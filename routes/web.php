@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\HomeAdsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TranslateController;
@@ -11,9 +12,9 @@ use App\Http\Controllers\Admin\HomeMemberController;
 use App\Http\Controllers\Admin\HomeSectorController;
 use App\Http\Controllers\Admin\HomeSliderController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\HomePartnerController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\HomeDocumentationController;
-use App\Http\Controllers\Admin\HomePartnerController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -51,6 +52,8 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::resource('home-ads', HomeAdsController::class);
     Route::resource('home-documentation', HomeDocumentationController::class);
     Route::resource('home-partner', HomePartnerController::class);
+    Route::resource('article', ArticleController::class);
+    Route::patch('article/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('article.toggle-status');
     // add export excel dashboardexport
     // Route::get('dashboard-export', [DashboardV2Controller::class, 'export'])->name('dashboard.export');
 

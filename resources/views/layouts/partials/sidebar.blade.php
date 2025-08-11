@@ -158,6 +158,146 @@
                             <!--end:Menu sub-->
                         </div>
                     @endcanany
+                    @canany(['home-slider', 'home-member', 'home-sector', 'home-ads', 'home-documentation',
+                        'home-partner'])
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs(['home-slider.*', 'home-member.*', 'home-sector.*', 'home-ads.*', 'home-documentation.*', 'home-partner.*']) ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                {{-- <span class="menu-icon">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </span>
+                            <span class="menu-title">Menu Admin</span>
+                            <span class="menu-arrow"></span> --}}
+                                <span class="menu-icon">
+                                    <i class="ki-duotone ki-home fs-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                        <span class="path3"></span>
+                                    </i>
+                                </span>
+                                <span class="menu-title">Beranda</span>
+                                <span class="menu-arrow"></span>
+                            </span>
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div class="menu-sub menu-sub-accordion">
+                                <!--begin:Menu item-->
+                                @can('home-slider')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('home-slider') ? ' active' : '' }}"
+                                            href="{{ route('home-slider.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Slider</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('home-member')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('home-member') ? ' active' : '' }}"
+                                            href="{{ route('home-member.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Member</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('home-sector')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('home-sector') ? ' active' : '' }}"
+                                            href="{{ route('home-sector.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Sektor Usaha</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('home-ads')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('home-ads') ? ' active' : '' }}"
+                                            href="{{ route('home-ads.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Iklan</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('home-documentation')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('home-documentation') ? ' active' : '' }}"
+                                            href="{{ route('home-documentation.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Dokumentasi</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('home-partner')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('home-partner') ? ' active' : '' }}"
+                                            href="{{ route('home-partner.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Partner</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                            </div>
+                        </div>
+                    @endcanany
+
+                    @can('article')
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs('article.*') ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                <span class="menu-icon">
+                                    <i class="fas fa-newspaper"></i>
+                                </span>
+                                <span class="menu-title">Artikel</span>
+                                <span class="menu-arrow"></span>
+                            </span>
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div
+                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['article.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                <div class="menu-item">
+                                    <!--begin:Menu link-->
+                                    <a class="menu-link {{ request()->routeIs('article.*') ? ' active' : '' }}"
+                                        href="{{ route('article.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">Artikel</span>
+                                    </a>
+                                    <!--end:Menu link-->
+                                </div>
+                                <!--end:Menu item-->
+                            </div>
+                            <!--end:Menu sub-->
+                        </div>
+                    @endcan
+
                 </div>
                 <!--end::Menu-->
             </div>
