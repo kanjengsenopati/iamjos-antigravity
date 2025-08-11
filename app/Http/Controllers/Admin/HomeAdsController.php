@@ -68,8 +68,9 @@ class HomeAdsController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(HomeAds $homeAds)
+    public function edit($id)
     {
+        $homeAds = HomeAds::findOrFail($id);
         return view('admins.home-ads.create-edit', compact('homeAds'));
     }
 
