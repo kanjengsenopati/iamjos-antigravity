@@ -5,10 +5,13 @@ namespace App\Models;
 use App\Traits\UuidTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Casts\Localized;
+use App\Traits\RequestLocale;
 
 class HomeSlider extends Model
 {
-    use UuidTrait, SoftDeletes;
+    use UuidTrait, SoftDeletes, RequestLocale;
 
     protected $table = 'home_sliders';
     protected $fillable = [
@@ -95,5 +98,26 @@ class HomeSlider extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order', 'asc');
+    }
+
+    protected function title(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('title', $value, $attr)
+        );
+    }
+
+    protected function description(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('description', $value, $attr)
+        );
+    }
+
+    protected function buttonText(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('button_text', $value, $attr)
+        );
     }
 }

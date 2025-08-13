@@ -112,7 +112,7 @@
                                             <div class="row">
                                                 <!--begin::Col-->
                                                 <div class="col-lg-12 fv-row">
-                                                    <input type="text" name="button_link" id="button_link"
+                                                    <input type="url" name="button_link" id="button_link"
                                                         class="form-control mb-3 mb-lg-0"
                                                         placeholder="Masukkan Tautan Tombol Slider"
                                                         value="{{ @$homeSlider->button_link ?? old('button_link') }}"

@@ -298,6 +298,38 @@
                         </div>
                     @endcan
 
+                    @can('bpd')
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs('bpd.*') ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                <span class="menu-icon">
+                                    <i class="fas fa-building"></i>
+                                </span>
+                                <span class="menu-title">BPD</span>
+                                <span class="menu-arrow"></span>
+                            </span>
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div class="menu-sub menu-sub-accordion {{ request()->routeIs(['bpd.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                <div class="menu-item">
+                                    <!--begin:Menu link-->
+                                    <a class="menu-link {{ request()->routeIs('bpd.*') ? ' active' : '' }}"
+                                        href="{{ route('bpd.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">BPD</span>
+                                    </a>
+                                    <!--end:Menu link-->
+                                </div>
+                                <!--end:Menu item-->
+                            </div>
+                            <!--end:Menu sub-->
+                        </div>
+                    @endcan
+
                 </div>
                 <!--end::Menu-->
             </div>

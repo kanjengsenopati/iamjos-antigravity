@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ArticleController;
+use App\Http\Controllers\Admin\BpdController;
 use App\Http\Controllers\Admin\HomeAdsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TranslateController;
@@ -54,6 +55,8 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::resource('home-partner', HomePartnerController::class);
     Route::resource('article', ArticleController::class);
     Route::patch('article/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('article.toggle-status');
+    Route::get('/bpd', [BpdController::class, 'index'])->name('bpd.index');
+    Route::post('/bpd/refresh', [BpdController::class, 'refresh'])->name('bpd.refresh');
     // add export excel dashboardexport
     // Route::get('dashboard-export', [DashboardV2Controller::class, 'export'])->name('dashboard.export');
 

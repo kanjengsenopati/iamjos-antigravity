@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Traits\RequestLocale;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class HomeSector extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasUuids, SoftDeletes, RequestLocale;
 
     protected $fillable = [
         'name',
@@ -19,4 +21,18 @@ class HomeSector extends Model
         'order',
         'link',
     ];
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('name', $value, $attr)
+        );
+    }
+
+    protected function description(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('description', $value, $attr)
+        );
+    }
 }

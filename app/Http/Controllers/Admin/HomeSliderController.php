@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\HomeSlider;
 use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\HomeSliderRequest;
 use App\Services\MediaService;
-use App\Jobs\ProcessImageCompressionJob;
-use App\Jobs\ProcessVideoCompressionJob;
+use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\ProcessImageCompressionJob;
+use App\Jobs\ProcessVideoCompressionJob;
+use Stichoza\GoogleTranslate\GoogleTranslate;
+use App\Http\Requests\Admin\HomeSliderRequest;
 
 class HomeSliderController extends Controller
 {
@@ -91,20 +92,27 @@ class HomeSliderController extends Controller
     {
         try {
             DB::transaction(function () use ($request) {
+                $data = $request->validated();
+                $data['title_en'] =  GoogleTranslate::trans($request->title, 'en');
+                $data['description_en'] = GoogleTranslate::trans($request->description, 'en');
+                $data['button_text_en'] = GoogleTranslate::trans($request->button_text, 'en');
                 // Create slider record first
-                $sliderData = $request->except(['media']);
-                $sliderData['media_processing_status'] = 'processing';
+                // $sliderData = $request->except(['media']);
+                $data['media_processing_status'] = 'processing';
+                if ($request->hasFile('media')) {
+                    $data['media'] = 'storage/' . $request->file('media')->store('sliders', ['disk' => 'public']);
+                }
 
-                $slider = HomeSlider::create($sliderData);
+                $slider = HomeSlider::create($data);
 
                 // Handle media upload
-                if ($request->hasFile('media')) {
-                    $this->handleMediaUpload($request->file('media'), $slider);
-                }
+                // if ($request->hasFile('media')) {
+                //     $this->handleMediaUpload($request->file('media'), $slider);
+                // }
             });
 
             return redirect()->route('home-slider.index')
-                ->with('success', 'Slider berhasil ditambahkan. Media sedang diproses.');
+                ->with('success', 'Slider berhasil ditambahkan');
         } catch (\Exception $e) {
             Log::error('Failed to create home slider: ' . $e->getMessage());
             return redirect()->back()

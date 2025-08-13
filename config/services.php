@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'phri' => [
+        'base' => env('PHRI_API_BASE', 'https://phri.or.id/membership/api'),
+        'key'  => env('PHRI_API_KEY'),
+    ],
+
 
 ];
