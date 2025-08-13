@@ -23,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         // Lebih aman pisahkan argumen
         $schedule->command('fetch:phri-news', ['1w'])->dailyAt('01:00');
+        $schedule->command('phri:sync-provinces')->dailyAt('02:00');
+        $schedule->command('phri:sync-regencies')->dailyAt('02:15');
+        $schedule->command('phri:sync-meetingrooms')->dailyAt('02:30');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
