@@ -26,6 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('phri:sync-provinces')->dailyAt('02:00');
         $schedule->command('phri:sync-regencies')->dailyAt('02:15');
         $schedule->command('phri:sync-meetingrooms')->dailyAt('02:30');
+        $schedule->command('media:sync-phri --pages=2')->everySixHours()
+            ->withoutOverlapping()
+            ->onOneServer();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -9,6 +9,7 @@ use App\Models\MeetingRoom;
 use App\Models\MeetingRoomLayout;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -74,20 +75,17 @@ class PhriMeetingRoomService
     protected function normalize(array $records): array
     {
         $venues  = [];
-        $rooms   = [];
-        $layouts = [];
+        $rooms   = [];   // per item: ['venue_external_id','name']
+        $layouts = [];   // per item: ['venue_external_id','room_name','layout','capacity']
 
         foreach ($records as $row) {
             $extId = (int) (Arr::get($row, 'id') ?? 0);
             if ($extId <= 0) continue;
 
-            $phriProv = (int) (Arr::get($row, 'id_province') ?? Arr::get($row, 'id_provinsi') ?? 0);
-            $phriCity = (int) (Arr::get($row, 'id_city') ?? 0);
-
             $venues[] = [
                 'external_id'      => $extId,
-                'phri_province_id' => $phriProv,
-                'phri_regency_id'  => $phriCity,
+                'phri_province_id' => (int) (Arr::get($row, 'id_province') ?? Arr::get($row, 'id_provinsi') ?? 0),
+                'phri_regency_id'  => (int) (Arr::get($row, 'id_city') ?? 0),
                 'province_name'    => trim((string) Arr::get($row, 'provinsi')),
                 'city_name'        => trim((string) Arr::get($row, 'kota')),
                 'hotel'            => trim((string) Arr::get($row, 'hotel')),
@@ -112,7 +110,7 @@ class PhriMeetingRoomService
                         if ($k === 'ruangan') continue;
                         $layoutName = $this->normalizeLayoutKey($k);
                         $cap        = (int) ($v ?? 0);
-                        if ($cap <= 0) continue;
+                        // simpan semua layout, termasuk 0 jika Anda mau
                         $layouts[] = [
                             'venue_external_id' => $extId,
                             'room_name'         => $roomName,
@@ -135,15 +133,12 @@ class PhriMeetingRoomService
         return Str::slug($k, '_');
     }
 
-    /**
-     * Map ke ID lokal (diasumsikan PK tabel provinces/regencies juga UUID).
-     * provinces.id diambil via mapping phri_id -> id
-     * regencies.id diambil via mapping external_id -> id
-     */
     protected function mapLocalIds(array $venues): array
     {
-        $provMap = Province::query()->pluck('id', 'external_id')->all();      // returns UUID string
-        $regMap  = Regency::query()->pluck('id', 'external_id')->all();  // returns UUID string
+        // PROVINSI: kunci dari PHRI = provinces.phri_id
+        $provMap = Province::query()->pluck('id', 'external_id')->all();        // [phri_id => uuid]
+        // REGENCY: kunci dari PHRI = regencies.external_id
+        $regMap  = Regency::query()->pluck('id', 'external_id')->all();     // [external_id => uuid]
 
         foreach ($venues as &$v) {
             $v['province_id'] = $provMap[$v['phri_province_id']] ?? null;
@@ -162,8 +157,11 @@ class PhriMeetingRoomService
                 'not_modified'     => true,
                 'venues_inserted'  => 0,
                 'venues_updated'   => 0,
+                'venues_deleted'   => 0,
                 'rooms_upserted'   => 0,
-                'layouts_upserted' => 0
+                'rooms_deleted'    => 0,
+                'layouts_upserted' => 0,
+                'layouts_deleted'  => 0,
             ];
         }
 
@@ -172,125 +170,186 @@ class PhriMeetingRoomService
         $rooms   = $norm['rooms'];
         $layouts = $norm['layouts'];
 
-        // ==== Upsert VENUES (manual, karena PK UUID & external_id tidak unik di DB) ====
-        $existingVenues = MeetingVenue::query()->pluck('id', 'external_id')->all(); // ext_id => uuid
-        $venueIdMap = []; // ext_id => uuid
+        // Group rooms/layouts by venue_ext and room_name
+        $roomsByVenue = [];
+        foreach ($rooms as $r) {
+            $roomsByVenue[$r['venue_external_id']][] = $r['name'];
+        }
+        $roomsByVenue = array_map(function ($names) {
+            return array_values(array_unique($names));
+        }, $roomsByVenue);
+
+        $layoutsByVenueRoom = [];
+        foreach ($layouts as $lt) {
+            $layoutsByVenueRoom[$lt['venue_external_id']][$lt['room_name']][$lt['layout']] = (int) $lt['capacity'];
+        }
+
+        // ===== Upsert VENUE & catat UUID lokal =========================
+        $existingVenues = MeetingVenue::query()->pluck('id', 'external_id')->all(); // [ext => uuid]
+        $apiExtIds = array_map(fn($v) => $v['external_id'], $venues);
+        $apiExtIds = array_values(array_unique($apiExtIds));
+
+        $venueIdMap = []; // [ext => uuid]
         $venuesInserted = 0;
         $venuesUpdated  = 0;
 
-        foreach ($venues as $v) {
-            $ext = $v['external_id'];
-            $payload = [
-                'phri_province_id' => $v['phri_province_id'],
-                'phri_regency_id'  => $v['phri_regency_id'],
-                'province_id'      => $v['province_id'],
-                'regency_id'       => $v['regency_id'],
-                'province_name'    => $v['province_name'],
-                'city_name'        => $v['city_name'],
-                'hotel'            => $v['hotel'],
-                'address'          => $v['address'],
-                'email'            => $v['email'],
-                'phone'            => $v['phone'],
-                'max_capacity'     => $v['max_capacity'],
+        DB::beginTransaction();
+        try {
+            foreach ($venues as $v) {
+                $ext = $v['external_id'];
+                $payload = [
+                    'phri_province_id' => $v['phri_province_id'],
+                    'phri_regency_id'  => $v['phri_regency_id'],
+                    'province_id'      => $v['province_id'],
+                    'regency_id'       => $v['regency_id'],
+                    'province_name'    => $v['province_name'],
+                    'city_name'        => $v['city_name'],
+                    'hotel'            => $v['hotel'],
+                    'address'          => $v['address'],
+                    'email'            => $v['email'],
+                    'phone'            => $v['phone'],
+                    'max_capacity'     => $v['max_capacity'],
+                    'updated_at'       => now(),
+                ];
+
+                if (isset($existingVenues[$ext])) {
+                    $venueId = $existingVenues[$ext];
+                    MeetingVenue::where('id', $venueId)->update($payload);
+                    $venuesUpdated++;
+                } else {
+                    $venueId = (string) Str::uuid();
+                    MeetingVenue::create(array_merge([
+                        'id'          => $venueId,
+                        'external_id' => $ext,
+                        'created_at'  => now(),
+                    ], $payload));
+                    $venuesInserted++;
+                }
+                $venueIdMap[$ext] = $venueId;
+            }
+
+            // ===== Hapus VENUE yang tidak ada di API ===================
+            $toDeleteExt = array_diff(array_keys($existingVenues), $apiExtIds);
+            $venuesDeleted = 0;
+            $roomsDeleted = 0;
+            $layoutsDeleted = 0;
+
+            if (!empty($toDeleteExt)) {
+                $toDeleteVenueIds = array_values(array_map(fn($ext) => $existingVenues[$ext], $toDeleteExt));
+
+                // ambil room ids di venue yang akan dihapus
+                $roomIds = MeetingRoom::whereIn('meeting_venue_id', $toDeleteVenueIds)->pluck('id')->all();
+                if (!empty($roomIds)) {
+                    // hapus layouts
+                    $layoutsDeleted += MeetingRoomLayout::whereIn('meeting_room_id', $roomIds)->delete();
+                    // hapus rooms (force, karena pakai soft deletes)
+                    $roomsDeleted   += MeetingRoom::whereIn('id', $roomIds)->forceDelete();
+                }
+
+                // hapus venues (force)
+                $venuesDeleted += MeetingVenue::whereIn('id', $toDeleteVenueIds)->forceDelete();
+            }
+
+            // ===== Upsert ROOMS & LAYOUTS per venue (dan purge yang hilang) ===
+            $roomsUpserted = 0;
+            $layoutsUpserted = 0;
+            foreach ($venueIdMap as $ext => $venueId) {
+                // ---- ROOMS ----
+                $apiRoomNames = $roomsByVenue[$ext] ?? [];
+
+                // DB rooms map: [name => id]
+                $dbRooms = MeetingRoom::where('meeting_venue_id', $venueId)
+                    ->get(['id', 'name'])
+                    ->keyBy('name')
+                    ->map(fn($m) => $m->id)
+                    ->all();
+
+                // upsert rooms
+                foreach ($apiRoomNames as $roomName) {
+                    if (isset($dbRooms[$roomName])) {
+                        MeetingRoom::where('id', $dbRooms[$roomName])->update(['updated_at' => now()]);
+                    } else {
+                        $newId = (string) Str::uuid();
+                        MeetingRoom::create([
+                            'id'               => $newId,
+                            'meeting_venue_id' => $venueId,
+                            'name'             => $roomName,
+                            'created_at'       => now(),
+                            'updated_at'       => now(),
+                        ]);
+                        $dbRooms[$roomName] = $newId;
+                    }
+                    $roomsUpserted++;
+                }
+
+                // purge rooms yang hilang
+                $missingRoomNames = array_diff(array_keys($dbRooms), $apiRoomNames);
+                if (!empty($missingRoomNames)) {
+                    $missingRoomIds = array_values(array_intersect_key($dbRooms, array_flip($missingRoomNames)));
+                    if (!empty($missingRoomIds)) {
+                        $layoutsDeleted += MeetingRoomLayout::whereIn('meeting_room_id', $missingRoomIds)->delete();
+                        $roomsDeleted   += MeetingRoom::whereIn('id', $missingRoomIds)->forceDelete();
+                    }
+                }
+
+                // ---- LAYOUTS per room ----
+                $apiLayoutsForVenue = $layoutsByVenueRoom[$ext] ?? []; // [roomName => [layout => capacity]]
+                foreach ($apiLayoutsForVenue as $roomName => $layoutMap) {
+                    $roomId = $dbRooms[$roomName] ?? null;
+                    if (!$roomId) continue;
+
+                    // DB layouts map: [layout => id]
+                    $dbLayouts = MeetingRoomLayout::where('meeting_room_id', $roomId)
+                        ->get(['id', 'layout'])
+                        ->keyBy('layout')
+                        ->map(fn($m) => $m->id)
+                        ->all();
+
+                    // upsert layouts
+                    foreach ($layoutMap as $layout => $cap) {
+                        if (isset($dbLayouts[$layout])) {
+                            MeetingRoomLayout::where('id', $dbLayouts[$layout])->update([
+                                'capacity'   => (int) $cap,
+                                'updated_at' => now(),
+                            ]);
+                        } else {
+                            MeetingRoomLayout::create([
+                                'id'              => (string) Str::uuid(),
+                                'meeting_room_id' => $roomId,
+                                'layout'          => $layout,
+                                'capacity'        => (int) $cap,
+                                'created_at'      => now(),
+                                'updated_at'      => now(),
+                            ]);
+                            $dbLayouts[$layout] = true; // mark present
+                        }
+                        $layoutsUpserted++;
+                    }
+
+                    // purge layouts yang hilang
+                    $missingLayouts = array_diff(array_keys($dbLayouts), array_keys($layoutMap));
+                    if (!empty($missingLayouts)) {
+                        $layoutsDeleted += MeetingRoomLayout::where('meeting_room_id', $roomId)
+                            ->whereIn('layout', $missingLayouts)
+                            ->delete();
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return [
+                'venues_inserted'  => $venuesInserted,
+                'venues_updated'   => $venuesUpdated,
+                'venues_deleted'   => $venuesDeleted,
+                'rooms_upserted'   => $roomsUpserted,
+                'rooms_deleted'    => $roomsDeleted,
+                'layouts_upserted' => $layoutsUpserted,
+                'layouts_deleted'  => $layoutsDeleted,
             ];
-
-            if (isset($existingVenues[$ext])) {
-                // update
-                $venueId = $existingVenues[$ext];
-                MeetingVenue::where('id', $venueId)->update($payload);
-                $venueIdMap[$ext] = $venueId;
-                $venuesUpdated++;
-            } else {
-                // insert dengan UUID baru
-                $venueId = (string) Str::uuid();
-                MeetingVenue::create(array_merge([
-                    'id'           => $venueId,
-                    'external_id'  => $ext,
-                ], $payload));
-                $venueIdMap[$ext] = $venueId;
-                $venuesInserted++;
-            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
         }
-
-        // ==== Upsert ROOMS (unik: (meeting_venue_id, name)) ====
-        $roomsUpserted = 0;
-
-        // ambil semua room eksisting untuk venue yang terproses
-        $venueIds = array_values(array_unique(array_values($venueIdMap)));
-        $existingRooms = [];
-        if (!empty($venueIds)) {
-            MeetingRoom::whereIn('meeting_venue_id', $venueIds)
-                ->get(['id', 'meeting_venue_id', 'name'])
-                ->each(function ($rm) use (&$existingRooms) {
-                    $existingRooms[$rm->meeting_venue_id . '|' . $rm->name] = $rm->id;
-                });
-        }
-
-        foreach ($rooms as $r) {
-            $venId = $venueIdMap[$r['venue_external_id']] ?? null;
-            if (!$venId) continue;
-
-            $key = $venId . '|' . $r['name'];
-            if (isset($existingRooms[$key])) {
-                // update timestamp saja agar "terlihat" diubah
-                MeetingRoom::where('id', $existingRooms[$key])->update(['updated_at' => now()]);
-            } else {
-                $roomId = (string) Str::uuid();
-                MeetingRoom::create([
-                    'id'               => $roomId,
-                    'meeting_venue_id' => $venId,
-                    'name'             => $r['name'],
-                ]);
-                $existingRooms[$key] = $roomId;
-            }
-            $roomsUpserted++;
-        }
-
-        // ==== Upsert LAYOUTS (unik: (meeting_room_id, layout)) ====
-        $layoutsUpserted = 0;
-
-        // ambil layout eksisting untuk room-room yang terproses
-        $roomIds = array_values($existingRooms);
-        $existingLayouts = [];
-        if (!empty($roomIds)) {
-            MeetingRoomLayout::whereIn('meeting_room_id', $roomIds)
-                ->get(['id', 'meeting_room_id', 'layout'])
-                ->each(function ($lt) use (&$existingLayouts) {
-                    $existingLayouts[$lt->meeting_room_id . '|' . $lt->layout] = $lt->id;
-                });
-        }
-
-        foreach ($layouts as $lt) {
-            $venId  = $venueIdMap[$lt['venue_external_id']] ?? null;
-            if (!$venId) continue;
-
-            $roomKey = $venId . '|' . $lt['room_name'];
-            $roomId  = $existingRooms[$roomKey] ?? null;
-            if (!$roomId) continue;
-
-            $key = $roomId . '|' . $lt['layout'];
-            if (isset($existingLayouts[$key])) {
-                // update capacity
-                MeetingRoomLayout::where('id', $existingLayouts[$key])->update([
-                    'capacity'   => (int) $lt['capacity'],
-                    'updated_at' => now(),
-                ]);
-            } else {
-                MeetingRoomLayout::create([
-                    'id'              => (string) Str::uuid(),
-                    'meeting_room_id' => $roomId,
-                    'layout'          => $lt['layout'],
-                    'capacity'        => (int) $lt['capacity'],
-                ]);
-            }
-            $layoutsUpserted++;
-        }
-
-        return [
-            'venues_inserted'  => $venuesInserted,
-            'venues_updated'   => $venuesUpdated,
-            'rooms_upserted'   => $roomsUpserted,
-            'layouts_upserted' => $layoutsUpserted,
-        ];
     }
 }

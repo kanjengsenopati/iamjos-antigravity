@@ -204,7 +204,7 @@
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
-                                            <span class="menu-title">Member</span>
+                                            <span class="menu-title">Relasi</span>
                                         </a>
                                         <!--end:Menu link-->
                                     </div>
@@ -265,15 +265,15 @@
                         </div>
                     @endcanany
 
-                    @can('article')
+                    @canany(['media-corner', 'article'])
                         <div data-kt-menu-trigger="click"
-                            class="menu-item menu-accordion {{ request()->routeIs('article.*') ? 'show' : '' }}">
+                            class="menu-item menu-accordion {{ request()->routeIs(['article.*', 'media-corner.*']) ? 'show' : '' }}">
                             <!--begin:Menu link-->
                             <span class="menu-link">
                                 <span class="menu-icon">
                                     <i class="fas fa-newspaper"></i>
                                 </span>
-                                <span class="menu-title">Artikel</span>
+                                <span class="menu-title">Media Corner</span>
                                 <span class="menu-arrow"></span>
                             </span>
                             <!--end:Menu link-->
@@ -294,9 +294,25 @@
                                 </div>
                                 <!--end:Menu item-->
                             </div>
+                            <div
+                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['media-corner.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                <div class="menu-item">
+                                    <!--begin:Menu link-->
+                                    <a class="menu-link {{ request()->routeIs('media-corner.*') ? ' active' : '' }}"
+                                        href="{{ route('media-corner.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">Video</span>
+                                    </a>
+                                    <!--end:Menu link-->
+                                </div>
+                                <!--end:Menu item-->
+                            </div>
                             <!--end:Menu sub-->
                         </div>
-                    @endcan
+                    @endcanany
 
                     @can('bpd')
                         <div data-kt-menu-trigger="click"

@@ -38,6 +38,8 @@ return [
         'base' => env('PHRI_API_BASE', 'https://phri.or.id/membership/api'),
         'key'  => env('PHRI_API_KEY'),
     ],
-
+    'youtube' => [
+        'key' => env('YOUTUBE_API_KEY'),
+    ],
 
 ];

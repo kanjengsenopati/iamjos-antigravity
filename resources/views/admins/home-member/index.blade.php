@@ -1,4 +1,4 @@
-@extends('layouts.master', ['title' => 'Data Keanggotaan', 'main' => 'Dashboard'])
+@extends('layouts.master', ['title' => 'Data Relasi', 'main' => 'Dashboard'])
 @section('content')
     <div class="app-main pt-6 flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -13,12 +13,12 @@
                         <div class="card-header mt-4">
                             <!--begin::Card title-->
                             <h3 class="card-title align-items-start flex-column">
-                                <span class="card-label fw-bold fs-3 mb-1">Data Keanggotaan</span>
+                                <span class="card-label fw-bold fs-3 mb-1">Data Relasi</span>
                             </h3>
                             <div class="card-toolbar">
                                 <a href="{{ route('home-member.create') }}" class="btn btn-primary btn-sm btn-create">
                                     <i class="fa fa-plus"></i>
-                                    Keanggotaan
+                                    Relasi
                                 </a>
                             </div>
                             <!--end::Card toolbar-->

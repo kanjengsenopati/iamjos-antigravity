@@ -24,4 +24,9 @@ class MeetingVenue extends Model
         'phone',
         'max_capacity',
     ];
+
+    public function meeting_rooms()
+    {
+        return $this->hasMany(MeetingRoom::class, 'meeting_venue_id', 'id');
+    }
 }

@@ -15,8 +15,13 @@ class MeetingRoom extends Model
         'name',
     ];
 
-    public function meetingVenue()
+    public function meeting_venue()
     {
         return $this->belongsTo(MeetingVenue::class)->withTrashed();
+    }
+
+    public function meeting_room_layouts()
+    {
+        return $this->hasMany(MeetingRoomLayout::class, 'meeting_room_id', 'id');
     }
 }
