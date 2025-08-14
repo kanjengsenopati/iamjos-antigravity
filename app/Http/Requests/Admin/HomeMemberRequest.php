@@ -24,13 +24,13 @@ class HomeMemberRequest extends FormRequest
         // atur berdasarkan method
         if ($this->isMethod('post')) {
             return [
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:51200', // maksimal 5MB
                 'link' => 'nullable|url',
                 'order' => 'nullable|integer|min:0',
             ];
         } elseif ($this->isMethod('put') || $this->isMethod('patch')) {
             return [
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:51200',
                 'link' => 'nullable|url',
                 'order' => 'nullable|integer|min:0',
             ];

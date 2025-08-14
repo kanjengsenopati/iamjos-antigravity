@@ -40,7 +40,7 @@
                                 </label>
                                 <!--end::Label-->
                                 <!--begin::Input-->
-                                <input type="link" class="form-control" id="link" name="link"
+                                <input type="url" class="form-control" id="link" name="link"
                                     value="{{ old('link', @$homeMember->link) }}" placeholder="Masukkan Link" />
                                 <!--end::Input-->
                             </div>

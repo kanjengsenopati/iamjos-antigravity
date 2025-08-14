@@ -6,6 +6,7 @@ use App\Models\HomeMember;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
+use App\Services\ImageService;
 use App\Http\Requests\Admin\HomeMemberRequest;
 
 class HomeMemberController extends Controller
@@ -40,17 +41,34 @@ class HomeMemberController extends Controller
         return view('admins.home-member.create-edit');
     }
 
+
     /**
-     * Store a newly created resource in storage.
+     * Simpan HomeMember dengan 1 gambar WebP (tanpa resize atau resize opsional).
      */
-    public function store(HomeMemberRequest $request)
+    public function store(HomeMemberRequest $request, ImageService $imageService)
     {
         $data = $request->validated();
+
         if ($request->hasFile('image')) {
-            $data['image'] = 'storage/' . $request->file('image')->store('home-members', ['disk' => 'public']);
+            // Simpan SATU gambar WebP.
+            // Ganti  null -> 1200 kalau mau resize ke lebar maks 1200px.
+            $saved = $imageService->storeSingleWebp(
+                file: $request->file('image'),
+                maxWidth: null,        // contoh: 1200 untuk resize, null untuk tanpa resize
+                quality: 50,
+                disk: 'public',
+                dir: 'home-members'    // simpan di storage/app/public/home-members
+            );
+
+            // Simpan 'path' relatif ke DB (lebih aman saat domain berubah)
+            $data['image'] = 'storage/' . $saved['path'];
         }
+
         HomeMember::create($data);
-        return redirect()->route('home-member.index')->with('success', 'Keanggotan berhasil ditambahkan.');
+
+        return redirect()
+            ->route('home-member.index')
+            ->with('success', 'Keanggotan berhasil ditambahkan.');
     }
 
     /**
@@ -72,15 +90,27 @@ class HomeMemberController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(HomeMemberRequest $request, HomeMember $homeMember)
-    {
+    public function update(
+        HomeMemberRequest $request,
+        HomeMember $homeMember,
+        ImageService $imageService
+    ) {
         $data = $request->validated();
         if ($request->hasFile('image')) {
             // Delete old image if exists
             if (file_exists($homeMember->image)) {
                 unlink($homeMember->image);
             }
-            $data['image'] = 'storage/' . $request->file('image')->store('home-members', ['disk' => 'public']);
+            $saved = $imageService->storeSingleWebp(
+                file: $request->file('image'),
+                maxWidth: null,        // contoh: 1200 untuk resize, null untuk tanpa resize
+                quality: 50,
+                disk: 'public',
+                dir: 'home-members'    // simpan di storage/app/public/home-members
+            );
+
+            // Simpan 'path' relatif ke DB (lebih aman saat domain berubah)
+            $data['image'] = 'storage/' . $saved['path'];
         }
         $homeMember->update($data);
         return redirect()->route('home-member.index')->with('success', 'Keanggotan berhasil diperbarui.');

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HomePartnerRequest;
+use App\Services\ImageService;
 
 class HomePartnerController extends Controller
 {
@@ -43,13 +44,19 @@ class HomePartnerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(HomePartnerRequest $request)
+    public function store(HomePartnerRequest $request, ImageService $imageService)
     {
         $data = $request->validated();
         if ($request->hasFile('image')) {
-            $data['image'] = 'storage/' . $request->file('image')->store('home-partner', [
-                'disk' => 'public',
-            ]);
+            $saved = $imageService->storeSingleWebp(
+                file: $request->file('image'),
+                maxWidth: null,
+                quality: 50,
+                disk: 'public',
+                dir: 'home-partner'
+            );
+
+            $data['image'] = 'storage/' . $saved['path'];
         }
         HomePartner::create($data);
         return redirect()->route('home-partner.index')->with('success', 'Berhasil Menambahkan Partner');
@@ -74,7 +81,7 @@ class HomePartnerController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(HomePartnerRequest $request, HomePartner $homePartner)
+    public function update(HomePartnerRequest $request, HomePartner $homePartner, ImageService $imageService)
     {
         $data = $request->validated();
         if ($request->hasFile('image')) {
@@ -82,9 +89,15 @@ class HomePartnerController extends Controller
             if (file_exists($homePartner->image)) {
                 unlink($homePartner->image);
             }
-            $data['image'] = 'storage/' . $request->file('image')->store('home-partner', [
-                'disk' => 'public',
-            ]);
+            $saved = $imageService->storeSingleWebp(
+                file: $request->file('image'),
+                maxWidth: null,
+                quality: 50,
+                disk: 'public',
+                dir: 'home-partner'
+            );
+
+            $data['image'] = 'storage/' . $saved['path'];
         }
         $homePartner->update($data);
         return redirect()->route('home-partner.index')->with('success', 'Berhasil Mengupdate Partner');

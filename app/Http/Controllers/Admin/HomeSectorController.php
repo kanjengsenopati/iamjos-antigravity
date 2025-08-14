@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\HomeSector;
 use Illuminate\Http\Request;
+use App\Services\ImageService;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
 use Stichoza\GoogleTranslate\GoogleTranslate;
@@ -44,11 +45,20 @@ class HomeSectorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(HomeSectorRequest $request)
+    public function store(HomeSectorRequest $request, ImageService $imageService)
     {
         $data = $request->validated();
         if ($request->hasFile('image')) {
-            $data['image'] = 'storage/' . $request->file('image')->store('home-sectors', ['disk' => 'public']);
+            $saved = $imageService->storeSingleWebp(
+                file: $request->file('image'),
+                maxWidth: null,        // contoh: 1200 untuk resize, null untuk tanpa resize
+                quality: 50,
+                disk: 'public',
+                dir: 'home-sectors'    // simpan di storage/app/public/home-sectors
+            );
+
+            // Simpan 'path' relatif ke DB (lebih aman saat domain berubah)
+            $data['image'] = 'storage/' . $saved['path'];
         }
         $data['name_en'] = GoogleTranslate::trans($request->name, 'en');
         $data['description_en'] = GoogleTranslate::trans($request->description, 'en');
@@ -75,7 +85,7 @@ class HomeSectorController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(HomeSectorRequest $request, HomeSector $homeSector)
+    public function update(HomeSectorRequest $request, HomeSector $homeSector, ImageService $imageService)
     {
         $data = $request->validated();
         if ($request->hasFile('image')) {
@@ -83,7 +93,16 @@ class HomeSectorController extends Controller
             if (file_exists($homeSector->image)) {
                 unlink($homeSector->image);
             }
-            $data['image'] = 'storage/' . $request->file('image')->store('home-sectors', ['disk' => 'public']);
+            $saved = $imageService->storeSingleWebp(
+                file: $request->file('image'),
+                maxWidth: null,        // contoh: 1200 untuk resize, null untuk tanpa resize
+                quality: 50,
+                disk: 'public',
+                dir: 'home-sectors'    // simpan di storage/app/public/home-sectors
+            );
+
+            // Simpan 'path' relatif ke DB (lebih aman saat domain berubah)
+            $data['image'] = 'storage/' . $saved['path'];
         }
         $data['name_en'] = GoogleTranslate::trans($request->name, 'en');
         $data['description_en'] = GoogleTranslate::trans($request->description, 'en');
