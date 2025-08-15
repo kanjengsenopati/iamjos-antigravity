@@ -27,8 +27,8 @@ class BenefitRequest extends FormRequest
         return [
             'title' => self::REQUIRED_STRING_VALIDATION,
             'title_en' => self::NULLABLE_STRING_VALIDATION,
-            'subtitle' => self::REQUIRED_STRING_VALIDATION,
-            'subtitle_en' => self::NULLABLE_STRING_VALIDATION,
+            'subtitle' => 'required|string',
+            'subtitle_en' => 'nullable|string',
             'button_text' => self::REQUIRED_STRING_VALIDATION,
             'button_text_en' => self::NULLABLE_STRING_VALIDATION,
             'url' => 'required|url',

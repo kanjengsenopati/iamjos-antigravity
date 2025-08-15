@@ -1,4 +1,4 @@
-@extends('layouts.master', ['main' => 'Data PHRI Berbagi', 'title' => request()->routeIs('benefit.create') ? 'Tambah PHRI Berbagi' : 'Edit PHRI Berbagi'])
+@extends('layouts.master', ['main' => 'Data Benefit', 'title' => request()->routeIs('benefit.create') ? 'Tambah Benefit' : 'Edit Benefit'])
 
 @section('content')
     <!--begin::Container-->
@@ -9,7 +9,7 @@
                     <div class="card-header" id="kt_chat_contacts_header">
                         <h3 class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold fs-3">
-                                {{ request()->routeIs('benefit.create') ? 'Tambah PHRI Berbagi' : 'Edit PHRI Berbagi' }}
+                                {{ request()->routeIs('benefit.create') ? 'Tambah Benefit' : 'Edit Benefit' }}
                             </span>
                         </h3>
                     </div>
@@ -69,9 +69,7 @@
                                     <label for="subtitle" class="fs-6 fw-bold form-label mt-3">
                                         <span class="text-dark">SubJudul (ID)</span>
                                     </label>
-                                    <input type="text" class="form-control" id="subtitle" name="subtitle"
-                                        value="{{ old('subtitle', @$benefit->subtitle) }}" placeholder="Masukkan SubJudul"
-                                        required />
+                                    <textarea class="form-control" id="subtitle" name="subtitle">{{ old('subtitle', @$benefit->subtitle) }}</textarea>
                                 </div>
                                 <div class="col-md-2 mt-8">
                                     <button type="button" class="btn btn-info btn-sm w-100"
@@ -84,9 +82,7 @@
                                 <label for="subtitle_en" class="fs-6 fw-bold form-label mt-3">
                                     <span class="text-dark">SubJudul (EN)</span>
                                 </label>
-                                <input type="text" class="form-control" id="subtitle_en" name="subtitle_en"
-                                    value="{{ old('subtitle_en', @$benefit->subtitle_en) }}"
-                                    placeholder="Enter Subtitle in English" />
+                                <textarea class="form-control" id="subtitle_en" name="subtitle_en">{{ old('subtitle_en', @$benefit->subtitle_en) }}</textarea>
                             </div>
 
                             {{-- Teks Tombol --}}

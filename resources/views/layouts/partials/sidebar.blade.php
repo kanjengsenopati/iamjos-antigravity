@@ -351,9 +351,14 @@
                             <!--begin:Menu link-->
                             <span class="menu-link">
                                 <span class="menu-icon">
-                                    <i class="fas fa-gift"></i>
+                                    {{-- <i class="ki-duotone ki-heart fs-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                        <span class="path3"></span>
+                                    </i> --}}
+                                    <i class="ph ph-handshake"></i>
                                 </span>
-                                <span class="menu-title">PHRI Berbagi</span>
+                                <span class="menu-title">Benefit</span>
                                 <span class="menu-arrow"></span>
                             </span>
                             <!--end:Menu link-->
@@ -368,7 +373,7 @@
                                         <span class="menu-bullet">
                                             <span class="bullet bullet-dot"></span>
                                         </span>
-                                        <span class="menu-title">PHRI Berbagi</span>
+                                        <span class="menu-title">Benefit</span>
                                     </a>
                                     <!--end:Menu link-->
                                 </div>

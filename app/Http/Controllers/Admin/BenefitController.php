@@ -3,18 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Benefit;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Services\ImageService;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\BenefitRequest;
-use App\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\Admin\BenefitRequest;
 
 class BenefitController extends Controller
 {
-    private const REQUIRED_STRING_VALIDATION = 'required|string|max:255';
-    private const NULLABLE_STRING_VALIDATION = 'nullable|string|max:255';
-    private const IMAGE_VALIDATION = 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
 
     /**
      * Display a listing of the resource.
@@ -24,6 +22,9 @@ class BenefitController extends Controller
         if (request()->ajax()) {
             $data = Benefit::latest();
             return DataTables::of($data)
+                ->editColumn('subtitle', function ($data) {
+                    return $data->subtitle ? Str::limit($data->subtitle, 50) : '-';
+                })
                 ->addColumn('action', function ($data) {
                     $actionEdit = route('benefit.edit', $data->id);
                     $actionDelete = route('benefit.destroy', $data->id);
