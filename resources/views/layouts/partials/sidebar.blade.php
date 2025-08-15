@@ -345,6 +345,38 @@
                             <!--end:Menu sub-->
                         </div>
                     @endcan
+                    @can('benefit')
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs('benefit.*') ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                <span class="menu-icon">
+                                    <i class="fas fa-gift"></i>
+                                </span>
+                                <span class="menu-title">PHRI Berbagi</span>
+                                <span class="menu-arrow"></span>
+                            </span>
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div
+                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['benefit.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                <div class="menu-item">
+                                    <!--begin:Menu link-->
+                                    <a class="menu-link {{ request()->routeIs('benefit.*') ? ' active' : '' }}"
+                                        href="{{ route('benefit.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">PHRI Berbagi</span>
+                                    </a>
+                                    <!--end:Menu link-->
+                                </div>
+                                <!--end:Menu item-->
+                            </div>
+                            <!--end:Menu sub-->
+                        </div>
+                    @endcan
 
                 </div>
                 <!--end::Menu-->
