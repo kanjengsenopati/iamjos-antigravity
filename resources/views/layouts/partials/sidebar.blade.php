@@ -382,6 +382,39 @@
                             <!--end:Menu sub-->
                         </div>
                     @endcan
+
+                    {{-- Meeting Room Menu --}}
+                    <div data-kt-menu-trigger="click"
+                        class="menu-item menu-accordion {{ request()->routeIs('meeting-room.*') ? 'show' : '' }}">
+                        <!--begin:Menu link-->
+                        <span class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ph ph-buildings"></i>
+                            </span>
+                            <span class="menu-title">Meeting Room</span>
+                            <span class="menu-arrow"></span>
+                        </span>
+                        <!--end:Menu link-->
+                        <!--begin:Menu sub-->
+                        <div
+                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['meeting-room.*']) ? 'show' : '' }}">
+                            <!--begin:Menu item-->
+                            <div class="menu-item">
+                                <!--begin:Menu link-->
+                                <a class="menu-link {{ request()->routeIs('meeting-room.*') ? ' active' : '' }}"
+                                    href="{{ route('meeting-room.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Kelola Venue</span>
+                                </a>
+                                <!--end:Menu link-->
+                            </div>
+                            <!--end:Menu item-->
+                        </div>
+                        <!--end:Menu sub-->
+                    </div>
+
                     <div data-kt-menu-trigger="click"
                         class="menu-item menu-accordion {{ request()->routeIs('aboutus-information.*') ? 'show' : '' }}">
                         <!--begin:Menu link-->

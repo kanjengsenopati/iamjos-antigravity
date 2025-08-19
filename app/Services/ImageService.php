@@ -94,4 +94,32 @@ class ImageService
 
         return $result;
     }
+
+    /**
+     * Simple method to store image with compression
+     * 
+     * @param UploadedFile $file
+     * @param string $directory
+     * @param int $quality
+     * @return string File path
+     */
+    public function storeImage(UploadedFile $file, string $directory = 'uploads', int $quality = 80): string
+    {
+        $filename = Str::uuid() . '.webp';
+        $path = $directory . '/' . $filename;
+
+        // Resize dan compress gambar
+        $image = Image::read($file);
+
+        // Resize jika lebih dari 1200px width
+        if ($image->width() > 1200) {
+            $image->scaleDown(width: 1200);
+        }
+
+        // Simpan sebagai WebP dengan kompresi
+        $bytes = $image->toWebp($quality);
+        Storage::disk('public')->put($path, $bytes);
+
+        return $path;
+    }
 }

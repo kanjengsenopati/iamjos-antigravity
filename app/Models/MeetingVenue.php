@@ -23,6 +23,7 @@ class MeetingVenue extends Model
         'email',
         'phone',
         'max_capacity',
+        'photo',
     ];
 
     public function meeting_rooms()

@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\MediaCornerController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\HomeDocumentationController;
 use App\Http\Controllers\Admin\AboutUsInformationController;
+use App\Http\Controllers\Admin\MeetingRoomController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -66,6 +67,12 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::resource('benefit', BenefitController::class);
     Route::resource('aboutus-information', AboutUsInformationController::class, ['only' => ['index', 'store']]);
     Route::resource('aboutus-history', AboutUsHistoryController::class, ['only' => ['index', 'store']]);
+
+    // Meeting Room Management
+    Route::resource('meeting-room', MeetingRoomController::class);
+    Route::post('meeting-room/sync', [MeetingRoomController::class, 'sync'])->name('meeting-room.sync');
+    Route::get('meeting-room/regencies/{province}', [MeetingRoomController::class, 'getRegencies'])->name('meeting-room.regencies');
+
     // add export excel dashboardexport
     // Route::get('dashboard-export', [DashboardV2Controller::class, 'export'])->name('dashboard.export');
 
