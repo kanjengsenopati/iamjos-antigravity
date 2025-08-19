@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\AboutUsHistoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BpdController;
 use App\Http\Controllers\Admin\AuthController;
@@ -17,9 +16,13 @@ use App\Http\Controllers\Admin\HomeSliderController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\HomePartnerController;
 use App\Http\Controllers\Admin\MediaCornerController;
+use App\Http\Controllers\Admin\AboutUsHistoryController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
+use App\Http\Controllers\Admin\HonoraryCouncilController;
 use App\Http\Controllers\Admin\HomeDocumentationController;
 use App\Http\Controllers\Admin\AboutUsInformationController;
+use App\Http\Controllers\Admin\DirectionCommitmentController;
+use App\Http\Controllers\Admin\RegionalCoordinatorController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -66,6 +69,9 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::resource('benefit', BenefitController::class);
     Route::resource('aboutus-information', AboutUsInformationController::class, ['only' => ['index', 'store']]);
     Route::resource('aboutus-history', AboutUsHistoryController::class, ['only' => ['index', 'store']]);
+    Route::resource('direction-commitment', DirectionCommitmentController::class);
+    Route::resource('honorary-council', HonoraryCouncilController::class);
+    Route::resource('regional-coordinator', RegionalCoordinatorController::class);
     // add export excel dashboardexport
     // Route::get('dashboard-export', [DashboardV2Controller::class, 'export'])->name('dashboard.export');
 

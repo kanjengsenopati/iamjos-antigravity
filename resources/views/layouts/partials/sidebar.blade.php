@@ -383,7 +383,15 @@
                         </div>
                     @endcan
                     <div data-kt-menu-trigger="click"
-                        class="menu-item menu-accordion {{ request()->routeIs('aboutus-information.*') ? 'show' : '' }}">
+                        class="menu-item menu-accordion {{ request()->routeIs(
+                            'aboutus-information.*',
+                            'aboutus-history.*',
+                            'direction-commitment.*',
+                            'honorary-council.*',
+                            'regional-coordinator.*',
+                        )
+                            ? 'show'
+                            : '' }}">
                         <!--begin:Menu link-->
                         <span class="menu-link">
                             <span class="menu-icon">
@@ -395,7 +403,15 @@
                         <!--end:Menu link-->
                         <!--begin:Menu sub-->
                         <div
-                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['aboutus-information.*', 'aboutus-history.*']) ? 'show' : '' }}">
+                            class="menu-sub menu-sub-accordion {{ request()->routeIs([
+                                'aboutus-information.*',
+                                'aboutus-history.*',
+                                'direction-commitment.*',
+                                'honorary-council.*',
+                                'regional-coordinator.*',
+                            ])
+                                ? 'show'
+                                : '' }}">
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
@@ -412,6 +428,27 @@
                                         <span class="bullet bullet-dot"></span>
                                     </span>
                                     <span class="menu-title">Sejarah</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('direction-commitment.*') ? ' active' : '' }}"
+                                    href="{{ route('direction-commitment.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Arah Komitmen</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('honorary-council.*') ? ' active' : '' }}"
+                                    href="{{ route('honorary-council.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Dewan Kehormatan</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('regional-coordinator.*') ? ' active' : '' }}"
+                                    href="{{ route('regional-coordinator.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Koordinator Wilayah</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>
