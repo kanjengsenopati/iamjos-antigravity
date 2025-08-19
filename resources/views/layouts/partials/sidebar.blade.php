@@ -382,6 +382,43 @@
                             <!--end:Menu sub-->
                         </div>
                     @endcan
+                    <div data-kt-menu-trigger="click"
+                        class="menu-item menu-accordion {{ request()->routeIs('aboutus-information.*') ? 'show' : '' }}">
+                        <!--begin:Menu link-->
+                        <span class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ph ph-info"></i>
+                            </span>
+                            <span class="menu-title">Tentang Kami</span>
+                            <span class="menu-arrow"></span>
+                        </span>
+                        <!--end:Menu link-->
+                        <!--begin:Menu sub-->
+                        <div
+                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['aboutus-information.*', 'aboutus-history.*']) ? 'show' : '' }}">
+                            <!--begin:Menu item-->
+                            <div class="menu-item">
+                                <!--begin:Menu link-->
+                                <a class="menu-link {{ request()->routeIs('aboutus-information.*') ? ' active' : '' }}"
+                                    href="{{ route('aboutus-information.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Informasi</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('aboutus-history.*') ? ' active' : '' }}"
+                                    href="{{ route('aboutus-history.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Sejarah</span>
+                                </a>
+                                <!--end:Menu link-->
+                            </div>
+                            <!--end:Menu item-->
+                        </div>
+                        <!--end:Menu sub-->
+                    </div>
 
                 </div>
                 <!--end::Menu-->

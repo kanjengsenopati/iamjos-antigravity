@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AboutUsHistoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BpdController;
 use App\Http\Controllers\Admin\AuthController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Admin\HomePartnerController;
 use App\Http\Controllers\Admin\MediaCornerController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\HomeDocumentationController;
+use App\Http\Controllers\Admin\AboutUsInformationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -62,6 +64,8 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::patch('media-corner/{mediaCorner}/toggle-status', [MediaCornerController::class, 'toggleStatus'])->name('media-corner.toggle-status');
     Route::resource('media-corner', MediaCornerController::class, ['only' => ['index', 'destroy']]);
     Route::resource('benefit', BenefitController::class);
+    Route::resource('aboutus-information', AboutUsInformationController::class, ['only' => ['index', 'store']]);
+    Route::resource('aboutus-history', AboutUsHistoryController::class, ['only' => ['index', 'store']]);
     // add export excel dashboardexport
     // Route::get('dashboard-export', [DashboardV2Controller::class, 'export'])->name('dashboard.export');
 

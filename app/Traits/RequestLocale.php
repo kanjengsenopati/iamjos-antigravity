@@ -7,9 +7,18 @@ trait RequestLocale
     protected function shouldUseEnglish(): bool
     {
         if (app()->runningInConsole()) return false;
-        $lang = request()->query('lang')
-            ?? request()->header('X-Lang')
-            ?? request()->header('Accept-Language');
+
+        $req = request();
+
+        // Hanya aktif untuk route /api/* (atau request yang benar-benar API)
+        if (! $req->is('api/*')) {
+            return false;
+        }
+
+        $lang = $req->query('lang')
+            ?? $req->header('X-Lang')
+            ?? $req->header('Accept-Language');
+
         $lang = strtolower((string) $lang);
         return $lang === 'en' || str_starts_with($lang, 'en-');
     }
