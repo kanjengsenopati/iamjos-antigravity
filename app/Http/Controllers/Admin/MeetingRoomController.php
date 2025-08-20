@@ -37,17 +37,13 @@ class MeetingRoomController extends Controller
                     $actionShow = route('meeting-room.show', $data->id);
                     $actionEdit = route('meeting-room.edit', $data->id);
                     $actionDelete = route('meeting-room.destroy', $data->id);
+                    $actionRooms = route('venue.rooms.index', $data->id);
                     return "<div class='d-flex justify-content-center'>" .
+                        "<a href='{$actionRooms}' class='btn btn-success btn-sm me-1' title='Kelola Ruang'><i class='fa fa-door-open'></i></a>" .
                         view('components.action.show', ['action' => $actionShow]) .
                         view('components.action.edit', ['action' => $actionEdit]) .
                         view('components.action.delete', ['action' => $actionDelete, 'id' => $data->id]) .
                         "</div>";
-                })
-                ->addColumn('photo', function ($data) {
-                    if ($data->photo) {
-                        return '<img src="' . Storage::url($data->photo) . '" alt="' . $data->hotel . '" class="img-thumbnail" style="max-width: 80px; max-height: 60px;">';
-                    }
-                    return '<span class="text-muted">Tidak ada foto</span>';
                 })
                 ->addColumn('province_name', function ($data) {
                     return $data->province_name ?: '-';
@@ -61,7 +57,7 @@ class MeetingRoomController extends Controller
                 ->addColumn('max_capacity', function ($data) {
                     return $data->max_capacity ? $data->max_capacity . ' orang' : '-';
                 })
-                ->rawColumns(['action', 'photo'])
+                ->rawColumns(['action'])
                 ->make(true);
         }
         return view('admins.meeting-room.index');
@@ -96,12 +92,20 @@ class MeetingRoomController extends Controller
             'email' => $validated['email'] ?? null,
             'phone' => $validated['phone'] ?? null,
             'max_capacity' => $validated['max_capacity'] ?? null,
+            'gallery' => [],
         ];
 
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
+        // Handle gallery uploads
+        if ($request->hasFile('gallery')) {
             $imageService = app(ImageService::class);
-            $data['photo'] = $imageService->storeImage($request->file('photo'), 'meeting-venues');
+            $gallery = [];
+
+            foreach ($request->file('gallery') as $photo) {
+                $photoPath = $imageService->storeImage($photo, 'meeting-venues');
+                $gallery[] = $photoPath;
+            }
+
+            $data['gallery'] = $gallery;
         }
 
         MeetingVenue::create($data);
@@ -150,17 +154,29 @@ class MeetingRoomController extends Controller
             'max_capacity' => $validated['max_capacity'] ?? null,
         ];
 
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
-            $imageService = app(ImageService::class);
+        // Handle gallery updates
+        $imageService = app(ImageService::class);
+        $currentGallery = $meetingRoom->gallery ?? [];
+        $existingGallery = $request->input('existing_gallery', []);
 
-            // Delete old photo if exists
-            if ($meetingRoom->photo) {
-                Storage::delete($meetingRoom->photo);
-            }
-
-            $data['photo'] = $imageService->storeImage($request->file('photo'), 'meeting-venues');
+        // Remove deleted photos from storage
+        $photosToDelete = array_diff($currentGallery, $existingGallery);
+        foreach ($photosToDelete as $photoPath) {
+            Storage::delete($photoPath);
         }
+
+        // Start with existing photos that weren't deleted
+        $newGallery = $existingGallery;
+
+        // Add new photos
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $photo) {
+                $photoPath = $imageService->storeImage($photo, 'meeting-venues');
+                $newGallery[] = $photoPath;
+            }
+        }
+
+        $data['gallery'] = array_values($newGallery); // Re-index array
 
         $meetingRoom->update($data);
 
@@ -172,9 +188,11 @@ class MeetingRoomController extends Controller
      */
     public function destroy(MeetingVenue $meetingRoom)
     {
-        // Delete photo if exists
-        if ($meetingRoom->photo) {
-            Storage::delete($meetingRoom->photo);
+        // Delete all photos in gallery if exists
+        if ($meetingRoom->gallery && is_array($meetingRoom->gallery)) {
+            foreach ($meetingRoom->gallery as $photoPath) {
+                Storage::delete($photoPath);
+            }
         }
 
         $meetingRoom->delete();

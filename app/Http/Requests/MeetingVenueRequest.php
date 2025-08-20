@@ -29,7 +29,10 @@ class MeetingVenueRequest extends FormRequest
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'max_capacity' => 'required|integer|min:0',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'gallery' => 'nullable|array|max:10',
+            'gallery.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'existing_gallery' => 'nullable|array',
+            'existing_gallery.*' => 'string',
         ];
     }
 }

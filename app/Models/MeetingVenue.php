@@ -23,7 +23,11 @@ class MeetingVenue extends Model
         'email',
         'phone',
         'max_capacity',
-        'photo',
+        'gallery',
+    ];
+
+    protected $casts = [
+        'gallery' => 'array',
     ];
 
     public function meeting_rooms()

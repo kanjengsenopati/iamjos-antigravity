@@ -29,7 +29,8 @@
                                 </form>
                                 <!--end::Sync Button-->
                                 <!--begin::Add Button-->
-                                <a type="button" class="btn btn-primary btn-sm" href="{{ route('meeting-room.create') }}">
+                                <a type="button" class="btn btn-primary btn-sm disabled"
+                                    href="{{ route('meeting-room.create') }}">
                                     <i class="fa fa-plus"></i>
                                     Tambah Venue
                                 </a>
@@ -45,11 +46,10 @@
                                 <thead>
                                     <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                         <th style="width: 5%">No</th>
-                                        <th>Foto</th>
                                         <th>Hotel/Venue</th>
                                         <th>Provinsi</th>
                                         <th>Kota</th>
-
+                                        <th>Jumlah Ruang</th>
                                         <th>Kapasitas Max</th>
                                         <th>Email</th>
                                         <th>Telepon</th>
@@ -92,12 +92,6 @@
                         searchable: false
                     },
                     {
-                        data: 'photo',
-                        name: 'photo',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
                         data: 'hotel',
                         name: 'hotel'
                     },
@@ -109,7 +103,12 @@
                         data: 'city_name',
                         name: 'city_name'
                     },
-
+                    {
+                        data: 'rooms_count',
+                        name: 'rooms_count',
+                        orderable: false,
+                        searchable: false
+                    },
                     {
                         data: 'max_capacity',
                         name: 'max_capacity'
@@ -131,7 +130,7 @@
                     }
                 ],
                 order: [
-                    [2, 'asc']
+                    [1, 'asc']
                 ],
                 pageLength: 10,
                 lengthMenu: [

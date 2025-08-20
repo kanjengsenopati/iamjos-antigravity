@@ -13,6 +13,7 @@ class MeetingRoom extends Model
     protected $fillable = [
         'meeting_venue_id',
         'name',
+        'photo',
     ];
 
     public function meeting_venue()

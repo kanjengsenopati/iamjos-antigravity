@@ -122,21 +122,45 @@
                                 <div class="form-text">Kapasitas maksimum orang dalam venue ini</div>
                             </div>
 
-                            {{-- Photo Upload --}}
+                            {{-- Gallery Upload --}}
                             <div class="fv-row mb-6">
-                                <label for="photo" class="fs-6 fw-bold form-label">
-                                    <span class="text-dark">Foto Venue</span>
+                                <label for="gallery" class="fs-6 fw-bold form-label">
+                                    <span class="text-dark">Galeri Venue</span>
                                 </label>
-                                <input type="file" class="form-control" id="photo" name="photo"
-                                    accept="image/*" />
-                                <div class="form-text">Upload foto venue (JPEG, PNG, JPG, GIF - Maksimal 2MB)</div>
+                                <input type="file" class="form-control" id="gallery" name="gallery[]"
+                                    accept="image/*" multiple />
+                                <div class="form-text">Upload foto venue (JPEG, PNG, JPG, WebP - Maksimal 5MB per foto,
+                                    bisa pilih beberapa foto sekaligus)</div>
 
-                                @if (isset($meetingRoom) && $meetingRoom->photo)
-                                    <div class="mt-3">
-                                        <label class="form-label">Foto Saat Ini:</label>
-                                        <div class="mt-2">
-                                            <img src="{{ Storage::url($meetingRoom->photo) }}" alt="Current Photo"
-                                                class="img-thumbnail" style="max-width: 200px;">
+                                {{-- Preview untuk foto baru --}}
+                                <div id="gallery-preview" class="mt-4" style="display: none;">
+                                    <label class="form-label fw-semibold">Preview Foto Baru:</label>
+                                    <div class="row" id="preview-container"></div>
+                                </div>
+
+                                {{-- Galeri saat ini --}}
+                                @if (isset($meetingRoom) && $meetingRoom->gallery && count($meetingRoom->gallery) > 0)
+                                    <div class="mt-4">
+                                        <label class="form-label fw-semibold">Galeri Saat Ini
+                                            ({{ count($meetingRoom->gallery) }} foto):</label>
+                                        <div class="row g-3 mt-2">
+                                            @foreach ($meetingRoom->gallery as $index => $photo)
+                                                <div class="col-md-3">
+                                                    <div class="position-relative">
+                                                        <img src="{{ Storage::url($photo) }}"
+                                                            alt="Gallery {{ $index + 1 }}" class="img-thumbnail w-100"
+                                                            style="height: 120px; object-fit: cover;">
+                                                        <button type="button"
+                                                            class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 remove-photo"
+                                                            data-photo="{{ $photo }}"
+                                                            data-index="{{ $index }}">
+                                                            <i class="fa fa-times"></i>
+                                                        </button>
+                                                        <input type="hidden" name="existing_gallery[]"
+                                                            value="{{ $photo }}">
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
                                 @endif
@@ -195,6 +219,61 @@
                 } else {
                     regencySelect.empty();
                     regencySelect.append('<option value="">Pilih Kota/Kabupaten</option>');
+                }
+            });
+
+            // Gallery preview functionality
+            $('#gallery').change(function(e) {
+                const files = e.target.files;
+                const previewContainer = $('#preview-container');
+                previewContainer.empty();
+
+                if (files.length > 0) {
+                    $('#gallery-preview').show();
+
+                    Array.from(files).forEach((file, index) => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const col = $(`
+                                    <div class="col-md-3">
+                                        <div class="position-relative">
+                                            <img src="${e.target.result}" alt="Preview ${index + 1}" 
+                                                class="img-thumbnail w-100" style="height: 120px; object-fit: cover;">
+                                            <div class="position-absolute top-0 start-0 bg-primary text-white px-2 py-1 rounded-end small">
+                                                ${index + 1}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `);
+                                previewContainer.append(col);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                } else {
+                    $('#gallery-preview').hide();
+                }
+            });
+
+            // Remove existing photo functionality
+            $('.remove-photo').click(function() {
+                const photoPath = $(this).data('photo');
+                const index = $(this).data('index');
+
+                if (confirm('Yakin ingin menghapus foto ini?')) {
+                    $(this).closest('.col-md-3').remove();
+
+                    // Add to remove list (you might want to track photos to be removed)
+                    if (!$('#photos-to-remove').length) {
+                        $('form').append(
+                            '<input type="hidden" id="photos-to-remove" name="photos_to_remove[]" value="">'
+                            );
+                    }
+
+                    let photosToRemove = $('#photos-to-remove').val().split(',').filter(p => p);
+                    photosToRemove.push(photoPath);
+                    $('#photos-to-remove').val(photosToRemove.join(','));
                 }
             });
         });

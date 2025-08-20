@@ -28,101 +28,273 @@
                         </div>
                     </div>
                     <div class="card-body pt-5">
-                        {{-- Venue Information --}}
-                        <div class="row mb-8">
-                            <div class="col-md-6">
-                                <div class="card border">
-                                    <div class="card-header">
-                                        <h4 class="card-title">Informasi Venue</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="mb-3">
-                                            <strong>Nama Hotel/Venue:</strong><br>
-                                            {{ $meetingRoom->hotel }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Alamat:</strong><br>
-                                            {{ $meetingRoom->address }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <strong>Lokasi:</strong><br>
-                                            {{ $meetingRoom->city_name }}, {{ $meetingRoom->province_name }}
-                                        </div>
-                                        @if ($meetingRoom->max_capacity)
-                                            <div class="mb-3">
-                                                <strong>Kapasitas Maksimum:</strong><br>
-                                                {{ number_format($meetingRoom->max_capacity) }} orang
+                        {{-- Navigation Tabs --}}
+                        <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#overview_tab">
+                                    <i class="ki-duotone ki-home fs-2 me-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    Overview
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#gallery_tab">
+                                    <i class="ki-duotone ki-picture fs-2 me-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    Galeri
+                                    @if ($meetingRoom->gallery && count($meetingRoom->gallery) > 0)
+                                        <span
+                                            class="badge badge-circle badge-primary ms-1">{{ count($meetingRoom->gallery) }}</span>
+                                    @endif
+                                </a>
+                            </li>
+                        </ul>
+
+                        {{-- Tab Content --}}
+                        <div class="tab-content" id="myTabContent">
+                            {{-- Overview Tab --}}
+                            <div class="tab-pane fade show active" id="overview_tab" role="tabpanel">
+                                <div class="row g-6">
+                                    {{-- Venue Information Card --}}
+                                    <div class="col-lg-6">
+                                        <div class="card card-flush h-100">
+                                            <div class="card-header">
+                                                <div class="card-title">
+                                                    <i class="ki-duotone ki-information fs-1 text-primary me-2">
+                                                        <span class="path1"></span>
+                                                        <span class="path2"></span>
+                                                        <span class="path3"></span>
+                                                    </i>
+                                                    <h3 class="fw-bold m-0">Informasi Venue</h3>
+                                                </div>
                                             </div>
-                                        @endif
+                                            <div class="card-body">
+                                                <div class="mb-5">
+                                                    <label class="fw-semibold text-muted fs-7 mb-1">Nama Hotel/Venue</label>
+                                                    <div class="fw-bold fs-6">{{ $meetingRoom->hotel }}</div>
+                                                </div>
+                                                <div class="mb-5">
+                                                    <label class="fw-semibold text-muted fs-7 mb-1">Alamat Lengkap</label>
+                                                    <div class="fw-bold fs-6">{{ $meetingRoom->address }}</div>
+                                                </div>
+                                                <div class="mb-5">
+                                                    <label class="fw-semibold text-muted fs-7 mb-1">Lokasi</label>
+                                                    <div class="fw-bold fs-6">
+                                                        <i class="ki-duotone ki-geolocation text-primary me-1">
+                                                            <span class="path1"></span>
+                                                            <span class="path2"></span>
+                                                        </i>
+                                                        {{ $meetingRoom->city_name }}, {{ $meetingRoom->province_name }}
+                                                    </div>
+                                                </div>
+                                                @if ($meetingRoom->max_capacity)
+                                                    <div class="mb-0">
+                                                        <label class="fw-semibold text-muted fs-7 mb-1">Kapasitas
+                                                            Maksimum</label>
+                                                        <div class="fw-bold fs-6 text-success">
+                                                            <i class="ki-duotone ki-user fs-4 text-success me-1">
+                                                                <span class="path1"></span>
+                                                                <span class="path2"></span>
+                                                            </i>
+                                                            {{ number_format($meetingRoom->max_capacity) }} orang
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {{-- Contact Information Card --}}
+                                    <div class="col-lg-6">
+                                        <div class="card card-flush h-100">
+                                            <div class="card-header">
+                                                <div class="card-title">
+                                                    <i class="ki-duotone ki-call fs-1 text-success me-2">
+                                                        <span class="path1"></span>
+                                                        <span class="path2"></span>
+                                                        <span class="path3"></span>
+                                                        <span class="path4"></span>
+                                                    </i>
+                                                    <h3 class="fw-bold m-0">Kontak</h3>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                @if ($meetingRoom->email || $meetingRoom->phone)
+                                                    @if ($meetingRoom->email)
+                                                        <div class="mb-5">
+                                                            <label class="fw-semibold text-muted fs-7 mb-1">Email</label>
+                                                            <div class="fw-bold fs-6">
+                                                                <a href="mailto:{{ $meetingRoom->email }}"
+                                                                    class="text-hover-primary">
+                                                                    <i class="ki-duotone ki-sms text-primary me-1">
+                                                                        <span class="path1"></span>
+                                                                        <span class="path2"></span>
+                                                                    </i>
+                                                                    {{ $meetingRoom->email }}
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                    @if ($meetingRoom->phone)
+                                                        <div class="mb-0">
+                                                            <label class="fw-semibold text-muted fs-7 mb-1">Telepon</label>
+                                                            <div class="fw-bold fs-6">
+                                                                <a href="tel:{{ $meetingRoom->phone }}"
+                                                                    class="text-hover-primary">
+                                                                    <i class="ki-duotone ki-phone text-success me-1">
+                                                                        <span class="path1"></span>
+                                                                        <span class="path2"></span>
+                                                                    </i>
+                                                                    {{ $meetingRoom->phone }}
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <div class="d-flex flex-column text-center py-5">
+                                                        <i class="ki-duotone ki-call fs-3x text-gray-400 mb-4">
+                                                            <span class="path1"></span>
+                                                            <span class="path2"></span>
+                                                            <span class="path3"></span>
+                                                            <span class="path4"></span>
+                                                        </i>
+                                                        <div class="text-gray-500">Belum ada informasi kontak</div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- System Information Card --}}
+                                    @if ($meetingRoom->external_id)
+                                        <div class="col-12">
+                                            <div class="card card-flush">
+                                                <div class="card-header">
+                                                    <div class="card-title">
+                                                        <i class="ki-duotone ki-code fs-1 text-info me-2">
+                                                            <span class="path1"></span>
+                                                            <span class="path2"></span>
+                                                            <span class="path3"></span>
+                                                            <span class="path4"></span>
+                                                        </i>
+                                                        <h3 class="fw-bold m-0">Informasi Sistem</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <label class="fw-semibold text-muted fs-7 mb-1">External
+                                                                ID</label>
+                                                            <div class="fw-bold fs-6">
+                                                                <code
+                                                                    class="bg-light-primary text-primary px-2 py-1 rounded">{{ $meetingRoom->external_id }}</code>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="fw-semibold text-muted fs-7 mb-1">Terakhir
+                                                                Diperbarui</label>
+                                                            <div class="fw-bold fs-6">
+                                                                <i class="ki-duotone ki-calendar text-warning me-1">
+                                                                    <span class="path1"></span>
+                                                                    <span class="path2"></span>
+                                                                </i>
+                                                                {{ $meetingRoom->updated_at->format('d M Y H:i') }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card border">
-                                    <div class="card-header">
-                                        <h4 class="card-title">Kontak</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        @if ($meetingRoom->email)
-                                            <div class="mb-3">
-                                                <strong>Email:</strong><br>
-                                                <a href="mailto:{{ $meetingRoom->email }}">{{ $meetingRoom->email }}</a>
+
+                            {{-- Gallery Tab --}}
+                            <div class="tab-pane fade" id="gallery_tab" role="tabpanel">
+                                @if ($meetingRoom->gallery && count($meetingRoom->gallery) > 0)
+                                    <div class="row g-5">
+                                        @foreach ($meetingRoom->gallery as $index => $photo)
+                                            <div class="col-lg-4 col-md-6">
+                                                <div class="card card-flush">
+                                                    <div class="card-body p-0">
+                                                        <div class="position-relative overflow-hidden rounded">
+                                                            <img src="{{ Storage::url($photo) }}"
+                                                                alt="{{ $meetingRoom->hotel }} - Foto {{ $index + 1 }}"
+                                                                class="img-fluid gallery-image"
+                                                                style="height: 250px; width: 100%; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;"
+                                                                data-bs-toggle="modal" data-bs-target="#galleryModal"
+                                                                data-image="{{ Storage::url($photo) }}"
+                                                                data-title="{{ $meetingRoom->hotel }} - Foto {{ $index + 1 }}"
+                                                                onmouseover="this.style.transform='scale(1.05)'"
+                                                                onmouseout="this.style.transform='scale(1)'">
+                                                            <div class="position-absolute top-0 end-0 m-3">
+                                                                <span
+                                                                    class="badge badge-primary">{{ $index + 1 }}/{{ count($meetingRoom->gallery) }}</span>
+                                                            </div>
+                                                            <div
+                                                                class="position-absolute bottom-0 start-0 end-0 bg-gradient-dark p-3">
+                                                                <div class="text-white fw-bold">{{ $meetingRoom->hotel }}
+                                                                </div>
+                                                                <div class="text-gray-300 fs-7">Klik untuk memperbesar
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        @endif
-                                        @if ($meetingRoom->phone)
-                                            <div class="mb-3">
-                                                <strong>Telepon:</strong><br>
-                                                <a href="tel:{{ $meetingRoom->phone }}">{{ $meetingRoom->phone }}</a>
-                                            </div>
-                                        @endif
+                                        @endforeach
                                     </div>
-                                </div>
+                                @else
+                                    <div class="d-flex flex-column text-center py-10">
+                                        <i class="ki-duotone ki-picture fs-3x text-gray-400 mb-4">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                        </i>
+                                        <div class="text-gray-700 fs-2 fw-bold mb-2">Belum Ada Galeri</div>
+                                        <div class="text-gray-500">Belum ada foto yang tersedia untuk venue ini</div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
-
-                        {{-- Photo Section --}}
-                        @if ($meetingRoom->photo)
-                            <div class="row mb-8">
-                                <div class="col-12">
-                                    <div class="card border">
-                                        <div class="card-header">
-                                            <h4 class="card-title">Foto Venue</h4>
-                                        </div>
-                                        <div class="card-body text-center">
-                                            <img src="{{ Storage::url($meetingRoom->photo) }}"
-                                                alt="{{ $meetingRoom->hotel }}" class="img-fluid rounded shadow-sm"
-                                                style="max-height: 400px;">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- Daftar ruang meeting dihapus -->
-
-                        {{-- Metadata --}}
-                        @if ($meetingRoom->external_id)
-                            <div class="mt-6">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title mb-3">Informasi Sistem</h6>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <small class="text-muted">External ID:</small><br>
-                                                <code>{{ $meetingRoom->external_id }}</code>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <small class="text-muted">Terakhir diperbarui:</small><br>
-                                                {{ $meetingRoom->updated_at->format('d M Y H:i') }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Gallery Modal -->
+    <div class="modal fade" id="galleryModal" tabindex="-1" aria-labelledby="galleryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="galleryModalLabel">Galeri Venue</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" alt="" class="img-fluid rounded"
+                        style="max-height: 70vh;">
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('js')
+    <script>
+        $(document).ready(function() {
+            // Handle gallery image clicks
+            $('.gallery-image').click(function() {
+                var imageSrc = $(this).data('image');
+                var imageTitle = $(this).data('title');
+
+                $('#modalImage').attr('src', imageSrc);
+                $('#modalImage').attr('alt', imageTitle);
+                $('#galleryModalLabel').text(imageTitle);
+            });
+        });
+    </script>
+@endpush

@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\HomeDocumentationController;
 use App\Http\Controllers\Admin\AboutUsInformationController;
 use App\Http\Controllers\Admin\MeetingRoomController;
+use App\Http\Controllers\Admin\RoomController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -72,6 +73,16 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::resource('meeting-room', MeetingRoomController::class);
     Route::post('meeting-room/sync', [MeetingRoomController::class, 'sync'])->name('meeting-room.sync');
     Route::get('meeting-room/regencies/{province}', [MeetingRoomController::class, 'getRegencies'])->name('meeting-room.regencies');
+
+    // Room Management for specific venue
+    Route::prefix('venue/{venue}')->group(function () {
+        Route::get('rooms', [RoomController::class, 'index'])->name('venue.rooms.index');
+        Route::get('rooms/create', [RoomController::class, 'create'])->name('venue.rooms.create');
+        Route::post('rooms', [RoomController::class, 'store'])->name('venue.rooms.store');
+        Route::get('rooms/{room}/edit', [RoomController::class, 'edit'])->name('venue.rooms.edit');
+        Route::put('rooms/{room}', [RoomController::class, 'update'])->name('venue.rooms.update');
+        Route::delete('rooms/{room}', [RoomController::class, 'destroy'])->name('venue.rooms.destroy');
+    });
 
     // add export excel dashboardexport
     // Route::get('dashboard-export', [DashboardV2Controller::class, 'export'])->name('dashboard.export');
