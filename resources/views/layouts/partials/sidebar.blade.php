@@ -389,6 +389,7 @@
                             'direction-commitment.*',
                             'honorary-council.*',
                             'regional-coordinator.*',
+                            'organization.*',
                         )
                             ? 'show'
                             : '' }}">
@@ -409,6 +410,7 @@
                                 'direction-commitment.*',
                                 'honorary-council.*',
                                 'regional-coordinator.*',
+                                'organization.*',
                             ])
                                 ? 'show'
                                 : '' }}">
@@ -436,6 +438,13 @@
                                     </span>
                                     <span class="menu-title">Arah Komitmen</span>
                                 </a>
+                                <a class="menu-link {{ request()->routeIs('organization.*') ? ' active' : '' }}"
+                                    href="{{ route('organization.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Struktur Organisasi</span>
+                                </a>
                                 <a class="menu-link {{ request()->routeIs('honorary-council.*') ? ' active' : '' }}"
                                     href="{{ route('honorary-council.index') }}">
                                     <span class="menu-bullet">
@@ -450,6 +459,7 @@
                                     </span>
                                     <span class="menu-title">Koordinator Wilayah</span>
                                 </a>
+
                                 <!--end:Menu link-->
                             </div>
                             <!--end:Menu item-->
