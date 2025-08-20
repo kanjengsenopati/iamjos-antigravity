@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\BenefitController;
 use App\Http\Controllers\Admin\HomeAdsController;
+use App\Http\Controllers\Admin\ContactUsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TranslateController;
 use App\Http\Controllers\Admin\HomeMemberController;
@@ -82,6 +83,7 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::get('organization/template/positions', [OrganizationController::class, 'downloadPositionTemplate'])->name('organization.template.positions');
 
     Route::resource('member', MemberController::class, ['except' => ['show']]);
+    Route::resource('contact-us', ContactUsController::class, ['except' => ['show']]);
 
     // Excel Import/Export for Members
     Route::get('member/export/excel', [MemberController::class, 'exportMembers'])->name('member.export.excel');
