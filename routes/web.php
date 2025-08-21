@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\ArticleController;
+use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\BenefitController;
 use App\Http\Controllers\Admin\HomeAdsController;
 use App\Http\Controllers\Admin\ContactUsController;
@@ -65,6 +66,9 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::resource('home-partner', HomePartnerController::class);
     Route::resource('article', ArticleController::class);
     Route::patch('article/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('article.toggle-status');
+    Route::resource('event', EventController::class, ['only' => ['index', 'destroy']]);
+    Route::patch('event/{event}/toggle-status', [EventController::class, 'toggleStatus'])->name('event.toggle-status');
+    Route::post('event/sync', [EventController::class, 'sync'])->name('event.sync');
     Route::get('/bpd', [BpdController::class, 'index'])->name('bpd.index');
     Route::post('/bpd/refresh', [BpdController::class, 'refresh'])->name('bpd.refresh');
     Route::patch('media-corner/{mediaCorner}/toggle-status', [MediaCornerController::class, 'toggleStatus'])->name('media-corner.toggle-status');
