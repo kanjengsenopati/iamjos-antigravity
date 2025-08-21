@@ -27,11 +27,35 @@ class MeetingRoomController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        if (request()->ajax()) {
-            $data = MeetingVenue::with(['meeting_rooms'])->orderBy('hotel');
-            return DataTables::of($data)
+        if ($request->ajax()) {
+            $query = MeetingVenue::with(['meeting_rooms'])->orderBy('hotel');
+
+            // Apply search filters
+            if ($request->filled('search_venue')) {
+                $searchTerm = $request->search_venue;
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->whereRaw('LOWER(hotel) LIKE LOWER(?)', ['%' . $searchTerm . '%'])
+                        ->orWhereRaw('LOWER(address) LIKE LOWER(?)', ['%' . $searchTerm . '%'])
+                        ->orWhereRaw('LOWER(province_name) LIKE LOWER(?)', ['%' . $searchTerm . '%'])
+                        ->orWhereRaw('LOWER(city_name) LIKE LOWER(?)', ['%' . $searchTerm . '%']);
+                });
+            }
+
+            if ($request->filled('filter_province')) {
+                $query->whereRaw('LOWER(province_name) = LOWER(?)', [$request->filter_province]);
+            }
+
+            if ($request->filled('filter_city')) {
+                $query->whereRaw('LOWER(city_name) = LOWER(?)', [$request->filter_city]);
+            }
+
+            if ($request->filled('filter_capacity')) {
+                $query->where('max_capacity', '>=', $request->filter_capacity);
+            }
+
+            return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('action', function ($data) {
                     $actionShow = route('meeting-room.show', $data->id);
@@ -240,5 +264,43 @@ class MeetingRoomController extends Controller
             \Log::error('Error getting regencies: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to load regencies'], 500);
         }
+    }
+
+    /**
+     * Get filter data for search
+     */
+    public function getFilterData()
+    {
+        $provinces = MeetingVenue::distinct()
+            ->whereNotNull('province_name')
+            ->orderBy('province_name')
+            ->pluck('province_name');
+
+        $cities = MeetingVenue::distinct()
+            ->whereNotNull('city_name')
+            ->orderBy('city_name')
+            ->pluck('city_name');
+
+        return response()->json([
+            'provinces' => $provinces,
+            'cities' => $cities
+        ]);
+    }
+
+    /**
+     * Get cities by province name for filter
+     */
+    public function getCitiesByProvince($provinceName)
+    {
+        $cities = MeetingVenue::whereRaw('LOWER(province_name) = LOWER(?)', [$provinceName])
+            ->distinct()
+            ->whereNotNull('city_name')
+            ->orderBy('city_name')
+            ->pluck('city_name')
+            ->map(function ($city) {
+                return ['name' => $city];
+            });
+
+        return response()->json($cities);
     }
 }

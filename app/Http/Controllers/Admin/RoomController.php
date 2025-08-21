@@ -25,7 +25,16 @@ class RoomController extends Controller
      */
     public function create(MeetingVenue $venue)
     {
-        return view('admins.room.create-edit', compact('venue'));
+        // Hitung kapasitas tersisa
+        $usedCapacity = $venue->meeting_rooms()
+            ->with('meeting_room_layouts')
+            ->get()
+            ->sum(function ($room) {
+                return $room->meeting_room_layouts->max('capacity') ?? 0;
+            });
+        $remainingCapacity = $venue->max_capacity - $usedCapacity;
+
+        return view('admins.room.create-edit', compact('venue', 'remainingCapacity'));
     }
 
     /**
@@ -41,16 +50,32 @@ class RoomController extends Controller
             'layouts.*.capacity' => 'nullable|integer|min:1'
         ]);
 
-        // Custom validation: capacity tidak boleh melebihi max_capacity venue
+        // Custom validation: total kapasitas semua ruang tidak boleh melebihi max_capacity venue
         if (!empty($validated['layouts']) && $venue->max_capacity > 0) {
+            // Hitung total kapasitas ruang yang sudah ada
+            $existingRoomCapacity = $venue->meeting_rooms()
+                ->with('meeting_room_layouts')
+                ->get()
+                ->sum(function ($room) {
+                    return $room->meeting_room_layouts->max('capacity') ?? 0;
+                });
+
+            // Hitung kapasitas maksimal ruang baru yang akan ditambah
+            $newRoomMaxCapacity = 0;
             foreach ($validated['layouts'] as $index => $layout) {
-                if (isset($layout['capacity']) && $layout['capacity'] > $venue->max_capacity) {
-                    return redirect()->back()
-                        ->withErrors([
-                            "layouts.{$index}.capacity" => "Kapasitas layout tidak boleh melebihi kapasitas maksimal venue ({$venue->max_capacity} orang)"
-                        ])
-                        ->withInput();
+                if (isset($layout['capacity']) && $layout['capacity'] > $newRoomMaxCapacity) {
+                    $newRoomMaxCapacity = $layout['capacity'];
                 }
+            }
+
+            // Cek apakah total akan melebihi max capacity venue
+            $totalCapacity = $existingRoomCapacity + $newRoomMaxCapacity;
+            if ($totalCapacity > $venue->max_capacity) {
+                return redirect()->back()
+                    ->withErrors([
+                        'layouts' => "Total kapasitas semua ruang ($totalCapacity orang) akan melebihi kapasitas maksimal venue ({$venue->max_capacity} orang). Sisa kapasitas yang tersedia: " . ($venue->max_capacity - $existingRoomCapacity) . " orang."
+                    ])
+                    ->withInput();
             }
         }
 
@@ -91,7 +116,18 @@ class RoomController extends Controller
     public function edit(MeetingVenue $venue, MeetingRoom $room)
     {
         $room->load('meeting_room_layouts');
-        return view('admins.room.create-edit', compact('venue', 'room'));
+
+        // Hitung kapasitas tersisa (tidak termasuk ruang yang sedang diedit)
+        $usedCapacity = $venue->meeting_rooms()
+            ->where('id', '!=', $room->id)
+            ->with('meeting_room_layouts')
+            ->get()
+            ->sum(function ($room) {
+                return $room->meeting_room_layouts->max('capacity') ?? 0;
+            });
+        $remainingCapacity = $venue->max_capacity - $usedCapacity;
+
+        return view('admins.room.create-edit', compact('venue', 'room', 'remainingCapacity'));
     }
 
     /**
@@ -107,16 +143,33 @@ class RoomController extends Controller
             'layouts.*.capacity' => 'nullable|integer|min:1'
         ]);
 
-        // Custom validation: capacity tidak boleh melebihi max_capacity venue
+        // Custom validation: total kapasitas semua ruang tidak boleh melebihi max_capacity venue
         if (!empty($validated['layouts']) && $venue->max_capacity > 0) {
+            // Hitung total kapasitas ruang yang sudah ada (kecuali ruang yang sedang diedit)
+            $existingRoomCapacity = $venue->meeting_rooms()
+                ->where('id', '!=', $room->id)
+                ->with('meeting_room_layouts')
+                ->get()
+                ->sum(function ($room) {
+                    return $room->meeting_room_layouts->max('capacity') ?? 0;
+                });
+
+            // Hitung kapasitas maksimal ruang yang sedang diedit
+            $newRoomMaxCapacity = 0;
             foreach ($validated['layouts'] as $index => $layout) {
-                if (isset($layout['capacity']) && $layout['capacity'] > $venue->max_capacity) {
-                    return redirect()->back()
-                        ->withErrors([
-                            "layouts.{$index}.capacity" => "Kapasitas layout tidak boleh melebihi kapasitas maksimal venue ({$venue->max_capacity} orang)"
-                        ])
-                        ->withInput();
+                if (isset($layout['capacity']) && $layout['capacity'] > $newRoomMaxCapacity) {
+                    $newRoomMaxCapacity = $layout['capacity'];
                 }
+            }
+
+            // Cek apakah total akan melebihi max capacity venue
+            $totalCapacity = $existingRoomCapacity + $newRoomMaxCapacity;
+            if ($totalCapacity > $venue->max_capacity) {
+                return redirect()->back()
+                    ->withErrors([
+                        'layouts' => "Total kapasitas semua ruang ($totalCapacity orang) akan melebihi kapasitas maksimal venue ({$venue->max_capacity} orang). Sisa kapasitas yang tersedia: " . ($venue->max_capacity - $existingRoomCapacity) . " orang."
+                    ])
+                    ->withInput();
             }
         }
 

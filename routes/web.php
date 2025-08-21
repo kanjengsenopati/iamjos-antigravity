@@ -73,6 +73,8 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::resource('meeting-room', MeetingRoomController::class);
     Route::post('meeting-room/sync', [MeetingRoomController::class, 'sync'])->name('meeting-room.sync');
     Route::get('meeting-room/regencies/{province}', [MeetingRoomController::class, 'getRegencies'])->name('meeting-room.regencies');
+    Route::get('meeting-room-filter-data', [MeetingRoomController::class, 'getFilterData'])->name('meeting-room.filter-data');
+    Route::get('meeting-room-cities/{province}', [MeetingRoomController::class, 'getCitiesByProvince'])->name('meeting-room.cities');
 
     // Room Management for specific venue
     Route::prefix('venue/{venue}')->group(function () {

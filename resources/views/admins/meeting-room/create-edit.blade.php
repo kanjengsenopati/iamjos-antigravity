@@ -124,12 +124,15 @@
 
                             {{-- Gallery Upload --}}
                             <div class="fv-row mb-6">
-                                <label for="gallery" class="fs-6 fw-bold form-label">
+                                <label class="fs-6 fw-bold form-label">
                                     <span class="text-dark">Galeri Venue</span>
                                 </label>
+                                <button type="button" class="btn btn-success mb-3" id="add-photo-btn">
+                                    <i class="fa fa-plus"></i> Tambah Foto
+                                </button>
                                 <input type="file" class="form-control" id="gallery" name="gallery[]"
-                                    accept="image/*" multiple />
-                                <div class="form-text">Upload foto venue (JPEG, PNG, JPG, WebP - Maksimal 5MB per foto,
+                                    accept="image/*" multiple style="display:none;" />
+                                <div class="form-text">Upload foto venue (JPEG, PNG, JPG, WebP - Maksimal 4MB per foto,
                                     bisa pilih beberapa foto sekaligus)</div>
 
                                 {{-- Preview untuk foto baru --}}
@@ -186,6 +189,13 @@
 @push('js')
     <script>
         $(document).ready(function() {
+            let selectedFiles = []; // Array untuk menyimpan file yang dipilih
+
+            // Show file input when 'Tambah Foto' button is clicked
+            $('#add-photo-btn').click(function() {
+                $('#gallery').click();
+            });
+
             // Handle province change
             $('#province_id').change(function() {
                 const provinceId = $(this).val();
@@ -222,27 +232,39 @@
                 }
             });
 
-            // Gallery preview functionality
+            // Gallery preview functionality - support multiple selections
             $('#gallery').change(function(e) {
-                const files = e.target.files;
+                const newFiles = Array.from(e.target.files);
+
+                // Tambahkan file baru ke array yang sudah ada
+                selectedFiles = selectedFiles.concat(newFiles);
+
+                updateGalleryPreview();
+                updateFileInput();
+            });
+
+            function updateGalleryPreview() {
                 const previewContainer = $('#preview-container');
                 previewContainer.empty();
 
-                if (files.length > 0) {
+                if (selectedFiles.length > 0) {
                     $('#gallery-preview').show();
 
-                    Array.from(files).forEach((file, index) => {
+                    selectedFiles.forEach((file, index) => {
                         if (file.type.startsWith('image/')) {
                             const reader = new FileReader();
                             reader.onload = function(e) {
                                 const col = $(`
-                                    <div class="col-md-3">
+                                    <div class="col-md-3 mb-3">
                                         <div class="position-relative">
                                             <img src="${e.target.result}" alt="Preview ${index + 1}" 
                                                 class="img-thumbnail w-100" style="height: 120px; object-fit: cover;">
                                             <div class="position-absolute top-0 start-0 bg-primary text-white px-2 py-1 rounded-end small">
                                                 ${index + 1}
                                             </div>
+                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 remove-new-photo" data-index="${index}">
+                                                <i class="fa fa-times"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 `);
@@ -254,6 +276,23 @@
                 } else {
                     $('#gallery-preview').hide();
                 }
+            }
+
+            function updateFileInput() {
+                // Buat file input baru dengan files yang dipilih
+                const dt = new DataTransfer();
+                selectedFiles.forEach(file => {
+                    dt.items.add(file);
+                });
+                document.getElementById('gallery').files = dt.files;
+            }
+
+            // Remove new photo from preview
+            $(document).on('click', '.remove-new-photo', function() {
+                const index = parseInt($(this).data('index'));
+                selectedFiles.splice(index, 1);
+                updateGalleryPreview();
+                updateFileInput();
             });
 
             // Remove existing photo functionality
@@ -264,11 +303,11 @@
                 if (confirm('Yakin ingin menghapus foto ini?')) {
                     $(this).closest('.col-md-3').remove();
 
-                    // Add to remove list (you might want to track photos to be removed)
+                    // Add to remove list
                     if (!$('#photos-to-remove').length) {
                         $('form').append(
                             '<input type="hidden" id="photos-to-remove" name="photos_to_remove[]" value="">'
-                            );
+                        );
                     }
 
                     let photosToRemove = $('#photos-to-remove').val().split(',').filter(p => p);

@@ -81,11 +81,24 @@
                                 <div class="form-text mb-3">Tambahkan berbagai layout yang tersedia untuk ruang ini beserta
                                     kapasitasnya</div>
                                 @if ($venue->max_capacity > 0)
-                                    <div class="alert alert-info d-flex align-items-center mb-5">
+                                    <div class="alert alert-info d-flex align-items-center mb-3">
                                         <i class="fa fa-info-circle me-2"></i>
                                         <span>Kapasitas maksimal venue: <strong>{{ number_format($venue->max_capacity) }}
                                                 orang</strong></span>
                                     </div>
+                                    @if (isset($remainingCapacity))
+                                        <div
+                                            class="alert alert-{{ $remainingCapacity > 0 ? 'success' : 'warning' }} d-flex align-items-center mb-5">
+                                            <i
+                                                class="fa fa-{{ $remainingCapacity > 0 ? 'check-circle' : 'exclamation-triangle' }} me-2"></i>
+                                            <span>Sisa kapasitas yang tersedia:
+                                                <strong>{{ number_format(max(0, $remainingCapacity)) }} orang</strong>
+                                                @if ($remainingCapacity <= 0)
+                                                    - Kapasitas venue sudah penuh!
+                                                @endif
+                                            </span>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 <div id="layouts-container">
@@ -350,44 +363,75 @@
 
             // Capacity validation
             const maxCapacity = {{ $venue->max_capacity ?? 0 }};
+            const remainingCapacity = {{ $remainingCapacity ?? 0 }};
 
             // Real-time capacity validation
             $(document).on('input', '.capacity-input', function() {
-                const value = parseInt($(this).val());
-                const maxValue = parseInt($(this).attr('max'));
-
-                if (maxCapacity > 0 && value > maxCapacity) {
-                    $(this).addClass('is-invalid');
-                    // Show error message
-                    if (!$(this).siblings('.invalid-feedback').length) {
-                        $(this).after('<div class="invalid-feedback">Kapasitas tidak boleh melebihi ' +
-                            maxCapacity.toLocaleString() + ' orang</div>');
-                    }
-                } else {
-                    $(this).removeClass('is-invalid');
-                    $(this).siblings('.invalid-feedback').remove();
-                }
+                validateCapacities();
             });
+
+            function validateCapacities() {
+                if (maxCapacity <= 0) return;
+
+                // Find highest capacity among all layouts
+                let highestCapacity = 0;
+                $('.capacity-input').each(function() {
+                    const value = parseInt($(this).val()) || 0;
+                    if (value > highestCapacity) {
+                        highestCapacity = value;
+                    }
+                });
+
+                // Check if highest capacity exceeds remaining capacity
+                $('.capacity-input').each(function() {
+                    const value = parseInt($(this).val()) || 0;
+
+                    if (value > remainingCapacity) {
+                        $(this).addClass('is-invalid');
+                        // Show error message
+                        if (!$(this).siblings('.invalid-feedback').length) {
+                            $(this).after(
+                                '<div class="invalid-feedback">Kapasitas melebihi sisa kapasitas venue (' +
+                                remainingCapacity.toLocaleString() + ' orang)</div>');
+                        }
+                    } else {
+                        $(this).removeClass('is-invalid');
+                        $(this).siblings('.invalid-feedback').remove();
+                    }
+                });
+            }
 
             // Enhanced form validation
             $('#roomForm').on('submit', function(e) {
                 let hasError = false;
+                let highestCapacity = 0;
 
-                // Validate capacity limits
+                // Find highest capacity among all layouts
                 $('.capacity-input').each(function() {
-                    const value = parseInt($(this).val());
-                    if (maxCapacity > 0 && value > maxCapacity) {
-                        hasError = true;
-                        $(this).addClass('is-invalid');
+                    const value = parseInt($(this).val()) || 0;
+                    if (value > highestCapacity) {
+                        highestCapacity = value;
                     }
                 });
+
+                // Validate against remaining capacity
+                if (maxCapacity > 0 && highestCapacity > remainingCapacity) {
+                    hasError = true;
+                    $('.capacity-input').each(function() {
+                        const value = parseInt($(this).val()) || 0;
+                        if (value > remainingCapacity) {
+                            $(this).addClass('is-invalid');
+                        }
+                    });
+                }
 
                 if (hasError) {
                     e.preventDefault();
                     Swal.fire({
                         title: 'Validasi Gagal!',
-                        text: 'Terdapat kapasitas yang melebihi batas maksimal venue (' +
-                            maxCapacity.toLocaleString() + ' orang)',
+                        text: 'Kapasitas ruang (' + highestCapacity.toLocaleString() +
+                            ' orang) melebihi sisa kapasitas venue (' + remainingCapacity
+                            .toLocaleString() + ' orang)',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });

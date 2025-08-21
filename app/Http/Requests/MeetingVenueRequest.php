@@ -30,7 +30,7 @@ class MeetingVenueRequest extends FormRequest
             'phone' => 'nullable|string|max:20',
             'max_capacity' => 'required|integer|min:0',
             'gallery' => 'nullable|array|max:10',
-            'gallery.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'gallery.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
             'existing_gallery' => 'nullable|array',
             'existing_gallery.*' => 'string',
         ];
