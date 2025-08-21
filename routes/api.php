@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\BpdController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\BenefitController;
+use App\Http\Controllers\Api\V1\ContactUsController;
 use App\Http\Controllers\Api\V1\MediaCornerController;
 use App\Http\Controllers\Api\V1\MeetingRoomController;
 
@@ -21,6 +22,7 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('regency', [MeetingRoomController::class, 'regency'])->name('regency.index');
     Route::get('media-corner', [MediaCornerController::class, 'index'])->name('media-corner.index');
     Route::get('benefit', [BenefitController::class, 'index'])->name('benefit.index');
+    Route::post('contact-us', [ContactUsController::class, 'store'])->name('contact-us.store');
     Route::middleware('auth:api')->group(function () {
         // protected routes...
     });

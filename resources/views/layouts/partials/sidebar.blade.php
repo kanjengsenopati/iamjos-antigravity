@@ -314,6 +314,38 @@
                         </div>
                     @endcanany
 
+                    @can('event')
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs('event.*') ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                <span class="menu-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
+                                <span class="menu-title">Event Management</span>
+                                <span class="menu-arrow"></span>
+                            </span>
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div class="menu-sub menu-sub-accordion {{ request()->routeIs(['event.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                <div class="menu-item">
+                                    <!--begin:Menu link-->
+                                    <a class="menu-link {{ request()->routeIs('event.*') ? ' active' : '' }}"
+                                        href="{{ route('event.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">Events</span>
+                                    </a>
+                                    <!--end:Menu link-->
+                                </div>
+                                <!--end:Menu item-->
+                            </div>
+                            <!--end:Menu sub-->
+                        </div>
+                    @endcan
+
                     @can('bpd')
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion {{ request()->routeIs('bpd.*') ? 'show' : '' }}">
@@ -416,7 +448,16 @@
                     </div>
 
                     <div data-kt-menu-trigger="click"
-                        class="menu-item menu-accordion {{ request()->routeIs('aboutus-information.*') ? 'show' : '' }}">
+                        class="menu-item menu-accordion {{ request()->routeIs(
+                            'aboutus-information.*',
+                            'aboutus-history.*',
+                            'direction-commitment.*',
+                            'honorary-council.*',
+                            'regional-coordinator.*',
+                            'organization.*',
+                        )
+                            ? 'show'
+                            : '' }}">
                         <!--begin:Menu link-->
                         <span class="menu-link">
                             <span class="menu-icon">
@@ -428,7 +469,16 @@
                         <!--end:Menu link-->
                         <!--begin:Menu sub-->
                         <div
-                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['aboutus-information.*', 'aboutus-history.*']) ? 'show' : '' }}">
+                            class="menu-sub menu-sub-accordion {{ request()->routeIs([
+                                'aboutus-information.*',
+                                'aboutus-history.*',
+                                'direction-commitment.*',
+                                'honorary-council.*',
+                                'regional-coordinator.*',
+                                'organization.*',
+                            ])
+                                ? 'show'
+                                : '' }}">
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
@@ -445,6 +495,66 @@
                                         <span class="bullet bullet-dot"></span>
                                     </span>
                                     <span class="menu-title">Sejarah</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('direction-commitment.*') ? ' active' : '' }}"
+                                    href="{{ route('direction-commitment.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Arah Komitmen</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('organization.*') ? ' active' : '' }}"
+                                    href="{{ route('organization.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Struktur Organisasi</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('honorary-council.*') ? ' active' : '' }}"
+                                    href="{{ route('honorary-council.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Dewan Kehormatan</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('regional-coordinator.*') ? ' active' : '' }}"
+                                    href="{{ route('regional-coordinator.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Koordinator Wilayah</span>
+                                </a>
+
+                                <!--end:Menu link-->
+                            </div>
+                            <!--end:Menu item-->
+                        </div>
+                        <!--end:Menu sub-->
+                    </div>
+
+                    <div data-kt-menu-trigger="click"
+                        class="menu-item menu-accordion {{ request()->routeIs('contact-us.*') ? 'show' : '' }}">
+                        <!--begin:Menu link-->
+                        <span class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ph ph-gear"></i>
+                            </span>
+                            <span class="menu-title">App Information</span>
+                            <span class="menu-arrow"></span>
+                        </span>
+                        <!--end:Menu link-->
+                        <!--begin:Menu sub-->
+                        <div
+                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['contact-us.*']) ? 'show' : '' }}">
+                            <!--begin:Menu item-->
+                            <div class="menu-item">
+                                <!--begin:Menu link-->
+                                <a class="menu-link {{ request()->routeIs('contact-us.*') ? ' active' : '' }}"
+                                    href="{{ route('contact-us.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Pesan Pengguna</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>

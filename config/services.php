@@ -37,6 +37,8 @@ return [
     'phri' => [
         'base' => env('PHRI_API_BASE', 'https://phri.or.id/membership/api'),
         'key'  => env('PHRI_API_KEY'),
+        'timeout' => env('PHRI_API_TIMEOUT', 20),
+        'retry' => env('PHRI_API_RETRY', 2),
     ],
     'youtube' => [
         'key' => env('YOUTUBE_API_KEY'),

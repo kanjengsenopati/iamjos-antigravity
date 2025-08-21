@@ -35,7 +35,7 @@ class HomeSliderController extends Controller
                     }
 
                     if ($data->isImage()) {
-                        $url = $data->thumbnail_url ?: $data->media_url;
+                        $url = $data->thumbnail_url ?: $data->media;
                         return "<img src='{$url}' alt='Preview' style='width: 60px; height: 40px; object-fit: cover;' class='rounded'>";
                     } elseif ($data->isVideo()) {
                         $thumbnailUrl = $data->thumbnail_url;
@@ -52,21 +52,22 @@ class HomeSliderController extends Controller
                         ? '<span class="badge badge-success">Active</span>'
                         : '<span class="badge badge-secondary">Inactive</span>';
 
-                    $processingStatus = match ($data->media_processing_status) {
-                        'completed' => '<span class="badge badge-success ms-1">Ready</span>',
-                        'processing' => '<span class="badge badge-warning ms-1">Processing</span>',
-                        'failed' => '<span class="badge badge-danger ms-1">Failed</span>',
-                        default => '<span class="badge badge-info ms-1">Pending</span>'
-                    };
+                    // $processingStatus = match ($data->media_processing_status) {
+                    //     'completed' => '<span class="badge badge-success ms-1">Ready</span>',
+                    //     'processing' => '<span class="badge badge-warning ms-1">Processing</span>',
+                    //     'failed' => '<span class="badge badge-danger ms-1">Failed</span>',
+                    //     default => '<span class="badge badge-info ms-1">Pending</span>'
+                    // };
 
-                    return $activeStatus . $processingStatus;
+                    // return $activeStatus . $processingStatus;
+                    return $activeStatus;
                 })
                 ->addColumn('action', function ($data) {
                     $actionEdit = route('home-slider.edit', $data->id);
-                    $actionShow = route('home-slider.show', $data->id);
+                    // $actionShow = route('home-slider.show', $data->id);
                     $actionDelete = route('home-slider.destroy', $data->id);
                     return "<div class='d-flex justify-content-center'>" .
-                        view('components.action.show', ['action' => $actionShow]) .
+                        // view('components.action.show', ['action' => $actionShow]) .
                         view('components.action.edit', ['action' => $actionEdit]) .
                         view('components.action.delete', ['action' => $actionDelete, 'id' => $data->id]) .
                         "</div>";
@@ -102,13 +103,9 @@ class HomeSliderController extends Controller
                 if ($request->hasFile('media')) {
                     $data['media'] = 'storage/' . $request->file('media')->store('sliders', ['disk' => 'public']);
                 }
+                $data['media_type'] = $request->file('media')->getClientMimeType() ? $request->file('media')->getClientMimeType() == 'image/jpeg' ? 'image' : 'video' : null;
 
                 $slider = HomeSlider::create($data);
-
-                // Handle media upload
-                // if ($request->hasFile('media')) {
-                //     $this->handleMediaUpload($request->file('media'), $slider);
-                // }
             });
 
             return redirect()->route('home-slider.index')
