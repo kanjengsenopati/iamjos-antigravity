@@ -15,7 +15,7 @@ class MediaCornerController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            $data = MediaCorner::latest();
+            $data = MediaCorner::orderBy('published_at', 'desc');
             return DataTables::of($data)
                 ->addColumn('image', function ($data) {
                     // $data->thumbnails sudah array karena di-cast di model

@@ -21,10 +21,10 @@ class HomeController extends Controller
         $members = HomeMember::orderBy('order')->get();
         $sectors = HomeSector::orderBy('order')->get();
         $ads = HomeAds::whereIsActive(true)->orderBy('order')->get();
-        $documentations = MediaCorner::whereIsActive(true)->latest()->take(4)->get();
+        $documentations = MediaCorner::whereIsActive(true)->orderBy('published_at', 'desc')->take(4)->get();
         $articles = Article::where('is_active', true)
             ->orderBy('published_at', 'desc')
-            ->take(9)
+            ->take(6)
             ->get();
         $partners = HomePartner::whereIsActive(true)->orderBy('order')->get();
         return $this->getSuccessResponse([

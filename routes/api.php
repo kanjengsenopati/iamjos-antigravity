@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ArticleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\BpdController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Api\V1\BenefitController;
 use App\Http\Controllers\Api\V1\ContactUsController;
 use App\Http\Controllers\Api\V1\MediaCornerController;
 use App\Http\Controllers\Api\V1\MeetingRoomController;
+use App\Models\Article;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -23,6 +25,7 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('media-corner', [MediaCornerController::class, 'index'])->name('media-corner.index');
     Route::get('benefit', [BenefitController::class, 'index'])->name('benefit.index');
     Route::post('contact-us', [ContactUsController::class, 'store'])->name('contact-us.store');
+    Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
     Route::middleware('auth:api')->group(function () {
         // protected routes...
     });
