@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\HomeSlider;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Services\MediaService;
 use Yajra\DataTables\DataTables;
@@ -94,24 +95,52 @@ class HomeSliderController extends Controller
         try {
             DB::transaction(function () use ($request) {
                 $data = $request->validated();
-                $data['title_en'] =  GoogleTranslate::trans($request->title, 'en');
-                $data['description_en'] = GoogleTranslate::trans($request->description, 'en');
-                $data['button_text_en'] = GoogleTranslate::trans($request->button_text, 'en');
-                // Create slider record first
-                // $sliderData = $request->except(['media']);
-                $data['media_processing_status'] = 'processing';
-                if ($request->hasFile('media')) {
-                    $data['media'] = 'storage/' . $request->file('media')->store('sliders', ['disk' => 'public']);
-                }
-                $data['media_type'] = $request->file('media')->getClientMimeType() ? $request->file('media')->getClientMimeType() == 'image/jpeg' ? 'image' : 'video' : null;
 
-                $slider = HomeSlider::create($data);
+                // Terjemahan (aman jika field kosong)
+                $data['title_en']       = $request->filled('title')        ? GoogleTranslate::trans($request->title, 'en')        : null;
+                $data['description_en'] = $request->filled('description')  ? GoogleTranslate::trans($request->description, 'en')  : null;
+                $data['button_text_en'] = $request->filled('button_text')  ? GoogleTranslate::trans($request->button_text, 'en')  : null;
+
+                // Upload media
+                if ($request->hasFile('media')) {
+                    $file = $request->file('media');
+
+                    // Simpan ke disk "public" -> akan tersaji via storage:link
+                    $path = $file->store('sliders', ['disk' => 'public']);
+                    $data['media'] = 'storage/' . $path;
+
+                    // Deteksi tipe media berdasarkan MIME prefix
+                    // Gunakan getMimeType() (lebih akurat) lalu fallback ke client mime
+                    $mime = $file->getMimeType() ?? $file->getClientMimeType();
+
+                    if (is_string($mime)) {
+                        if (Str::startsWith($mime, 'image/')) {
+                            $data['media_type'] = 'image';
+                        } elseif (Str::startsWith($mime, 'video/')) {
+                            $data['media_type'] = 'video';
+                        } else {
+                            // Fallback berbasis ekstensi kalau MIME tidak jelas
+                            $ext = strtolower($file->getClientOriginalExtension());
+                            $imageExt = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'tiff', 'avif'];
+                            $videoExt = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv', 'm4v'];
+                            $data['media_type'] = in_array($ext, $imageExt, true) ? 'image'
+                                : (in_array($ext, $videoExt, true) ? 'video' : null);
+                        }
+                    } else {
+                        $data['media_type'] = null;
+                    }
+                } else {
+                    $data['media'] = null;
+                    $data['media_type'] = null;
+                }
+
+                HomeSlider::create($data);
             });
 
             return redirect()->route('home-slider.index')
                 ->with('success', 'Slider berhasil ditambahkan');
-        } catch (\Exception $e) {
-            Log::error('Failed to create home slider: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Failed to create home slider: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Gagal menambahkan slider: ' . $e->getMessage());
@@ -239,10 +268,6 @@ class HomeSliderController extends Controller
     {
         if ($slider->media) {
             $this->mediaService->deleteMedia($slider->media);
-        }
-
-        if ($slider->thumbnail_path) {
-            $this->mediaService->deleteMedia($slider->thumbnail_path);
         }
     }
 }

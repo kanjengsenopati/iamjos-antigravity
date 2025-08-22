@@ -2,36 +2,35 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Admin\{
-    AboutUsHistoryController,
-    AboutUsInformationController,
-    AdminController,
-    ArticleController,
-    AuthController,
-    BenefitController,
-    BpdController,
-    ContactUsController,
-    DashboardController,
-    DirectionCommitmentController,
-    EventController,
-    ForgotPasswordController,
-    HomeAdsController,
-    HomeDocumentationController,
-    HomeMemberController,
-    HomePartnerController,
-    HomeSectorController,
-    HomeSliderController,
-    HonoraryCouncilController,
-    MediaCornerController,
-    MemberController,
-    MeetingRoomController,
-    OrganizationController,
-    PermissionController,
-    RegionalCoordinatorController,
-    RoleController,
-    RoomController,
-    TranslateController
-};
+use App\Http\Controllers\Admin\AboutUsHistoryController;
+use App\Http\Controllers\Admin\AboutUsInformationController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ApplicationSettingController;
+use App\Http\Controllers\Admin\ArticleController;
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BenefitController;
+use App\Http\Controllers\Admin\BpdController;
+use App\Http\Controllers\Admin\ContactUsController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DirectionCommitmentController;
+use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\ForgotPasswordController;
+use App\Http\Controllers\Admin\HomeAdsController;
+use App\Http\Controllers\Admin\HomeDocumentationController;
+use App\Http\Controllers\Admin\HomeMemberController;
+use App\Http\Controllers\Admin\HomePartnerController;
+use App\Http\Controllers\Admin\HomeSectorController;
+use App\Http\Controllers\Admin\HomeSliderController;
+use App\Http\Controllers\Admin\HonoraryCouncilController;
+use App\Http\Controllers\Admin\MediaCornerController;
+use App\Http\Controllers\Admin\MemberController;
+use App\Http\Controllers\Admin\MeetingRoomController;
+use App\Http\Controllers\Admin\OrganizationController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RegionalCoordinatorController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\RoomController;
+use App\Http\Controllers\Admin\TranslateController;
 
 // ---------- Public / Auth ----------
 Route::get('/', [AuthController::class, 'index']); // gunakan halaman login sebagai root
@@ -121,6 +120,15 @@ Route::group(['middleware' => ['auth']], function () {
         Route::put('rooms/{room}', [RoomController::class, 'update'])->name('venue.rooms.update');
         Route::delete('rooms/{room}', [RoomController::class, 'destroy'])->name('venue.rooms.destroy');
     });
+
+    // --------- Application Settings (dari development) ---------
+    Route::get('application-setting', [ApplicationSettingController::class, 'index'])->name('application-setting.index');
+    Route::post('application-setting/backup', [ApplicationSettingController::class, 'backupDatabase'])->name('application-setting.backup');
+    Route::get('application-setting/system-info', [ApplicationSettingController::class, 'getSystemInfo'])->name('application-setting.system-info');
+    Route::get('application-setting/database-info', [ApplicationSettingController::class, 'getDatabaseInfo'])->name('application-setting.database-info');
+    Route::post('application-setting/upload-ad-art', [ApplicationSettingController::class, 'uploadAdArt'])->name('application-setting.upload-ad-art');
+    Route::get('application-setting/download-ad-art', [ApplicationSettingController::class, 'downloadAdArt'])->name('application-setting.download-ad-art');
+    Route::delete('application-setting/delete-ad-art', [ApplicationSettingController::class, 'deleteAdArt'])->name('application-setting.delete-ad-art');
 });
 
 // ---------- Translate (public) ----------

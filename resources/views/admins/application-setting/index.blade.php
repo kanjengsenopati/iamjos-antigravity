@@ -1,353 +1,571 @@
-@extends('layouts.master', ['main' => 'Pengaturan Aplikasi','title' => 'Edit Pengaturan Aplikasi'])
+@extends('layouts.master', ['title' => 'Application Settings', 'main' => 'Dashboard'])
 @section('content')
-<!--begin::Content-->
-<div id="kt_app_content_container" class="app-container container-xxl pt-6">
-    <!--begin::Basic info-->
-    <div class="card mb-5 mb-xl-10">
-        <!--begin::Card header-->
-        <div class="card-header">
-            <!--begin::Card title-->
-            <div class="card-title m-0">
-                <h3 class="fw-bold m-0">{{ request()->routeIs('application-setting.create') ? 'Tambah Tentang
-                    Aplikasi' :
-                    'Edit Pengaturan Aplikasi'
-                    }}
-                </h3>
+    <div class="app-main pt-6 flex-column flex-row-fluid" id="kt_app_main">
+        <!--begin::Content wrapper-->
+        <div class="d-flex flex-column flex-column-fluid">
+            <!--begin::Content-->
+            <div id="kt_app_content" class="app-content flex-column-fluid">
+                <!--begin::Content container-->
+                <div id="kt_app_content_container" class="app-container container-xxl">
+
+                    <!--begin::Row-->
+                    <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                        <!--begin::Col-->
+                        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-6">
+                            <!--begin::Card-->
+                            <div class="card card-flush h-md-50 mb-5 mb-xl-10">
+                                <!--begin::Header-->
+                                <div class="card-header pt-5">
+                                    <!--begin::Title-->
+                                    <div class="card-title d-flex flex-column">
+                                        <h3 class="fw-bold text-dark">System Information</h3>
+                                        <span class="text-muted fw-semibold fs-7">Server and application details</span>
+                                    </div>
+                                    <!--end::Title-->
+                                </div>
+                                <!--end::Header-->
+                                <!--begin::Card body-->
+                                <div class="card-body pt-5">
+                                    <div id="system-info-loading" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div id="system-info-content" style="display: none;">
+                                        <div class="table-responsive">
+                                            <table class="table table-row-dashed table-row-gray-300 gy-4">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">PHP Version</td>
+                                                        <td class="text-end" id="php-version">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Laravel Version</td>
+                                                        <td class="text-end" id="laravel-version">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Server Software</td>
+                                                        <td class="text-end" id="server-software">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Memory Limit</td>
+                                                        <td class="text-end" id="memory-limit">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Max Execution Time</td>
+                                                        <td class="text-end" id="max-execution-time">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Upload Max Size</td>
+                                                        <td class="text-end" id="upload-max-filesize">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Free Disk Space</td>
+                                                        <td class="text-end" id="disk-free-space">-</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Card body-->
+                            </div>
+                            <!--end::Card-->
+                        </div>
+                        <!--end::Col-->
+
+                        <!--begin::Col-->
+                        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-6">
+                            <!--begin::Card-->
+                            <div class="card card-flush h-md-50 mb-5 mb-xl-10">
+                                <!--begin::Header-->
+                                <div class="card-header pt-5">
+                                    <!--begin::Title-->
+                                    <div class="card-title d-flex flex-column">
+                                        <h3 class="fw-bold text-dark">Database Information</h3>
+                                        <span class="text-muted fw-semibold fs-7">Database details and backup history</span>
+                                    </div>
+                                    <!--end::Title-->
+                                </div>
+                                <!--end::Header-->
+                                <!--begin::Card body-->
+                                <div class="card-body pt-5">
+                                    <div id="database-info-loading" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div id="database-info-content" style="display: none;">
+                                        <div class="table-responsive">
+                                            <table class="table table-row-dashed table-row-gray-300 gy-4">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Database Name</td>
+                                                        <td class="text-end" id="database-name">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Database Size</td>
+                                                        <td class="text-end" id="database-size">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Table Count</td>
+                                                        <td class="text-end" id="table-count">-</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Card body-->
+                            </div>
+                            <!--end::Card-->
+                        </div>
+                        <!--end::Col-->
+                    </div>
+                    <!--end::Row-->
+
+                    <!--begin::AD/ART Upload Card-->
+                    <div class="card card-flush mb-5 mb-xl-10">
+                        <!--begin::Card header-->
+                        <div class="card-header mt-6">
+                            <!--begin::Card title-->
+                            <h3 class="card-title align-items-start flex-column">
+                                <span class="card-label fw-bold fs-3 mb-1">AD/ART Document</span>
+                                <span class="text-muted mt-1 fw-semibold fs-7">Upload Anggaran Dasar/Anggaran Rumah
+                                    Tangga</span>
+                            </h3>
+                            <!--end::Card title-->
+                        </div>
+                        <!--end::Card header-->
+                        <!--begin::Card body-->
+                        <div class="card-body pt-0">
+                            <!--begin::Upload Form-->
+                            <form id="ad-art-form" enctype="multipart/form-data">
+                                @csrf
+                                <div class="row mb-6">
+                                    <div class="col-lg-12">
+                                        <label class="form-label fw-semibold">Upload File AD/ART</label>
+                                        <input type="file" name="ad_art" id="ad_art" class="form-control"
+                                            accept=".pdf,.doc,.docx" />
+                                        <div class="form-text">
+                                            Format yang didukung: PDF, DOC, DOCX (Max 10MB)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-6">
+                                    <div class="col-lg-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ki-duotone ki-cloud-upload fs-2">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                            Upload AD/ART
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <!--end::Upload Form-->
+
+                            <!--begin::Current File-->
+                            @if (isset($settings) && $settings && $settings->hasAdArt())
+                                <div id="current-ad-art" class="alert alert-primary d-flex align-items-center p-5">
+                                    <i class="ki-duotone ki-file-text fs-2hx text-primary me-4">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    <div class="d-flex flex-column flex-grow-1">
+                                        <h4 class="mb-1 text-dark">File AD/ART Saat Ini</h4>
+                                        <span class="fw-semibold">{{ $settings->ad_art_file_name }}</span>
+                                        <span class="text-muted">{{ $settings->ad_art_file_size }}</span>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('application-setting.download-ad-art') }}"
+                                            class="btn btn-sm btn-light-primary">
+                                            <i class="ki-duotone ki-download fs-2">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                            Download
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-light-danger"
+                                            onclick="deleteAdArt()">
+                                            <i class="ki-duotone ki-trash fs-2">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                                <span class="path3"></span>
+                                                <span class="path4"></span>
+                                                <span class="path5"></span>
+                                            </i>
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            @else
+                                <div id="no-ad-art" class="alert alert-info d-flex align-items-center p-5">
+                                    <i class="ki-duotone ki-information-5 fs-2hx text-info me-4">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                        <span class="path3"></span>
+                                    </i>
+                                    <div class="d-flex flex-column">
+                                        <h4 class="mb-1 text-dark">Belum Ada File AD/ART</h4>
+                                        <span>Silakan upload file Anggaran Dasar/Anggaran Rumah Tangga</span>
+                                    </div>
+                                </div>
+                            @endif
+                            <!--end::Current File-->
+                        </div>
+                        <!--end::Card body-->
+                    </div>
+                    <!--end::AD/ART Upload Card-->
+
+                    <!--begin::Database Backup Card-->
+                    <div class="card card-flush">
+                        <!--begin::Card header-->
+                        <div class="card-header mt-6">
+                            <!--begin::Card title-->
+                            <h3 class="card-title align-items-start flex-column">
+                                <span class="card-label fw-bold fs-3 mb-1">Database Backup</span>
+                                <span class="text-muted mt-1 fw-semibold fs-7">Create and download database backup</span>
+                            </h3>
+                            <!--end::Card title-->
+                            <!--begin::Card toolbar-->
+                            <div class="card-toolbar">
+                                <!--begin::Button-->
+                                <button type="button" class="btn btn-primary btn-sm" onclick="createBackup()">
+                                    <i class="fa fa-download"></i>
+                                    Create Backup
+                                </button>
+                                <!--end::Button-->
+                            </div>
+                            <!--end::Card toolbar-->
+                        </div>
+                        <!--end::Card header-->
+                        <!--begin::Card body-->
+                        <div class="card-body pt-0">
+                            <!--begin::Alert-->
+                            <div class="alert alert-primary d-flex align-items-center p-5 mb-10">
+                                <!--begin::Icon-->
+                                <i class="ki-duotone ki-shield-tick fs-2hx text-primary me-4">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                                <!--end::Icon-->
+                                <!--begin::Wrapper-->
+                                <div class="d-flex flex-column">
+                                    <h4 class="mb-1 text-dark">Database Backup Information</h4>
+                                    <span>This feature creates a complete backup of your MySQL database including all
+                                        tables, data, and structure. The backup file will be downloaded
+                                        automatically.</span>
+                                </div>
+                                <!--end::Wrapper-->
+                            </div>
+                            <!--end::Alert-->
+
+                            <!--begin::Recent Backups-->
+                            <div class="mb-10">
+                                <h4 class="fw-bold text-dark mb-5">Recent Backups</h4>
+                                <div id="recent-backups-loading" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                                <div id="recent-backups-content" style="display: none;">
+                                    <div class="table-responsive">
+                                        <table class="table table-row-dashed table-row-gray-300 gy-4">
+                                            <thead>
+                                                <tr class="fw-bold fs-6 text-gray-800">
+                                                    <th>Backup File</th>
+                                                    <th>Size</th>
+                                                    <th>Created At</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="recent-backups-list">
+                                                <!-- Backup list will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="no-backups" style="display: none;">
+                                    <div class="text-center text-muted">
+                                        <i class="ki-duotone ki-folder fs-3x mb-3">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                        </i>
+                                        <p>No backup files found</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Recent Backups-->
+                        </div>
+                        <!--end::Card body-->
+                    </div>
+                    <!--end::Card-->
+                </div>
+                <!--end::Content container-->
             </div>
-            <!--end::Card title-->
+            <!--end::Content-->
         </div>
-        <!--begin::Card header-->
-        <!--begin::Content-->
-        <div id="kt_account_settings_profile_details" class="collapse show">
-            <!--begin::Form-->
-            <form class="form" method="POST" enctype="multipart/form-data"
-                action="{{ route('application-setting.store') }}">
-                @csrf
-                <x-form.put-method />
-                <x-alert.alert-validation />
-                <!--begin::Card body-->
-                <div class="card-body">
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="time_booking_gym_class">
-                            <span class="required">Waktu Booking Kelas</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input waktu kapan booking kelas dapat dilakukan"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" placeholder="hh:mm" class="form-control time" name="time_booking_gym_class"
-                            value="{{ old('time_booking_gym_class', @$applicationSetting?->time_booking_gym_class) }}"
-                            required />
-                        <!--end::Input-->
-                    </div>
-
-                    <div class="fv-row mb-6">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label mt-3" for="payment_expiry_time">
-                            <span class="required">Batas Pembayaran Expired</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input batas waktu pembayaran"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" placeholder="hh:mm" class="form-control time" name="payment_expiry_time"
-                            value="{{ old('payment_expiry_time', @$applicationSetting?->payment_expiry_time) }}"
-                            required />
-                        <!--end::Input-->
-                    </div>
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="payment_cancel_time_class">
-                            <span class="required">Batas Pembatalan Kelas</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input batas waktu cancel pembelian kelas"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" placeholder="hh:mm" class="form-control time"
-                            name="payment_cancel_time_class"
-                            value="{{ old('payment_cancel_time_class', @$applicationSetting?->payment_cancel_time_class) }}"
-                            required />
-                        <!--end::Input-->
-                    </div>
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="payment_cancel_time_pt">
-                            <span class="required">Batas Pembatalan Booking Sesi Personal Trainer</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input batas waktu cancel pembelian personal trainer"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" placeholder="hh:mm" class="form-control time" name="payment_cancel_time_pt"
-                            value="{{ old('payment_cancel_time_pt', @$applicationSetting?->payment_cancel_time_pt) }}"
-                            required />
-                        <!--end::Input-->
-                    </div>
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="xendit_fee">
-                            <span class="required">Payment Fee</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input biaya payment"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" class="form-control input-money" name="xendit_fee"
-                            value="{{ old('xendit_fee', @$applicationSetting?->xendit_fee) }}" required />
-                        <!--end::Input-->
-                    </div>
-
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="user_timeoff_fee">
-                            <span class="required">Biaya Cuti User per Bulan</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input Biaya Cuti perbulan"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" class="form-control input-money" name="user_timeoff_fee"
-                            value="{{ old('user_timeoff_fee', @$applicationSetting?->user_timeoff_fee) }}" required />
-                        <!--end::Input-->
-                    </div>
-
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="annual_payment_fee">
-                            <span class="required">Biaya Membership Tahunan</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input Biaya Membership Tahunan"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" class="form-control input-money" name="annual_payment_fee"
-                            value="{{ old('annual_payment_fee', @$applicationSetting?->annual_payment_fee) }}"
-                            required />
-                        <!--end::Input-->
-                    </div>
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="fitness_asessment_expiry_month">
-                            <span class="required">Lama Masa Aktif Fitness Assessment (Bulan)</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input Lama Masa Aktif Membership Bonus Fitness Assessment (Bulan)"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="number" class="form-control input-money" name="fitness_asessment_expiry_month"
-                            value="{{ old('fitness_asessment_expiry_month', @$applicationSetting?->fitness_asessment_expiry_month) }}"
-                            required />
-                        <!--end::Input-->
-                    </div>
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="session_price_for_accrual">
-                            <span class="required">Harga Sesi per Pertemuan (For Accrual Revenue)</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Masukkan Harga Sesi per Pertemuan untuk Menentukan harga Paket Coach/Coach Plus (For Accrual Revenue)"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" class="form-control input-money" name="session_price_for_accrual"
-                            value="{{ old('session_price_for_accrual', @$applicationSetting?->session_price_for_accrual) }}" required />
-                        <!--end::Input-->
-                    </div>
-
-                    <!-- Separator -->
-                    <div class="separator my-10"></div>
-
-                    {{-- add title authentikasi --}}
-                    <div class="fv-row mb-7">
-                        <h3 class="fw-bold">Authentikasi</h3>
-                    </div>
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="whatsapp_login">
-                            <span class="required">Whatsapp Login</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Aktifkan atau nonaktifkan login whatsapp"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <select class="form-select form-select-solid" name="whatsapp_login">
-                            <option value="1" {{ old('whatsapp_login', @$applicationSetting?->whatsapp_login) == 1 ?
-                                'selected' : '' }}>
-                                Aktif</option>
-                            <option value="0" {{ old('whatsapp_login', @$applicationSetting?->whatsapp_login) == 0 ?
-                                'selected' : '' }}>
-                                Tidak Aktif</option>
-                        </select>
-                        <!--end::Input-->
-                    </div>
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="qontak_token">
-                            <span class="required">Qontak Token</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input token qontak"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" class="form-control" name="qontak_token"
-                            value="{{ old('qontak_token', @$applicationSetting?->qontak_token) }}" required />
-                        <!--end::Input-->
-                    </div>
-
-                    <!-- Separator -->
-                    <div class="separator my-10"></div>
-
-                    <div class="fv-row mb-7">
-                        <h3 class="fw-bold">Pengaturan Lainnya</h3>
-                    </div>
-
-                    <div class="row mb-7">
-                        <!-- Kolom 1 -->
-                        <div class="col-md-6 fv-row">
-                            <!--begin::Label-->
-                            <label class="fs-6 fw-bold form-label" for="android_version">
-                                <span class="required">Versi APP Android</span>
-                                <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                    title="Input versi app android"></i>
-                            </label>
-                            <!--end::Label-->
-                            <!--begin::Input-->
-                            <input type="text" class="form-control" name="android_version" placeholder="1.0.0"
-                                value="{{ old('android_version', @$applicationSetting?->android_version) }}" required />
-                            <!--end::Input-->
-                        </div>
-                        <!-- Kolom 2 -->
-                        <div class="col-md-6 fv-row">
-                            <!--begin::Label-->
-                            <label class="fs-6 fw-bold form-label" for="ios_version">
-                                <span class="required">Versi APP IOS</span>
-                                <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                    title="Input versi app ios"></i>
-                            </label>
-                            <!--end::Label-->
-                            <!--begin::Input-->
-                            <input type="text" class="form-control" name="ios_version" placeholder="1.0.0"
-                                value="{{ old('ios_version', @$applicationSetting?->ios_version) }}" required />
-                            <!--end::Input-->
-                        </div>
-                    </div>
-
-                    <div class="row mb-7">
-                        <!-- Kolom 1 -->
-                        <div class="col-md-6 fv-row">
-                            <!--begin::Label-->
-                            <label class="fs-6 fw-bold form-label" for="android_force_update">
-                                <span class="required">Force Update APP Android</span>
-                                <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                    title="Pilih apakah app android wajib diupdate atau tidak"></i>
-                            </label>
-                            <!--end::Label-->
-                            <!--begin::Input-->
-                            <select class="form-select form-select-solid" name="android_force_update">
-                                <option value="1" {{ old('android_force_update', @$applicationSetting?->
-                                    android_force_update) == 1 ?
-                                    'selected' : '' }}>
-                                    Ya</option>
-                                <option value="0" {{ old('android_force_update', @$applicationSetting?->
-                                    android_force_update) == 0 ?
-                                    'selected' : '' }}>
-                                    Tidak</option>
-                            </select>
-                            <!--end::Input-->
-                        </div>
-                        <!-- Kolom 2 -->
-                        <div class="col-md-6 fv-row">
-                            <!--begin::Label-->
-                            <label class="fs-6 fw-bold form-label" for="ios_force_update">
-                                <span class="required">Force Update APP IOS</span>
-                                <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                    title="Pilih apakah app ios wajib diupdate atau tidak"></i>
-                            </label>
-                            <!--end::Label-->
-                            <!--begin::Input-->
-                            <select class="form-select form-select-solid" name="ios_force_update">
-                                <option value="1" {{ old('ios_force_update', @$applicationSetting?->ios_force_update) ==
-                                    1 ?
-                                    'selected' : '' }}>
-                                    Ya</option>
-                                <option value="0" {{ old('ios_force_update', @$applicationSetting?->ios_force_update) ==
-                                    0 ?
-                                    'selected' : '' }}>
-                                    Tidak</option>
-                            </select>
-                            <!--end::Input-->
-                        </div>
-                    </div>
-
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fs-6 fw-bold form-label" for="app_update_message">
-                            <span class="required">Pesan Update APP</span>
-                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                title="Input pesan update app"></i>
-                        </label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <textarea class="form-control" placeholder="Pesan Update APP" rows="5"
-                            name="app_update_message">{{ old('app_update_message', @$applicationSetting?->app_update_message) }}</textarea>
-                        <!--end::Input-->
-                    </div>
-
-
-                </div>
-                <!--end::Card body-->
-                <!--begin::Actions-->
-                <div class="card-footer d-flex justify-content-end py-6 px-9">
-                    <a href="{{ route('application-setting.index') }}" class="btn btn-sm btn-secondary me-3">Batal</a>
-                    <button type="submit" class="btn btn-sm btn-primary"
-                        id="kt_account_profile_details_submit">Simpan</button>
-                </div>
-                <!--end::Actions-->
-            </form>
-            <!--end::Form-->
-            <!--end::Form-->
-        </div>
-        <!--end::Content-->
+        <!--end::Content wrapper-->
     </div>
-    <!--end::Basic info-->
-</div>
-<!--end::Content-->
 @endsection
+
 @push('js')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script>
-    $('.time').mask('00:00', {
-        reverse: true
-    });
-    $(".input-money").on('keyup', function() {
+    <script>
+        $(document).ready(function() {
+            loadSystemInfo();
+            loadDatabaseInfo();
+        });
 
-        var n = parseInt($(this).val().replace(/\D/g, ''), 10) || 0
-        if (n > 0) {
-            // var value = n.toLocaleString()
-            // $(this).val(value);
-            var value = n.toLocaleString('en-US')
-            $(this).val(value.replace(/\./g, ','));
-        } else {
-            $(this).val(0);
-        }
-    });
+        function loadSystemInfo() {
+            $.ajax({
+                url: '{{ route('application-setting.system-info') }}',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const data = response.data;
+                        $('#php-version').text(data.php_version);
+                        $('#laravel-version').text(data.laravel_version);
+                        $('#server-software').text(data.server_software);
+                        $('#memory-limit').text(data.memory_limit);
+                        $('#max-execution-time').text(data.max_execution_time + 's');
+                        $('#upload-max-filesize').text(data.upload_max_filesize);
+                        $('#disk-free-space').text(data.disk_free_space);
 
-    $(':submit').on('click', function(e) {
-        var x = $(".input-money");
-        for (var i = 0; i < x.length; i++) {
-            var str = x[i].value;
-            x[i].value = str.replace(/,(?=\d{3})/g, '');
+                        $('#system-info-loading').hide();
+                        $('#system-info-content').show();
+                    }
+                },
+                error: function() {
+                    $('#system-info-loading').html(
+                        '<div class="text-danger">Failed to load system information</div>');
+                }
+            });
         }
-    })
-</script>
+
+        function loadDatabaseInfo() {
+            $.ajax({
+                url: '{{ route('application-setting.database-info') }}',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const data = response.data;
+                        $('#database-name').text(data.database_name);
+                        $('#database-size').text(data.database_size);
+                        $('#table-count').text(data.table_count);
+
+                        // Load recent backups
+                        const backupsList = $('#recent-backups-list');
+                        backupsList.empty();
+
+                        if (data.recent_backups && data.recent_backups.length > 0) {
+                            data.recent_backups.forEach(function(backup) {
+                                backupsList.append(`
+                                    <tr>
+                                        <td class="fw-semibold">${backup.name}</td>
+                                        <td>${backup.size}</td>
+                                        <td>${backup.created_at}</td>
+                                    </tr>
+                                `);
+                            });
+                            $('#recent-backups-content').show();
+                        } else {
+                            $('#no-backups').show();
+                        }
+
+                        $('#database-info-loading').hide();
+                        $('#database-info-content').show();
+                        $('#recent-backups-loading').hide();
+                    }
+                },
+                error: function() {
+                    $('#database-info-loading').html(
+                        '<div class="text-danger">Failed to load database information</div>');
+                    $('#recent-backups-loading').html(
+                        '<div class="text-danger">Failed to load backup history</div>');
+                }
+            });
+        }
+
+        function createBackup() {
+            Swal.fire({
+                title: 'Create Database Backup',
+                text: 'This will create a complete backup of your database. Do you want to continue?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Create Backup!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Creating Backup...',
+                        text: 'Please wait while we create your database backup...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Create a temporary form to trigger file download
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ route('application-setting.backup') }}';
+                    form.style.display = 'none';
+
+                    // Add CSRF token
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
+
+                    document.body.appendChild(form);
+
+                    // Submit form to trigger download
+                    form.submit();
+
+                    // Clean up
+                    document.body.removeChild(form);
+
+                    // Close loading after a short delay
+                    setTimeout(() => {
+                        Swal.close();
+                        Swal.fire({
+                            title: 'Backup Created!',
+                            text: 'Your database backup has been created and should start downloading shortly.',
+                            icon: 'success',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+
+                        // Reload database info to show new backup
+                        setTimeout(() => {
+                            loadDatabaseInfo();
+                        }, 2000);
+                    }, 2000);
+                }
+            });
+        }
+
+        // AD/ART Upload Form Handler
+        document.getElementById('ad-art-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const fileInput = document.getElementById('ad_art');
+
+            if (!fileInput.files[0]) {
+                Swal.fire({
+                    title: 'File Tidak Dipilih',
+                    text: 'Silakan pilih file AD/ART terlebih dahulu',
+                    icon: 'warning'
+                });
+                return;
+            }
+
+            // Show loading
+            Swal.fire({
+                title: 'Uploading...',
+                text: 'Sedang mengupload file AD/ART...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('{{ route('application-setting.upload-ad-art') }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: data.message,
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        // Reload page to show updated file
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat mengupload file',
+                        icon: 'error'
+                    });
+                });
+        });
+
+        // Delete AD/ART function
+        function deleteAdArt() {
+            Swal.fire({
+                title: 'Konfirmasi Hapus',
+                text: 'Apakah Anda yakin ingin menghapus file AD/ART?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('{{ route('application-setting.delete-ad-art') }}', {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: data.message,
+                                    icon: 'success',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+
+                                // Reload page to show updated state
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 2000);
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: data.message,
+                                    icon: 'error'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Terjadi kesalahan saat menghapus file',
+                                icon: 'error'
+                            });
+                        });
+                }
+            });
+        }
+    </script>
 @endpush

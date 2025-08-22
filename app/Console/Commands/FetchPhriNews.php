@@ -9,7 +9,7 @@ use App\Models\Article;
 
 class FetchPhriNews extends Command
 {
-    protected $signature = 'fetch:phri-news {period=1d}';
+    protected $signature = 'fetch:phri-news {period=1w}';
     protected $description = 'Fetch news from PHRI API and store into the database';
 
     public function handle()

@@ -25,8 +25,6 @@ class HomeSlider extends Model
         'button_link',
         'media',
         'media_type',
-        'media_processing_status',
-        'thumbnail_path',
         'is_active',
         'sort_order',
     ];
@@ -41,7 +39,7 @@ class HomeSlider extends Model
      */
     public function getMediaUrlAttribute(): ?string
     {
-        return $this->media ? asset('storage/' . $this->media) : null;
+        return $this->media ? asset($this->media) : null;
     }
 
     /**
