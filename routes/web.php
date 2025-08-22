@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ApplicationSettingController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BenefitController;
+use App\Http\Controllers\Admin\BookingInaController;
 use App\Http\Controllers\Admin\BpdController;
 use App\Http\Controllers\Admin\ContactUsController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -66,6 +67,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('home-ads', HomeAdsController::class);
     Route::resource('home-documentation', HomeDocumentationController::class);
     Route::resource('home-partner', HomePartnerController::class);
+    Route::resource('booking-ina', BookingInaController::class);
 
     // Article & Media Corner
     Route::resource('article', ArticleController::class);
