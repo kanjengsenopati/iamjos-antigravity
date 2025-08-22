@@ -90,6 +90,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('honorary-council', HonoraryCouncilController::class);
     Route::resource('regional-coordinator', RegionalCoordinatorController::class);
     Route::resource('organization', OrganizationController::class);
+    Route::resource('benefit', BenefitController::class);
 
     // Organization positions import/export
     Route::get('organization/export/positions', [OrganizationController::class, 'exportPositions'])->name('organization.export.positions');
