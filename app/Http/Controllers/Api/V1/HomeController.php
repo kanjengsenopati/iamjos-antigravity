@@ -11,6 +11,7 @@ use App\Models\Article;
 use App\Models\HomeAds;
 use App\Models\HomeDocumentation;
 use App\Models\HomePartner;
+use App\Models\MediaCorner;
 
 class HomeController extends Controller
 {
@@ -20,7 +21,7 @@ class HomeController extends Controller
         $members = HomeMember::orderBy('order')->get();
         $sectors = HomeSector::orderBy('order')->get();
         $ads = HomeAds::whereIsActive(true)->orderBy('order')->get();
-        $documentations = HomeDocumentation::inRandomOrder()->get();
+        $documentations = MediaCorner::whereIsActive(true)->latest()->take(4)->get();
         $articles = Article::where('is_active', true)
             ->orderBy('published_at', 'desc')
             ->take(9)
