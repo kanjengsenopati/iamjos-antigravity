@@ -58,7 +58,7 @@
                                     required>{{ old('description', @$homeSector->description) }}</textarea>
                                 <!--end::Input-->
                             </div>
-                            <div class="fv-row mb-6">
+                            {{-- <div class="fv-row mb-6">
                                 <!--begin::Label-->
                                 <label for="link" class="fs-6 fw-bold form-label mt-3">
                                     <span class="text-dark">Tautan Link</span>
@@ -71,7 +71,7 @@
                                     value="{{ old('link', @$homeSector->link) }}" placeholder="Masukkan Tautan Link"
                                     required />
                                 <!--end::Input-->
-                            </div>
+                            </div> --}}
                             <div class="fv-row mb-6">
                                 <!--begin::Label-->
                                 <label for="order" class="fs-6 fw-bold form-label mt-3">

@@ -19,7 +19,7 @@ class HomeSector extends Model
         'description_en',
         'image',
         'order',
-        'link',
+        // 'link',
     ];
 
     protected function name(): Attribute
