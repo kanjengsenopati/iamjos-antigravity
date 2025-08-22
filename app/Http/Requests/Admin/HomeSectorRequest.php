@@ -21,12 +21,22 @@ class HomeSectorRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name' => 'required|string|max:255',
+        $rules = [
+            'name'        => 'required|string|max:255',
             'description' => 'required|string|max:1000',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'link' => 'required|url', // Uncomment if link is required
-            'order' => 'nullable|integer|min:1', // Uncomment if order is required
+            'order'       => 'nullable|integer|min:1',
         ];
+
+        if ($this->isMethod('post')) {
+            // Saat create (POST)
+            $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10240'; // 10 MB
+        }
+
+        if ($this->isMethod('put') || $this->isMethod('patch')) {
+            // Saat update (PUT/PATCH)
+            $rules['image'] = 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:10240'; // 10 MB
+        }
+
+        return $rules;
     }
 }

@@ -164,11 +164,6 @@
                             class="menu-item menu-accordion {{ request()->routeIs(['home-slider.*', 'home-member.*', 'home-sector.*', 'home-ads.*', 'home-documentation.*', 'home-partner.*']) ? 'show' : '' }}">
                             <!--begin:Menu link-->
                             <span class="menu-link">
-                                {{-- <span class="menu-icon">
-                                <i class="fa-solid fa-user-shield"></i>
-                            </span>
-                            <span class="menu-title">Menu Admin</span>
-                            <span class="menu-arrow"></span> --}}
                                 <span class="menu-icon">
                                     <i class="ki-duotone ki-home fs-2">
                                         <span class="path1"></span>
@@ -186,7 +181,7 @@
                                 @can('home-slider')
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link {{ request()->routeIs('home-slider') ? ' active' : '' }}"
+                                        <a class="menu-link {{ request()->routeIs('home-slider.*') ? ' active' : '' }}"
                                             href="{{ route('home-slider.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
@@ -199,7 +194,7 @@
                                 @can('home-member')
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link {{ request()->routeIs('home-member') ? ' active' : '' }}"
+                                        <a class="menu-link {{ request()->routeIs('home-member.*') ? ' active' : '' }}"
                                             href="{{ route('home-member.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
@@ -212,7 +207,7 @@
                                 @can('home-sector')
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link {{ request()->routeIs('home-sector') ? ' active' : '' }}"
+                                        <a class="menu-link {{ request()->routeIs('home-sector.*') ? ' active' : '' }}"
                                             href="{{ route('home-sector.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
@@ -225,7 +220,7 @@
                                 @can('home-ads')
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link {{ request()->routeIs('home-ads') ? ' active' : '' }}"
+                                        <a class="menu-link {{ request()->routeIs('home-ads.*') ? ' active' : '' }}"
                                             href="{{ route('home-ads.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
@@ -251,7 +246,7 @@
                                 @can('home-partner')
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link {{ request()->routeIs('home-partner') ? ' active' : '' }}"
+                                        <a class="menu-link {{ request()->routeIs('home-partner.*') ? ' active' : '' }}"
                                             href="{{ route('home-partner.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
@@ -532,36 +527,53 @@
                         <!--end:Menu sub-->
                     </div>
 
-                    <div data-kt-menu-trigger="click"
-                        class="menu-item menu-accordion {{ request()->routeIs('contact-us.*') ? 'show' : '' }}">
-                        <!--begin:Menu link-->
-                        <span class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ph ph-gear"></i>
+                    @canany(['contact-us', 'application-setting'])
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs(['contact-us.*', 'application-setting.*']) ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                <span class="menu-icon">
+                                    <i class="ph ph-gear"></i>
+                                </span>
+                                <span class="menu-title">App Information</span>
+                                <span class="menu-arrow"></span>
                             </span>
-                            <span class="menu-title">App Information</span>
-                            <span class="menu-arrow"></span>
-                        </span>
-                        <!--end:Menu link-->
-                        <!--begin:Menu sub-->
-                        <div
-                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['contact-us.*']) ? 'show' : '' }}">
-                            <!--begin:Menu item-->
-                            <div class="menu-item">
-                                <!--begin:Menu link-->
-                                <a class="menu-link {{ request()->routeIs('contact-us.*') ? ' active' : '' }}"
-                                    href="{{ route('contact-us.index') }}">
-                                    <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                    </span>
-                                    <span class="menu-title">Pesan Pengguna</span>
-                                </a>
-                                <!--end:Menu link-->
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div
+                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['contact-us.*', 'application-setting.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                @can('contact-us')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('contact-us.*') ? ' active' : '' }}"
+                                            href="{{ route('contact-us.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Pesan Pengguna</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('application-setting')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('application-setting.*') ? ' active' : '' }}"
+                                            href="{{ route('application-setting.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Pengaturan Aplikasi</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                <!--end:Menu item-->
                             </div>
-                            <!--end:Menu item-->
+                            <!--end:Menu sub-->
                         </div>
-                        <!--end:Menu sub-->
-                    </div>
+                    @endcanany
 
                 </div>
                 <!--end::Menu-->
