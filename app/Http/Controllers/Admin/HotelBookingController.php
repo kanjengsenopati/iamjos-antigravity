@@ -71,11 +71,38 @@ class HotelBookingController extends Controller
         return view('admins.hotel-booking.create-edit', compact('hotelBooking'));
     }
 
-    public function update(HotelBookingRequest $request, $id)
+    public function update(HotelBookingRequest $request, $id, ImageService $imageService)
     {
-        $data = $request->validated();
         $hotelBooking = HotelBooking::findOrFail($id);
+        $data = $request->validated();
+        if ($request->hasFile('image')) {
+            if (file_exists($hotelBooking->image)) {
+                unlink($hotelBooking->image);
+            }
+            $saved = $imageService->storeSingleWebp(
+                file: $request->file('image'),
+                maxWidth: null,        // contoh: 1200 untuk resize, null untuk tanpa resize
+                quality: 50,
+                disk: 'public',
+                dir: 'home-sectors'    // simpan di storage/app/public/home-sectors
+            );
+
+            // Simpan 'path' relatif ke DB (lebih aman saat domain berubah)
+            $data['image'] = 'storage/' . $saved['path'];
+        }
         $hotelBooking->update($data);
         return redirect()->route('hotel-booking.index')->with('success', 'Hotel Booking updated successfully');
+    }
+
+    public function destroy($id)
+    {
+        $hotelBooking = HotelBooking::findOrFail($id);
+        if ($hotelBooking->image) {
+            if (file_exists($hotelBooking->image)) {
+                unlink($hotelBooking->image);
+            }
+        }
+        $hotelBooking->delete();
+        return redirect()->route('hotel-booking.index')->with('success', 'Hotel Booking deleted successfully');
     }
 }
