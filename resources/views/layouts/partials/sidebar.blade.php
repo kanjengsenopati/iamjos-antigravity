@@ -159,9 +159,20 @@
                         </div>
                     @endcanany
                     @canany(['home-slider', 'home-member', 'home-sector', 'home-ads', 'home-documentation',
-                        'home-partner'])
+                        'home-partner', 'booking-ina', 'hotel-booking'])
                         <div data-kt-menu-trigger="click"
-                            class="menu-item menu-accordion {{ request()->routeIs(['home-slider.*', 'home-member.*', 'home-sector.*', 'home-ads.*', 'home-documentation.*', 'home-partner.*']) ? 'show' : '' }}">
+                            class="menu-item menu-accordion {{ request()->routeIs([
+                                'home-slider.*',
+                                'home-member.*',
+                                'home-sector.*',
+                                'home-ads.*',
+                                'home-documentation.*',
+                                'home-partner.*',
+                                'booking-ina.*',
+                                'hotel-booking.*',
+                            ])
+                                ? 'show'
+                                : '' }}">
                             <!--begin:Menu link-->
                             <span class="menu-link">
                                 <span class="menu-icon">
@@ -239,6 +250,19 @@
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
                                             <span class="menu-title">Booking INA</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('hotel-booking')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('hotel-booking.*') ? ' active' : '' }}"
+                                            href="{{ route('hotel-booking.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Hotel Booking</span>
                                         </a>
                                         <!--end:Menu link-->
                                     </div>

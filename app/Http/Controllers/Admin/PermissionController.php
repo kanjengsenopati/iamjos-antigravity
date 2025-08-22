@@ -20,7 +20,7 @@ class PermissionController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            $permissions = Permission::orderBy('name', 'asc')->get();
+            $permissions = Permission::latest();
             return DataTables::of($permissions)
                 ->editColumn('created_at', function ($data) {
                     return $data->created_at->format('j M Y, h:i A');

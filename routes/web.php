@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\HomePartnerController;
 use App\Http\Controllers\Admin\HomeSectorController;
 use App\Http\Controllers\Admin\HomeSliderController;
 use App\Http\Controllers\Admin\HonoraryCouncilController;
+use App\Http\Controllers\Admin\HotelBookingController;
 use App\Http\Controllers\Admin\MediaCornerController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\MeetingRoomController;
@@ -68,6 +69,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('home-documentation', HomeDocumentationController::class);
     Route::resource('home-partner', HomePartnerController::class);
     Route::resource('booking-ina', BookingInaController::class);
+    Route::resource('hotel-booking', HotelBookingController::class);
 
     // Article & Media Corner
     Route::resource('article', ArticleController::class);
