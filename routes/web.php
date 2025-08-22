@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\HomeDocumentationController;
 use App\Http\Controllers\Admin\AboutUsInformationController;
 use App\Http\Controllers\Admin\DirectionCommitmentController;
 use App\Http\Controllers\Admin\RegionalCoordinatorController;
+use App\Http\Controllers\Admin\ApplicationSettingController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -95,6 +96,15 @@ Route::group(['middleware' => ['auth',]], function () {
     Route::get('member/template/excel', [MemberController::class, 'downloadMemberTemplate'])->name('member.template.excel');
     // add export excel dashboardexport
     // Route::get('dashboard-export', [DashboardV2Controller::class, 'export'])->name('dashboard.export');
+
+    // Application Settings
+    Route::get('application-setting', [ApplicationSettingController::class, 'index'])->name('application-setting.index');
+    Route::post('application-setting/backup', [ApplicationSettingController::class, 'backupDatabase'])->name('application-setting.backup');
+    Route::get('application-setting/system-info', [ApplicationSettingController::class, 'getSystemInfo'])->name('application-setting.system-info');
+    Route::get('application-setting/database-info', [ApplicationSettingController::class, 'getDatabaseInfo'])->name('application-setting.database-info');
+    Route::post('application-setting/upload-ad-art', [ApplicationSettingController::class, 'uploadAdArt'])->name('application-setting.upload-ad-art');
+    Route::get('application-setting/download-ad-art', [ApplicationSettingController::class, 'downloadAdArt'])->name('application-setting.download-ad-art');
+    Route::delete('application-setting/delete-ad-art', [ApplicationSettingController::class, 'deleteAdArt'])->name('application-setting.delete-ad-art');
 
     // // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');          // old dashboard
     // Route::get('dashboard', [DashboardV2Controller::class, 'index'])->name('dashboard.index');

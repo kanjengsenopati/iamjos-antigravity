@@ -42,9 +42,10 @@ class MediaService
      */
     public function deleteMedia(string $path): bool
     {
-        if (Storage::disk('public')->exists($path)) {
-            return Storage::disk('public')->delete($path);
+        if ($path && file_exists($path)) {
+            unlink($path);
         }
+
 
         return false;
     }
