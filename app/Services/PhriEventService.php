@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use App\Models\Event;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class PhriEventService
 {
@@ -92,11 +93,16 @@ class PhriEventService
                     return null;
                 }
 
+                $name_en = GoogleTranslate::trans(Arr::get($row, 'nama'), 'en');
+                $description_en = GoogleTranslate::trans(Arr::get($row, 'detail'), 'en');
+
                 return [
                     'external_id'    => (int) $id,
                     'province_id'    => Arr::get($row, 'id_provinsi'),
                     'name'           => Arr::get($row, 'nama'),
+                    'name_en'        => $name_en,
                     'description'    => Arr::get($row, 'detail'),
+                    'description_en' => $description_en,
                     'location'       => Arr::get($row, 'lokasi'),
                     'organized_by'   => Arr::get($row, 'organized_by'),
                     'start_date'     => Arr::get($row, 'date_start'),
