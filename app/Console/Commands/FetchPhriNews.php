@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Article;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
-use App\Models\Article;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class FetchPhriNews extends Command
 {
@@ -63,22 +65,53 @@ class FetchPhriNews extends Command
         $articlesToInsert = [];
 
         foreach ($articles as $item) {
-            if (in_array($item['id'], $existingIds)) continue;
+            // Hindari duplikat
+            if (in_array($item['id'] ?? null, $existingIds, true)) {
+                continue;
+            }
 
+            // 1) Normalisasi & validasi data sumber
+            $rawTitle = Arr::get($item, 'title');         // wajib
+            $rawBody  = Arr::get($item, 'body');          // wajib
+            $source   = Arr::get($item, 'source');
+            $image    = Arr::get($item, 'image');
+            $pubAt    = Arr::get($item, 'publish_at');
+
+            if (empty($rawTitle) || empty($rawBody)) {
+                $this->warn("⚠️ Skip ID " . Arr::get($item, 'id') . " karena title/body kosong.");
+                continue;
+            }
+
+            // 2) Rapikan ringkasan (hapus HTML, trim spasi berlebih), lalu limit 200 char
+            $summaryPlain = Str::limit(
+                preg_replace('/\s+/u', ' ', trim(strip_tags($rawBody))) ?? '',
+                200
+            );
+
+            // 3) Translate dengan proteksi error (dan skip kalau teks kosong)
+            $title_en   = $this->translateSafe($rawTitle, 'en');            // dari sumber yang sama dengan title asli
+            $summary_en = $summaryPlain !== '' ? $this->translateSafe($summaryPlain, 'en') : null;
+            $body_en    = $this->translateSafe($rawBody, 'en');
+
+            // 4) Susun payload insert
             $articlesToInsert[] = [
                 'id'           => Str::uuid(),
-                'external_id'  => $item['id'],
-                'title'        => $item['title'],
-                'slug'         => Str::slug($item['title']) . '-' . Str::random(5), // slug unik
-                'source'       => $item['source'],
-                'image'        => $item['image'] ?? null,
-                'summary'      => Str::limit(strip_tags($item['body']), 200),
-                'body'         => $item['body'],
-                'published_at' => $item['publish_at'],
+                'external_id'  => Arr::get($item, 'id'),
+                'title'        => $rawTitle,
+                'title_en'     => $title_en,
+                'slug'         => Str::slug($rawTitle) . '-' . Str::random(5), // unik, berbasis judul yang sama
+                'source'       => $source,
+                'image'        => $image ?: null,
+                'summary'      => $summaryPlain,
+                'summary_en'   => $summary_en,
+                'body'         => $rawBody,   // simpan HTML asli
+                'body_en'      => $body_en,   // hasil translate
+                'published_at' => $pubAt,
                 'created_at'   => now(),
                 'updated_at'   => now(),
             ];
         }
+
 
         if (empty($articlesToInsert)) {
             $this->info("ℹ️ Semua artikel sudah ada di database.");
@@ -92,5 +125,24 @@ class FetchPhriNews extends Command
         }
 
         $this->info("✅ Selesai! Total artikel baru disimpan: " . count($articlesToInsert));
+    }
+
+    /**
+     * Translate dengan proteksi error & fallback ke teks asli bila gagal.
+     * (Opsional) aktifkan cache agar hemat biaya/rate limit.
+     */
+    private function translateSafe(?string $text, string $to = 'en'): ?string
+    {
+        $text = $text ?? '';
+        if ($text === '') {
+            return null;
+        }
+
+        try {
+            return GoogleTranslate::trans($text, $to);
+        } catch (\Throwable $e) {
+            $this->warn("Translate gagal: " . $e->getMessage());
+            return $text; // fallback ke teks asli supaya insert tetap jalan
+        }
     }
 }
