@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use App\Traits\UuidTrait;
+use App\Traits\RequestLocale;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Event extends Model
 {
-    use SoftDeletes, UuidTrait;
+    const TYPE_UPCOMING = 'UPCOMING';
+    const TYPE_PAST = 'PAST';
+    use SoftDeletes, UuidTrait, RequestLocale;
 
     protected $fillable = [
         'province_id',
@@ -26,4 +30,18 @@ class Event extends Model
         'is_active',
         'image',
     ];
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('name', $value, $attr)
+        );
+    }
+
+    protected function description(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('description', $value, $attr)
+        );
+    }
 }

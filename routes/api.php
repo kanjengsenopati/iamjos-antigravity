@@ -1,15 +1,16 @@
 <?php
 
-use App\Http\Controllers\Api\V1\ArticleController;
+use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\BpdController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\EventController;
+use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\BenefitController;
 use App\Http\Controllers\Api\V1\ContactUsController;
 use App\Http\Controllers\Api\V1\MediaCornerController;
 use App\Http\Controllers\Api\V1\MeetingRoomController;
-use App\Models\Article;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -25,6 +26,8 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('media-corner', [MediaCornerController::class, 'index'])->name('media-corner.index');
     Route::get('benefit', [BenefitController::class, 'index'])->name('benefit.index');
     Route::post('contact-us', [ContactUsController::class, 'store'])->name('contact-us.store');
+    Route::get('event', [EventController::class, 'index'])->name('event.index');
+    Route::get('event/{id}', [EventController::class, 'show'])->name('event.show');
     Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
     Route::middleware('auth:api')->group(function () {
         // protected routes...

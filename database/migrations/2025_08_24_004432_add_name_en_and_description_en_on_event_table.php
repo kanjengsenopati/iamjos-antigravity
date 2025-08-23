@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            $table->string('name_en')->after('name');
-            $table->text('description_en')->after('description');
+            $table->string('name_en')->nullable()->after('name');
+            $table->text('description_en')->nullable()->after('description');
         });
     }
 
