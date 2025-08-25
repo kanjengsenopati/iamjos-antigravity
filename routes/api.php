@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AboutUsController;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,7 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('event', [EventController::class, 'index'])->name('event.index');
     Route::get('event/{id}', [EventController::class, 'show'])->name('event.show');
     Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
+    Route::get('about-us', [AboutUsController::class, 'index'])->name('about-us.index');
     Route::middleware('auth:api')->group(function () {
         // protected routes...
     });

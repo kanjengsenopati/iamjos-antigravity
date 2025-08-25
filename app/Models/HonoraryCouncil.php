@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Traits\UuidTrait;
+use App\Traits\RequestLocale;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class HonoraryCouncil extends Model
 {
-    use SoftDeletes, UuidTrait;
+    use SoftDeletes, UuidTrait, RequestLocale;
 
     protected $fillable = [
         'name',
@@ -17,4 +19,11 @@ class HonoraryCouncil extends Model
         'image',
         'order',
     ];
+
+    protected function position(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('position', $value, $attr)
+        );
+    }
 }

@@ -32,4 +32,16 @@ class Position extends Model
     {
         return $this->belongsTo(Position::class, 'parent_id');
     }
+
+    // eager load rekursif
+    public function childrenRecursive()
+    {
+        return $this->children()->with(['member', 'childrenRecursive']);
+    }
+
+    // root node saja
+    public function scopeRoots($q)
+    {
+        return $q->whereNull('parent_id');
+    }
 }

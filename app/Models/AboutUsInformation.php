@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\RequestLocale;
 use App\Traits\UuidTrait;
+use App\Traits\RequestLocale;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class AboutUsInformation extends Model
 {
@@ -21,4 +22,26 @@ class AboutUsInformation extends Model
         'button_text_en',
         'image',
     ];
+
+
+    protected function title(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('title', $value, $attr)
+        );
+    }
+
+    protected function subtitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('subtitle', $value, $attr)
+        );
+    }
+
+    protected function buttonText(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, array $attr) => $this->localizeAttr('button_text', $value, $attr)
+        );
+    }
 }
