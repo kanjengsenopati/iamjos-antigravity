@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\BenefitController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ContactUsController;
 use App\Http\Controllers\Api\V1\MediaCornerController;
 use App\Http\Controllers\Api\V1\MeetingRoomController;
@@ -25,6 +26,7 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('regency', [MeetingRoomController::class, 'regency'])->name('regency.index');
     Route::get('media-corner', [MediaCornerController::class, 'index'])->name('media-corner.index');
     Route::get('benefit', [BenefitController::class, 'index'])->name('benefit.index');
+    Route::get('contact', [ContactController::class, 'index'])->name('contact.index');
     Route::post('contact-us', [ContactUsController::class, 'store'])->name('contact-us.store');
     Route::get('event', [EventController::class, 'index'])->name('event.index');
     Route::get('event/{id}', [EventController::class, 'show'])->name('event.show');

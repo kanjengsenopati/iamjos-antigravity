@@ -564,9 +564,9 @@
                         <!--end:Menu sub-->
                     </div>
 
-                    @canany(['contact-us', 'application-setting'])
+                    @canany(['contact-us', 'application-setting', 'contact'])
                         <div data-kt-menu-trigger="click"
-                            class="menu-item menu-accordion {{ request()->routeIs(['contact-us.*', 'application-setting.*']) ? 'show' : '' }}">
+                            class="menu-item menu-accordion {{ request()->routeIs(['contact-us.*', 'application-setting.*', 'contact.*']) ? 'show' : '' }}">
                             <!--begin:Menu link-->
                             <span class="menu-link">
                                 <span class="menu-icon">
@@ -578,7 +578,7 @@
                             <!--end:Menu link-->
                             <!--begin:Menu sub-->
                             <div
-                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['contact-us.*', 'application-setting.*']) ? 'show' : '' }}">
+                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['contact-us.*', 'application-setting.*', 'contact.*']) ? 'show' : '' }}">
                                 <!--begin:Menu item-->
                                 @can('contact-us')
                                     <div class="menu-item">
@@ -589,6 +589,19 @@
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
                                             <span class="menu-title">Pesan Pengguna</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('contact')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('contact.*') ? ' active' : '' }}"
+                                            href="{{ route('contact.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Kontak</span>
                                         </a>
                                         <!--end:Menu link-->
                                     </div>

@@ -2,37 +2,38 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Admin\AboutUsHistoryController;
-use App\Http\Controllers\Admin\AboutUsInformationController;
-use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\ApplicationSettingController;
-use App\Http\Controllers\Admin\ArticleController;
-use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\Admin\BenefitController;
-use App\Http\Controllers\Admin\BookingInaController;
 use App\Http\Controllers\Admin\BpdController;
-use App\Http\Controllers\Admin\ContactUsController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\DirectionCommitmentController;
-use App\Http\Controllers\Admin\EventController;
-use App\Http\Controllers\Admin\ForgotPasswordController;
-use App\Http\Controllers\Admin\HomeAdsController;
-use App\Http\Controllers\Admin\HomeDocumentationController;
-use App\Http\Controllers\Admin\HomeMemberController;
-use App\Http\Controllers\Admin\HomePartnerController;
-use App\Http\Controllers\Admin\HomeSectorController;
-use App\Http\Controllers\Admin\HomeSliderController;
-use App\Http\Controllers\Admin\HonoraryCouncilController;
-use App\Http\Controllers\Admin\HotelBookingController;
-use App\Http\Controllers\Admin\MediaCornerController;
-use App\Http\Controllers\Admin\MemberController;
-use App\Http\Controllers\Admin\MeetingRoomController;
-use App\Http\Controllers\Admin\OrganizationController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\RegionalCoordinatorController;
+use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RoomController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\MemberController;
+use App\Http\Controllers\Admin\ArticleController;
+use App\Http\Controllers\Admin\BenefitController;
+use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\HomeAdsController;
+use App\Http\Controllers\Admin\ContactUsController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TranslateController;
+use App\Http\Controllers\Admin\BookingInaController;
+use App\Http\Controllers\Admin\HomeMemberController;
+use App\Http\Controllers\Admin\HomeSectorController;
+use App\Http\Controllers\Admin\HomeSliderController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\HomePartnerController;
+use App\Http\Controllers\Admin\MediaCornerController;
+use App\Http\Controllers\Admin\MeetingRoomController;
+use App\Http\Controllers\Admin\HotelBookingController;
+use App\Http\Controllers\Admin\OrganizationController;
+use App\Http\Controllers\Admin\AboutUsHistoryController;
+use App\Http\Controllers\Admin\ForgotPasswordController;
+use App\Http\Controllers\Admin\HonoraryCouncilController;
+use App\Http\Controllers\Admin\HomeDocumentationController;
+use App\Http\Controllers\Admin\AboutUsInformationController;
+use App\Http\Controllers\Admin\ApplicationSettingController;
+use App\Http\Controllers\Admin\DirectionCommitmentController;
+use App\Http\Controllers\Admin\RegionalCoordinatorController;
 
 // ---------- Public / Auth ----------
 Route::get('/', [AuthController::class, 'index']); // gunakan halaman login sebagai root
@@ -107,6 +108,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('member/import/excel', [MemberController::class, 'importMembers'])->name('member.import.excel');
     Route::get('member/template/excel', [MemberController::class, 'downloadMemberTemplate'])->name('member.template.excel');
 
+    Route::resource('contact', ContactController::class, ['except' => ['show']]);
     Route::resource('contact-us', ContactUsController::class, ['except' => ['show']]);
 
     // --------- Meeting Room (dari main) ---------
