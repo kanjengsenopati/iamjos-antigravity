@@ -26,7 +26,7 @@ class MeetingRoomInfoRequest extends FormRequest
             'title_en' => 'required|string|max:255',
             'subtitle' => 'required|string',
             'subtitle_en' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
         ];
     }
 }

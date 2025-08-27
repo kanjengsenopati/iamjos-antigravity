@@ -43,7 +43,7 @@ class MeetingRoomInfoController extends Controller
                 maxWidth: null,
                 quality: 50,
                 disk: 'public',
-                dir: 'about-us'
+                dir: 'meeting-room-info'
             );
 
             // Simpan path relatif (konsisten dengan pola kamu sebelumnya)

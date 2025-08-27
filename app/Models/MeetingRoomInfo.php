@@ -13,8 +13,8 @@ class MeetingRoomInfo extends Model
     protected $fillable = [
         'title',
         'title_en',
-        'description',
-        'description_en',
+        'subtitle',
+        'subtitle_en',
         'image',
     ];
 }
