@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Models\MeetingRoomInfo;
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BpdController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\RoleController;
@@ -23,17 +24,19 @@ use App\Http\Controllers\Admin\HomeSliderController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\HomePartnerController;
 use App\Http\Controllers\Admin\MediaCornerController;
+use App\Http\Controllers\Admin\MeetingInfoController;
 use App\Http\Controllers\Admin\MeetingRoomController;
 use App\Http\Controllers\Admin\HotelBookingController;
 use App\Http\Controllers\Admin\OrganizationController;
-use App\Http\Controllers\Admin\BppOrganizationController;
 use App\Http\Controllers\Admin\AboutUsHistoryController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
+use App\Http\Controllers\Admin\BppOrganizationController;
 use App\Http\Controllers\Admin\HonoraryCouncilController;
 use App\Http\Controllers\Admin\HomeDocumentationController;
 use App\Http\Controllers\Admin\AboutUsInformationController;
 use App\Http\Controllers\Admin\ApplicationSettingController;
 use App\Http\Controllers\Admin\DirectionCommitmentController;
+use App\Http\Controllers\Admin\MeetingRoomInfoController;
 use App\Http\Controllers\Admin\RegionalCoordinatorController;
 
 // ---------- Public / Auth ----------
@@ -131,6 +134,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('contact', ContactController::class, ['except' => ['show']]);
     Route::resource('contact-us', ContactUsController::class, ['except' => ['show']]);
 
+    Route::resource('meeting-room-info', MeetingRoomInfoController::class);
     // --------- Meeting Room (dari main) ---------
     Route::resource('meeting-room', MeetingRoomController::class);
     Route::post('meeting-room/sync', [MeetingRoomController::class, 'sync'])->name('meeting-room.sync');
