@@ -68,7 +68,7 @@
                         <p class="text-muted">{{ $admin->role_name }}</p>
                         <p class="mb-1">Hak Akses</p>
                         @foreach ($admin->roles()->first()->permissions as $permission)
-                            <span class="badge badge-primary m-1">{{ $permission->name }}</span>
+                            <span class="badge badge-primary m-1">{{ $permission->label }}</span>
                         @endforeach
                     </div>
                 </div>

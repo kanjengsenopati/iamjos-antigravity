@@ -36,7 +36,7 @@ class RoleController extends Controller
                 ->editColumn('permissions', function ($query) {
                     $permission = "";
                     foreach ($query->permissions as $value) {
-                        $permission .= "<span class='badge badge-primary m-1'>{$value->name}</span>";
+                        $permission .= "<span class='badge badge-primary m-1'>{$value->label}</span>";
                     }
                     return $permission;
                 })

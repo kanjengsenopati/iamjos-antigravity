@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PermissionRequest extends FormRequest
 {
@@ -21,8 +22,19 @@ class PermissionRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name' => 'required|unique:permissions,name',
+        $base = ['label' => ['nullable', 'string', 'max:255']];
+
+        if ($this->isMethod('post')) {
+            return $base + [
+                'name' => ['required', 'string', 'max:255', 'unique:permissions,name'],
+            ];
+        }
+
+        $id = $this->route('permission') ?? $this->route('id');
+        if (is_object($id)) $id = $id->id;
+
+        return $base + [
+            'name' => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')->ignore($id)],
         ];
     }
 }

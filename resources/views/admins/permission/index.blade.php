@@ -40,6 +40,7 @@
                                 <thead>
                                     <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                         <th style="width: 5%">No</th>
+                                        <th class="min-w-125px">Label</th>
                                         <th class="min-w-125px">Nama</th>
                                         <th class="min-w-125px">Dibuat Pada</th>
                                         <th class="text-center min-w-100px">Aksi</th>
@@ -92,10 +93,16 @@
                         }
                     },
                     {
+                        data: 'label',
+                        name: 'label',
+                        responsivePriority: -2,
+                    },
+                    {
                         data: 'name',
                         name: 'name',
                         responsivePriority: -2,
                     },
+
                     {
                         data: 'created_at',
                         name: 'created_at'

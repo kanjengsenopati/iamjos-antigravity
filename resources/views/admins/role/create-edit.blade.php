@@ -63,7 +63,7 @@ Role',
                                         @foreach ($permissions as $permission)
                                             <option value="{{ $permission->name }}"
                                                 @if (in_array(@$permission->id, @$permissionValue)) selected @endif>
-                                                {{ $permission->name }}
+                                                {{ $permission->label }}
                                             </option>
                                         @endforeach
                                     </select>

@@ -1,5 +1,4 @@
-@extends('layouts.master', ['title' => request()->routeIs('permission.create') ? 'Tambah Permission' : 'Edit Permission',
- 'main' => 'Data Permission'])
+@extends('layouts.master', ['title' => request()->routeIs('permission.create') ? 'Tambah Permission' : 'Edit Permission', 'main' => 'Data Permission'])
 @section('content')
     <!--begin::Content-->
     <div class="content pt-6 d-flex flex-column flex-column-fluid" id="kt_content">
@@ -16,7 +15,8 @@
                         <div class="card-header" id="kt_chat_contacts_header">
                             <!--begin::Card title-->
                             <h3 class="card-title align-items-start flex-column">
-                                <span class="card-label fw-bold fs-3">{{ request()->routeIs('permission.create') ? 'Tambah Permission' : 'Edit Permission' }}</span>
+                                <span
+                                    class="card-label fw-bold fs-3">{{ request()->routeIs('permission.create') ? 'Tambah Permission' : 'Edit Permission' }}</span>
                             </h3>
                             <!--end::Card title-->
                         </div>
@@ -30,6 +30,19 @@
                             @csrf
                             <x-form.put-method />
                             <div class="card-body">
+                                <div class="fv-row mb-6">
+                                    <!--begin::Label-->
+                                    <label class="fs-6 fw-bold form-label mt-3" for="label">
+                                        <span class="required text-dark">Label Permission</span>
+                                        <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
+                                            title="Label Permission yang diberikan"></i>
+                                    </label>
+                                    <!--end::Label-->
+                                    <!--begin::Input-->
+                                    <input type="text" class="form-control" name="label" id="label"
+                                        value="{{ @$permission->label ?? old('label') }}" required />
+                                    <!--end::Input-->
+                                </div>
                                 <!--begin::Input group-->
                                 <div class="fv-row mb-6">
                                     <!--begin::Label-->
@@ -51,16 +64,14 @@
                             <div class="card-footer d-flex justify-content-end py-6 px-9">
                                 <!--begin::Button-->
                                 <a href="{{ route('permission.index') }}">
-                                    <button type="button"
-                                        class="btn btn-secondary me-3">Batal</button>
+                                    <button type="button" class="btn btn-secondary me-3">Batal</button>
                                 </a>
                                 <!--end::Button-->
                                 <!--begin::Button-->
                                 <button type="submit" data-kt-contacts-type="submit" class="btn btn-primary btn-sm">
                                     <span class="indicator-label">Simpan</span>
                                     <span class="indicator-progress">Please wait...
-                                        <span
-                                            class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                 </button>
                                 <!--end::Button-->
                             </div>

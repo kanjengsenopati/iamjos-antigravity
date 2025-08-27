@@ -23,4 +23,10 @@ class Permission extends SpatiePermission
      */
     public $incrementing = false;
     protected $keyType = 'string';
+
+    protected $fillable = [
+        'name',
+        'guard_name',
+        'label',
+    ];
 }
