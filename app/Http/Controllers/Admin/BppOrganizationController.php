@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Position;
+use App\Models\BppOrganization;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\OrganizationRequest;
+use App\Http\Requests\Admin\BppOrganizationRequest;
 use App\Models\Member;
 use App\Services\ExcelService;
 use Illuminate\Support\Facades\DB;
 
-class OrganizationController extends Controller
+class BppOrganizationController extends Controller
 {
     public function index()
     {
         if (request()->ajax()) {
             if (request()->type === 'position') {
-                $data = Position::latest();
+                $data = BppOrganization::latest();
                 return DataTables::of($data)
                     ->addColumn('parent_name', function ($data) {
                         return $data->parent ? $data->parent?->name : '-';
@@ -43,8 +43,8 @@ class OrganizationController extends Controller
                         return e($m);
                     })
                     ->addColumn('action', function ($data) {
-                        $actionEdit = route('organization.edit', $data->id);
-                        $actionDelete = route('organization.destroy', $data->id);
+                        $actionEdit = route('bpp-organization.edit', $data->id);
+                        $actionDelete = route('bpp-organization.destroy', $data->id);
                         return "<div class='d-flex justify-content-center'>" .
                             view('components.action.edit', ['action' => $actionEdit]) .
                             view('components.action.delete', ['action' => $actionDelete, 'id' => $data->id]) .
@@ -54,7 +54,7 @@ class OrganizationController extends Controller
                     ->make(true);
             }
             if (request()->type === 'member') {
-                $data = Member::organization()->latest();
+                $data = Member::bpp()->latest();
                 return DataTables::of($data)
                     ->addColumn('action', function ($data) {
                         $actionEdit = route('member.edit', $data->id);
@@ -68,48 +68,47 @@ class OrganizationController extends Controller
                     ->make(true);
             }
         }
-        return view('admins.organization.index');
+        return view('admins.bpp-organization.index');
     }
 
     public function create()
     {
-        $positions = Position::orderBy('name')->get();
-        $members = Member::orderBy('name')->get();
-        return view('admins.organization.create-edit', compact('positions', 'members'));
+        $positions = BppOrganization::orderBy('name')->get();
+        $members = Member::bpp()->orderBy('name')->get();
+        return view('admins.bpp-organization.create-edit', compact('positions', 'members'));
     }
 
-    public function store(OrganizationRequest $request)
+    public function store(BppOrganizationRequest $request)
     {
         $data = $request->validated();
 
-        Position::create($data);
-        return redirect()->route('organization.index')->with('success', 'Jabatan berhasil ditambahkan.');
+        BppOrganization::create($data);
+        return redirect()->route('bpp-organization.index')->with('success', 'Jabatan BPP berhasil ditambahkan.');
     }
 
     public function edit($id)
     {
-        $organization = Position::findOrFail($id);
+        $organization = BppOrganization::findOrFail($id);
 
-        $positions = Position::orderBy('name')->get();
-        $members = Member::orderBy('name')->get();
-        return view('admins.organization.create-edit', compact('organization', 'positions', 'members'));
+        $positions = BppOrganization::orderBy('name')->get();
+        $members = Member::bpp()->orderBy('name')->get();
+        return view('admins.bpp-organization.create-edit', compact('organization', 'positions', 'members'));
     }
 
-    public function update(OrganizationRequest $request, $id)
+    public function update(BppOrganizationRequest $request, $id)
     {
-        $organization = Position::findOrFail($id);
+        $organization = BppOrganization::findOrFail($id);
         $data = $request->validated();
 
         $organization->update($data);
-        return redirect()->route('organization.index')->with('success', 'Jabatan berhasil diperbarui.');
+        return redirect()->route('bpp-organization.index')->with('success', 'Jabatan BPP berhasil diperbarui.');
     }
-
 
     public function destroy($id)
     {
-        $organization = Position::findOrFail($id);
+        $organization = BppOrganization::findOrFail($id);
         $organization->delete();
-        return redirect()->route('organization.index')->with('success', 'Jabatan berhasil dihapus.');
+        return redirect()->route('bpp-organization.index')->with('success', 'Jabatan BPP berhasil dihapus.');
     }
 
     /**
@@ -117,7 +116,7 @@ class OrganizationController extends Controller
      */
     public function exportPositions(ExcelService $excelService)
     {
-        $positions = Position::with(['parent', 'member'])->get();
+        $positions = BppOrganization::with(['parent', 'member'])->get();
 
         $data = $positions->map(function ($position) {
             return [
@@ -141,7 +140,7 @@ class OrganizationController extends Controller
             'Dibuat'
         ];
 
-        $filename = 'positions_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+        $filename = 'bpp_positions_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
         $filePath = $excelService->writeExcel($data, $headers, $filename);
 
         return response()->download($filePath)->deleteFileAfterSend(true);
@@ -176,7 +175,7 @@ class OrganizationController extends Controller
                 // Cari jabatan induk jika ada
                 $parentId = null;
                 if (!empty($row['Jabatan Induk'])) {
-                    $parent = Position::where('name', $row['Jabatan Induk'])->first();
+                    $parent = BppOrganization::where('name', $row['Jabatan Induk'])->first();
                     if (!$parent) {
                         $errors[] = "Baris {$rowNumber}: Jabatan Induk '{$row['Jabatan Induk']}' tidak ditemukan";
                         continue;
@@ -187,16 +186,16 @@ class OrganizationController extends Controller
                 // Cari member jika ada
                 $memberId = null;
                 if (!empty($row['Nama Anggota'])) {
-                    $member = Member::where('name', $row['Nama Anggota'])->first();
+                    $member = Member::bpp()->where('name', $row['Nama Anggota'])->first();
                     if (!$member) {
-                        $errors[] = "Baris {$rowNumber}: Anggota '{$row['Nama Anggota']}' tidak ditemukan";
+                        $errors[] = "Baris {$rowNumber}: Anggota BPP '{$row['Nama Anggota']}' tidak ditemukan";
                         continue;
                     }
                     $memberId = $member->id;
                 }
 
                 // Buat atau update position
-                Position::updateOrCreate(
+                BppOrganization::updateOrCreate(
                     ['name' => $row['Nama Jabatan']],
                     [
                         'name_en' => $row['Nama Jabatan (EN)'] ?? null,
@@ -211,7 +210,7 @@ class OrganizationController extends Controller
 
             DB::commit();
 
-            $message = "Berhasil import {$imported} jabatan.";
+            $message = "Berhasil import {$imported} jabatan BPP.";
             if (!empty($errors)) {
                 $message .= " Terdapat " . count($errors) . " error: " . implode(', ', array_slice($errors, 0, 3));
                 if (count($errors) > 3) {
@@ -219,7 +218,7 @@ class OrganizationController extends Controller
                 }
             }
 
-            return redirect()->route('organization.index')
+            return redirect()->route('bpp-organization.index')
                 ->with('success', $message);
         } catch (\Exception $e) {
             DB::rollback();
@@ -241,18 +240,18 @@ class OrganizationController extends Controller
             'Urutan'
         ];
 
-        $filename = 'template_positions.xlsx';
+        $filename = 'template_bpp_positions.xlsx';
         $filePath = $excelService->generateTemplate($headers, $filename);
 
         return response()->download($filePath)->deleteFileAfterSend(true);
     }
 
     /**
-     * Export organization members to Excel
+     * Export BPP members to Excel
      */
     public function exportMembers(ExcelService $excelService)
     {
-        $members = Member::organization()->get();
+        $members = Member::bpp()->get();
 
         $data = $members->map(function ($member) {
             return [
@@ -266,14 +265,14 @@ class OrganizationController extends Controller
 
         $headers = ['ID', 'Nama', 'Gambar', 'Type', 'Dibuat'];
 
-        $filename = 'organization_members_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+        $filename = 'bpp_members_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
         $filePath = $excelService->writeExcel($data, $headers, $filename);
 
         return response()->download($filePath)->deleteFileAfterSend(true);
     }
 
     /**
-     * Import organization members from Excel
+     * Import BPP members from Excel
      */
     public function importMembers(Request $request, ExcelService $excelService)
     {
@@ -298,12 +297,12 @@ class OrganizationController extends Controller
                     continue;
                 }
 
-                // Buat atau update member dengan type organization
+                // Buat atau update member dengan type BPP
                 Member::updateOrCreate(
-                    ['name' => $row['Nama'], 'type' => 'organization'],
+                    ['name' => $row['Nama'], 'type' => 'bpp'],
                     [
                         'image' => $row['Gambar'] ?? null,
-                        'type' => 'organization',
+                        'type' => 'bpp',
                     ]
                 );
 
@@ -312,7 +311,7 @@ class OrganizationController extends Controller
 
             DB::commit();
 
-            $message = "Berhasil import {$imported} anggota organisasi.";
+            $message = "Berhasil import {$imported} anggota BPP.";
             if (!empty($errors)) {
                 $message .= " Terdapat " . count($errors) . " error: " . implode(', ', array_slice($errors, 0, 3));
                 if (count($errors) > 3) {
@@ -320,7 +319,7 @@ class OrganizationController extends Controller
                 }
             }
 
-            return redirect()->route('organization.index')
+            return redirect()->route('bpp-organization.index')
                 ->with('success', $message);
         } catch (\Exception $e) {
             DB::rollback();
@@ -330,13 +329,13 @@ class OrganizationController extends Controller
     }
 
     /**
-     * Download template Excel for organization members
+     * Download template Excel for BPP members
      */
     public function downloadMemberTemplate(ExcelService $excelService)
     {
         $headers = ['Nama', 'Gambar'];
 
-        $filename = 'template_organization_members.xlsx';
+        $filename = 'template_bpp_members.xlsx';
         $filePath = $excelService->generateTemplate($headers, $filename);
 
         return response()->download($filePath)->deleteFileAfterSend(true);

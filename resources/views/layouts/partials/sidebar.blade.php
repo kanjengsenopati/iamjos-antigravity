@@ -487,6 +487,7 @@
                             'honorary-council.*',
                             'regional-coordinator.*',
                             'organization.*',
+                            'bpp-organization.*',
                         )
                             ? 'show'
                             : '' }}">
@@ -508,6 +509,7 @@
                                 'honorary-council.*',
                                 'regional-coordinator.*',
                                 'organization.*',
+                                'bpp-organization.*',
                             ])
                                 ? 'show'
                                 : '' }}">
@@ -555,6 +557,13 @@
                                         <span class="bullet bullet-dot"></span>
                                     </span>
                                     <span class="menu-title">Koordinator Wilayah</span>
+                                </a>
+                                <a class="menu-link {{ request()->routeIs('bpp-organization.*') ? ' active' : '' }}"
+                                    href="{{ route('bpp-organization.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Struktur BPP</span>
                                 </a>
 
                                 <!--end:Menu link-->

@@ -42,9 +42,10 @@ class MemberController extends Controller
         return view('admins.member.index');
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admins.member.create-edit');
+        $type = $request->get('type', 'organization');
+        return view('admins.member.create-edit', compact('type'));
     }
 
     public function store(MemberRequest $request, ImageService $imageService)
@@ -64,9 +65,13 @@ class MemberController extends Controller
         }
 
         // Logic to create a new member
-        Member::create($data);
+        $member = Member::create($data);
 
-        return redirect()->route('organization.index')->with('success', 'Anggota berhasil ditambahkan.');
+        if ($member->type === Member::TYPE_BPP) {
+            return redirect()->route('bpp-organization.index')->with('success', 'Anggota BPP berhasil ditambahkan.');
+        } else {
+            return redirect()->route('organization.index')->with('success', 'Anggota berhasil ditambahkan.');
+        }
     }
 
     public function edit($id)
@@ -77,7 +82,7 @@ class MemberController extends Controller
         return view('admins.member.create-edit', compact('member'));
     }
 
-    public function update(Request $request, $id, ImageService $imageService)
+    public function update(MemberRequest $request, $id, ImageService $imageService)
     {
         $data = $request->validated();
 
@@ -100,7 +105,11 @@ class MemberController extends Controller
         }
         $member->update($data);
 
-        return redirect()->route('member.index')->with('success', 'Anggota berhasil diperbarui.');
+        if ($member->type === Member::TYPE_BPP) {
+            return redirect()->route('bpp-organization.index')->with('success', 'Anggota BPP berhasil ditambahkan.');
+        } else {
+            return redirect()->route('organization.index')->with('success', 'Anggota berhasil ditambahkan.');
+        }
     }
 
     public function destroy($id)
@@ -112,7 +121,11 @@ class MemberController extends Controller
         }
         $member->delete();
 
-        return redirect()->route('member.index')->with('success', 'Anggota berhasil dihapus.');
+        if ($member->type === Member::TYPE_BPP) {
+            return redirect()->route('bpp-organization.index')->with('success', 'Anggota BPP berhasil ditambahkan.');
+        } else {
+            return redirect()->route('organization.index')->with('success', 'Anggota berhasil ditambahkan.');
+        }
     }
 
     /**
@@ -120,18 +133,19 @@ class MemberController extends Controller
      */
     public function exportMembers(ExcelService $excelService)
     {
-        $members = Member::all();
+        $members = Member::get();
 
         $data = $members->map(function ($member) {
             return [
                 'ID' => $member->id,
                 'Nama' => $member->name,
                 'Gambar' => $member->image ?? '',
+                'Type' => $member->type ?? 'organization',
                 'Dibuat' => $member->created_at?->format('Y-m-d H:i:s'),
             ];
         })->toArray();
 
-        $headers = ['ID', 'Nama', 'Gambar', 'Dibuat'];
+        $headers = ['ID', 'Nama', 'Gambar', 'Type', 'Dibuat'];
 
         $filename = 'members_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
         $filePath = $excelService->writeExcel($data, $headers, $filename);
@@ -165,11 +179,18 @@ class MemberController extends Controller
                     continue;
                 }
 
+                // Set default type jika tidak ada
+                $type = $row['Type'] ?? 'organization';
+                if (!in_array($type, ['organization', 'bpp'])) {
+                    $type = 'organization';
+                }
+
                 // Buat atau update member
                 Member::updateOrCreate(
-                    ['name' => $row['Nama']],
+                    ['name' => $row['Nama'], 'type' => $type],
                     [
                         'image' => $row['Gambar'] ?? null,
+                        'type' => $type,
                     ]
                 );
 
@@ -200,7 +221,7 @@ class MemberController extends Controller
      */
     public function downloadMemberTemplate(ExcelService $excelService)
     {
-        $headers = ['Nama', 'Gambar'];
+        $headers = ['Nama', 'Gambar', 'Type'];
 
         $filename = 'template_members.xlsx';
         $filePath = $excelService->generateTemplate($headers, $filename);

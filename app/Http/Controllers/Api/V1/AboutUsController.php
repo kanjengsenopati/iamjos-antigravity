@@ -10,6 +10,7 @@ use App\Models\AboutUsInformation;
 use App\Models\DirectionCommitment;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrgNodeResource;
+use App\Models\BppOrganization;
 use App\Models\RegionalCoordinator;
 
 class AboutUsController extends Controller
@@ -33,6 +34,14 @@ class AboutUsController extends Controller
 
         $tree = $query->get();
 
+        $bppOrganizations = BppOrganization::roots()
+            ->orderBy('order')
+            ->with([
+                'childrenRecursive' => fn($q) => $q->orderBy('order'),
+                'member'
+            ]);
+
+        $bppTree = $bppOrganizations->get();
         return $this->getSuccessResponse([
             'information'          => $aboutUsInformation,
             'history'              => $aboutUsHistory,
@@ -40,6 +49,7 @@ class AboutUsController extends Controller
             'honorary_councils'     => $honoraryCouncil,
             'organizations'         => OrgNodeResource::collection($tree),
             'regional_coordinators' => $regionalCoordinators,
+            'bpp_organizations'     => OrgNodeResource::collection($bppTree),
         ]);
     }
 }

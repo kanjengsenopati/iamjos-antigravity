@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\MediaCornerController;
 use App\Http\Controllers\Admin\MeetingRoomController;
 use App\Http\Controllers\Admin\HotelBookingController;
 use App\Http\Controllers\Admin\OrganizationController;
+use App\Http\Controllers\Admin\BppOrganizationController;
 use App\Http\Controllers\Admin\AboutUsHistoryController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\HonoraryCouncilController;
@@ -96,17 +97,36 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('regional-coordinator', RegionalCoordinatorController::class);
     Route::resource('organization', OrganizationController::class);
     Route::resource('benefit', BenefitController::class);
+    Route::resource('bpp-organization', BppOrganizationController::class);
 
     // Organization positions import/export
     Route::get('organization/export/positions', [OrganizationController::class, 'exportPositions'])->name('organization.export.positions');
     Route::post('organization/import/positions', [OrganizationController::class, 'importPositions'])->name('organization.import.positions');
     Route::get('organization/template/positions', [OrganizationController::class, 'downloadPositionTemplate'])->name('organization.template.positions');
 
+    // Organization members import/export
+    Route::get('organization/export/members', [OrganizationController::class, 'exportMembers'])->name('organization.export.members');
+    Route::post('organization/import/members', [OrganizationController::class, 'importMembers'])->name('organization.import.members');
+    Route::get('organization/template/members', [OrganizationController::class, 'downloadMemberTemplate'])->name('organization.template.members');
+
     // Member + Contact Us (+ Excel)
     Route::resource('member', MemberController::class, ['except' => ['show']]);
     Route::get('member/export/excel', [MemberController::class, 'exportMembers'])->name('member.export.excel');
     Route::post('member/import/excel', [MemberController::class, 'importMembers'])->name('member.import.excel');
     Route::get('member/template/excel', [MemberController::class, 'downloadMemberTemplate'])->name('member.template.excel');
+
+    // BPP Organization Routes
+    Route::resource('bpp-organization', BppOrganizationController::class);
+
+    // Excel Import/Export for BPP Positions
+    Route::get('bpp-organization/export/positions', [BppOrganizationController::class, 'exportPositions'])->name('bpp-organization.export.positions');
+    Route::post('bpp-organization/import/positions', [BppOrganizationController::class, 'importPositions'])->name('bpp-organization.import.positions');
+    Route::get('bpp-organization/template/positions', [BppOrganizationController::class, 'downloadPositionTemplate'])->name('bpp-organization.template.positions');
+
+    // Excel Import/Export for BPP Members
+    Route::get('bpp-organization/export/members', [BppOrganizationController::class, 'exportMembers'])->name('bpp-organization.export.members');
+    Route::post('bpp-organization/import/members', [BppOrganizationController::class, 'importMembers'])->name('bpp-organization.import.members');
+    Route::get('bpp-organization/template/members', [BppOrganizationController::class, 'downloadMemberTemplate'])->name('bpp-organization.template.members');
 
     Route::resource('contact', ContactController::class, ['except' => ['show']]);
     Route::resource('contact-us', ContactUsController::class, ['except' => ['show']]);

@@ -37,6 +37,24 @@
                                     required />
                             </div>
 
+                            {{-- Type Anggota --}}
+                            <div class="fv-row mb-6">
+                                <label for="type" class="fs-6 fw-bold form-label mt-3">
+                                    <span class="text-dark">Jenis Anggota</span>
+                                </label>
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="">-- Pilih Jenis Anggota --</option>
+                                    <option value="organization"
+                                        {{ old('type', @$member->type ?? @$type) == 'organization' ? 'selected' : '' }}>
+                                        Organisasi
+                                    </option>
+                                    <option value="bpp"
+                                        {{ old('type', @$member->type ?? @$type) == 'bpp' ? 'selected' : '' }}>
+                                        BPP
+                                    </option>
+                                </select>
+                            </div>
+
                             {{-- Tombol Aksi --}}
                             <div class="d-flex justify-content-end">
                                 <a href="{{ route('organization.index') }}">

@@ -24,6 +24,7 @@ class MemberRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+            'type' => 'required|in:organization,bpp',
         ];
     }
 }
