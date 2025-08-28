@@ -8,6 +8,7 @@ use App\Models\MeetingVenue;
 use Illuminate\Http\Request;
 use App\Models\MeetingRoomInfo;
 use App\Http\Controllers\Controller;
+use App\Models\MeetingRoom;
 
 class MeetingRoomController extends Controller
 {
@@ -15,6 +16,7 @@ class MeetingRoomController extends Controller
     public function index(Request $request)
     {
         $meetingRoomInformation = MeetingRoomInfo::latest()->first();
+        $meetingRoomInformation['total_rooms'] = MeetingVenue::with('meeting_rooms')->get()->sum(fn($venue) => $venue->meeting_rooms->count());
 
         $data = MeetingVenue::query()
             ->with('meeting_rooms.meeting_room_layouts')
