@@ -215,6 +215,7 @@ class MeetingRoomController extends Controller
         if (!$meetingVenue) {
             return $this->failedResponse('Meeting venue not found', 404);
         }
+        $meetingVenue['total_rooms'] = $meetingVenue->meeting_rooms->count();
         return $this->getSuccessResponse($meetingVenue);
     }
 }

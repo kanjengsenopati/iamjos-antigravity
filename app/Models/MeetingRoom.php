@@ -23,6 +23,6 @@ class MeetingRoom extends Model
 
     public function meeting_room_layouts()
     {
-        return $this->hasMany(MeetingRoomLayout::class, 'meeting_room_id', 'id');
+        return $this->hasMany(MeetingRoomLayout::class, 'meeting_room_id', 'id')->where('capacity', '>', 0);
     }
 }

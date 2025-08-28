@@ -145,6 +145,10 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('meeting-room-cities/{province}', [MeetingRoomController::class, 'getCitiesByProvince'])->name('meeting-room.cities');
     Route::post('meeting-room/{meetingRoom}/gallery/upload', [MeetingRoomController::class, 'uploadGallery'])->name('meeting-room.gallery.upload');
     Route::delete('meeting-room/{meetingRoom}/gallery/{gallery}', [MeetingRoomController::class, 'deleteGallery'])->name('meeting-room.gallery.delete');
+    Route::get('meeting-room-types', [MeetingRoomController::class, 'getMeetingRoomTypes'])->name('meeting-room.types');
+    Route::post('meeting-room/{meetingRoom}/room/{room}/layout', [MeetingRoomController::class, 'storeLayout'])->name('meeting-room.layout.store');
+    Route::put('meeting-room/{meetingRoom}/room/{room}/layout/{layout}', [MeetingRoomController::class, 'updateLayout'])->name('meeting-room.layout.update');
+    Route::delete('meeting-room/{meetingRoom}/room/{room}/layout/{layout}', [MeetingRoomController::class, 'deleteLayout'])->name('meeting-room.layout.delete');
 
     // Rooms under a venue
     Route::prefix('venue/{venue}')->group(function () {

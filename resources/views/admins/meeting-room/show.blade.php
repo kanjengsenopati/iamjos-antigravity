@@ -16,11 +16,6 @@
                             </span>
                         </h3>
                         <div class="card-toolbar">
-                            <a href="{{ route('venue.rooms.index', $meetingRoom->id) }}"
-                                class="btn btn-sm btn-success me-2">
-                                <i class="fa fa-door-open"></i>
-                                Kelola Ruang
-                            </a>
                             <a href="{{ route('meeting-room.edit', $meetingRoom->id) }}"
                                 class="btn btn-sm btn-warning me-2">
                                 <i class="fa fa-edit"></i>
@@ -329,218 +324,155 @@
                             </div>
 
                             {{-- Rooms Tab --}}
-                            {{-- Rooms Tab --}}
                             <div class="tab-pane fade" id="rooms_tab" role="tabpanel">
                                 @if ($meetingRoom->meeting_rooms && count($meetingRoom->meeting_rooms) > 0)
                                     <div class="row g-5">
                                         @foreach ($meetingRoom->meeting_rooms as $index => $room)
-                                            <div class="col-xl-6">
+                                            <div class="col-lg-6 col-xl-4">
                                                 <div class="card card-flush h-100">
-                                                    {{-- Header: Nama + badge urutan --}}
-                                                    <div class="card-header align-items-center">
-                                                        <div class="card-title">
-                                                            <i class="ki-duotone ki-entrance-left fs-2 me-2 text-primary">
-                                                                <span class="path1"></span><span class="path2"></span>
-                                                            </i>
-                                                            <h3 class="fw-bold m-0">{{ $room->name }}</h3>
-                                                        </div>
-                                                        <div class="card-toolbar">
-                                                            <span class="badge badge-success">Ruang
-                                                                {{ $index + 1 }}</span>
-                                                        </div>
-                                                    </div>
-
                                                     <div class="card-body p-0">
-                                                        {{-- Foto (bukan gaya galeri) --}}
+                                                        {{-- Room Photo --}}
                                                         <div class="position-relative overflow-hidden rounded-top">
-                                                            @if (!empty($room->photo))
-                                                                <img src="{{ asset($room->photo) }}"
-                                                                    alt="{{ $room->name }}" class="img-fluid w-100"
-                                                                    style="height: 220px; object-fit: cover; cursor: pointer;"
+                                                            @if ($room->photo)
+                                                                <img src="{{ Storage::url($room->photo) }}"
+                                                                    alt="{{ $room->name }}"
+                                                                    class="img-fluid room-image"
+                                                                    style="height: 200px; width: 100%; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;"
                                                                     data-bs-toggle="modal" data-bs-target="#roomModal"
-                                                                    data-image="{{ asset($room->photo) }}"
-                                                                    data-title="{{ $room->name }}">
+                                                                    data-image="{{ Storage::url($room->photo) }}"
+                                                                    data-title="{{ $room->name }}"
+                                                                    onmouseover="this.style.transform='scale(1.05)'"
+                                                                    onmouseout="this.style.transform='scale(1)'">
                                                             @else
                                                                 <div class="bg-light-primary d-flex align-items-center justify-content-center"
-                                                                    style="height: 220px;">
+                                                                    style="height: 200px;">
                                                                     <div class="text-center">
                                                                         <i
                                                                             class="ki-duotone ki-home fs-3x text-primary mb-3">
-                                                                            <span class="path1"></span><span
-                                                                                class="path2"></span>
+                                                                            <span class="path1"></span>
+                                                                            <span class="path2"></span>
                                                                         </i>
-                                                                        <div class="text-gray-600 fw-semibold">Tidak ada
-                                                                            foto</div>
+                                                                        <div class="text-primary fw-bold">
+                                                                            {{ $room->name }}</div>
                                                                     </div>
                                                                 </div>
                                                             @endif
+                                                            <div class="position-absolute top-0 end-0 m-3">
+                                                                <span class="badge badge-success">Ruang
+                                                                    {{ $index + 1 }}</span>
+                                                            </div>
                                                         </div>
 
-                                                        {{-- Info Ringkas Ruang --}}
+                                                        {{-- Room Info --}}
                                                         <div class="p-5">
-                                                            <div class="row g-4">
-                                                                <div class="col-md-6">
-                                                                    <div class="d-flex align-items-center">
-                                                                        <i class="ki-duotone ki-layer fs-2 me-2 text-info">
-                                                                            <span class="path1"></span><span
-                                                                                class="path2"></span>
-                                                                        </i>
-                                                                        <div>
-                                                                            <div class="text-muted fs-8">Luas (perkiraan)
-                                                                            </div>
-                                                                            <div class="fw-bold">
-                                                                                @php
-                                                                                    // jika ada panjang & lebar pada model, hitung luas; jika tidak, tampilkan '-'
-                                                                                    $len = $room->length ?? null;
-                                                                                    $wid = $room->width ?? null;
-                                                                                    $area =
-                                                                                        $len && $wid
-                                                                                            ? $len * $wid
-                                                                                            : null;
-                                                                                @endphp
-                                                                                {{ $area ? number_format($area, 0) . ' m²' : '-' }}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
+                                                            <div class="mb-4">
+                                                                <h4 class="fw-bold text-gray-900 mb-2">{{ $room->name }}
+                                                                </h4>
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-center mb-3">
+                                                                    <span class="text-muted fs-7">Layout Tersedia</span>
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-light-primary add-layout-btn"
+                                                                        data-room-id="{{ $room->id }}"
+                                                                        data-room-name="{{ $room->name }}"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#layoutModal">
+                                                                        <i class="fa fa-plus me-1"></i>
+                                                                        Tambah Layout
+                                                                    </button>
                                                                 </div>
-                                                                <div class="col-md-6">
-                                                                    <div class="d-flex align-items-center">
-                                                                        <i
-                                                                            class="ki-duotone ki-map fs-2 me-2 text-warning">
-                                                                            <span class="path1"></span><span
-                                                                                class="path2"></span>
-                                                                        </i>
-                                                                        <div>
-                                                                            <div class="text-muted fs-8">Dimensi</div>
-                                                                            <div class="fw-bold">
-                                                                                @if (($room->length ?? null) && ($room->width ?? null))
-                                                                                    {{ rtrim(rtrim(number_format($room->length, 2), '0'), '.') }}m
-                                                                                    ×
-                                                                                    {{ rtrim(rtrim(number_format($room->width, 2), '0'), '.') }}m
-                                                                                @else
-                                                                                    -
-                                                                                @endif
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                @if (!empty($room->floor))
-                                                                    <div class="col-md-6">
-                                                                        <div class="d-flex align-items-center">
-                                                                            <i
-                                                                                class="ki-duotone ki-arrow-up-down fs-2 me-2 text-primary">
-                                                                                <span class="path1"></span><span
-                                                                                    class="path2"></span>
-                                                                            </i>
-                                                                            <div>
-                                                                                <div class="text-muted fs-8">Lantai</div>
-                                                                                <div class="fw-bold">{{ $room->floor }}
+                                                            </div>
+
+                                                            {{-- Room Layouts --}}
+                                                            @if ($room->meeting_room_layouts->count() > 0)
+                                                                <div class="layout-container"
+                                                                    data-room-id="{{ $room->id }}">
+                                                                    @foreach ($room->meeting_room_layouts as $layout)
+                                                                        <div class="layout-item d-flex justify-content-between align-items-center p-3 mb-2 bg-light-info rounded"
+                                                                            data-layout-id="{{ $layout->id }}">
+                                                                            <div class="flex-grow-1">
+                                                                                <div
+                                                                                    class="d-flex align-items-center mb-1">
+                                                                                    <i
+                                                                                        class="ki-duotone ki-design-1 text-info me-2 fs-6">
+                                                                                        <span class="path1"></span>
+                                                                                        <span class="path2"></span>
+                                                                                    </i>
+                                                                                    <span
+                                                                                        class="fw-semibold text-gray-800 fs-7">
+                                                                                        {{ $layout->type->name ?? 'N/A' }}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div class="d-flex align-items-center">
+                                                                                    <i
+                                                                                        class="ki-duotone ki-user text-success me-1 fs-8">
+                                                                                        <span class="path1"></span>
+                                                                                        <span class="path2"></span>
+                                                                                    </i>
+                                                                                    <span
+                                                                                        class="text-success fw-bold fs-8">
+                                                                                        {{ number_format($layout->capacity) }}
+                                                                                        orang
+                                                                                    </span>
                                                                                 </div>
                                                                             </div>
-                                                                        </div>
-                                                                    </div>
-                                                                @endif
-                                                                @if (!empty($room->max_capacity))
-                                                                    <div class="col-md-6">
-                                                                        <div class="d-flex align-items-center">
-                                                                            <i
-                                                                                class="ki-duotone ki-user fs-2 me-2 text-success">
-                                                                                <span class="path1"></span><span
-                                                                                    class="path2"></span>
-                                                                            </i>
-                                                                            <div>
-                                                                                <div class="text-muted fs-8">Kapasitas
-                                                                                    Maks.</div>
-                                                                                <div class="fw-bold">
-                                                                                    {{ number_format($room->max_capacity) }}
-                                                                                    orang</div>
+                                                                            <div class="d-flex">
+                                                                                <button type="button"
+                                                                                    class="btn btn-sm btn-light-warning me-1 edit-layout-btn"
+                                                                                    data-layout-id="{{ $layout->id }}"
+                                                                                    data-room-id="{{ $room->id }}"
+                                                                                    data-room-name="{{ $room->name }}"
+                                                                                    data-type-id="{{ $layout->meeting_room_type_id }}"
+                                                                                    data-capacity="{{ $layout->capacity }}"
+                                                                                    data-bs-toggle="modal"
+                                                                                    data-bs-target="#layoutModal"
+                                                                                    title="Edit Layout">
+                                                                                    <i class="fa fa-edit fs-8"></i>
+                                                                                </button>
+                                                                                <button type="button"
+                                                                                    class="btn btn-sm btn-light-danger delete-layout-btn"
+                                                                                    data-layout-id="{{ $layout->id }}"
+                                                                                    data-room-id="{{ $room->id }}"
+                                                                                    data-type-name="{{ $layout->type->name ?? 'Layout' }}"
+                                                                                    title="Hapus Layout">
+                                                                                    <i class="fa fa-trash fs-8"></i>
+                                                                                </button>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            @else
+                                                                <div class="text-center py-4 layout-empty-state"
+                                                                    data-room-id="{{ $room->id }}">
+                                                                    <i
+                                                                        class="ki-duotone ki-design-1 fs-2x text-gray-400 mb-2">
+                                                                        <span class="path1"></span>
+                                                                        <span class="path2"></span>
+                                                                    </i>
+                                                                    <div class="text-gray-500 fs-7">Belum ada layout</div>
+                                                                </div>
+                                                            @endif
+
+                                                            {{-- Room Actions --}}
+                                                            <div class="text-center mt-4 pt-3 border-top">
+                                                                <a href="{{ route('venue.rooms.edit', [$meetingRoom->id, $room->id]) }}"
+                                                                    class="btn btn-sm btn-light-primary me-2">
+                                                                    <i class="fa fa-edit me-1"></i>
+                                                                    Edit Ruang
+                                                                </a>
+                                                                @if ($room->photo)
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-light-info"
+                                                                        data-bs-toggle="modal" data-bs-target="#roomModal"
+                                                                        data-image="{{ Storage::url($room->photo) }}"
+                                                                        data-title="{{ $room->name }}">
+                                                                        <i class="fa fa-eye me-1"></i>
+                                                                        Lihat Foto
+                                                                    </button>
                                                                 @endif
                                                             </div>
-
-                                                            {{-- Fasilitas (opsional) --}}
-                                                            @if (!empty($room->facilities))
-                                                                <div class="mt-4">
-                                                                    <div class="text-muted fs-8 mb-2">Fasilitas</div>
-                                                                    <div class="d-flex flex-wrap gap-2">
-                                                                        @foreach (explode(',', $room->facilities) as $f)
-                                                                            <span
-                                                                                class="badge badge-light">{{ trim($f) }}</span>
-                                                                        @endforeach
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-
-                                                            {{-- Layout & Kapasitas per layout --}}
-                                                            @if ($room->meeting_room_layouts->count() > 0)
-                                                                <div class="mt-5">
-                                                                    <label
-                                                                        class="fw-semibold text-gray-700 fs-7 mb-2">Layout
-                                                                        & Kapasitas</label>
-                                                                    <div class="table-responsive">
-                                                                        <table
-                                                                            class="table align-middle table-row-dashed gy-3 mb-0">
-                                                                            <thead>
-                                                                                <tr
-                                                                                    class="text-muted fw-semibold fs-8 text-uppercase">
-                                                                                    <th class="min-w-140px">Layout</th>
-                                                                                    <th class="text-end min-w-100px">
-                                                                                        Kapasitas</th>
-                                                                                </tr>
-                                                                            </thead>
-                                                                            <tbody class="fs-7">
-                                                                                @foreach ($room->meeting_room_layouts as $layout)
-                                                                                    <tr>
-                                                                                        <td>
-                                                                                            <div
-                                                                                                class="d-flex align-items-center">
-                                                                                                <i
-                                                                                                    class="ki-duotone ki-design-1 text-info me-2 fs-6">
-                                                                                                    <span
-                                                                                                        class="path1"></span><span
-                                                                                                        class="path2"></span>
-                                                                                                </i>
-                                                                                                <span
-                                                                                                    class="fw-semibold text-gray-800">{{ $layout->layout }}</span>
-                                                                                            </div>
-                                                                                        </td>
-                                                                                        <td class="text-end">
-                                                                                            @if (($layout->capacity ?? 0) > 0)
-                                                                                                <span
-                                                                                                    class="badge badge-light-success">
-                                                                                                    <i
-                                                                                                        class="ki-duotone ki-user fs-8 me-1">
-                                                                                                        <span
-                                                                                                            class="path1"></span><span
-                                                                                                            class="path2"></span>
-                                                                                                    </i>
-                                                                                                    {{ $layout->capacity }}
-                                                                                                    orang
-                                                                                                </span>
-                                                                                            @else
-                                                                                                <span
-                                                                                                    class="text-muted">-</span>
-                                                                                            @endif
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                @endforeach
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-
-                                                            {{-- Actions --}}
-                                                            <div class="mt-5 d-flex justify-content-end">
-                                                                <a href="{{ route('venue.rooms.edit', [$meetingRoom->id, $room->id]) }}"
-                                                                    class="btn btn-sm btn-light-primary">
-                                                                    <i class="fa fa-edit fs-7 me-1"></i> Edit Ruang
-                                                                </a>
-                                                            </div>
                                                         </div>
-                                                    </div> {{-- end card-body --}}
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -548,7 +480,8 @@
                                 @else
                                     <div class="d-flex flex-column text-center py-10">
                                         <i class="ki-duotone ki-entrance-left fs-3x text-gray-400 mb-4">
-                                            <span class="path1"></span><span class="path2"></span>
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
                                         </i>
                                         <div class="text-gray-700 fs-2 fw-bold mb-2">Belum Ada Ruang Meeting</div>
                                         <div class="text-gray-500 mb-4">Belum ada ruang meeting yang tersedia untuk venue
@@ -556,7 +489,8 @@
                                         <div>
                                             <a href="{{ route('venue.rooms.create', $meetingRoom->id) }}"
                                                 class="btn btn-primary">
-                                                <i class="fa fa-plus me-2"></i> Tambah Ruang Meeting
+                                                <i class="fa fa-plus me-2"></i>
+                                                Tambah Ruang Meeting
                                             </a>
                                         </div>
                                     </div>
@@ -598,6 +532,55 @@
                     <img id="modalRoomImage" src="" alt="" class="img-fluid rounded"
                         style="max-height: 70vh;">
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Modal -->
+    <div class="modal fade" id="layoutModal" tabindex="-1" aria-labelledby="layoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="layoutModalLabel">Tambah Layout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="layoutForm">
+                    @csrf
+                    <div class="modal-body">
+                        <input type="hidden" id="layoutId" name="layout_id">
+                        <input type="hidden" id="roomId" name="room_id">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Ruang Meeting</label>
+                            <input type="text" class="form-control bg-light" id="roomName" readonly>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold" for="meeting_room_type_id">Tipe Layout</label>
+                            <select class="form-select" id="meeting_room_type_id" name="meeting_room_type_id" required>
+                                <option value="">Pilih Tipe Layout</option>
+                            </select>
+                            <div class="invalid-feedback" id="typeError"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold" for="capacity">Kapasitas</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="capacity" name="capacity"
+                                    min="1" placeholder="Masukkan kapasitas" required>
+                                <span class="input-group-text">orang</span>
+                            </div>
+                            <div class="invalid-feedback" id="capacityError"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="layoutSubmitBtn">
+                            <i class="fa fa-save me-2"></i>
+                            Simpan Layout
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -856,6 +839,245 @@
                     }
                 });
             });
+
+            // Load meeting room types when modal is first opened
+            let typesLoaded = false;
+            $('#layoutModal').on('show.bs.modal', function() {
+                if (!typesLoaded) {
+                    loadMeetingRoomTypes();
+                }
+            });
+
+            // Handle add layout button
+            $(document).on('click', '.add-layout-btn', function() {
+                const roomId = $(this).data('room-id');
+                const roomName = $(this).data('room-name');
+
+                // Reset form for adding
+                $('#layoutForm')[0].reset();
+                $('#layoutId').val('');
+                $('#roomId').val(roomId);
+                $('#roomName').val(roomName);
+                $('#layoutModalLabel').text('Tambah Layout untuk ' + roomName);
+                $('#layoutSubmitBtn').html('<i class="fa fa-save me-2"></i>Simpan Layout');
+
+                // Clear previous errors
+                clearFormErrors();
+            });
+
+            // Handle edit layout button
+            $(document).on('click', '.edit-layout-btn', function() {
+                const layoutId = $(this).data('layout-id');
+                const roomId = $(this).data('room-id');
+                const roomName = $(this).data('room-name');
+                const typeId = $(this).data('type-id');
+                const capacity = $(this).data('capacity');
+
+                // Set form for editing
+                $('#layoutId').val(layoutId);
+                $('#roomId').val(roomId);
+                $('#roomName').val(roomName);
+                $('#meeting_room_type_id').val(typeId);
+                $('#capacity').val(capacity);
+                $('#layoutModalLabel').text('Edit Layout untuk ' + roomName);
+                $('#layoutSubmitBtn').html('<i class="fa fa-save me-2"></i>Update Layout');
+
+                // Clear previous errors
+                clearFormErrors();
+            });
+
+            // Handle layout form submission
+            $('#layoutForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const layoutId = $('#layoutId').val();
+                const roomId = $('#roomId').val();
+                const isEdit = layoutId !== '';
+
+                let url = '';
+                let method = '';
+
+                if (isEdit) {
+                    url =
+                        '{{ route('meeting-room.layout.update', [$meetingRoom->id, '__ROOM_ID__', '__LAYOUT_ID__']) }}'
+                        .replace('__ROOM_ID__', roomId)
+                        .replace('__LAYOUT_ID__', layoutId);
+                    method = 'PUT';
+                } else {
+                    url = '{{ route('meeting-room.layout.store', [$meetingRoom->id, '__ROOM_ID__']) }}'
+                        .replace('__ROOM_ID__', roomId);
+                    method = 'POST';
+                }
+
+                const formData = {
+                    _token: '{{ csrf_token() }}',
+                    _method: method,
+                    meeting_room_type_id: $('#meeting_room_type_id').val(),
+                    capacity: $('#capacity').val()
+                };
+
+                const submitBtn = $('#layoutSubmitBtn');
+                const originalText = submitBtn.html();
+
+                // Disable button and show loading
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fa fa-spinner fa-spin me-2"></i>Menyimpan...');
+
+                // Clear previous errors
+                clearFormErrors();
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#layoutModal').modal('hide');
+
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: response.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // Refresh the page to show updated layouts
+                                window.location.reload();
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            // Validation errors
+                            const errors = xhr.responseJSON.errors;
+                            if (errors.meeting_room_type_id) {
+                                $('#meeting_room_type_id').addClass('is-invalid');
+                                $('#typeError').text(errors.meeting_room_type_id[0]);
+                            }
+                            if (errors.capacity) {
+                                $('#capacity').addClass('is-invalid');
+                                $('#capacityError').text(errors.capacity[0]);
+                            }
+                        } else {
+                            // Other errors
+                            let errorMessage = 'Terjadi kesalahan saat menyimpan layout';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+
+                            Swal.fire({
+                                title: 'Error!',
+                                text: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    complete: function() {
+                        // Re-enable button
+                        submitBtn.prop('disabled', false);
+                        submitBtn.html(originalText);
+                    }
+                });
+            });
+
+            // Handle delete layout button
+            $(document).on('click', '.delete-layout-btn', function() {
+                const layoutId = $(this).data('layout-id');
+                const roomId = $(this).data('room-id');
+                const typeName = $(this).data('type-name');
+
+                Swal.fire({
+                    title: 'Hapus Layout?',
+                    text: `Apakah Anda yakin ingin menghapus layout "${typeName}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const url =
+                            '{{ route('meeting-room.layout.delete', [$meetingRoom->id, '__ROOM_ID__', '__LAYOUT_ID__']) }}'
+                            .replace('__ROOM_ID__', roomId)
+                            .replace('__LAYOUT_ID__', layoutId);
+
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Berhasil!',
+                                        text: response.message,
+                                        icon: 'success',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        // Remove the layout item from DOM or refresh
+                                        window.location.reload();
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                let errorMessage =
+                                    'Terjadi kesalahan saat menghapus layout';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: errorMessage,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Function to load meeting room types
+            function loadMeetingRoomTypes() {
+                $.ajax({
+                    url: '{{ route('meeting-room.types') }}',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            const select = $('#meeting_room_type_id');
+                            select.empty();
+                            select.append('<option value="">Pilih Tipe Layout</option>');
+
+                            response.data.forEach(function(type) {
+                                select.append(
+                                    `<option value="${type.id}">${type.name}</option>`);
+                            });
+
+                            typesLoaded = true;
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading room types:', xhr);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Gagal memuat data tipe layout',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            }
+
+            // Function to clear form errors
+            function clearFormErrors() {
+                $('#meeting_room_type_id, #capacity').removeClass('is-invalid');
+                $('#typeError, #capacityError').text('');
+            }
         });
     </script>
 @endpush

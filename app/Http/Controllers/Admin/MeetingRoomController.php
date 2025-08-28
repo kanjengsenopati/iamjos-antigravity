@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Models\MeetingRoom;
 use App\Models\MeetingVenue;
 use App\Models\MeetingVenueGallery;
+use App\Models\MeetingRoomLayout;
+use App\Models\MeetingRoomType;
 use App\Models\Province;
 use App\Models\Regency;
 use Illuminate\Http\Request;
@@ -327,6 +329,152 @@ class MeetingRoomController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus gambar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get meeting room types for layout dropdown
+     */
+    public function getMeetingRoomTypes()
+    {
+        try {
+            $types = MeetingRoomType::where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $types
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting meeting room types: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data tipe ruang'
+            ], 500);
+        }
+    }
+
+    /**
+     * Store or update meeting room layout
+     */
+    public function storeLayout(Request $request, MeetingVenue $meetingRoom, MeetingRoom $room)
+    {
+        $request->validate([
+            'meeting_room_type_id' => 'required|exists:meeting_room_types,id',
+            'capacity' => 'required|integer|min:1'
+        ], [
+            'meeting_room_type_id.required' => 'Tipe layout harus dipilih',
+            'meeting_room_type_id.exists' => 'Tipe layout tidak valid',
+            'capacity.required' => 'Kapasitas harus diisi',
+            'capacity.integer' => 'Kapasitas harus berupa angka',
+            'capacity.min' => 'Kapasitas minimal 1 orang'
+        ]);
+
+        try {
+            // Check if layout already exists for this room and type
+            $existingLayout = MeetingRoomLayout::where('meeting_room_id', $room->id)
+                ->where('meeting_room_type_id', $request->meeting_room_type_id)
+                ->first();
+
+            if ($existingLayout) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Layout dengan tipe ini sudah ada untuk ruang ini'
+                ], 422);
+            }
+
+            $layout = MeetingRoomLayout::create([
+                'meeting_room_id' => $room->id,
+                'meeting_room_type_id' => $request->meeting_room_type_id,
+                'capacity' => $request->capacity
+            ]);
+
+            $layout->load('type');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Layout berhasil ditambahkan',
+                'data' => $layout
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error storing layout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambah layout: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update meeting room layout
+     */
+    public function updateLayout(Request $request, MeetingVenue $meetingRoom, MeetingRoom $room, MeetingRoomLayout $layout)
+    {
+        $request->validate([
+            'meeting_room_type_id' => 'required|exists:meeting_room_types,id',
+            'capacity' => 'required|integer|min:1'
+        ], [
+            'meeting_room_type_id.required' => 'Tipe layout harus dipilih',
+            'meeting_room_type_id.exists' => 'Tipe layout tidak valid',
+            'capacity.required' => 'Kapasitas harus diisi',
+            'capacity.integer' => 'Kapasitas harus berupa angka',
+            'capacity.min' => 'Kapasitas minimal 1 orang'
+        ]);
+
+        try {
+            // Check if layout with this type already exists (except current)
+            $existingLayout = MeetingRoomLayout::where('meeting_room_id', $room->id)
+                ->where('meeting_room_type_id', $request->meeting_room_type_id)
+                ->where('id', '!=', $layout->id)
+                ->first();
+
+            if ($existingLayout) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Layout dengan tipe ini sudah ada untuk ruang ini'
+                ], 422);
+            }
+
+            $layout->update([
+                'meeting_room_type_id' => $request->meeting_room_type_id,
+                'capacity' => $request->capacity
+            ]);
+
+            $layout->load('type');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Layout berhasil diperbarui',
+                'data' => $layout
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating layout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui layout: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete meeting room layout
+     */
+    public function deleteLayout(MeetingVenue $meetingRoom, MeetingRoom $room, MeetingRoomLayout $layout)
+    {
+        try {
+            $layout->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Layout berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting layout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus layout: ' . $e->getMessage()
             ], 500);
         }
     }
