@@ -23,6 +23,7 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
     Route::get('bpd', [BpdController::class, 'index'])->name('bpd.index');
     Route::get('meeting-room', [MeetingRoomController::class, 'index'])->name('meeting-room.index');
+    Route::get('meeting-room/{id}', [MeetingRoomController::class, 'show'])->name('meeting-room.show');
     Route::get('meeting-room/filter-capacity', [MeetingRoomController::class, 'filterCapacity'])->name('meeting-room.filter-capacity');
     Route::get('province', [MeetingRoomController::class, 'province'])->name('province.index');
     Route::get('regency', [MeetingRoomController::class, 'regency'])->name('regency.index');

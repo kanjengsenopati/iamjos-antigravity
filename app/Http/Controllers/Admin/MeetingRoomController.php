@@ -65,9 +65,9 @@ class MeetingRoomController extends Controller
                     $actionShow = route('meeting-room.show', $data->id);
                     $actionEdit = route('meeting-room.edit', $data->id);
                     $actionDelete = route('meeting-room.destroy', $data->id);
-                    $actionRooms = route('venue.rooms.index', $data->id);
+                    // $actionRooms = route('venue.rooms.index', $data->id);
                     return "<div class='d-flex justify-content-center'>" .
-                        "<a href='{$actionRooms}' class='btn btn-success btn-sm me-1' title='Kelola Ruang'><i class='fa fa-door-open'></i></a>" .
+                        // "<a href='{$actionRooms}' class='btn btn-success btn-sm me-1' title='Kelola Ruang'><i class='fa fa-door-open'></i></a>" .
                         view('components.action.show', ['action' => $actionShow]) .
                         view('components.action.edit', ['action' => $actionEdit]) .
                         view('components.action.delete', ['action' => $actionDelete, 'id' => $data->id]) .

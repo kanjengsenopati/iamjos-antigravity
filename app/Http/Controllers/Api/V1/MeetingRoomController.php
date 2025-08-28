@@ -208,4 +208,13 @@ class MeetingRoomController extends Controller
         $data = array_values($counters);
         return $this->getSuccessResponse($data);
     }
+
+    public function show($id)
+    {
+        $meetingVenue = MeetingVenue::with('meeting_rooms.meeting_room_layouts.type', 'galleries')->find($id);
+        if (!$meetingVenue) {
+            return $this->failedResponse('Meeting venue not found', 404);
+        }
+        return $this->getSuccessResponse($meetingVenue);
+    }
 }

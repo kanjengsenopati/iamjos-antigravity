@@ -14,6 +14,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+/**
+ * PHRI Meeting Room Sync Service — revised
+ * - Mencegah dan membersihkan duplikasi meeting_venues.external_id
+ * - Memastikan meeting_rooms.meeting_venue_id selalu menunjuk ke venue yang valid
+ * - Mem-purge orphan rooms/layouts yang tidak punya induk venue/room
+ * - Upsert dengan kunci natural: venue.external_id, room (venue_id + name), layout (room_id + type_id)
+ */
 class PhriMeetingRoomService
 {
     private const ETAG_KEY = 'phri:meetingrooms:etag';
@@ -47,11 +54,7 @@ class PhriMeetingRoomService
         return $headers;
     }
 
-    /**
-     * Fetch raw records from PHRI API with conditional GET support.
-     *
-     * @return array
-     */
+    /** Fetch raw records from PHRI API with conditional GET support. */
     protected function fetchRaw(): array
     {
         $timeout = (int) config('services.phri.timeout', 30);
@@ -78,12 +81,7 @@ class PhriMeetingRoomService
         return Arr::get($json, 'RECORDS', $json) ?? [];
     }
 
-    /**
-     * Normalize API payload to structured arrays:
-     *  - venues:   list of venues
-     *  - rooms:    list of rooms {venue_external_id, name}
-     *  - layouts:  list of layouts {venue_external_id, room_name, layout_name, capacity}
-     */
+    /** Normalize API payload. */
     protected function normalize(array $records): array
     {
         $venues  = [];
@@ -91,13 +89,15 @@ class PhriMeetingRoomService
         $layouts = [];
 
         foreach ($records as $row) {
-            $extId = (int) (Arr::get($row, 'id') ?? 0);
-            if ($extId <= 0) continue;
+            // Jangan paksa ke int; simpan apa adanya sebagai string untuk mencegah collision
+            $extIdRaw = Arr::get($row, 'id');
+            if ($extIdRaw === null || $extIdRaw === '') continue;
+            $extId = (string) $extIdRaw; // simpan sebagai string
 
             $venues[] = [
                 'external_id'      => $extId,
-                'phri_province_id' => (int) (Arr::get($row, 'id_province') ?? Arr::get($row, 'id_provinsi') ?? 0),
-                'phri_regency_id'  => (int) (Arr::get($row, 'id_city') ?? 0),
+                'phri_province_id' => (string) (Arr::get($row, 'id_province') ?? Arr::get($row, 'id_provinsi') ?? ''),
+                'phri_regency_id'  => (string) (Arr::get($row, 'id_city') ?? ''),
                 'province_name'    => trim((string) Arr::get($row, 'provinsi')),
                 'city_name'        => trim((string) Arr::get($row, 'kota')),
                 'name'             => trim((string) (Arr::get($row, 'hotel') ?? Arr::get($row, 'resort') ?? '')),
@@ -121,7 +121,7 @@ class PhriMeetingRoomService
 
                     foreach ($r as $k => $v) {
                         if ($k === 'ruangan') continue;
-                        $layoutName = $this->normalizeLayoutLabel($k); // human-readable & konsisten
+                        $layoutName = $this->normalizeLayoutLabel((string) $k);
                         $cap        = (int) ($v ?? 0);
                         $layouts[]  = [
                             'venue_external_id' => $extId,
@@ -137,60 +137,45 @@ class PhriMeetingRoomService
         return compact('venues', 'rooms', 'layouts');
     }
 
-    /**
-     * Normalize raw layout key into a stable, human-readable Title Case label.
-     * Example: "classroom (30)" => "Classroom"
-     */
+    /** Normalize raw layout key into Title Case label. */
     protected function normalizeLayoutLabel(string $raw): string
     {
-        // hilangkan tanda kurung & kompres spasi
         $label = Str::of($raw)->lower()
             ->replace(['(', ')'], '')
             ->replaceMatches('/\s+/', ' ')
             ->trim();
-
-        // bentuk Title Case
         return Str::of($label)->title();
     }
 
-    /**
-     * Map PHRI province/regency external IDs to local UUIDs on venues array.
-     */
+    /** Map PHRI province/regency external IDs to local UUIDs on venues array. */
     protected function mapLocalIds(array $venues): array
     {
-        // Province: provinces.external_id (PHRI) => provinces.id (UUID)
-        $provMap = Province::query()->pluck('id', 'external_id')->all();   // [phri_id => uuid]
-        // Regency:  regencies.external_id (PHRI) => regencies.id (UUID)
-        $regMap  = Regency::query()->pluck('id', 'external_id')->all();    // [external_id => uuid]
+        // Catatan: di sini diasumsikan kolom provinces.external_id & regencies.external_id bertipe string
+        $provMap = Province::query()->pluck('id', 'external_id')->all(); // [phri_id => uuid]
+        $regMap  = Regency::query()->pluck('id', 'external_id')->all();  // [phri_id => uuid]
 
         foreach ($venues as &$v) {
-            $v['province_id'] = $provMap[$v['phri_province_id']] ?? null;
-            $v['regency_id']  = $regMap[$v['phri_regency_id']]   ?? null;
+            $v['province_id'] = $provMap[(string) $v['phri_province_id']] ?? null;
+            $v['regency_id']  = $regMap[(string) $v['phri_regency_id']]   ?? null;
         }
         unset($v);
 
         return $venues;
     }
 
-    /**
-     * Ensure all meeting room types exist (by name). Create missing types without touching image/is_active.
-     * Returns map: [name => id]
-     */
+    /** Ensure all meeting room types exist (by name). Return map: [name => id] */
     protected function ensureMeetingRoomTypes(array $allLayoutNames): array
     {
         $allLayoutNames = array_values(array_unique(
             array_filter(array_map('strval', $allLayoutNames), fn($v) => trim($v) !== '')
         ));
-
         if (empty($allLayoutNames)) return [];
 
-        // Ambil yang sudah ada
         $existing = MeetingRoomType::query()
             ->whereIn('name', $allLayoutNames)
             ->get(['id', 'name'])
             ->keyBy('name');
 
-        // Siapkan yang belum ada
         $toInsert = [];
         foreach ($allLayoutNames as $name) {
             if (!isset($existing[$name])) {
@@ -203,23 +188,85 @@ class PhriMeetingRoomService
                 ];
             }
         }
-
         if (!empty($toInsert)) {
             DB::table('meeting_room_types')->insert($toInsert);
-            // refresh map
             $existing = MeetingRoomType::query()
                 ->whereIn('name', $allLayoutNames)
                 ->get(['id', 'name'])
                 ->keyBy('name');
         }
 
-        // Return map: name => id
         return collect($existing)->map(fn($m) => $m->id)->all();
     }
 
     /**
-     * Sync entry point. Upserts venues/rooms/layouts; purges missing ones.
+     * PRE-CLEANUP 1: Deduplicate meeting_venues by external_id.
+     * - Pilih venue "kanonis" (created_at paling tua) per external_id
+     * - Reassign meeting_rooms dari duplikat ke kanonis
+     * - Hapus duplikat (force)
      */
+    protected function deduplicateVenuesByExternalId(): array
+    {
+        $dups = DB::table('meeting_venues')
+            ->select('external_id', DB::raw('COUNT(*) as c'))
+            ->groupBy('external_id')
+            ->having('c', '>', 1)
+            ->pluck('external_id')
+            ->all();
+
+        $reassignedRooms = 0;
+        $deletedVenues   = 0;
+
+        if (empty($dups)) {
+            return compact('reassignedRooms', 'deletedVenues');
+        }
+
+        foreach ($dups as $ext) {
+            $venues = MeetingVenue::where('external_id', $ext)
+                ->orderBy('created_at', 'asc')
+                ->get(['id', 'external_id', 'created_at']);
+
+            if ($venues->count() < 2) continue;
+
+            $canonical = $venues->first();
+            $dupes     = $venues->slice(1)->pluck('id')->all();
+
+            if (!empty($dupes)) {
+                // Pindahkan rooms ke canonical
+                $reassignedRooms += MeetingRoom::whereIn('meeting_venue_id', $dupes)
+                    ->update(['meeting_venue_id' => $canonical->id, 'updated_at' => now()]);
+
+                // Hapus duplikat venue
+                $deletedVenues += MeetingVenue::whereIn('id', $dupes)->forceDelete();
+            }
+        }
+
+        return compact('reassignedRooms', 'deletedVenues');
+    }
+
+    /**
+     * PRE-CLEANUP 2: Purge orphan rooms/layouts:
+     * - Hapus MeetingRoom yang meeting_venue_id tidak ada di tabel meeting_venues
+     * - Hapus MeetingRoomLayout yang meeting_room_id tidak ada di tabel meeting_rooms
+     */
+    protected function purgeOrphans(): array
+    {
+        $validVenueIds = MeetingVenue::query()->pluck('id')->all();
+        $validRoomIds  = MeetingRoom::query()->pluck('id')->all();
+
+        $deletedLayouts = 0;
+        $deletedRooms   = 0;
+
+        // Layouts orphan karena room hilang
+        $deletedLayouts += MeetingRoomLayout::whereNotIn('meeting_room_id', $validRoomIds ?: ['_none_'])->delete();
+
+        // Rooms orphan karena venue hilang
+        $deletedRooms   += MeetingRoom::whereNotIn('meeting_venue_id', $validVenueIds ?: ['_none_'])->forceDelete();
+
+        return compact('deletedLayouts', 'deletedRooms');
+    }
+
+    /** Sync entry point */
     public function sync(): array
     {
         $raw = $this->fetchRaw();
@@ -233,6 +280,9 @@ class PhriMeetingRoomService
                 'rooms_deleted'    => 0,
                 'layouts_upserted' => 0,
                 'layouts_deleted'  => 0,
+                'reassigned_rooms' => 0,
+                'dedup_venues'     => 0,
+                'purged_orphans'   => ['rooms' => 0, 'layouts' => 0],
             ];
         }
 
@@ -263,16 +313,27 @@ class PhriMeetingRoomService
             $typeId = $layoutTypeMap[$name] ?? null;
             if (!$typeId) continue;
 
-            $ext      = $lt['venue_external_id'];
+            $ext      = (string) $lt['venue_external_id'];
             $roomName = $lt['room_name'];
             $cap      = (int) $lt['capacity'];
 
             $layoutsByVenueRoom[$ext][$roomName][$typeId] = $cap;
         }
 
+        // ===== PRE-CLEANUP: rapikan duplikat & orphan sebelum upsert =====
+        DB::beginTransaction();
+        try {
+            $dedupStats = $this->deduplicateVenuesByExternalId();
+            $purge1     = $this->purgeOrphans();
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
         // ===== Upsert VENUE & catat UUID lokal =====
-        $existingVenues = MeetingVenue::query()->pluck('id', 'external_id')->all(); // [ext => uuid]
-        $apiExtIds      = array_values(array_unique(array_map(fn($v) => $v['external_id'], $venues)));
+        $existingVenues = MeetingVenue::query()->pluck('id', 'external_id')->all(); // [ext(string) => uuid]
+        $apiExtIds      = array_values(array_unique(array_map(fn($v) => (string) $v['external_id'], $venues)));
 
         $venueIdMap     = []; // [ext => uuid]
         $venuesInserted = 0;
@@ -281,10 +342,10 @@ class PhriMeetingRoomService
         DB::beginTransaction();
         try {
             foreach ($venues as $v) {
-                $ext = $v['external_id'];
+                $ext = (string) $v['external_id'];
                 $payload = [
-                    'phri_province_id' => $v['phri_province_id'],
-                    'phri_regency_id'  => $v['phri_regency_id'],
+                    'phri_province_id' => (string) $v['phri_province_id'],
+                    'phri_regency_id'  => (string) $v['phri_regency_id'],
                     'province_id'      => $v['province_id'],
                     'regency_id'       => $v['regency_id'],
                     'province_name'    => $v['province_name'],
@@ -314,7 +375,7 @@ class PhriMeetingRoomService
                 $venueIdMap[$ext] = $venueId;
             }
 
-            // Hapus venue yang tidak ada di API
+            // Hapus venue yang tidak ada di API (beserta turunannya)
             $toDeleteExt   = array_diff(array_keys($existingVenues), $apiExtIds);
             $venuesDeleted = 0;
             $roomsDeleted  = 0;
@@ -323,16 +384,12 @@ class PhriMeetingRoomService
             if (!empty($toDeleteExt)) {
                 $toDeleteVenueIds = array_values(array_map(fn($ext) => $existingVenues[$ext], $toDeleteExt));
 
-                // ambil room ids di venue yang akan dihapus
                 $roomIds = MeetingRoom::whereIn('meeting_venue_id', $toDeleteVenueIds)->pluck('id')->all();
                 if (!empty($roomIds)) {
-                    // hapus layouts terlebih dahulu
                     $layoutsDeleted += MeetingRoomLayout::whereIn('meeting_room_id', $roomIds)->delete();
-                    // hapus rooms (force)
                     $roomsDeleted   += MeetingRoom::whereIn('id', $roomIds)->forceDelete();
                 }
 
-                // hapus venues (force)
                 $venuesDeleted += MeetingVenue::whereIn('id', $toDeleteVenueIds)->forceDelete();
             }
 
@@ -341,7 +398,6 @@ class PhriMeetingRoomService
             $layoutsUpserted  = 0;
 
             foreach ($venueIdMap as $ext => $venueId) {
-                // ---- ROOMS ----
                 $apiRoomNames = $roomsByVenue[$ext] ?? [];
 
                 // DB rooms map: [name => id]
@@ -351,20 +407,21 @@ class PhriMeetingRoomService
                     ->map(fn($m) => $m->id)
                     ->all();
 
-                // upsert rooms
+                // upsert rooms via natural key (venue_id + name)
                 foreach ($apiRoomNames as $roomName) {
-                    if (isset($dbRooms[$roomName])) {
-                        MeetingRoom::where('id', $dbRooms[$roomName])->update(['updated_at' => now()]);
+                    $roomId = $dbRooms[$roomName] ?? null;
+                    if ($roomId) {
+                        MeetingRoom::where('id', $roomId)->update(['updated_at' => now()]);
                     } else {
-                        $newId = (string) Str::uuid();
+                        $roomId = (string) Str::uuid();
                         MeetingRoom::create([
-                            'id'               => $newId,
+                            'id'               => $roomId,
                             'meeting_venue_id' => $venueId,
                             'name'             => $roomName,
                             'created_at'       => now(),
                             'updated_at'       => now(),
                         ]);
-                        $dbRooms[$roomName] = $newId;
+                        $dbRooms[$roomName] = $roomId;
                     }
                     $roomsUpserted++;
                 }
@@ -425,14 +482,23 @@ class PhriMeetingRoomService
 
             DB::commit();
 
+            // FINAL CLEANUP: pastikan tidak ada orphan tersisa setelah upsert
+            $purge2 = $this->purgeOrphans();
+
             return [
-                'venues_inserted'  => $venuesInserted,
-                'venues_updated'   => $venuesUpdated,
-                'venues_deleted'   => $venuesDeleted,
-                'rooms_upserted'   => $roomsUpserted,
-                'rooms_deleted'    => $roomsDeleted,
-                'layouts_upserted' => $layoutsUpserted,
-                'layouts_deleted'  => $layoutsDeleted,
+                'venues_inserted'   => $venuesInserted,
+                'venues_updated'    => $venuesUpdated,
+                'venues_deleted'    => $venuesDeleted ?? 0,
+                'rooms_upserted'    => $roomsUpserted,
+                'rooms_deleted'     => $roomsDeleted ?? 0,
+                'layouts_upserted'  => $layoutsUpserted,
+                'layouts_deleted'   => $layoutsDeleted ?? 0,
+                'reassigned_rooms'  => $dedupStats['reassignedRooms'] ?? 0,
+                'dedup_venues'      => $dedupStats['deletedVenues'] ?? 0,
+                'purged_orphans'    => [
+                    'rooms'   => ($purge1['deletedRooms'] ?? 0) + ($purge2['deletedRooms'] ?? 0),
+                    'layouts' => ($purge1['deletedLayouts'] ?? 0) + ($purge2['deletedLayouts'] ?? 0),
+                ],
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
