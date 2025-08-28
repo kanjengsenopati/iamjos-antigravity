@@ -18,14 +18,14 @@ class MediaCornerController extends Controller
                     return $query->where('title', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
                 })
-                ->orderBy('published_at')->paginate(12);
+                ->orderBy('published_at')->paginate($request->per_page ?? 12);
         } else {
             $data = Article::whereIsActive(true)
                 ->when($request->search, function ($query, $search) {
                     return $query->where('title', 'like', "%{$search}%")
                         ->orWhere('source', 'like', "%{$search}%");
                 })
-                ->orderBy('published_at')->paginate(12);
+                ->orderBy('published_at')->paginate($request->per_page ?? 12);
         }
 
         // Example response (replace with actual data retrieval logic)
