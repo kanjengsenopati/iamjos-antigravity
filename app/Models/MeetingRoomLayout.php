@@ -12,12 +12,17 @@ class MeetingRoomLayout extends Model
 
     protected $fillable = [
         'meeting_room_id',
-        'layout',
+        'meeting_room_type_id',
         'capacity'
     ];
 
     public function meetingRoom()
     {
         return $this->belongsTo(MeetingRoom::class)->withTrashed();
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(MeetingRoomType::class, 'meeting_room_type_id')->withTrashed();
     }
 }

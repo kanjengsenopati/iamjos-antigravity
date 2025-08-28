@@ -29,11 +29,11 @@
                                 </form>
                                 <!--end::Sync Button-->
                                 <!--begin::Add Button-->
-                                <a type="button" class="btn btn-primary btn-sm disabled"
+                                {{-- <a type="button" class="btn btn-primary btn-sm disabled"
                                     href="{{ route('meeting-room.create') }}">
                                     <i class="fa fa-plus"></i>
                                     Tambah Venue
-                                </a>
+                                </a> --}}
                                 <!--end::Add Button-->
                             </div>
                             <!--end::Card toolbar-->
@@ -91,11 +91,13 @@
                                 <thead>
                                     <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                         <th style="width: 5%">No</th>
+                                        <th>Logo</th>
                                         <th>Hotel/Venue</th>
                                         <th>Provinsi</th>
                                         <th>Kota</th>
                                         <th>Jumlah Ruang</th>
                                         <th>Kapasitas Max</th>
+                                        <th>Tipe</th>
                                         <th>Email</th>
                                         <th>Telepon</th>
                                         <th class="text-center min-w-100px">Aksi</th>
@@ -117,19 +119,14 @@
         <!--end::Content wrapper-->
     </div>
 @endsection
-
-@push('css')
-    <link href="{{ asset('assets/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
-@endpush
-
 @push('js')
-    <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
     <script>
         $(document).ready(function() {
             // Initialize DataTable
             var table = $('#datatable').DataTable({
                 processing: true,
                 serverSide: true,
+                responsive: true,
                 ajax: {
                     url: "{{ route('meeting-room.index') }}",
                     data: function(d) {
@@ -146,8 +143,19 @@
                         searchable: false
                     },
                     {
-                        data: 'hotel',
-                        name: 'hotel'
+                        data: 'thumbnail',
+                        name: 'thumbnail',
+                        render: function(data, type, row) {
+                            if (data == null) {
+                                return `<span class="symbol-label fs-2x fw-bold text-primary bg-light-primary">${row.name.charAt(0)}</span>`;
+                            } else {
+                                return `<img src="${data}" alt="image" class="h-50px w-50px rounded-circle" />`;
+                            }
+                        }
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
                     },
                     {
                         data: 'province_name',
@@ -166,6 +174,10 @@
                     {
                         data: 'max_capacity',
                         name: 'max_capacity'
+                    },
+                    {
+                        data: 'type',
+                        name: 'type'
                     },
                     {
                         data: 'email',

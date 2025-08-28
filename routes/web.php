@@ -32,11 +32,12 @@ use App\Http\Controllers\Admin\AboutUsHistoryController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\BppOrganizationController;
 use App\Http\Controllers\Admin\HonoraryCouncilController;
+use App\Http\Controllers\Admin\MeetingRoomInfoController;
+use App\Http\Controllers\Admin\MeetingRoomTypeController;
 use App\Http\Controllers\Admin\HomeDocumentationController;
 use App\Http\Controllers\Admin\AboutUsInformationController;
 use App\Http\Controllers\Admin\ApplicationSettingController;
 use App\Http\Controllers\Admin\DirectionCommitmentController;
-use App\Http\Controllers\Admin\MeetingRoomInfoController;
 use App\Http\Controllers\Admin\RegionalCoordinatorController;
 
 // ---------- Public / Auth ----------
@@ -135,12 +136,15 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('contact-us', ContactUsController::class, ['except' => ['show']]);
 
     Route::resource('meeting-room-info', MeetingRoomInfoController::class);
+    Route::resource('meeting-room-type', MeetingRoomTypeController::class);
     // --------- Meeting Room (dari main) ---------
     Route::resource('meeting-room', MeetingRoomController::class);
     Route::post('meeting-room/sync', [MeetingRoomController::class, 'sync'])->name('meeting-room.sync');
     Route::get('meeting-room/regencies/{province}', [MeetingRoomController::class, 'getRegencies'])->name('meeting-room.regencies');
     Route::get('meeting-room-filter-data', [MeetingRoomController::class, 'getFilterData'])->name('meeting-room.filter-data');
     Route::get('meeting-room-cities/{province}', [MeetingRoomController::class, 'getCitiesByProvince'])->name('meeting-room.cities');
+    Route::post('meeting-room/{meetingRoom}/gallery/upload', [MeetingRoomController::class, 'uploadGallery'])->name('meeting-room.gallery.upload');
+    Route::delete('meeting-room/{meetingRoom}/gallery/{gallery}', [MeetingRoomController::class, 'deleteGallery'])->name('meeting-room.gallery.delete');
 
     // Rooms under a venue
     Route::prefix('venue/{venue}')->group(function () {

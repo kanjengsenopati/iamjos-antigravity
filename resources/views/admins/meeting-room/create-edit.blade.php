@@ -29,13 +29,29 @@
 
                             {{-- Hotel Name --}}
                             <div class="fv-row mb-6">
-                                <label for="hotel" class="fs-6 fw-bold form-label">
-                                    <span class="text-dark">Nama Hotel/Venue</span>
+                                <label for="name" class="fs-6 fw-bold form-label">
+                                    <span class="text-dark">Nama Hotel/Resort</span>
                                     <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" class="form-control" id="hotel" name="hotel"
-                                    value="{{ old('hotel', @$meetingRoom->hotel) }}" placeholder="Masukkan nama hotel/venue"
+                                <input type="text" class="form-control" id="name" name="name"
+                                    value="{{ old('name', @$meetingRoom->name) }}" placeholder="Masukkan nama hotel/resort"
                                     required />
+                            </div>
+
+                            <div class="fv-row mb-6">
+                                <label for="type" class="fs-6 fw-bold form-label">
+                                    <span class="text-dark">Tipe</span>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select name="type" id="type" class="form-select" required>
+                                    <option value="">Pilih Tipe</option>
+                                    @foreach (['HOTEL', 'RESORT'] as $type)
+                                        <option value="{{ $type }}"
+                                            {{ old('type', @$meetingRoom->type) == $type ? 'selected' : '' }}>
+                                            {{ $type }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             {{-- Address --}}
@@ -122,51 +138,10 @@
                                 <div class="form-text">Kapasitas maksimum orang dalam venue ini</div>
                             </div>
 
-                            {{-- Gallery Upload --}}
+                            {{-- Address --}}
                             <div class="fv-row mb-6">
-                                <label class="fs-6 fw-bold form-label">
-                                    <span class="text-dark">Galeri Venue</span>
-                                </label>
-                                <button type="button" class="btn btn-success mb-3" id="add-photo-btn">
-                                    <i class="fa fa-plus"></i> Tambah Foto
-                                </button>
-                                <input type="file" class="form-control" id="gallery" name="gallery[]"
-                                    accept="image/*" multiple style="display:none;" />
-                                <div class="form-text">Upload foto venue (JPEG, PNG, JPG, WebP - Maksimal 4MB per foto,
-                                    bisa pilih beberapa foto sekaligus)</div>
-
-                                {{-- Preview untuk foto baru --}}
-                                <div id="gallery-preview" class="mt-4" style="display: none;">
-                                    <label class="form-label fw-semibold">Preview Foto Baru:</label>
-                                    <div class="row" id="preview-container"></div>
-                                </div>
-
-                                {{-- Galeri saat ini --}}
-                                @if (isset($meetingRoom) && $meetingRoom->gallery && count($meetingRoom->gallery) > 0)
-                                    <div class="mt-4">
-                                        <label class="form-label fw-semibold">Galeri Saat Ini
-                                            ({{ count($meetingRoom->gallery) }} foto):</label>
-                                        <div class="row g-3 mt-2">
-                                            @foreach ($meetingRoom->gallery as $index => $photo)
-                                                <div class="col-md-3">
-                                                    <div class="position-relative">
-                                                        <img src="{{ Storage::url($photo) }}"
-                                                            alt="Gallery {{ $index + 1 }}" class="img-thumbnail w-100"
-                                                            style="height: 120px; object-fit: cover;">
-                                                        <button type="button"
-                                                            class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 remove-photo"
-                                                            data-photo="{{ $photo }}"
-                                                            data-index="{{ $index }}">
-                                                            <i class="fa fa-times"></i>
-                                                        </button>
-                                                        <input type="hidden" name="existing_gallery[]"
-                                                            value="{{ $photo }}">
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
+                                <x-form.image-upload label="Foto Logo" maxSize="2MB" name="thumbnail" :value="@$meetingRoom->thumbnail ?? null"
+                                    nullable='1' />
                             </div>
 
                             {{-- Submit Button --}}
@@ -189,13 +164,6 @@
 @push('js')
     <script>
         $(document).ready(function() {
-            let selectedFiles = []; // Array untuk menyimpan file yang dipilih
-
-            // Show file input when 'Tambah Foto' button is clicked
-            $('#add-photo-btn').click(function() {
-                $('#gallery').click();
-            });
-
             // Handle province change
             $('#province_id').change(function() {
                 const provinceId = $(this).val();
@@ -229,90 +197,6 @@
                 } else {
                     regencySelect.empty();
                     regencySelect.append('<option value="">Pilih Kota/Kabupaten</option>');
-                }
-            });
-
-            // Gallery preview functionality - support multiple selections
-            $('#gallery').change(function(e) {
-                const newFiles = Array.from(e.target.files);
-
-                // Tambahkan file baru ke array yang sudah ada
-                selectedFiles = selectedFiles.concat(newFiles);
-
-                updateGalleryPreview();
-                updateFileInput();
-            });
-
-            function updateGalleryPreview() {
-                const previewContainer = $('#preview-container');
-                previewContainer.empty();
-
-                if (selectedFiles.length > 0) {
-                    $('#gallery-preview').show();
-
-                    selectedFiles.forEach((file, index) => {
-                        if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                const col = $(`
-                                    <div class="col-md-3 mb-3">
-                                        <div class="position-relative">
-                                            <img src="${e.target.result}" alt="Preview ${index + 1}" 
-                                                class="img-thumbnail w-100" style="height: 120px; object-fit: cover;">
-                                            <div class="position-absolute top-0 start-0 bg-primary text-white px-2 py-1 rounded-end small">
-                                                ${index + 1}
-                                            </div>
-                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 remove-new-photo" data-index="${index}">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                `);
-                                previewContainer.append(col);
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-                } else {
-                    $('#gallery-preview').hide();
-                }
-            }
-
-            function updateFileInput() {
-                // Buat file input baru dengan files yang dipilih
-                const dt = new DataTransfer();
-                selectedFiles.forEach(file => {
-                    dt.items.add(file);
-                });
-                document.getElementById('gallery').files = dt.files;
-            }
-
-            // Remove new photo from preview
-            $(document).on('click', '.remove-new-photo', function() {
-                const index = parseInt($(this).data('index'));
-                selectedFiles.splice(index, 1);
-                updateGalleryPreview();
-                updateFileInput();
-            });
-
-            // Remove existing photo functionality
-            $('.remove-photo').click(function() {
-                const photoPath = $(this).data('photo');
-                const index = $(this).data('index');
-
-                if (confirm('Yakin ingin menghapus foto ini?')) {
-                    $(this).closest('.col-md-3').remove();
-
-                    // Add to remove list
-                    if (!$('#photos-to-remove').length) {
-                        $('form').append(
-                            '<input type="hidden" id="photos-to-remove" name="photos_to_remove[]" value="">'
-                        );
-                    }
-
-                    let photosToRemove = $('#photos-to-remove').val().split(',').filter(p => p);
-                    photosToRemove.push(photoPath);
-                    $('#photos-to-remove').val(photosToRemove.join(','));
                 }
             });
         });

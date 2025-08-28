@@ -449,7 +449,7 @@
 
                     {{-- Meeting Room Menu --}}
                     <div data-kt-menu-trigger="click"
-                        class="menu-item menu-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*']) ? 'show' : '' }}">
+                        class="menu-item menu-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*', 'meeting-room-type.*']) ? 'show' : '' }}">
                         <!--begin:Menu link-->
                         <span class="menu-link">
                             <span class="menu-icon">
@@ -461,7 +461,7 @@
                         <!--end:Menu link-->
                         <!--begin:Menu sub-->
                         <div
-                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*']) ? 'show' : '' }}">
+                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*', 'meeting-room-type.*']) ? 'show' : '' }}">
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
@@ -482,6 +482,17 @@
                                         <span class="bullet bullet-dot"></span>
                                     </span>
                                     <span class="menu-title">Informasi Banner</span>
+                                </a>
+                                <!--end:Menu link-->
+                            </div>
+                            <div class="menu-item">
+                                <!--begin:Menu link-->
+                                <a class="menu-link {{ request()->routeIs('meeting-room-type.*') ? ' active' : '' }}"
+                                    href="{{ route('meeting-room-type.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Tipe Ruang Pertemuan</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>

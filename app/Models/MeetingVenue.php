@@ -24,15 +24,16 @@ class MeetingVenue extends Model
         'email',
         'phone',
         'max_capacity',
-        'gallery',
-    ];
-
-    protected $casts = [
-        'gallery' => 'array',
+        'thumbnail'
     ];
 
     public function meeting_rooms()
     {
         return $this->hasMany(MeetingRoom::class, 'meeting_venue_id', 'id');
+    }
+
+    public function galleries()
+    {
+        return $this->hasMany(MeetingVenueGallery::class, 'meeting_venue_id', 'id');
     }
 }

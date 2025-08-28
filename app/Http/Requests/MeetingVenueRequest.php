@@ -22,17 +22,15 @@ class MeetingVenueRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'hotel' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|in:HOTEL,RESORT',
             'province_id' => 'required|exists:provinces,id',
             'regency_id' => 'required|exists:regencies,id',
             'address' => 'nullable|string',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'max_capacity' => 'required|integer|min:0',
-            'gallery' => 'nullable|array|max:10',
-            'gallery.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
-            'existing_gallery' => 'nullable|array',
-            'existing_gallery.*' => 'string',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp'
         ];
     }
 }

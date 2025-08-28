@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\MeetingRoom;
 use App\Models\MeetingVenue;
+use App\Models\MeetingVenueGallery;
 use App\Models\Province;
 use App\Models\Regency;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UploadGalleryMeetingVenueRequest;
 use App\Http\Requests\MeetingVenueRequest;
 use App\Services\PhriMeetingRoomService;
 use App\Services\ImageService;
@@ -30,13 +32,13 @@ class MeetingRoomController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = MeetingVenue::with(['meeting_rooms'])->orderBy('hotel');
+            $query = MeetingVenue::query();
 
             // Apply search filters
             if ($request->filled('search_venue')) {
                 $searchTerm = $request->search_venue;
                 $query->where(function ($q) use ($searchTerm) {
-                    $q->whereRaw('LOWER(hotel) LIKE LOWER(?)', ['%' . $searchTerm . '%'])
+                    $q->whereRaw('LOWER(name) LIKE LOWER(?)', ['%' . $searchTerm . '%'])
                         ->orWhereRaw('LOWER(address) LIKE LOWER(?)', ['%' . $searchTerm . '%'])
                         ->orWhereRaw('LOWER(province_name) LIKE LOWER(?)', ['%' . $searchTerm . '%'])
                         ->orWhereRaw('LOWER(city_name) LIKE LOWER(?)', ['%' . $searchTerm . '%']);
@@ -55,7 +57,9 @@ class MeetingRoomController extends Controller
                 $query->where('max_capacity', '>=', $request->filter_capacity);
             }
 
-            return DataTables::of($query)
+            $data = $query->latest();
+
+            return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($data) {
                     $actionShow = route('meeting-room.show', $data->id);
@@ -101,38 +105,15 @@ class MeetingRoomController extends Controller
      */
     public function store(MeetingVenueRequest $request)
     {
-        $validated = $request->validated();
+        $data = $request->validated();
 
-        $province = Province::find($validated['province_id']);
-        $regency = Regency::find($validated['regency_id']);
-
-        $data = [
-            'hotel' => $validated['hotel'],
-            'address' => $validated['address'],
-            'province_id' => $validated['province_id'],
-            'regency_id' => $validated['regency_id'],
-            'province_name' => $province->name,
-            'city_name' => $regency->name,
-            'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'max_capacity' => $validated['max_capacity'] ?? null,
-            'gallery' => [],
-        ];
-
-        // Handle gallery uploads
-        if ($request->hasFile('gallery')) {
+        if ($request->hasFile('thumbnail')) {
             $imageService = app(ImageService::class);
-            $gallery = [];
-
-            foreach ($request->file('gallery') as $photo) {
-                $photoPath = $imageService->storeImage($photo, 'meeting-venues');
-                $gallery[] = $photoPath;
-            }
-
-            $data['gallery'] = $gallery;
+            $thumbnailPath = $imageService->storeImage($request->file('thumbnail'), 'images/meeting-venues');
+            $data['thumbnail'] = 'storage/' . $thumbnailPath;
         }
 
-        MeetingVenue::create($data);
+        $MeetingVenue = MeetingVenue::create($data);
 
         return redirect()->route('meeting-room.index')->with('success', 'Meeting venue berhasil ditambahkan.');
     }
@@ -142,7 +123,7 @@ class MeetingRoomController extends Controller
      */
     public function show(MeetingVenue $meetingRoom)
     {
-        $meetingRoom->load(['meeting_rooms.meeting_room_layouts']);
+        $meetingRoom->load(['meeting_rooms.meeting_room_layouts', 'galleries']);
         return view('admins.meeting-room.show', compact('meetingRoom'));
     }
 
@@ -161,46 +142,14 @@ class MeetingRoomController extends Controller
      */
     public function update(MeetingVenueRequest $request, MeetingVenue $meetingRoom)
     {
-        $validated = $request->validated();
+        $data = $request->validated();
 
-        $province = Province::find($validated['province_id']);
-        $regency = Regency::find($validated['regency_id']);
-
-        $data = [
-            'hotel' => $validated['hotel'],
-            'address' => $validated['address'],
-            'province_id' => $validated['province_id'],
-            'regency_id' => $validated['regency_id'],
-            'province_name' => $province->name,
-            'city_name' => $regency->name,
-            'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'max_capacity' => $validated['max_capacity'] ?? null,
-        ];
-
-        // Handle gallery updates
-        $imageService = app(ImageService::class);
-        $currentGallery = $meetingRoom->gallery ?? [];
-        $existingGallery = $request->input('existing_gallery', []);
-
-        // Remove deleted photos from storage
-        $photosToDelete = array_diff($currentGallery, $existingGallery);
-        foreach ($photosToDelete as $photoPath) {
-            Storage::delete($photoPath);
+        if ($request->hasFile('thumbnail')) {
+            file_exists($meetingRoom->thumbnail) ? unlink($meetingRoom->thumbnail) : null;
+            $imageService = app(ImageService::class);
+            $thumbnailPath = $imageService->storeImage($request->file('thumbnail'), 'images/meeting-venues');
+            $data['thumbnail'] = 'storage/' . $thumbnailPath;
         }
-
-        // Start with existing photos that weren't deleted
-        $newGallery = $existingGallery;
-
-        // Add new photos
-        if ($request->hasFile('gallery')) {
-            foreach ($request->file('gallery') as $photo) {
-                $photoPath = $imageService->storeImage($photo, 'meeting-venues');
-                $newGallery[] = $photoPath;
-            }
-        }
-
-        $data['gallery'] = array_values($newGallery); // Re-index array
 
         $meetingRoom->update($data);
 
@@ -212,12 +161,7 @@ class MeetingRoomController extends Controller
      */
     public function destroy(MeetingVenue $meetingRoom)
     {
-        // Delete all photos in gallery if exists
-        if ($meetingRoom->gallery && is_array($meetingRoom->gallery)) {
-            foreach ($meetingRoom->gallery as $photoPath) {
-                Storage::delete($photoPath);
-            }
-        }
+        file_exists($meetingRoom->thumbnail) ? unlink($meetingRoom->thumbnail) : null;
 
         $meetingRoom->delete();
         return redirect()->route('meeting-room.index')->with('success', 'Meeting venue berhasil dihapus.');
@@ -302,5 +246,88 @@ class MeetingRoomController extends Controller
             });
 
         return response()->json($cities);
+    }
+
+    /**
+     * Upload new gallery images (multiple)
+     */
+    public function uploadGallery(UploadGalleryMeetingVenueRequest $request, MeetingVenue $meetingRoom)
+    {
+        try {
+            $imageService = app(ImageService::class);
+            $uploadedCount = 0;
+            $errors = [];
+
+            foreach ($request->file('gallery_images') as $index => $image) {
+                try {
+                    $imagePath = $imageService->storeImage($image, 'meeting-venues/gallery');
+
+                    // Create gallery record
+                    MeetingVenueGallery::create([
+                        'meeting_venue_id' => $meetingRoom->id,
+                        'image' => 'storage/' . $imagePath,
+                    ]);
+
+                    $uploadedCount++;
+                } catch (\Exception $e) {
+                    Log::error('Error uploading single gallery image: ' . $e->getMessage());
+                    $errors[] = "Gambar ke-" . ($index + 1) . " gagal diupload: " . $e->getMessage();
+                }
+            }
+
+            if ($uploadedCount > 0) {
+                $message = "Berhasil mengupload {$uploadedCount} gambar";
+                if (count($errors) > 0) {
+                    $message .= ". " . count($errors) . " gambar gagal diupload.";
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'uploaded_count' => $uploadedCount,
+                    'errors' => $errors,
+                    'redirect' => route('meeting-room.show', $meetingRoom->id)
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Semua gambar gagal diupload',
+                    'errors' => $errors
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error uploading gallery images: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupload gambar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete gallery image
+     */
+    public function deleteGallery(MeetingVenue $meetingRoom, MeetingVenueGallery $gallery)
+    {
+        try {
+            // Delete file from storage
+            if (file_exists($gallery->image)) {
+                unlink($gallery->image);
+            }
+
+            // Delete record from database
+            $gallery->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gambar berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting gallery image: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus gambar: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
