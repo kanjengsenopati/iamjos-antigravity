@@ -180,7 +180,8 @@ class MeetingRoomController extends Controller
             ['label' => '0-500',     'min' => 0,    'max' => 500],
             ['label' => '501-1000',  'min' => 501,  'max' => 1000],
             ['label' => '1001-1500', 'min' => 1001, 'max' => 1500],
-            ['label' => '1501+',     'min' => 1501, 'max' => null],
+            ['label' => '1501+',     'min' => 1501, 'max' => 2000],
+            ['label' => '2001+',     'min' => 2001, 'max' => null],
         ];
 
         // inisialisasi counter
