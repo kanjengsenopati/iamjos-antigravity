@@ -7,130 +7,13 @@
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
                 <div id="kt_app_content_container" class="app-container container-xxl">
-
-                    <!--begin::Row-->
-                    <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-                        <!--begin::Col-->
-                        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-6">
-                            <!--begin::Card-->
-                            <div class="card card-flush h-md-50 mb-5 mb-xl-10">
-                                <!--begin::Header-->
-                                <div class="card-header pt-5">
-                                    <!--begin::Title-->
-                                    <div class="card-title d-flex flex-column">
-                                        <h3 class="fw-bold text-dark">System Information</h3>
-                                        <span class="text-muted fw-semibold fs-7">Server and application details</span>
-                                    </div>
-                                    <!--end::Title-->
-                                </div>
-                                <!--end::Header-->
-                                <!--begin::Card body-->
-                                <div class="card-body pt-5">
-                                    <div id="system-info-loading" class="text-center">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
-                                    <div id="system-info-content" style="display: none;">
-                                        <div class="table-responsive">
-                                            <table class="table table-row-dashed table-row-gray-300 gy-4">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">PHP Version</td>
-                                                        <td class="text-end" id="php-version">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Laravel Version</td>
-                                                        <td class="text-end" id="laravel-version">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Server Software</td>
-                                                        <td class="text-end" id="server-software">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Memory Limit</td>
-                                                        <td class="text-end" id="memory-limit">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Max Execution Time</td>
-                                                        <td class="text-end" id="max-execution-time">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Upload Max Size</td>
-                                                        <td class="text-end" id="upload-max-filesize">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Free Disk Space</td>
-                                                        <td class="text-end" id="disk-free-space">-</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end::Card body-->
-                            </div>
-                            <!--end::Card-->
-                        </div>
-                        <!--end::Col-->
-
-                        <!--begin::Col-->
-                        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-6">
-                            <!--begin::Card-->
-                            <div class="card card-flush h-md-50 mb-5 mb-xl-10">
-                                <!--begin::Header-->
-                                <div class="card-header pt-5">
-                                    <!--begin::Title-->
-                                    <div class="card-title d-flex flex-column">
-                                        <h3 class="fw-bold text-dark">Database Information</h3>
-                                        <span class="text-muted fw-semibold fs-7">Database details and backup history</span>
-                                    </div>
-                                    <!--end::Title-->
-                                </div>
-                                <!--end::Header-->
-                                <!--begin::Card body-->
-                                <div class="card-body pt-5">
-                                    <div id="database-info-loading" class="text-center">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
-                                    <div id="database-info-content" style="display: none;">
-                                        <div class="table-responsive">
-                                            <table class="table table-row-dashed table-row-gray-300 gy-4">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Database Name</td>
-                                                        <td class="text-end" id="database-name">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Database Size</td>
-                                                        <td class="text-end" id="database-size">-</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold text-muted">Table Count</td>
-                                                        <td class="text-end" id="table-count">-</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end::Card body-->
-                            </div>
-                            <!--end::Card-->
-                        </div>
-                        <!--end::Col-->
-                    </div>
-                    <!--end::Row-->
-
                     <!--begin::AD/ART Upload Card-->
                     <div class="card card-flush mb-5 mb-xl-10">
                         <!--begin::Card header-->
                         <div class="card-header mt-6">
                             <!--begin::Card title-->
                             <h3 class="card-title align-items-start flex-column">
-                                <span class="card-label fw-bold fs-3 mb-1">AD/ART Document</span>
+                                <span class="card-label fw-bold fs-3 mb-1">Dokumen AD/ART</span>
                                 <span class="text-muted mt-1 fw-semibold fs-7">Upload Anggaran Dasar/Anggaran Rumah
                                     Tangga</span>
                             </h3>
@@ -187,8 +70,7 @@
                                             </i>
                                             Download
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-light-danger"
-                                            onclick="deleteAdArt()">
+                                        <button type="button" class="btn btn-sm btn-light-danger" onclick="deleteAdArt()">
                                             <i class="ki-duotone ki-trash fs-2">
                                                 <span class="path1"></span>
                                                 <span class="path2"></span>
@@ -220,7 +102,7 @@
                     <!--end::AD/ART Upload Card-->
 
                     <!--begin::Database Backup Card-->
-                    <div class="card card-flush">
+                    <div class="card card-flush mb-5 mb-xl-10">
                         <!--begin::Card header-->
                         <div class="card-header mt-6">
                             <!--begin::Card title-->
@@ -301,6 +183,122 @@
                         <!--end::Card body-->
                     </div>
                     <!--end::Card-->
+                    <!--begin::Row-->
+                    <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                        <!--begin::Col-->
+                        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-6">
+                            <!--begin::Card-->
+                            <div class="card card-flush h-md-50 mb-5 mb-xl-10">
+                                <!--begin::Header-->
+                                <div class="card-header pt-5">
+                                    <!--begin::Title-->
+                                    <div class="card-title d-flex flex-column">
+                                        <h3 class="fw-bold text-dark">System Information</h3>
+                                        <span class="text-muted fw-semibold fs-7">Server and application details</span>
+                                    </div>
+                                    <!--end::Title-->
+                                </div>
+                                <!--end::Header-->
+                                <!--begin::Card body-->
+                                <div class="card-body pt-5">
+                                    <div id="system-info-loading" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div id="system-info-content" style="display: none;">
+                                        <div class="table-responsive">
+                                            <table class="table table-row-dashed table-row-gray-300 gy-4">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">PHP Version</td>
+                                                        <td class="text-end" id="php-version">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Laravel Version</td>
+                                                        <td class="text-end" id="laravel-version">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Server Software</td>
+                                                        <td class="text-end" id="server-software">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Memory Limit</td>
+                                                        <td class="text-end" id="memory-limit">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Max Execution Time</td>
+                                                        <td class="text-end" id="max-execution-time">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Upload Max Size</td>
+                                                        <td class="text-end" id="upload-max-filesize">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Free Disk Space</td>
+                                                        <td class="text-end" id="disk-free-space">-</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Card body-->
+                            </div>
+                            <!--end::Card-->
+                        </div>
+                        <!--end::Col-->
+
+                        <!--begin::Col-->
+                        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-6">
+                            <!--begin::Card-->
+                            <div class="card card-flush h-md-50 mb-5 mb-xl-10">
+                                <!--begin::Header-->
+                                <div class="card-header pt-5">
+                                    <!--begin::Title-->
+                                    <div class="card-title d-flex flex-column">
+                                        <h3 class="fw-bold text-dark">Database Information</h3>
+                                        <span class="text-muted fw-semibold fs-7">Database details and backup
+                                            history</span>
+                                    </div>
+                                    <!--end::Title-->
+                                </div>
+                                <!--end::Header-->
+                                <!--begin::Card body-->
+                                <div class="card-body pt-5">
+                                    <div id="database-info-loading" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div id="database-info-content" style="display: none;">
+                                        <div class="table-responsive">
+                                            <table class="table table-row-dashed table-row-gray-300 gy-4">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Database Name</td>
+                                                        <td class="text-end" id="database-name">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Database Size</td>
+                                                        <td class="text-end" id="database-size">-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold text-muted">Table Count</td>
+                                                        <td class="text-end" id="table-count">-</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Card body-->
+                            </div>
+                            <!--end::Card-->
+                        </div>
+                        <!--end::Col-->
+                    </div>
+                    <!--end::Row-->
                 </div>
                 <!--end::Content container-->
             </div>
