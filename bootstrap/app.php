@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\ValidateApiKey;
+use App\Http\Middleware\AdsTrackingRateLimit;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'validate_api_key' => ValidateApiKey::class,
+            'ads_rate_limit' => AdsTrackingRateLimit::class,
         ]);
         // contoh jika mau auto-apply ke grup API:
         // $middleware->appendToGroup('api', [ValidateApiKey::class]);

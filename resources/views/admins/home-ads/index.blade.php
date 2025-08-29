@@ -34,9 +34,9 @@
                                         <th style="width: 5%">No</th>
                                         <th class="min-w-125px">Media</th>
                                         <th class="min-w-125px">Tanggal</th>
-                                        <th class="min-w-125px">Total Dilihat</th>
-                                        <th class="min-w-125px">Total Klik</th>
+                                        <th class="min-w-125px">Statistik</th>
                                         <th class="min-w-125px">Urutan</th>
+                                        <th class="min-w-125px">Status</th>
                                         <th class="min-w-125px">Link</th>
                                         <th class="text-center min-w-100px">Aksi</th>
                                     </tr>
@@ -108,18 +108,24 @@
                         responsivePriority: -2
                     },
                     {
-                        data: 'total_view',
-                        name: 'total_view',
-                        responsivePriority: -2
-                    },
-                    {
-                        data: 'total_click',
-                        name: 'total_click',
+                        data: 'statistics',
+                        name: 'statistics',
+                        orderable: false,
+                        searchable: false,
                         responsivePriority: -2
                     },
                     {
                         data: 'order',
                         name: 'order',
+                        responsivePriority: -2
+                    },
+                    {
+                        data: 'is_active',
+                        name: 'is_active',
+                        render: function(data, type, row) {
+                            return data ? `<span class="badge badge-light-success">Aktif</span>` :
+                                `<span class="badge badge-light-danger">Nonaktif</span>`;
+                        },
                         responsivePriority: -2
                     },
                     {

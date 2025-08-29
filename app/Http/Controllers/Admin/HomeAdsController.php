@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Requests\Admin\HomeAdsRequest;
 
 class HomeAdsController extends Controller
@@ -22,6 +24,24 @@ class HomeAdsController extends Controller
         if (request()->ajax()) {
             $data = HomeAds::latest();
             return DataTables::of($data)
+                ->addColumn('statistics', function ($d) {
+                    // Ambil statistik real-time untuk setiap ads
+                    $pendingViews = $this->getCounterValue("ads_view_count:{$d->id}");
+                    $pendingClicks = $this->getCounterValue("ads_click_count:{$d->id}");
+                    $totalViews = $d->total_view + $pendingViews;
+                    $totalClicks = $d->total_click + $pendingClicks;
+                    $ctr = $totalViews > 0 ? round(($totalClicks / $totalViews) * 100, 1) : 0;
+
+                    return "
+                        <div class='text-center'>
+                            <div class='fs-7 text-muted'>Views</div>
+                            <div class='fw-bold text-primary'>" . number_format($totalViews) . "</div>
+                            <div class='fs-7 text-muted mt-1'>Clicks</div>
+                            <div class='fw-bold text-success'>" . number_format($totalClicks) . "</div>
+                            <div class='fs-8 text-muted mt-1'>CTR: {$ctr}%</div>
+                        </div>
+                    ";
+                })
                 ->addColumn('date', function ($d) {
                     $parse = function ($v) {
                         if (!$v) return null;
@@ -59,14 +79,16 @@ class HomeAdsController extends Controller
                     return '–';
                 })
                 ->addColumn('action', function ($data) {
+                    $actionShow = route('home-ads.show', $data->id);
                     $actionEdit = route('home-ads.edit', $data->id);
                     $actionDelete = route('home-ads.destroy', $data->id);
                     return "<div class='d-flex justify-content-center'>" .
+                        view('components.action.show', ['action' => $actionShow]) .
                         view('components.action.edit', ['action' => $actionEdit]) .
                         view('components.action.delete', ['action' => $actionDelete, 'id' => $data->id]) .
                         "</div>";
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'statistics'])
                 ->make(true);
         }
         return view('admins.home-ads.index');
@@ -100,9 +122,14 @@ class HomeAdsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $homeAds = HomeAds::findOrFail($id);
+
+        // Ambil statistik real-time
+        $statistics = $this->getAdsStatistics($homeAds);
+
+        return view('admins.home-ads.show', compact('homeAds', 'statistics'));
     }
 
     /**
@@ -171,5 +198,90 @@ class HomeAdsController extends Controller
         }
         $homeAds->delete();
         return redirect()->route('home-ads.index')->with('success', 'Iklan Berhasil dihapus');
+    }
+
+    /**
+     * Get detailed statistics for ads
+     */
+    private function getAdsStatistics(HomeAds $ads): array
+    {
+        // Ambil pending counts dari Redis/Cache
+        $pendingViews = $this->getCounterValue("ads_view_count:{$ads->id}");
+        $pendingClicks = $this->getCounterValue("ads_click_count:{$ads->id}");
+
+        // Total counts (DB + pending Redis)
+        $totalViews = $ads->total_view + $pendingViews;
+        $totalClicks = $ads->total_click + $pendingClicks;
+
+        // Hitung CTR (Click Through Rate)
+        $ctr = $totalViews > 0 ? round(($totalClicks / $totalViews) * 100, 2) : 0;
+
+        // Hitung periode dan status
+        $now = now();
+        $isActive = $ads->is_active &&
+            ($ads->start_date <= $now) &&
+            ($ads->end_date >= $now);
+
+        $daysRemaining = $ads->end_date ? $now->diffInDays($ads->end_date, false) : null;
+        $startDate = \Carbon\Carbon::parse($ads->start_date);
+        $endDate   = \Carbon\Carbon::parse($ads->end_date);
+
+        $totalDays = $startDate->diffInDays($endDate) + 1;
+
+
+        $startDate = $ads->start_date ? \Carbon\Carbon::parse($ads->start_date) : null;
+
+        $daysElapsed = $startDate
+            ? $startDate->diffInDays($now) + 1
+            : 0;
+
+        if ($daysElapsed > $totalDays && $totalDays > 0) {
+            $daysElapsed = $totalDays;
+        }
+
+        // Performance metrics
+        $avgViewsPerDay = $daysElapsed > 0 ? round($totalViews / $daysElapsed, 2) : 0;
+        $avgClicksPerDay = $daysElapsed > 0 ? round($totalClicks / $daysElapsed, 2) : 0;
+
+        // Projected metrics
+        $projectedViews = $totalDays > 0 && $avgViewsPerDay > 0 ?
+            round($avgViewsPerDay * $totalDays) : 0;
+        $projectedClicks = $totalDays > 0 && $avgClicksPerDay > 0 ?
+            round($avgClicksPerDay * $totalDays) : 0;
+
+        return [
+            'total_views' => $totalViews,
+            'total_clicks' => $totalClicks,
+            'pending_views' => $pendingViews,
+            'pending_clicks' => $pendingClicks,
+            'ctr_percentage' => $ctr,
+            'is_currently_active' => $isActive,
+            'days_remaining' => $daysRemaining,
+            'days_elapsed' => $daysElapsed,
+            'total_campaign_days' => $totalDays,
+            'avg_views_per_day' => $avgViewsPerDay,
+            'avg_clicks_per_day' => $avgClicksPerDay,
+            'projected_total_views' => $projectedViews,
+            'projected_total_clicks' => $projectedClicks,
+            'campaign_progress' => $totalDays > 0 ? round(($daysElapsed / $totalDays) * 100, 1) : 0,
+        ];
+    }
+
+    /**
+     * Helper method untuk mendapatkan counter value dengan fallback
+     */
+    private function getCounterValue($key)
+    {
+        try {
+            // Coba gunakan Redis dulu
+            if (extension_loaded('redis') && config('database.redis.default')) {
+                return Redis::get($key) ?? 0;
+            }
+        } catch (\Exception $e) {
+            // Fallback ke Cache driver
+        }
+
+        // Fallback ke Cache driver
+        return Cache::get($key, 0);
     }
 }
