@@ -16,5 +16,9 @@ class HomeAds extends Model
         'link',
         'is_active',
         'order',
+        'start_date',
+        'end_date',
+        'total_view',
+        'total_click',
     ];
 }

@@ -165,7 +165,6 @@
                                 'home-slider.*',
                                 'home-member.*',
                                 'home-sector.*',
-                                'home-ads.*',
                                 'home-documentation.*',
                                 'home-partner.*',
                                 'booking-ina.*',
@@ -224,19 +223,6 @@
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
                                             <span class="menu-title">Sektor Usaha</span>
-                                        </a>
-                                        <!--end:Menu link-->
-                                    </div>
-                                @endcan
-                                @can('home-ads')
-                                    <div class="menu-item">
-                                        <!--begin:Menu link-->
-                                        <a class="menu-link {{ request()->routeIs('home-ads.*') ? ' active' : '' }}"
-                                            href="{{ route('home-ads.index') }}">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">Iklan</span>
                                         </a>
                                         <!--end:Menu link-->
                                     </div>
@@ -438,6 +424,39 @@
                                             <span class="bullet bullet-dot"></span>
                                         </span>
                                         <span class="menu-title">Event</span>
+                                    </a>
+                                    <!--end:Menu link-->
+                                </div>
+                                <!--end:Menu item-->
+                            </div>
+                            <!--end:Menu sub-->
+                        </div>
+                    @endcan
+
+                    @can('home-ads')
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs('home-ads.*') ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                <span class="menu-icon">
+                                    <i class="ph ph-megaphone"></i>
+                                </span>
+                                <span class="menu-title">Iklan</span>
+                                <span class="menu-arrow"></span>
+                            </span>
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div
+                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['home-ads.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                <div class="menu-item">
+                                    <!--begin:Menu link-->
+                                    <a class="menu-link {{ request()->routeIs('home-ads.*') ? ' active' : '' }}"
+                                        href="{{ route('home-ads.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">Iklan</span>
                                     </a>
                                     <!--end:Menu link-->
                                 </div>

@@ -33,6 +33,9 @@
                                     <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                         <th style="width: 5%">No</th>
                                         <th class="min-w-125px">Media</th>
+                                        <th class="min-w-125px">Tanggal</th>
+                                        <th class="min-w-125px">Total Dilihat</th>
+                                        <th class="min-w-125px">Total Klik</th>
                                         <th class="min-w-125px">Urutan</th>
                                         <th class="min-w-125px">Link</th>
                                         <th class="text-center min-w-100px">Aksi</th>
@@ -85,6 +88,7 @@
                     {
                         data: 'media_url',
                         name: 'media_url',
+                        responsivePriority: -2,
                         render: function(data, type, row) {
                             if (row.media_type === 'image') {
                                 return `<img src="${data}" class="img-fluid" style="max-width: 200px; max-height: 200px;">`;
@@ -97,6 +101,21 @@
                                 return `<span class="text-muted">Tidak ada media</span>`;
                             }
                         }
+                    },
+                    {
+                        data: 'date',
+                        name: 'date',
+                        responsivePriority: -2
+                    },
+                    {
+                        data: 'total_view',
+                        name: 'total_view',
+                        responsivePriority: -2
+                    },
+                    {
+                        data: 'total_click',
+                        name: 'total_click',
+                        responsivePriority: -2
                     },
                     {
                         data: 'order',
@@ -119,7 +138,7 @@
                         name: 'action',
                         orderable: true,
                         searchable: true,
-                        responsivePriority: -1,
+                        responsivePriority: -3,
                     },
                 ]
             });

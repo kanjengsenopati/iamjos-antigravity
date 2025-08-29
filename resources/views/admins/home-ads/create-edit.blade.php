@@ -57,6 +57,34 @@
                             </div>
                             <div class="fv-row mb-6">
                                 <!--begin::Label-->
+                                <label for="start_date" class="fs-6 fw-bold form-label mt-3">
+                                    <span class="text-dark">Tanggal Mulai</span>
+                                    <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
+                                        title="Masukkan Tanggal Mulai"></i>
+                                </label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <input type="date" class="form-control" id="start_date" name="start_date"
+                                    value="{{ old('start_date', @$homeAds->start_date) }}"
+                                    placeholder="Masukkan Tanggal Mulai" />
+                                <!--end::Input-->
+                            </div>
+                            <div class="fv-row mb-6">
+                                <!--begin::Label-->
+                                <label for="end_date" class="fs-6 fw-bold form-label mt-3">
+                                    <span class="text-dark">Tanggal Selesai</span>
+                                    <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
+                                        title="Masukkan Tanggal Selesai"></i>
+                                </label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <input type="date" class="form-control" id="end_date" name="end_date"
+                                    value="{{ old('end_date', @$homeAds->end_date) }}"
+                                    placeholder="Masukkan Tanggal Selesai" />
+                                <!--end::Input-->
+                            </div>
+                            <div class="fv-row mb-6">
+                                <!--begin::Label-->
                                 <label for="link" class="fs-6 fw-bold form-label mt-3">
                                     <span class="text-dark">Link</span>
                                     <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"

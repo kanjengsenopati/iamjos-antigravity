@@ -22,7 +22,12 @@ class HomeController extends Controller
         $sliders = HomeSlider::whereIsActive(true)->get();
         $members = HomeMember::orderBy('order')->get();
         $sectors = HomeSector::orderBy('order')->get();
-        $ads = HomeAds::whereIsActive(true)->orderBy('order')->get();
+        $ads = HomeAds::whereIsActive(true)
+            ->where(function ($query) {
+                $query->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now());
+            })
+            ->orderBy('order')->get();
         $bookingIna = BookingIna::latest()->first();
         $hotelBookings = HotelBooking::whereIsActive(true)->inRandomOrder()->take(6)->get();
         $documentations = MediaCorner::whereIsActive(true)->orderBy('published_at', 'desc')->take(4)->get();
