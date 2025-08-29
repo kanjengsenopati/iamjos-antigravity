@@ -369,11 +369,6 @@
                             <!--begin:Menu link-->
                             <span class="menu-link">
                                 <span class="menu-icon">
-                                    {{-- <i class="ki-duotone ki-heart fs-2">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                        <span class="path3"></span>
-                                    </i> --}}
                                     <i class="ph ph-handshake"></i>
                                 </span>
                                 <span class="menu-title">Benefit</span>
@@ -466,59 +461,68 @@
                         </div>
                     @endcan
 
-                    {{-- Meeting Room Menu --}}
-                    <div data-kt-menu-trigger="click"
-                        class="menu-item menu-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*', 'meeting-room-type.*']) ? 'show' : '' }}">
-                        <!--begin:Menu link-->
-                        <span class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ph ph-buildings"></i>
+                    @canany(['meeting-room', 'meeting-room-info', 'meeting-room-type'])
+                        {{-- Meeting Room Menu --}}
+                        <div data-kt-menu-trigger="click"
+                            class="menu-item menu-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*', 'meeting-room-type.*']) ? 'show' : '' }}">
+                            <!--begin:Menu link-->
+                            <span class="menu-link">
+                                <span class="menu-icon">
+                                    <i class="ph ph-buildings"></i>
+                                </span>
+                                <span class="menu-title">Ruang Pertemuan</span>
+                                <span class="menu-arrow"></span>
                             </span>
-                            <span class="menu-title">Ruang Pertemuan</span>
-                            <span class="menu-arrow"></span>
-                        </span>
-                        <!--end:Menu link-->
-                        <!--begin:Menu sub-->
-                        <div
-                            class="menu-sub menu-sub-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*', 'meeting-room-type.*']) ? 'show' : '' }}">
-                            <!--begin:Menu item-->
-                            <div class="menu-item">
-                                <!--begin:Menu link-->
-                                <a class="menu-link {{ request()->routeIs('meeting-room.*') ? ' active' : '' }}"
-                                    href="{{ route('meeting-room.index') }}">
-                                    <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                    </span>
-                                    <span class="menu-title">Kelola Venue</span>
-                                </a>
-                                <!--end:Menu link-->
+                            <!--end:Menu link-->
+                            <!--begin:Menu sub-->
+                            <div
+                                class="menu-sub menu-sub-accordion {{ request()->routeIs(['meeting-room.*', 'meeting-room-info.*', 'meeting-room-type.*']) ? 'show' : '' }}">
+                                <!--begin:Menu item-->
+                                @can('meeting-room')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('meeting-room.*') ? ' active' : '' }}"
+                                            href="{{ route('meeting-room.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Kelola Venue</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+
+                                @can('meeting-room-type')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('meeting-room-type.*') ? ' active' : '' }}"
+                                            href="{{ route('meeting-room-type.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Tipe Ruang Pertemuan</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                @can('meeting-room-info')
+                                    <div class="menu-item">
+                                        <!--begin:Menu link-->
+                                        <a class="menu-link {{ request()->routeIs('meeting-room-info.*') ? ' active' : '' }}"
+                                            href="{{ route('meeting-room-info.index') }}">
+                                            <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
+                                            </span>
+                                            <span class="menu-title">Informasi Banner</span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                @endcan
+                                <!--end:Menu item-->
                             </div>
-                            <div class="menu-item">
-                                <!--begin:Menu link-->
-                                <a class="menu-link {{ request()->routeIs('meeting-room-info.*') ? ' active' : '' }}"
-                                    href="{{ route('meeting-room-info.index') }}">
-                                    <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                    </span>
-                                    <span class="menu-title">Informasi Banner</span>
-                                </a>
-                                <!--end:Menu link-->
-                            </div>
-                            <div class="menu-item">
-                                <!--begin:Menu link-->
-                                <a class="menu-link {{ request()->routeIs('meeting-room-type.*') ? ' active' : '' }}"
-                                    href="{{ route('meeting-room-type.index') }}">
-                                    <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                    </span>
-                                    <span class="menu-title">Tipe Ruang Pertemuan</span>
-                                </a>
-                                <!--end:Menu link-->
-                            </div>
-                            <!--end:Menu item-->
+                            <!--end:Menu sub-->
                         </div>
-                        <!--end:Menu sub-->
-                    </div>
+                    @endcanany
 
                     <div data-kt-menu-trigger="click"
                         class="menu-item menu-accordion {{ request()->routeIs(
