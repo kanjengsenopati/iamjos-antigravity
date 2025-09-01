@@ -132,23 +132,33 @@
             table.on('row-reorder', function(e, diff, edit) {
                 if (!diff.length) return;
 
-                // Ambil baris yang dipicu drag (baris utama yg dipindah)
-                const triggerNode = edit.triggerRow; // DOM TR
+                // Baris yang diseret (DOM TR)
+                const triggerNode = edit.triggerRow;
+
+                // Data baris yang diseret (buat ambil UUID)
                 const triggerData = table.row(triggerNode).data() || {};
                 let id = triggerData.uuid || triggerData.id || table.row(triggerNode).id();
+                if (!id) return;
                 id = String(id);
 
-                // Hitung posisi global baru: start index halaman + newData (1-based)
-                // (Ambil newData dari item diff yang node-nya sama dengan triggerNode)
-                const pageInfo = table.page.info();
-                const moved = diff.find(d => d.node === triggerNode) || diff[0];
-                const newOrderGlobal = pageInfo.start + parseInt(moved.newData, 10); // udah 1-based
+                // Hitung posisi BARU si trigger di DOM (pada halaman saat ini)
+                const nodesOnPage = table.rows({
+                    page: 'current',
+                    order: 'current'
+                }).nodes().toArray();
+                const newIndexOnPage = nodesOnPage.indexOf(triggerNode); // 0-based pada halaman
+                if (newIndexOnPage < 0) return;
 
+                // Konversi ke posisi global 1-based
+                const pageInfo = table.page.info();
+                const newOrderGlobal = pageInfo.start + newIndexOnPage + 1;
+
+                // Kirim ke server
                 fetch("{{ route('home-partner.reorder.single') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrf,
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
@@ -169,6 +179,7 @@
                         table.ajax.reload(null, false);
                     });
             });
+
         });
     </script>
 @endpush
