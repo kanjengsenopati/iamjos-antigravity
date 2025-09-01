@@ -56,69 +56,139 @@
     </div>
 @endsection
 @push('js')
+    <link rel="stylesheet" href="https://cdn.datatables.net/rowreorder/1.3.1/css/rowReorder.dataTables.css" />
+    <script src="https://cdn.datatables.net/rowreorder/1.3.1/js/dataTables.rowReorder.js"></script>
     <script>
-        $(document).ready(() => {
-            var table = $('#table-home-partner').DataTable({
+        $(function() {
+            const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const table = $('#table-home-partner').DataTable({
                 ordering: false,
                 processing: true,
                 serverSide: true,
                 responsive: true,
                 searchDelay: 500,
                 ajax: "{{ route('home-partner.index') }}",
-                language: {
-                    "paginate": {
-                        "next": "<i class='fa fa-angle-right'>",
-                        "previous": "<i class='fa fa-angle-left'>"
-                    },
-                    "loadingRecords": "Loading...",
-                    "processing": "Processing...",
+                rowReorder: {
+                    selector: 'tr',
+                    dataSrc: 'order'
                 },
-                columns: [{
-                        "data": null,
-                        "sortable": false,
-                        "searchable": false,
-                        responsivePriority: -3,
-                        render: function(data, type, row, meta) {
-                            return meta.row + meta.settings._iDisplayStart + 1;
-                        }
+                language: {
+                    paginate: {
+                        next: "<i class='fa fa-angle-right'>",
+                        previous: "<i class='fa fa-angle-left'>"
                     },
+                    loadingRecords: "Loading...",
+                    processing: "Processing..."
+                },
+                columns: [
+                    // (0) nomor urut tampilan
+                    {
+                        data: null,
+                        sortable: false,
+                        searchable: false,
+                        responsivePriority: -3,
+                        render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1
+                    },
+                    // (1) logo
                     {
                         data: 'image',
                         name: 'image',
-                        render: function(data, type, row) {
-                            if (data == null) {
-                                return `<span class="symbol-label fs-2x fw-bold text-primary bg-light-primary">${row.name.charAt(0)}</span>`;
-                            } else {
-                                return `<img src="${data}" alt="image" class="h-70px w-70px" />`;
+                        render: (data, type, row) => {
+                            if (!data) {
+                                const initial = (row.name || '?').toString().charAt(0)
+                                    .toUpperCase();
+                                return `<span class="symbol-label fs-2x fw-bold text-primary bg-light-primary">${initial}</span>`;
                             }
+                            return `<img src="${data}" alt="image" class="h-70px w-70px" />`;
                         }
                     },
+                    // (2) urutan
                     {
                         data: 'order',
                         name: 'order',
                         orderable: true,
                         searchable: true,
-                        responsivePriority: 1,
+                        responsivePriority: 1
                     },
+
+                    // (3) status
                     {
                         data: 'is_active',
                         name: 'is_active',
                         orderable: true,
                         searchable: true,
-                        render: function(data, type, row) {
-                            return `<span class="badge badge-light-${data ? 'success' : 'danger'}">${data ? 'Aktif' : 'Tidak Aktif'}</span>`;
-                        },
                         responsivePriority: 2,
+                        render: (v) =>
+                            `<span class="badge badge-light-${v ? 'success' : 'danger'}">${v ? 'Aktif' : 'Tidak Aktif'}</span>`
                     },
+
+                    // (4) aksi
                     {
                         data: 'action',
                         name: 'action',
                         orderable: true,
                         searchable: true,
-                        responsivePriority: -1,
+                        responsivePriority: -1
                     },
+
+                    // (5) UUID tersembunyi buat kebutuhan JS
+                    {
+                        data: 'uuid',
+                        name: 'uuid',
+                        visible: false,
+                        searchable: false
+                    }
                 ]
             });
-        })
+
+            table.on('row-reorder', function(e, diff, edit) {
+                if (!diff.length) return;
+
+                // Susun ulang 1..N berdasarkan urutan tampilan saat ini (lebih aman)
+                const updates = [];
+                table.rows({
+                    page: 'current',
+                    order: 'current'
+                }).every(function(idx) {
+                    const rowData = this.data() || {};
+                    // Ambil UUID *string* dari kolom 'uuid' (fallback: 'id' atau DT_RowId)
+                    let uuid = rowData.uuid || rowData.id || table.row(this.node()).id();
+                    if (uuid != null) {
+                        uuid = String(uuid); // pastikan string
+                        updates.push({
+                            id: uuid,
+                            order: idx + 1
+                        });
+                    }
+                });
+
+                if (!updates.length) return;
+
+                fetch("{{ route('home-partner.reorder') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            updates
+                        })
+                    })
+                    .then(async (res) => {
+                        if (!res.ok) throw new Error(await res.text());
+                        return res.json();
+                    })
+                    .then(() => {
+                        table.ajax.reload(null, false);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Gagal update urutan. Coba ulangi.');
+                        table.ajax.reload(null, false);
+                    });
+            });
+        });
     </script>
 @endpush

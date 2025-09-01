@@ -6,6 +6,7 @@ use App\Models\MediaCorner;
 use App\Services\YouTubeSearchService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class SyncMediaCornerPhri extends Command
 {
@@ -59,11 +60,16 @@ class SyncMediaCornerPhri extends Command
 
         // Simpan semua video (update jika sudah ada, insert jika baru)
         foreach ($videos as $v) {
+            $title_en = GoogleTranslate::trans($v['title'], 'en');
+            $description_en = GoogleTranslate::trans($v['description'], 'en');
+
             MediaCorner::updateOrCreate(
                 ['video_id' => $v['videoId']],
                 [
                     'title'        => $v['title'],
+                    'title_en'     => $title_en ?? $v['title'],
                     'description'  => $v['description'],
+                    'description_en' => $description_en ?? $v['description'],
                     'channel'      => $v['channel'],
                     'published_at' => $v['publishedAt'] ? Carbon::parse($v['publishedAt']) : null,
                     'url'          => $v['url'],

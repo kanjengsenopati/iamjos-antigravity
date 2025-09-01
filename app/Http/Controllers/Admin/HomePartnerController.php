@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\HomePartner;
 use Illuminate\Http\Request;
+use App\Services\ImageService;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\FacadesDB;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HomePartnerRequest;
-use App\Services\ImageService;
 
 class HomePartnerController extends Controller
 {
@@ -17,8 +19,11 @@ class HomePartnerController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            $data = HomePartner::latest();
+            $data = HomePartner::orderBy('order');
+
             return DataTables::of($data)
+                ->setRowId('id') // DT_RowId = UUID
+                ->addColumn('uuid', fn($row) => (string) $row->id) // <-- kolom eksplisit
                 ->addColumn('action', function ($data) {
                     $actionEdit = route('home-partner.edit', $data->id);
                     $actionDelete = route('home-partner.destroy', $data->id);
@@ -30,6 +35,7 @@ class HomePartnerController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         }
+
         return view('admins.home-partner.index');
     }
 
@@ -114,5 +120,35 @@ class HomePartnerController extends Controller
         }
         $homePartner->delete();
         return redirect()->route('home-partner.index')->with('success', 'Berhasil Menghapus Partner');
+    }
+
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'updates'          => ['required', 'array', 'min:1'],
+            'updates.*.id'     => ['required', 'string', 'exists:home_partners,id'], // UUID string
+            'updates.*.order'  => ['required', 'integer', 'min:1'],
+        ]);
+
+        $updates = collect($validated['updates']);
+
+        $caseSql = 'CASE';
+        $ids = [];
+
+        foreach ($updates as $u) {
+            $id    = (string) $u['id'];
+            $order = (int) $u['order'];
+            $ids[] = $id;
+            $caseSql .= " WHEN id = " . DB::getPdo()->quote($id) . " THEN " . $order;
+        }
+        $caseSql .= ' END';
+
+        DB::transaction(function () use ($ids, $caseSql) {
+            DB::table('home_partners')
+                ->whereIn('id', $ids)
+                ->update(['order' => DB::raw($caseSql)]);
+        });
+
+        return response()->json(['message' => 'Reorder updated']);
     }
 }
