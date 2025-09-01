@@ -67,8 +67,10 @@ Route::group(['middleware' => ['auth']], function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     // routes/web.php
-    Route::post('/home-partner/reorder', [HomePartnerController::class, 'reorder'])
-        ->name('home-partner.reorder');
+    // routes/web.php
+    Route::post('/home-partner/reorder-single', [HomePartnerController::class, 'reorderSingle'])
+        ->name('home-partner.reorder.single');
+
 
     // Home content
     Route::resource('home-slider', HomeSliderController::class);

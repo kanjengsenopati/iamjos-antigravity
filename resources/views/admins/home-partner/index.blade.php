@@ -71,7 +71,8 @@
                 ajax: "{{ route('home-partner.index') }}",
                 rowReorder: {
                     selector: 'tr',
-                    dataSrc: 'order'
+                    dataSrc: 'order',
+                    update: false // penting: biar DataTables tidak overwrite urutan lokal
                 },
                 language: {
                     paginate: {
@@ -81,16 +82,12 @@
                     loadingRecords: "Loading...",
                     processing: "Processing..."
                 },
-                columns: [
-                    // (0) nomor urut tampilan
-                    {
+                columns: [{
                         data: null,
                         sortable: false,
                         searchable: false,
-                        responsivePriority: -3,
-                        render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1
+                        render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
                     },
-                    // (1) logo
                     {
                         data: 'image',
                         name: 'image',
@@ -103,69 +100,51 @@
                             return `<img src="${data}" alt="image" class="h-70px w-70px" />`;
                         }
                     },
-                    // (2) urutan
                     {
                         data: 'order',
                         name: 'order',
                         orderable: true,
-                        searchable: true,
-                        responsivePriority: 1
+                        searchable: true
                     },
-
-                    // (3) status
                     {
                         data: 'is_active',
                         name: 'is_active',
                         orderable: true,
                         searchable: true,
-                        responsivePriority: 2,
-                        render: (v) =>
+                        render: v =>
                             `<span class="badge badge-light-${v ? 'success' : 'danger'}">${v ? 'Aktif' : 'Tidak Aktif'}</span>`
                     },
-
-                    // (4) aksi
                     {
                         data: 'action',
                         name: 'action',
                         orderable: true,
-                        searchable: true,
-                        responsivePriority: -1
+                        searchable: true
                     },
-
-                    // (5) UUID tersembunyi buat kebutuhan JS
                     {
                         data: 'uuid',
                         name: 'uuid',
                         visible: false,
                         searchable: false
-                    }
+                    } // pastikan server kirim 'uuid'
                 ]
             });
 
             table.on('row-reorder', function(e, diff, edit) {
                 if (!diff.length) return;
 
-                // Susun ulang 1..N berdasarkan urutan tampilan saat ini (lebih aman)
-                const updates = [];
-                table.rows({
-                    page: 'current',
-                    order: 'current'
-                }).every(function(idx) {
-                    const rowData = this.data() || {};
-                    // Ambil UUID *string* dari kolom 'uuid' (fallback: 'id' atau DT_RowId)
-                    let uuid = rowData.uuid || rowData.id || table.row(this.node()).id();
-                    if (uuid != null) {
-                        uuid = String(uuid); // pastikan string
-                        updates.push({
-                            id: uuid,
-                            order: idx + 1
-                        });
-                    }
-                });
+                // Ambil baris yang dipicu drag (baris utama yg dipindah)
+                const triggerNode = edit.triggerRow; // DOM TR
+                const triggerData = table.row(triggerNode).data() || {};
+                let id = triggerData.uuid || triggerData.id || table.row(triggerNode).id();
+                id = String(id);
 
-                if (!updates.length) return;
+                // Hitung posisi global baru: start index halaman + newData (1-based)
+                // (Ambil newData dari item diff yang node-nya sama dengan triggerNode)
+                const pageInfo = table.page.info();
+                const moved = diff.find(d => d.node === triggerNode) || diff[0];
+                const newOrderGlobal = pageInfo.start + parseInt(moved.newData, 10); // udah 1-based
 
-                fetch("{{ route('home-partner.reorder') }}", {
+                fetch("{{ route('home-partner.reorder.single') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -173,15 +152,16 @@
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
-                            updates
+                            id,
+                            new_order: newOrderGlobal
                         })
                     })
-                    .then(async (res) => {
+                    .then(async res => {
                         if (!res.ok) throw new Error(await res.text());
                         return res.json();
                     })
                     .then(() => {
-                        table.ajax.reload(null, false);
+                        table.ajax.reload(null, false); // refresh alus
                     })
                     .catch(err => {
                         console.error(err);

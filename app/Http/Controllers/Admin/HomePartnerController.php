@@ -6,7 +6,6 @@ use App\Models\HomePartner;
 use Illuminate\Http\Request;
 use App\Services\ImageService;
 use Yajra\DataTables\DataTables;
-use Illuminate\Support\FacadesDB;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HomePartnerRequest;
@@ -122,31 +121,41 @@ class HomePartnerController extends Controller
         return redirect()->route('home-partner.index')->with('success', 'Berhasil Menghapus Partner');
     }
 
-    public function reorder(Request $request)
+    public function reorderSingle(Request $request)
     {
-        $validated = $request->validate([
-            'updates'          => ['required', 'array', 'min:1'],
-            'updates.*.id'     => ['required', 'string', 'exists:home_partners,id'], // UUID string
-            'updates.*.order'  => ['required', 'integer', 'min:1'],
+        $data = $request->validate([
+            'id'        => ['required', 'string', 'exists:home_partners,id'],
+            'new_order' => ['required', 'integer', 'min:1'],
         ]);
 
-        $updates = collect($validated['updates']);
+        $id        = (string) $data['id'];
+        $newOrder  = (int) $data['new_order'];
 
-        $caseSql = 'CASE';
-        $ids = [];
+        // Ambil record sekarang
+        $item = HomePartner::select('id', 'order')->findOrFail($id);
+        $oldOrder = (int) $item->order;
 
-        foreach ($updates as $u) {
-            $id    = (string) $u['id'];
-            $order = (int) $u['order'];
-            $ids[] = $id;
-            $caseSql .= " WHEN id = " . DB::getPdo()->quote($id) . " THEN " . $order;
+        if ($newOrder === $oldOrder) {
+            return response()->json(['message' => 'No change'], 200);
         }
-        $caseSql .= ' END';
 
-        DB::transaction(function () use ($ids, $caseSql) {
+        DB::transaction(function () use ($oldOrder, $newOrder, $id) {
+            if ($newOrder < $oldOrder) {
+                // Geser ke atas: baris di rentang [newOrder .. oldOrder-1] +1
+                DB::table('home_partners')
+                    ->whereBetween('order', [$newOrder, $oldOrder - 1])
+                    ->update(['order' => DB::raw('`order` + 1')]);
+            } else {
+                // Geser ke bawah: baris di rentang [oldOrder+1 .. newOrder] -1
+                DB::table('home_partners')
+                    ->whereBetween('order', [$oldOrder + 1, $newOrder])
+                    ->update(['order' => DB::raw('`order` - 1')]);
+            }
+
+            // Set order item pindahan ke posisi baru
             DB::table('home_partners')
-                ->whereIn('id', $ids)
-                ->update(['order' => DB::raw($caseSql)]);
+                ->where('id', $id)
+                ->update(['order' => $newOrder]);
         });
 
         return response()->json(['message' => 'Reorder updated']);
