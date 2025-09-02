@@ -222,7 +222,14 @@ class HomeAdsController extends Controller
             ($ads->start_date <= $now) &&
             ($ads->end_date >= $now);
 
-        $daysRemaining = $ads->end_date ? $now->diffInDays($ads->end_date, false) : null;
+        $daysRemaining = null;
+
+        if ($ads->end_date) {
+            // Selisih hari (bisa desimal), bertanda (negatif kalau sudah lewat)
+            $diff = $now->diffInRealDays($ads->end_date, false);
+            $daysRemaining = (int) round($diff);
+        }
+
         $startDate = \Carbon\Carbon::parse($ads->start_date);
         $endDate   = \Carbon\Carbon::parse($ads->end_date);
 
@@ -231,12 +238,17 @@ class HomeAdsController extends Controller
 
         $startDate = $ads->start_date ? \Carbon\Carbon::parse($ads->start_date) : null;
 
-        $daysElapsed = $startDate
-            ? $startDate->diffInDays($now) + 1
-            : 0;
+        $daysElapsed = 0;
 
-        if ($daysElapsed > $totalDays && $totalDays > 0) {
-            $daysElapsed = $totalDays;
+        if ($startDate) {
+            // Konversi selisih ke HARI (float), lalu bulatkan ke terdekat.
+            $diffDaysFloat = $startDate->diffInSeconds($now) / 86400;
+            $daysElapsed   = (int) round($diffDaysFloat) + 1; // +1 jika ingin hari mulai dihitung inklusif
+        }
+
+        // Batasi agar tidak melebihi total durasi
+        if ($totalDays > 0) {
+            $daysElapsed = min($daysElapsed, (int) $totalDays);
         }
 
         // Performance metrics
