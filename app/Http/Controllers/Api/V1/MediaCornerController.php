@@ -18,7 +18,8 @@ class MediaCornerController extends Controller
                     return $query->where('title', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
                 })
-                ->orderBy('published_at')->paginate($request->per_page ?? 12);
+                ->whereNotNull('published_at')
+                ->orderByDesc('published_at')->paginate($request->per_page ?? 12);
         } else {
             $data = Article::whereIsActive(true)
                 ->when($request->search, function ($query, $search) {
