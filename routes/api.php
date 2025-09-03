@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ContactUsController;
 use App\Http\Controllers\Api\V1\MediaCornerController;
 use App\Http\Controllers\Api\V1\MeetingRoomController;
+use App\Http\Controllers\Api\V1\PartnerController;
 
 Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
@@ -41,6 +42,7 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
     Route::get('about-us', [AboutUsController::class, 'index'])->name('about-us.index');
     Route::get('app-information', [AppInformationController::class, 'index'])->name('app-information.index');
+    Route::get('partner', [PartnerController::class, 'index'])->name('partner.index');
     Route::middleware('auth:api')->group(function () {
         // protected routes...
     });
