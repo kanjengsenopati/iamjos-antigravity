@@ -1,21 +1,22 @@
 <?php
 
-use App\Http\Controllers\Api\V1\AboutUsController;
-use App\Http\Controllers\Api\V1\AppInformationController;
-use App\Http\Controllers\Api\V1\HomeAdsController as ApiHomeAdsController;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\BpdController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\EventController;
+use App\Http\Controllers\Api\V1\AboutUsController;
 use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\BenefitController;
 use App\Http\Controllers\Api\V1\ContactController;
+use App\Http\Controllers\Api\V1\GalleryController;
+use App\Http\Controllers\Api\V1\PartnerController;
 use App\Http\Controllers\Api\V1\ContactUsController;
 use App\Http\Controllers\Api\V1\MediaCornerController;
 use App\Http\Controllers\Api\V1\MeetingRoomController;
-use App\Http\Controllers\Api\V1\PartnerController;
+use App\Http\Controllers\Api\V1\AppInformationController;
+use App\Http\Controllers\Api\V1\HomeAdsController as ApiHomeAdsController;
 
 Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
@@ -43,6 +44,12 @@ Route::prefix('v1')->middleware('validate_api_key')->group(function () {
     Route::get('about-us', [AboutUsController::class, 'index'])->name('about-us.index');
     Route::get('app-information', [AppInformationController::class, 'index'])->name('app-information.index');
     Route::get('partner', [PartnerController::class, 'index'])->name('partner.index');
+    Route::prefix('gallery')->group(function () {
+        Route::get('/',            [GalleryController::class, 'index'])->name('gallery.index');
+        Route::get('/preview',     [GalleryController::class, 'preview'])->name('gallery.preview');
+        Route::get('/download',    [GalleryController::class, 'download'])->name('gallery.download');
+        Route::get('/album/{slug}', [GalleryController::class, 'album'])->name('gallery.album'); // opsional
+    });
     Route::middleware('auth:api')->group(function () {
         // protected routes...
     });
