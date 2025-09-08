@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\HomeAdsController;
 use App\Http\Controllers\Admin\ContactUsController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\PHRIDashboardController;
 use App\Http\Controllers\Admin\TranslateController;
 use App\Http\Controllers\Admin\BookingInaController;
 use App\Http\Controllers\Admin\HomeMemberController;
@@ -66,6 +67,11 @@ Route::group(['middleware' => ['auth']], function () {
 
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    // PHRI Modern Dashboard
+    Route::get('phri-dashboard', [PHRIDashboardController::class, 'index'])->name('phri.dashboard');
+    Route::get('phri-dashboard/stats', [PHRIDashboardController::class, 'getStats'])->name('phri.dashboard.stats');
+    Route::get('phri-dashboard/ads-analytics', [PHRIDashboardController::class, 'getAdsAnalytics'])->name('phri.dashboard.ads');
     // routes/web.php
     // routes/web.php
     Route::post('/home-partner/reorder-single', [HomePartnerController::class, 'reorderSingle'])

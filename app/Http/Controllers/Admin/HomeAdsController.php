@@ -144,48 +144,34 @@ class HomeAdsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(HomeAdsRequest $request, $id)
+
+    public function update(HomeAdsRequest $request, HomeAds $homeAds)
     {
-        $homeAds = HomeAds::findOrFail($id);
         $data = $request->validated();
-        $file = $request->file('media');
 
-        if ($file) {
-            // Deteksi tipe media secara generik
-            $mime = $file->getClientMimeType() ?: $file->getMimeType();
-            $data['media_type'] = Str::startsWith($mime, 'video/') ? 'video' : 'image';
+        if ($request->hasFile('media')) {
+            $file = $request->file('media');
 
-            // Simpan file BARU terlebih dulu
-            $newPath = $file->store('home_ads', 'public');     // ex: home_ads/abc.jpg
-            $data['media_url'] = Storage::url($newPath);       // ex: /storage/home_ads/abc.jpg
+            // Deteksi kaya versi store panjenengan
+            $data['media_type'] = $file->getClientMimeType() === 'video/mp4' ? 'video' : 'image';
 
-            // Simpan untuk dihapus setelah update sukses
-            $oldUrl = $homeAds->media_url;
-
-            // Update model + data baru
-            $homeAds->fill($data)->save();
-
-            // Bersihkan file lama (best-effort)
-            if ($oldUrl) {
-                // Normalisasi ke path di disk 'public'
-                $oldPath = Str::of(parse_url($oldUrl, PHP_URL_PATH) ?? '')
-                    ->after('/storage/')
-                    ->value();
-
-                if ($oldPath && Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
-                }
+            // Hapus file lawas (yen ana)
+            if (!empty($homeAds->media_url) && file_exists($homeAds->media_url)) {
+                unlink($homeAds->media_url);
             }
+
+            // Simpen file anyar
+            $path = $file->store('home_ads', ['disk' => 'public']); // "home_ads/xxx"
+            $data['media_url'] = 'storage/' . $path;
         } else {
-            // Tidak ada file baru: biarkan media_type & media_url tetap, update field lain saja
-            unset($data['media_type'], $data['media_url']);
-            $homeAds->update($data);
+            unset($data['media_url'], $data['media_type']);
         }
 
-        return redirect()
-            ->route('home-ads.index')
-            ->with('success', 'Iklan berhasil diperbarui.');
+        $homeAds->update($data);
+
+        return redirect()->route('home-ads.index')->with('success', 'Iklan berhasil diperbarui');
     }
+
 
     /**
      * Remove the specified resource from storage.

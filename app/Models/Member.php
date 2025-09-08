@@ -29,4 +29,14 @@ class Member extends Model
     {
         return $query->where('type', 'bpp');
     }
+
+    public function position()
+    {
+        return $this->hasOne(Position::class, 'member_id', 'id');
+    }
+
+    public function bppOrganization()
+    {
+        return $this->hasOne(BppOrganization::class, 'member_id', 'id');
+    }
 }
