@@ -1,0 +1,1992 @@
+@php
+    $journal = current_journal();
+    $allDiscussions = $submission->discussions;
+
+    // Map stage_id to stage key for Alpine state
+    $stageMap = [
+        1 => 'submission',
+        2 => 'review',
+        3 => 'copyediting',
+        4 => 'production',
+    ];
+    $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
+@endphp
+
+<x-app-layout>
+    <x-slot name="title">{{ $submission->title }}</x-slot>
+    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
+
+    <div x-data="{
+        activeTab: 'workflow',
+        activeStage: '{{ $defaultStage }}',
+        fileModalOpen: false,
+        discussionModalOpen: false,
+        fileWizardOpen: false,
+        uploadStage: '{{ $defaultStage }}',
+        discussionStageId: {{ $submission->stage_id }},
+    
+        // Assign Editor Modal State
+        assignEditorModalOpen: false,
+        editorSearch: '',
+        editorResults: [],
+        selectedEditor: null,
+        editorRole: 'editor',
+        isSearchingEditors: false,
+    
+        async searchEditors() {
+            if (this.editorSearch.length < 2) {
+                this.editorResults = [];
+                return;
+            }
+            this.isSearchingEditors = true;
+            try {
+                const res = await fetch(`{{ route('journal.workflow.reviewers.search', $journal->slug) }}?q=${encodeURIComponent(this.editorSearch)}&role=editor`);
+                this.editorResults = await res.json();
+            } catch (e) {
+                console.error(e);
+            }
+            this.isSearchingEditors = false;
+        },
+    
+        selectEditor(editor) {
+            this.selectedEditor = editor;
+            this.editorSearch = editor.name;
+            this.editorResults = [];
+        },
+    
+        resetEditorModal() {
+            this.selectedEditor = null;
+            this.editorSearch = '';
+            this.editorResults = [];
+            this.editorRole = 'editor';
+        },
+    
+        // Reviewer Modal State
+        reviewerModalOpen: false,
+        selectedReviewer: null,
+        reviewerSearch: '',
+        reviewerResults: [],
+        reviewMethod: 'double_blind',
+        responseDueDate: '',
+        reviewDueDate: '',
+        isSearching: false,
+    
+        async searchReviewers() {
+            if (this.reviewerSearch.length < 2) {
+                this.reviewerResults = [];
+                return;
+            }
+            this.isSearching = true;
+            try {
+                const res = await fetch(`{{ route('journal.workflow.reviewers.search', $journal->slug) }}?q=${encodeURIComponent(this.reviewerSearch)}`);
+                this.reviewerResults = await res.json();
+            } catch (e) {
+                console.error(e);
+            }
+            this.isSearching = false;
+        },
+    
+        selectReviewer(reviewer) {
+            this.selectedReviewer = reviewer;
+            this.reviewerSearch = reviewer.name;
+            this.reviewerResults = [];
+        },
+    
+        resetReviewerModal() {
+            this.selectedReviewer = null;
+            this.reviewerSearch = '';
+            this.reviewerResults = [];
+            this.reviewMethod = 'double_blind';
+            this.responseDueDate = '';
+            this.reviewDueDate = '';
+        },
+    
+        // Discussion Wizard State
+        discussionFiles: [],
+        wizardStep: 1,
+        tempUploadedFile: null,
+    
+        // CKEditor
+        editorInstance: null,
+        messageBody: '',
+    
+        initEditor() {
+            if (this.editorInstance) return;
+            ClassicEditor
+                .create(document.querySelector('#discussion-editor'), {
+                    simpleUpload: {
+                        uploadUrl: '{{ route('journal.discussion.upload-image', ['journal' => $journal->slug]) }}',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    }
+                })
+                .then(editor => {
+                    this.editorInstance = editor;
+                    editor.model.document.on('change:data', () => {
+                        this.messageBody = editor.getData();
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+    
+        resetDiscussionForm() {
+            this.discussionFiles = [];
+            this.messageBody = '';
+            if (this.editorInstance) {
+                this.editorInstance.setData('');
+            }
+        },
+    
+        submitDiscussion() {
+            if (!this.messageBody || this.messageBody.trim() === '') {
+                alert('Message is required');
+                return;
+            }
+            document.querySelector('#discussion-form').submit();
+        },
+    
+        // Wizard Actions
+        handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+    
+            let formData = new FormData();
+            formData.append('file', file);
+    
+            fetch('{{ route('journal.discussion.upload-file', $journal->slug) }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.tempUploadedFile = data;
+                    this.wizardStep = 2;
+                })
+                .catch(err => alert('Upload failed'));
+        },
+    
+        completeWizard() {
+            if (this.tempUploadedFile) {
+                this.discussionFiles.push(this.tempUploadedFile);
+            }
+            this.wizardStep = 1;
+            this.tempUploadedFile = null;
+            this.fileWizardOpen = false;
+        },
+    
+        addAnotherFile() {
+            if (this.tempUploadedFile) {
+                this.discussionFiles.push(this.tempUploadedFile);
+            }
+            this.wizardStep = 1;
+            this.tempUploadedFile = null;
+        },
+    
+        // ============== Editorial Decision Modals ==============
+        // Send to Review Modal
+        sendToReviewModalOpen: false,
+        availableFiles: [],
+        selectedFilesForPromotion: [],
+        isLoadingFiles: false,
+    
+        // Accept Skip Review Modal  
+        skipReviewModalOpen: false,
+        skipReviewNotes: '',
+    
+        // Decline Modal
+        declineModalOpen: false,
+        declineReason: '',
+        notifyAuthor: true,
+    
+        async loadAvailableFiles() {
+            this.isLoadingFiles = true;
+            try {
+                const res = await fetch(`{{ route('journal.workflow.available-files', ['journal' => $journal->slug, 'submission' => $submission->id]) }}`);
+                const data = await res.json();
+                this.availableFiles = data.files;
+                // Pre-select all files by default
+                this.selectedFilesForPromotion = data.files.map(f => ({ id: f.id, type: f.type }));
+            } catch (e) {
+                console.error('Failed to load files:', e);
+            }
+            this.isLoadingFiles = false;
+        },
+    
+        toggleFileSelection(file) {
+            const index = this.selectedFilesForPromotion.findIndex(f => f.id === file.id);
+            if (index > -1) {
+                this.selectedFilesForPromotion.splice(index, 1);
+            } else {
+                this.selectedFilesForPromotion.push({ id: file.id, type: file.type });
+            }
+        },
+    
+        isFileSelected(file) {
+            return this.selectedFilesForPromotion.some(f => f.id === file.id);
+        },
+    
+        openSendToReviewModal() {
+            this.sendToReviewModalOpen = true;
+            this.loadAvailableFiles();
+        },
+    
+        openSkipReviewModal() {
+            this.skipReviewModalOpen = true;
+            this.loadAvailableFiles();
+        },
+    
+        resetDeclineModal() {
+            this.declineReason = '';
+            this.notifyAuthor = true;
+        }
+    }" x-init="$watch('discussionModalOpen', value => { if (value) setTimeout(() => initEditor(), 100); })">
+
+        {{-- Header Section --}}
+        <div class="mb-6">
+            <nav class="text-sm text-gray-500 mb-2">
+                <a href="{{ route('journal.submissions.index', $journal->slug) }}"
+                    class="hover:text-indigo-600">Submissions</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-700">{{ $submission->id }}</span>
+            </nav>
+            <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-3xl font-bold text-gray-900 leading-tight">{{ $submission->title }}</h1>
+                @php
+                    $stageColors = [
+                        1 => 'bg-blue-100 text-blue-800', // Submission
+                        2 => 'bg-yellow-100 text-yellow-800', // Review
+                        3 => 'bg-teal-100 text-teal-800', // Copyediting
+                        4 => 'bg-green-100 text-green-800', // Production
+                    ];
+                    $stageNames = [
+                        1 => 'Submission',
+                        2 => 'Review',
+                        3 => 'Copyediting',
+                        4 => 'Production',
+                    ];
+                    $currentStageColor = $stageColors[$submission->stage_id] ?? 'bg-gray-100 text-gray-800';
+                    $currentStageName = $stageNames[$submission->stage_id] ?? 'Unknown';
+
+                    // Override for Declined/Published
+                    if ($submission->status == 3) {
+                        // Declined
+                        $currentStageColor = 'bg-red-100 text-red-800';
+                        $currentStageName = 'Declined';
+                    } elseif ($submission->status == 2) {
+                        // Published
+                        $currentStageColor = 'bg-indigo-100 text-indigo-800';
+                        $currentStageName = 'Published';
+                    }
+                @endphp
+                <span
+                    class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium {{ $currentStageColor }}">
+                    {{ $currentStageName }}
+                </span>
+            </div>
+            <div class="mt-2 text-sm text-gray-500">
+                <span class="font-medium text-gray-900">
+                    {{ $submission->authors->first()->name ?? 'Unknown Author' }}
+                </span>
+                <span class="mx-2">•</span>
+                Submitted
+                {{ $submission->submitted_at?->format('M d, Y') ?? $submission->created_at->format('M d, Y') }}
+                <span class="mx-2">•</span>
+                ID: {{ substr($submission->id, 0, 8) }}
+            </div>
+        </div>
+
+        {{-- UNASSIGNED WARNING BANNER --}}
+        @php
+            $isUnassigned = $submission->editorialAssignments->where('is_active', true)->isEmpty();
+        @endphp
+        @if ($isUnassigned)
+            @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-exclamation-triangle text-red-500 text-xl mr-3"></i>
+                            <div>
+                                <p class="text-red-800 font-semibold">No editor has been assigned to this submission.</p>
+                                <p class="text-red-600 text-sm">Assign an editor to enable editorial decisions.</p>
+                            </div>
+                        </div>
+                        <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                            class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">
+                            Assign Editor
+                        </button>
+                    </div>
+                </div>
+            @endrole
+        @endif
+
+        {{-- Main Navigation (Tabs) --}}
+        <div class="border-b border-gray-200 mb-6">
+            <nav class="-mb-px flex space-x-8">
+                <button @click="activeTab = 'workflow'"
+                    :class="activeTab === 'workflow' ? 'border-indigo-600 text-indigo-600' :
+                        'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg focus:outline-none">
+                    Workflow
+                </button>
+                <button @click="activeTab = 'publication'"
+                    :class="activeTab === 'publication' ? 'border-indigo-600 text-indigo-600' :
+                        'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg focus:outline-none">
+                    Publication
+                </button>
+            </nav>
+        </div>
+
+        {{-- Workflow Content --}}
+        <div x-show="activeTab === 'workflow'">
+
+            {{-- Stage Navigation (Blue Bar) --}}
+            <div class="bg-gray-100 p-1 rounded-t-lg border-b border-gray-200 flex space-x-1">
+                @foreach (['submission' => 1, 'review' => 2, 'copyediting' => 3, 'production' => 4] as $stageName => $stageId)
+                    <button
+                        @click="activeStage = '{{ $stageName }}'; uploadStage = '{{ $stageName }}'; discussionStageId = {{ $stageId }}"
+                        :class="activeStage === '{{ $stageName }}' ?
+                            'bg-white text-indigo-600 border-t-4 border-indigo-600 shadow-sm' :
+                            'text-gray-600 hover:bg-white/50'"
+                        class="px-6 py-3 text-sm font-medium rounded-t-sm transition-all focus:outline-none flex-1 lg:flex-none">
+                        {{ ucfirst($stageName) }}
+                    </button>
+                @endforeach
+            </div>
+
+            {{-- Submission Stage Content --}}
+            <div x-show="activeStage === 'submission'" class="bg-gray-50/50 min-h-screen pt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+                    {{-- Main Panel Area --}}
+                    <div class="lg:col-span-3 space-y-8">
+
+                        {{-- Files Panel --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">Submission Files</h3>
+                                <button @click="fileModalOpen = true"
+                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                    + Upload File
+                                </button>
+                            </div>
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            File</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Date</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse($submission->files->where('stage', 'submission') as $file)
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div
+                                                        class="flex-shrink-0 h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                                                        @php
+                                                            $extension = strtolower(
+                                                                pathinfo($file->file_name, PATHINFO_EXTENSION),
+                                                            );
+                                                            $iconClass = match ($extension) {
+                                                                'pdf' => 'fa-file-pdf text-red-500',
+                                                                'doc', 'docx' => 'fa-file-word text-blue-500',
+                                                                'xls', 'xlsx' => 'fa-file-excel text-green-500',
+                                                                'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
+                                                                default => 'fa-file-lines text-gray-500',
+                                                            };
+                                                        @endphp
+                                                        <i class="fa-solid {{ $iconClass }} text-lg"></i>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            {{ $file->file_name }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-500">
+                                                            {{ ucfirst($file->file_type) }} •
+                                                            {{ number_format($file->file_size / 1024, 0) }} KB •
+                                                            v{{ $file->version ?? 1 }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $file->created_at->format('M d, Y') }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    {{-- Preview Button --}}
+                                                    @php
+                                                        $viewableExtensions = [
+                                                            'pdf',
+                                                            'doc',
+                                                            'docx',
+                                                            'xls',
+                                                            'xlsx',
+                                                            'ppt',
+                                                            'pptx',
+                                                            'odt',
+                                                            'ods',
+                                                            'odp',
+                                                        ];
+                                                        $isViewable = in_array($extension, $viewableExtensions);
+                                                    @endphp
+                                                    @if ($isViewable)
+                                                        <a href="{{ route('files.preview', $file) }}" title="Preview"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                                            <i class="fa-solid fa-eye"></i>
+                                                        </a>
+                                                    @endif
+                                                    {{-- Download Button --}}
+                                                    <a href="{{ route('files.download', $file) }}" title="Download"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                                                        <i class="fa-solid fa-download"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3"
+                                                class="px-6 py-8 text-center text-sm text-gray-500 italic">
+                                                No files uploaded to this stage.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Discussions Panel --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">Pre-Review Discussions</h3>
+                                <button @click="discussionModalOpen = true; resetDiscussionForm()"
+                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                    + Add Discussion
+                                </button>
+                            </div>
+                            <div class="divide-y divide-gray-100">
+                                @forelse($allDiscussions->where('stage_id', 1) as $discussion)
+                                    <details class="group">
+                                        <summary
+                                            class="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50">
+                                            <div class="flex items-center gap-4">
+                                                <i
+                                                    class="fa-regular fa-comments text-gray-400 group-open:text-indigo-500"></i>
+                                                <div>
+                                                    <p
+                                                        class="text-sm font-medium text-gray-900 group-open:text-indigo-600">
+                                                        {{ $discussion->subject }}</p>
+                                                    <p class="text-xs text-gray-500">
+                                                        From {{ $discussion->user->name }} •
+                                                        {{ $discussion->created_at->format('M d') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-4">
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    {{ $discussion->messages->count() }} replies
+                                                </span>
+                                                <i
+                                                    class="fa-solid fa-chevron-down text-gray-400 transform group-open:rotate-180 transition-transform"></i>
+                                            </div>
+                                        </summary>
+                                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 space-y-4">
+                                            @foreach ($discussion->messages as $message)
+                                                <div class="flex gap-3">
+                                                    <div class="flex-shrink-0">
+                                                        <div
+                                                            class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold">
+                                                            {{ substr($message->user->name, 0, 1) }}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex-1">
+                                                        <div class="flex justify-between items-start mb-1">
+                                                            <span
+                                                                class="text-xs font-semibold text-gray-900">{{ $message->user->name }}</span>
+                                                            <span
+                                                                class="text-xs text-gray-400">{{ $message->created_at->format('M d, H:i') }}</span>
+                                                        </div>
+                                                        <div class="prose prose-sm text-gray-700 max-w-none">
+                                                            {!! $message->body !!}
+                                                        </div>
+                                                        @if ($message->files->count() > 0)
+                                                            <div class="mt-3 border-t border-gray-100 pt-2">
+                                                                <p class="text-xs font-bold text-gray-500 mb-1">
+                                                                    Attached
+                                                                    Files:</p>
+                                                                <ul class="space-y-1">
+                                                                    @foreach ($message->files as $file)
+                                                                        <li>
+                                                                            <a href="{{ route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->id]) }}"
+                                                                                class="text-xs text-blue-600 hover:underline flex items-center">
+                                                                                <i
+                                                                                    class="fa-solid fa-paperclip mr-1"></i>
+                                                                                {{ $file->original_name }}
+                                                                            </a>
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                            {{-- Reply Form --}}
+                                            <div class="mt-4 pl-11">
+                                                <form
+                                                    action="{{ route('journal.discussion.reply', ['journal' => $journal->slug, 'submission' => $submission->id, 'discussion' => $discussion->id]) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    <div class="flex gap-2">
+                                                        <input type="text" name="body"
+                                                            placeholder="Write a reply..."
+                                                            class="flex-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                                        <button type="submit"
+                                                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">Reply</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </details>
+                                @empty
+                                    <div class="px-6 py-8 text-center text-sm text-gray-500 italic">
+                                        No discussions started.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {{-- Active Stage Placeholder for other tabs --}}
+                    <div class="lg:col-span-1 space-y-6">
+                        {{-- Workflow Actions --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow Actions
+                            </h4>
+                            @role('Editor|Section Editor|Admin|Super Admin')
+                                @if ($isUnassigned)
+                                    {{-- BLUE INFO BOX: Disabled state for unassigned --}}
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                        <div class="flex items-start">
+                                            <i class="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                                            <p class="text-sm text-blue-700">
+                                                Assign an editor to enable the editorial decisions for this stage.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {{-- Disabled buttons --}}
+                                    <button disabled
+                                        class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                        <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                    </button>
+                                    <button disabled
+                                        class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                        <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
+                                    </button>
+                                    <button disabled
+                                        class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg cursor-not-allowed text-sm font-medium">
+                                        <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                    </button>
+                                @else
+                                    {{-- Assigned, check if stage is active --}}
+                                    @if ($submission->stage_id == 1 && $submission->status != 3)
+                                        {{-- Normal enabled buttons (Modal Triggers) --}}
+                                        <div class="space-y-2">
+                                            {{-- Send to Review Button --}}
+                                            <button @click="openSendToReviewModal()"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                                <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                            </button>
+
+                                            {{-- Accept & Skip Review Button --}}
+                                            <button @click="openSkipReviewModal()"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                                                <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
+                                            </button>
+
+                                            {{-- Decline Submission Button --}}
+                                            <button @click="declineModalOpen = true; resetDeclineModal()"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-red-200 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                                                <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                            </button>
+                                        </div>
+                                    @else
+                                        {{-- Disabled State (Decision Made) --}}
+                                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                                            <div class="flex items-start">
+                                                <i class="fa-solid fa-check-circle text-gray-500 mt-0.5 mr-2"></i>
+                                                <p class="text-sm text-gray-600">
+                                                    @if ($submission->status == 3)
+                                                        Submission has been declined.
+                                                    @elseif($submission->stage_id > 1)
+                                                        Submission has moved to the
+                                                        <strong>{{ ucfirst($stageNames[$submission->stage_id] ?? 'next') }}</strong>
+                                                        stage.
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button disabled
+                                            class="w-full mb-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                            <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                        </button>
+                                        <button disabled
+                                            class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                            <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                        </button>
+                                    @endif
+                                @endif
+                            @else
+                                <p class="text-sm text-gray-500 italic">Actions available to Editors.</p>
+                            @endrole
+                        </div>
+
+                        {{-- Participants --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants</h4>
+                                @role('Journal Manager|Admin|Super Admin')
+                                    <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                        class="text-xs text-indigo-600 font-medium hover:underline">
+                                        + Assign
+                                    </button>
+                                @endrole
+                            </div>
+                            <ul class="space-y-3">
+                                @forelse($submission->editorialAssignments->where('is_active', true) as $assignment)
+                                    <li class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+                                            <span
+                                                class="font-medium text-gray-900">{{ $assignment->user->name }}</span>
+                                        </div>
+                                        <span
+                                            class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $assignment->role)) }}</span>
+                                    </li>
+                                @empty
+                                    <li class="text-sm text-gray-400 italic">No editors assigned</li>
+                                @endforelse
+
+                                {{-- Always show the submitting author --}}
+                                <li
+                                    class="flex items-center justify-between text-sm border-t border-gray-100 pt-3 mt-3">
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
+                                        <span
+                                            class="font-medium text-gray-900">{{ $submission->authors->first()->name ?? 'Unknown Author' }}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">Author</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            {{-- ==================== REVIEW STAGE ==================== --}}
+            <div x-show="activeStage === 'review'" class="bg-gray-50/50 min-h-screen pt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {{-- Main Panel Area --}}
+                    <div class="lg:col-span-3 space-y-6">
+
+                        {{-- Reviewers Panel --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">
+                                    <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i>Reviewers
+                                </h3>
+                                @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                                    <button @click="reviewerModalOpen = true; resetReviewerModal()"
+                                        class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                        + Add Reviewer
+                                    </button>
+                                @endif
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Reviewer</th>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Assigned</th>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Due Date</th>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Status</th>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Recommendation</th>
+                                            <th
+                                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                                Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @forelse($submission->reviewAssignments as $assignment)
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="flex items-center">
+                                                        <div
+                                                            class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                                                            {{ strtoupper(substr($assignment->reviewer->name ?? 'R', 0, 1)) }}
+                                                        </div>
+                                                        <div class="ml-4">
+                                                            <div class="text-sm font-medium text-gray-900">
+                                                                {{ $assignment->reviewer->name ?? 'Unknown' }}</div>
+                                                            <div class="text-xs text-gray-500">
+                                                                {{ $assignment->reviewer->email ?? '' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ $assignment->assigned_at?->format('M d, Y') ?? '-' }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @if ($assignment->due_date)
+                                                        <span
+                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $assignment->isOverdue() ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' }}">
+                                                            {{ $assignment->due_date->format('M d, Y') }}
+                                                            @if ($assignment->isOverdue())
+                                                                <i class="fa-solid fa-exclamation-circle ml-1"></i>
+                                                            @endif
+                                                        </span>
+                                                    @else
+                                                        <span class="text-gray-400">-</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @php
+                                                        $statusColors = [
+                                                            'pending' => 'bg-yellow-100 text-yellow-800',
+                                                            'accepted' => 'bg-blue-100 text-blue-800',
+                                                            'completed' => 'bg-green-100 text-green-800',
+                                                            'declined' => 'bg-red-100 text-red-800',
+                                                            'cancelled' => 'bg-gray-100 text-gray-600',
+                                                        ];
+                                                    @endphp
+                                                    <span
+                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$assignment->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                                        {{ $assignment->status_label }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                    @if ($assignment->recommendation)
+                                                        <span
+                                                            class="font-medium text-{{ $assignment->recommendation_color }}-600">{{ $assignment->recommendation_label }}</span>
+                                                    @else
+                                                        <span class="text-gray-400 italic">Awaiting</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <form
+                                                        action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->id, 'assignment' => $assignment->id]) }}"
+                                                        method="POST" class="inline"
+                                                        onsubmit="return confirm('Remove this reviewer?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="text-red-600 hover:text-red-900 text-xs">Unassign</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6"
+                                                    class="px-6 py-8 text-center text-sm text-gray-500 italic">
+                                                    No reviewers assigned yet.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- Review Files Panel --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">
+                                    <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>Review Files
+                                </h3>
+                            </div>
+                            <div class="p-6">
+                                @forelse($submission->files->where('stage', 'review') as $file)
+                                    <div
+                                        class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
+                                        <div class="flex items-center">
+                                            @php
+                                                $extension = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
+                                                $iconClass = match ($extension) {
+                                                    'pdf' => 'fa-file-pdf text-red-500',
+                                                    'doc', 'docx' => 'fa-file-word text-blue-500',
+                                                    'xls', 'xlsx' => 'fa-file-excel text-green-500',
+                                                    'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
+                                                    default => 'fa-file-lines text-gray-500',
+                                                };
+                                                $viewableExtensions = [
+                                                    'pdf',
+                                                    'doc',
+                                                    'docx',
+                                                    'xls',
+                                                    'xlsx',
+                                                    'ppt',
+                                                    'pptx',
+                                                    'odt',
+                                                ];
+                                                $isViewable = in_array($extension, $viewableExtensions);
+                                            @endphp
+                                            <div
+                                                class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-3">
+                                                <i class="fa-solid {{ $iconClass }}"></i>
+                                            </div>
+                                            <div>
+                                                <span
+                                                    class="text-sm font-medium text-gray-700">{{ $file->file_name }}</span>
+                                                <p class="text-xs text-gray-500">
+                                                    {{ number_format($file->file_size / 1024, 0) }} KB</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            @if ($isViewable)
+                                                <a href="{{ route('files.preview', $file) }}" title="Preview"
+                                                    class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                                    <i class="fa-solid fa-eye text-sm"></i>
+                                                </a>
+                                            @endif
+                                            <a href="{{ route('files.download', $file) }}" title="Download"
+                                                class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-emerald-600 hover:bg-emerald-50">
+                                                <i class="fa-solid fa-download text-sm"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="text-sm text-gray-500 italic text-center py-4">No review files uploaded.
+                                    </p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        {{-- Review Discussions --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">
+                                    <i class="fa-solid fa-comments text-indigo-500 mr-2"></i>Review Discussions
+                                </h3>
+                                <button
+                                    @click="discussionModalOpen = true; discussionStageId = 2; resetDiscussionForm()"
+                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                    + Add Discussion
+                                </button>
+                            </div>
+                            <div class="divide-y divide-gray-100">
+                                @forelse($allDiscussions->where('stage_id', 2) as $discussion)
+                                    <div class="px-6 py-4">
+                                        <p class="text-sm font-medium text-gray-900">{{ $discussion->subject }}</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $discussion->user->name }} •
+                                            {{ $discussion->created_at->diffForHumans() }}</p>
+                                    </div>
+                                @empty
+                                    <p class="px-6 py-8 text-center text-sm text-gray-500 italic">No discussions in
+                                        this stage.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Sidebar --}}
+                    <div class="lg:col-span-1 space-y-6">
+                        {{-- Editor Decision Panel --}}
+                        @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Editor
+                                    Decision</h4>
+                                <div class="space-y-3">
+                                    <form
+                                        action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        method="POST">
+                                        @csrf
+                                        <input type="hidden" name="decision" value="accept">
+                                        <button type="submit"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                            <i class="fa-solid fa-check mr-2"></i> Accept Submission
+                                        </button>
+                                    </form>
+                                    <form
+                                        action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        method="POST">
+                                        @csrf
+                                        <input type="hidden" name="decision" value="request_revisions">
+                                        <button type="submit"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-yellow-300 shadow-sm text-sm font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
+                                            <i class="fa-solid fa-pen mr-2"></i> Request Revisions
+                                        </button>
+                                    </form>
+                                    <form
+                                        action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('This will decline the submission. Continue?')">
+                                        @csrf
+                                        <input type="hidden" name="decision" value="decline">
+                                        <button type="submit"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                                            <i class="fa-solid fa-xmark mr-2"></i> Decline
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Review Round Info --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Review Round</h4>
+                            @php $currentRound = $submission->currentReviewRound(); @endphp
+                            @if ($currentRound)
+                                <div class="text-center">
+                                    <span class="text-3xl font-bold text-indigo-600">{{ $currentRound->round }}</span>
+                                    <p class="text-sm text-gray-500 mt-1">{{ $currentRound->status_label }}</p>
+                                </div>
+                            @else
+                                <p class="text-sm text-gray-500 italic text-center">No review round started.</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ==================== COPYEDITING STAGE ==================== --}}
+            <div x-show="activeStage === 'copyediting'" class="bg-gray-50/50 min-h-screen pt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {{-- Main Panel --}}
+                    <div class="lg:col-span-3 space-y-6">
+                        {{-- Copyedited Files --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">
+                                    <i class="fa-solid fa-file-pen text-teal-500 mr-2"></i>Copyedited Files
+                                </h3>
+                                <button @click="fileModalOpen = true; uploadStage = 'copyediting'"
+                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                    + Upload File
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                @forelse($submission->files->where('stage', 'copyediting') as $file)
+                                    <div
+                                        class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
+                                        <div class="flex items-center">
+                                            @php
+                                                $extension = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
+                                                $iconClass = match ($extension) {
+                                                    'pdf' => 'fa-file-pdf text-red-500',
+                                                    'doc', 'docx' => 'fa-file-word text-blue-500',
+                                                    'xls', 'xlsx' => 'fa-file-excel text-green-500',
+                                                    'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
+                                                    default => 'fa-file-lines text-gray-500',
+                                                };
+                                                $viewableExtensions = [
+                                                    'pdf',
+                                                    'doc',
+                                                    'docx',
+                                                    'xls',
+                                                    'xlsx',
+                                                    'ppt',
+                                                    'pptx',
+                                                    'odt',
+                                                ];
+                                                $isViewable = in_array($extension, $viewableExtensions);
+                                            @endphp
+                                            <div
+                                                class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center mr-3">
+                                                <i class="fa-solid {{ $iconClass }}"></i>
+                                            </div>
+                                            <div>
+                                                <span
+                                                    class="text-sm font-medium text-gray-700">{{ $file->file_name }}</span>
+                                                <p class="text-xs text-gray-500">
+                                                    {{ $file->created_at->format('M d, Y') }} •
+                                                    {{ number_format($file->file_size / 1024, 0) }} KB</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            @if ($isViewable)
+                                                <a href="{{ route('files.preview', $file) }}" title="Preview"
+                                                    class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                                    <i class="fa-solid fa-eye text-sm"></i>
+                                                </a>
+                                            @endif
+                                            <a href="{{ route('files.download', $file) }}" title="Download"
+                                                class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-emerald-600 hover:bg-emerald-50">
+                                                <i class="fa-solid fa-download text-sm"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="text-sm text-gray-500 italic text-center py-4">No copyedited files yet.
+                                    </p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        {{-- Copyediting Discussions --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">
+                                    <i class="fa-solid fa-comments text-teal-500 mr-2"></i>Copyediting Discussions
+                                </h3>
+                                <button
+                                    @click="discussionModalOpen = true; discussionStageId = 3; resetDiscussionForm()"
+                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                    + Add Discussion
+                                </button>
+                            </div>
+                            <div class="divide-y divide-gray-100">
+                                @forelse($allDiscussions->where('stage_id', 3) as $discussion)
+                                    <div class="px-6 py-4">
+                                        <p class="text-sm font-medium text-gray-900">{{ $discussion->subject }}</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $discussion->user->name }} •
+                                            {{ $discussion->created_at->diffForHumans() }}</p>
+                                    </div>
+                                @empty
+                                    <p class="px-6 py-8 text-center text-sm text-gray-500 italic">No discussions in
+                                        this stage.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Sidebar --}}
+                    <div class="lg:col-span-1 space-y-6">
+                        @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Actions</h4>
+                                <form
+                                    action="{{ route('journal.workflow.send-production', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                    method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                                        <i class="fa-solid fa-arrow-right mr-2"></i> Send to Production
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- ==================== PRODUCTION STAGE (Placeholder) ==================== --}}
+            <div x-show="activeStage === 'production'"
+                class="p-12 text-center text-gray-500 bg-gray-50 h-96 flex items-center justify-center">
+                <div class="max-w-md">
+                    <i class="fa-solid fa-industry text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-lg font-medium text-gray-900">Production Stage</p>
+                    <p class="text-sm text-gray-500 mt-2">Galley files and final publication preparation.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div x-show="activeTab === 'publication'" class="p-12 text-center text-gray-500">Publication Metadata</div>
+
+        {{-- NEW DISCUSSION MODAL --}}
+        <div x-show="discussionModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div @click="discussionModalOpen = false"
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <div
+                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+                    <div class="mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Add Discussion</h3>
+                    </div>
+
+                    <form id="discussion-form"
+                        action="{{ route('journal.discussion.create', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        method="POST">
+                        @csrf
+                        <input type="hidden" name="stage_id" x-model="discussionStageId">
+
+                        {{-- Hidden inputs for attached files --}}
+                        <template x-for="(file, index) in discussionFiles" :key="file.id">
+                            <div>
+                                <input type="hidden" :name="'attached_files[' + index + '][id]'"
+                                    :value="file.id">
+                                <input type="hidden" :name="'attached_files[' + index + '][name]'"
+                                    :value="file.name">
+                            </div>
+                        </template>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                                <input type="text" name="subject" id="subject"
+                                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                            </div>
+
+                            @if (!auth()->user()->hasRole('Author'))
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Participants</label>
+                                    <div
+                                        class="mt-2 text-sm text-gray-500 border border-gray-200 p-3 rounded bg-gray-50">
+                                        <p>Select users to notify (Placeholder).</p>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div>
+                                <label for="discussion-editor"
+                                    class="block text-sm font-medium text-gray-700">Message</label>
+                                <div class="mt-1">
+                                    <textarea name="body" id="discussion-editor"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-gray-200 pt-4">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-sm font-medium text-gray-900">Attached Files</h4>
+                                    <button type="button" @click="fileWizardOpen = true"
+                                        class="text-sm text-indigo-600 font-medium hover:underline">
+                                        + Attach File
+                                    </button>
+                                </div>
+                                <ul class="mt-3 space-y-2">
+                                    <template x-for="file in discussionFiles" :key="file.id">
+                                        <li
+                                            class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded border border-gray-200">
+                                            <div class="flex items-center">
+                                                <i class="fa-regular fa-file text-gray-400 mr-2"></i>
+                                                <span class="text-sm text-gray-700" x-text="file.name"></span>
+                                                <span class="ml-2 text-xs text-gray-500"
+                                                    x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
+                                            </div>
+                                            <button type="button" class="text-xs text-red-600 hover:text-red-800"
+                                                @click="discussionFiles = discussionFiles.filter(f => f.id !== file.id)">Remove</button>
+                                        </li>
+                                    </template>
+                                    <template x-if="discussionFiles.length === 0">
+                                        <li class="text-sm text-gray-500 italic">No files attached.</li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="button" @click="submitDiscussion()"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
+                                OK
+                            </button>
+                            <button type="button" @click="discussionModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- FILE WIZARD MODAL (Nested/Overlay) --}}
+        <div x-show="fileWizardOpen" style="display: none;" class="fixed inset-0 z-[60] overflow-y-auto"
+            aria-labelledby="wizard-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+                <div
+                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                    <div class="mb-4 border-b border-gray-200 pb-2">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="wizard-title">
+                            Add File to Discussion
+                        </h3>
+                        <div class="flex space-x-2 mt-2">
+                            <span :class="wizardStep >= 1 ? 'text-indigo-600 font-bold' : 'text-gray-400'"
+                                class="text-xs">1. Upload</span>
+                            <span :class="wizardStep >= 2 ? 'text-indigo-600 font-bold' : 'text-gray-400'"
+                                class="text-xs">2. Metadata</span>
+                            <span :class="wizardStep >= 3 ? 'text-indigo-600 font-bold' : 'text-gray-400'"
+                                class="text-xs">3. Confirm</span>
+                        </div>
+                    </div>
+
+                    {{-- Step 1: Upload --}}
+                    <div x-show="wizardStep === 1">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Article Component</label>
+                                <select
+                                    class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                    <option>Article Text</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div
+                                class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md relative hover:bg-gray-50">
+                                <div class="space-y-1 text-center">
+                                    <i class="fa-solid fa-cloud-arrow-up text-gray-400 text-3xl"></i>
+                                    <div class="flex text-sm text-gray-600 justify-center">
+                                        <label
+                                            class="relative cursor-pointer rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                                            <span>Upload a file</span>
+                                            <input type="file" class="sr-only" @change="handleFileUpload">
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Drag and drop or select file</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-5 sm:flex sm:flex-row-reverse">
+                            <button type="button" @click="fileWizardOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                        </div>
+                    </div>
+
+                    {{-- Step 2: Metadata --}}
+                    <template x-if="wizardStep === 2">
+                        <div>
+                            <div class="space-y-4">
+                                <p class="text-sm text-gray-500">File uploaded. Please review metadata.</p>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Filename</label>
+                                    <input type="text" x-model="tempUploadedFile.name"
+                                        class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                            </div>
+                            <div class="mt-5 sm:flex sm:flex-row-reverse">
+                                <button type="button" @click="wizardStep = 3"
+                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Continue</button>
+                                <button type="button" @click="fileWizardOpen = false"
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Step 3: Confirm --}}
+                    <div x-show="wizardStep === 3">
+                        <div class="text-center py-4">
+                            <div
+                                class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-3">
+                                <i class="fa-solid fa-check text-green-600 text-lg"></i>
+                            </div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">File Added</h3>
+                            <p class="text-sm text-gray-500 mt-2">The file <span class="font-bold"
+                                    x-text="tempUploadedFile && tempUploadedFile.name"></span> is ready to be attached.
+                            </p>
+                        </div>
+                        <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="button" @click="completeWizard()"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
+                                Complete
+                            </button>
+                            <button type="button" @click="addAnotherFile()"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Add Another File
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        {{-- Original File Modal for main submission files (kept for reference or reuse) --}}
+        <div x-show="fileModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+            aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div @click="fileModalOpen = false" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                    aria-hidden="true"></div>
+                <div
+                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                    <div class="mb-5">
+                        <h3 class="text-lg leading-6 font-bold text-gray-900">Upload Submission File</h3>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Uploading file to <strong class="text-indigo-600"><span
+                                    x-text="uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1)"></span></strong>
+                            stage.
+                        </p>
+                    </div>
+
+                    <form
+                        action="{{ route('journal.workflow.file.store', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="stage" x-model="uploadStage">
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Select File</label>
+                                <div
+                                    class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:bg-gray-50 hover:border-indigo-400 transition-colors cursor-pointer relative group">
+                                    <div class="space-y-1 text-center">
+                                        <i
+                                            class="fa-solid fa-cloud-arrow-up text-gray-400 text-3xl mb-3 group-hover:text-indigo-500 transition-colors"></i>
+                                        <div class="flex text-sm text-gray-600 justify-center">
+                                            <span
+                                                class="relative bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                                <span>Upload a file</span>
+                                            </span>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">
+                                            PDF, DOC, DOCX, XLS up to 10MB
+                                        </p>
+                                        <p x-ref="fileNameDisplay"
+                                            class="text-sm text-indigo-600 font-medium mt-2 min-h-[20px]"></p>
+                                    </div>
+                                    <input type="file" name="file"
+                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required
+                                        @change="$refs.fileNameDisplay.innerText = $event.target.files[0].name">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
+                                <i class="fa-solid fa-upload mr-2 mt-0.5"></i> Upload
+                            </button>
+                            <button type="button" @click="fileModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== ADD REVIEWER MODAL ==================== --}}
+        <div x-show="reviewerModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="reviewer-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div @click="reviewerModalOpen = false"
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <div
+                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                    <div class="mb-6">
+                        <h3 class="text-lg leading-6 font-bold text-gray-900" id="reviewer-modal-title">
+                            <i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Add Reviewer
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500">Search and assign a reviewer to this submission.</p>
+                    </div>
+
+                    <form
+                        action="{{ route('journal.workflow.assign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        method="POST">
+                        @csrf
+                        <input type="hidden" name="reviewer_id" x-bind:value="selectedReviewer?.id || ''">
+
+                        <div class="space-y-5">
+                            {{-- Reviewer Search --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Search Reviewer</label>
+                                <div class="relative">
+                                    <input type="text" x-model="reviewerSearch"
+                                        @input.debounce.300ms="searchReviewers()" placeholder="Type name or email..."
+                                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fa-solid fa-search text-gray-400"></i>
+                                    </div>
+                                    <template x-if="isSearching">
+                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                            <i class="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                                        </div>
+                                    </template>
+                                </div>
+                                {{-- Search Results Dropdown --}}
+                                <template x-if="reviewerResults.length > 0">
+                                    <ul
+                                        class="mt-1 border border-gray-200 rounded-md bg-white shadow-lg max-h-40 overflow-y-auto">
+                                        <template x-for="reviewer in reviewerResults" :key="reviewer.id">
+                                            <li @click="selectReviewer(reviewer)"
+                                                class="px-4 py-2 hover:bg-indigo-50 cursor-pointer flex items-center justify-between">
+                                                <div>
+                                                    <span class="text-sm font-medium text-gray-900"
+                                                        x-text="reviewer.name"></span>
+                                                    <span class="text-xs text-gray-500 ml-2"
+                                                        x-text="reviewer.email"></span>
+                                                </div>
+                                                <i class="fa-solid fa-plus text-indigo-500"></i>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                {{-- Selected Reviewer Display --}}
+                                <template x-if="selectedReviewer">
+                                    <div
+                                        class="mt-2 flex items-center justify-between bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs">
+                                                <span x-text="selectedReviewer.name.charAt(0).toUpperCase()"></span>
+                                            </div>
+                                            <div class="ml-3">
+                                                <p class="text-sm font-medium text-indigo-900"
+                                                    x-text="selectedReviewer.name"></p>
+                                                <p class="text-xs text-indigo-700" x-text="selectedReviewer.email">
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="selectedReviewer = null; reviewerSearch = ''"
+                                            class="text-indigo-600 hover:text-indigo-800">
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Review Method --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Review Method</label>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <label
+                                        class="relative flex cursor-pointer rounded-lg border bg-white p-3 shadow-sm focus:outline-none"
+                                        :class="reviewMethod === 'double_blind' ? 'border-indigo-500 ring-2 ring-indigo-500' :
+                                            'border-gray-300'">
+                                        <input type="radio" name="review_method" value="double_blind"
+                                            x-model="reviewMethod" class="sr-only">
+                                        <span class="flex flex-1 flex-col text-center">
+                                            <i class="fa-solid fa-eye-slash text-gray-500 text-lg mb-1"></i>
+                                            <span class="block text-xs font-medium text-gray-900">Double Blind</span>
+                                        </span>
+                                    </label>
+                                    <label
+                                        class="relative flex cursor-pointer rounded-lg border bg-white p-3 shadow-sm focus:outline-none"
+                                        :class="reviewMethod === 'blind' ? 'border-indigo-500 ring-2 ring-indigo-500' :
+                                            'border-gray-300'">
+                                        <input type="radio" name="review_method" value="blind"
+                                            x-model="reviewMethod" class="sr-only">
+                                        <span class="flex flex-1 flex-col text-center">
+                                            <i class="fa-solid fa-user-secret text-gray-500 text-lg mb-1"></i>
+                                            <span class="block text-xs font-medium text-gray-900">Blind</span>
+                                        </span>
+                                    </label>
+                                    <label
+                                        class="relative flex cursor-pointer rounded-lg border bg-white p-3 shadow-sm focus:outline-none"
+                                        :class="reviewMethod === 'open' ? 'border-indigo-500 ring-2 ring-indigo-500' :
+                                            'border-gray-300'">
+                                        <input type="radio" name="review_method" value="open"
+                                            x-model="reviewMethod" class="sr-only">
+                                        <span class="flex flex-1 flex-col text-center">
+                                            <i class="fa-solid fa-eye text-gray-500 text-lg mb-1"></i>
+                                            <span class="block text-xs font-medium text-gray-900">Open</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Due Dates --}}
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Response Due
+                                        Date</label>
+                                    <input type="date" name="response_due_date" x-model="responseDueDate"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Due Date</label>
+                                    <input type="date" name="review_due_date" x-model="reviewDueDate"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="submit" :disabled="!selectedReviewer"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:col-start-2 sm:text-sm">
+                                <i class="fa-solid fa-paper-plane mr-2"></i> Assign Reviewer
+                            </button>
+                            <button type="button" @click="reviewerModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== ASSIGN EDITOR MODAL ==================== --}}
+        <div x-show="assignEditorModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                {{-- Background overlay --}}
+                <div x-show="assignEditorModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="assignEditorModalOpen = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                {{-- Modal Panel --}}
+                <div x-show="assignEditorModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                    <div class="sm:flex sm:items-start">
+                        <div
+                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fa-solid fa-user-plus text-indigo-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Assign Editor
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Search and assign an editor to handle this submission.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form
+                        action="{{ route('journal.workflow.assign-editor', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        method="POST" class="mt-5">
+                        @csrf
+                        <div class="space-y-4">
+                            {{-- Editor Search --}}
+                            <div>
+                                <label for="editor-search" class="block text-sm font-medium text-gray-700 mb-1">Search
+                                    Editor</label>
+                                <div class="relative">
+                                    <input type="text" id="editor-search" x-model="editorSearch"
+                                        @input.debounce.300ms="searchEditors()"
+                                        placeholder="Type to search editors..."
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        autocomplete="off">
+                                    <div x-show="isSearchingEditors" class="absolute right-3 top-2.5">
+                                        <i class="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                                    </div>
+                                </div>
+
+                                {{-- Search Results Dropdown --}}
+                                <div x-show="editorResults.length > 0"
+                                    class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+                                    style="max-width: calc(100% - 2rem);">
+                                    <template x-for="editor in editorResults" :key="editor.id">
+                                        <div @click="selectEditor(editor)"
+                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50">
+                                            <div class="flex items-center">
+                                                <span class="font-medium block truncate" x-text="editor.name"></span>
+                                            </div>
+                                            <span class="text-gray-500 text-xs" x-text="editor.email"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Selected Editor Display --}}
+                            <div x-show="selectedEditor" class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm"
+                                            x-text="selectedEditor?.name?.charAt(0)?.toUpperCase()">
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900"
+                                                x-text="selectedEditor?.name"></p>
+                                            <p class="text-xs text-gray-500" x-text="selectedEditor?.email"></p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="selectedEditor = null; editorSearch = ''"
+                                        class="text-gray-400 hover:text-gray-600">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="user_id" :value="selectedEditor?.id">
+                            </div>
+
+                            {{-- Role Selection --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Assignment Role</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label
+                                        class="relative flex cursor-pointer rounded-lg border bg-white p-3 shadow-sm focus:outline-none"
+                                        :class="editorRole === 'editor' ? 'border-indigo-500 ring-2 ring-indigo-500' :
+                                            'border-gray-300'">
+                                        <input type="radio" name="role" value="editor" x-model="editorRole"
+                                            class="sr-only">
+                                        <span class="flex flex-1 flex-col text-center">
+                                            <i class="fa-solid fa-user-pen text-gray-500 text-lg mb-1"></i>
+                                            <span class="block text-xs font-medium text-gray-900">Editor</span>
+                                        </span>
+                                    </label>
+                                    <label
+                                        class="relative flex cursor-pointer rounded-lg border bg-white p-3 shadow-sm focus:outline-none"
+                                        :class="editorRole === 'section_editor' ? 'border-indigo-500 ring-2 ring-indigo-500' :
+                                            'border-gray-300'">
+                                        <input type="radio" name="role" value="section_editor"
+                                            x-model="editorRole" class="sr-only">
+                                        <span class="flex flex-1 flex-col text-center">
+                                            <i class="fa-solid fa-user-tag text-gray-500 text-lg mb-1"></i>
+                                            <span class="block text-xs font-medium text-gray-900">Section Editor</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="submit" :disabled="!selectedEditor"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:col-start-2 sm:text-sm">
+                                <i class="fa-solid fa-user-plus mr-2"></i> Assign Editor
+                            </button>
+                            <button type="button" @click="assignEditorModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== SEND TO REVIEW MODAL ==================== --}}
+        <div x-show="sendToReviewModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="send-review-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="sendToReviewModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="sendToReviewModalOpen = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="sendToReviewModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                    <div class="sm:flex sm:items-start">
+                        <div
+                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fa-solid fa-arrow-right text-indigo-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                            <h3 class="text-lg leading-6 font-semibold text-gray-900" id="send-review-modal-title">
+                                Send to Review
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Select files to promote to the Review stage. Original files will remain in the
+                                Submission stage.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form
+                        action="{{ route('journal.workflow.promote-review', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        method="POST" class="mt-5">
+                        @csrf
+
+                        {{-- File Selection --}}
+                        <div class="border border-gray-200 rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                <h4 class="text-sm font-medium text-gray-900">
+                                    <i class="fa-solid fa-file-lines text-gray-400 mr-2"></i>
+                                    Select Files to Promote
+                                </h4>
+                            </div>
+                            <div class="max-h-64 overflow-y-auto">
+                                <template x-if="isLoadingFiles">
+                                    <div class="px-4 py-8 text-center">
+                                        <i class="fa-solid fa-spinner fa-spin text-gray-400 text-xl"></i>
+                                        <p class="text-sm text-gray-500 mt-2">Loading files...</p>
+                                    </div>
+                                </template>
+                                <template x-if="!isLoadingFiles && availableFiles.length === 0">
+                                    <div class="px-4 py-8 text-center">
+                                        <i class="fa-solid fa-folder-open text-gray-300 text-2xl"></i>
+                                        <p class="text-sm text-gray-500 mt-2">No files available for promotion.</p>
+                                    </div>
+                                </template>
+                                <template x-if="!isLoadingFiles && availableFiles.length > 0">
+                                    <ul class="divide-y divide-gray-100">
+                                        <template x-for="file in availableFiles" :key="file.id">
+                                            <li class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                                                @click="toggleFileSelection(file)">
+                                                <label class="flex items-center cursor-pointer">
+                                                    <input type="checkbox" :checked="isFileSelected(file)"
+                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][id]'"
+                                                        :value="file.id"
+                                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                                    <input type="hidden" x-show="isFileSelected(file)"
+                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][type]'"
+                                                        :value="file.type">
+                                                    <div class="ml-3 flex-1 min-w-0">
+                                                        <p class="text-sm font-medium text-gray-900 truncate"
+                                                            x-text="file.name"></p>
+                                                        <p class="text-xs text-gray-500">
+                                                            <span x-text="file.source"></span> •
+                                                            <span
+                                                                x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
+                                                            •
+                                                            <span x-text="file.created_at"></span>
+                                                        </p>
+                                                    </div>
+                                                </label>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-2 border-t border-gray-200">
+                                <p class="text-xs text-gray-500">
+                                    <span x-text="selectedFilesForPromotion.length"></span> file(s) selected
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
+                                <i class="fa-solid fa-arrow-right mr-2"></i> Send to Review
+                            </button>
+                            <button type="button" @click="sendToReviewModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== ACCEPT & SKIP REVIEW MODAL ==================== --}}
+        <div x-show="skipReviewModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="skip-review-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="skipReviewModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="skipReviewModalOpen = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="skipReviewModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                    <div class="sm:flex sm:items-start">
+                        <div
+                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fa-solid fa-forward text-emerald-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                            <h3 class="text-lg leading-6 font-semibold text-gray-900" id="skip-review-modal-title">
+                                Accept & Skip Review
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                This will bypass the Review stage and move the submission directly to Copyediting.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form
+                        action="{{ route('journal.workflow.skip-review', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        method="POST" class="mt-5">
+                        @csrf
+
+                        {{-- Warning Banner --}}
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                            <div class="flex">
+                                <i class="fa-solid fa-exclamation-triangle text-yellow-500 mt-0.5 mr-3"></i>
+                                <div class="text-sm text-yellow-700">
+                                    <p class="font-medium">Are you sure?</p>
+                                    <p class="mt-1">This action will accept the submission without peer review. Use
+                                        this only for trusted authors or special cases.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- File Selection --}}
+                        <div class="border border-gray-200 rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                <h4 class="text-sm font-medium text-gray-900">
+                                    <i class="fa-solid fa-file-lines text-gray-400 mr-2"></i>
+                                    Select Files to Promote to Copyediting
+                                </h4>
+                            </div>
+                            <div class="max-h-48 overflow-y-auto">
+                                <template x-if="isLoadingFiles">
+                                    <div class="px-4 py-6 text-center">
+                                        <i class="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                                        <p class="text-sm text-gray-500 mt-2">Loading files...</p>
+                                    </div>
+                                </template>
+                                <template x-if="!isLoadingFiles && availableFiles.length > 0">
+                                    <ul class="divide-y divide-gray-100">
+                                        <template x-for="file in availableFiles" :key="file.id">
+                                            <li class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                                                @click="toggleFileSelection(file)">
+                                                <label class="flex items-center cursor-pointer">
+                                                    <input type="checkbox" :checked="isFileSelected(file)"
+                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][id]'"
+                                                        :value="file.id"
+                                                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
+                                                    <input type="hidden" x-show="isFileSelected(file)"
+                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][type]'"
+                                                        :value="file.type">
+                                                    <div class="ml-3 flex-1 min-w-0">
+                                                        <p class="text-sm font-medium text-gray-900 truncate"
+                                                            x-text="file.name"></p>
+                                                        <p class="text-xs text-gray-500"
+                                                            x-text="file.source + ' • ' + (file.size / 1024).toFixed(0) + ' KB'">
+                                                        </p>
+                                                    </div>
+                                                </label>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Notes (Optional) --}}
+                        <div class="mt-4">
+                            <label for="skip-review-notes" class="block text-sm font-medium text-gray-700">Notes
+                                (Optional)</label>
+                            <textarea id="skip-review-notes" name="notes" rows="2" x-model="skipReviewNotes"
+                                placeholder="Reason for skipping review..."
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"></textarea>
+                        </div>
+
+                        <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:col-start-2 sm:text-sm">
+                                <i class="fa-solid fa-check mr-2"></i> Accept & Skip Review
+                            </button>
+                            <button type="button" @click="skipReviewModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== DECLINE SUBMISSION MODAL ==================== --}}
+        <div x-show="declineModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="decline-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="declineModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="declineModalOpen = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="declineModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                    <div class="sm:flex sm:items-start">
+                        <div
+                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fa-solid fa-ban text-red-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                            <h3 class="text-lg leading-6 font-semibold text-gray-900" id="decline-modal-title">
+                                Decline Submission
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                This will reject the submission. Please provide a reason for declining.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form
+                        action="{{ route('journal.workflow.decline', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        method="POST" class="mt-5">
+                        @csrf
+
+                        {{-- Reason Textarea --}}
+                        <div>
+                            <label for="decline-reason" class="block text-sm font-medium text-gray-700">
+                                Reason for Declining <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="decline-reason" name="reason" rows="4" required minlength="10" x-model="declineReason"
+                                placeholder="Please explain why this submission is being declined. This will be logged for future reference."
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"></textarea>
+                            <p class="mt-1 text-xs text-gray-500">Minimum 10 characters required.</p>
+                        </div>
+
+                        {{-- Notify Author Checkbox --}}
+                        <div class="mt-4 flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="notify-author" name="notify_author" type="checkbox"
+                                    x-model="notifyAuthor"
+                                    class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="notify-author" class="font-medium text-gray-700">Notify the Author</label>
+                                <p class="text-gray-500">Send an email notification to the author about this decision.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="submit" :disabled="declineReason.length < 10"
+                                class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed sm:col-start-2 sm:text-sm">
+                                <i class="fa-solid fa-ban mr-2"></i> Decline Submission
+                            </button>
+                            <button type="button" @click="declineModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</x-app-layout>

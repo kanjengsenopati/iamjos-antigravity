@@ -53,7 +53,7 @@ class PermissionController extends Controller
     public function store(PermissionRequest $request)
     {
         Permission::create($request->validated());
-        return redirect('permission')->with('success', 'Data berhasil disimpan');
+        return redirect()->route('permission.index')->with('success', 'Data berhasil disimpan');
     }
 
     /**
@@ -78,7 +78,7 @@ class PermissionController extends Controller
     public function update(PermissionRequest $request, Permission $permission)
     {
         $permission->update($request->validated());
-        return redirect('permission')->with('success', 'Data berhasil diperbarui');
+        return redirect()->route('permission.index')->with('success', 'Data berhasil diperbarui');
     }
 
     /**
@@ -87,6 +87,6 @@ class PermissionController extends Controller
     public function destroy(Permission $permission)
     {
         $permission->delete();
-        return redirect('permission')->with('success', 'Data berhasil dihapus');
+        return redirect()->route('permission.index')->with('success', 'Data berhasil dihapus');
     }
 }

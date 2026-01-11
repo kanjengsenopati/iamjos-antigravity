@@ -149,7 +149,7 @@
         const title = data.title;
         const options = {
             body: data.body,
-            icon: '/assets/media/logos/logo.png'
+            icon: '/assets/media/logos/logo.webp'
         };
         
         if (!window.location.toString().includes("chat")) {

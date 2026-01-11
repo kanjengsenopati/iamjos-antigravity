@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,16 +12,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // =====================================================
+        // IAMJOS OJS Clone Seeders
+        // =====================================================
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
         $this->call([
-            PermissionSeeder::class,
-            RoleSeeder::class,
-            AdminSeeder::class,
+            // 1. Setup Roles & Permissions (Spatie)
+            RolesAndPermissionsSeeder::class,
+
+            // 2. Create Initial Data (Journal, Sections, Users)
+            InitialDataSeeder::class,
         ]);
+
+        $this->command->info('');
+        $this->command->info('✅ IAMJOS Database seeded successfully!');
+        $this->command->info('');
+        $this->command->info('You can now login with:');
+        $this->command->info('  Email: superadmin@iamjos.id');
+        $this->command->info('  Password: password');
+        $this->command->info('');
     }
 }

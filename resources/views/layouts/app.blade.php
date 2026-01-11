@@ -1,0 +1,969 @@
+@php
+    $journal = $journal ?? ((isset($attributes) ? $attributes->get('journal') : null) ?? current_journal());
+    $journalSlug =
+        $journalSlug ??
+        ((isset($attributes) ? $attributes->get('journalSlug') : null) ?? ($journal ? $journal->slug : null));
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>@yield('title', $title ?? 'Dashboard') - {{ config('app.name', 'IAMJOS') }}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background-color: #e5e7eb;
+            border-radius: 20px;
+        }
+
+        /* Form Elements Base Styles */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        input[type="date"],
+        input[type="url"],
+        input[type="tel"],
+        input[type="search"],
+        textarea,
+        select {
+            display: block;
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #374151;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        input[type="url"]:focus,
+        input[type="tel"]:focus,
+        input[type="search"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #6366f1;
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Checkbox and Radio */
+        input[type="checkbox"],
+        input[type="radio"] {
+            width: 1rem;
+            height: 1rem;
+            color: #6366f1;
+            background-color: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            border-radius: 50%;
+        }
+
+        input[type="checkbox"]:checked,
+        input[type="radio"]:checked {
+            background-color: #6366f1;
+            border-color: #6366f1;
+        }
+
+        input[type="checkbox"]:focus,
+        input[type="radio"]:focus {
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* File Input */
+        input[type="file"] {
+            font-size: 0.875rem;
+        }
+
+        /* Select Arrow */
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        /* Disabled State */
+        input:disabled,
+        textarea:disabled,
+        select:disabled {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Button Base Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.5;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: #4f46e5;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+
+        .btn-secondary {
+            background-color: #fff;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+
+        .btn-success {
+            background-color: #059669;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background-color: #047857;
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        /* Tailwind Primary Colors fallback */
+        .bg-primary-500 {
+            background-color: #6366f1 !important;
+        }
+
+        .bg-primary-600 {
+            background-color: #4f46e5 !important;
+        }
+
+        .bg-primary-700 {
+            background-color: #4338ca !important;
+        }
+
+        .text-primary-500 {
+            color: #6366f1 !important;
+        }
+
+        .text-primary-600 {
+            color: #4f46e5 !important;
+        }
+
+        .text-primary-700 {
+            color: #4338ca !important;
+        }
+
+        .border-primary-500 {
+            border-color: #6366f1 !important;
+        }
+
+        .hover\:bg-primary-600:hover {
+            background-color: #4f46e5 !important;
+        }
+
+        .hover\:bg-primary-700:hover {
+            background-color: #4338ca !important;
+        }
+
+        .bg-primary-50 {
+            background-color: #eef2ff !important;
+        }
+
+        .bg-primary-100 {
+            background-color: #e0e7ff !important;
+        }
+
+        .text-white {
+            color: #fff !important;
+        }
+    </style>
+
+    @stack('styles')
+</head>
+
+<body class="h-full bg-gray-50 text-gray-900" x-data="{
+    sidebarOpen: false,
+    sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+    toggleSidebar() {
+        this.sidebarCollapsed = !this.sidebarCollapsed;
+        localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+    }
+}">
+
+    @php
+        $journal = current_journal();
+        $journalSlug = $journal ? $journal->slug : request()->route('journal');
+        $isAdminContext = request()->routeIs('journal.admin.*');
+        $usersRoutePrefix = $isAdminContext ? 'journal.admin.users' : 'journal.users';
+    @endphp
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0" class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
+        @click="sidebarOpen = false" x-cloak>
+    </div>
+
+    <!-- Sidebar -->
+    <aside
+        class="fixed top-0 left-0 z-50 h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out w-64 -translate-x-full lg:translate-x-0"
+        :class="{
+            'translate-x-0': sidebarOpen,
+            '-translate-x-full lg:translate-x-0': !sidebarOpen,
+            'w-64': !sidebarCollapsed,
+            'w-20': sidebarCollapsed
+        }">
+
+        <!-- 1. Journal Context Switcher -->
+        <div class="h-16 px-4 flex items-center border-b border-gray-100 relative" x-data="{ open: false }">
+            <button @click="open = !open"
+                class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left group">
+                <!-- Logo -->
+                <div
+                    class="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-sm group-hover:bg-primary-700 transition-colors">
+                    {{ $journal ? strtoupper(substr($journal->abbreviation ?? $journal->name, 0, 2)) : 'JM' }}
+                </div>
+
+                <!-- Text (Hidden when collapsed) -->
+                <div class="min-w-0 flex-1" x-show="!sidebarCollapsed"
+                    x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-90"
+                    x-transition:enter-end="opacity-100 scale-100">
+                    <p class="text-sm font-semibold text-gray-900 truncate">
+                        {{ $journal->abbreviation ?? Str::limit($journal->name ?? 'Journal', 15) }}</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium truncate">Switch Journal</p>
+                </div>
+
+                <!-- Icon -->
+                <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-auto" x-show="!sidebarCollapsed"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div x-show="open" @click.away="open = false" x-cloak x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="absolute top-14 left-4 right-4 z-50 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1"
+                :class="sidebarCollapsed ? 'left-16 top-2' : 'left-4 right-4 top-14'">
+
+                <div class="px-3 py-2 border-b border-gray-50 bg-gray-50/50">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">My Journals</span>
+                </div>
+
+                @php
+                    $userJournals = auth()->user()->journals ?? collect([]);
+                    if ($userJournals->isEmpty() && $journal) {
+                        $userJournals = collect([$journal]);
+                    }
+                @endphp
+
+                <div class="max-h-60 overflow-y-auto">
+                    @foreach ($userJournals as $j)
+                        <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
+                            class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 {{ $journal && $journal->id == $j->id ? 'bg-primary-50/50' : '' }}">
+                            <div
+                                class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-bold {{ $journal && $journal->id == $j->id ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600' }}">
+                                {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
+                            </div>
+                            <span
+                                class="text-sm text-gray-700 truncate {{ $journal && $journal->id == $j->id ? 'font-medium text-primary-900' : '' }}">{{ $j->name }}</span>
+                            @if ($journal && $journal->id == $j->id)
+                                <i class="fa-solid fa-check text-primary-600 text-xs ml-auto"></i>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+
+                <div class="border-t border-gray-100 pt-1 mt-1">
+                    <a href="{{ route('journal.select') }}"
+                        class="block px-4 py-2 text-xs text-gray-500 hover:text-primary-600 hover:bg-gray-50">
+                        <i class="fa-solid fa-grid-2 text-gray-400 mr-2"></i> View All Journals
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mobile Close Button -->
+            <button @click="sidebarOpen = false"
+                class="lg:hidden absolute right-4 top-5 p-1 text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- 2. Main Navigation -->
+        <nav class="flex-1 px-3 py-6 space-y-6 overflow-y-auto sidebar-scroll">
+
+            @if ($journalSlug)
+                <!-- Group: Workflow -->
+                <div class="space-y-1">
+                    <div class="px-3 mb-2" x-show="!sidebarCollapsed">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Workflow</span>
+                    </div>
+
+                    <!-- Dashboard -->
+                    <a href="{{ route('journal.dashboard', ['journal' => $journalSlug]) }}"
+                        class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
+                   {{ request()->routeIs('journal.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                        :title="sidebarCollapsed ? 'Dashboard' : ''">
+
+                        @if (request()->routeIs('journal.dashboard'))
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-600 rounded-r-full"
+                                x-show="!sidebarCollapsed"></div>
+                        @endif
+
+                        <i
+                            class="fa-solid fa-gauge-high w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.dashboard') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                        <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Dashboard</span>
+                    </a>
+
+                    <!-- Submissions -->
+                    @role('Author|Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                        <div x-data="{ expanded: {{ request()->routeIs('journal.submissions.*') ? 'true' : 'false' }} }">
+                            <button @click="expanded = !expanded"
+                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.submissions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                                :title="sidebarCollapsed ? 'Submissions' : ''">
+                                <div class="flex items-center gap-3">
+                                    <i
+                                        class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.submissions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Submissions</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
+                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
+                            </button>
+
+                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
+                                <div class="pl-10 pr-2 py-1 space-y-1">
+                                    @if (auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']))
+                                        {{-- Editor+ Menu: Full OJS 3.3 Navigation --}}
+                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=queue"
+                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'queue' || (!request('filter') && request()->routeIs('journal.submissions.index')) ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                            <i class="fa-solid fa-user-check w-4 text-center"></i>
+                                            My Queue
+                                        </a>
+                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=unassigned"
+                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'unassigned' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                            <i class="fa-solid fa-user-clock w-4 text-center"></i>
+                                            Unassigned
+                                        </a>
+                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=active"
+                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'active' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                            <i class="fa-solid fa-list-ul w-4 text-center"></i>
+                                            All Active
+                                        </a>
+                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=archives"
+                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'archives' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                            <i class="fa-solid fa-box-archive w-4 text-center"></i>
+                                            Archives
+                                        </a>
+                                    @else
+                                        {{-- Author Menu: Restricted View --}}
+                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=active"
+                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'active' || (!request('filter') && request()->routeIs('journal.submissions.index')) ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                            <i class="fa-solid fa-list-ul w-4 text-center"></i>
+                                            My Queue
+                                        </a>
+                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=archives"
+                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'archives' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                            <i class="fa-solid fa-box-archive w-4 text-center"></i>
+                                            Archives
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endrole
+
+                    <!-- Reviewer: My Reviews -->
+                    @role('Reviewer')
+                        <a href="{{ route('journal.reviewer.index', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
+                   {{ request()->routeIs('journal.reviewer.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            :title="sidebarCollapsed ? 'My Reviews' : ''">
+
+                            @if (request()->routeIs('journal.reviewer.*'))
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
+                                    x-show="!sidebarCollapsed"></div>
+                            @endif
+
+                            <i
+                                class="fa-solid fa-clipboard-check w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.reviewer.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">My
+                                Reviews</span>
+                        </a>
+                    @endrole
+
+                    <!-- Issues -->
+                    @role('Journal Manager|Editor|Admin|Super Admin')
+                        <div x-data="{ expanded: {{ request()->routeIs('journal.issues.*') ? 'true' : 'false' }} }">
+                            <button @click="expanded = !expanded"
+                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.issues.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                                :title="sidebarCollapsed ? 'Issues' : ''">
+                                <div class="flex items-center gap-3">
+                                    <i
+                                        class="fa-solid fa-layer-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.issues.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Issues</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
+                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
+                            </button>
+
+                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
+                                <div class="pl-10 pr-2 py-1 space-y-1">
+                                    <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}?status=future"
+                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('status') == 'future' ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Future
+                                        Issues</a>
+                                    <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}?status=published"
+                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('status') == 'published' ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Back
+                                        Issues</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endrole
+                </div>
+
+                <!-- Group: Management -->
+                @role('Journal Manager|Editor|Admin|Super Admin')
+                    <div class="space-y-1">
+                        <div class="px-3 mb-2 mt-6" x-show="!sidebarCollapsed">
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Settings</span>
+                        </div>
+
+                        <!-- Users & Roles -->
+                        <div x-data="{ expanded: {{ request()->routeIs($usersRoutePrefix . '.*') ? 'true' : 'false' }} }">
+                            <button @click="expanded = !expanded"
+                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs($usersRoutePrefix . '.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                                :title="sidebarCollapsed ? 'Users & Roles' : ''">
+                                <div class="flex items-center gap-3">
+                                    <i
+                                        class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs($usersRoutePrefix . '.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Users & Roles</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
+                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
+                            </button>
+
+                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
+                                <div class="pl-10 pr-2 py-1 space-y-1">
+                                    <a href="{{ route($usersRoutePrefix . '.index', ['journal' => $journalSlug]) }}"
+                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.index') || request()->routeIs($usersRoutePrefix . '.create') || request()->routeIs($usersRoutePrefix . '.edit') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                        <i class="fa-solid fa-user-group w-4 text-center"></i>
+                                        Users
+                                    </a>
+                                    <a href="{{ route($usersRoutePrefix . '.roles', ['journal' => $journalSlug]) }}"
+                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.roles*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                        <i class="fa-solid fa-user-tag w-4 text-center"></i>
+                                        Roles
+                                    </a>
+                                    <a href="{{ route($usersRoutePrefix . '.access', ['journal' => $journalSlug]) }}"
+                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.access') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                        <i class="fa-solid fa-lock w-4 text-center"></i>
+                                        Site Access
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- Settings -->
+                        <div x-data="{ expanded: {{ request()->routeIs('journal.settings.*') ? 'true' : 'false' }} }">
+                            <button @click="expanded = !expanded"
+                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                                :title="sidebarCollapsed ? 'Settings' : ''">
+                                <div class="flex items-center gap-3">
+                                    <i
+                                        class="fa-solid fa-gear w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Settings</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
+                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
+                            </button>
+
+                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
+                                <div class="pl-10 pr-2 py-1 space-y-1">
+                                    <a href="{{ route('journal.settings.index', ['journal' => $journalSlug]) }}"
+                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.index') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Journal</a>
+                                    <a href="{{ route('journal.settings.workflow.index', ['journal' => $journalSlug]) }}"
+                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.workflow*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Workflow</a>
+                                    <a href="{{ route('journal.settings.distribution.edit', ['journal' => $journalSlug]) }}"
+                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.distribution*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Distribution</a>
+                                    <a href="#"
+                                        class="block px-2 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100">Website</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endrole
+            @endif
+        </nav>
+
+        <!-- 3. Bottom Controls -->
+        <div class="p-4 border-t border-gray-100 bg-white">
+            <!-- Sidebar Toggle -->
+            <button @click="toggleSidebar()"
+                class="w-full flex items-center justify-center p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors border border-dashed border-transparent hover:border-gray-200">
+                <i class="fa-solid" :class="sidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="min-h-screen transition-all duration-300 ease-in-out flex flex-col lg:ml-64"
+        :class="sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'">
+
+        <!-- Top Navbar -->
+        <header class="sticky top-0 z-30 bg-white border-b border-gray-200">
+            <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+
+                <!-- Left: Mobile Menu Button + Breadcrumb -->
+                <div class="flex items-center">
+                    <!-- Mobile menu button -->
+                    <button @click="sidebarOpen = true"
+                        class="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    <!-- Logo (visible on mobile when sidebar is hidden) -->
+                    <a href="{{ $journalSlug ? route('journal.dashboard', ['journal' => $journalSlug]) : url('/') }}"
+                        class="lg:hidden ml-2 flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                        <span class="font-bold text-lg text-gray-900">{{ $journal->abbreviation ?? 'IAMJOS' }}</span>
+                    </a>
+
+                    <!-- Breadcrumb (desktop) -->
+                    <nav class="hidden lg:flex items-center space-x-2 text-sm">
+                        <a href="{{ $journalSlug ? route('journal.dashboard', ['journal' => $journalSlug]) : url('/') }}"
+                            class="text-gray-500 hover:text-gray-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </a>
+                        <span class="text-gray-300">/</span>
+                        <span class="text-gray-700 font-medium">{{ $journal->name ?? 'Journal' }}</span>
+                    </nav>
+                </div>
+
+                <!-- Right: Notifications + User Dropdown -->
+                <div class="flex items-center space-x-4">
+
+                    <!-- Notifications Dropdown -->
+                    <div x-data="{
+                        open: false,
+                        notifications: [],
+                        unreadCount: 0,
+                        isLoading: false,
+                    
+                        async fetchNotifications() {
+                            this.isLoading = true;
+                            try {
+                                const res = await fetch('{{ route('notifications.index') }}');
+                                const data = await res.json();
+                                this.notifications = data.notifications;
+                                this.unreadCount = data.unread_count;
+                            } catch (e) {
+                                console.error('Failed to fetch notifications:', e);
+                            }
+                            this.isLoading = false;
+                        },
+                    
+                        async markAsRead(id) {
+                            try {
+                                await fetch(`/notifications/${id}/mark-read`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                const notif = this.notifications.find(n => n.id === id);
+                                if (notif) notif.read_at = new Date().toISOString();
+                                this.unreadCount = Math.max(0, this.unreadCount - 1);
+                            } catch (e) {
+                                console.error('Failed to mark notification as read:', e);
+                            }
+                        },
+                    
+                        async markAllAsRead() {
+                            try {
+                                await fetch('{{ route('notifications.mark-all-read') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                this.notifications.forEach(n => n.read_at = new Date().toISOString());
+                                this.unreadCount = 0;
+                            } catch (e) {
+                                console.error('Failed to mark all as read:', e);
+                            }
+                        },
+                    
+                        getIcon(type) {
+                            const icons = {
+                                'new_submission': 'fa-file-circle-plus',
+                                'new_discussion_message': 'fa-comments',
+                                'submission_received': 'fa-inbox',
+                                'default': 'fa-bell'
+                            };
+                            return icons[type] || icons['default'];
+                        },
+                    
+                        getIconColor(type) {
+                            const colors = {
+                                'new_submission': 'text-indigo-500',
+                                'new_discussion_message': 'text-blue-500',
+                                'submission_received': 'text-emerald-500',
+                                'default': 'text-gray-500'
+                            };
+                            return colors[type] || colors['default'];
+                        }
+                    }" x-init="fetchNotifications()" class="relative">
+                        <!-- Bell Button -->
+                        <button @click="open = !open; if(open) fetchNotifications()"
+                            class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg relative transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <!-- Notification Badge -->
+                            <span x-show="unreadCount > 0" x-cloak
+                                class="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full">
+                                <span x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                            </span>
+                        </button>
+
+                        <!-- Dropdown Panel -->
+                        <div x-show="open" @click.away="open = false" x-cloak
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 z-50 overflow-hidden">
+
+                            <!-- Header -->
+                            <div
+                                class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                                <h3 class="text-sm font-semibold text-gray-900">
+                                    <i class="fa-solid fa-bell text-gray-400 mr-2"></i>Notifications
+                                </h3>
+                                <button x-show="unreadCount > 0" @click="markAllAsRead()"
+                                    class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                    Mark all as read
+                                </button>
+                            </div>
+
+                            <!-- Notification List -->
+                            <div class="max-h-80 overflow-y-auto">
+                                <!-- Loading State -->
+                                <template x-if="isLoading">
+                                    <div class="px-4 py-8 text-center">
+                                        <i class="fa-solid fa-spinner fa-spin text-gray-400 text-xl"></i>
+                                        <p class="text-sm text-gray-500 mt-2">Loading notifications...</p>
+                                    </div>
+                                </template>
+
+                                <!-- Empty State -->
+                                <template x-if="!isLoading && notifications.length === 0">
+                                    <div class="px-4 py-8 text-center">
+                                        <i class="fa-solid fa-bell-slash text-gray-300 text-3xl"></i>
+                                        <p class="text-sm text-gray-500 mt-2">No notifications yet</p>
+                                    </div>
+                                </template>
+
+                                <!-- Notification Items -->
+                                <template x-if="!isLoading && notifications.length > 0">
+                                    <ul class="divide-y divide-gray-100">
+                                        <template x-for="notif in notifications" :key="notif.id">
+                                            <li>
+                                                <a :href="notif.url"
+                                                    @click="if (!notif.read_at) markAsRead(notif.id)"
+                                                    class="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                                                    :class="{ 'bg-indigo-50/50': !notif.read_at }">
+                                                    <div class="flex items-start gap-3">
+                                                        <!-- Icon -->
+                                                        <div class="flex-shrink-0 mt-0.5">
+                                                            <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                                                :class="notif.read_at ? 'bg-gray-100' : 'bg-indigo-100'">
+                                                                <i class="fa-solid"
+                                                                    :class="[getIcon(notif.type), notif.read_at ?
+                                                                        'text-gray-400' : getIconColor(notif.type)
+                                                                    ]"></i>
+                                                            </div>
+                                                        </div>
+                                                        <!-- Content -->
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="text-sm"
+                                                                :class="notif.read_at ? 'text-gray-600' :
+                                                                    'text-gray-900 font-medium'"
+                                                                x-text="notif.message"></p>
+                                                            <p class="text-xs text-gray-400 mt-1"
+                                                                x-text="notif.created_at"></p>
+                                                        </div>
+                                                        <!-- Unread Indicator -->
+                                                        <div x-show="!notif.read_at" class="flex-shrink-0">
+                                                            <span
+                                                                class="w-2 h-2 bg-indigo-500 rounded-full block"></span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 text-center">
+                                <span class="text-xs text-gray-500">
+                                    Showing <span x-text="notifications.length"></span> most recent
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Dropdown -->
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" @click.outside="open = false"
+                            class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <!-- Avatar -->
+                            <div
+                                class="w-9 h-9 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                            </div>
+                            <!-- Name & Role -->
+                            <div class="hidden sm:block text-left">
+                                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name ?? 'User' }}</p>
+                                <p class="text-xs text-gray-500">
+                                    {{ Auth::user()->roles->first()->name ?? 'Member' }}
+                                </p>
+                            </div>
+                            <!-- Chevron -->
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 py-1 z-50">
+                            <!-- User Info Header -->
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name ?? 'User' }}</p>
+                                <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email ?? '' }}</p>
+                            </div>
+
+                            <!-- Menu Items -->
+                            <div class="py-1">
+                                <a href="{{ route('profile.edit') }}"
+                                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    My Profile
+                                </a>
+                                <a href="#"
+                                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Settings
+                                </a>
+                            </div>
+
+                            <!-- Logout -->
+                            <div class="border-t border-gray-100 py-1">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        Sign Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="flex-1 p-6 lg:p-8">
+            <!-- Page Header (for x-slot) -->
+            @isset($header)
+                <div class="mb-6">
+                    {{ $header }}
+                </div>
+            @endisset
+
+            @hasSection('content')
+                @yield('content')
+            @else
+                {{ $slot ?? '' }}
+            @endif
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200 py-4 px-6 mt-auto">
+            <p class="text-center text-sm text-gray-500">
+                &copy; {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. Open Journal System Clone.
+            </p>
+        </footer>
+    </main>
+
+    <!-- Flash Messages -->
+    @if (session('success'))
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
+                <i class="fa-solid fa-check-circle text-emerald-600"></i>
+                <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
+                <button @click="show = false" class="text-emerald-500 hover:text-emerald-700"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
+                <i class="fa-solid fa-circle-exclamation text-red-600"></i>
+                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                <button @click="show = false" class="text-red-500 hover:text-red-700"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+    @endif
+
+    @stack('scripts')
+</body>
+
+</html>

@@ -133,11 +133,11 @@ class RoleController extends Controller
             ]);
             $role->syncPermissions($request->permissions);
             DB::commit();
-            return redirect('role')->with('success', 'Data berhasil diperbarui');
+            return redirect()->route('role.index')->with('success', 'Data berhasil diupdate');
         } catch (\Exception $e) {
             DB::rollBack();
             // dd($e);
-            return redirect('role')->with('error', $e->getMessage());
+            return redirect()->route('role.index')->with('error', $e->getMessage());
         }
     }
 
@@ -147,6 +147,6 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         $role->delete();
-        return back()->with('success', 'Data berhasil dihapus');
+        return redirect()->route('role.index')->with('success', 'Data berhasil dihapus');
     }
 }

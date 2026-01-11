@@ -73,7 +73,7 @@
 
         <!-- header -->
         <header>
-            <img src="{{ asset('assets/media/logos/logo.png') }}" width="65" alt="" />
+            <img src="{{ asset('assets/media/logos/logo.webp') }}" width="65" alt="" />
             <p>Transaksi {{ $date }}</p>
 
         </header>

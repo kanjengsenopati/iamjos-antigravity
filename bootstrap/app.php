@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\ValidateApiKey;
 use App\Http\Middleware\AdsTrackingRateLimit;
+use App\Http\Middleware\JournalContextMiddleware;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'validate_api_key' => ValidateApiKey::class,
             'ads_rate_limit' => AdsTrackingRateLimit::class,
+            'journal.context' => JournalContextMiddleware::class,
+            // Spatie Permission middleware
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
         // contoh jika mau auto-apply ke grup API:
         // $middleware->appendToGroup('api', [ValidateApiKey::class]);

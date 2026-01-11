@@ -1,0 +1,446 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Journal;
+use App\Models\Section;
+use App\Models\Submission;
+use App\Models\SubmissionFile;
+use App\Models\SubmissionAuthor;
+use App\Models\SubmissionChecklist;
+use App\Models\Discussion;
+use App\Models\DiscussionMessage;
+use App\Models\EmailTemplate;
+use App\Models\User;
+use App\Notifications\NewSubmissionNotification;
+use App\Notifications\SubmissionReceived;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
+
+class SubmissionController extends Controller
+{
+    /**
+     * Get the current journal from context.
+     */
+    protected function getJournal(): Journal
+    {
+        $journal = current_journal();
+
+        if (!$journal) {
+            abort(404, 'Journal context not found.');
+        }
+
+        return $journal;
+    }
+
+    /**
+     * Display a listing of submissions for current journal.
+     * Role-based filtering: Authors see only their own, Editors see all with OJS 3.3 filters.
+     */
+    public function index(Request $request): View
+    {
+        $user = auth()->user();
+        $journal = $this->getJournal();
+        $filter = $request->get('filter', 'queue');
+
+        // Determine if user has editor+ privileges
+        $isEditor = $user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+
+        // Base query - restrict by journal, eager load relationships
+        $query = Submission::where('journal_id', $journal->id)
+            ->with(['journal', 'section', 'issue', 'editorialAssignments.user', 'authors']);
+
+        if (!$isEditor) {
+            // === AUTHOR VIEW ===
+            // Authors can ONLY see their own submissions
+            $query->where('user_id', $user->id);
+
+            if ($filter === 'archives') {
+                $query->whereIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED]);
+            } else {
+                // Default: Active submissions (My Queue for authors)
+                $query->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED]);
+            }
+        } else {
+            // === EDITOR+ VIEW ===
+            switch ($filter) {
+                case 'queue':
+                    // My Queue: Submissions assigned to this editor
+                    $query->whereHas('editorialAssignments', function ($q) use ($user) {
+                        $q->where('user_id', $user->id)->where('is_active', true);
+                    })->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED]);
+                    break;
+
+                case 'unassigned':
+                    // Unassigned: No active editor assigned, status = submitted
+                    $query->where('status', Submission::STATUS_SUBMITTED)
+                        ->whereDoesntHave('editorialAssignments', function ($q) {
+                            $q->where('is_active', true);
+                        });
+                    break;
+
+                case 'active':
+                    // All Active: All non-archived submissions
+                    $query->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED]);
+                    break;
+
+                case 'archives':
+                    // Archives: Published or Declined
+                    $query->whereIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED]);
+                    break;
+
+                default:
+                    // Fallback to queue
+                    $query->whereHas('editorialAssignments', function ($q) use ($user) {
+                        $q->where('user_id', $user->id)->where('is_active', true);
+                    })->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED]);
+            }
+        }
+
+        $submissions = $query->latest('submitted_at')->paginate(10);
+
+        // Status counts for sidebar badges
+        $statusCounts = $this->getStatusCounts($journal, $user, $isEditor);
+
+        return view('submissions.index', compact('submissions', 'statusCounts', 'filter', 'journal', 'isEditor'));
+    }
+
+    /**
+     * Get status counts for sidebar badges.
+     */
+    private function getStatusCounts(Journal $journal, $user, bool $isEditor): array
+    {
+        $base = Submission::where('journal_id', $journal->id);
+
+        if (!$isEditor) {
+            // Author counts - only their own submissions
+            return [
+                'active' => (clone $base)->where('user_id', $user->id)
+                    ->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])->count(),
+                'archives' => (clone $base)->where('user_id', $user->id)
+                    ->whereIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])->count(),
+            ];
+        }
+
+        // Editor counts - full OJS 3.3 style
+        return [
+            'queue' => (clone $base)->whereHas(
+                'editorialAssignments',
+                fn($q) =>
+                $q->where('user_id', $user->id)->where('is_active', true)
+            )->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])->count(),
+
+            'unassigned' => (clone $base)->where('status', Submission::STATUS_SUBMITTED)
+                ->whereDoesntHave('editorialAssignments', fn($q) => $q->where('is_active', true))->count(),
+
+            'active' => (clone $base)
+                ->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])->count(),
+
+            'archives' => (clone $base)
+                ->whereIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])->count(),
+        ];
+    }
+
+    /**
+     * Show the form for creating a new submission.
+     */
+    /**
+     * Show the form for creating a new submission.
+     */
+    public function create(): View
+    {
+        $journal = $this->getJournal();
+
+        // Get active sections
+        $sections = Section::where('journal_id', $journal->id)
+            ->active()
+            ->ordered()
+            ->get();
+
+        // Get submission requirements
+        $submissionChecklists = SubmissionChecklist::where('journal_id', $journal->id)
+            ->ordered()
+            ->get();
+
+        return view('submissions.create', compact('journal', 'sections', 'submissionChecklists'));
+    }
+
+    /**
+     * Handle TinyMCE image uploads.
+     */
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|mimes:jpeg,png,gif,webp|max:5120', // 5MB max
+        ]);
+
+        $journal = $this->getJournal();
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store("journals/{$journal->id}/images", 'public');
+
+            return response()->json([
+                'location' => Storage::url($path),
+            ]);
+        }
+
+        return response()->json(['error' => 'No file uploaded'], 400);
+    }
+
+    /**
+     * Store a newly created submission.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $journal = $this->getJournal();
+
+        // Count required checklists to validate all are checked
+        $requiredChecklistCount = SubmissionChecklist::where('journal_id', $journal->id)->count();
+
+        $validated = $request->validate([
+            'section_id' => 'required|uuid|exists:sections,id',
+            'requirements' => $requiredChecklistCount > 0 ? ['required', 'array', "size:$requiredChecklistCount"] : 'nullable',
+            'requirements.*' => 'required',
+            'manuscript' => 'required|file|mimes:doc,docx,pdf|max:10240',
+            'title' => 'required|string|max:500',
+            'subtitle' => 'nullable|string|max:500',
+            'abstract' => 'required|string',
+            'keywords' => 'nullable|string|max:500',
+
+            'authors' => 'required|array|min:1',
+            'authors.*.first_name' => 'required|string|max:255',
+            'authors.*.last_name' => 'required|string|max:255',
+            'authors.*.email' => 'required|email|max:255',
+            'authors.*.affiliation' => 'nullable|string|max:255',
+            'authors.*.country' => 'nullable|string|max:100',
+
+            'primary_contact' => 'required|integer|min:0',
+
+            'comments_for_editor' => 'nullable|string|max:5000',
+        ]);
+
+        $user = auth()->user();
+
+        DB::beginTransaction();
+
+        try {
+            // 1. Create Submission
+            $submission = Submission::create([
+                'journal_id' => $journal->id,
+                'user_id' => $user->id,
+                'section_id' => $validated['section_id'],
+                'title' => $validated['title'],
+                'subtitle' => $validated['subtitle'] ?? null,
+                'abstract' => $validated['abstract'],
+                'keywords' => $validated['keywords'] ?? null,
+                'status' => Submission::STATUS_SUBMITTED,
+                'stage' => Submission::STAGE_SUBMISSION,
+                'stage_id' => 1,
+                'submitted_at' => now(),
+            ]);
+
+            // 2. Upload File
+            if ($request->hasFile('manuscript')) {
+                $file = $request->file('manuscript');
+                $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", 'local');
+
+                $submission->update(['submission_file_path' => $path]);
+
+                SubmissionFile::create([
+                    'submission_id' => $submission->id,
+                    'uploaded_by' => $user->id,
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_type' => SubmissionFile::TYPE_MANUSCRIPT,
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'version' => 1,
+                    'stage' => Submission::STAGE_SUBMISSION,
+                ]);
+            }
+
+            // 3. Save Authors
+            foreach ($validated['authors'] as $index => $authorData) {
+                SubmissionAuthor::create([
+                    'submission_id' => $submission->id,
+                    'user_id' => ($authorData['email'] === $user->email) ? $user->id : null,
+                    'first_name' => $authorData['first_name'],
+                    'last_name' => $authorData['last_name'],
+                    'name' => $authorData['first_name'] . ' ' . $authorData['last_name'],
+                    'email' => $authorData['email'],
+                    'affiliation' => $authorData['affiliation'] ?? null,
+                    'country' => $authorData['country'] ?? null,
+                    'is_primary_contact' => (int)$validated['primary_contact'] === $index,
+                    'is_corresponding' => (int)$validated['primary_contact'] === $index,
+                    'sort_order' => $index,
+                ]);
+            }
+
+            // 4. Create Discussion for "Comments for the Editor" (if provided)
+            if (!empty($validated['comments_for_editor'])) {
+                $discussion = Discussion::create([
+                    'submission_id' => $submission->id,
+                    'user_id' => $user->id,
+                    'subject' => 'Comments for the Editor',
+                    'stage_id' => 1, // Submission stage
+                    'is_open' => true,
+                ]);
+
+                DiscussionMessage::create([
+                    'discussion_id' => $discussion->id,
+                    'user_id' => $user->id,
+                    'body' => $validated['comments_for_editor'],
+                ]);
+            }
+
+            DB::commit();
+
+            // ====== NOTIFICATIONS ======
+            // 1. Notify the author that submission was received
+            $user->notify(new SubmissionReceived($submission));
+
+            // 2. Notify Journal Managers and Editors about the new submission
+            $editorsAndManagers = User::whereHas('roles', function ($q) {
+                $q->whereIn('name', ['Journal Manager', 'Editor', 'Admin', 'Super Admin']);
+            })->get();
+
+            Notification::send($editorsAndManagers, new NewSubmissionNotification($submission));
+
+            return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
+                ->with('success', 'Submission created successfully! Your article is now under review.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Log error for debugging
+            Log::error('Submission creation failed', [
+                'user_id' => $user->id,
+                'journal_id' => $journal->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->withInput()
+                ->with('error', 'Failed to create submission. Please try again.');
+        }
+    }
+
+    /**
+     * Display the specified submission.
+     */
+    public function show(string $journalSlug, Submission $submission): View
+    {
+        $journal = $this->getJournal();
+
+
+        // Ensure submission belongs to this journal
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        // Ensure user can view this submission
+        $this->authorize('view', $submission);
+
+        $submission->load([
+            'journal',
+            'section',
+            'issue',
+            'authors',
+            'files',
+            'discussions.user', // Load discussions with creator
+            'discussions.messages', // Load messages to count replies
+            'editorialAssignments.user', // Load editors
+            'reviewAssignments.reviewer',
+        ]);
+
+        return view('submissions.show', compact('submission', 'journal'));
+    }
+
+    /**
+     * Show the form for editing the submission.
+     */
+    public function edit(string $journalSlug, Submission $submission): View
+    {
+        $journal = $this->getJournal();
+
+        // Ensure submission belongs to this journal
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        $this->authorize('update', $submission);
+
+        if (!$submission->isEditable()) {
+            abort(403, 'This submission cannot be edited.');
+        }
+
+        $sections = Section::where('journal_id', $journal->id)
+            ->active()
+            ->ordered()
+            ->get();
+
+        $submission->load(['authors', 'files']);
+
+        return view('submissions.edit', compact('submission', 'sections', 'journal'));
+    }
+
+    /**
+     * Update the specified submission.
+     */
+    public function update(Request $request, string $journalSlug, Submission $submission): RedirectResponse
+    {
+        $journal = $this->getJournal();
+
+        // Ensure submission belongs to this journal
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        $this->authorize('update', $submission);
+
+        if (!$submission->isEditable()) {
+            return back()->with('error', 'This submission cannot be edited.');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:500',
+            'abstract' => 'required|string',
+            'keywords' => 'nullable|string|max:500',
+            'section_id' => 'required|uuid',
+        ]);
+
+        $submission->update($validated);
+
+        return redirect()->route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission])
+            ->with('success', 'Submission updated successfully.');
+    }
+
+    /**
+     * Remove the specified submission (soft delete).
+     */
+    public function destroy(string $journalSlug, Submission $submission): RedirectResponse
+    {
+        $journal = $this->getJournal();
+
+        // Ensure submission belongs to this journal
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        $this->authorize('delete', $submission);
+
+        if ($submission->status !== Submission::STATUS_DRAFT) {
+            return back()->with('error', 'Only draft submissions can be deleted.');
+        }
+
+        $submission->delete();
+
+        return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
+            ->with('success', 'Submission deleted successfully.');
+    }
+}

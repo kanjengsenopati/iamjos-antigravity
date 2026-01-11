@@ -1,0 +1,200 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Journal;
+use App\Models\ReviewAssignment;
+use App\Models\SubmissionFile;
+use App\Notifications\ReviewCompleted;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+
+class ReviewerController extends Controller
+{
+    /**
+     * Get the current journal from context.
+     */
+    protected function getJournal(): Journal
+    {
+        $journal = current_journal();
+
+        if (!$journal) {
+            abort(404, 'Journal context not found.');
+        }
+
+        return $journal;
+    }
+
+    /**
+     * Display list of submissions assigned to current reviewer for current journal.
+     */
+    public function index(): View
+    {
+        $user = auth()->user();
+        $journal = $this->getJournal();
+
+        // Get all review assignments for this reviewer in this journal
+        $assignments = ReviewAssignment::where('reviewer_id', $user->id)
+            ->whereHas('submission', function ($query) use ($journal) {
+                $query->where('journal_id', $journal->id);
+            })
+            ->with(['submission' => function ($query) {
+                $query->with(['journal', 'section']);
+            }])
+            ->orderByRaw("CASE 
+                WHEN status = 'pending' THEN 1 
+                WHEN status = 'accepted' THEN 2 
+                WHEN status = 'completed' THEN 3 
+                ELSE 4 
+            END")
+            ->orderBy('due_date', 'asc')
+            ->paginate(15);
+
+        // Count by status for this journal
+        $statusCounts = [
+            'pending' => ReviewAssignment::where('reviewer_id', $user->id)
+                ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
+                ->where('status', 'pending')->count(),
+            'accepted' => ReviewAssignment::where('reviewer_id', $user->id)
+                ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
+                ->where('status', 'accepted')->count(),
+            'completed' => ReviewAssignment::where('reviewer_id', $user->id)
+                ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
+                ->where('status', 'completed')->count(),
+            'overdue' => ReviewAssignment::where('reviewer_id', $user->id)
+                ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
+                ->overdue()->count(),
+        ];
+
+        return view('reviewer.index', compact('assignments', 'statusCounts', 'journal'));
+    }
+
+    /**
+     * Accept review invitation.
+     */
+    public function accept(string $journalSlug, ReviewAssignment $assignment): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        $this->authorizeReviewer($assignment, $journal);
+
+        if ($assignment->status !== ReviewAssignment::STATUS_PENDING) {
+            return back()->with('error', 'This invitation has already been responded to.');
+        }
+
+        $assignment->update([
+            'status' => ReviewAssignment::STATUS_ACCEPTED,
+            'responded_at' => now(),
+        ]);
+
+        return redirect()->route('journal.reviewer.show', ['journal' => $journal->slug, 'assignment' => $assignment])
+            ->with('success', 'Review invitation accepted. You can now submit your review.');
+    }
+
+    /**
+     * Decline review invitation.
+     */
+    public function decline(Request $request, string $journalSlug, ReviewAssignment $assignment): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        $this->authorizeReviewer($assignment, $journal);
+
+        if ($assignment->status !== ReviewAssignment::STATUS_PENDING) {
+            return back()->with('error', 'This invitation has already been responded to.');
+        }
+
+        $metadata = $assignment->metadata ?? [];
+        $metadata['decline_reason'] = $request->input('reason');
+
+        $assignment->update([
+            'status' => ReviewAssignment::STATUS_DECLINED,
+            'responded_at' => now(),
+            'metadata' => $metadata,
+        ]);
+
+        return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug])
+            ->with('success', 'Review invitation declined.');
+    }
+
+    /**
+     * Show review form for a specific submission.
+     */
+    public function show(string $journalSlug, ReviewAssignment $assignment): View
+    {
+        $journal = $this->getJournal();
+        $this->authorizeReviewer($assignment, $journal);
+
+        // Load submission with blind review (hide author info)
+        $submission = $assignment->submission;
+        $submission->load(['journal', 'section']);
+
+        // Get manuscript files (latest version only)
+        $manuscriptFiles = SubmissionFile::where('submission_id', $submission->id)
+            ->whereIn('file_type', ['manuscript', 'revision'])
+            ->orderBy('version', 'desc')
+            ->get();
+
+        return view('reviewer.show', compact('assignment', 'submission', 'manuscriptFiles', 'journal'));
+    }
+
+    /**
+     * Submit the review.
+     */
+    public function submit(Request $request, string $journalSlug, ReviewAssignment $assignment): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        $this->authorizeReviewer($assignment, $journal);
+
+        if (!in_array($assignment->status, [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED])) {
+            return back()->with('error', 'This review cannot be submitted.');
+        }
+
+        $validated = $request->validate([
+            'recommendation' => 'required|in:accept,minor_revision,major_revision,resubmit,reject',
+            'comments_for_author' => 'required|string|min:50',
+            'comments_for_editor' => 'nullable|string',
+        ]);
+
+        $assignment->update([
+            'status' => ReviewAssignment::STATUS_COMPLETED,
+            'recommendation' => $validated['recommendation'],
+            'comments_for_author' => $validated['comments_for_author'],
+            'comments_for_editor' => $validated['comments_for_editor'] ?? null,
+            'completed_at' => now(),
+        ]);
+
+        // Notify editors that review is completed
+        $this->notifyEditorsReviewCompleted($assignment);
+
+        return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug])
+            ->with('success', 'Review submitted successfully. Thank you for your contribution!');
+    }
+
+    /**
+     * Check if current user is the assigned reviewer and submission belongs to journal.
+     */
+    private function authorizeReviewer(ReviewAssignment $assignment, Journal $journal): void
+    {
+        if ($assignment->reviewer_id !== auth()->id()) {
+            abort(403, 'You are not authorized to access this review.');
+        }
+
+        // Ensure the submission belongs to this journal
+        if ($assignment->submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+    }
+
+    /**
+     * Notify editors when review is completed.
+     */
+    private function notifyEditorsReviewCompleted(ReviewAssignment $assignment): void
+    {
+        // Get editors with permission to make decisions
+        $editors = \App\Models\User::role(['Editor', 'Admin', 'Super Admin'])->get();
+
+        foreach ($editors as $editor) {
+            $editor->notify(new ReviewCompleted($assignment));
+        }
+    }
+}

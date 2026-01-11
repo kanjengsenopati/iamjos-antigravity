@@ -25,7 +25,7 @@ class AdminController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            $data = Admin::latest();
+            $data = Admin::where('type', Admin::TYPE_ADMIN)->latest();
             return DataTables::of($data)
                 ->addColumn('role', function ($query) {
                     $role = "";

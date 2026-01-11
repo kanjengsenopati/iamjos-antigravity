@@ -4,16 +4,24 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use App\Models\Role;
+use App\Models\Publisher;
+use App\Models\Author;
 use App\Traits\UuidTrait;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Admin extends Authenticatable
 {
     const MAX_LOGIN_ATTEMPTS = 3;
+    const TYPE_ADMIN = 'ADMIN';
+    const TYPE_PUBLISHER = 'PUBLISHER';
+    const TYPE_AUTHOR = 'AUTHOR';
+    const TYPE_ASSESSOR = 'ASSESSOR';
+    
     use HasFactory, HasRoles, UuidTrait,  HasApiTokens;
     // use LogActivityTrait;
 
@@ -32,6 +40,7 @@ class Admin extends Authenticatable
         'token',
         'login_attempts',
         'blocked_until',
+        'type',
     ];
 
     /**
@@ -86,5 +95,21 @@ class Admin extends Authenticatable
         $this->login_attempts = 0;
         $this->blocked_until = null;
         $this->save();
+    }
+
+    /**
+     * Get the publisher detail of this admin.
+     */
+    public function publisher(): HasOne
+    {
+        return $this->hasOne(Publisher::class);
+    }
+
+    /**
+     * Get the author detail of this admin.
+     */
+    public function author(): HasOne
+    {
+        return $this->hasOne(Author::class);
     }
 }

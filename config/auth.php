@@ -38,7 +38,7 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'admins', // <-- Ubah dari 'users' menjadi 'admins'
+            'provider' => 'users', // <-- Use User model for OJS Clone
         ],
         'api' => [
             'driver' => 'passport', // <-- Ubah dari 'token' menjadi 'passport'

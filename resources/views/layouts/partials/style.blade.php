@@ -16,7 +16,7 @@
 <meta property="og:image" content="">
 
 <link rel="canonical" href="{{ env('APP_NAME') }}" />
-<link rel="shortcut icon" href="{{ asset('assets/media/logos/logo.png') }}" />
+<link rel="shortcut icon" href="{{ asset('assets/media/logos/logo.webp') }}" />
 <!--begin::Fonts-->
 <link href="https://fonts.cdnfonts.com/css/gothic-a1" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">

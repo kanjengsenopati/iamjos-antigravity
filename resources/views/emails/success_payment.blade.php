@@ -21,7 +21,7 @@
                                                             <tr>
                                                                 <td align="center">
                                                                     <a href="{{ env('APP_URL') }}" target="_blank"><img
-                                                                            src="{{ asset('assets/media/logos/logo.png') }}"
+                                                                            src="{{ asset('assets/media/logos/logo.webp') }}"
                                                                             alt="Logo" style="display: block; padding: 1rem 0;"
                                                                             title="Logo" height="80" /></a>
                                                                 </td>
