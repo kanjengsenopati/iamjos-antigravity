@@ -13,23 +13,36 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // =====================================================
-        // IAMJOS OJS Clone Seeders
+        // IAMJOS Production Seeders
         // =====================================================
 
-        $this->call([
-            // 1. Setup Roles & Permissions (Spatie)
-            RolesAndPermissionsSeeder::class,
+        $this->command->info('🚀 Starting IAMJOS Database Seeding...');
+        $this->command->newLine();
 
-            // 2. Create Initial Data (Journal, Sections, Users)
+        $this->call([
+            // 1. Setup Roles & Permissions (Required First)
+            RolesAndPermissionsSeeder::class,
+            // RoleSeeder::class,
+
+            // 3. Portal & Site Content (Public Pages)
+            SiteContentSeeder::class,
+
+            // 4. Email Templates
+            EmailTemplateSeeder::class,
+
+            // 5. Sample Journals & Initial Data
+            JournalSeeder::class,
             InitialDataSeeder::class,
         ]);
 
-        $this->command->info('');
+        $this->command->newLine();
         $this->command->info('✅ IAMJOS Database seeded successfully!');
-        $this->command->info('');
-        $this->command->info('You can now login with:');
-        $this->command->info('  Email: superadmin@iamjos.id');
-        $this->command->info('  Password: password');
-        $this->command->info('');
+        $this->command->newLine();
+        $this->command->info('📋 Default Credentials:');
+        $this->command->info('   Email: superadmin@iamjos.id');
+        $this->command->info('   Password: password');
+        $this->command->newLine();
+        $this->command->warn('⚠️  Remember to change default password in production!');
+        $this->command->newLine();
     }
 }
