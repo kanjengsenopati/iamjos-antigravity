@@ -40,12 +40,16 @@ use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\ApplicationSettingController;
 use App\Http\Controllers\Admin\DashboardController as LegacyDashboardController;
 use App\Http\Controllers\Admin\SiteAdminController;
+use App\Http\Controllers\Admin\PortalSettingsController;
+use App\Http\Controllers\PortalController;
 
 // =====================================================
 // PORTAL HOME (List of all journals)
 // =====================================================
-Route::get('/', [PublicController::class, 'portalHome'])->name('portal.home');
-Route::get('/journals', [PublicController::class, 'journalList'])->name('portal.journals');
+Route::get('/', [PortalController::class, 'index'])->name('portal.home');
+Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
+Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
+Route::get('/about', [PortalController::class, 'about'])->name('portal.about');
 
 // File downloads (public for galley files)
 Route::get('/files/{file}/download', [SubmissionFileController::class, 'download'])->name('files.download');
@@ -127,6 +131,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Admin'])->grou
     Route::get('/journals/{journal}/edit', [JournalController::class, 'edit'])->name('journals.edit');
     Route::put('/journals/{journal}', [JournalController::class, 'update'])->name('journals.update');
     Route::delete('/journals/{journal}', [JournalController::class, 'destroy'])->name('journals.destroy');
+
+    // Portal Settings (Landing Page CMS)
+    Route::get('/portal-settings', [PortalSettingsController::class, 'edit'])->name('portal.edit');
+    Route::put('/portal-settings', [PortalSettingsController::class, 'update'])->name('portal.update');
+
+    // About Page Settings
+    Route::get('/about-settings', [SiteAdminController::class, 'editAbout'])->name('about.edit');
+    Route::put('/about-settings', [SiteAdminController::class, 'updateAbout'])->name('about.update');
 });
 
 // =====================================================

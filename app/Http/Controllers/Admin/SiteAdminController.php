@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Journal;
+use App\Models\SiteContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -161,5 +162,32 @@ class SiteAdminController extends Controller
         } catch (\Exception $e) {
             return 'Unknown';
         }
+    }
+
+    /**
+     * Display the About Page settings form.
+     */
+    public function editAbout()
+    {
+        $content = SiteContent::getAll();
+
+        return view('admin.site.about-settings', compact('content'));
+    }
+
+    /**
+     * Update the About Page settings.
+     */
+    public function updateAbout(Request $request)
+    {
+        $validated = $request->validate([
+            'about_title' => 'required|string|max:255',
+            'about_content' => 'required|string',
+        ]);
+
+        // Save each field to site_contents
+        SiteContent::set('about_title', $validated['about_title'], 'about', 'text', 'About Page Title');
+        SiteContent::set('about_content', $validated['about_content'], 'about', 'html', 'About Page Content');
+
+        return back()->with('success', 'About page settings updated successfully.');
     }
 }
