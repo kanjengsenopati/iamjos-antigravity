@@ -155,14 +155,14 @@
 
                 <!-- Desktop Navigation -->
                 <nav class="hidden lg:flex items-center space-x-8">
-                    <a href="#journals" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-gray-600 hover:text-primary-600' : 'text-white/90 hover:text-white'">
+                    <a href="{{ route('portal.journals') }}" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-gray-600 hover:text-primary-600' : 'text-white/90 hover:text-white'">
                         Jurnal
                     </a>
                     <a href="#subjects" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-gray-600 hover:text-primary-600' : 'text-white/90 hover:text-white'">
                         Subjek
                     </a>
-                    <a href="#about" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-gray-600 hover:text-primary-600' : 'text-white/90 hover:text-white'">
-                        Tentang
+                    <a href="{{ route('portal.about') }}" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-gray-600 hover:text-primary-600' : 'text-white/90 hover:text-white'">
+                        Tentang Kami
                     </a>
                 </nav>
 
@@ -200,9 +200,9 @@
              x-transition:leave-end="opacity-0 -translate-y-4"
              class="lg:hidden bg-white border-t shadow-xl">
             <div class="px-4 py-6 space-y-4">
-                <a href="#journals" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Jurnal</a>
+                <a href="{{ route('portal.journals') }}" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Jurnal</a>
                 <a href="#subjects" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Subjek</a>
-                <a href="#about" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Tentang</a>
+                <a href="{{ route('portal.about') }}" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Tentang Kami</a>
                 @guest
                     <a href="{{ route('login') }}" class="block text-gray-600 hover:text-primary-600 font-medium">Masuk</a>
                 @endguest
