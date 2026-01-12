@@ -151,12 +151,18 @@ class JournalUserRole extends Model
 
     /**
      * Get all journals a user is registered with.
+     * Super Admins automatically have access to ALL journals.
      *
      * @param User $user
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function getUserJournals(User $user)
     {
+        // Super Admins have access to ALL enabled journals
+        if ($user->hasRole('Super Admin')) {
+            return Journal::where('enabled', true)->orderBy('name')->get();
+        }
+
         $journalIds = self::where('user_id', $user->id)
             ->distinct()
             ->pluck('journal_id');
@@ -166,6 +172,7 @@ class JournalUserRole extends Model
 
     /**
      * Get all roles a user has in a specific journal.
+     * Super Admins automatically have Super Admin role in all journals.
      *
      * @param User $user
      * @param Journal|string $journal
@@ -175,11 +182,85 @@ class JournalUserRole extends Model
     {
         $journalId = $journal instanceof Journal ? $journal->id : $journal;
 
+        // Super Admins have the Super Admin role in every journal
+        if ($user->hasRole('Super Admin')) {
+            $superAdminRole = Role::where('name', 'Super Admin')->first();
+            
+            // Also get any other explicit roles they might have
+            $roleIds = self::where([
+                'journal_id' => $journalId,
+                'user_id' => $user->id,
+            ])->pluck('role_id');
+
+            $roles = Role::whereIn('id', $roleIds)->get();
+            
+            // Add Super Admin if not already included
+            if ($superAdminRole && !$roles->contains('id', $superAdminRole->id)) {
+                $roles->push($superAdminRole);
+            }
+            
+            return $roles;
+        }
+
         $roleIds = self::where([
             'journal_id' => $journalId,
             'user_id' => $user->id,
         ])->pluck('role_id');
 
         return Role::whereIn('id', $roleIds)->get();
+    }
+
+    /**
+     * Enroll a Super Admin in all enabled journals.
+     *
+     * @param User $user
+     * @return void
+     */
+    public static function enrollSuperAdminInAllJournals(User $user): void
+    {
+        if (!$user->hasRole('Super Admin')) {
+            return;
+        }
+
+        $superAdminRole = Role::where('name', 'Super Admin')->first();
+        if (!$superAdminRole) {
+            return;
+        }
+
+        $journals = Journal::where('enabled', true)->get();
+
+        foreach ($journals as $journal) {
+            self::firstOrCreate([
+                'journal_id' => $journal->id,
+                'user_id' => $user->id,
+                'role_id' => $superAdminRole->id,
+            ]);
+        }
+    }
+
+    /**
+     * Enroll all Super Admins in a specific journal.
+     * Called when a new journal is created.
+     *
+     * @param Journal $journal
+     * @return void
+     */
+    public static function enrollAllSuperAdminsInJournal(Journal $journal): void
+    {
+        $superAdminRole = Role::where('name', 'Super Admin')->first();
+        if (!$superAdminRole) {
+            return;
+        }
+
+        // Get all users with Super Admin Spatie role
+        $superAdmins = User::role('Super Admin')->get();
+
+        foreach ($superAdmins as $admin) {
+            self::firstOrCreate([
+                'journal_id' => $journal->id,
+                'user_id' => $admin->id,
+                'role_id' => $superAdminRole->id,
+            ]);
+        }
     }
 }

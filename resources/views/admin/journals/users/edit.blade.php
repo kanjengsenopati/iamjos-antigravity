@@ -1,11 +1,31 @@
 @extends('layouts.app')
 
-@section('title', 'Edit User')
+@section('title', 'Edit User Roles')
 
 @section('content')
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Edit User</h1>
-        <p class="text-sm text-gray-500 mt-1">Update profile information for {{ $user->name }}.</p>
+        <nav class="flex mb-2" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <span class="text-gray-400 text-sm font-medium">Journal Manager</span>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
+                        <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
+                            class="text-sm font-medium text-gray-500 hover:text-indigo-600">Users</a>
+                    </div>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
+                        <span class="text-sm font-medium text-indigo-600">Edit User</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+        <h1 class="text-2xl font-bold text-gray-900">Edit User Roles</h1>
+        <p class="text-sm text-gray-500 mt-1">Update roles for <strong>{{ $user->name }}</strong> in <strong>{{ $journal->name }}</strong>.</p>
     </div>
 
     <form action="{{ route($routePrefix . '.update', ['journal' => $journal->slug, 'user' => $user->id]) }}" method="POST"
@@ -33,9 +53,8 @@
 
             {{-- Multi-Role Selection --}}
             <div class="border-t border-gray-100 pt-6">
-                <h3 class="text-sm font-medium text-gray-900 mb-2">Roles</h3>
-                <p class="text-xs text-gray-500 mb-4">Select one or more roles for this user. A user can be an Author,
-                    Reviewer, and Editor simultaneously.</p>
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Roles in {{ $journal->name }}</h3>
+                <p class="text-xs text-gray-500 mb-4">Select one or more roles for this user in this journal. A user can have multiple roles simultaneously.</p>
 
                 @error('roles')
                     <p class="mb-3 text-xs text-red-500">{{ $message }}</p>

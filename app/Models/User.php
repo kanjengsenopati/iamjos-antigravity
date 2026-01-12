@@ -103,6 +103,38 @@ class User extends Authenticatable
         return $this->hasMany(SubmissionFile::class, 'uploaded_by');
     }
 
+    /**
+     * Get journal-specific role assignments for this user
+     */
+    public function journalRoles(): HasMany
+    {
+        return $this->hasMany(JournalUserRole::class, 'user_id');
+    }
+
+    /**
+     * Get journals this user is registered with
+     */
+    public function registeredJournals()
+    {
+        return JournalUserRole::getUserJournals($this);
+    }
+
+    /**
+     * Get user's roles in a specific journal
+     */
+    public function rolesInJournal($journal)
+    {
+        return JournalUserRole::getUserRolesInJournal($this, $journal);
+    }
+
+    /**
+     * Check if user has a specific role in a journal
+     */
+    public function hasRoleInJournal($role, $journal): bool
+    {
+        return JournalUserRole::hasRole($this, $journal, $role);
+    }
+
     // =====================================================
     // ACCESSORS
     // =====================================================

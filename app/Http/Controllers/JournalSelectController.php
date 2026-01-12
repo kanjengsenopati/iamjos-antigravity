@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Journal;
+use App\Models\JournalUserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -10,24 +11,38 @@ class JournalSelectController extends Controller
 {
     /**
      * Display journal selection page.
+     * Shows only journals the user is registered with.
      */
     public function index(): View|RedirectResponse
     {
-        $journals = Journal::where('enabled', true)
-            ->orderBy('name')
-            ->get();
+        $user = auth()->user();
+
+        // Get journals the user is registered with
+        $journals = JournalUserRole::getUserJournals($user);
+
+        // If user has no journals, show all enabled journals with option to join
+        if ($journals->isEmpty()) {
+            $journals = Journal::where('enabled', true)
+                ->orderBy('name')
+                ->get();
+                
+            return view('journal-select', [
+                'journals' => $journals,
+                'userJournals' => collect([]),
+                'showJoinOption' => true,
+            ]);
+        }
 
         // If only one journal exists, redirect directly to its dashboard
         if ($journals->count() === 1) {
             return redirect()->route('journal.dashboard', ['journal' => $journals->first()->slug]);
         }
 
-        // If no journals exist, show error
-        if ($journals->isEmpty()) {
-            abort(404, 'No journals available.');
-        }
-
-        return view('journal-select', compact('journals'));
+        return view('journal-select', [
+            'journals' => $journals,
+            'userJournals' => $journals,
+            'showJoinOption' => false,
+        ]);
     }
 
     /**
@@ -37,11 +52,12 @@ class JournalSelectController extends Controller
     {
         $user = auth()->user();
 
-        // Get journals accessible to user (for now, all enabled journals)
-        $journals = Journal::where('enabled', true)->orderBy('name')->get();
+        // Get journals the user is registered with
+        $journals = JournalUserRole::getUserJournals($user);
 
         if ($journals->isEmpty()) {
-            abort(404, 'No journals available.');
+            // User has no journals, redirect to selection page
+            return redirect()->route('journal.select');
         }
 
         // If only one journal, redirect to it

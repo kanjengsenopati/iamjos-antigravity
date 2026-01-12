@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Observers\JournalObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
+#[ObservedBy([JournalObserver::class])]
 class Journal extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
@@ -92,6 +95,38 @@ class Journal extends Model
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class, 'journal_id');
+    }
+
+    /**
+     * Get user role assignments for this journal
+     */
+    public function userRoles(): HasMany
+    {
+        return $this->hasMany(JournalUserRole::class, 'journal_id');
+    }
+
+    /**
+     * Get all users registered with this journal
+     */
+    public function registeredUsers()
+    {
+        $userIds = $this->userRoles()->distinct()->pluck('user_id');
+        return User::whereIn('id', $userIds)->get();
+    }
+
+    /**
+     * Get users with a specific role in this journal
+     */
+    public function usersWithRole(string $roleName)
+    {
+        $role = Role::where('name', $roleName)->first();
+        if (!$role) return collect();
+
+        $userIds = $this->userRoles()
+            ->where('role_id', $role->id)
+            ->pluck('user_id');
+
+        return User::whereIn('id', $userIds)->get();
     }
 
     /**

@@ -26,18 +26,18 @@
                 </ol>
             </nav>
             <h1 class="text-2xl font-bold text-gray-900">Users</h1>
-            <p class="text-sm text-gray-500 mt-1">Manage users enrolled in this journal.</p>
+            <p class="text-sm text-gray-500 mt-1">Manage users enrolled in <strong>{{ $journal->name }}</strong>.</p>
         </div>
         <div class="flex gap-3">
-            <button
+            <a href="{{ route($routePrefix . '.enroll', ['journal' => $journal->slug]) }}"
                 class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors shadow-sm">
-                <i class="fa-solid fa-code-merge"></i>
-                Merge Users
-            </button>
+                <i class="fa-solid fa-user-plus"></i>
+                Enroll Existing User
+            </a>
             <a href="{{ route($routePrefix . '.create', ['journal' => $journal->slug]) }}"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors shadow-sm shadow-indigo-200">
-                <i class="fa-solid fa-user-plus"></i>
-                Add User
+                <i class="fa-solid fa-plus"></i>
+                Create New User
             </a>
         </div>
     </div>
@@ -127,17 +127,18 @@
                             <td class="px-6 py-4">
                                 <div class="flex flex-wrap gap-1.5 max-w-xs">
                                     @php
-                                        // Mock roles logic if not implemented properly in model yet
-                                        $userRoles = $user->roles->pluck('name')->toArray();
+                                        // Use per-journal roles from controller (journal_roles attribute)
+                                        $userRoles = $user->journal_roles->pluck('name')->toArray();
+                                        $isSuperAdmin = in_array('Super Admin', $userRoles);
                                         if (empty($userRoles)) {
                                             $userRoles = ['Reader'];
-                                        } // Default
+                                        }
                                     @endphp
 
                                     @foreach ($userRoles as $role)
                                         @php
                                             $badgeClass = match ($role) {
-                                                'Super Admin',
+                                                'Super Admin' => 'bg-purple-100 text-purple-800 border-purple-200 ring-1 ring-purple-500/20',
                                                 'Admin',
                                                 'Journal Manager'
                                                     => 'bg-red-50 text-red-700 border-red-100',
@@ -152,6 +153,9 @@
                                         @endphp
                                         <span
                                             class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border {{ $badgeClass }}">
+                                            @if($role === 'Super Admin')
+                                                <i class="fa-solid fa-shield-halved mr-1 text-[10px]"></i>
+                                            @endif
                                             {{ $role }}
                                         </span>
                                     @endforeach
@@ -166,49 +170,58 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div
                                     class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <!-- Login As -->
-                                    <form
-                                        action="{{ route($routePrefix . '.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                        method="POST">
-                                        @csrf
-                                        <button type="submit"
-                                            class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                            title="Login As User">
-                                            <i class="fa-solid fa-right-to-bracket"></i>
-                                        </button>
-                                    </form>
+                                    @if($isSuperAdmin)
+                                        {{-- Super Admin indicator --}}
+                                        <span class="text-xs text-purple-600 font-medium px-2 py-1 bg-purple-50 rounded-lg">
+                                            <i class="fa-solid fa-shield-halved mr-1"></i>
+                                            Full Access
+                                        </span>
+                                    @else
+                                        <!-- Login As -->
+                                        <form
+                                            action="{{ route($routePrefix . '.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                title="Login As User">
+                                                <i class="fa-solid fa-right-to-bracket"></i>
+                                            </button>
+                                        </form>
 
-                                    <!-- Email -->
-                                    <form
-                                        action="{{ route($routePrefix . '.email', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                        method="POST">
-                                        @csrf
-                                        <button type="submit"
-                                            class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                            title="Email User">
-                                            <i class="fa-solid fa-envelope"></i>
-                                        </button>
-                                    </form>
+                                        <!-- Email -->
+                                        <form
+                                            action="{{ route($routePrefix . '.email', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Email User">
+                                                <i class="fa-solid fa-envelope"></i>
+                                            </button>
+                                        </form>
 
-                                    <!-- Edit -->
-                                    <a href="{{ route($routePrefix . '.edit', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                        class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                                        title="Edit User">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </a>
+                                        <!-- Edit -->
+                                        <a href="{{ route($routePrefix . '.edit', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                            title="Edit User Roles">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
 
-                                    <!-- Disable -->
-                                    <form
-                                        action="{{ route($routePrefix . '.disable', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                        method="POST"
-                                        onsubmit="return confirm('Are you sure you want to disable this user?')">
-                                        @csrf
-                                        <button type="submit"
-                                            class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Disable User">
-                                            <i class="fa-solid fa-ban"></i>
-                                        </button>
-                                    </form>
+                                        <!-- Remove from Journal -->
+                                        <form
+                                            action="{{ route($routePrefix . '.destroy', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Remove this user from {{ $journal->name }}? They will no longer have access to this journal.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Remove from Journal">
+                                                <i class="fa-solid fa-user-minus"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -219,8 +232,14 @@
                                     <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                                         <i class="fa-solid fa-users-slash text-gray-400"></i>
                                     </div>
-                                    <p class="text-sm font-medium text-gray-900">No users found</p>
-                                    <p class="text-xs text-gray-500 mt-1">Try adjusting your filters or search query.</p>
+                                    <p class="text-sm font-medium text-gray-900">No users enrolled in this journal</p>
+                                    <p class="text-xs text-gray-500 mt-1">Enroll existing users or create new ones to get started.</p>
+                                    <div class="mt-4 flex gap-3">
+                                        <a href="{{ route($routePrefix . '.enroll', ['journal' => $journal->slug]) }}"
+                                            class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                                            <i class="fa-solid fa-user-plus mr-1"></i> Enroll User
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

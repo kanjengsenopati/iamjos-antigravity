@@ -91,13 +91,42 @@
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                     <h3 class="text-xl font-semibold text-white mb-2">No Journals Available</h3>
-                    <p class="text-gray-400">Contact your administrator to set up journals.</p>
+                    <p class="text-gray-400 mb-4">There are no journals available at this time.</p>
+                    <a href="{{ route('register') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Join a Journal
+                    </a>
                 </div>
             @else
+                @if(isset($showJoinOption) && $showJoinOption)
+                    <!-- Show message when user has no journals and can join -->
+                    <div class="text-center py-8 mb-8 bg-gradient-to-r from-amber-500/10 to-amber-600/10 backdrop-blur-sm rounded-2xl border border-amber-500/20">
+                        <svg class="w-12 h-12 text-amber-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="text-lg font-semibold text-white mb-2">You haven't joined any journal yet</h3>
+                        <p class="text-gray-400 mb-4">Browse the available journals below and register to get started.</p>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach ($journals as $journal)
-                        <a href="{{ route('journal.dashboard', ['journal' => $journal->slug]) }}"
-                            class="group relative bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 hover:bg-white/10 hover:border-primary-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/10">
+                        @php
+                            $isUserJournal = isset($userJournals) && $userJournals->contains('id', $journal->id);
+                        @endphp
+                        <a href="{{ $isUserJournal ? route('journal.dashboard', ['journal' => $journal->slug]) : route('register', ['journal' => $journal->slug]) }}"
+                            class="group relative bg-white/5 backdrop-blur-sm rounded-2xl border {{ $isUserJournal ? 'border-primary-500/30' : 'border-white/10' }} p-6 hover:bg-white/10 hover:border-primary-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/10">
+
+                            @if(!$isUserJournal && isset($showJoinOption) && $showJoinOption)
+                                <!-- Join badge for journals user hasn't joined -->
+                                <div class="absolute -top-2 -right-2 px-3 py-1 bg-primary-600 text-white text-xs font-medium rounded-full shadow-lg">
+                                    Join
+                                </div>
+                            @endif
 
                             <!-- Journal Logo/Icon -->
                             <div class="flex items-start justify-between mb-4">

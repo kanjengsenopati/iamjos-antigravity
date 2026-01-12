@@ -82,6 +82,10 @@ class RolesAndPermissionsSeeder extends Seeder
         // CREATE ROLES WITH PERMISSIONS
         // =====================================================
 
+        // 0. READER - Basic registered user
+        $readerRole = Role::firstOrCreate(['name' => 'Reader', 'guard_name' => 'web']);
+        // Reader has no specific restricted permissions by default, but role existence is required
+
         // 1. AUTHOR - Can submit and manage own articles
         $authorRole = Role::firstOrCreate(['name' => 'Author', 'guard_name' => 'web']);
         $authorRole->syncPermissions([
@@ -98,6 +102,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'reviews.submit',
         ]);
 
+        // 2b. COPYEDITOR (Optional OJS role)
+        $copyeditorRole = Role::firstOrCreate(['name' => 'Copyeditor', 'guard_name' => 'web']);
+
         // 3. EDITOR - Can manage submissions and make decisions
         $editorRole = Role::firstOrCreate(['name' => 'Editor', 'guard_name' => 'web']);
         $editorRole->syncPermissions([
@@ -113,6 +120,36 @@ class RolesAndPermissionsSeeder extends Seeder
             'issues.create',
             'issues.edit',
             'issues.publish',
+        ]);
+
+        // 3b. SECTION EDITOR
+        $sectionEditorRole = Role::firstOrCreate(['name' => 'Section Editor', 'guard_name' => 'web']);
+        $sectionEditorRole->syncPermissions([
+            'submissions.view-own',
+            'submissions.view-all', // Needs policy refinement for actual section scoping
+            'submissions.edit-all',
+            'submissions.assign-reviewer',
+            'submissions.make-decision',
+            'reviews.view-all',
+        ]);
+
+        // 3c. JOURNAL MANAGER
+        $journalManagerRole = Role::firstOrCreate(['name' => 'Journal Manager', 'guard_name' => 'web']);
+        $journalManagerRole->syncPermissions([
+            'users.view',
+            'users.create',
+            'users.edit',
+            'users.assign-role',
+            'journal.view-settings',
+            'journal.edit-settings',
+            'sections.manage',
+            'issues.view',
+            'issues.create',
+            'issues.edit',
+            'issues.publish',
+            // Can typically manage submissions too
+            'submissions.view-all',
+            'submissions.make-decision',
         ]);
 
         // 4. ADMIN - Can manage users, sections, and journal settings

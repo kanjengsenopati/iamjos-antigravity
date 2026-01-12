@@ -351,14 +351,15 @@
                 </div>
 
                 @php
-                    $userJournals = auth()->user()->journals ?? collect([]);
+                    $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
+                    // Fallback: if user has no registered journals but is viewing a journal, show current
                     if ($userJournals->isEmpty() && $journal) {
                         $userJournals = collect([$journal]);
                     }
                 @endphp
 
                 <div class="max-h-60 overflow-y-auto">
-                    @foreach ($userJournals as $j)
+                    @forelse ($userJournals as $j)
                         <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
                             class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 {{ $journal && $journal->id == $j->id ? 'bg-primary-50/50' : '' }}">
                             <div
@@ -371,7 +372,12 @@
                                 <i class="fa-solid fa-check text-primary-600 text-xs ml-auto"></i>
                             @endif
                         </a>
-                    @endforeach
+                    @empty
+                        <div class="px-4 py-3 text-center">
+                            <p class="text-xs text-gray-500">No journals yet</p>
+                            <a href="{{ route('register') }}" class="text-xs text-primary-600 hover:underline">Join a journal</a>
+                        </div>
+                    @endforelse
                 </div>
 
                 <div class="border-t border-gray-100 pt-1 mt-1">

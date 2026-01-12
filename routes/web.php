@@ -70,6 +70,13 @@ Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'
 Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Google OAuth Routes
+use App\Http\Controllers\Admin\SocialAuthController;
+Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+// Journal-specific Google OAuth (e.g., /journals/my-journal/auth/google)
+Route::get('/journals/{journal}/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
+
 // =====================================================
 // JOURNAL SELECTION (Protected)
 // =====================================================
@@ -98,7 +105,7 @@ Route::middleware(['auth'])->group(function () {
 // =====================================================
 
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Admin'])->group(function () {
     // Site Administration Dashboard
     Route::get('/', [SiteAdminController::class, 'index'])->name('site.index');
 
@@ -209,6 +216,8 @@ Route::prefix('{journal}')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/create', 'create')->name('create');
             Route::post('/', 'store')->name('store');
+            Route::get('/enroll', 'enrollForm')->name('enroll');
+            Route::post('/enroll', 'enroll')->name('enroll.store');
             Route::get('/{user}/edit', 'edit')->name('edit');
             Route::put('/{user}', 'update')->name('update');
             Route::delete('/{user}', 'destroy')->name('destroy');
@@ -383,6 +392,8 @@ Route::prefix('{journal}')->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
+                Route::get('/enroll', 'enrollForm')->name('enroll');
+                Route::post('/enroll', 'enroll')->name('enroll.store');
                 Route::get('/{user}/edit', 'edit')->name('edit');
                 Route::put('/{user}', 'update')->name('update');
                 Route::delete('/{user}', 'destroy')->name('destroy');
