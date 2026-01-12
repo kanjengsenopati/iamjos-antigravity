@@ -108,8 +108,7 @@ Route::middleware(['auth'])->group(function () {
 // GLOBAL ADMIN ROUTES (Super Admin only - manages all journals)
 // =====================================================
 
-
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])->group(function () {
     // Site Administration Dashboard
     Route::get('/', [SiteAdminController::class, 'index'])->name('site.index');
 

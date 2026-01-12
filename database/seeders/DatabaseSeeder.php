@@ -23,7 +23,6 @@ class DatabaseSeeder extends Seeder
             // 1. Setup Roles & Permissions (Required First)
             RolesAndPermissionsSeeder::class,
             // RoleSeeder::class,
-            PermissionSeeder::class,
 
             // 3. Portal & Site Content (Public Pages)
             SiteContentSeeder::class,
