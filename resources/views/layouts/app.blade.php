@@ -951,7 +951,7 @@
         <!-- Footer -->
         <footer class="bg-white border-t border-gray-200 py-4 px-6 mt-auto">
             <p class="text-center text-sm text-gray-500">
-                &copy; {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. Open Journal System Clone.
+                &copy; {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}.
             </p>
         </footer>
     </main>
