@@ -351,6 +351,16 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/submission/{submission}/send-to-review', [EditorDecisionController::class, 'sendToReview'])->name('send-to-review');
         });
 
+        // --------- Announcements (Manager Level) ---------
+        Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')->prefix('announcements')->name('journal.announcements.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Journal\AnnouncementController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Journal\AnnouncementController::class, 'store'])->name('store');
+            Route::get('/{announcement}/edit', [\App\Http\Controllers\Journal\AnnouncementController::class, 'edit'])->name('edit');
+            Route::put('/{announcement}', [\App\Http\Controllers\Journal\AnnouncementController::class, 'update'])->name('update');
+            Route::delete('/{announcement}', [\App\Http\Controllers\Journal\AnnouncementController::class, 'destroy'])->name('destroy');
+            Route::post('/{announcement}/toggle', [\App\Http\Controllers\Journal\AnnouncementController::class, 'toggleActive'])->name('toggle');
+        });
+
         // --------- Journal Settings (Manager Level) ---------
         Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')->prefix('settings')->name('journal.settings.')->group(function () {
             Route::get('/', [JournalController::class, 'settings'])->name('index');

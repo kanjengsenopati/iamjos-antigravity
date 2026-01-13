@@ -112,9 +112,26 @@ class JournalHomepageController extends Controller
      */
     private function getAnnouncements(Journal $journal)
     {
-        // Check if Announcement model exists and has data
-        if (!class_exists(Announcement::class)) {
-            // Return mock data for now
+        // Fetch the 3 latest active announcements that are published and not expired
+        $announcements = Announcement::where('journal_id', $journal->id)
+            ->where('is_active', true)
+            // Published: published_at is null or in the past
+            ->where(function ($query) {
+                $query->whereNull('published_at')
+                    ->orWhere('published_at', '<=', now());
+            })
+            // Not expired: expires_at is null or in the future
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->orderBy('is_urgent', 'desc') // Show urgent first
+            ->orderBy('published_at', 'desc')
+            ->take(3)
+            ->get();
+
+        // If no real announcements, return placeholder data for preview
+        if ($announcements->isEmpty()) {
             return collect([
                 (object) [
                     'id' => 1,
@@ -140,11 +157,7 @@ class JournalHomepageController extends Controller
             ]);
         }
 
-        return Announcement::where('journal_id', $journal->id)
-            ->where('is_active', true)
-            ->orderBy('created_at', 'desc')
-            ->take(3)
-            ->get();
+        return $announcements;
     }
 
     /**
