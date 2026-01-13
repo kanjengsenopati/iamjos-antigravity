@@ -36,7 +36,8 @@ class JournalHomepageController extends Controller
         }
 
         // Get indexed in images
-        $indexedInImages = json_decode($settings['indexed_in_images'] ?? '[]', true) ?? [];
+        $val = $settings['indexed_in_images'] ?? [];
+        $indexedInImages = is_array($val) ? $val : json_decode($val, true) ?? [];
 
         // Get current issue
         $currentIssue = $journal->issues()
@@ -89,7 +90,7 @@ class JournalHomepageController extends Controller
             'show_stats' => true,
 
             // Indexed In
-            'indexed_in_images' => '[]',
+            'indexed_in_images' => [],
 
             // Footer
             'footer_description' => $journal->description ?? 'A leading academic journal.',
