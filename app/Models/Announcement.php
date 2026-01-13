@@ -13,9 +13,10 @@ class Announcement extends Model
 
     protected $fillable = [
         'journal_id',
+        'user_id',
         'title',
-        'content',
         'excerpt',
+        'content',
         'is_active',
         'is_urgent',
         'published_at',
@@ -41,6 +42,14 @@ class Announcement extends Model
     }
 
     /**
+     * Get the user who created the announcement.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
      * Scope to only include active announcements.
      */
     public function scopeActive($query)
@@ -53,10 +62,43 @@ class Announcement extends Model
     }
 
     /**
+     * Scope to only include published announcements.
+     */
+    public function scopePublished($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('published_at')
+                ->orWhere('published_at', '<=', now());
+        });
+    }
+
+    /**
      * Scope to only include urgent announcements.
      */
     public function scopeUrgent($query)
     {
         return $query->where('is_urgent', true);
+    }
+
+    /**
+     * Check if the announcement is currently active (not expired).
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at && $this->expires_at->isPast();
+    }
+
+    /**
+     * Get the status label.
+     */
+    public function getStatusAttribute(): string
+    {
+        if (!$this->is_active) {
+            return 'inactive';
+        }
+        if ($this->isExpired()) {
+            return 'expired';
+        }
+        return 'active';
     }
 }
