@@ -202,4 +202,48 @@ class Journal extends Model
         data_set($settings, $key, $value);
         $this->settings = $settings;
     }
+
+    // =====================================================
+    // JOURNAL SETTINGS (Key-Value Storage)
+    // =====================================================
+
+    /**
+     * Get website settings for this journal
+     */
+    public function websiteSettings(): HasMany
+    {
+        return $this->hasMany(JournalSetting::class, 'journal_id');
+    }
+
+    /**
+     * Get a website setting value
+     */
+    public function getWebsiteSetting(string $name, mixed $default = null): mixed
+    {
+        return JournalSetting::get($this, $name, $default);
+    }
+
+    /**
+     * Set a website setting value
+     */
+    public function setWebsiteSetting(string $name, mixed $value, string $type = 'string', string $group = 'general'): JournalSetting
+    {
+        return JournalSetting::set($this, $name, $value, $type, $group);
+    }
+
+    /**
+     * Get all website settings, optionally by group
+     */
+    public function getWebsiteSettings(?string $group = null): array
+    {
+        return JournalSetting::getAllForJournal($this, $group);
+    }
+
+    /**
+     * Get announcements for this journal
+     */
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class, 'journal_id');
+    }
 }

@@ -375,7 +375,8 @@
                     @empty
                         <div class="px-4 py-3 text-center">
                             <p class="text-xs text-gray-500">No journals yet</p>
-                            <a href="{{ route('register') }}" class="text-xs text-primary-600 hover:underline">Join a journal</a>
+                            <a href="{{ route('register') }}" class="text-xs text-primary-600 hover:underline">Join a
+                                journal</a>
                         </div>
                     @endforelse
                 </div>
@@ -591,8 +592,8 @@
                                         class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.workflow*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Workflow</a>
                                     <a href="{{ route('journal.settings.distribution.edit', ['journal' => $journalSlug]) }}"
                                         class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.distribution*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Distribution</a>
-                                    <a href="#"
-                                        class="block px-2 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100">Website</a>
+                                    <a href="{{ route('journal.settings.website.edit', ['journal' => $journalSlug]) }}"
+                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.website*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Website</a>
                                 </div>
                             </div>
                         </div>

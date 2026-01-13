@@ -26,6 +26,8 @@ use App\Http\Controllers\Admin\JournalController;
 use App\Http\Controllers\Admin\SectionController as AdminSectionController;
 use App\Http\Controllers\Admin\JournalUserManagementController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Journal\WebsiteSettingsController;
+use App\Http\Controllers\Journal\JournalHomepageController;
 
 // Legacy Controllers (keep for backward compatibility)
 use App\Http\Controllers\Admin\AuthController;
@@ -63,6 +65,7 @@ Route::get('/login', [AuthController::class, 'index'])->name('login');
 
 // Registration Routes
 use App\Http\Controllers\Admin\RegisterController;
+
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::post('/register', [RegisterController::class, 'store']);
 
@@ -76,6 +79,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Google OAuth Routes
 use App\Http\Controllers\Admin\SocialAuthController;
+
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 // Journal-specific Google OAuth (e.g., /journals/my-journal/auth/google)
@@ -201,7 +205,7 @@ Route::post('translate_post', [TranslateController::class, 'translatePost'])->na
 Route::prefix('{journal}')->group(function () {
 
     // --------- Public Journal Pages ---------
-    Route::get('/', [PublicController::class, 'journalHome'])->name('journal.public.home');
+    Route::get('/', [JournalHomepageController::class, 'index'])->name('journal.public.home');
     Route::get('/current', [PublicController::class, 'currentIssue'])->name('journal.public.current');
     Route::get('/archives', [PublicController::class, 'archives'])->name('journal.public.archives');
     Route::get('/about', [PublicController::class, 'about'])->name('journal.public.about');
@@ -392,6 +396,13 @@ Route::prefix('{journal}')->group(function () {
             Route::controller(\App\Http\Controllers\Admin\DistributionSettingsController::class)->prefix('distribution')->name('distribution.')->group(function () {
                 Route::get('/', 'edit')->name('edit');
                 Route::put('/', 'update')->name('update');
+            });
+
+            // Website Settings (Homepage Customization)
+            Route::controller(WebsiteSettingsController::class)->prefix('website')->name('website.')->group(function () {
+                Route::get('/', 'edit')->name('edit');
+                Route::put('/', 'update')->name('update');
+                Route::delete('/indexed-image', 'deleteIndexedImage')->name('indexed-image.delete');
             });
         });
 
