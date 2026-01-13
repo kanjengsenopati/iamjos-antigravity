@@ -109,7 +109,8 @@
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
-                                        <div class="text-xs text-gray-500">@ {{ $user->username ?? Str::slug($user->name) }}
+                                        <div class="text-xs text-gray-500">@
+                                            {{ $user->username ?? Str::slug($user->name) }}
                                         </div>
                                     </div>
                                 </div>
@@ -138,10 +139,9 @@
                                     @foreach ($userRoles as $role)
                                         @php
                                             $badgeClass = match ($role) {
-                                                'Super Admin' => 'bg-purple-100 text-purple-800 border-purple-200 ring-1 ring-purple-500/20',
-                                                'Admin',
-                                                'Journal Manager'
-                                                    => 'bg-red-50 text-red-700 border-red-100',
+                                                'Super Admin'
+                                                    => 'bg-purple-100 text-purple-800 border-purple-200 ring-1 ring-purple-500/20',
+                                                'Admin', 'Journal Manager' => 'bg-red-50 text-red-700 border-red-100',
                                                 'Editor',
                                                 'Section Editor'
                                                     => 'bg-blue-50 text-blue-700 border-blue-100',
@@ -153,7 +153,7 @@
                                         @endphp
                                         <span
                                             class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border {{ $badgeClass }}">
-                                            @if($role === 'Super Admin')
+                                            @if ($role === 'Super Admin')
                                                 <i class="fa-solid fa-shield-halved mr-1 text-[10px]"></i>
                                             @endif
                                             {{ $role }}
@@ -168,9 +168,8 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div
-                                    class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    @if($isSuperAdmin)
+                                <div class="flex items-center justify-end gap-2">
+                                    @if ($isSuperAdmin)
                                         {{-- Super Admin indicator --}}
                                         <span class="text-xs text-purple-600 font-medium px-2 py-1 bg-purple-50 rounded-lg">
                                             <i class="fa-solid fa-shield-halved mr-1"></i>
@@ -233,7 +232,8 @@
                                         <i class="fa-solid fa-users-slash text-gray-400"></i>
                                     </div>
                                     <p class="text-sm font-medium text-gray-900">No users enrolled in this journal</p>
-                                    <p class="text-xs text-gray-500 mt-1">Enroll existing users or create new ones to get started.</p>
+                                    <p class="text-xs text-gray-500 mt-1">Enroll existing users or create new ones to get
+                                        started.</p>
                                     <div class="mt-4 flex gap-3">
                                         <a href="{{ route($routePrefix . '.enroll', ['journal' => $journal->slug]) }}"
                                             class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
