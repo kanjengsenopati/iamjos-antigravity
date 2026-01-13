@@ -248,7 +248,8 @@
                         etc.)</p>
 
                     @php
-                        $indexedImages = json_decode($settings['indexed_in_images'] ?? '[]', true) ?? [];
+                        $val = $settings['indexed_in_images'] ?? [];
+                        $indexedImages = is_array($val) ? $val : json_decode($val, true) ?? [];
                     @endphp
 
                     @if (count($indexedImages) > 0)

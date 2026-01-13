@@ -160,7 +160,7 @@ class WebsiteSettingsController extends Controller
             'show_stats' => true,
 
             // Indexed In
-            'indexed_in_images' => '[]',
+            'indexed_in_images' => [],
 
             // Footer
             'footer_description' => $journal->description ?? 'A leading academic journal publishing cutting-edge research.',
