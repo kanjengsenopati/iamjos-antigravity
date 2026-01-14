@@ -851,28 +851,43 @@
                     <!-- User Dropdown -->
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" @click.outside="open = false"
-                            class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            class="flex items-center gap-3 p-1.5 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+
                             <!-- Avatar -->
-                            @if (Auth::user()->profile_photo_path ?? false)
-                                <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
-                                    alt="{{ Auth::user()->name }}"
-                                    class="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm">
-                            @else
-                                <div
-                                    class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
-                                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
-                                </div>
-                            @endif
-                            <!-- Name & Role -->
-                            <div class="hidden sm:block text-left">
-                                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name ?? 'User' }}</p>
-                                <p class="text-xs text-gray-500">
-                                    {{ Auth::user()->roles->first()->name ?? 'Member' }}
-                                </p>
+                            <div
+                                class="relative w-9 h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-white group-hover:ring-gray-200 transition-all">
+                                @if (Auth::user()->profile_photo_path)
+                                    <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                        alt="{{ Auth::user()->name }}" class="w-full h-full object-cover bg-gray-100"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <!-- Fallback if Image Fails to Load -->
+                                    <div
+                                        class="hidden absolute inset-0 bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                    </div>
+                                @else
+                                    <div
+                                        class="w-full h-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                    </div>
+                                @endif
                             </div>
+
+                            <!-- Name & Role (Hidden on mobile) -->
+                            <div class="hidden sm:block text-left pr-2">
+                                <p class="text-sm font-semibold text-gray-900 leading-tight">
+                                    {{ Auth::user()->name ?? 'User' }}</p>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span
+                                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wide">
+                                        {{ Auth::user()->roles->first()->name ?? 'Member' }}
+                                    </span>
+                                </div>
+                            </div>
+
                             <!-- Chevron -->
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-gray-400 sm:ml-1" :class="{ 'rotate-180': open }" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 9l-7 7-7-7" />
                             </svg>
