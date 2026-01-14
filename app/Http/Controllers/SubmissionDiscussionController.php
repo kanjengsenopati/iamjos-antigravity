@@ -6,11 +6,11 @@ use App\Models\Discussion;
 use App\Models\DiscussionMessage;
 use App\Models\DiscussionFile;
 use App\Models\Submission;
-use App\Models\Journal;
 use App\Models\User;
 use App\Notifications\NewDiscussionMessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -22,40 +22,153 @@ class SubmissionDiscussionController extends Controller
     }
 
     /**
-     * Store a new discussion.
+     * Check if user can participate in discussions for this submission.
+     */
+    private function canParticipate(Submission $submission): bool
+    {
+        $user = auth()->user();
+
+        // Editors can always participate
+        if ($user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+            return true;
+        }
+
+        // Author can participate in their own submissions
+        if ($submission->user_id === $user->id) {
+            return true;
+        }
+
+        // Check if user is assigned as editor
+        return $submission->editorialAssignments()
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->exists();
+    }
+
+    /**
+     * Store a new discussion topic (Create Discussion).
+     * 
+     * OJS 3.3 Behavior:
+     * - Stage isolation: Each discussion is bound to a specific stage_id
+     * - Participants: Users selected + current user (creator) always included
+     * - Notification: All participants except creator receive notification
      */
     public function store(Request $request, string $journalSlug, Submission $submission)
     {
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
+        // Check participation permission
+        if (!$this->canParticipate($submission)) {
+            abort(403, 'You do not have permission to create discussions for this submission.');
+        }
+
         $request->validate([
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
-            'stage_id' => 'required|integer',
+            'stage_id' => 'required|integer|in:1,2,3,4',
+            'participants' => 'required|array|min:1',
+            'participants.*' => 'required|uuid|exists:users,id',
             'attached_files' => 'nullable|array',
             'attached_files.*.id' => 'required|exists:discussion_files,id',
             'attached_files.*.name' => 'nullable|string|max:255',
         ]);
 
-        DB::transaction(function () use ($request, $submission) {
-            // 1. Create Discussion
+        $discussion = null;
+        $firstMessage = null;
+        $currentUserId = auth()->id();
+
+        DB::transaction(function () use ($request, $submission, &$discussion, &$firstMessage, $currentUserId) {
+            // 1. Create Discussion with stage_id for stage isolation
             $discussion = Discussion::create([
                 'submission_id' => $submission->id,
-                'user_id' => auth()->id(),
+                'user_id' => $currentUserId,
                 'subject' => $request->subject,
                 'stage_id' => $request->stage_id,
                 'is_open' => true,
             ]);
 
-            // 2. Create Message
-            $message = DiscussionMessage::create([
+            // 2. Sync Participants - ALWAYS include creator
+            $participantIds = collect($request->participants)
+                ->push($currentUserId)
+                ->unique()
+                ->values()
+                ->toArray();
+
+            $discussion->addParticipants($participantIds);
+
+            // 3. Create First Message
+            $firstMessage = DiscussionMessage::create([
                 'discussion_id' => $discussion->id,
-                'user_id' => auth()->id(),
+                'user_id' => $currentUserId,
                 'body' => $request->body,
             ]);
 
-            // 3. Link Files
+            // 4. Link Attached Files
+            if ($request->filled('attached_files')) {
+                foreach ($request->attached_files as $fileData) {
+                    DiscussionFile::where('id', $fileData['id'])
+                        ->update([
+                            'discussion_message_id' => $firstMessage->id,
+                            'original_name' => $fileData['name'] ?? DB::raw('original_name'),
+                        ]);
+                }
+            }
+        });
+
+        // 5. Send Notifications to all participants EXCEPT the creator
+        if ($discussion && $firstMessage) {
+            $this->notifyParticipants($discussion, $firstMessage, $currentUserId);
+        }
+
+        return back()->with('success', 'Discussion created successfully.');
+    }
+
+    /**
+     * Add a reply to a discussion (Create Message).
+     * 
+     * OJS 3.3 Behavior:
+     * - User must be a participant OR have editor privileges
+     * - Touch parent discussion to update sorting
+     * - Notify all participants except sender
+     */
+    public function storeReply(Request $request, string $journalSlug, Submission $submission, Discussion $discussion)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+        if ($discussion->submission_id !== $submission->id) abort(404);
+
+        // Check if discussion is open
+        if (!$discussion->is_open) {
+            return back()->with('error', 'This discussion is closed.');
+        }
+
+        $currentUserId = auth()->id();
+        $isEditor = auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+
+        // Check if user can reply (is participant or editor)
+        if (!$isEditor && !$discussion->hasParticipant($currentUserId)) {
+            abort(403, 'You are not a participant in this discussion.');
+        }
+
+        $request->validate([
+            'body' => 'required|string',
+            'attached_files' => 'nullable|array',
+            'attached_files.*.id' => 'required|exists:discussion_files,id',
+            'attached_files.*.name' => 'nullable|string|max:255',
+        ]);
+
+        $message = null;
+
+        DB::transaction(function () use ($request, $discussion, &$message, $currentUserId) {
+            // 1. Create Message
+            $message = DiscussionMessage::create([
+                'discussion_id' => $discussion->id,
+                'user_id' => $currentUserId,
+                'body' => $request->body,
+            ]);
+
+            // 2. Link Attached Files
             if ($request->filled('attached_files')) {
                 foreach ($request->attached_files as $fileData) {
                     DiscussionFile::where('id', $fileData['id'])
@@ -66,76 +179,119 @@ class SubmissionDiscussionController extends Controller
                 }
             }
 
-            // 4. Role Logic (Participants) - Placeholder as table doesn't exist
-            // If Author, we effectively notify Editors.
+            // 3. Touch parent discussion to update updated_at (for sorting)
+            $discussion->touch();
+
+            // 4. Add sender as participant if not already (edge case)
+            if (!$discussion->hasParticipant($currentUserId)) {
+                $discussion->addParticipants([$currentUserId]);
+            }
         });
 
-        return back()->with('success', 'Discussion created successfully.');
+        // 5. Notify all participants except sender
+        if ($message) {
+            $this->notifyParticipants($discussion, $message, $currentUserId);
+        }
+
+        return back()->with('success', 'Reply added successfully.');
     }
 
     /**
-     * Add a reply to a discussion.
+     * Update a message (Edit Feature).
+     * 
+     * OJS 3.3 Behavior:
+     * - Editor/Admin: Can edit ANY message in the discussion
+     * - Author: Can only edit their OWN messages
      */
-    public function storeReply(Request $request, string $journalSlug, Submission $submission, Discussion $discussion)
+    public function updateMessage(Request $request, string $journalSlug, Submission $submission, Discussion $discussion, DiscussionMessage $message)
     {
-        // Journal/Submission validation
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+        if ($discussion->submission_id !== $submission->id) abort(404);
+        if ($message->discussion_id !== $discussion->id) abort(404);
+
+        $currentUserId = auth()->id();
+        $isEditor = auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+        $isOwner = $message->user_id === $currentUserId;
+
+        // Permission check
+        if (!$isEditor && !$isOwner) {
+            abort(403, 'You do not have permission to edit this message.');
+        }
+
+        $request->validate([
+            'body' => 'required|string',
+        ]);
+
+        $message->update([
+            'body' => $request->body,
+        ]);
+
+        return back()->with('success', 'Message updated successfully.');
+    }
+
+    /**
+     * Close a discussion.
+     * Only Editors can close discussions.
+     */
+    public function close(Request $request, string $journalSlug, Submission $submission, Discussion $discussion)
+    {
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
         if ($discussion->submission_id !== $submission->id) abort(404);
 
-        $request->validate([
-            'body' => 'required|string',
-            'attached_files' => 'nullable|array',
-            'attached_files.*.id' => 'required|exists:discussion_files,id',
-        ]);
-
-        $message = null;
-        $savedDiscussion = $discussion;
-
-        DB::transaction(function () use ($request, $discussion, &$message, &$savedDiscussion) {
-            $message = DiscussionMessage::create([
-                'discussion_id' => $discussion->id,
-                'user_id' => auth()->id(),
-                'body' => $request->body,
-            ]);
-
-            if ($request->filled('attached_files')) {
-                foreach ($request->attached_files as $fileData) {
-                    DiscussionFile::where('id', $fileData['id'])
-                        ->update(['discussion_message_id' => $message->id]);
-                }
-            }
-        });
-
-        // ====== NOTIFICATION: Notify discussion participants ======
-        if ($message) {
-            // Get all users who have participated in this discussion (excluding current user)
-            $participantIds = $savedDiscussion->messages()
-                ->pluck('user_id')
-                ->unique()
-                ->reject(fn($id) => $id === auth()->id())
-                ->toArray();
-
-            // Also include the submission author if not already in participants
-            $submission = $savedDiscussion->submission;
-            if ($submission && $submission->user_id !== auth()->id() && !in_array($submission->user_id, $participantIds)) {
-                $participantIds[] = $submission->user_id;
-            }
-
-            // Add the discussion creator if not already included
-            if ($savedDiscussion->user_id !== auth()->id() && !in_array($savedDiscussion->user_id, $participantIds)) {
-                $participantIds[] = $savedDiscussion->user_id;
-            }
-
-            $participants = User::whereIn('id', $participantIds)->get();
-            $sender = auth()->user();
-
-            foreach ($participants as $participant) {
-                $participant->notify(new NewDiscussionMessageNotification($savedDiscussion, $message, $sender));
-            }
+        if (!auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+            abort(403, 'You do not have permission to close discussions.');
         }
 
-        return back()->with('success', 'Reply added.');
+        $discussion->close(auth()->id());
+
+        return back()->with('success', 'Discussion closed successfully.');
+    }
+
+    /**
+     * Reopen a discussion.
+     * Only Editors can reopen discussions.
+     */
+    public function reopen(Request $request, string $journalSlug, Submission $submission, Discussion $discussion)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+        if ($discussion->submission_id !== $submission->id) abort(404);
+
+        if (!auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+            abort(403, 'You do not have permission to reopen discussions.');
+        }
+
+        $discussion->reopen();
+
+        return back()->with('success', 'Discussion reopened.');
+    }
+
+    /**
+     * Notify all participants except the sender.
+     */
+    private function notifyParticipants(Discussion $discussion, DiscussionMessage $message, string $excludeUserId): void
+    {
+        $discussion->load('participants');
+
+        $participantsToNotify = $discussion->participants
+            ->reject(fn($user) => $user->id === $excludeUserId);
+
+        $sender = auth()->user();
+
+        foreach ($participantsToNotify as $participant) {
+            try {
+                $participant->notify(new NewDiscussionMessageNotification($discussion, $message, $sender));
+            } catch (\Exception $e) {
+                // Log but don't fail the request
+                \Log::warning('Failed to send discussion notification', [
+                    'discussion_id' => $discussion->id,
+                    'participant_id' => $participant->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
@@ -167,7 +323,6 @@ class SubmissionDiscussionController extends Controller
         ]);
 
         $file = $request->file('file');
-        // Store in a secure directory (not public)
         $path = $file->store('discussion-files');
 
         $discussionFile = DiscussionFile::create([
@@ -187,12 +342,27 @@ class SubmissionDiscussionController extends Controller
         ]);
     }
 
+    /**
+     * Download a discussion file.
+     */
     public function download(string $journalSlug, DiscussionFile $file)
     {
-        // Basic Access Control
-        if ($file->user_id !== auth()->id() && !auth()->user()->hasRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
-            abort(403);
+        $user = auth()->user();
+        $isEditor = $user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+
+        // Access control: Owner or Editor can download
+        if ($file->user_id !== $user->id && !$isEditor) {
+            // Also check if user is participant in the discussion
+            if ($file->discussionMessage && $file->discussionMessage->discussion) {
+                $discussion = $file->discussionMessage->discussion;
+                if (!$discussion->hasParticipant($user->id)) {
+                    abort(403);
+                }
+            } else {
+                abort(403);
+            }
         }
+
         return Storage::download($file->file_path, $file->original_name);
     }
 }

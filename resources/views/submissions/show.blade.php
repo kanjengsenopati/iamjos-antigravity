@@ -467,111 +467,20 @@
                             </table>
                         </div>
 
-                        {{-- Discussions Panel --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-                            <div
-                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                                <h3 class="text-base font-bold text-gray-900">Pre-Review Discussions</h3>
-                                <button @click="discussionModalOpen = true; resetDiscussionForm()"
-                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                                    + Add Discussion
-                                </button>
-                            </div>
-                            <div class="divide-y divide-gray-100">
-                                @forelse($allDiscussions->where('stage_id', 1) as $discussion)
-                                    <details class="group">
-                                        <summary
-                                            class="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50">
-                                            <div class="flex items-center gap-4">
-                                                <i
-                                                    class="fa-regular fa-comments text-gray-400 group-open:text-indigo-500"></i>
-                                                <div>
-                                                    <p
-                                                        class="text-sm font-medium text-gray-900 group-open:text-indigo-600">
-                                                        {{ $discussion->subject }}</p>
-                                                    <p class="text-xs text-gray-500">
-                                                        From {{ $discussion->user->name }} •
-                                                        {{ $discussion->created_at->format('M d') }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-4">
-                                                <span
-                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                    {{ $discussion->messages->count() }} replies
-                                                </span>
-                                                <i
-                                                    class="fa-solid fa-chevron-down text-gray-400 transform group-open:rotate-180 transition-transform"></i>
-                                            </div>
-                                        </summary>
-                                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 space-y-4">
-                                            @foreach ($discussion->messages as $message)
-                                                <div class="flex gap-3">
-                                                    <div class="flex-shrink-0">
-                                                        <div
-                                                            class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold">
-                                                            {{ substr($message->user->name, 0, 1) }}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex-1">
-                                                        <div class="flex justify-between items-start mb-1">
-                                                            <span
-                                                                class="text-xs font-semibold text-gray-900">{{ $message->user->name }}</span>
-                                                            <span
-                                                                class="text-xs text-gray-400">{{ $message->created_at->format('M d, H:i') }}</span>
-                                                        </div>
-                                                        <div class="prose prose-sm text-gray-700 max-w-none">
-                                                            {!! $message->body !!}
-                                                        </div>
-                                                        @if ($message->files->count() > 0)
-                                                            <div class="mt-3 border-t border-gray-100 pt-2">
-                                                                <p class="text-xs font-bold text-gray-500 mb-1">
-                                                                    Attached
-                                                                    Files:</p>
-                                                                <ul class="space-y-1">
-                                                                    @foreach ($message->files as $file)
-                                                                        <li>
-                                                                            <a href="{{ route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->id]) }}"
-                                                                                class="text-xs text-blue-600 hover:underline flex items-center">
-                                                                                <i
-                                                                                    class="fa-solid fa-paperclip mr-1"></i>
-                                                                                {{ $file->original_name }}
-                                                                            </a>
-                                                                        </li>
-                                                                    @endforeach
-                                                                </ul>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                            {{-- Reply Form --}}
-                                            <div class="mt-4 pl-11">
-                                                <form
-                                                    action="{{ route('journal.discussion.reply', ['journal' => $journal->slug, 'submission' => $submission->id, 'discussion' => $discussion->id]) }}"
-                                                    method="POST">
-                                                    @csrf
-                                                    <div class="flex gap-2">
-                                                        <input type="text" name="body"
-                                                            placeholder="Write a reply..."
-                                                            class="flex-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                                        <button type="submit"
-                                                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">Reply</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </details>
-                                @empty
-                                    <div class="px-6 py-8 text-center text-sm text-gray-500 italic">
-                                        No discussions started.
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
+                        {{-- Discussions Panel - Stage 1: Submission --}}
+                        <x-discussion-panel :submission="$submission" :stageId="1" stageName="submission" :discussions="$allDiscussions"
+                            :participants="$participants" :journal="$journal" />
+
+
+
 
                     </div>
+
+
+
+
+
+
 
                     {{-- Active Stage Placeholder for other tabs --}}
                     <div class="lg:col-span-1 space-y-6">
@@ -890,32 +799,9 @@
                             </div>
                         </div>
 
-                        {{-- Review Discussions --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-                            <div
-                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                                <h3 class="text-base font-bold text-gray-900">
-                                    <i class="fa-solid fa-comments text-indigo-500 mr-2"></i>Review Discussions
-                                </h3>
-                                <button
-                                    @click="discussionModalOpen = true; discussionStageId = 2; resetDiscussionForm()"
-                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                                    + Add Discussion
-                                </button>
-                            </div>
-                            <div class="divide-y divide-gray-100">
-                                @forelse($allDiscussions->where('stage_id', 2) as $discussion)
-                                    <div class="px-6 py-4">
-                                        <p class="text-sm font-medium text-gray-900">{{ $discussion->subject }}</p>
-                                        <p class="text-xs text-gray-500 mt-1">{{ $discussion->user->name }} •
-                                            {{ $discussion->created_at->diffForHumans() }}</p>
-                                    </div>
-                                @empty
-                                    <p class="px-6 py-8 text-center text-sm text-gray-500 italic">No discussions in
-                                        this stage.</p>
-                                @endforelse
-                            </div>
-                        </div>
+                        {{-- Review Discussions - Stage 2 --}}
+                        <x-discussion-panel :submission="$submission" :stageId="2" stageName="review" :discussions="$allDiscussions"
+                            :participants="$participants" :journal="$journal" />
                     </div>
 
                     {{-- Sidebar --}}
@@ -925,39 +811,71 @@
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Editor
                                     Decision</h4>
-                                <div class="space-y-3">
-                                    <form
-                                        action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
-                                        method="POST">
-                                        @csrf
-                                        <input type="hidden" name="decision" value="accept">
-                                        <button type="submit"
-                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                                            <i class="fa-solid fa-check mr-2"></i> Accept Submission
-                                        </button>
-                                    </form>
-                                    <form
-                                        action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
-                                        method="POST">
-                                        @csrf
-                                        <input type="hidden" name="decision" value="request_revisions">
-                                        <button type="submit"
-                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-yellow-300 shadow-sm text-sm font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
-                                            <i class="fa-solid fa-pen mr-2"></i> Request Revisions
-                                        </button>
-                                    </form>
-                                    <form
-                                        action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
-                                        method="POST"
-                                        onsubmit="return confirm('This will decline the submission. Continue?')">
-                                        @csrf
-                                        <input type="hidden" name="decision" value="decline">
-                                        <button type="submit"
-                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
-                                            <i class="fa-solid fa-xmark mr-2"></i> Decline
-                                        </button>
-                                    </form>
-                                </div>
+
+                                @if ($submission->stage_id == 2 && $submission->status != 3)
+                                    {{-- Active - Stage 2 and not declined --}}
+                                    <div class="space-y-3">
+                                        <form
+                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <input type="hidden" name="decision" value="accept">
+                                            <button type="submit"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                                <i class="fa-solid fa-check mr-2"></i> Accept Submission
+                                            </button>
+                                        </form>
+                                        <form
+                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <input type="hidden" name="decision" value="request_revisions">
+                                            <button type="submit"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-yellow-300 shadow-sm text-sm font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
+                                                <i class="fa-solid fa-pen mr-2"></i> Request Revisions
+                                            </button>
+                                        </form>
+                                        <form
+                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('This will decline the submission. Continue?')">
+                                            @csrf
+                                            <input type="hidden" name="decision" value="decline">
+                                            <button type="submit"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                                                <i class="fa-solid fa-xmark mr-2"></i> Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    {{-- Disabled - Stage has passed or submission declined --}}
+                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                                        <p class="text-sm text-gray-600 flex items-center">
+                                            <i class="fa-solid fa-check-circle text-gray-400 mr-2"></i>
+                                            @if ($submission->status == 3)
+                                                Submission has been declined.
+                                            @elseif($submission->stage_id > 2)
+                                                Review stage complete. Moved to
+                                                <strong
+                                                    class="ml-1">{{ ucfirst($stageNames[$submission->stage_id] ?? 'next stage') }}</strong>.
+                                            @else
+                                                Awaiting review stage.
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <button disabled
+                                        class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
+                                        <i class="fa-solid fa-check mr-2"></i> Accept Submission
+                                    </button>
+                                    <button disabled
+                                        class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
+                                        <i class="fa-solid fa-pen mr-2"></i> Request Revisions
+                                    </button>
+                                    <button disabled
+                                        class="w-full px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
+                                        <i class="fa-solid fa-xmark mr-2"></i> Decline
+                                    </button>
+                                @endif
                             </div>
                         @endif
 
@@ -1053,32 +971,9 @@
                             </div>
                         </div>
 
-                        {{-- Copyediting Discussions --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-                            <div
-                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                                <h3 class="text-base font-bold text-gray-900">
-                                    <i class="fa-solid fa-comments text-teal-500 mr-2"></i>Copyediting Discussions
-                                </h3>
-                                <button
-                                    @click="discussionModalOpen = true; discussionStageId = 3; resetDiscussionForm()"
-                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                                    + Add Discussion
-                                </button>
-                            </div>
-                            <div class="divide-y divide-gray-100">
-                                @forelse($allDiscussions->where('stage_id', 3) as $discussion)
-                                    <div class="px-6 py-4">
-                                        <p class="text-sm font-medium text-gray-900">{{ $discussion->subject }}</p>
-                                        <p class="text-xs text-gray-500 mt-1">{{ $discussion->user->name }} •
-                                            {{ $discussion->created_at->diffForHumans() }}</p>
-                                    </div>
-                                @empty
-                                    <p class="px-6 py-8 text-center text-sm text-gray-500 italic">No discussions in
-                                        this stage.</p>
-                                @endforelse
-                            </div>
-                        </div>
+                        {{-- Copyediting Discussions - Stage 3 --}}
+                        <x-discussion-panel :submission="$submission" :stageId="3" stageName="copyediting"
+                            :discussions="$allDiscussions" :participants="$participants" :journal="$journal" />
                     </div>
 
                     {{-- Sidebar --}}
@@ -1086,15 +981,34 @@
                         @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Actions</h4>
-                                <form
-                                    action="{{ route('journal.workflow.send-production', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
-                                    method="POST">
-                                    @csrf
-                                    <button type="submit"
-                                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                                @if ($submission->stage_id == 3 && $submission->status != 3)
+                                    <form
+                                        action="{{ route('journal.workflow.send-production', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                                            <i class="fa-solid fa-arrow-right mr-2"></i> Send to Production
+                                        </button>
+                                    </form>
+                                @else
+                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                                        <p class="text-sm text-gray-600 flex items-center">
+                                            <i class="fa-solid fa-check-circle text-gray-400 mr-2"></i>
+                                            @if ($submission->status == 3)
+                                                Submission has been declined.
+                                            @elseif($submission->stage_id > 3)
+                                                Copyediting complete. Moved to Production.
+                                            @else
+                                                Awaiting copyediting stage.
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <button disabled
+                                        class="w-full inline-flex justify-center items-center px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
                                         <i class="fa-solid fa-arrow-right mr-2"></i> Send to Production
                                     </button>
-                                </form>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -1271,45 +1185,9 @@
                             </div>
                         </div>
 
-                        {{-- ====== PRODUCTION DISCUSSIONS ====== --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-                            <div
-                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                                <h3 class="text-base font-bold text-gray-900">
-                                    <i class="fa-solid fa-comments text-green-500 mr-2"></i>Production Discussions
-                                </h3>
-                                <button
-                                    @click="discussionModalOpen = true; discussionStageId = 4; resetDiscussionForm()"
-                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                                    + Add Discussion
-                                </button>
-                            </div>
-                            <div class="divide-y divide-gray-100">
-                                @forelse($allDiscussions->where('stage_id', 4) as $discussion)
-                                    <div class="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors">
-                                        <div class="flex items-start justify-between">
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-900">
-                                                    {{ $discussion->subject }}</p>
-                                                <p class="text-xs text-gray-500 mt-1">
-                                                    {{ $discussion->user->name }} •
-                                                    {{ $discussion->created_at->diffForHumans() }}
-                                                </p>
-                                            </div>
-                                            <span
-                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                                                {{ $discussion->messages->count() }}
-                                                {{ Str::plural('reply', $discussion->messages->count()) }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <p class="px-6 py-8 text-center text-sm text-gray-500 italic">
-                                        No discussions in this stage.
-                                    </p>
-                                @endforelse
-                            </div>
-                        </div>
+                        {{-- Production Discussions - Stage 4 --}}
+                        <x-discussion-panel :submission="$submission" :stageId="4" stageName="production"
+                            :discussions="$allDiscussions" :participants="$participants" :journal="$journal" />
 
                     </div>
 
@@ -2442,11 +2320,9 @@
 
                         <div class="space-y-4">
                             <div>
-                                <label for="subject"
-                                    class="block text-sm font-medium text-gray-700">Subject</label>
+                                <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
                                 <input type="text" name="subject" id="subject"
-                                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                                    required>
+                                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
                             </div>
 
                             @if (!auth()->user()->hasRole('Author'))
@@ -2458,7 +2334,7 @@
                                         @forelse($participants as $participant)
                                             <label
                                                 class="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
-                                                <input type="checkbox" name="recipient_ids[]"
+                                                <input type="checkbox" name="participants[]"
                                                     value="{{ $participant->id }}" checked
                                                     class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                                                 <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -2954,7 +2830,8 @@
                                         </div>
                                         <div class="ml-3">
                                             <p class="text-sm font-medium text-gray-900"
-                                                x-text="selectedEditor?.name"></p>
+                                                x-text="selectedEditor?.name">
+                                            </p>
                                             <p class="text-xs text-gray-500" x-text="selectedEditor?.email"></p>
                                         </div>
                                     </div>
