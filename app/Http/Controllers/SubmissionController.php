@@ -365,7 +365,25 @@ class SubmissionController extends Controller
             ->orderBy('number', 'desc')
             ->get();
 
-        return view('submissions.show', compact('submission', 'journal', 'issues'));
+        // Prepare participants for discussion modal (Author + Editors, exclude self)
+        $participants = collect();
+
+        // Add the submission author
+        if ($submission->author) {
+            $participants->push($submission->author);
+        }
+
+        // Add assigned editors
+        foreach ($submission->editorialAssignments->where('is_active', true) as $assignment) {
+            if ($assignment->user && !$participants->contains('id', $assignment->user->id)) {
+                $participants->push($assignment->user);
+            }
+        }
+
+        // Exclude current logged-in user
+        $participants = $participants->reject(fn($user) => $user->id === auth()->id());
+
+        return view('submissions.show', compact('submission', 'journal', 'issues', 'participants'));
     }
 
     /**

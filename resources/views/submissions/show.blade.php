@@ -250,8 +250,6 @@
             <nav class="text-sm text-gray-500 mb-2">
                 <a href="{{ route('journal.submissions.index', $journal->slug) }}"
                     class="hover:text-indigo-600">Submissions</a>
-                <span class="mx-2">/</span>
-                <span class="text-gray-700">{{ $submission->id }}</span>
             </nav>
             <div class="flex items-center gap-3 mb-2">
                 <h1 class="text-3xl font-bold text-gray-900 leading-tight">{{ $submission->title }}</h1>
@@ -1411,34 +1409,107 @@
                             @endif
                         </div>
 
-                        {{-- Participants --}}
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Participants</h4>
-                            <ul class="space-y-3">
+                        {{-- Participants (Modern Team Card) --}}
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            {{-- Header --}}
+                            <div
+                                class="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                <h4 class="text-sm font-bold text-gray-900">Participants</h4>
+                                @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                    <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                        class="inline-flex items-center px-2.5 py-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors">
+                                        <i class="fa-solid fa-user-plus mr-1.5"></i> Assign
+                                    </button>
+                                @endrole
+                            </div>
+
+                            {{-- Participants List --}}
+                            <div class="divide-y divide-gray-100">
+                                {{-- Assigned Editors --}}
                                 @forelse($submission->editorialAssignments->where('is_active', true) as $assignment)
-                                    <li class="flex items-center justify-between text-sm">
-                                        <div class="flex items-center">
-                                            <span class="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+                                    <div class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors group">
+                                        {{-- Avatar --}}
+                                        @if ($assignment->user->profile_photo_path ?? false)
+                                            <img src="{{ asset('storage/' . $assignment->user->profile_photo_path) }}"
+                                                class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
+                                                alt="{{ $assignment->user->name }}">
+                                        @else
+                                            <div
+                                                class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                                {{ strtoupper(substr($assignment->user->name, 0, 1)) }}
+                                            </div>
+                                        @endif
+
+                                        {{-- Info --}}
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 line-clamp-1">
+                                                {{ $assignment->user->name }}</p>
                                             <span
-                                                class="font-medium text-gray-900">{{ $assignment->user->name }}</span>
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 w-fit mt-0.5">
+                                                {{ ucfirst(str_replace('_', ' ', $assignment->role)) }}
+                                            </span>
                                         </div>
-                                        <span
-                                            class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $assignment->role)) }}</span>
-                                    </li>
+
+                                        {{-- Actions --}}
+                                        <div
+                                            class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button type="button"
+                                                @click="discussionModalOpen = true; discussionStageId = 4; resetDiscussionForm()"
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                                title="Start Discussion">
+                                                <i class="fa-solid fa-envelope text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 @empty
-                                    <li class="text-sm text-gray-400 italic">No editors assigned</li>
+                                    <div class="p-4 text-center">
+                                        <div
+                                            class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                            <i class="fa-solid fa-user-slash text-gray-400"></i>
+                                        </div>
+                                        <p class="text-sm text-gray-500 italic">No editors assigned</p>
+                                        @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                            <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                                class="mt-2 text-xs text-indigo-600 font-medium hover:text-indigo-800">
+                                                + Assign an editor
+                                            </button>
+                                        @endrole
+                                    </div>
                                 @endforelse
 
-                                <li
-                                    class="flex items-center justify-between text-sm border-t border-gray-100 pt-3 mt-3">
-                                    <div class="flex items-center">
-                                        <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
-                                        <span
-                                            class="font-medium text-gray-900">{{ $submission->authors->first()->name ?? 'Unknown' }}</span>
+                                {{-- Author (Separator) --}}
+                                @if ($submission->authors->first())
+                                    <div
+                                        class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors group bg-amber-50/30">
+                                        {{-- Avatar --}}
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                            {{ strtoupper(substr($submission->authors->first()->name, 0, 1)) }}
+                                        </div>
+
+                                        {{-- Info --}}
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 line-clamp-1">
+                                                {{ $submission->authors->first()->name }}</p>
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 w-fit mt-0.5">
+                                                Author
+                                            </span>
+                                        </div>
+
+                                        {{-- Actions --}}
+                                        <div
+                                            class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button type="button"
+                                                @click="discussionModalOpen = true; discussionStageId = 4; resetDiscussionForm()"
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                                title="Start Discussion">
+                                                <i class="fa-solid fa-envelope text-sm"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <span class="text-xs text-gray-500">Author</span>
-                                </li>
-                            </ul>
+                                @endif
+                            </div>
                         </div>
 
                     </div>
@@ -2354,7 +2425,7 @@
                     </div>
 
                     <form id="discussion-form"
-                        action="{{ route('journal.discussion.create', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        action="{{ route('journal.discussion.create', ['journal' => $journal->slug, 'submission' => $submission]) }}"
                         method="POST">
                         @csrf
                         <input type="hidden" name="stage_id" x-model="discussionStageId">
@@ -2371,17 +2442,52 @@
 
                         <div class="space-y-4">
                             <div>
-                                <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                                <label for="subject"
+                                    class="block text-sm font-medium text-gray-700">Subject</label>
                                 <input type="text" name="subject" id="subject"
-                                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                                    required>
                             </div>
 
                             @if (!auth()->user()->hasRole('Author'))
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Participants</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Notify
+                                        Participants</label>
                                     <div
-                                        class="mt-2 text-sm text-gray-500 border border-gray-200 p-3 rounded bg-gray-50">
-                                        <p>Select users to notify (Placeholder).</p>
+                                        class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                        @forelse($participants as $participant)
+                                            <label
+                                                class="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
+                                                <input type="checkbox" name="recipient_ids[]"
+                                                    value="{{ $participant->id }}" checked
+                                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                                    {{-- Avatar --}}
+                                                    <div
+                                                        class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                                        {{ strtoupper(substr($participant->name, 0, 1)) }}
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <span
+                                                            class="text-sm font-medium text-gray-900 block truncate">{{ $participant->name }}</span>
+                                                        <span
+                                                            class="text-xs text-gray-500 block truncate">{{ $participant->email }}</span>
+                                                    </div>
+                                                </div>
+                                                {{-- Role Badge --}}
+                                                @php
+                                                    $role =
+                                                        $participant->id === $submission->user_id ? 'Author' : 'Editor';
+                                                @endphp
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $role === 'Author' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
+                                                    {{ $role }}
+                                                </span>
+                                            </label>
+                                        @empty
+                                            <p class="text-sm text-gray-500 italic text-center py-2">No other
+                                                participants to notify.</p>
+                                        @endforelse
                                     </div>
                                 </div>
                             @endif
