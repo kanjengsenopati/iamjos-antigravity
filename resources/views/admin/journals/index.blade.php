@@ -85,8 +85,17 @@
                         <tr class="journal-row hover:bg-gray-50 transition-colors"
                             data-name="{{ strtolower($journal->name) }}" data-path="{{ strtolower($journal->slug) }}">
                             <td class="px-6 py-4">
-                                <code
-                                    class="font-mono text-sm text-indigo-600 bg-indigo-50 px-2 py-1 rounded">/{{ $journal->slug }}</code>
+                                <a href="{{ route('journal.public.home', $journal->slug) }}" target="_blank"
+                                    class="group flex items-center gap-1 hover:text-indigo-800 transition-colors"
+                                    title="View Journal Homepage">
+                                    <code
+                                        class="font-mono text-sm text-indigo-600 bg-indigo-50 group-hover:bg-indigo-100 px-2 py-1 rounded transition-colors">/{{ $journal->slug }}</code>
+                                    <svg class="w-3 h-3 text-indigo-400 group-hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-all"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </a>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
