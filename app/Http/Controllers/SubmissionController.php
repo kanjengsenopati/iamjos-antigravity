@@ -363,7 +363,9 @@ class SubmissionController extends Controller
             'authors',
             'files',
             'discussions.user', // Load discussions with creator
-            'discussions.messages', // Load messages to count replies
+            'discussions.messages.user', // Load messages with user
+            'discussions.messages.files', // Load message files
+            'discussions.participants', // Load discussion participants
             'editorialAssignments.user', // Load editors
             'reviewAssignments.reviewer',
         ]);
@@ -374,7 +376,8 @@ class SubmissionController extends Controller
             ->orderBy('number', 'desc')
             ->get();
 
-        // Prepare participants for discussion modal (Author + Editors, exclude self)
+        // Prepare participants for discussion modal (Author + Editors)
+        // Component handles self-display logic
         $participants = collect();
 
         // Add the submission author
@@ -389,8 +392,11 @@ class SubmissionController extends Controller
             }
         }
 
-        // Exclude current logged-in user
-        $participants = $participants->reject(fn($user) => $user->id === auth()->id());
+        // Add current user if not already in list (may be an editor viewing)
+        $currentUser = auth()->user();
+        if (!$participants->contains('id', $currentUser->id)) {
+            $participants->push($currentUser);
+        }
 
         return view('submissions.show', compact('submission', 'journal', 'issues', 'participants'));
     }

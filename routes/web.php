@@ -281,6 +281,9 @@ Route::prefix('{journal}')->group(function () {
         Route::get('/discussion/file/{file}', [SubmissionDiscussionController::class, 'download'])->name('journal.discussion.file.download');
         Route::post('/{submission}/discussion/create', [SubmissionDiscussionController::class, 'store'])->name('journal.discussion.create');
         Route::post('/{submission}/discussion/{discussion}/reply', [SubmissionDiscussionController::class, 'storeReply'])->name('journal.discussion.reply');
+        Route::post('/{submission}/discussion/{discussion}/close', [SubmissionDiscussionController::class, 'close'])->name('journal.discussion.close');
+        Route::post('/{submission}/discussion/{discussion}/reopen', [SubmissionDiscussionController::class, 'reopen'])->name('journal.discussion.reopen');
+        Route::put('/{submission}/discussion/{discussion}/message/{message}', [SubmissionDiscussionController::class, 'updateMessage'])->name('journal.discussion.message.update');
 
         // --------- Submission Workflow (OJS 3.3 Style) ---------
         Route::prefix('workflow')->name('journal.workflow.')->middleware('role:Editor|Section Editor|Admin|Super Admin')->group(function () {

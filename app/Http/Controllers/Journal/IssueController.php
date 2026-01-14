@@ -15,14 +15,46 @@ class IssueController extends Controller
     {
         $journal = current_journal();
 
-        $issues = Issue::where('journal_id', $journal->id)
+        // Stats
+        $totalIssues = Issue::where('journal_id', $journal->id)->count();
+        $publishedCount = Issue::where('journal_id', $journal->id)->where('is_published', true)->count();
+        $upcomingCount = Issue::where('journal_id', $journal->id)->where('is_published', false)->count();
+
+        // Count all articles in all issues (or you can refine to published only if needed)
+        // Assuming 'submissions' relation exists on Issue
+        $totalArticles = Issue::where('journal_id', $journal->id)
+            ->withCount('submissions')
+            ->get()
+            ->sum('submissions_count');
+
+        // Future Issues (all of them, usually few)
+        $futureIssues = Issue::where('journal_id', $journal->id)
+            ->where('is_published', false)
+            ->orderBy('year', 'asc') // Upcoming should probably be ascending or descending? Usually upcoming is nearest first.
+            ->orderBy('volume', 'asc')
+            ->orderBy('number', 'asc')
+            ->withCount('submissions')
+            ->get();
+
+        // Back Issues (Published, paginated)
+        $backIssues = Issue::where('journal_id', $journal->id)
+            ->where('is_published', true)
+            ->orderBy('published_at', 'desc') // Published recently first
             ->orderBy('year', 'desc')
             ->orderBy('volume', 'desc')
             ->orderBy('number', 'desc')
             ->withCount('submissions')
-            ->paginate(20);
+            ->paginate(12);
 
-        return view('editor.issues.index', compact('journal', 'issues'));
+        return view('editor.issues.index', compact(
+            'journal',
+            'futureIssues',
+            'backIssues',
+            'totalIssues',
+            'publishedCount',
+            'upcomingCount',
+            'totalArticles'
+        ));
     }
 
     /**
