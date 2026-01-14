@@ -295,7 +295,7 @@
                 Submitted
                 {{ $submission->submitted_at?->format('M d, Y') ?? $submission->created_at->format('M d, Y') }}
                 <span class="mx-2">•</span>
-                ID: {{ substr($submission->id, 0, 8) }}
+                <span class="font-mono text-gray-700">{{ $submission->submission_code }}</span>
             </div>
         </div>
 
