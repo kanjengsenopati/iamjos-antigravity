@@ -465,61 +465,23 @@
                         <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Dashboard</span>
                     </a>
 
-                    <!-- Submissions -->
+                    <!-- Submissions (Single Menu - OJS 3.3 Style, tabs are in content page) -->
                     @role('Author|Editor|Section Editor|Journal Manager|Admin|Super Admin')
-                        <div x-data="{ expanded: {{ request()->routeIs('journal.submissions.*') ? 'true' : 'false' }} }">
-                            <button @click="expanded = !expanded"
-                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.submissions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                                :title="sidebarCollapsed ? 'Submissions' : ''">
-                                <div class="flex items-center gap-3">
-                                    <i
-                                        class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.submissions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Submissions</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
-                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
-                            </button>
+                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
+                            {{ request()->routeIs('journal.submissions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            :title="sidebarCollapsed ? 'Submissions' : ''">
 
-                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
-                                <div class="pl-10 pr-2 py-1 space-y-1">
-                                    @if (auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']))
-                                        {{-- Editor+ Menu: Full OJS 3.3 Navigation --}}
-                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=queue"
-                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'queue' || (!request('filter') && request()->routeIs('journal.submissions.index')) ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                            <i class="fa-solid fa-user-check w-4 text-center"></i>
-                                            My Queue
-                                        </a>
-                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=unassigned"
-                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'unassigned' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                            <i class="fa-solid fa-user-clock w-4 text-center"></i>
-                                            Unassigned
-                                        </a>
-                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=active"
-                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'active' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                            <i class="fa-solid fa-list-ul w-4 text-center"></i>
-                                            All Active
-                                        </a>
-                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=archives"
-                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'archives' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                            <i class="fa-solid fa-box-archive w-4 text-center"></i>
-                                            Archives
-                                        </a>
-                                    @else
-                                        {{-- Author Menu: Restricted View --}}
-                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=active"
-                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'active' || (!request('filter') && request()->routeIs('journal.submissions.index')) ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                            <i class="fa-solid fa-list-ul w-4 text-center"></i>
-                                            My Queue
-                                        </a>
-                                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=archives"
-                                            class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'archives' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                            <i class="fa-solid fa-box-archive w-4 text-center"></i>
-                                            Archives
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
+                            @if (request()->routeIs('journal.submissions.*'))
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
+                                    x-show="!sidebarCollapsed"></div>
+                            @endif
+
+                            <i
+                                class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 
+                                {{ request()->routeIs('journal.submissions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Submissions</span>
+                        </a>
                     @endrole
 
                     <!-- Reviewer: My Reviews -->
@@ -883,10 +845,15 @@
                             </div>
 
                             <!-- Footer -->
-                            <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 text-center">
+                            <div
+                                class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
                                 <span class="text-xs text-gray-500">
-                                    Showing <span x-text="notifications.length"></span> most recent
+                                    <span x-text="notifications.length"></span> recent
                                 </span>
+                                <a href="{{ route('notifications.index') }}"
+                                    class="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                                    View All →
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -896,10 +863,16 @@
                         <button @click="open = !open" @click.outside="open = false"
                             class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <!-- Avatar -->
-                            <div
-                                class="w-9 h-9 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
-                            </div>
+                            @if (Auth::user()->profile_photo_path ?? false)
+                                <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
+                                    alt="{{ Auth::user()->name }}"
+                                    class="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm">
+                            @else
+                                <div
+                                    class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                </div>
+                            @endif
                             <!-- Name & Role -->
                             <div class="hidden sm:block text-left">
                                 <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name ?? 'User' }}</p>
