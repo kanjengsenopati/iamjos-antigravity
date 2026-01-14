@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Journal;
 use App\Models\Section;
+use App\Models\Issue;
 use App\Models\Submission;
 use App\Models\SubmissionFile;
 use App\Models\SubmissionAuthor;
@@ -358,7 +359,13 @@ class SubmissionController extends Controller
             'reviewAssignments.reviewer',
         ]);
 
-        return view('submissions.show', compact('submission', 'journal'));
+        $issues = Issue::where('journal_id', $journal->id)
+            ->orderBy('year', 'desc')
+            ->orderBy('volume', 'desc')
+            ->orderBy('number', 'desc')
+            ->get();
+
+        return view('submissions.show', compact('submission', 'journal', 'issues'));
     }
 
     /**

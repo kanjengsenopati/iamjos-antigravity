@@ -316,7 +316,7 @@
         }">
 
         <!-- 1. Journal Context Switcher -->
-        <div class="h-16 px-4 flex items-center border-b border-gray-100 relative" x-data="{ open: false }">
+        <div class="h-16 px-4 flex items-center border-b border-gray-100 relative" x-data="{ open: false, search: '' }">
             <button @click="open = !open"
                 class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left group">
                 <!-- Logo -->
@@ -338,16 +338,30 @@
                 <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-auto" x-show="!sidebarCollapsed"></i>
             </button>
 
-            <!-- Dropdown Menu -->
+            <!-- Dropdown Menu (Wider Popover) -->
             <div x-show="open" @click.away="open = false" x-cloak x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
-                class="absolute top-14 left-4 right-4 z-50 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1"
-                :class="sidebarCollapsed ? 'left-16 top-2' : 'left-4 right-4 top-14'">
+                class="absolute z-50 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden ring-1 ring-black ring-opacity-5"
+                :class="sidebarCollapsed ? 'left-16 top-2 origin-top-left' : 'left-2 top-14 origin-top-left'">
 
-                <div class="px-3 py-2 border-b border-gray-50 bg-gray-50/50">
-                    <span class="text-xs font-semibold text-gray-500 uppercase">My Journals</span>
+                <!-- Header -->
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">My Journals</span>
+                    <span class="text-[10px] text-gray-400 bg-white px-2 py-0.5 rounded border border-gray-200">Press
+                        Esc to close</span>
+                </div>
+
+                <!-- Search Input -->
+                <div class="p-2 border-b border-gray-100 bg-white sticky top-0 z-10">
+                    <div class="relative">
+                        <i
+                            class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" x-model="search" placeholder="Find journal..."
+                            class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 focus:bg-white transition-colors"
+                            autofocus>
+                    </div>
                 </div>
 
                 @php
@@ -358,33 +372,62 @@
                     }
                 @endphp
 
-                <div class="max-h-60 overflow-y-auto">
+                <!-- Scrollable List -->
+                <div class="max-h-[320px] overflow-y-auto custom-scrollbar">
                     @forelse ($userJournals as $j)
                         <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
-                            class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 {{ $journal && $journal->id == $j->id ? 'bg-primary-50/50' : '' }}">
+                            x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
+                            class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 group/item relative
+                            {{ $journal && $journal->id == $j->id ? 'bg-primary-50/40' : '' }}">
+
+                            <!-- Left: Indicator/Icon -->
                             <div
-                                class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-bold {{ $journal && $journal->id == $j->id ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600' }}">
+                                class="mt-0.5 w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm transition-colors
+                                {{ $journal && $journal->id == $j->id ? 'bg-primary-600 text-white ring-2 ring-primary-100' : 'bg-gray-100 text-gray-600 group-hover/item:bg-white group-hover/item:text-primary-600 group-hover/item:ring-1 group-hover/item:ring-gray-200' }}">
                                 {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
                             </div>
-                            <span
-                                class="text-sm text-gray-700 truncate {{ $journal && $journal->id == $j->id ? 'font-medium text-primary-900' : '' }}">{{ $j->name }}</span>
+
+                            <!-- Right: Details -->
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="text-sm font-medium leading-tight truncate {{ $journal && $journal->id == $j->id ? 'text-primary-900' : 'text-gray-900' }}">
+                                    {{ $j->name }}
+                                </p>
+                                @if ($j->abbreviation)
+                                    <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $j->abbreviation }}</p>
+                                @endif
+                            </div>
+
+                            <!-- Active Check -->
                             @if ($journal && $journal->id == $j->id)
-                                <i class="fa-solid fa-check text-primary-600 text-xs ml-auto"></i>
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
+                                </div>
                             @endif
                         </a>
                     @empty
-                        <div class="px-4 py-3 text-center">
-                            <p class="text-xs text-gray-500">No journals yet</p>
-                            <a href="{{ route('register') }}" class="text-xs text-primary-600 hover:underline">Join a
-                                journal</a>
+                        <div class="px-4 py-8 text-center bg-gray-50/50">
+                            <div
+                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-100">
+                                <i class="fa-solid fa-book-open text-gray-400"></i>
+                            </div>
+                            <p class="text-xs text-gray-500 font-medium">No journals found</p>
+                            <a href="{{ route('register') }}"
+                                class="mt-2 inline-block text-xs font-semibold text-primary-600 hover:text-primary-700">
+                                Join a journal
+                            </a>
                         </div>
                     @endforelse
+
+
                 </div>
 
-                <div class="border-t border-gray-100 pt-1 mt-1">
+                <!-- Footer -->
+                <div class="bg-gray-50 border-t border-gray-200 p-2">
                     <a href="{{ route('journal.select') }}"
-                        class="block px-4 py-2 text-xs text-gray-500 hover:text-primary-600 hover:bg-gray-50">
-                        <i class="fa-solid fa-grid-2 text-gray-400 mr-2"></i> View All Journals
+                        class="flex items-center justify-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 transition-all shadow-sm">
+                        <i class="fa-solid fa-grid-2"></i> View All Journals
+                        <i class="fa-solid fa-arrow-right text-[10px] opacity-50 ml-1"></i>
                     </a>
                 </div>
             </div>

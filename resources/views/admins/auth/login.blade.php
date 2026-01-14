@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,19 +33,23 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
-        [x-cloak] { display: none !important; }
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
+
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen flex" x-data="{ showPassword: false }">
         <!-- Left Side - Brand Panel -->
-        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 relative overflow-hidden">
+        <div
+            class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 relative overflow-hidden">
             <!-- Abstract Pattern Overlay -->
             <div class="absolute inset-0 opacity-10">
                 <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <defs>
                         <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/>
+                            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
                         </pattern>
                     </defs>
                     <rect width="100" height="100" fill="url(#grid)" />
@@ -52,9 +57,13 @@
             </div>
 
             <!-- Floating Circles -->
-            <div class="absolute top-20 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-            <div class="absolute bottom-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 1s;"></div>
-            <div class="absolute top-1/2 left-1/3 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+            <div
+                class="absolute top-20 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse">
+            </div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+                style="animation-delay: 1s;"></div>
+            <div class="absolute top-1/2 left-1/3 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+                style="animation-delay: 2s;"></div>
 
             <!-- Content -->
             <div class="relative z-10 flex flex-col justify-center px-12 xl:px-20 w-full">
@@ -76,7 +85,8 @@
 
                 <!-- Tagline -->
                 <p class="text-lg text-indigo-200 leading-relaxed max-w-md mb-12">
-                    A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.
+                    A modern platform for managing academic journal submissions, peer reviews, and publications with
+                    streamlined workflows.
                 </p>
 
                 <!-- Features -->
@@ -157,16 +167,10 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-envelope text-gray-400 text-sm"></i>
                             </div>
-                            <input
-                                type="text"
-                                id="email"
-                                name="email"
-                                value="{{ old('email') }}"
-                                placeholder="Enter your email"
+                            <input type="text" id="email" name="email" value="{{ old('email') }}"
+                                placeholder="Enter your email or username"
                                 class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                required
-                                autofocus
-                            >
+                                required autofocus>
                         </div>
                         @error('email')
                             <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
@@ -179,7 +183,8 @@
                             <label for="password" class="block text-sm font-medium text-gray-700">
                                 Password
                             </label>
-                            <a href="{{ route('forgot-password') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
+                            <a href="{{ route('forgot-password') }}"
+                                class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
                                 Forgot password?
                             </a>
                         </div>
@@ -187,19 +192,12 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-gray-400 text-sm"></i>
                             </div>
-                            <input
-                                :type="showPassword ? 'text' : 'password'"
-                                id="password"
-                                name="password"
+                            <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
                                 placeholder="Enter your password"
                                 class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                required
-                            >
-                            <button
-                                type="button"
-                                @click="showPassword = !showPassword"
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                            >
+                                required>
+                            <button type="button" @click="showPassword = !showPassword"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                                 <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
@@ -210,22 +208,16 @@
 
                     <!-- Remember Me -->
                     <div class="flex items-center">
-                        <input
-                            type="checkbox"
-                            id="remember"
-                            name="remember"
-                            class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        >
+                        <input type="checkbox" id="remember" name="remember"
+                            class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                         <label for="remember" class="ml-2 text-sm text-gray-600">
                             Remember for 30 days
                         </label>
                     </div>
 
                     <!-- Submit Button -->
-                    <button
-                        type="submit"
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
+                    <button type="submit"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Sign in
                     </button>
                 </form>
@@ -233,7 +225,8 @@
                 <!-- Register Link -->
                 <p class="mt-8 text-center text-sm text-gray-500">
                     Don't have an account?
-                    <a href="{{ route('register') }}" class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
+                    <a href="{{ route('register') }}"
+                        class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
                         Create account
                     </a>
                 </p>
@@ -248,4 +241,5 @@
         </div>
     </div>
 </body>
+
 </html>

@@ -122,6 +122,45 @@ class Submission extends Model
     }
 
     /**
+     * Get all publications (versions) for this submission
+     */
+    public function publications(): HasMany
+    {
+        return $this->hasMany(Publication::class, 'submission_id')->orderBy('version', 'desc');
+    }
+
+    /**
+     * Get the current (latest) publication version
+     */
+    public function currentPublication()
+    {
+        return $this->publications()->first();
+    }
+
+    /**
+     * Get or create the current publication
+     */
+    public function getOrCreatePublication(): Publication
+    {
+        $publication = $this->currentPublication();
+
+        if (!$publication) {
+            $publication = Publication::create([
+                'submission_id' => $this->id,
+                'section_id' => $this->section_id,
+                'version' => 1,
+                'status' => Publication::STATUS_QUEUED,
+                'title' => $this->title,
+                'subtitle' => $this->subtitle,
+                'abstract' => $this->abstract,
+                'keywords' => $this->keywords,
+            ]);
+        }
+
+        return $publication;
+    }
+
+    /**
      * Get review assignments for this submission
      */
     public function reviewAssignments(): HasMany
@@ -167,6 +206,31 @@ class Submission extends Model
     public function discussions(): HasMany
     {
         return $this->hasMany(Discussion::class, 'submission_id');
+    }
+
+    /**
+     * Get publication galleys for this submission
+     */
+    public function galleys(): HasMany
+    {
+        return $this->hasMany(PublicationGalley::class, 'submission_id')->ordered();
+    }
+
+    /**
+     * Check if submission has at least one galley
+     */
+    public function hasGalleys(): bool
+    {
+        return $this->galleys()->exists();
+    }
+
+    /**
+     * Check if submission is ready for publication
+     * (Has galleys AND assigned to an issue)
+     */
+    public function isReadyForPublication(): bool
+    {
+        return $this->hasGalleys() && $this->issue_id !== null;
     }
 
     /**
