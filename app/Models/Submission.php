@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Submission extends Model
 {
@@ -43,6 +44,8 @@ class Submission extends Model
         'section_id',
         'issue_id',
         'title',
+        'slug',
+        'submission_code',
         'subtitle',
         'abstract',
         'keywords',
@@ -67,6 +70,133 @@ class Submission extends Model
             'published_at' => 'datetime',
             'metadata' => 'array', // JSONB to array
         ];
+    }
+
+    // =====================================================
+    // ROUTE MODEL BINDING
+    // =====================================================
+
+    /**
+     * Get the route key name for Laravel's route model binding.
+     * This makes URLs use /submissions/{slug} instead of /submissions/{id}
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    // =====================================================
+    // MODEL EVENTS (Auto-generate slug & code)
+    // =====================================================
+
+    /**
+     * Bootstrap the model.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Submission $submission) {
+            // Auto-generate slug from title
+            if (empty($submission->slug) && !empty($submission->title)) {
+                $submission->slug = static::generateUniqueSlug($submission->title);
+            }
+
+            // Auto-generate submission code
+            if (empty($submission->submission_code) && !empty($submission->journal_id)) {
+                $submission->submission_code = static::generateSubmissionCode($submission->journal_id);
+            }
+        });
+
+        // Update slug if title changes (optional, can be removed if slugs should be permanent)
+        static::updating(function (Submission $submission) {
+            if ($submission->isDirty('title') && !empty($submission->title)) {
+                // Only update slug if it hasn't been manually changed
+                $oldSlug = Str::slug($submission->getOriginal('title'));
+                if ($submission->slug === $oldSlug || Str::startsWith($submission->slug, $oldSlug . '-')) {
+                    $submission->slug = static::generateUniqueSlug($submission->title, $submission->id);
+                }
+            }
+        });
+    }
+
+    /**
+     * Generate a unique slug from a title.
+     */
+    public static function generateUniqueSlug(string $title, ?string $excludeId = null): string
+    {
+        $baseSlug = Str::slug($title);
+
+        // Ensure base slug is not empty
+        if (empty($baseSlug)) {
+            $baseSlug = 'submission';
+        }
+
+        // Limit slug length to prevent database issues
+        $baseSlug = Str::limit($baseSlug, 200, '');
+
+        $slug = $baseSlug;
+        $counter = 1;
+
+        // Keep incrementing until we find a unique slug
+        while (static::slugExists($slug, $excludeId)) {
+            $counter++;
+            $slug = $baseSlug . '-' . $counter;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Check if a slug already exists.
+     */
+    private static function slugExists(string $slug, ?string $excludeId = null): bool
+    {
+        $query = static::withTrashed()->where('slug', $slug);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Generate a unique submission code.
+     * Format: [JOURNAL_ABBR]-[YEAR]-[SEQUENCE]
+     * Example: JCO-2026-001
+     */
+    public static function generateSubmissionCode(string $journalId): string
+    {
+        $journal = Journal::find($journalId);
+
+        // Get journal abbreviation (uppercase, max 5 chars)
+        $abbreviation = strtoupper(Str::limit(
+            $journal->abbreviation ?? $journal->slug ?? 'SUB',
+            5,
+            ''
+        ));
+
+        // Current year
+        $year = now()->year;
+
+        // Count existing submissions for this journal this year
+        $count = static::withTrashed()
+            ->where('journal_id', $journalId)
+            ->whereYear('created_at', $year)
+            ->count();
+
+        // Next sequence number (padded to 3 digits)
+        $sequence = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+
+        $code = "{$abbreviation}-{$year}-{$sequence}";
+
+        // Ensure uniqueness (in rare race conditions)
+        while (static::withTrashed()->where('submission_code', $code)->exists()) {
+            $count++;
+            $sequence = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+            $code = "{$abbreviation}-{$year}-{$sequence}";
+        }
+
+        return $code;
     }
 
     // =====================================================

@@ -53,10 +53,16 @@
                     <li class="p-6 hover:bg-gray-50 transition-colors">
                         <div class="flex items-start justify-between">
                             <div class="flex-1 min-w-0">
-                                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
-                                    class="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors">
-                                    {{ $submission->title }}
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
+                                        class="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors">
+                                        {{ $submission->title }}
+                                    </a>
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-gray-100 text-gray-600">
+                                        {{ $submission->submission_code }}
+                                    </span>
+                                </div>
                                 <div class="mt-1 flex items-center gap-4 text-sm text-gray-500">
                                     @if ($submission->section)
                                         <span>
@@ -88,7 +94,7 @@
                                     {{ $submission->status_label }}
                                 </span>
 
-                                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
                                     class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     View
                                 </a>
