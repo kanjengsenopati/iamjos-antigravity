@@ -53,8 +53,17 @@ class SubmissionController extends Controller
         $isEditor = $user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
 
         // Base query - restrict by journal, eager load relationships
+        // Include discussions & reviewAssignments for OJS-style list (discussion count, reviewer X/Y)
         $query = Submission::where('journal_id', $journal->id)
-            ->with(['journal', 'section', 'issue', 'editorialAssignments.user', 'authors']);
+            ->with([
+                'journal',
+                'section',
+                'issue',
+                'editorialAssignments.user',
+                'authors',
+                'discussions',        // For discussion count badge
+                'reviewAssignments',  // For reviewer progress (X/Y)
+            ]);
 
         if (!$isEditor) {
             // === AUTHOR VIEW ===
