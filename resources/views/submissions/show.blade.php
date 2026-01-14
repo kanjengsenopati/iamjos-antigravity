@@ -1103,19 +1103,1243 @@
                 </div>
             </div>
 
-            {{-- ==================== PRODUCTION STAGE (Placeholder) ==================== --}}
-            <div x-show="activeStage === 'production'"
-                class="p-12 text-center text-gray-500 bg-gray-50 h-96 flex items-center justify-center">
-                <div class="max-w-md">
-                    <i class="fa-solid fa-industry text-4xl text-gray-300 mb-4"></i>
-                    <p class="text-lg font-medium text-gray-900">Production Stage</p>
-                    <p class="text-sm text-gray-500 mt-2">Galley files and final publication preparation.</p>
+            @php
+                $issueOptions = $issues->map(function ($i) {
+                    $title = $i->title ? " - {$i->title}" : '';
+                    $status = $i->is_published ? ' [Published]' : ' [Future]';
+                    return [
+                        'id' => $i->id,
+                        'label' => "Vol {$i->volume}, No {$i->number} ({$i->year}){$title}{$status}",
+                        'is_published' => $i->is_published,
+                    ];
+                });
+            @endphp
+            {{-- ==================== PRODUCTION STAGE ==================== --}}
+            <div x-show="activeStage === 'production'" class="bg-gray-50/50 min-h-screen pt-6"
+                x-data="{
+                    galleyModalOpen: false,
+                    scheduleModalOpen: false,
+                    editGalleyModalOpen: false,
+                    editingGalley: null,
+                    issues: {{ json_encode($issueOptions) }},
+                    selectedIssueId: '{{ $submission->issue_id ?? '' }}',
+                    isLoadingIssues: false,
+                
+                    openScheduleModal() {
+                        this.scheduleModalOpen = true;
+                    },
+                
+                    openEditGalley(galley) {
+                        this.editingGalley = galley;
+                        this.editGalleyModalOpen = true;
+                    }
+                }">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+                    {{-- Main Panel Area --}}
+                    <div class="lg:col-span-3 space-y-6">
+
+                        {{-- ====== GALLEYS PANEL ====== --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <div>
+                                    <h3 class="text-base font-bold text-gray-900">
+                                        <i class="fa-solid fa-file-lines text-green-500 mr-2"></i>Publication Galleys
+                                    </h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">Final files that will be available to
+                                        readers.</p>
+                                </div>
+                                @role('Editor|Section Editor|Admin|Super Admin')
+                                    <button @click="galleyModalOpen = true"
+                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors">
+                                        <i class="fa-solid fa-plus mr-1.5"></i> Add Galley
+                                    </button>
+                                @endrole
+                            </div>
+
+                            {{-- Galleys Table --}}
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Format</th>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                File</th>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Language</th>
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Uploaded</th>
+                                            <th
+                                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                                Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @forelse($submission->galleys as $galley)
+                                            <tr class="hover:bg-gray-50 transition-colors">
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold 
+                                                        {{ strtolower($galley->label) === 'pdf'
+                                                            ? 'bg-red-100 text-red-700'
+                                                            : (strtolower($galley->label) === 'html'
+                                                                ? 'bg-orange-100 text-orange-700'
+                                                                : (strtolower($galley->label) === 'epub'
+                                                                    ? 'bg-purple-100 text-purple-700'
+                                                                    : 'bg-gray-100 text-gray-700')) }}">
+                                                        <i class="fa-solid {{ $galley->label_icon }} mr-1.5"></i>
+                                                        {{ $galley->label }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center">
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-900">
+                                                                {{ $galley->file->file_name ?? 'Remote File' }}
+                                                            </p>
+                                                            @if ($galley->file)
+                                                                <p class="text-xs text-gray-500">
+                                                                    {{ number_format($galley->file->file_size / 1024, 0) }}
+                                                                    KB
+                                                                </p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        class="text-sm text-gray-600">{{ $galley->locale_name }}</span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ $galley->created_at->format('M d, Y') }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                                    <div class="flex items-center justify-end gap-1">
+                                                        @if ($galley->download_url)
+                                                            <a href="{{ $galley->download_url }}" target="_blank"
+                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                                                title="Download">
+                                                                <i class="fa-solid fa-download"></i>
+                                                            </a>
+                                                        @endif
+                                                        @role('Editor|Section Editor|Admin|Super Admin')
+                                                            <form
+                                                                action="{{ route('journal.workflow.galley.destroy', ['journal' => $journal->slug, 'submission' => $submission->id, 'galley' => $galley->id]) }}"
+                                                                method="POST" class="inline"
+                                                                onsubmit="return confirm('Are you sure you want to delete this galley?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                                    title="Delete">
+                                                                    <i class="fa-solid fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endrole
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="px-6 py-12 text-center">
+                                                    <div class="flex flex-col items-center">
+                                                        <div
+                                                            class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                                            <i
+                                                                class="fa-solid fa-file-circle-plus text-gray-400 text-xl"></i>
+                                                        </div>
+                                                        <p class="text-sm font-medium text-gray-900">No galleys
+                                                            uploaded yet</p>
+                                                        <p class="text-xs text-gray-500 mt-1">Upload PDF, HTML, or EPUB
+                                                            files for readers to download.</p>
+                                                        @role('Editor|Section Editor|Admin|Super Admin')
+                                                            <button @click="galleyModalOpen = true"
+                                                                class="mt-3 text-sm text-green-600 font-medium hover:text-green-700">
+                                                                <i class="fa-solid fa-plus mr-1"></i> Add your first galley
+                                                            </button>
+                                                        @endrole
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- ====== PRODUCTION DISCUSSIONS ====== --}}
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                            <div
+                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-base font-bold text-gray-900">
+                                    <i class="fa-solid fa-comments text-green-500 mr-2"></i>Production Discussions
+                                </h3>
+                                <button
+                                    @click="discussionModalOpen = true; discussionStageId = 4; resetDiscussionForm()"
+                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                    + Add Discussion
+                                </button>
+                            </div>
+                            <div class="divide-y divide-gray-100">
+                                @forelse($allDiscussions->where('stage_id', 4) as $discussion)
+                                    <div class="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">
+                                                    {{ $discussion->subject }}</p>
+                                                <p class="text-xs text-gray-500 mt-1">
+                                                    {{ $discussion->user->name }} •
+                                                    {{ $discussion->created_at->diffForHumans() }}
+                                                </p>
+                                            </div>
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                                {{ $discussion->messages->count() }}
+                                                {{ Str::plural('reply', $discussion->messages->count()) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="px-6 py-8 text-center text-sm text-gray-500 italic">
+                                        No discussions in this stage.
+                                    </p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {{-- ====== SIDEBAR ====== --}}
+                    <div class="lg:col-span-1 space-y-6">
+
+                        {{-- Publication Status Card --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Publication</h4>
+
+                            @if ($submission->status === 'published')
+                                {{-- Published State --}}
+                                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-check-circle text-emerald-500 text-xl mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-semibold text-emerald-800">Published</p>
+                                            <p class="text-xs text-emerald-600">
+                                                {{ $submission->published_at?->format('M d, Y') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if ($submission->issue)
+                                    <p class="text-sm text-gray-600 mb-4">
+                                        <i class="fa-solid fa-book text-gray-400 mr-2"></i>
+                                        {{ $submission->issue->identifier }}
+                                    </p>
+                                @endif
+                                @role('Editor|Section Editor|Admin|Super Admin')
+                                    <form
+                                        action="{{ route('journal.workflow.unpublish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            onclick="return confirm('Are you sure you want to unpublish this submission?')"
+                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-200 text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 transition-colors">
+                                            <i class="fa-solid fa-eye-slash mr-2"></i> Unpublish
+                                        </button>
+                                    </form>
+                                @endrole
+                            @elseif($submission->issue_id)
+                                {{-- Scheduled State --}}
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-calendar-check text-blue-500 text-xl mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-semibold text-blue-800">Scheduled</p>
+                                            <p class="text-xs text-blue-600">{{ $submission->issue->identifier }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @role('Editor|Section Editor|Admin|Super Admin')
+                                    @if (!$submission->hasGalleys())
+                                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                                            <p class="text-xs text-amber-700">
+                                                <i class="fa-solid fa-exclamation-triangle mr-1"></i>
+                                                Upload at least one galley to publish.
+                                            </p>
+                                        </div>
+                                    @endif
+
+                                    <div class="space-y-2">
+                                        <form
+                                            action="{{ route('journal.workflow.publish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <button type="submit" {{ !$submission->hasGalleys() ? 'disabled' : '' }}
+                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white {{ $submission->hasGalleys() ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-300 cursor-not-allowed' }} transition-colors">
+                                                <i class="fa-solid fa-rocket mr-2"></i> Publish Now
+                                            </button>
+                                        </form>
+
+                                        <form
+                                            action="{{ route('journal.workflow.unschedule', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors">
+                                                <i class="fa-solid fa-calendar-xmark mr-2"></i> Unschedule
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endrole
+                            @else
+                                {{-- Not Scheduled State --}}
+                                <p class="text-sm text-gray-500 mb-4">
+                                    This submission is not scheduled for publication yet.
+                                </p>
+
+                                @role('Editor|Section Editor|Admin|Super Admin')
+                                    <button @click="openScheduleModal()"
+                                        class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors">
+                                        <i class="fa-solid fa-calendar-plus mr-2"></i> Schedule for Publication
+                                    </button>
+                                @endrole
+                            @endif
+                        </div>
+
+                        {{-- Participants --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Participants</h4>
+                            <ul class="space-y-3">
+                                @forelse($submission->editorialAssignments->where('is_active', true) as $assignment)
+                                    <li class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+                                            <span
+                                                class="font-medium text-gray-900">{{ $assignment->user->name }}</span>
+                                        </div>
+                                        <span
+                                            class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $assignment->role)) }}</span>
+                                    </li>
+                                @empty
+                                    <li class="text-sm text-gray-400 italic">No editors assigned</li>
+                                @endforelse
+
+                                <li
+                                    class="flex items-center justify-between text-sm border-t border-gray-100 pt-3 mt-3">
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
+                                        <span
+                                            class="font-medium text-gray-900">{{ $submission->authors->first()->name ?? 'Unknown' }}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">Author</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
                 </div>
+
+                {{-- ====== ADD GALLEY MODAL ====== --}}
+                <div x-show="galleyModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog"
+                    aria-modal="true">
+                    <div
+                        class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div x-show="galleyModalOpen" x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                            @click="galleyModalOpen = false"></div>
+
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                        <div x-show="galleyModalOpen" x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave="ease-in duration-200"
+                            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            class="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <i class="fa-solid fa-file-arrow-up text-green-600"></i>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                                    <h3 class="text-lg leading-6 font-semibold text-gray-900">Add Publication Galley
+                                    </h3>
+                                    <p class="mt-1 text-sm text-gray-500">Upload a final file for readers to download.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <form
+                                action="{{ route('journal.workflow.galley.store', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                method="POST" enctype="multipart/form-data" class="mt-5 space-y-4">
+                                @csrf
+
+                                <div>
+                                    <label for="galley-label" class="block text-sm font-medium text-gray-700">
+                                        Galley Label <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="label" id="galley-label" required
+                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                                        <option value="PDF">PDF</option>
+                                        <option value="HTML">HTML</option>
+                                        <option value="EPUB">EPUB</option>
+                                        <option value="XML">XML (JATS)</option>
+                                        <option value="MP3">MP3 (Audio)</option>
+                                    </select>
+                                    <p class="mt-1 text-xs text-gray-500">Choose the format type for this file.</p>
+                                </div>
+
+                                <div>
+                                    <label for="galley-locale"
+                                        class="block text-sm font-medium text-gray-700">Language</label>
+                                    <select name="locale" id="galley-locale"
+                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                                        <option value="en">English</option>
+                                        <option value="id">Indonesian</option>
+                                        <option value="ar">Arabic</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="galley-file" class="block text-sm font-medium text-gray-700">
+                                        File <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="file" name="file" id="galley-file" required
+                                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                    <p class="mt-1 text-xs text-gray-500">Maximum file size: 50MB</p>
+                                </div>
+
+                                <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                                    <button type="submit"
+                                        class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-2 sm:text-sm">
+                                        <i class="fa-solid fa-upload mr-2"></i> Upload Galley
+                                    </button>
+                                    <button type="button" @click="galleyModalOpen = false"
+                                        class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ====== SCHEDULE FOR PUBLICATION MODAL ====== --}}
+                <div x-show="scheduleModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog"
+                    aria-modal="true">
+                    <div
+                        class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div x-show="scheduleModalOpen" x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                            @click="scheduleModalOpen = false"></div>
+
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                        <div x-show="scheduleModalOpen" x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave="ease-in duration-200"
+                            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            class="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <i class="fa-solid fa-calendar-plus text-indigo-600"></i>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                                    <h3 class="text-lg leading-6 font-semibold text-gray-900">Schedule for Publication
+                                    </h3>
+                                    <p class="mt-1 text-sm text-gray-500">Assign this submission to an issue.</p>
+                                </div>
+                            </div>
+
+                            <form
+                                action="{{ route('journal.workflow.assign-issue', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                method="POST" class="mt-5 space-y-4">
+                                @csrf
+
+                                <div>
+                                    <label for="issue-select" class="block text-sm font-medium text-gray-700">
+                                        Select Issue <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="mt-1 relative">
+                                        <template x-if="isLoadingIssues">
+                                            <div class="flex items-center justify-center py-4">
+                                                <i class="fa-solid fa-spinner fa-spin text-gray-400 mr-2"></i>
+                                                <span class="text-sm text-gray-500">Loading issues...</span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!isLoadingIssues && issues.length === 0">
+                                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                                <p class="text-sm text-amber-700">
+                                                    <i class="fa-solid fa-exclamation-triangle mr-1"></i>
+                                                    No issues found. Please create an issue first.
+                                                </p>
+                                            </div>
+                                        </template>
+                                        <template x-if="!isLoadingIssues && issues.length > 0">
+                                            <select name="issue_id" id="issue-select" required
+                                                x-model="selectedIssueId"
+                                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                                <option value="">-- Select an Issue --</option>
+                                                <template x-for="issue in issues" :key="issue.id">
+                                                    <option :value="issue.id" x-text="issue.label"></option>
+                                                </template>
+                                            </select>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input type="checkbox" id="permissions-confirmed"
+                                            name="permissions_confirmed"
+                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="permissions-confirmed" class="font-medium text-gray-700">Copyright
+                                            Confirmed</label>
+                                        <p class="text-gray-500">I confirm that all copyright and permissions are in
+                                            order.</p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                                    <button type="submit" :disabled="!selectedIssueId"
+                                        class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed sm:col-start-2 sm:text-sm">
+                                        <i class="fa-solid fa-calendar-check mr-2"></i> Save Schedule
+                                    </button>
+                                    <button type="button" @click="scheduleModalOpen = false"
+                                        class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
 
-        <div x-show="activeTab === 'publication'" class="p-12 text-center text-gray-500">Publication Metadata</div>
+        {{-- ==================== PUBLICATION TAB ==================== --}}
+        @php
+            $publication = $submission->currentPublication() ?? $submission->getOrCreatePublication();
+            $pubStatus = $publication->status ?? 1;
+            $pubAuthors = $publication->authors ?? $submission->authors;
+        @endphp
+        <div x-show="activeTab === 'publication'" x-cloak x-data="{
+            pubTab: 'title',
+            contributorModalOpen: false,
+            editingContributor: null,
+            issues: {{ json_encode($issueOptions) }},
+            sections: [],
+            isLoadingIssues: false,
+            isLoadingSections: false,
+        
+            async loadSections() {
+                this.isLoadingSections = true;
+                try {
+                    const res = await fetch('{{ route('journal.workflow.sections.list', $journal->slug) }}');
+                    this.sections = await res.json();
+                } catch (e) { console.error(e); }
+                this.isLoadingSections = false;
+            },
+        
+            openContributorModal(contributor = null) {
+                this.editingContributor = contributor;
+                this.contributorModalOpen = true;
+            },
+        
+            init() {
+                this.loadSections();
+            }
+        }">
+
+            {{-- Status Bar Header --}}
+            <div class="bg-white border-b border-gray-200 -mx-6 -mt-6 px-6 py-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-900">Publication</h2>
+                        @php
+                            $statusColors = [
+                                1 => 'bg-gray-100 text-gray-700',
+                                2 => 'bg-blue-100 text-blue-700',
+                                3 => 'bg-emerald-100 text-emerald-700',
+                                4 => 'bg-orange-100 text-orange-700',
+                            ];
+                            $statusLabels = [
+                                1 => 'Unscheduled',
+                                2 => 'Scheduled',
+                                3 => 'Published',
+                                4 => 'Unpublished',
+                            ];
+                        @endphp
+                        <span
+                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $statusColors[$pubStatus] ?? 'bg-gray-100 text-gray-700' }}">
+                            <span
+                                class="w-1.5 h-1.5 rounded-full mr-1.5 {{ $pubStatus == 3 ? 'bg-emerald-500' : ($pubStatus == 2 ? 'bg-blue-500' : 'bg-gray-400') }}"></span>
+                            {{ $statusLabels[$pubStatus] ?? 'Unknown' }}
+                        </span>
+                        @if ($publication && $publication->issue)
+                            <span class="text-sm text-gray-500">
+                                <i class="fa-solid fa-book text-gray-400 mr-1"></i>
+                                {{ $publication->issue->identifier }}
+                            </span>
+                        @endif
+                    </div>
+
+                    {{-- Main Action Button --}}
+                    @role('Editor|Section Editor|Admin|Super Admin')
+                        <div class="flex items-center gap-2">
+                            @if ($pubStatus == 3)
+                                <form
+                                    action="{{ route('journal.workflow.publication.unpublish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                    method="POST">
+                                    @csrf
+                                    <button type="submit" onclick="return confirm('Are you sure?')"
+                                        class="inline-flex items-center px-4 py-2 border border-orange-200 text-sm font-medium rounded-lg text-orange-700 bg-white hover:bg-orange-50">
+                                        <i class="fa-solid fa-eye-slash mr-2"></i> Unpublish
+                                    </button>
+                                </form>
+                            @elseif($pubStatus == 2)
+                                <form
+                                    action="{{ route('journal.workflow.publication.publish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                    method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm">
+                                        <i class="fa-solid fa-rocket mr-2"></i> Publish
+                                    </button>
+                                </form>
+                            @else
+                                <button @click="pubTab = 'issue'" :disabled="!issues.length"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fa-solid fa-calendar-plus mr-2"></i> Schedule for Publication
+                                </button>
+                            @endif
+                        </div>
+                    @endrole
+                </div>
+            </div>
+
+            {{-- Split Layout: Sidebar + Content --}}
+            <div class="flex gap-8">
+
+                {{-- Left Vertical Sidebar Navigation --}}
+                <nav class="w-56 flex-shrink-0">
+                    <div class="sticky top-24 space-y-1">
+                        <button @click="pubTab = 'title'"
+                            :class="pubTab === 'title' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-solid fa-heading w-5 mr-2 text-center"></i> Title & Abstract
+                        </button>
+                        <button @click="pubTab = 'contributors'"
+                            :class="pubTab === 'contributors' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-solid fa-users w-5 mr-2 text-center"></i> Contributors
+                            <span
+                                class="ml-auto text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">{{ $pubAuthors->count() }}</span>
+                        </button>
+                        <button @click="pubTab = 'metadata'"
+                            :class="pubTab === 'metadata' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-solid fa-tags w-5 mr-2 text-center"></i> Metadata
+                        </button>
+                        <button @click="pubTab = 'references'"
+                            :class="pubTab === 'references' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-solid fa-quote-left w-5 mr-2 text-center"></i> References
+                        </button>
+                        <button @click="pubTab = 'issue'"
+                            :class="pubTab === 'issue' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-solid fa-book-open w-5 mr-2 text-center"></i> Issue
+                        </button>
+                        <button @click="pubTab = 'license'"
+                            :class="pubTab === 'license' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-solid fa-scale-balanced w-5 mr-2 text-center"></i> License & DOI
+                        </button>
+                    </div>
+                </nav>
+
+                {{-- Right Content Area --}}
+                <div class="flex-1 min-w-0">
+
+                    {{-- ====== TITLE & ABSTRACT ====== --}}
+                    <div x-show="pubTab === 'title'"
+                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-base font-bold text-gray-900">Title & Abstract</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Edit the publication title and abstract.</p>
+                        </div>
+                        <form
+                            action="{{ route('journal.workflow.publication.title.update', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            method="POST" class="p-6 space-y-5">
+                            @csrf
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Title <span
+                                        class="text-red-500">*</span></label>
+                                <input type="text" name="title"
+                                    value="{{ old('title', $publication->title ?? $submission->title) }}" required
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-lg font-medium">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                                <input type="text" name="subtitle"
+                                    value="{{ old('subtitle', $publication->subtitle ?? $submission->subtitle) }}"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Abstract</label>
+                                <textarea name="abstract" rows="8"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('abstract', $publication->abstract ?? $submission->abstract) }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500">HTML formatting is allowed.</p>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-gray-100">
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    <i class="fa-solid fa-save mr-2"></i> Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- ====== CONTRIBUTORS ====== --}}
+                    <div x-show="pubTab === 'contributors'"
+                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-base font-bold text-gray-900">Contributors</h3>
+                                <p class="text-xs text-gray-500 mt-0.5">Manage authors and contributors for this
+                                    publication.</p>
+                            </div>
+                            @role('Editor|Section Editor|Admin|Super Admin')
+                                <button @click="openContributorModal()"
+                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    <i class="fa-solid fa-plus mr-1.5"></i> Add Contributor
+                                </button>
+                            @endrole
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            Affiliation</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                            Primary</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                            In Browse</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                            Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse($pubAuthors as $index => $author)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $index + 1 }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div
+                                                        class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold mr-3">
+                                                        {{ strtoupper(substr($author->name, 0, 1)) }}
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900">
+                                                            {{ $author->name }}</p>
+                                                        @if ($author->orcid)
+                                                            <a href="{{ $author->orcid_url }}" target="_blank"
+                                                                class="text-xs text-green-600 hover:underline">
+                                                                <i class="fa-brands fa-orcid mr-0.5"></i> ORCID
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $author->email }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                                {{ $author->affiliation ?? '-' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                @if ($author->is_corresponding)
+                                                    <i class="fa-solid fa-check-circle text-emerald-500"></i>
+                                                @else
+                                                    <span class="text-gray-300">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                @if ($author->include_in_browse ?? true)
+                                                    <i class="fa-solid fa-check-circle text-emerald-500"></i>
+                                                @else
+                                                    <span class="text-gray-300">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                                @role('Editor|Section Editor|Admin|Super Admin')
+                                                    <div class="flex items-center justify-end gap-1">
+                                                        <button type="button"
+                                                            @click="openContributorModal({
+                                                                id: '{{ $author->id }}',
+                                                                given_name: '{{ $author->given_name ?? '' }}',
+                                                                family_name: '{{ $author->family_name ?? '' }}',
+                                                                email: '{{ $author->email }}',
+                                                                affiliation: '{{ $author->affiliation ?? '' }}',
+                                                                country: '{{ $author->country ?? '' }}',
+                                                                orcid: '{{ $author->orcid ?? '' }}',
+                                                                is_corresponding: {{ $author->is_corresponding ? 'true' : 'false' }},
+                                                                include_in_browse: {{ $author->include_in_browse ?? true ? 'true' : 'false' }}
+                                                            })"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                                            <i class="fa-solid fa-pen"></i>
+                                                        </button>
+                                                        <form
+                                                            action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->id, 'author' => $author->id]) }}"
+                                                            method="POST" class="inline"
+                                                            onsubmit="return confirm('Remove this contributor?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @endrole
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center">
+                                                    <div
+                                                        class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                                        <i class="fa-solid fa-user-plus text-gray-400 text-xl"></i>
+                                                    </div>
+                                                    <p class="text-sm font-medium text-gray-900">No contributors yet
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 mt-1">Add authors and contributors
+                                                        to this publication.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- ====== METADATA ====== --}}
+                    <div x-show="pubTab === 'metadata'"
+                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-base font-bold text-gray-900">Metadata</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Keywords and other metadata for indexing.</p>
+                        </div>
+                        <form
+                            action="{{ route('journal.workflow.publication.metadata.update', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            method="POST" class="p-6 space-y-5">
+                            @csrf
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
+                                <input type="text" name="keywords"
+                                    value="{{ old('keywords', $publication->keywords ?? $submission->keywords) }}"
+                                    placeholder="Separate keywords with commas"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <p class="mt-1 text-xs text-gray-500">Enter keywords separated by commas (e.g., machine
+                                    learning, AI, neural networks)</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pages</label>
+                                <input type="text" name="pages"
+                                    value="{{ old('pages', $publication->pages ?? '') }}" placeholder="e.g., 1-12"
+                                    class="block w-48 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">URL Path</label>
+                                <div class="flex items-center">
+                                    <span
+                                        class="text-sm text-gray-500 mr-2">{{ config('app.url') }}/article/view/</span>
+                                    <input type="text" name="url_path"
+                                        value="{{ old('url_path', $publication->url_path ?? '') }}"
+                                        placeholder="custom-url-slug"
+                                        class="block w-64 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-gray-100">
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    <i class="fa-solid fa-save mr-2"></i> Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- ====== REFERENCES (Placeholder) ====== --}}
+                    <div x-show="pubTab === 'references'"
+                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-base font-bold text-gray-900">References</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Manage article references and citations.</p>
+                        </div>
+                        <div class="p-12 text-center">
+                            <div
+                                class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa-solid fa-quote-left text-gray-400 text-xl"></i>
+                            </div>
+                            <p class="text-sm font-medium text-gray-900">References Management</p>
+                            <p class="text-xs text-gray-500 mt-1">This feature will be available in a future update.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- ====== ISSUE (SCHEDULING) ====== --}}
+                    <div x-show="pubTab === 'issue'"
+                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-base font-bold text-gray-900">Issue</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Schedule this publication to an issue.</p>
+                        </div>
+                        <form
+                            action="{{ route('journal.workflow.publication.issue.assign', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            method="POST" class="p-6 space-y-5">
+                            @csrf
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Issue <span
+                                            class="text-red-500">*</span></label>
+                                    <template x-if="isLoadingIssues">
+                                        <div class="flex items-center py-2 text-sm text-gray-500">
+                                            <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
+                                        </div>
+                                    </template>
+                                    <template x-if="!isLoadingIssues">
+                                        <select name="issue_id" required
+                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                            <option value="">-- Select Issue --</option>
+                                            <template x-for="issue in issues" :key="issue.id">
+                                                <option :value="issue.id"
+                                                    :selected="issue.id === '{{ $publication->issue_id ?? '' }}'"
+                                                    x-text="issue.label">
+                                                </option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                                    <template x-if="isLoadingSections">
+                                        <div class="flex items-center py-2 text-sm text-gray-500">
+                                            <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
+                                        </div>
+                                    </template>
+                                    <template x-if="!isLoadingSections">
+                                        <select name="section_id"
+                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                            <option value="">-- Select Section --</option>
+                                            <template x-for="section in sections" :key="section.id">
+                                                <option :value="section.id"
+                                                    :selected="section
+                                                        .id === '{{ $publication->section_id ?? ($submission->section_id ?? '') }}'"
+                                                    x-text="section.title"></option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Pages</label>
+                                    <input type="text" name="pages"
+                                        value="{{ old('pages', $publication->pages ?? '') }}"
+                                        placeholder="e.g., 1-12"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date Published</label>
+                                    <input type="date" name="date_published"
+                                        value="{{ old('date_published', $publication->date_published?->format('Y-m-d') ?? '') }}"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            @if ($publication->issue_id)
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-calendar-check text-blue-500 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-medium text-blue-800">Currently Scheduled</p>
+                                            <p class="text-xs text-blue-600">
+                                                {{ $publication->issue->identifier ?? 'Unknown Issue' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="flex justify-between pt-4 border-t border-gray-100">
+                                @if ($publication->issue_id)
+                                    <form
+                                        action="{{ route('journal.workflow.publication.unschedule', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-600 bg-white hover:bg-gray-50">
+                                            <i class="fa-solid fa-calendar-xmark mr-2"></i> Unschedule
+                                        </button>
+                                    </form>
+                                @else
+                                    <div></div>
+                                @endif
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    <i class="fa-solid fa-calendar-check mr-2"></i>
+                                    {{ $publication->issue_id ? 'Update Schedule' : 'Schedule' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- ====== LICENSE & DOI ====== --}}
+                    <div x-show="pubTab === 'license'"
+                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-base font-bold text-gray-900">License & DOI</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Copyright, licensing, and identifier information.
+                            </p>
+                        </div>
+                        <form
+                            action="{{ route('journal.workflow.publication.license.update', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            method="POST" class="p-6 space-y-5">
+                            @csrf
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">DOI</label>
+                                <div class="flex items-center">
+                                    <span class="text-sm text-gray-500 mr-2">https://doi.org/</span>
+                                    <input type="text" name="doi"
+                                        value="{{ old('doi', $publication->doi ?? '') }}"
+                                        placeholder="10.xxxx/xxxxx"
+                                        class="block w-64 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
+                                        Holder</label>
+                                    <input type="text" name="copyright_holder"
+                                        value="{{ old('copyright_holder', $publication->copyright_holder ?? '') }}"
+                                        placeholder="e.g., The Author(s)"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Copyright Year</label>
+                                    <input type="number" name="copyright_year"
+                                        value="{{ old('copyright_year', $publication->copyright_year ?? date('Y')) }}"
+                                        min="1900" max="2100"
+                                        class="block w-32 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">License URL</label>
+                                <input type="url" name="license_url"
+                                    value="{{ old('license_url', $publication->license_url ?? '') }}"
+                                    placeholder="https://creativecommons.org/licenses/by/4.0/"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <p class="mt-1 text-xs text-gray-500">Common licenses: CC BY 4.0, CC BY-SA 4.0, CC
+                                    BY-NC 4.0</p>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-gray-100">
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    <i class="fa-solid fa-save mr-2"></i> Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+            {{-- ====== ADD/EDIT CONTRIBUTOR MODAL ====== --}}
+            <div x-show="contributorModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog"
+                aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div x-show="contributorModalOpen" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                        @click="contributorModalOpen = false"></div>
+
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                    <div x-show="contributorModalOpen" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave="ease-in duration-200"
+                        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        class="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+
+                        <div class="sm:flex sm:items-start mb-5">
+                            <div
+                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fa-solid fa-user-plus text-indigo-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                                <h3 class="text-lg leading-6 font-semibold text-gray-900"
+                                    x-text="editingContributor ? 'Edit Contributor' : 'Add Contributor'"></h3>
+                                <p class="mt-1 text-sm text-gray-500">Enter the contributor's information.</p>
+                            </div>
+                        </div>
+
+                        <form
+                            :action="editingContributor
+                                ?
+                                '{{ url('/' . $journal->slug . '/workflow') }}/' + '{{ $submission->id }}' +
+                                '/publication/contributor/' + editingContributor.id :
+                                '{{ route('journal.workflow.publication.contributor.store', ['journal' => $journal->slug, 'submission' => $submission->id]) }}'"
+                            method="POST" class="space-y-4">
+                            @csrf
+                            <template x-if="editingContributor">
+                                <input type="hidden" name="_method" value="PUT">
+                            </template>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="text" name="given_name" required
+                                        :value="editingContributor?.given_name || ''"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="text" name="family_name" required
+                                        :value="editingContributor?.family_name || ''"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email <span
+                                        class="text-red-500">*</span></label>
+                                <input type="email" name="email" required
+                                    :value="editingContributor?.email || ''"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Affiliation</label>
+                                <input type="text" name="affiliation"
+                                    :value="editingContributor?.affiliation || ''"
+                                    placeholder="e.g., Harvard University"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                                    <input type="text" name="country" :value="editingContributor?.country || ''"
+                                        placeholder="e.g., United States"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ORCID iD</label>
+                                    <input type="text" name="orcid" :value="editingContributor?.orcid || ''"
+                                        placeholder="0000-0000-0000-0000"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 pt-2">
+                                <div class="flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input type="checkbox" name="is_corresponding" value="1"
+                                            :checked="editingContributor?.is_corresponding"
+                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label class="font-medium text-gray-700">Principal contact for editorial
+                                            correspondence</label>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input type="checkbox" name="include_in_browse" value="1"
+                                            :checked="editingContributor?.include_in_browse ?? true"
+                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label class="font-medium text-gray-700">Include this contributor in browse
+                                            lists</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                                <button type="submit"
+                                    class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
+                                    <i class="fa-solid fa-save mr-2"></i> <span
+                                        x-text="editingContributor ? 'Update' : 'Add'"></span>
+                                </button>
+                                <button type="button"
+                                    @click="contributorModalOpen = false; editingContributor = null"
+                                    class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
 
         {{-- NEW DISCUSSION MODAL --}}
         <div x-show="discussionModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
@@ -1297,7 +2521,8 @@
                             </div>
                             <h3 class="text-lg leading-6 font-medium text-gray-900">File Added</h3>
                             <p class="text-sm text-gray-500 mt-2">The file <span class="font-bold"
-                                    x-text="tempUploadedFile && tempUploadedFile.name"></span> is ready to be attached.
+                                    x-text="tempUploadedFile && tempUploadedFile.name"></span> is ready to be
+                                attached.
                             </p>
                         </div>
                         <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
@@ -1320,8 +2545,8 @@
         <div x-show="fileModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
             aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div @click="fileModalOpen = false" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                    aria-hidden="true"></div>
+                <div @click="fileModalOpen = false"
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                 <div
                     class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
 
@@ -1410,7 +2635,8 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Search Reviewer</label>
                                 <div class="relative">
                                     <input type="text" x-model="reviewerSearch"
-                                        @input.debounce.300ms="searchReviewers()" placeholder="Type name or email..."
+                                        @input.debounce.300ms="searchReviewers()"
+                                        placeholder="Type name or email..."
                                         class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fa-solid fa-search text-gray-400"></i>
@@ -1513,7 +2739,8 @@
                                         required>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Due Date</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Due
+                                        Date</label>
                                     <input type="date" name="review_due_date" x-model="reviewDueDate"
                                         class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                         required>
@@ -1580,7 +2807,8 @@
                         <div class="space-y-4">
                             {{-- Editor Search --}}
                             <div>
-                                <label for="editor-search" class="block text-sm font-medium text-gray-700 mb-1">Search
+                                <label for="editor-search"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Search
                                     Editor</label>
                                 <div class="relative">
                                     <input type="text" id="editor-search" x-model="editorSearch"
@@ -1601,7 +2829,8 @@
                                         <div @click="selectEditor(editor)"
                                             class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50">
                                             <div class="flex items-center">
-                                                <span class="font-medium block truncate" x-text="editor.name"></span>
+                                                <span class="font-medium block truncate"
+                                                    x-text="editor.name"></span>
                                             </div>
                                             <span class="text-gray-500 text-xs" x-text="editor.email"></span>
                                         </div>
@@ -1610,7 +2839,8 @@
                             </div>
 
                             {{-- Selected Editor Display --}}
-                            <div x-show="selectedEditor" class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                            <div x-show="selectedEditor"
+                                class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center">
                                         <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm"
@@ -1653,7 +2883,8 @@
                                             x-model="editorRole" class="sr-only">
                                         <span class="flex flex-1 flex-col text-center">
                                             <i class="fa-solid fa-user-tag text-gray-500 text-lg mb-1"></i>
-                                            <span class="block text-xs font-medium text-gray-900">Section Editor</span>
+                                            <span class="block text-xs font-medium text-gray-900">Section
+                                                Editor</span>
                                         </span>
                                     </label>
                                 </div>
@@ -1967,7 +3198,8 @@
                                     class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
                             </div>
                             <div class="ml-3 text-sm">
-                                <label for="notify-author" class="font-medium text-gray-700">Notify the Author</label>
+                                <label for="notify-author" class="font-medium text-gray-700">Notify the
+                                    Author</label>
                                 <p class="text-gray-500">Send an email notification to the author about this decision.
                                 </p>
                             </div>

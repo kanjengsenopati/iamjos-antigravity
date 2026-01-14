@@ -27,13 +27,17 @@ class AuthController extends Controller
     {
         $credentials = $request->validated();
 
-        // 1. Cari user berdasarkan email
-        $user = User::where('email', $credentials['email'])->first();
+        // Determine if input is email or username
+        $loginInput = $credentials['email'];
+        $fieldType = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        // Find user by either email or username
+        $user = User::where($fieldType, $loginInput)->first();
 
         // 2. Guard Clause: Jika user tidak ada, langsung kembalikan error.
         // Pesan dibuat umum untuk keamanan.
         if (!$user) {
-            return back()->with('warning', 'Email atau password tidak sesuai.')
+            return back()->with('warning', 'Email/Username atau password tidak sesuai.')
                 ->withInput($request->only('email'));
         }
 
@@ -45,8 +49,14 @@ class AuthController extends Controller
         // }
 
         // 4. Coba lakukan autentikasi dengan kredensial & status aktif
+        // Prepare credentials for Auth generic attempt
+        $authCredentials = [
+            $fieldType => $loginInput,
+            'password' => $credentials['password']
+        ];
+
         // Menggunakan guard 'admin' adalah praktik yang baik untuk memisahkan sesi user biasa dan admin
-        if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::guard('web')->attempt($authCredentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             /** @var \App\Models\User $user */
@@ -79,7 +89,7 @@ class AuthController extends Controller
 
         // return back()->with('warning', $warningMessage)
         //     ->withInput($request->only('email'));
-        return back()->with('warning', 'Email atau password tidak sesuai.')
+        return back()->with('warning', 'Email/Username atau password tidak sesuai.')
             ->withInput($request->only('email'));
     }
 

@@ -304,6 +304,35 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/{submission}/promote-to-review', [SubmissionWorkflowController::class, 'promoteToReview'])->name('promote-review');
             Route::post('/{submission}/skip-review', [SubmissionWorkflowController::class, 'skipReview'])->name('skip-review');
             Route::post('/{submission}/decline', [SubmissionWorkflowController::class, 'decline'])->name('decline');
+
+            // Production Workflow Routes
+            Route::post('/{submission}/galley', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'storeGalley'])->name('galley.store');
+            Route::put('/{submission}/galley/{galley}', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'updateGalley'])->name('galley.update');
+            Route::delete('/{submission}/galley/{galley}', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'destroyGalley'])->name('galley.destroy');
+            Route::post('/{submission}/assign-issue', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'assignToIssue'])->name('assign-issue');
+            Route::post('/{submission}/unschedule', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'unschedule'])->name('unschedule');
+            Route::post('/{submission}/publish', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'publish'])->name('publish');
+            Route::post('/{submission}/unpublish', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'unpublish'])->name('unpublish');
+            Route::get('/issues', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'getIssues'])->name('issues.list');
+
+            // Publication Metadata Routes
+            Route::prefix('{submission}/publication')->name('publication.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Journal\PublicationController::class, 'show'])->name('show');
+                Route::post('/title', [\App\Http\Controllers\Journal\PublicationController::class, 'updateTitleAbstract'])->name('title.update');
+                Route::post('/metadata', [\App\Http\Controllers\Journal\PublicationController::class, 'updateMetadata'])->name('metadata.update');
+                Route::post('/license', [\App\Http\Controllers\Journal\PublicationController::class, 'updateLicense'])->name('license.update');
+                Route::post('/issue', [\App\Http\Controllers\Journal\PublicationController::class, 'assignIssue'])->name('issue.assign');
+                Route::post('/unschedule', [\App\Http\Controllers\Journal\PublicationController::class, 'unschedule'])->name('unschedule');
+                Route::post('/publish', [\App\Http\Controllers\Journal\PublicationController::class, 'publish'])->name('publish');
+                Route::post('/unpublish', [\App\Http\Controllers\Journal\PublicationController::class, 'unpublish'])->name('unpublish');
+
+                // Contributors
+                Route::post('/contributor', [\App\Http\Controllers\Journal\PublicationController::class, 'storeContributor'])->name('contributor.store');
+                Route::put('/contributor/{author}', [\App\Http\Controllers\Journal\PublicationController::class, 'updateContributor'])->name('contributor.update');
+                Route::delete('/contributor/{author}', [\App\Http\Controllers\Journal\PublicationController::class, 'destroyContributor'])->name('contributor.destroy');
+                Route::post('/contributors/reorder', [\App\Http\Controllers\Journal\PublicationController::class, 'reorderContributors'])->name('contributors.reorder');
+            });
+            Route::get('/sections', [\App\Http\Controllers\Journal\PublicationController::class, 'getSections'])->name('sections.list');
         });
 
         // --------- Editorial (Editor) ---------

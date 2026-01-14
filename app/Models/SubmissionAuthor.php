@@ -16,16 +16,24 @@ class SubmissionAuthor extends Model
      */
     protected $fillable = [
         'submission_id',
+        'publication_id',
         'user_id',
         'name',
+        'given_name',
+        'family_name',
+        'preferred_public_name',
         'first_name',
         'last_name',
         'email',
         'affiliation',
         'country',
         'orcid',
+        'url',
+        'biography',
         'is_corresponding',
         'is_primary_contact',
+        'include_in_browse',
+        'user_group_id',
         'sort_order',
     ];
 
@@ -59,6 +67,14 @@ class SubmissionAuthor extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the publication this author belongs to
+     */
+    public function publication(): BelongsTo
+    {
+        return $this->belongsTo(Publication::class, 'publication_id');
     }
 
     // =====================================================
