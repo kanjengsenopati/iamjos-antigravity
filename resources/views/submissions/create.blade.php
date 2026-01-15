@@ -69,6 +69,20 @@
                     </div>
                 @endif
 
+                <!-- Validation Errors (Frontend) -->
+                <div x-show="validationErrors.length > 0" x-cloak
+                    class="mx-8 mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+                        <h4 class="text-sm font-bold text-red-800">Please correct the following errors:</h4>
+                    </div>
+                    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+                        <template x-for="error in validationErrors" :key="error">
+                            <li x-text="error"></li>
+                        </template>
+                    </ul>
+                </div>
+
                 <!-- STEP 1: START -->
                 <div x-show="step === 1" x-transition class="p-8">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Submission Requirements</h2>
@@ -131,6 +145,17 @@
                             </label>
                         </div>
                     @endif
+
+                    <!-- Comments for the Editor -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Comments for the Editor
+                            (Optional)</label>
+                        <div id="commentsEditor" class="rounded-lg border border-gray-300">{{ old('comments_for_editor') }}
+                        </div>
+                        <textarea name="comments_for_editor" id="commentsHidden" class="hidden">{{ old('comments_for_editor') }}</textarea>
+                        <p class="text-xs text-gray-500 mt-2">These comments will be visible only to the editorial team and
+                            will be added as a discussion.</p>
+                    </div>
                 </div>
 
                 <!-- STEP 2: UPLOAD SUBMISSION -->
@@ -179,8 +204,8 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Title <span
                                     class="text-red-500">*</span></label>
                             <textarea name="title" x-model="title" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Article Title"
-                                required></textarea>
+                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="Article Title" required></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
@@ -301,16 +326,7 @@
                         </div>
                     </dl>
 
-                    <!-- Comments for the Editor -->
-                    <div class="mt-8 pt-6 border-t border-gray-200">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Comments for the Editor
-                            (Optional)</label>
-                        <textarea name="comments_for_editor" rows="4"
-                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="Enter any additional comments or notes for the editor...">{{ old('comments_for_editor') }}</textarea>
-                        <p class="text-xs text-gray-500 mt-1">These comments will be visible only to the editorial team.
-                        </p>
-                    </div>
+
                 </div>
 
                 <!-- Footer Buttons -->
@@ -322,8 +338,7 @@
                     <div x-show="step === 1"></div> <!-- Spacer -->
 
                     <button type="button" x-show="step < 4" @click="nextStep()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="!canProceed()">
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition">
                         Next <i class="fa-solid fa-arrow-right ml-1"></i>
                     </button>
 
@@ -338,8 +353,9 @@
     </div>
 
     <script>
-        // CKEditor Instance
+        // CKEditor Instances
         let editorInstance = null;
+        let commentsEditorInstance = null;
 
         // Custom Upload Adapter for CKEditor
         class CustomUploadAdapter {
@@ -384,6 +400,7 @@
 
         // Initialize CKEditor
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Abstract Editor
             ClassicEditor
                 .create(document.querySelector('#abstractEditor'), {
                     extraPlugins: [CustomUploadAdapterPlugin],
@@ -418,6 +435,31 @@
                 .catch(error => {
                     console.error('CKEditor initialization failed:', error);
                 });
+
+            // Initialize Comments Editor
+            ClassicEditor
+                .create(document.querySelector('#commentsEditor'), {
+                    extraPlugins: [CustomUploadAdapterPlugin],
+                    toolbar: {
+                        items: [
+                            'heading', '|',
+                            'bold', 'italic', '|',
+                            'bulletedList', 'numberedList', '|',
+                            'link', 'blockQuote', '|',
+                            'undo', 'redo'
+                        ]
+                    },
+                    placeholder: 'Enter your comments for the editor here...'
+                })
+                .then(editor => {
+                    commentsEditorInstance = editor;
+                    editor.model.document.on('change:data', () => {
+                        document.querySelector('#commentsHidden').value = editor.getData();
+                    });
+                })
+                .catch(error => {
+                    console.error('Comments CKEditor initialization failed:', error);
+                });
         });
 
         function submissionWizard() {
@@ -425,6 +467,7 @@
                 step: {{ $errors->any() ? 4 : 1 }},
                 requirements: [],
                 totalRequirements: {{ $submissionChecklists->count() }},
+                validationErrors: [],
                 title: '{{ old('title', '') }}',
                 subtitle: '{{ old('subtitle', '') }}',
                 abstract: '',
@@ -470,12 +513,65 @@
                 },
 
                 nextStep() {
-                    // Sync CKEditor before proceeding
+                    // Sync CKEditors
+                    if (this.step === 1 && commentsEditorInstance) {
+                        document.querySelector('#commentsHidden').value = commentsEditorInstance.getData();
+                    }
                     if (this.step === 3 && editorInstance) {
                         document.querySelector('#abstractHidden').value = editorInstance.getData();
                         this.abstractHtml = editorInstance.getData();
                     }
-                    if (this.canProceed()) {
+
+                    // Validate current step
+                    this.validationErrors = [];
+
+                    if (this.step === 1) {
+                        if (this.totalRequirements > 0 && this.requirements.length < this.totalRequirements) {
+                            this.validationErrors.push('Please check all required submission checklist items.');
+                        }
+                    } else if (this.step === 2) {
+                        if (!this.fileName) {
+                            this.validationErrors.push('Please upload a manuscript file.');
+                        }
+                    } else if (this.step === 3) {
+                        if (!this.title || this.title.trim() === '') {
+                            this.validationErrors.push('Title is required.');
+                        }
+
+                        if (editorInstance) {
+                            this.abstractHtml = editorInstance.getData();
+                            const div = document.createElement('div');
+                            div.innerHTML = this.abstractHtml;
+                            this.abstract = div.textContent || div.innerText || '';
+                        }
+                        if (!this.abstract || this.abstract.trim() === '') {
+                            this.validationErrors.push('Abstract is required.');
+                        }
+
+                        // Validate authors
+                        this.authors.forEach((author, index) => {
+                            if (!author.first_name || author.first_name.trim() === '') {
+                                this.validationErrors.push(`Contributor ${index + 1}: First name is required.`);
+                            }
+                            if (!author.last_name || author.last_name.trim() === '') {
+                                this.validationErrors.push(`Contributor ${index + 1}: Last name is required.`);
+                            }
+                            if (!author.email || author.email.trim() === '') {
+                                this.validationErrors.push(`Contributor ${index + 1}: Email is required.`);
+                            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(author.email)) {
+                                this.validationErrors.push(`Contributor ${index + 1}: Valid email is required.`);
+                            }
+                        });
+                    }
+
+                    // Show errors or proceed
+                    if (this.validationErrors.length > 0) {
+                        // Scroll to top to show errors
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    } else {
                         this.step++;
                     }
                 },
