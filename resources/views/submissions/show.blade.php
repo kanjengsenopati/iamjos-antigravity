@@ -205,7 +205,7 @@
         async loadAvailableFiles() {
             this.isLoadingFiles = true;
             try {
-                const res = await fetch(`{{ route('journal.workflow.available-files', ['journal' => $journal->slug, 'submission' => $submission->id]) }}`);
+                const res = await fetch(`{{ route('journal.workflow.available-files', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}`);
                 const data = await res.json();
                 this.availableFiles = data.files;
                 // Pre-select all files by default
@@ -3065,7 +3065,7 @@
                     </div>
 
                     <form
-                        action="{{ route('journal.workflow.promote-review', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        action="{{ route('journal.workflow.promote-review', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                         method="POST" class="mt-5">
                         @csrf
 
