@@ -1659,7 +1659,7 @@
                 this.isSavingOrder = true;
                 const order = this.reorderList.map(a => a.id);
                 try {
-                    const response = await fetch('{{ route('journal.workflow.publication.contributors.reorder', ['journal' => $journal->slug, 'submission' => $submission->id]) }}', {
+                    const response = await fetch('{{ route('journal.workflow.publication.contributors.reorder', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1806,7 +1806,7 @@
                             <p class="text-xs text-gray-500 mt-0.5">Edit the publication title and abstract.</p>
                         </div>
                         <form
-                            action="{{ route('journal.workflow.publication.title.update', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            action="{{ route('journal.workflow.publication.title.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                             method="POST" class="p-6 space-y-5">
                             @csrf
 
@@ -2681,7 +2681,7 @@
                     </div>
 
                     <form
-                        action="{{ route('journal.workflow.file.store', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        action="{{ route('journal.workflow.file.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                         method="POST" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="stage" x-model="uploadStage">
@@ -2745,7 +2745,7 @@
                     </div>
 
                     <form
-                        action="{{ route('journal.workflow.assign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        action="{{ route('journal.workflow.assign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                         method="POST">
                         @csrf
                         <input type="hidden" name="reviewer_id" x-bind:value="selectedReviewer?.id || ''">
@@ -2922,7 +2922,7 @@
                     </div>
 
                     <form
-                        action="{{ route('journal.workflow.assign-editor', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        action="{{ route('journal.workflow.assign-editor', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                         method="POST" class="mt-5">
                         @csrf
                         <div class="space-y-4">
