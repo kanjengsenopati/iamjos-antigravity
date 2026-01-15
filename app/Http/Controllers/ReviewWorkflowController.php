@@ -27,7 +27,7 @@ class ReviewWorkflowController extends Controller
         $request->validate([
             'reviewer_id' => 'required|exists:users,id',
             'review_method' => 'required|in:double_blind,blind,open',
-            'response_due_date' => 'required|date|after:today',
+            'response_due_date' => 'required|date|after_or_equal:today',
             'review_due_date' => 'required|date|after:response_due_date',
         ]);
 
