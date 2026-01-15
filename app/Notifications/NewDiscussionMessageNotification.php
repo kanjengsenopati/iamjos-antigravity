@@ -46,7 +46,7 @@ class NewDiscussionMessageNotification extends Notification implements ShouldQue
     {
         $submission = $this->discussion->submission;
         $journal = $submission->journal;
-        $url = url("/{$journal->slug}/submissions/{$submission->id}");
+        $url = url("/{$journal->slug}/submissions/{$submission->slug}");
 
         return (new MailMessage)
             ->subject('New Message in Discussion: ' . $this->discussion->subject)
@@ -78,7 +78,7 @@ class NewDiscussionMessageNotification extends Notification implements ShouldQue
             'sender_name' => $this->sender->name,
             'subject' => $this->discussion->subject,
             'message' => $this->sender->name . ' posted a message in "' . $this->discussion->subject . '".',
-            'url' => "/{$journal->slug}/submissions/{$submission->id}",
+            'url' => "/{$journal->slug}/submissions/{$submission->slug}",
         ];
     }
 }

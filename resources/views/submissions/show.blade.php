@@ -251,7 +251,7 @@
                 <a href="{{ route('journal.submissions.index', $journal->slug) }}"
                     class="hover:text-indigo-600">Submissions</a>
             </nav>
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex flex-wrap items-center gap-3 mb-2">
                 <h1 class="text-3xl font-bold text-gray-900 leading-tight">{{ $submission->title }}</h1>
                 @php
                     $stageColors = [
@@ -269,21 +269,49 @@
                     $currentStageColor = $stageColors[$submission->stage_id] ?? 'bg-gray-100 text-gray-800';
                     $currentStageName = $stageNames[$submission->stage_id] ?? 'Unknown';
 
-                    // Override for Declined/Published
+                    // Status badge
+                    $statusColors = [
+                        1 => 'bg-gray-100 text-gray-700', // Submitted
+                        2 => 'bg-emerald-100 text-emerald-700', // Published
+                        3 => 'bg-red-100 text-red-700', // Rejected
+                        4 => 'bg-orange-100 text-orange-700', // Revision Required
+                        5 => 'bg-blue-100 text-blue-700', // In Review
+                        6 => 'bg-green-100 text-green-700', // Accepted
+                    ];
+                    $statusNames = [
+                        1 => 'Submitted',
+                        2 => 'Published',
+                        3 => 'Rejected',
+                        4 => 'Revision Required',
+                        5 => 'in_review',
+                        6 => 'Accepted',
+                    ];
+                    $statusColor = $statusColors[$submission->status] ?? 'bg-gray-100 text-gray-700';
+                    $statusName = $statusNames[$submission->status] ?? 'Unknown';
+
+                    // Override stage for Declined/Published
                     if ($submission->status == 3) {
-                        // Declined
                         $currentStageColor = 'bg-red-100 text-red-800';
                         $currentStageName = 'Declined';
                     } elseif ($submission->status == 2) {
-                        // Published
                         $currentStageColor = 'bg-indigo-100 text-indigo-800';
                         $currentStageName = 'Published';
                     }
+
+                    $isRejected = $submission->status == 3;
                 @endphp
-                <span
-                    class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium {{ $currentStageColor }}">
-                    {{ $currentStageName }}
-                </span>
+                <div class="flex gap-2">
+                    <span
+                        class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium {{ $currentStageColor }}">
+                        <i class="fa-solid fa-layer-group mr-1.5 text-xs"></i>
+                        {{ $currentStageName }}
+                    </span>
+                    <span
+                        class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium {{ $statusColor }}">
+                        <i class="fa-solid fa-circle-dot mr-1.5 text-xs"></i>
+                        {{ $statusName }}
+                    </span>
+                </div>
             </div>
             <div class="mt-2 text-sm text-gray-500">
                 <span class="font-medium text-gray-900">
@@ -297,11 +325,28 @@
             </div>
         </div>
 
-        {{-- UNASSIGNED WARNING BANNER --}}
+        {{-- WARNING BANNERS --}}
         @php
             $isUnassigned = $submission->editorialAssignments->where('is_active', true)->isEmpty();
+            $isRejected = $submission->status == 3;
         @endphp
-        @if ($isUnassigned)
+
+        {{-- REJECTED WARNING BANNER --}}
+        @if ($isRejected)
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-ban text-red-500 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-red-800 font-semibold">This submission has been declined.</p>
+                        <p class="text-red-600 text-sm">Workflow actions are disabled. This submission will appear in
+                            the Archives.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- UNASSIGNED WARNING BANNER --}}
+        @if ($isUnassigned && !$isRejected)
             @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
                 <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
                     <div class="flex items-center justify-between">
@@ -377,98 +422,110 @@
                                     </button>
                                 @endif
                             </div>
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            File</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Date</th>
-                                        <th scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @forelse($submission->files->where('stage', 'submission') as $file)
-                                        <tr class="hover:bg-gray-50 transition-colors">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <div
-                                                        class="flex-shrink-0 h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                                                        @php
-                                                            $extension = strtolower(
-                                                                pathinfo($file->file_name, PATHINFO_EXTENSION),
-                                                            );
-                                                            $iconClass = match ($extension) {
-                                                                'pdf' => 'fa-file-pdf text-red-500',
-                                                                'doc', 'docx' => 'fa-file-word text-blue-500',
-                                                                'xls', 'xlsx' => 'fa-file-excel text-green-500',
-                                                                'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
-                                                                default => 'fa-file-lines text-gray-500',
-                                                            };
-                                                        @endphp
-                                                        <i class="fa-solid {{ $iconClass }} text-lg"></i>
-                                                    </div>
-                                                    <div class="ml-4">
-                                                        <div class="text-sm font-medium text-gray-900">
-                                                            {{ $file->file_name }}
-                                                        </div>
-                                                        <div class="text-xs text-gray-500">
-                                                            {{ ucfirst($file->file_type) }} •
-                                                            {{ number_format($file->file_size / 1024, 0) }} KB •
-                                                            v{{ $file->version ?? 1 }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $file->created_at->format('M d, Y') }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div class="flex items-center justify-end gap-2">
-                                                    {{-- Preview Button --}}
-                                                    @php
-                                                        $viewableExtensions = [
-                                                            'pdf',
-                                                            'doc',
-                                                            'docx',
-                                                            'xls',
-                                                            'xlsx',
-                                                            'ppt',
-                                                            'pptx',
-                                                            'odt',
-                                                            'ods',
-                                                            'odp',
-                                                        ];
-                                                        $isViewable = in_array($extension, $viewableExtensions);
-                                                    @endphp
-                                                    @if ($isViewable)
-                                                        <a href="{{ route('files.preview', $file) }}" title="Preview"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                                                            <i class="fa-solid fa-eye"></i>
-                                                        </a>
-                                                    @endif
-                                                    {{-- Download Button --}}
-                                                    <a href="{{ route('files.download', $file) }}" title="Download"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                                                        <i class="fa-solid fa-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
+                            {{-- Responsive wrapper for file table --}}
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full table-fixed divide-y divide-gray-200">
+                                    <colgroup>
+                                        <col class="w-1/2 md:w-auto">
+                                        <col class="w-32">
+                                        <col class="w-32 flex-shrink-0">
+                                    </colgroup>
+                                    <thead class="bg-gray-50">
                                         <tr>
-                                            <td colspan="3"
-                                                class="px-6 py-8 text-center text-sm text-gray-500 italic">
-                                                No files uploaded to this stage.
-                                            </td>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                File</th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Date</th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Actions</th>
                                         </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @forelse($submission->files->where('stage', 'submission') as $file)
+                                            <tr class="hover:bg-gray-50 transition-colors">
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center">
+                                                        <div
+                                                            class="flex-shrink-0 h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                                                            @php
+                                                                $extension = strtolower(
+                                                                    pathinfo($file->file_name, PATHINFO_EXTENSION),
+                                                                );
+                                                                $iconClass = match ($extension) {
+                                                                    'pdf' => 'fa-file-pdf text-red-500',
+                                                                    'doc', 'docx' => 'fa-file-word text-blue-500',
+                                                                    'xls', 'xlsx' => 'fa-file-excel text-green-500',
+                                                                    'ppt',
+                                                                    'pptx'
+                                                                        => 'fa-file-powerpoint text-orange-500',
+                                                                    default => 'fa-file-lines text-gray-500',
+                                                                };
+                                                            @endphp
+                                                            <i class="fa-solid {{ $iconClass }} text-lg"></i>
+                                                        </div>
+                                                        <div class="ml-4 min-w-0 flex-1">
+                                                            <div class="text-sm font-medium text-gray-900 truncate"
+                                                                title="{{ $file->file_name }}">
+                                                                {{ $file->file_name }}
+                                                            </div>
+                                                            <div class="text-xs text-gray-500">
+                                                                {{ ucfirst($file->file_type) }} •
+                                                                {{ number_format($file->file_size / 1024, 0) }} KB •
+                                                                v{{ $file->version ?? 1 }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ $file->created_at->format('M d, Y') }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <div class="flex items-center justify-end gap-2">
+                                                        {{-- Preview Button --}}
+                                                        @php
+                                                            $viewableExtensions = [
+                                                                'pdf',
+                                                                'doc',
+                                                                'docx',
+                                                                'xls',
+                                                                'xlsx',
+                                                                'ppt',
+                                                                'pptx',
+                                                                'odt',
+                                                                'ods',
+                                                                'odp',
+                                                            ];
+                                                            $isViewable = in_array($extension, $viewableExtensions);
+                                                        @endphp
+                                                        @if ($isViewable)
+                                                            <a href="{{ route('files.preview', $file) }}"
+                                                                title="Preview"
+                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                                                <i class="fa-solid fa-eye"></i>
+                                                            </a>
+                                                        @endif
+                                                        {{-- Download Button --}}
+                                                        <a href="{{ route('files.download', $file) }}" title="Download"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                                                            <i class="fa-solid fa-download"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3"
+                                                    class="px-6 py-8 text-center text-sm text-gray-500 italic">
+                                                    No files uploaded to this stage.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         {{-- Discussions Panel - Stage 1: Submission --}}
@@ -494,7 +551,21 @@
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow Actions
                                 </h4>
                                 @role('Editor|Section Editor|Admin|Super Admin')
-                                    @if ($isUnassigned)
+                                    @if ($isRejected)
+                                        {{-- RED ALERT: Locked state for rejected submissions --}}
+                                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                            <div class="flex items-start">
+                                                <i class="fa-solid fa-lock text-red-500 mt-0.5 mr-2"></i>
+                                                <div>
+                                                    <p class="text-sm font-semibold text-red-800">Submission Declined</p>
+                                                    <p class="text-xs text-red-600 mt-1">
+                                                        This submission has been declined and archived. No further actions are
+                                                        allowed.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @elseif ($isUnassigned)
                                         {{-- BLUE INFO BOX: Disabled state for unassigned --}}
                                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                                             <div class="flex items-start">
@@ -504,110 +575,156 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        {{-- Disabled buttons --}}
+                                        {{-- DISABLED STATE: Show grayed out buttons for unassigned --}}
                                         <button disabled
-                                            class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                            class="w-full mb-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
                                             <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
                                         </button>
                                         <button disabled
-                                            class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                            <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
-                                        </button>
-                                        <button disabled
-                                            class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg cursor-not-allowed text-sm font-medium">
+                                            class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
                                             <i class="fa-solid fa-ban mr-2"></i>Decline Submission
                                         </button>
                                     @else
-                                        {{-- Assigned, check if stage is active --}}
-                                        @if ($submission->stage_id == 1 && $submission->status != 3)
-                                            {{-- Normal enabled buttons (Modal Triggers) --}}
-                                            <div class="space-y-2">
-                                                {{-- Send to Review Button --}}
-                                                <button @click="openSendToReviewModal()"
-                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                                                    <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
-                                                </button>
-
-                                                {{-- Accept & Skip Review Button --}}
-                                                <button @click="openSkipReviewModal()"
-                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                                                    <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
-                                                </button>
-
-                                                {{-- Decline Submission Button --}}
-                                                <button @click="declineModalOpen = true; resetDeclineModal()"
-                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-red-200 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                                                    <i class="fa-solid fa-ban mr-2"></i>Decline Submission
-                                                </button>
-                                            </div>
-                                        @else
-                                            {{-- Disabled State (Decision Made) --}}
-                                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                                                <div class="flex items-start">
-                                                    <i class="fa-solid fa-check-circle text-gray-500 mt-0.5 mr-2"></i>
-                                                    <p class="text-sm text-gray-600">
-                                                        @if ($submission->status == 3)
-                                                            Submission has been declined.
-                                                        @elseif($submission->stage_id > 1)
-                                                            Submission has moved to the
-                                                            <strong>{{ ucfirst($stageNames[$submission->stage_id] ?? 'next') }}</strong>
-                                                            stage.
-                                                        @endif
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button disabled
-                                                class="w-full mb-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                                <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
-                                            </button>
-                                            <button disabled
-                                                class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                                <i class="fa-solid fa-ban mr-2"></i>Decline Submission
-                                            </button>
-                                        @endif
+                                        {{-- ACTIVE STATE: Enabled workflow actions --}}
+                                        <button @click="openSendToReviewModal()"
+                                            class="w-full mb-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors">
+                                            <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                        </button>
+                                        <button @click="openSkipReviewModal()"
+                                            class="w-full mb-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors">
+                                            <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
+                                        </button>
+                                        <button @click="declineModalOpen = true; resetDeclineModal()"
+                                            class="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors">
+                                            <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                        </button>
                                     @endif
                                 @else
                                     <p class="text-sm text-gray-500 italic">Actions available to Editors.</p>
                                 @endrole
                             </div>
 
-                            {{-- Participants --}}
+                            {{-- Participants (Modernized - OJS 3.3 Style) --}}
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-4">
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants</h4>
                                     @role('Journal Manager|Admin|Super Admin')
                                         <button @click="assignEditorModalOpen = true; resetEditorModal()"
-                                            class="text-xs text-indigo-600 font-medium hover:underline">
-                                            + Assign
+                                            class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
+                                            <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
                                         </button>
                                     @endrole
                                 </div>
-                                <ul class="space-y-3">
-                                    @forelse($submission->editorialAssignments->where('is_active', true) as $assignment)
-                                        <li class="flex items-center justify-between text-sm">
-                                            <div class="flex items-center">
-                                                <span class="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
-                                                <span
-                                                    class="font-medium text-gray-900">{{ $assignment->user->name }}</span>
-                                            </div>
-                                            <span
-                                                class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $assignment->role)) }}</span>
-                                        </li>
-                                    @empty
-                                        <li class="text-sm text-gray-400 italic">No editors assigned</li>
-                                    @endforelse
 
-                                    {{-- Always show the submitting author --}}
-                                    <li
-                                        class="flex items-center justify-between text-sm border-t border-gray-100 pt-3 mt-3">
-                                        <div class="flex items-center">
-                                            <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
-                                            <span
-                                                class="font-medium text-gray-900">{{ $submission->authors->first()->name ?? 'Unknown Author' }}</span>
-                                        </div>
-                                        <span class="text-xs text-gray-500">Author</span>
-                                    </li>
-                                </ul>
+                                @php
+                                    // Group participants by role
+                                    $groupedParticipants = [
+                                        'Journal Manager' => [],
+                                        'Editor' => [],
+                                        'Section Editor' => [],
+                                        'Author' => [],
+                                        'Reviewer' => [],
+                                    ];
+
+                                    // Add editorial assignments
+                                    foreach (
+                                        $submission->editorialAssignments->where('is_active', true)
+                                        as $assignment
+                                    ) {
+                                        $roleName = ucfirst(str_replace('_', ' ', $assignment->role));
+                                        if (!isset($groupedParticipants[$roleName])) {
+                                            $groupedParticipants[$roleName] = [];
+                                        }
+                                        $groupedParticipants[$roleName][] = [
+                                            'user' => $assignment->user,
+                                            'role' => $roleName,
+                                        ];
+                                    }
+
+                                    // Add submitting author
+                                    if ($submission->authors->first()) {
+                                        $groupedParticipants['Author'][] = [
+                                            'user' => $submission->authors->first(),
+                                            'role' => 'Author',
+                                        ];
+                                    }
+
+                                    // Role colors and initials
+                                    $roleColors = [
+                                        'Journal Manager' => 'bg-purple-500',
+                                        'Editor' => 'bg-blue-500',
+                                        'Section Editor' => 'bg-indigo-500',
+                                        'Author' => 'bg-amber-500',
+                                        'Reviewer' => 'bg-emerald-500',
+                                    ];
+                                @endphp
+
+                                <div class="space-y-4">
+                                    @foreach ($groupedParticipants as $role => $members)
+                                        @if (count($members) > 0)
+                                            {{-- Role Group Header --}}
+                                            <div>
+                                                <h5
+                                                    class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                                                    {{ $role }}
+                                                </h5>
+                                                <div class="space-y-2">
+                                                    @foreach ($members as $member)
+                                                        @php
+                                                            $user = $member['user'];
+                                                            $initials = strtoupper(substr($user->name, 0, 1));
+                                                            if (str_contains($user->name, ' ')) {
+                                                                $parts = explode(' ', $user->name);
+                                                                $initials = strtoupper(
+                                                                    substr($parts[0], 0, 1) .
+                                                                        substr($parts[1] ?? '', 0, 1),
+                                                                );
+                                                            }
+                                                            $avatarColor = $roleColors[$role] ?? 'bg-gray-500';
+                                                        @endphp
+                                                        {{-- User Item --}}
+                                                        <div
+                                                            class="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                                                            {{-- Avatar --}}
+                                                            <div
+                                                                class="w-9 h-9 rounded-full {{ $avatarColor }} flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                                {{ $initials }}
+                                                            </div>
+                                                            {{-- Name --}}
+                                                            <div class="flex-1 min-w-0">
+                                                                <p class="text-sm font-semibold text-gray-900 truncate">
+                                                                    {{ $user->name }}</p>
+                                                                <p class="text-xs text-gray-500 truncate">
+                                                                    {{ $user->email }}</p>
+                                                            </div>
+                                                            {{-- Hover Actions --}}
+                                                            <div
+                                                                class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                @role('Admin|Super Admin')
+                                                                    <button title="Notify"
+                                                                        class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors">
+                                                                        <i class="fa-solid fa-envelope text-xs"></i>
+                                                                    </button>
+                                                                    @if ($role !== 'Author')
+                                                                        <button title="Remove"
+                                                                            class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                                                                            <i class="fa-solid fa-trash text-xs"></i>
+                                                                        </button>
+                                                                    @endif
+                                                                @endrole
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+
+                                    @if (array_sum(array_map('count', $groupedParticipants)) === 0)
+                                        <p class="text-sm text-gray-400 italic text-center py-4">No participants assigned
+                                        </p>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endrole
@@ -717,7 +834,7 @@
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <form
-                                                        action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->id, 'assignment' => $assignment->id]) }}"
+                                                        action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
                                                         method="POST" class="inline"
                                                         onsubmit="return confirm('Remove this reviewer?')">
                                                         @csrf
@@ -3178,7 +3295,7 @@
                     </div>
 
                     <form
-                        action="{{ route('journal.workflow.skip-review', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        action="{{ route('journal.workflow.skip-review', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                         method="POST" class="mt-5">
                         @csrf
 
@@ -3297,7 +3414,7 @@
                     </div>
 
                     <form
-                        action="{{ route('journal.workflow.decline', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                        action="{{ route('journal.workflow.decline', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                         method="POST" class="mt-5">
                         @csrf
 

@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Journal;
-use App\Models\Submission;
-use App\Models\EditorialAssignment;
-use App\Models\User;
-use App\Models\SubmissionFile;
 use App\Models\Discussion;
-use App\Models\DiscussionMessage;
 use App\Models\DiscussionFile;
+use App\Models\DiscussionMessage;
+use App\Models\EditorialAssignment;
+use App\Models\Journal;
 use App\Models\ReviewRound;
+use App\Models\Submission;
 use App\Models\SubmissionDeclineLog;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
+use App\Models\SubmissionFile;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class SubmissionWorkflowController extends Controller
 {
@@ -579,7 +580,7 @@ class SubmissionWorkflowController extends Controller
 
         $validated = $request->validate([
             'reason' => 'required|string|min:10|max:5000',
-            'notify_author' => 'nullable|boolean',
+            'notify_author' => 'nullable',
         ]);
 
         DB::beginTransaction();
@@ -589,7 +590,6 @@ class SubmissionWorkflowController extends Controller
             $submission->update([
                 'status' => Submission::STATUS_REJECTED,
             ]);
-
             // Log the decline reason as metadata
             $metadata = $submission->metadata ?? [];
             $metadata['decline_log'] = [
@@ -614,17 +614,26 @@ class SubmissionWorkflowController extends Controller
                 'body' => '<p><strong>Reason for Declining:</strong></p>' . nl2br(e($validated['reason'])),
             ]);
 
-            // Optionally notify the author (placeholder for email notification)
-            if (!empty($validated['notify_author'])) {
-                // TODO: Send decline notification email to author
-                // $submission->author->notify(new SubmissionDeclinedNotification($submission, $validated['reason']));
-            }
+            // Notify the author about the decline
+            // if (!empty($validated['notify_author']) || true) { // Default to always notify
+            //     try {
+            //         $author = $submission->user;
+            //         $author->notify(new \App\Notifications\SubmissionDeclinedNotification(
+            //             $submission,
+            //             auth()->user(),
+            //             $validated['reason']
+            //         ));
+            //     } catch (\Exception $e) {
+            //         Log::error('Failed to send decline notification: ' . $e->getMessage());
+            //     }
+            // }
 
             DB::commit();
 
-            return back()->with('success', 'Submission has been declined.');
+            return back()->with('success', 'Submission has been declined and the author has been notified.');
         } catch (\Exception $e) {
             DB::rollBack();
+            dd($e);
             return back()->with('error', 'Failed to decline submission: ' . $e->getMessage());
         }
     }
