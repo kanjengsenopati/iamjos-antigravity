@@ -185,9 +185,11 @@ class PublicationController extends Controller
             'order.*' => 'uuid',
         ]);
 
+        $publication = $submission->getOrCreatePublication();
+
         foreach ($request->order as $index => $authorId) {
             SubmissionAuthor::where('id', $authorId)
-                ->where('submission_id', $submission->id)
+                ->where('publication_id', $publication->id)
                 ->update(['sort_order' => $index]);
         }
 

@@ -285,6 +285,14 @@ class Submission extends Model
                 'abstract' => $this->abstract,
                 'keywords' => $this->keywords,
             ]);
+
+            // Copy authors from submission to publication
+            foreach ($this->authors as $author) {
+                $newAuthor = $author->replicate();
+                $newAuthor->submission_id = null;
+                $newAuthor->publication_id = $publication->id;
+                $newAuthor->save();
+            }
         }
 
         return $publication;

@@ -361,17 +361,21 @@
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
                     {{-- Main Panel Area --}}
-                    <div class="lg:col-span-3 space-y-8">
+                    <div
+                        class="{{ auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])? 'lg:col-span-3': 'lg:col-span-4' }} space-y-8">
 
                         {{-- Files Panel --}}
                         <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
                             <div
                                 class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                 <h3 class="text-base font-bold text-gray-900">Submission Files</h3>
-                                <button @click="fileModalOpen = true"
-                                    class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                                    + Upload File
-                                </button>
+                                @if (auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']) ||
+                                        !$submission->submitted_at)
+                                    <button @click="fileModalOpen = true"
+                                        class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                        + Upload File
+                                    </button>
+                                @endif
                             </div>
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -483,128 +487,130 @@
 
 
                     {{-- Active Stage Placeholder for other tabs --}}
-                    <div class="lg:col-span-1 space-y-6">
-                        {{-- Workflow Actions --}}
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow Actions
-                            </h4>
-                            @role('Editor|Section Editor|Admin|Super Admin')
-                                @if ($isUnassigned)
-                                    {{-- BLUE INFO BOX: Disabled state for unassigned --}}
-                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                                        <div class="flex items-start">
-                                            <i class="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
-                                            <p class="text-sm text-blue-700">
-                                                Assign an editor to enable the editorial decisions for this stage.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    {{-- Disabled buttons --}}
-                                    <button disabled
-                                        class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                        <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
-                                    </button>
-                                    <button disabled
-                                        class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                        <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
-                                    </button>
-                                    <button disabled
-                                        class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg cursor-not-allowed text-sm font-medium">
-                                        <i class="fa-solid fa-ban mr-2"></i>Decline Submission
-                                    </button>
-                                @else
-                                    {{-- Assigned, check if stage is active --}}
-                                    @if ($submission->stage_id == 1 && $submission->status != 3)
-                                        {{-- Normal enabled buttons (Modal Triggers) --}}
-                                        <div class="space-y-2">
-                                            {{-- Send to Review Button --}}
-                                            <button @click="openSendToReviewModal()"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                                                <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
-                                            </button>
-
-                                            {{-- Accept & Skip Review Button --}}
-                                            <button @click="openSkipReviewModal()"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                                                <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
-                                            </button>
-
-                                            {{-- Decline Submission Button --}}
-                                            <button @click="declineModalOpen = true; resetDeclineModal()"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-red-200 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                                                <i class="fa-solid fa-ban mr-2"></i>Decline Submission
-                                            </button>
-                                        </div>
-                                    @else
-                                        {{-- Disabled State (Decision Made) --}}
-                                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                    @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                        <div class="lg:col-span-1 space-y-6">
+                            {{-- Workflow Actions --}}
+                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow Actions
+                                </h4>
+                                @role('Editor|Section Editor|Admin|Super Admin')
+                                    @if ($isUnassigned)
+                                        {{-- BLUE INFO BOX: Disabled state for unassigned --}}
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                                             <div class="flex items-start">
-                                                <i class="fa-solid fa-check-circle text-gray-500 mt-0.5 mr-2"></i>
-                                                <p class="text-sm text-gray-600">
-                                                    @if ($submission->status == 3)
-                                                        Submission has been declined.
-                                                    @elseif($submission->stage_id > 1)
-                                                        Submission has moved to the
-                                                        <strong>{{ ucfirst($stageNames[$submission->stage_id] ?? 'next') }}</strong>
-                                                        stage.
-                                                    @endif
+                                                <i class="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                                                <p class="text-sm text-blue-700">
+                                                    Assign an editor to enable the editorial decisions for this stage.
                                                 </p>
                                             </div>
                                         </div>
+                                        {{-- Disabled buttons --}}
                                         <button disabled
-                                            class="w-full mb-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                            class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
                                             <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
                                         </button>
                                         <button disabled
-                                            class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                            class="w-full mb-2 px-4 py-2.5 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                            <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
+                                        </button>
+                                        <button disabled
+                                            class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg cursor-not-allowed text-sm font-medium">
                                             <i class="fa-solid fa-ban mr-2"></i>Decline Submission
                                         </button>
-                                    @endif
-                                @endif
-                            @else
-                                <p class="text-sm text-gray-500 italic">Actions available to Editors.</p>
-                            @endrole
-                        </div>
+                                    @else
+                                        {{-- Assigned, check if stage is active --}}
+                                        @if ($submission->stage_id == 1 && $submission->status != 3)
+                                            {{-- Normal enabled buttons (Modal Triggers) --}}
+                                            <div class="space-y-2">
+                                                {{-- Send to Review Button --}}
+                                                <button @click="openSendToReviewModal()"
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                                    <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                                </button>
 
-                        {{-- Participants --}}
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            <div class="flex justify-between items-center mb-4">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants</h4>
-                                @role('Journal Manager|Admin|Super Admin')
-                                    <button @click="assignEditorModalOpen = true; resetEditorModal()"
-                                        class="text-xs text-indigo-600 font-medium hover:underline">
-                                        + Assign
-                                    </button>
+                                                {{-- Accept & Skip Review Button --}}
+                                                <button @click="openSkipReviewModal()"
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                                                    <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
+                                                </button>
+
+                                                {{-- Decline Submission Button --}}
+                                                <button @click="declineModalOpen = true; resetDeclineModal()"
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-red-200 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                                                    <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                                </button>
+                                            </div>
+                                        @else
+                                            {{-- Disabled State (Decision Made) --}}
+                                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                                                <div class="flex items-start">
+                                                    <i class="fa-solid fa-check-circle text-gray-500 mt-0.5 mr-2"></i>
+                                                    <p class="text-sm text-gray-600">
+                                                        @if ($submission->status == 3)
+                                                            Submission has been declined.
+                                                        @elseif($submission->stage_id > 1)
+                                                            Submission has moved to the
+                                                            <strong>{{ ucfirst($stageNames[$submission->stage_id] ?? 'next') }}</strong>
+                                                            stage.
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button disabled
+                                                class="w-full mb-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                                <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                            </button>
+                                            <button disabled
+                                                class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                                <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                            </button>
+                                        @endif
+                                    @endif
+                                @else
+                                    <p class="text-sm text-gray-500 italic">Actions available to Editors.</p>
                                 @endrole
                             </div>
-                            <ul class="space-y-3">
-                                @forelse($submission->editorialAssignments->where('is_active', true) as $assignment)
-                                    <li class="flex items-center justify-between text-sm">
-                                        <div class="flex items-center">
-                                            <span class="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
-                                            <span
-                                                class="font-medium text-gray-900">{{ $assignment->user->name }}</span>
-                                        </div>
-                                        <span
-                                            class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $assignment->role)) }}</span>
-                                    </li>
-                                @empty
-                                    <li class="text-sm text-gray-400 italic">No editors assigned</li>
-                                @endforelse
 
-                                {{-- Always show the submitting author --}}
-                                <li
-                                    class="flex items-center justify-between text-sm border-t border-gray-100 pt-3 mt-3">
-                                    <div class="flex items-center">
-                                        <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
-                                        <span
-                                            class="font-medium text-gray-900">{{ $submission->authors->first()->name ?? 'Unknown Author' }}</span>
-                                    </div>
-                                    <span class="text-xs text-gray-500">Author</span>
-                                </li>
-                            </ul>
+                            {{-- Participants --}}
+                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants</h4>
+                                    @role('Journal Manager|Admin|Super Admin')
+                                        <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                            class="text-xs text-indigo-600 font-medium hover:underline">
+                                            + Assign
+                                        </button>
+                                    @endrole
+                                </div>
+                                <ul class="space-y-3">
+                                    @forelse($submission->editorialAssignments->where('is_active', true) as $assignment)
+                                        <li class="flex items-center justify-between text-sm">
+                                            <div class="flex items-center">
+                                                <span class="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+                                                <span
+                                                    class="font-medium text-gray-900">{{ $assignment->user->name }}</span>
+                                            </div>
+                                            <span
+                                                class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $assignment->role)) }}</span>
+                                        </li>
+                                    @empty
+                                        <li class="text-sm text-gray-400 italic">No editors assigned</li>
+                                    @endforelse
+
+                                    {{-- Always show the submitting author --}}
+                                    <li
+                                        class="flex items-center justify-between text-sm border-t border-gray-100 pt-3 mt-3">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
+                                            <span
+                                                class="font-medium text-gray-900">{{ $submission->authors->first()->name ?? 'Unknown Author' }}</span>
+                                        </div>
+                                        <span class="text-xs text-gray-500">Author</span>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
+                    @endrole
 
                 </div>
             </div>
@@ -1589,7 +1595,10 @@
         @php
             $publication = $submission->currentPublication() ?? $submission->getOrCreatePublication();
             $pubStatus = $publication->status ?? 1;
-            $pubAuthors = $publication->authors ?? $submission->authors;
+            $pubAuthors =
+                $publication->authors && $publication->authors->isNotEmpty()
+                    ? $publication->authors
+                    : $submission->authors;
         @endphp
         <div x-show="activeTab === 'publication'" x-cloak x-data="{
             pubTab: 'title',
@@ -1616,6 +1625,59 @@
         
             init() {
                 this.loadSections();
+            },
+        
+            // Reordering Logic
+            reorderModalOpen: false,
+            reorderList: [],
+            allAuthors: {{ json_encode($pubAuthors) }},
+            isSavingOrder: false,
+        
+            openReorderModal() {
+                // Clone authors to local list for manipulation
+                this.reorderList = JSON.parse(JSON.stringify(this.allAuthors));
+                this.reorderModalOpen = true;
+            },
+        
+            moveUp(index) {
+                if (index > 0) {
+                    const temp = this.reorderList[index];
+                    this.reorderList[index] = this.reorderList[index - 1];
+                    this.reorderList[index - 1] = temp;
+                }
+            },
+        
+            moveDown(index) {
+                if (index < this.reorderList.length - 1) {
+                    const temp = this.reorderList[index];
+                    this.reorderList[index] = this.reorderList[index + 1];
+                    this.reorderList[index + 1] = temp;
+                }
+            },
+        
+            async saveOrder() {
+                this.isSavingOrder = true;
+                const order = this.reorderList.map(a => a.id);
+                try {
+                    const response = await fetch('{{ route('journal.workflow.publication.contributors.reorder', ['journal' => $journal->slug, 'submission' => $submission->id]) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ order })
+                    });
+        
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to save order. Please try again.');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('An error occurred.');
+                }
+                this.isSavingOrder = false;
             }
         }">
 
@@ -1765,7 +1827,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Abstract</label>
-                                <textarea name="abstract" rows="8"
+                                <textarea name="abstract" id="publicationAbstract" rows="8"
                                     class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('abstract', $publication->abstract ?? $submission->abstract) }}</textarea>
                                 <p class="mt-1 text-xs text-gray-500">HTML formatting is allowed.</p>
                             </div>
@@ -1792,6 +1854,10 @@
                                 <button @click="openContributorModal()"
                                     class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
                                     <i class="fa-solid fa-plus mr-1.5"></i> Add Contributor
+                                </button>
+                                <button @click="openReorderModal()" :disabled="allAuthors.length < 2"
+                                    class="ml-2 inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fa-solid fa-arrow-down-short-wide mr-1.5"></i> Order
                                 </button>
                             @endrole
                         </div>
@@ -2288,6 +2354,77 @@
                 </div>
             </div>
 
+            {{-- ====== REORDER CONTRIBUTORS MODAL ====== --}}
+            <div x-show="reorderModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog"
+                aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div x-show="reorderModalOpen" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                        @click="reorderModalOpen = false"></div>
+
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                    <div x-show="reorderModalOpen" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave="ease-in duration-200"
+                        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        class="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full sm:p-6">
+
+                        <div class="sm:flex sm:items-start mb-5">
+                            <div
+                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fa-solid fa-arrow-down-short-wide text-indigo-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                                <h3 class="text-lg leading-6 font-semibold text-gray-900">Order Contributors</h3>
+                                <p class="mt-1 text-sm text-gray-500">Drag and drop or use arrows to change the order.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="mt-2 text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-1 max-h-[300px] overflow-y-auto">
+                            <ul class="space-y-1">
+                                <template x-for="(author, index) in reorderList" :key="author.id">
+                                    <li
+                                        class="flex items-center justify-between p-2 bg-white border border-gray-200 rounded shadow-sm">
+                                        <span class="font-medium text-gray-900 truncate flex-1 mr-2"
+                                            x-text="author.name"></span>
+                                        <div class="flex items-center space-x-1">
+                                            <button type="button" @click="moveUp(index)" :disabled="index === 0"
+                                                class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400">
+                                                <i class="fa-solid fa-arrow-up"></i>
+                                            </button>
+                                            <button type="button" @click="moveDown(index)"
+                                                :disabled="index === reorderList.length - 1"
+                                                class="p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400">
+                                                <i class="fa-solid fa-arrow-down"></i>
+                                            </button>
+                                        </div>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+
+                        <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button type="button" @click="saveOrder()" :disabled="isSavingOrder"
+                                class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none disabled:opacity-75 sm:col-start-2 sm:text-sm">
+                                <i class="fa-solid fa-spinner fa-spin mr-2" x-show="isSavingOrder"></i>
+                                <span x-text="isSavingOrder ? 'Saving...' : 'Done'"></span>
+                            </button>
+                            <button type="button" @click="reorderModalOpen = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         {{-- NEW DISCUSSION MODAL --}}
@@ -2320,9 +2457,11 @@
 
                         <div class="space-y-4">
                             <div>
-                                <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                                <label for="subject"
+                                    class="block text-sm font-medium text-gray-700">Subject</label>
                                 <input type="text" name="subject" id="subject"
-                                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                                    class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                                    required>
                             </div>
 
                             @if (!auth()->user()->hasRole('Author'))
@@ -3204,4 +3343,38 @@
         </div>
 
     </div>
+    <style>
+        .ck-editor__editable {
+            min-height: 250px !important;
+        }
+
+        .ck-editor__editable:focus {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        }
+    </style>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const abstractTextarea = document.querySelector('#publicationAbstract');
+            if (abstractTextarea) {
+                ClassicEditor
+                    .create(abstractTextarea, {
+                        toolbar: {
+                            items: [
+                                'heading', '|',
+                                'bold', 'italic', '|',
+                                'bulletedList', 'numberedList', '|',
+                                'outdent', 'indent', '|',
+                                'link', 'blockQuote', 'insertTable', '|',
+                                'undo', 'redo'
+                            ]
+                        }
+                    })
+                    .catch(error => {
+                        console.error('CKEditor initialization failed:', error);
+                    });
+            }
+        });
+    </script>
 </x-app-layout>
