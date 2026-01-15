@@ -939,7 +939,7 @@
                                     {{-- Active - Stage 2 and not declined --}}
                                     <div class="space-y-3">
                                         <form
-                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST">
                                             @csrf
                                             <input type="hidden" name="decision" value="accept">
@@ -949,7 +949,7 @@
                                             </button>
                                         </form>
                                         <form
-                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST">
                                             @csrf
                                             <input type="hidden" name="decision" value="request_revisions">
@@ -959,7 +959,7 @@
                                             </button>
                                         </form>
                                         <form
-                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST"
                                             onsubmit="return confirm('This will decline the submission. Continue?')">
                                             @csrf
