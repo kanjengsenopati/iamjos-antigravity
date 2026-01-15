@@ -1106,7 +1106,7 @@
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Actions</h4>
                                 @if ($submission->stage_id == 3 && $submission->status != 3)
                                     <form
-                                        action="{{ route('journal.workflow.send-production', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        action="{{ route('journal.workflow.send-production', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                         method="POST">
                                         @csrf
                                         <button type="submit"
