@@ -37,7 +37,7 @@ class ProductionWorkflowController extends Controller
         $path = $file->storeAs(
             "journals/{$submission->journal_id}/galleys/{$submission->id}",
             $filename,
-            'public'
+            'local'
         );
 
         // Create SubmissionFile record
@@ -89,7 +89,7 @@ class ProductionWorkflowController extends Controller
     {
         // Delete the associated file from storage
         if ($galley->file) {
-            Storage::disk('public')->delete($galley->file->file_path);
+            Storage::disk('local')->delete($galley->file->file_path);
             $galley->file->delete();
         }
 

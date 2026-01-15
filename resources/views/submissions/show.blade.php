@@ -1180,14 +1180,14 @@
                                 class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                 <div>
                                     <h3 class="text-base font-bold text-gray-900">
-                                        <i class="fa-solid fa-file-lines text-green-500 mr-2"></i>Publication Galleys
+                                        <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>Publication Galleys
                                     </h3>
                                     <p class="text-xs text-gray-500 mt-0.5">Final files that will be available to
                                         readers.</p>
                                 </div>
                                 @role('Editor|Section Editor|Admin|Super Admin')
                                     <button @click="galleyModalOpen = true"
-                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors">
+                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors">
                                         <i class="fa-solid fa-plus mr-1.5"></i> Add Galley
                                     </button>
                                 @endrole
@@ -1265,7 +1265,7 @@
                                                         @endif
                                                         @role('Editor|Section Editor|Admin|Super Admin')
                                                             <form
-                                                                action="{{ route('journal.workflow.galley.destroy', ['journal' => $journal->slug, 'submission' => $submission->id, 'galley' => $galley->id]) }}"
+                                                                action="{{ route('journal.workflow.galley.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'galley' => $galley->id]) }}"
                                                                 method="POST" class="inline"
                                                                 onsubmit="return confirm('Are you sure you want to delete this galley?')">
                                                                 @csrf
@@ -1295,7 +1295,7 @@
                                                             files for readers to download.</p>
                                                         @role('Editor|Section Editor|Admin|Super Admin')
                                                             <button @click="galleyModalOpen = true"
-                                                                class="mt-3 text-sm text-green-600 font-medium hover:text-green-700">
+                                                                class="mt-3 text-sm text-indigo-600 font-medium hover:text-indigo-700">
                                                                 <i class="fa-solid fa-plus mr-1"></i> Add your first galley
                                                             </button>
                                                         @endrole
@@ -1341,7 +1341,7 @@
                                 @endif
                                 @role('Editor|Section Editor|Admin|Super Admin')
                                     <form
-                                        action="{{ route('journal.workflow.unpublish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                        action="{{ route('journal.workflow.unpublish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                         method="POST">
                                         @csrf
                                         <button type="submit"
@@ -1375,7 +1375,7 @@
 
                                     <div class="space-y-2">
                                         <form
-                                            action="{{ route('journal.workflow.publish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            action="{{ route('journal.workflow.publish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST">
                                             @csrf
                                             <button type="submit" {{ !$submission->hasGalleys() ? 'disabled' : '' }}
@@ -1385,7 +1385,7 @@
                                         </form>
 
                                         <form
-                                            action="{{ route('journal.workflow.unschedule', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                            action="{{ route('journal.workflow.unschedule', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST">
                                             @csrf
                                             <button type="submit"
@@ -1539,8 +1539,8 @@
 
                             <div class="sm:flex sm:items-start">
                                 <div
-                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                                    <i class="fa-solid fa-file-arrow-up text-green-600"></i>
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <i class="fa-solid fa-file-arrow-up text-indigo-600"></i>
                                 </div>
                                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                                     <h3 class="text-lg leading-6 font-semibold text-gray-900">Add Publication Galley
@@ -1551,7 +1551,7 @@
                             </div>
 
                             <form
-                                action="{{ route('journal.workflow.galley.store', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                action="{{ route('journal.workflow.galley.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                 method="POST" enctype="multipart/form-data" class="mt-5 space-y-4">
                                 @csrf
 
@@ -1560,7 +1560,7 @@
                                         Galley Label <span class="text-red-500">*</span>
                                     </label>
                                     <select name="label" id="galley-label" required
-                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="PDF">PDF</option>
                                         <option value="HTML">HTML</option>
                                         <option value="EPUB">EPUB</option>
@@ -1574,7 +1574,7 @@
                                     <label for="galley-locale"
                                         class="block text-sm font-medium text-gray-700">Language</label>
                                     <select name="locale" id="galley-locale"
-                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="en">English</option>
                                         <option value="id">Indonesian</option>
                                         <option value="ar">Arabic</option>
@@ -1586,13 +1586,13 @@
                                         File <span class="text-red-500">*</span>
                                     </label>
                                     <input type="file" name="file" id="galley-file" required
-                                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                                     <p class="mt-1 text-xs text-gray-500">Maximum file size: 50MB</p>
                                 </div>
 
                                 <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                                     <button type="submit"
-                                        class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-2 sm:text-sm">
+                                        class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
                                         <i class="fa-solid fa-upload mr-2"></i> Upload Galley
                                     </button>
                                     <button type="button" @click="galleyModalOpen = false"
@@ -1639,7 +1639,7 @@
                             </div>
 
                             <form
-                                action="{{ route('journal.workflow.assign-issue', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                action="{{ route('journal.workflow.assign-issue', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                 method="POST" class="mt-5 space-y-4">
                                 @csrf
 
