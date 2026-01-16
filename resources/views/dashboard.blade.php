@@ -130,8 +130,22 @@
                                     <p class="text-sm text-gray-500">Submitted on
                                         {{ $submission->created_at->format('M d, Y') }}</p>
                                 </div>
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ $submission->status }}
+                                @php
+                                    $statusColors = [
+                                        'draft' => 'bg-gray-100 text-gray-800',
+                                        'submitted' => 'bg-blue-100 text-blue-800',
+                                        'submission' => 'bg-blue-100 text-blue-800', // Handle legacy/alternate
+                                        'under_review' => 'bg-amber-100 text-amber-800',
+                                        'in_review' => 'bg-amber-100 text-amber-800',
+                                        'revision_required' => 'bg-orange-100 text-orange-800',
+                                        'accepted' => 'bg-green-100 text-green-800',
+                                        'rejected' => 'bg-red-100 text-red-800',
+                                        'published' => 'bg-emerald-100 text-emerald-800',
+                                    ];
+                                    $statusClass = $statusColors[$submission->status] ?? 'bg-gray-100 text-gray-800';
+                                @endphp
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
+                                    {{ $submission->status_label ?? ucfirst(str_replace('_', ' ', $submission->status)) }}
                                 </span>
                             </div>
                         @endforeach
