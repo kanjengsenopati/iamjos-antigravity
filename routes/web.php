@@ -48,6 +48,7 @@ use App\Http\Controllers\PortalController;
 // =====================================================
 // PORTAL HOME (List of all journals)
 // =====================================================
+
 Route::get('/', [PortalController::class, 'index'])->name('portal.home');
 Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
 Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
@@ -304,6 +305,11 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/{submission}/record-decision', [ReviewWorkflowController::class, 'recordDecision'])->name('record-decision');
             Route::post('/{submission}/promote-to-copyediting', [ReviewWorkflowController::class, 'promoteToCopyediting'])->name('promote-copyediting');
             Route::post('/{submission}/send-to-production', [ReviewWorkflowController::class, 'sendToProduction'])->name('send-production');
+
+            // Enhanced Revision Request (OJS 3.3 Style Modal)
+            Route::post('/{submission}/request-revisions', [ReviewWorkflowController::class, 'requestRevisions'])->name('request-revisions');
+            Route::get('/{submission}/reviewer-attachments', [ReviewWorkflowController::class, 'getReviewerAttachments'])->name('reviewer-attachments');
+            Route::post('/{submission}/upload-decision-file', [ReviewWorkflowController::class, 'uploadDecisionFile'])->name('upload-decision-file');
 
             // Enhanced Workflow Actions (OJS 3.3 Editorial Decisions)
             Route::get('/{submission}/available-files', [SubmissionWorkflowController::class, 'getAvailableFiles'])->name('available-files');
