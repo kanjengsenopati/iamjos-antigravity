@@ -306,11 +306,7 @@
                         <i class="fa-solid fa-layer-group mr-1.5 text-xs"></i>
                         {{ $currentStageName }}
                     </span>
-                    <span
-                        class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium {{ $statusColor }}">
-                        <i class="fa-solid fa-circle-dot mr-1.5 text-xs"></i>
-                        {{ $statusName }}
-                    </span>
+
                 </div>
             </div>
             <div class="mt-2 text-sm text-gray-500">
