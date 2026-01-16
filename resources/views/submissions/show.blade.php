@@ -547,54 +547,87 @@
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow Actions
                                 </h4>
                                 @role('Editor|Section Editor|Admin|Super Admin')
-                                    @if ($isRejected)
-                                        {{-- RED ALERT: Locked state for rejected submissions --}}
-                                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                                            <div class="flex items-start">
-                                                <i class="fa-solid fa-lock text-red-500 mt-0.5 mr-2"></i>
-                                                <div>
-                                                    <p class="text-sm font-semibold text-red-800">Submission Declined</p>
-                                                    <p class="text-xs text-red-600 mt-1">
-                                                        This submission has been declined and archived. No further actions are
-                                                        allowed.
-                                                    </p>
+                                    @php
+                                        $decisionMade = $submission->stage_id > 1 || $submission->status == 3;
+                                    @endphp
+
+                                    <div x-data="{ changingDecision: false }">
+                                        @if ($decisionMade)
+                                            <div x-show="!changingDecision" class="space-y-3">
+                                                @if ($submission->status == 3)
+                                                    <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                                                        <div class="flex items-center">
+                                                            <i class="fa-solid fa-ban text-red-500 mr-2"></i>
+                                                            <span class="text-sm font-semibold text-red-800">Submission
+                                                                Declined</span>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                        <div class="flex items-center">
+                                                            <i class="fa-solid fa-check text-blue-500 mr-2"></i>
+                                                            <span class="text-sm font-semibold text-blue-800">Submission
+                                                                accepted for review</span>
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                <button @click="changingDecision = true"
+                                                    class="text-sm text-indigo-600 font-medium hover:underline focus:outline-none">
+                                                    Change Decision
+                                                </button>
+                                            </div>
+                                        @endif
+
+                                        <div x-show="!{{ $decisionMade ? 'true' : 'false' }} || changingDecision"
+                                            class="{{ $decisionMade ? 'mt-4 pt-4 border-t border-gray-100' : '' }}"
+                                            style="{{ $decisionMade ? 'display: none' : '' }}">
+
+                                            @if ($isUnassigned && !$isRejected)
+                                                {{-- BLUE INFO BOX: Disabled state for unassigned --}}
+                                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                                    <div class="flex items-start">
+                                                        <i class="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                                                        <p class="text-sm text-blue-700">
+                                                            Assign an editor to enable the editorial decisions for this stage.
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                                {{-- DISABLED STATE: Show grayed out buttons for unassigned --}}
+                                                <button disabled
+                                                    class="w-full mb-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                                    <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                                </button>
+                                                <button disabled
+                                                    class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
+                                                    <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                                </button>
+                                            @else
+                                                {{-- ACTIVE STATE: Enabled workflow actions --}}
+                                                <button @click="openSendToReviewModal()"
+                                                    class="w-full mb-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors">
+                                                    <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
+                                                </button>
+                                                <button @click="openSkipReviewModal()"
+                                                    class="w-full mb-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors">
+                                                    <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
+                                                </button>
+                                                <button @click="declineModalOpen = true; resetDeclineModal()"
+                                                    class="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors">
+                                                    <i class="fa-solid fa-ban mr-2"></i>Decline Submission
+                                                </button>
+                                            @endif
+
+                                            @if ($decisionMade)
+                                                <div class="mt-3 text-center">
+                                                    <button @click="changingDecision = false"
+                                                        class="text-xs text-gray-400 hover:text-gray-600 underline focus:outline-none">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @elseif ($isUnassigned)
-                                        {{-- BLUE INFO BOX: Disabled state for unassigned --}}
-                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                                            <div class="flex items-start">
-                                                <i class="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
-                                                <p class="text-sm text-blue-700">
-                                                    Assign an editor to enable the editorial decisions for this stage.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {{-- DISABLED STATE: Show grayed out buttons for unassigned --}}
-                                        <button disabled
-                                            class="w-full mb-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                            <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
-                                        </button>
-                                        <button disabled
-                                            class="w-full px-4 py-2.5 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                            <i class="fa-solid fa-ban mr-2"></i>Decline Submission
-                                        </button>
-                                    @else
-                                        {{-- ACTIVE STATE: Enabled workflow actions --}}
-                                        <button @click="openSendToReviewModal()"
-                                            class="w-full mb-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors">
-                                            <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
-                                        </button>
-                                        <button @click="openSkipReviewModal()"
-                                            class="w-full mb-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors">
-                                            <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
-                                        </button>
-                                        <button @click="declineModalOpen = true; resetDeclineModal()"
-                                            class="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors">
-                                            <i class="fa-solid fa-ban mr-2"></i>Decline Submission
-                                        </button>
-                                    @endif
+                                    </div>
                                 @else
                                     <p class="text-sm text-gray-500 italic">Actions available to Editors.</p>
                                 @endrole
@@ -923,10 +956,10 @@
                                     <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>Review Files
                                 </h3>
                             </div>
-                            <div class="p-6">
+                            <div class="p-6 overflow-x-auto">
                                 @forelse($submission->files->where('stage', 'review') as $file)
                                     <div
-                                        class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
+                                        class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors min-w-max">
                                         <div class="flex items-center">
                                             @php
                                                 $extension = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
