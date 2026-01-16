@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Journal;
-use App\Models\Section;
-use App\Models\Issue;
-use App\Models\Submission;
-use App\Models\SubmissionFile;
-use App\Models\SubmissionAuthor;
-use App\Models\SubmissionChecklist;
 use App\Models\Discussion;
 use App\Models\DiscussionMessage;
+use App\Models\DiscussionParticipant;
 use App\Models\EmailTemplate;
+use App\Models\Issue;
+use App\Models\Journal;
+use App\Models\Section;
+use App\Models\Submission;
+use App\Models\SubmissionAuthor;
+use App\Models\SubmissionChecklist;
+use App\Models\SubmissionFile;
 use App\Models\User;
 use App\Notifications\NewSubmissionNotification;
 use App\Notifications\SubmissionReceived;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class SubmissionController extends Controller
 {
@@ -300,6 +301,12 @@ class SubmissionController extends Controller
                     'subject' => 'Comments for the Editor',
                     'stage_id' => 1, // Submission stage
                     'is_open' => true,
+                ]);
+
+                // create discussion participant
+                DiscussionParticipant::create([
+                    'discussion_id' => $discussion->id,
+                    'user_id' => $user->id,
                 ]);
 
                 DiscussionMessage::create([
