@@ -42,7 +42,7 @@ class ReviewWorkflowController extends Controller
                 ]);
             }
 
-            ReviewAssignment::create([
+            $assignment = ReviewAssignment::create([
                 'submission_id' => $submission->id,
                 'review_round_id' => $reviewRound->id,
                 'reviewer_id' => $request->reviewer_id,
@@ -53,6 +53,21 @@ class ReviewWorkflowController extends Controller
                 'round' => $reviewRound->round,
                 'status' => ReviewAssignment::STATUS_PENDING,
             ]);
+
+            // Notify the reviewer about the assignment
+            $reviewer = User::find($request->reviewer_id);
+            if ($reviewer) {
+                $reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
+
+                // Log the event
+                \App\Models\SubmissionLog::log(
+                    $submission,
+                    \App\Models\SubmissionLog::EVENT_REVIEWER_ASSIGNED,
+                    'Reviewer Assigned',
+                    auth()->user()->name . " assigned {$reviewer->name} as peer reviewer (Round {$reviewRound->round}).",
+                    ['reviewer_id' => $reviewer->id, 'round' => $reviewRound->round]
+                );
+            }
         });
 
         return back()->with('success', 'Reviewer assigned successfully.');

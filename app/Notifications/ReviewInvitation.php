@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ReviewInvitation extends Notification implements ShouldQueue
+class ReviewInvitation extends Notification
 {
     use Queueable;
 
@@ -58,12 +58,22 @@ class ReviewInvitation extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $submission = $this->review->submission;
+        $journal = $submission->journal;
+
         return [
             'type' => 'review_invitation',
+            'title' => 'New Review Assignment',
+            'message' => "You have been invited to review \"{$submission->title}\".",
+            'url' => "/{$journal->slug}/reviewer/{$this->review->id}",
+            'notification_type' => 'info',
+            'icon' => 'fa-clipboard-check',
             'review_id' => $this->review->id,
-            'submission_id' => $this->review->submission_id,
-            'title' => $this->review->submission->title,
-            'message' => 'You have been invited to review "' . $this->review->submission->title . '".',
+            'submission_id' => $submission->id,
+            'submission_title' => $submission->title,
+            'journal_id' => $journal->id,
+            'journal_slug' => $journal->slug,
+            'due_date' => $this->review->due_date?->format('Y-m-d'),
         ];
     }
 }

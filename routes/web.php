@@ -103,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
     // --------- Notifications API (Global) ---------
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/{id}/read', [NotificationController::class, 'read'])->name('read');
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
         Route::post('/clear-read', [NotificationController::class, 'clearRead'])->name('clear-read');

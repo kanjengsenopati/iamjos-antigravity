@@ -3,26 +3,30 @@
 namespace App\Notifications;
 
 use App\Models\Submission;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Notification sent to Journal Managers and Editors when a new submission is created.
+ * Notification sent to Editors when they are assigned to handle a submission.
+ * Triggered when Manager/Journal Manager assigns an Editor to a submission.
  */
-class NewSubmissionNotification extends Notification
+class EditorAssignmentNotification extends Notification
 {
     use Queueable;
 
     protected Submission $submission;
+    protected User $assignedBy;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Submission $submission)
+    public function __construct(Submission $submission, User $assignedBy)
     {
         $this->submission = $submission;
+        $this->assignedBy = $assignedBy;
     }
 
     /**
@@ -39,19 +43,19 @@ class NewSubmissionNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = url("/{$journal->slug}/submissions/{$this->submission->id}");
+        $url = url("/{$journal->slug}/submissions/{$this->submission->slug}");
 
         return (new MailMessage)
-            ->subject('New Submission - ' . $this->submission->title)
+            ->subject('Editor Assignment - ' . $this->submission->title)
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line('A new submission has been submitted to ' . $journal->name . '.')
+            ->line('You have been assigned as editor for the following submission:')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Author:** ' . ($this->submission->authors->first()->name ?? 'Unknown'))
             ->line('- **Section:** ' . ($this->submission->section->title ?? 'Not specified'))
-            ->line('- **Submitted:** ' . $this->submission->submitted_at->format('F j, Y'))
+            ->line('- **Assigned by:** ' . $this->assignedBy->name)
             ->action('View Submission', $url)
-            ->line('Please review and assign an editor to handle this submission.')
+            ->line('Please review the submission and begin the editorial process.')
             ->salutation('Best regards, ' . $journal->name);
     }
 
@@ -63,17 +67,17 @@ class NewSubmissionNotification extends Notification
         $journal = $this->submission->journal;
 
         return [
-            'type' => 'new_submission',
-            'title' => 'New Submission Received',
-            'message' => "A new submission has been submitted: \"{$this->submission->title}\".",
+            'type' => 'editor_assignment',
+            'title' => 'Editor Assignment',
+            'message' => "You have been assigned as editor for \"{$this->submission->title}\".",
             'url' => "/{$journal->slug}/submissions/{$this->submission->slug}",
             'notification_type' => 'info',
-            'icon' => 'fa-file-circle-plus',
+            'icon' => 'fa-user-tie',
             'submission_id' => $this->submission->id,
-            'submission_title' => $this->submission->title,
             'journal_id' => $journal->id,
             'journal_slug' => $journal->slug,
-            'author' => $this->submission->authors->first()->name ?? 'Unknown',
+            'assigned_by_id' => $this->assignedBy->id,
+            'assigned_by_name' => $this->assignedBy->name,
         ];
     }
 }

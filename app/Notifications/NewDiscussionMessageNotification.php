@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notification;
 /**
  * Notification sent to discussion participants when a new message is posted.
  */
-class NewDiscussionMessageNotification extends Notification implements ShouldQueue
+class NewDiscussionMessageNotification extends Notification
 {
     use Queueable;
 
@@ -69,6 +69,11 @@ class NewDiscussionMessageNotification extends Notification implements ShouldQue
 
         return [
             'type' => 'new_discussion_message',
+            'title' => 'New Discussion Message',
+            'message' => "{$this->sender->name} posted a message in \"{$this->discussion->subject}\".",
+            'url' => "/{$journal->slug}/submissions/{$submission->slug}?open_discussion={$this->discussion->id}",
+            'notification_type' => 'info',
+            'icon' => 'fa-comments',
             'discussion_id' => $this->discussion->id,
             'message_id' => $this->message->id,
             'submission_id' => $submission->id,
@@ -77,8 +82,6 @@ class NewDiscussionMessageNotification extends Notification implements ShouldQue
             'sender_id' => $this->sender->id,
             'sender_name' => $this->sender->name,
             'subject' => $this->discussion->subject,
-            'message' => $this->sender->name . ' posted a message in "' . $this->discussion->subject . '".',
-            'url' => "/{$journal->slug}/submissions/{$submission->slug}",
         ];
     }
 }

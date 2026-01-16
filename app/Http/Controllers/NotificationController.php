@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class NotificationController extends Controller
@@ -45,8 +46,11 @@ class NotificationController extends Controller
                 return [
                     'id' => $notification->id,
                     'type' => $notification->data['type'] ?? 'general',
+                    'title' => $notification->data['title'] ?? null,
                     'message' => $notification->data['message'] ?? 'You have a new notification.',
                     'url' => $notification->data['url'] ?? '#',
+                    'notification_type' => $notification->data['notification_type'] ?? 'info',
+                    'icon' => $notification->data['icon'] ?? 'fa-bell',
                     'read_at' => $notification->read_at,
                     'created_at' => $notification->created_at->diffForHumans(),
                 ];
@@ -58,6 +62,26 @@ class NotificationController extends Controller
             'notifications' => $notifications,
             'unread_count' => $unreadCount,
         ]);
+    }
+
+    /**
+     * Mark notification as read and redirect to the action URL.
+     * This is the primary click action for notification items.
+     */
+    public function read(string $id): RedirectResponse
+    {
+        $user = auth()->user();
+        $notification = $user->notifications()->find($id);
+
+        if (!$notification) {
+            abort(404, 'Notification not found');
+        }
+
+        $notification->markAsRead();
+
+        $url = $notification->data['url'] ?? route('dashboard');
+
+        return redirect($url);
     }
 
     /**
