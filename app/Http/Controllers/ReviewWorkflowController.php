@@ -431,4 +431,133 @@ class ReviewWorkflowController extends Controller
             'uploader' => auth()->user()->name,
         ]);
     }
+
+    /**
+     * Create a new review round (OJS 3.3 Multi-Round Review).
+     * Promotes selected revision files to become review files for the new round.
+     */
+    public function createNewRound(Request $request, string $journalSlug, Submission $submission)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'selected_files' => 'nullable|array',
+            'selected_files.*' => 'exists:submission_files,id',
+        ]);
+
+        $currentRound = $submission->currentReviewRound();
+
+        // Check if there's already a pending round (created by Request Revisions with new_round_required)
+        $existingPendingRound = ReviewRound::where('submission_id', $submission->id)
+            ->where('status', ReviewRound::STATUS_PENDING)
+            ->where('round', '>', $currentRound?->round ?? 0)
+            ->first();
+
+        $newRound = null;
+
+        DB::transaction(function () use ($validated, $submission, $currentRound, $existingPendingRound, &$newRound) {
+            // If there's already a pending new round, use it
+            if ($existingPendingRound) {
+                $newRound = $existingPendingRound;
+                $newRoundNumber = $existingPendingRound->round;
+            } else {
+                // Mark current round as complete
+                if ($currentRound) {
+                    $currentRound->update([
+                        'status' => 'completed',
+                    ]);
+                }
+
+                // Create new review round
+                $newRoundNumber = ($currentRound?->round ?? 0) + 1;
+                $newRound = ReviewRound::create([
+                    'submission_id' => $submission->id,
+                    'round' => $newRoundNumber,
+                    'status' => ReviewRound::STATUS_PENDING,
+                ]);
+            }
+
+            // 3. Promote selected revision files to review files for new round
+            if (!empty($validated['selected_files'])) {
+                foreach ($validated['selected_files'] as $fileId) {
+                    $originalFile = SubmissionFile::find($fileId);
+                    if ($originalFile && $originalFile->submission_id === $submission->id) {
+                        // Create a copy as a review file for the new round
+                        SubmissionFile::create([
+                            'submission_id' => $submission->id,
+                            'uploaded_by' => auth()->id(),
+                            'file_path' => $originalFile->file_path,
+                            'file_name' => $originalFile->file_name,
+                            'file_type' => SubmissionFile::TYPE_MANUSCRIPT, // Now it's a manuscript for review
+                            'mime_type' => $originalFile->mime_type,
+                            'file_size' => $originalFile->file_size,
+                            'version' => $originalFile->version,
+                            'stage' => 'review', // Review stage files
+                            'metadata' => [
+                                'source_file_id' => $originalFile->id,
+                                'promoted_from' => 'revision',
+                                'promoted_at' => now()->toISOString(),
+                                'promoted_by' => auth()->id(),
+                                'review_round' => $newRoundNumber,
+                            ],
+                        ]);
+                    }
+                }
+            }
+
+            // 4. Update submission status to "queued for review" / "in_review"
+            $submission->update([
+                'status' => Submission::STATUS_IN_REVIEW,
+            ]);
+
+            // 5. Log the event
+            SubmissionLog::log(
+                $submission,
+                'review_new_round',
+                'New Review Round Created',
+                "Round {$newRound->round} has been created. The submission is now queued for review.",
+                [
+                    'round' => $newRound->round,
+                    'files_promoted' => count($validated['selected_files'] ?? []),
+                    'created_by' => auth()->id(),
+                ]
+            );
+        });
+
+        return back()->with('success', "Review Round {$newRound->round} has been created successfully.");
+    }
+
+    /**
+     * Get revision files for the new round modal.
+     * Returns files uploaded by the author as revisions.
+     */
+    public function getRevisionFiles(Request $request, string $journalSlug, Submission $submission)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        // Get revision files uploaded by the author
+        $files = SubmissionFile::where('submission_id', $submission->id)
+            ->where('stage', 'revision')
+            ->where('file_type', 'revision')
+            ->with('uploader:id,name')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'name' => $file->file_name,
+                    'size' => $file->file_size,
+                    'uploaded_at' => $file->created_at->format('M d, Y'),
+                    'uploader' => $file->uploader?->name ?? 'Unknown',
+                ];
+            });
+
+        return response()->json($files);
+    }
 }
