@@ -311,6 +311,10 @@ Route::prefix('{journal}')->group(function () {
             Route::get('/{submission}/reviewer-attachments', [ReviewWorkflowController::class, 'getReviewerAttachments'])->name('reviewer-attachments');
             Route::post('/{submission}/upload-decision-file', [ReviewWorkflowController::class, 'uploadDecisionFile'])->name('upload-decision-file');
 
+            // Multi-Round Review Workflow (OJS 3.3 Style)
+            Route::post('/{submission}/create-new-round', [ReviewWorkflowController::class, 'createNewRound'])->name('create-new-round');
+            Route::get('/{submission}/revision-files', [ReviewWorkflowController::class, 'getRevisionFiles'])->name('revision-files');
+
             // Enhanced Workflow Actions (OJS 3.3 Editorial Decisions)
             Route::get('/{submission}/available-files', [SubmissionWorkflowController::class, 'getAvailableFiles'])->name('available-files');
             Route::post('/{submission}/promote-to-review', [SubmissionWorkflowController::class, 'promoteToReview'])->name('promote-review');

@@ -31,6 +31,52 @@
         selectedDecision: null,
         revisionUploadModalOpen: false,
     
+        // Editor Review View State (Multi-Round)
+        selectedEditorRound: {{ $submission->reviewRounds()->max('round') ?? 1 }},
+        newRoundModalOpen: false,
+        newRoundFiles: [],
+        newRoundSelectedFiles: [],
+        newRoundIsLoading: false,
+        newRoundIsSubmitting: false,
+    
+        async loadRevisionFilesForNewRound() {
+            this.newRoundIsLoading = true;
+            try {
+                const res = await fetch(`{{ route('journal.workflow.revision-files', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}`);
+                this.newRoundFiles = await res.json();
+                // Pre-select all files by default
+                this.newRoundSelectedFiles = this.newRoundFiles.map(f => f.id);
+            } catch (e) {
+                console.error('Failed to load revision files:', e);
+            }
+            this.newRoundIsLoading = false;
+        },
+    
+        toggleNewRoundFile(fileId) {
+            const idx = this.newRoundSelectedFiles.indexOf(fileId);
+            if (idx > -1) {
+                this.newRoundSelectedFiles.splice(idx, 1);
+            } else {
+                this.newRoundSelectedFiles.push(fileId);
+            }
+        },
+    
+        isNewRoundFileSelected(fileId) {
+            return this.newRoundSelectedFiles.includes(fileId);
+        },
+    
+        openNewRoundModal() {
+            this.newRoundModalOpen = true;
+            this.loadRevisionFilesForNewRound();
+        },
+    
+        resetNewRoundModal() {
+            this.newRoundModalOpen = false;
+            this.newRoundFiles = [];
+            this.newRoundSelectedFiles = [];
+            this.newRoundIsSubmitting = false;
+        },
+    
         // Assign Editor Modal State
         assignEditorModalOpen: false,
         editorSearch: '',
@@ -311,16 +357,16 @@
     
         getDefaultRevisionEmailTemplate() {
             return `<p>Dear {{ $submission->authors->first()?->name ?? 'Author' }},</p>
-                            <p>We have reached a decision regarding your submission to <strong>{{ $journal->name }}</strong>:</p>
-                            <p><strong>Submission:</strong> {{ $submission->title }}</p>
-                            <p><strong>Manuscript ID:</strong> {{ $submission->submission_code }}</p>
-                            <hr>
-                            <p><strong>Our Decision: Revisions Required</strong></p>
-                            <p>Based on the reviewers' feedback, we request that you revise your manuscript. Please address each reviewer comment carefully and submit your revised manuscript through the journal portal.</p>
-                            <p>The reviewer comments are attached or included below for your reference.</p>
-                            <hr>
-                            <p>If you have any questions, please do not hesitate to contact us.</p>
-                            <p>Best regards,<br>The Editorial Team</p>`;
+                                                                                                        <p>We have reached a decision regarding your submission to <strong>{{ $journal->name }}</strong>:</p>
+                                                                                                        <p><strong>Submission:</strong> {{ $submission->title }}</p>
+                                                                                                        <p><strong>Manuscript ID:</strong> {{ $submission->submission_code }}</p>
+                                                                                                        <hr>
+                                                                                                        <p><strong>Our Decision: Revisions Required</strong></p>
+                                                                                                        <p>Based on the reviewers' feedback, we request that you revise your manuscript. Please address each reviewer comment carefully and submit your revised manuscript through the journal portal.</p>
+                                                                                                        <p>The reviewer comments are attached or included below for your reference.</p>
+                                                                                                        <hr>
+                                                                                                        <p>If you have any questions, please do not hesitate to contact us.</p>
+                                                                                                        <p>Best regards,<br>The Editorial Team</p>`;
         },
     
         toggleRevisionFile(fileId) {
@@ -963,6 +1009,193 @@
                         {{-- Main Panel Area --}}
                         <div class="lg:col-span-3 space-y-6">
 
+                            {{-- ==================== ROUND TABS NAVIGATION ==================== --}}
+                            @php
+                                // Get all valid rounds (not duplicates)
+                                $allRounds = $submission->reviewRounds()->orderBy('round')->get()->unique('round'); // Prevent duplicate round numbers
+
+                                $currentRound = $submission->currentReviewRound();
+                                $latestRoundNumber = $currentRound?->round ?? 1;
+
+                                // Check if there's already a pending new round
+$hasPendingNewRound = $allRounds->contains(function ($r) use ($currentRound) {
+    return $r->status === 'pending' && $r->round > ($currentRound?->round ?? 0);
+});
+
+// Get selected round from URL or default to latest
+$selectedRoundNumber = request()->query('round', $latestRoundNumber);
+$selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $currentRound;
+
+// Filter revision files for the SELECTED round
+// Revisions are files uploaded by author in response to that round's revision request
+                                $authorRevisionFiles = $submission->files
+                                    ->where('stage', 'revision')
+                                    ->where('file_type', 'revision')
+                                    ->filter(function ($file) use ($selectedRoundNumber, $allRounds) {
+                                        $metadata = $file->metadata ?? [];
+
+                                        // Exclude files promoted by editor
+                                        if (isset($metadata['decision_type']) || isset($metadata['promoted_from'])) {
+                                            return false;
+                                        }
+
+                                        // If file has revision_round metadata, use it
+                                        if (isset($metadata['revision_for_round'])) {
+                                            return $metadata['revision_for_round'] == $selectedRoundNumber;
+                                        }
+
+                                        // Fallback: Check upload time relative to round dates
+                                        // Get the selected round and next round to determine time window
+                                        $thisRound = $allRounds->firstWhere('round', $selectedRoundNumber);
+                                        $nextRound = $allRounds->firstWhere('round', $selectedRoundNumber + 1);
+
+                                        if ($thisRound) {
+                                            $uploadedAt = $file->created_at;
+                                            $roundCreatedAt = $thisRound->created_at;
+
+                                            // File should be uploaded after this round was created
+                                            if ($uploadedAt < $roundCreatedAt) {
+                                                return false;
+                                            }
+
+                                            // If there's a next round, file should be uploaded before that
+                                            if ($nextRound && $uploadedAt >= $nextRound->created_at) {
+                                                return false;
+                                            }
+
+                                            return true;
+                                        }
+
+                                        // Default: show in Round 1 if no round data
+                                        return $selectedRoundNumber == 1;
+                                    });
+                                $hasAuthorRevisions = $authorRevisionFiles->isNotEmpty();
+                            @endphp
+                            <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                                <div class="border-b border-gray-200 bg-gray-50">
+                                    <nav class="flex items-center justify-between px-4" aria-label="Tabs">
+                                        <div class="flex -mb-px">
+                                            @foreach ($allRounds as $round)
+                                                @php
+                                                    $isSelected = $round->round == $selectedRoundNumber;
+                                                    $isCompleted = $round->status === 'completed';
+                                                @endphp
+                                                <a href="{{ request()->fullUrlWithQuery(['round' => $round->round]) }}"
+                                                    class="whitespace-nowrap py-3 px-5 border-b-2 font-semibold text-sm transition-colors
+                                                    {{ $isSelected
+                                                        ? 'border-indigo-500 text-indigo-600 bg-white'
+                                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                                                    <i
+                                                        class="fa-solid fa-rotate mr-1.5 {{ $isSelected ? 'text-indigo-500' : 'text-gray-400' }}"></i>
+                                                    Round {{ $round->round }}
+                                                    @if ($isCompleted)
+                                                        <i class="fa-solid fa-check text-green-500 ml-1 text-xs"></i>
+                                                    @elseif ($round->round == $latestRoundNumber)
+                                                        <span
+                                                            class="ml-1 text-xs font-normal {{ $isSelected ? 'text-indigo-500' : 'text-gray-400' }}">(Latest)</span>
+                                                    @endif
+                                                </a>
+                                            @endforeach
+                                            @if ($allRounds->isEmpty())
+                                                <span class="py-3 px-5 text-sm text-gray-500 italic">No review rounds
+                                                    yet</span>
+                                            @endif
+                                        </div>
+                                        {{-- New Review Round Button (only show if author has revisions AND no pending new round exists) --}}
+                                        @if ($hasAuthorRevisions && $submission->status === 'revision_required' && !$hasPendingNewRound)
+                                            <button type="button" @click="openNewRoundModal()"
+                                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors my-2">
+                                                <i class="fa-solid fa-plus mr-1.5"></i> New Review Round
+                                            </button>
+                                        @endif
+                                    </nav>
+                                </div>
+
+                                {{-- Status Banner - Shows status for the SELECTED round --}}
+                                <div class="p-4">
+                                    @php
+                                        $displayRoundStatus = $selectedRound?->status ?? 'pending';
+                                        $displayRoundNumber = $selectedRoundNumber;
+
+                                        // Get reviewers for selected round (if round-specific data needed in future)
+                                        $reviewersCount = $submission->reviewAssignments->count();
+                                        $completedReviews = $submission->reviewAssignments
+                                            ->where('status', 'completed')
+                                            ->count();
+
+                                        // Determine the status message based on selected round state
+                                        if ($displayRoundStatus === 'completed') {
+                                            $statusConfig = [
+                                                'class' => 'border-green-400 bg-green-50',
+                                                'icon' => 'fa-check-circle text-green-500',
+                                                'title' => 'Round Complete',
+                                                'message' => 'This review round has been completed.',
+                                            ];
+                                        } elseif (
+                                            $hasAuthorRevisions &&
+                                            $submission->status === 'revision_required' &&
+                                            $displayRoundNumber == $latestRoundNumber
+                                        ) {
+                                            $statusConfig = [
+                                                'class' => 'border-teal-400 bg-teal-50',
+                                                'icon' => 'fa-file-circle-check text-teal-500',
+                                                'title' => 'Revisions Submitted',
+                                                'message' =>
+                                                    'The author has submitted revised files. You can create a new review round to send these revisions to reviewers.',
+                                            ];
+                                        } elseif ($displayRoundStatus === 'pending' && $reviewersCount === 0) {
+                                            $statusConfig = [
+                                                'class' => 'border-amber-400 bg-amber-50',
+                                                'icon' => 'fa-user-plus text-amber-500',
+                                                'title' => 'Awaiting Reviewers',
+                                                'message' =>
+                                                    'No reviewers have been assigned yet. Add reviewers to begin the review process.',
+                                            ];
+                                        } elseif ($completedReviews < $reviewersCount && $reviewersCount > 0) {
+                                            $statusConfig = [
+                                                'class' => 'border-blue-400 bg-blue-50',
+                                                'icon' => 'fa-clock text-blue-500',
+                                                'title' => 'Under Review',
+                                                'message' => "{$completedReviews} of {$reviewersCount} reviewers have completed their review.",
+                                            ];
+                                        } elseif (
+                                            $displayRoundStatus === 'revisions_requested' ||
+                                            $submission->status === 'revision_required'
+                                        ) {
+                                            $statusConfig = [
+                                                'class' => 'border-orange-400 bg-orange-50',
+                                                'icon' => 'fa-pen text-orange-500',
+                                                'title' => 'Revisions Requested',
+                                                'message' => 'Waiting for author to submit revised manuscript.',
+                                            ];
+                                        } else {
+                                            $statusConfig = [
+                                                'class' => 'border-green-400 bg-green-50',
+                                                'icon' => 'fa-check-circle text-green-500',
+                                                'title' => 'Reviews Complete',
+                                                'message' =>
+                                                    'All reviewers have completed their review. A decision can now be made.',
+                                            ];
+                                        }
+                                    @endphp
+                                    <div class="border-l-4 {{ $statusConfig['class'] }} p-4 rounded-r-lg">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0">
+                                                <i class="fa-solid {{ $statusConfig['icon'] }} text-lg"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <h3 class="text-sm font-semibold text-gray-900">
+                                                    Round {{ $displayRoundNumber }} Status:
+                                                    {{ $statusConfig['title'] }}
+                                                </h3>
+                                                <p class="mt-1 text-sm text-gray-600">{{ $statusConfig['message'] }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {{-- Reviewers Panel --}}
                             <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
                                 <div
@@ -1085,15 +1318,31 @@
                             </div>
 
                             {{-- Review Files Panel --}}
+                            @php
+                                // Filter review files by selected round
+                                $reviewFiles = $submission->files
+                                    ->where('stage', 'review')
+                                    ->filter(function ($file) use ($selectedRoundNumber) {
+                                        $metadata = $file->metadata ?? [];
+                                        // File with review_round metadata - show only for matching round
+                                        if (isset($metadata['review_round'])) {
+                                            return $metadata['review_round'] == $selectedRoundNumber;
+                                        }
+                                        // Original files (no round metadata) - show for Round 1 only
+                                        return $selectedRoundNumber == 1;
+                                    });
+                            @endphp
                             <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
                                 <div
                                     class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                     <h3 class="text-base font-bold text-gray-900">
                                         <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>Review Files
+                                        <span class="text-xs text-gray-500 font-normal ml-2">(Round
+                                            {{ $selectedRoundNumber }})</span>
                                     </h3>
                                 </div>
                                 <div class="p-6 overflow-x-auto">
-                                    @forelse($submission->files->where('stage', 'review') as $file)
+                                    @forelse($reviewFiles as $file)
                                         <div
                                             class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors min-w-max">
                                             <div class="flex items-center">
@@ -1128,7 +1377,13 @@
                                                     <span
                                                         class="text-sm font-medium text-gray-700">{{ $file->file_name }}</span>
                                                     <p class="text-xs text-gray-500">
-                                                        {{ number_format($file->file_size / 1024, 0) }} KB</p>
+                                                        @if (isset($file->metadata['promoted_from']))
+                                                            <span class="text-purple-600"><i
+                                                                    class="fa-solid fa-arrow-up-from-bracket mr-1"></i>Promoted</span>
+                                                            •
+                                                        @endif
+                                                        {{ number_format($file->file_size / 1024, 0) }} KB
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-1">
@@ -1146,8 +1401,75 @@
                                         </div>
                                     @empty
                                         <p class="text-sm text-gray-500 italic text-center py-4">No review files
-                                            uploaded.
+                                            for Round {{ $selectedRoundNumber }}.
                                         </p>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            {{-- ==================== REVISIONS GRID (Author's Uploaded Revisions) ==================== --}}
+                            <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                                <div
+                                    class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-teal-50 to-emerald-50">
+                                    <h3 class="text-base font-bold text-gray-900">
+                                        <i class="fa-solid fa-file-circle-check text-teal-500 mr-2"></i>Revisions
+                                        <span class="text-xs text-gray-500 font-normal ml-2">(Round
+                                            {{ $selectedRoundNumber }})</span>
+                                        @if ($authorRevisionFiles->isNotEmpty())
+                                            <span
+                                                class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
+                                                {{ $authorRevisionFiles->count() }} file(s)
+                                            </span>
+                                        @endif
+                                    </h3>
+                                    @if ($authorRevisionFiles->isNotEmpty())
+                                        <button type="button" @click="openNewRoundModal()"
+                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors">
+                                            <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i> Send to Review
+                                        </button>
+                                    @endif
+                                </div>
+                                <div class="p-6">
+                                    @forelse($authorRevisionFiles as $file)
+                                        <div
+                                            class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-3 -mx-3 transition-colors">
+                                            <div class="flex items-center gap-3">
+                                                @php
+                                                    $ext = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
+                                                    $iconClass = match ($ext) {
+                                                        'pdf' => 'fa-file-pdf text-red-500',
+                                                        'doc', 'docx' => 'fa-file-word text-blue-500',
+                                                        default => 'fa-file text-gray-500',
+                                                    };
+                                                @endphp
+                                                <div
+                                                    class="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                                                    <i class="fa-solid {{ $iconClass }}"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">
+                                                        {{ $file->file_name }}</p>
+                                                    <p class="text-xs text-gray-500">
+                                                        Uploaded by <span
+                                                            class="font-medium">{{ $file->uploader?->name ?? 'Author' }}</span>
+                                                        • {{ $file->created_at->format('M d, Y - H:i') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ route('files.download', $file) }}"
+                                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                                <i class="fa-solid fa-download mr-1.5"></i> Download
+                                            </a>
+                                        </div>
+                                    @empty
+                                        <div class="text-center py-8">
+                                            <i class="fa-solid fa-clock-rotate-left text-gray-300 text-3xl"></i>
+                                            <p class="text-sm text-gray-500 mt-3">No revisions for Round
+                                                {{ $selectedRoundNumber }}.
+                                            </p>
+                                            <p class="text-xs text-gray-400 mt-1">The author will upload revised files
+                                                after revisions are requested.</p>
+                                        </div>
                                     @endforelse
                                 </div>
                             </div>
@@ -1226,22 +1548,6 @@
                                     @endif
                                 </div>
                             @endif
-
-                            {{-- Review Round Info --}}
-                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Review Round
-                                </h4>
-                                @php $currentRound = $submission->currentReviewRound(); @endphp
-                                @if ($currentRound)
-                                    <div class="text-center">
-                                        <span
-                                            class="text-3xl font-bold text-indigo-600">{{ $currentRound->round }}</span>
-                                        <p class="text-sm text-gray-500 mt-1">{{ $currentRound->status_label }}</p>
-                                    </div>
-                                @else
-                                    <p class="text-sm text-gray-500 italic text-center">No review round started.</p>
-                                @endif
-                            </div>
                         </div>
                     @endif {{-- End of isAuthorView conditional --}}
                 </div>
@@ -4138,6 +4444,137 @@
                 }
             });
         </script>
+
+        {{-- ==================== NEW REVIEW ROUND MODAL (Editor View) ==================== --}}
+        <div x-show="newRoundModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="new-round-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="newRoundModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="resetNewRoundModal()"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="newRoundModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+
+                    {{-- Modal Header --}}
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div
+                                    class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-indigo-100">
+                                    <i class="fa-solid fa-rotate text-indigo-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold text-gray-900" id="new-round-modal-title">
+                                        Create New Review Round
+                                    </h3>
+                                    <p class="text-sm text-gray-500">Round
+                                        {{ ($submission->currentReviewRound()?->round ?? 0) + 1 }}</p>
+                                </div>
+                            </div>
+                            <button type="button" @click="resetNewRoundModal()"
+                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-times text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Modal Body --}}
+                    <form method="POST"
+                        action="{{ route('journal.workflow.create-new-round', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                        @submit="newRoundIsSubmitting = true">
+                        @csrf
+                        <div class="px-6 py-6 space-y-4">
+                            <p class="text-sm text-gray-600">
+                                You are about to create a new review round for this submission. Select the revision
+                                files you want to send to reviewers.
+                            </p>
+
+                            {{-- File Selection --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    Select Files for Review
+                                </label>
+
+                                {{-- Loading State --}}
+                                <div x-show="newRoundIsLoading" class="flex items-center justify-center py-8">
+                                    <i class="fa-solid fa-spinner fa-spin text-indigo-500 text-2xl"></i>
+                                    <span class="ml-3 text-sm text-gray-500">Loading revision files...</span>
+                                </div>
+
+                                {{-- File List --}}
+                                <div x-show="!newRoundIsLoading"
+                                    class="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                                    <template x-if="newRoundFiles.length === 0">
+                                        <div class="text-center py-6 px-4">
+                                            <i class="fa-solid fa-folder-open text-gray-300 text-2xl"></i>
+                                            <p class="text-sm text-gray-500 mt-2">No revision files available.</p>
+                                        </div>
+                                    </template>
+                                    <template x-for="file in newRoundFiles" :key="file.id">
+                                        <label class="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" name="selected_files[]" :value="file.id"
+                                                :checked="isNewRoundFileSelected(file.id)"
+                                                @change="toggleNewRoundFile(file.id)"
+                                                class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                            <div class="ml-3 flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 truncate"
+                                                    x-text="file.name"></p>
+                                                <p class="text-xs text-gray-500">
+                                                    <span x-text="file.uploader"></span> •
+                                                    <span x-text="file.uploaded_at"></span>
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </template>
+                                </div>
+
+                                <p class="text-xs text-gray-500 flex items-center gap-1.5 mt-2">
+                                    <i class="fa-solid fa-info-circle text-gray-400"></i>
+                                    <span x-text="newRoundSelectedFiles.length"></span> file(s) selected for promotion
+                                </p>
+                            </div>
+
+                            {{-- Info Box --}}
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p class="text-xs text-blue-700">
+                                    <i class="fa-solid fa-lightbulb mr-1"></i>
+                                    Selected files will be copied to the new review round as review files. You can then
+                                    assign new reviewers.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Modal Footer --}}
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                            <button type="button" @click="resetNewRoundModal()"
+                                class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                :disabled="newRoundIsSubmitting || newRoundSelectedFiles.length === 0"
+                                :class="(newRoundIsSubmitting || newRoundSelectedFiles.length === 0) ?
+                                'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'"
+                                class="flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors">
+                                <i class="fa-solid fa-rotate mr-2"
+                                    :class="newRoundIsSubmitting ? 'fa-spin' : ''"></i>
+                                <span
+                                    x-text="newRoundIsSubmitting ? 'Creating...' : 'Create New Review Round'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
     </div>
     <style>

@@ -14,11 +14,24 @@
 
     {{-- Section A: Round Tabs & Status --}}
     <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-        {{-- Round Tabs --}}
-        @if ($authorReviewData['reviewRounds']->count() > 1)
+        {{-- Round Tabs - Only show rounds that have activity (not pending new rounds) --}}
+        @php
+            // Filter rounds to only show ones that the author should see:
+            // - Completed rounds (revisions_requested, resubmit_for_review, approved, declined)
+            // - OR the first/current round
+            $visibleRounds = $authorReviewData['reviewRounds']->filter(function ($round) use ($authorReviewData) {
+                // Always show round 1
+                if ($round->round === 1) {
+                    return true;
+                }
+                // Show if round has decisions/activity (not just created as pending)
+                return !in_array($round->status, ['pending']);
+            });
+        @endphp
+        @if ($visibleRounds->count() > 1)
             <div class="border-b border-gray-200 bg-gray-50">
                 <nav class="flex -mb-px" aria-label="Tabs">
-                    @foreach ($authorReviewData['reviewRounds'] as $round)
+                    @foreach ($visibleRounds as $round)
                         <button type="button" @click="selectedAuthorRound = {{ $round->round }}"
                             :class="selectedAuthorRound === {{ $round->round }} ?
                                 'border-indigo-500 text-indigo-600 bg-white' :
@@ -35,6 +48,8 @@
         <div class="p-6">
             @php
                 $currentRound = $authorReviewData['currentRound'];
+                $hasUploadedRevision = $authorReviewData['revisionFiles']->isNotEmpty();
+
                 $statusMessages = [
                     'pending' => [
                         'class' => 'border-blue-400 bg-blue-50',
@@ -57,6 +72,12 @@
                         'message' =>
                             'The submission must be resubmitted for another review round. Please address the feedback and upload your revised manuscript.',
                     ],
+                    'revision_submitted' => [
+                        'class' => 'border-teal-400 bg-teal-50',
+                        'icon' => 'fa-check text-teal-500',
+                        'title' => 'Revision Submitted',
+                        'message' => 'Your revised manuscript has been submitted. The editor will review your changes.',
+                    ],
                     'approved' => [
                         'class' => 'border-green-400 bg-green-50',
                         'icon' => 'fa-check-circle text-green-500',
@@ -70,7 +91,15 @@
                         'message' => 'Unfortunately, your submission has been declined.',
                     ],
                 ];
+
                 $roundStatus = $currentRound?->status ?? 'pending';
+
+                // If author has uploaded revision and round status is still "revisions_requested" or "resubmit_for_review",
+                // show "revision_submitted" status
+                if ($hasUploadedRevision && in_array($roundStatus, ['revisions_requested', 'resubmit_for_review'])) {
+                    $roundStatus = 'revision_submitted';
+                }
+
                 $statusInfo = $statusMessages[$roundStatus] ?? $statusMessages['pending'];
             @endphp
 
