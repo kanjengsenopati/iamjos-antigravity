@@ -311,6 +311,15 @@ class SubmissionController extends Controller
 
             DB::commit();
 
+            // Log the submission event
+            \App\Models\SubmissionLog::log(
+                $submission,
+                \App\Models\SubmissionLog::EVENT_SUBMITTED,
+                'Submission Created',
+                "{$user->name} submitted the article for review.",
+                ['section' => $submission->section->title ?? null]
+            );
+
             // ====== NOTIFICATIONS ======
             // 1. Notify the author that submission was received
             $user->notify(new SubmissionReceived($submission));

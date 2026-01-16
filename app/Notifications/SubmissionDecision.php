@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SubmissionDecision extends Notification implements ShouldQueue
+class SubmissionDecision extends Notification
 {
     use Queueable;
 
@@ -85,18 +85,44 @@ class SubmissionDecision extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $journal = $this->submission->journal;
+
+        $titles = [
+            'accepted' => 'Submission Accepted',
+            'rejected' => 'Submission Declined',
+            'revision_required' => 'Revision Required',
+        ];
+
+        $types = [
+            'accepted' => 'success',
+            'rejected' => 'danger',
+            'revision_required' => 'warning',
+        ];
+
+        $icons = [
+            'accepted' => 'fa-check-circle',
+            'rejected' => 'fa-times-circle',
+            'revision_required' => 'fa-edit',
+        ];
+
         $messages = [
-            'accepted' => 'Your submission has been accepted!',
-            'rejected' => 'Your submission has been rejected.',
+            'accepted' => 'Congratulations! Your submission has been accepted.',
+            'rejected' => 'Your submission has been declined.',
             'revision_required' => 'Revision required for your submission.',
         ];
 
         return [
             'type' => 'submission_decision',
+            'title' => $titles[$this->decision] ?? 'Submission Update',
+            'message' => $messages[$this->decision] ?? 'There is an update on your submission.',
+            'url' => "/{$journal->slug}/submissions/{$this->submission->slug}",
+            'notification_type' => $types[$this->decision] ?? 'info',
+            'icon' => $icons[$this->decision] ?? 'fa-gavel',
             'submission_id' => $this->submission->id,
-            'title' => $this->submission->title,
+            'submission_title' => $this->submission->title,
+            'journal_id' => $journal->id,
+            'journal_slug' => $journal->slug,
             'decision' => $this->decision,
-            'message' => $messages[$this->decision] ?? 'Update on your submission.',
         ];
     }
 }

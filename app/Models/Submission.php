@@ -347,6 +347,14 @@ class Submission extends Model
     }
 
     /**
+     * Get activity logs for this submission (timeline)
+     */
+    public function logs(): HasMany
+    {
+        return $this->hasMany(SubmissionLog::class, 'submission_id')->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get publication galleys for this submission
      */
     public function galleys(): HasMany

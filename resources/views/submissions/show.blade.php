@@ -306,11 +306,7 @@
                         <i class="fa-solid fa-layer-group mr-1.5 text-xs"></i>
                         {{ $currentStageName }}
                     </span>
-                    <span
-                        class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium {{ $statusColor }}">
-                        <i class="fa-solid fa-circle-dot mr-1.5 text-xs"></i>
-                        {{ $statusName }}
-                    </span>
+
                 </div>
             </div>
             <div class="mt-2 text-sm text-gray-500">
@@ -724,6 +720,68 @@
                                         <p class="text-sm text-gray-400 italic text-center py-4">No participants assigned
                                         </p>
                                     @endif
+                                </div>
+                            </div>
+
+                            {{-- Activity Log Timeline --}}
+                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
+                                    <i class="fa-solid fa-clock-rotate-left mr-2 text-indigo-500"></i>Activity Log
+                                </h4>
+                                <div class="flow-root">
+                                    <ul role="list" class="-mb-8">
+                                        @forelse($submission->logs()->with('user')->limit(10)->get() as $index => $log)
+                                            @php
+                                                $isLast = $loop->last;
+                                                $colorMap = [
+                                                    'indigo' => 'bg-indigo-500',
+                                                    'purple' => 'bg-purple-500',
+                                                    'blue' => 'bg-blue-500',
+                                                    'emerald' => 'bg-emerald-500',
+                                                    'amber' => 'bg-amber-500',
+                                                    'green' => 'bg-green-500',
+                                                    'gray' => 'bg-gray-400',
+                                                ];
+                                                $bgColor = $colorMap[$log->color] ?? 'bg-gray-400';
+                                            @endphp
+                                            <li>
+                                                <div class="relative pb-6">
+                                                    @if (!$isLast)
+                                                        <span class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200"
+                                                            aria-hidden="true"></span>
+                                                    @endif
+                                                    <div class="relative flex space-x-3">
+                                                        <div>
+                                                            <span
+                                                                class="h-8 w-8 rounded-full {{ $bgColor }} flex items-center justify-center ring-4 ring-white">
+                                                                <i
+                                                                    class="fa-solid {{ $log->icon }} text-white text-xs"></i>
+                                                            </span>
+                                                        </div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <div>
+                                                                <p class="text-sm font-medium text-gray-900">
+                                                                    {{ $log->title }}</p>
+                                                                <p class="text-xs text-gray-500 mt-0.5">
+                                                                    {{ $log->description }}</p>
+                                                            </div>
+                                                            <div class="mt-1 text-xs text-gray-400">
+                                                                <time
+                                                                    datetime="{{ $log->created_at->toIso8601String() }}">
+                                                                    {{ $log->created_at->format('M d, Y \a\t H:i') }}
+                                                                </time>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        @empty
+                                            <li class="text-center py-4">
+                                                <i class="fa-solid fa-timeline text-gray-300 text-2xl mb-2"></i>
+                                                <p class="text-sm text-gray-400 italic">No activity recorded yet</p>
+                                            </li>
+                                        @endforelse
+                                    </ul>
                                 </div>
                             </div>
                         </div>

@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SubmissionReceived extends Notification implements ShouldQueue
+class SubmissionReceived extends Notification
 {
     use Queueable;
 
@@ -53,11 +53,17 @@ class SubmissionReceived extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $journal = $this->submission->journal;
+
         return [
             'type' => 'submission_received',
+            'title' => 'Submission Received',
+            'message' => "Your submission \"{$this->submission->title}\" has been received and is under review.",
+            'url' => "/{$journal->slug}/submissions/{$this->submission->slug}",
+            'notification_type' => 'success',
+            'icon' => 'fa-check-circle',
             'submission_id' => $this->submission->id,
-            'title' => $this->submission->title,
-            'message' => 'Your submission "' . $this->submission->title . '" has been received.',
+            'submission_title' => $this->submission->title,
         ];
     }
 }

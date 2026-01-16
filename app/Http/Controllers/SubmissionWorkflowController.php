@@ -111,6 +111,21 @@ class SubmissionWorkflowController extends Controller
             'date_assigned' => now(),
         ]);
 
+        // Notify the assigned editor
+        $editor = User::find($validated['user_id']);
+        if ($editor) {
+            $editor->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
+
+            // Log the event
+            \App\Models\SubmissionLog::log(
+                $submission,
+                \App\Models\SubmissionLog::EVENT_EDITOR_ASSIGNED,
+                'Editor Assigned',
+                auth()->user()->name . " assigned {$editor->name} as " . ucfirst(str_replace('_', ' ', $validated['role'])) . ".",
+                ['editor_id' => $editor->id, 'role' => $validated['role']]
+            );
+        }
+
         // Update submission status if it was just submitted
         if ($submission->status === Submission::STATUS_SUBMITTED && $submission->stage_id === 1) {
             $submission->update([

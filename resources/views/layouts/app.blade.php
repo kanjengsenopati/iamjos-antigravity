@@ -675,7 +675,12 @@
                         async fetchNotifications() {
                             this.isLoading = true;
                             try {
-                                const res = await fetch('{{ route('notifications.index') }}');
+                                const res = await fetch('{{ route('notifications.index') }}', {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                });
                                 const data = await res.json();
                                 this.notifications = data.notifications;
                                 this.unreadCount = data.unread_count;
@@ -721,7 +726,11 @@
                         getIcon(type) {
                             const icons = {
                                 'new_submission': 'fa-file-circle-plus',
+                                'editor_assignment': 'fa-user-tie',
+                                'review_invitation': 'fa-clipboard-check',
+                                'review_completed': 'fa-check-circle',
                                 'new_discussion_message': 'fa-comments',
+                                'submission_decision': 'fa-gavel',
                                 'submission_received': 'fa-inbox',
                                 'default': 'fa-bell'
                             };
@@ -731,7 +740,11 @@
                         getIconColor(type) {
                             const colors = {
                                 'new_submission': 'text-indigo-500',
+                                'editor_assignment': 'text-purple-500',
+                                'review_invitation': 'text-blue-500',
+                                'review_completed': 'text-emerald-500',
                                 'new_discussion_message': 'text-blue-500',
+                                'submission_decision': 'text-amber-500',
                                 'submission_received': 'text-emerald-500',
                                 'default': 'text-gray-500'
                             };
@@ -747,7 +760,7 @@
                             </svg>
                             <!-- Notification Badge -->
                             <span x-show="unreadCount > 0" x-cloak
-                                class="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full">
+                                class="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full animate-pulse">
                                 <span x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
                             </span>
                         </button>
@@ -797,26 +810,31 @@
                                     <ul class="divide-y divide-gray-100">
                                         <template x-for="notif in notifications" :key="notif.id">
                                             <li>
-                                                <a :href="notif.url"
-                                                    @click="if (!notif.read_at) markAsRead(notif.id)"
+                                                <a :href="`/notifications/${notif.id}/read`"
                                                     class="block px-4 py-3 hover:bg-gray-50 transition-colors"
-                                                    :class="{ 'bg-indigo-50/50': !notif.read_at }">
+                                                    :class="{
+                                                        'bg-blue-50 border-l-4 border-blue-500': !notif
+                                                            .read_at,
+                                                        'bg-white': notif.read_at
+                                                    }">
                                                     <div class="flex items-start gap-3">
                                                         <!-- Icon -->
                                                         <div class="flex-shrink-0 mt-0.5">
-                                                            <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                                            <div class="w-9 h-9 rounded-full flex items-center justify-center"
                                                                 :class="notif.read_at ? 'bg-gray-100' : 'bg-indigo-100'">
                                                                 <i class="fa-solid"
-                                                                    :class="[getIcon(notif.type), notif.read_at ?
+                                                                    :class="[notif.icon || getIcon(notif.type), notif.read_at ?
                                                                         'text-gray-400' : getIconColor(notif.type)
                                                                     ]"></i>
                                                             </div>
                                                         </div>
                                                         <!-- Content -->
                                                         <div class="flex-1 min-w-0">
-                                                            <p class="text-sm"
-                                                                :class="notif.read_at ? 'text-gray-600' :
-                                                                    'text-gray-900 font-medium'"
+                                                            <p class="text-sm font-semibold"
+                                                                :class="notif.read_at ? 'text-gray-600' : 'text-gray-900'"
+                                                                x-text="notif.title || 'Notification'"></p>
+                                                            <p class="text-xs mt-0.5 line-clamp-2"
+                                                                :class="notif.read_at ? 'text-gray-500' : 'text-gray-700'"
                                                                 x-text="notif.message"></p>
                                                             <p class="text-xs text-gray-400 mt-1"
                                                                 x-text="notif.created_at"></p>
@@ -824,7 +842,7 @@
                                                         <!-- Unread Indicator -->
                                                         <div x-show="!notif.read_at" class="flex-shrink-0">
                                                             <span
-                                                                class="w-2 h-2 bg-indigo-500 rounded-full block"></span>
+                                                                class="w-2 h-2 bg-blue-500 rounded-full block"></span>
                                                         </div>
                                                     </div>
                                                 </a>

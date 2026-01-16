@@ -97,6 +97,57 @@
             </button>
         </div>
 
+        <!-- Journal Switcher -->
+        @php
+            $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
+        @endphp
+        @if ($userJournals->count() > 0)
+            <div class="px-4 py-3 border-b border-slate-700/50" x-data="{ journalOpen: false, search: '' }">
+                <button @click="journalOpen = !journalOpen"
+                    class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors text-left group">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-book-open text-xs"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Switch Journal</p>
+                        <p class="text-sm font-medium text-white truncate">{{ $userJournals->count() }} Journal(s)</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"
+                        :class="{ 'rotate-180': journalOpen }"></i>
+                </button>
+
+                <!-- Journal Dropdown -->
+                <div x-show="journalOpen" x-cloak x-collapse class="mt-2">
+                    <!-- Search -->
+                    <div class="mb-2">
+                        <input type="text" x-model="search" placeholder="Search journal..."
+                            class="w-full px-3 py-1.5 text-xs bg-slate-800 border border-slate-700 rounded-md text-white placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <!-- Journal List -->
+                    <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+                        @foreach ($userJournals as $j)
+                            <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
+                                x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors group/j">
+                                <div
+                                    class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300 group-hover/j:bg-indigo-600 group-hover/j:text-white transition-colors">
+                                    {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
+                                </div>
+                                <span
+                                    class="text-sm text-slate-300 truncate group-hover/j:text-white">{{ $j->name }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                    <!-- View All -->
+                    <a href="{{ route('journal.select') }}"
+                        class="mt-2 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-800 rounded-lg hover:bg-slate-700 hover:text-white transition-colors">
+                        <i class="fa-solid fa-grid-2"></i> View All Journals
+                    </a>
+                </div>
+            </div>
+        @endif
+
         <!-- Navigation -->
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             <!-- Dashboard -->
@@ -227,16 +278,229 @@
 
     <!-- Main Content -->
     <main class="main-content min-h-screen">
-        <!-- Mobile Header -->
+        <!-- Top Header Bar -->
         <header
-            class="lg:hidden sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center px-4 gap-4">
-            <button @click="sidebarOpen = true" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-            <span class="font-semibold text-gray-900">IAMJOS Admin</span>
+            class="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+            <!-- Left: Mobile menu + Breadcrumb -->
+            <div class="flex items-center gap-4">
+                <button @click="sidebarOpen = true"
+                    class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <span class="text-sm text-gray-500 hidden lg:block">Site Administration</span>
+            </div>
+
+            <!-- Right: Notifications + Profile -->
+            <div class="flex items-center gap-4">
+                <!-- Notifications Dropdown -->
+                <div x-data="{
+                    open: false,
+                    notifications: [],
+                    unreadCount: 0,
+                    isLoading: false,
+                
+                    async fetchNotifications() {
+                        this.isLoading = true;
+                        try {
+                            const res = await fetch('{{ route('notifications.index') }}', {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
+                            const data = await res.json();
+                            this.notifications = data.notifications;
+                            this.unreadCount = data.unread_count;
+                        } catch (e) {
+                            console.error('Failed to fetch notifications:', e);
+                        }
+                        this.isLoading = false;
+                    },
+                
+                    async markAllAsRead() {
+                        try {
+                            await fetch('{{ route('notifications.mark-all-read') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            this.notifications.forEach(n => n.read_at = new Date().toISOString());
+                            this.unreadCount = 0;
+                        } catch (e) {
+                            console.error('Failed to mark all as read:', e);
+                        }
+                    },
+                
+                    getIcon(type) {
+                        const icons = {
+                            'new_submission': 'fa-file-circle-plus',
+                            'editor_assignment': 'fa-user-tie',
+                            'review_invitation': 'fa-clipboard-check',
+                            'review_completed': 'fa-check-circle',
+                            'new_discussion_message': 'fa-comments',
+                            'submission_decision': 'fa-gavel',
+                            'submission_received': 'fa-inbox',
+                            'default': 'fa-bell'
+                        };
+                        return icons[type] || icons['default'];
+                    },
+                
+                    getIconColor(type) {
+                        const colors = {
+                            'new_submission': 'text-indigo-500',
+                            'editor_assignment': 'text-purple-500',
+                            'review_invitation': 'text-blue-500',
+                            'review_completed': 'text-emerald-500',
+                            'new_discussion_message': 'text-blue-500',
+                            'submission_decision': 'text-amber-500',
+                            'submission_received': 'text-emerald-500',
+                            'default': 'text-gray-500'
+                        };
+                        return colors[type] || colors['default'];
+                    }
+                }" x-init="fetchNotifications()" class="relative">
+                    <!-- Bell Button -->
+                    <button @click="open = !open; if(open) fetchNotifications()"
+                        class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg relative transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <!-- Badge -->
+                        <span x-show="unreadCount > 0" x-cloak
+                            class="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+                            <span x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                        </span>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div x-show="open" @click.away="open = false" x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-100 z-50">
+
+                        <!-- Header -->
+                        <div
+                            class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between rounded-t-xl">
+                            <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+                            <button @click="markAllAsRead()" x-show="unreadCount > 0"
+                                class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                Mark all as read
+                            </button>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="max-h-80 overflow-y-auto">
+                            <!-- Loading -->
+                            <template x-if="isLoading">
+                                <div class="p-8 text-center">
+                                    <div
+                                        class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto">
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2">Loading...</p>
+                                </div>
+                            </template>
+
+                            <!-- Empty -->
+                            <template x-if="!isLoading && notifications.length === 0">
+                                <div class="p-8 text-center">
+                                    <i class="fa-solid fa-bell-slash text-gray-300 text-3xl"></i>
+                                    <p class="text-sm text-gray-500 mt-2">No notifications</p>
+                                </div>
+                            </template>
+
+                            <!-- Items -->
+                            <template x-if="!isLoading && notifications.length > 0">
+                                <ul class="divide-y divide-gray-100">
+                                    <template x-for="notif in notifications" :key="notif.id">
+                                        <li>
+                                            <a :href="`/notifications/${notif.id}/read`"
+                                                class="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                                                :class="{
+                                                    'bg-blue-50 border-l-4 border-blue-500': !notif
+                                                        .read_at,
+                                                    'bg-white': notif.read_at
+                                                }">
+                                                <div class="flex items-start gap-3">
+                                                    <div class="flex-shrink-0 mt-0.5">
+                                                        <div class="w-9 h-9 rounded-full flex items-center justify-center"
+                                                            :class="notif.read_at ? 'bg-gray-100' : 'bg-indigo-100'">
+                                                            <i class="fa-solid"
+                                                                :class="[notif.icon || getIcon(notif.type), notif.read_at ?
+                                                                    'text-gray-400' : getIconColor(notif.type)
+                                                                ]"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm font-semibold"
+                                                            :class="notif.read_at ? 'text-gray-600' : 'text-gray-900'"
+                                                            x-text="notif.title || 'Notification'"></p>
+                                                        <p class="text-xs mt-0.5 line-clamp-2"
+                                                            :class="notif.read_at ? 'text-gray-500' : 'text-gray-700'"
+                                                            x-text="notif.message"></p>
+                                                        <p class="text-xs text-gray-400 mt-1"
+                                                            x-text="notif.created_at"></p>
+                                                    </div>
+                                                    <div x-show="!notif.read_at" class="flex-shrink-0">
+                                                        <span class="w-2 h-2 bg-blue-500 rounded-full block"></span>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 text-center rounded-b-xl">
+                            <a href="{{ route('notifications.index') }}"
+                                class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                                View all notifications
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Dropdown (Desktop) -->
+                <div x-data="{ profileOpen: false }" class="hidden lg:block relative">
+                    <button @click="profileOpen = !profileOpen"
+                        class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div
+                            class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+                        </div>
+                        <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name ?? 'Admin' }}</span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="profileOpen" @click.away="profileOpen = false" x-cloak x-transition
+                        class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1">
+                        <a href="{{ route('profile.edit') }}"
+                            class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                            <i class="fa-solid fa-user text-gray-400"></i> Profile Settings
+                        </a>
+                        <hr class="my-1">
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <i class="fa-solid fa-right-from-bracket text-red-400"></i> Sign Out
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- Page Content -->
