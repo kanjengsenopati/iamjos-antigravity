@@ -52,6 +52,9 @@
                 replyUrl: '{{ route('journal.discussion.reply', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id]) }}',
                 closeUrl: '{{ route('journal.discussion.close', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id]) }}',
                 reopenUrl: '{{ route('journal.discussion.reopen', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id]) }}',
+                uploadFileUrl: '{{ route('journal.discussion.upload-file', $journal->slug) }}',
+                uploadImageUrl: '{{ route('journal.discussion.upload-image', ['journal' => $journal->slug]) }}',
+                csrfToken: '{{ csrf_token() }}',
             })">
 
                 {{-- Summary Row --}}
@@ -629,10 +632,9 @@
                 ClassicEditor
                     .create(editorEl, {
                         simpleUpload: {
-                            uploadUrl: window.discussionUploadImageUrl || '',
+                            uploadUrl: this.uploadImageUrl,
                             headers: {
-                                'X-CSRF-TOKEN': document.querySelector(
-                                    'meta[name="csrf-token"]')?.content || ''
+                                'X-CSRF-TOKEN': this.csrfToken
                             }
                         }
                     })
@@ -657,11 +659,10 @@
                 formData.append('file', file);
 
                 try {
-                    const res = await fetch(window.discussionUploadFileUrl || '', {
+                    const res = await fetch(this.uploadFileUrl, {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector(
-                                'meta[name="csrf-token"]')?.content || ''
+                            'X-CSRF-TOKEN': this.csrfToken
                         },
                         body: formData
                     });
