@@ -25,6 +25,12 @@
         uploadStage: '{{ $defaultStage }}',
         discussionStageId: {{ $submission->stage_id }},
     
+        // Author Review View State
+        selectedAuthorRound: {{ $submission->currentReviewRound()?->round ?? 1 }},
+        showDecisionModal: false,
+        selectedDecision: null,
+        revisionUploadModalOpen: false,
+    
         // Assign Editor Modal State
         assignEditorModalOpen: false,
         editorSearch: '',
@@ -242,6 +248,127 @@
         resetDeclineModal() {
             this.declineReason = '';
             this.notifyAuthor = true;
+        },
+    
+        // ============== Request Revisions Modal (OJS 3.3 Style) ==============
+        revisionModalOpen: false,
+        revisionNewRound: false,
+        revisionSendEmail: true,
+        revisionEmailBody: '',
+        revisionAttachments: [],
+        revisionSelectedFiles: [],
+        revisionIsLoadingFiles: false,
+        revisionIsSubmitting: false,
+        revisionEditorInstance: null,
+        revisionUploadedFiles: [],
+    
+        openRevisionModal() {
+            this.revisionModalOpen = true;
+            this.revisionNewRound = false;
+            this.revisionSendEmail = true;
+            this.revisionSelectedFiles = [];
+            this.revisionUploadedFiles = [];
+            this.loadRevisionAttachments();
+            this.$nextTick(() => this.initRevisionEditor());
+        },
+    
+        async loadRevisionAttachments() {
+            this.revisionIsLoadingFiles = true;
+            try {
+                const res = await fetch(`{{ route('journal.workflow.reviewer-attachments', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}`);
+                const data = await res.json();
+                this.revisionAttachments = data.files || [];
+            } catch (e) {
+                console.error('Failed to load reviewer attachments:', e);
+            }
+            this.revisionIsLoadingFiles = false;
+        },
+    
+        initRevisionEditor() {
+            if (this.revisionEditorInstance) return;
+            const editorEl = document.querySelector('#revision-email-editor');
+            if (!editorEl) return;
+    
+            ClassicEditor
+                .create(editorEl, {
+                    simpleUpload: {
+                        uploadUrl: '{{ route('journal.discussion.upload-image', ['journal' => $journal->slug]) }}',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                    }
+                })
+                .then(editor => {
+                    this.revisionEditorInstance = editor;
+                    // Pre-fill with default template
+                    const defaultBody = this.getDefaultRevisionEmailTemplate();
+                    editor.setData(defaultBody);
+                    this.revisionEmailBody = defaultBody;
+                    editor.model.document.on('change:data', () => {
+                        this.revisionEmailBody = editor.getData();
+                    });
+                })
+                .catch(err => console.error(err));
+        },
+    
+        getDefaultRevisionEmailTemplate() {
+            return `<p>Dear {{ $submission->authors->first()?->name ?? 'Author' }},</p>
+                            <p>We have reached a decision regarding your submission to <strong>{{ $journal->name }}</strong>:</p>
+                            <p><strong>Submission:</strong> {{ $submission->title }}</p>
+                            <p><strong>Manuscript ID:</strong> {{ $submission->submission_code }}</p>
+                            <hr>
+                            <p><strong>Our Decision: Revisions Required</strong></p>
+                            <p>Based on the reviewers' feedback, we request that you revise your manuscript. Please address each reviewer comment carefully and submit your revised manuscript through the journal portal.</p>
+                            <p>The reviewer comments are attached or included below for your reference.</p>
+                            <hr>
+                            <p>If you have any questions, please do not hesitate to contact us.</p>
+                            <p>Best regards,<br>The Editorial Team</p>`;
+        },
+    
+        toggleRevisionFile(fileId) {
+            const index = this.revisionSelectedFiles.indexOf(fileId);
+            if (index > -1) {
+                this.revisionSelectedFiles.splice(index, 1);
+            } else {
+                this.revisionSelectedFiles.push(fileId);
+            }
+        },
+    
+        isRevisionFileSelected(fileId) {
+            return this.revisionSelectedFiles.includes(fileId);
+        },
+    
+        async uploadRevisionFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+    
+            let formData = new FormData();
+            formData.append('file', file);
+    
+            try {
+                const res = await fetch(`{{ route('journal.workflow.upload-decision-file', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                });
+                const data = await res.json();
+                this.revisionUploadedFiles.push(data);
+                this.revisionSelectedFiles.push(data.id);
+            } catch (err) {
+                alert('Upload failed');
+            }
+            event.target.value = '';
+        },
+    
+        resetRevisionModal() {
+            this.revisionModalOpen = false;
+            this.revisionNewRound = false;
+            this.revisionSendEmail = true;
+            this.revisionEmailBody = '';
+            this.revisionSelectedFiles = [];
+            this.revisionUploadedFiles = [];
+            if (this.revisionEditorInstance) {
+                this.revisionEditorInstance.destroy();
+                this.revisionEditorInstance = null;
+            }
         }
     }" x-init="$watch('discussionModalOpen', value => { if (value) setTimeout(() => initEditor(), 100); })">
 
@@ -826,287 +953,297 @@
             {{-- ==================== REVIEW STAGE ==================== --}}
             <div x-show="activeStage === 'review'" class="bg-gray-50/50 min-h-screen pt-6">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {{-- Main Panel Area --}}
-                    <div class="lg:col-span-3 space-y-6">
 
-                        {{-- Reviewers Panel --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-                            <div
-                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                                <h3 class="text-base font-bold text-gray-900">
-                                    <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i>Reviewers
-                                </h3>
-                                @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
-                                    <button @click="reviewerModalOpen = true; resetReviewerModal()"
-                                        class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                                        + Add Reviewer
-                                    </button>
-                                @endif
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                Reviewer</th>
-                                            <th
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                Assigned</th>
-                                            <th
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                Due Date</th>
-                                            <th
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                Status</th>
-                                            <th
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                Recommendation</th>
-                                            <th
-                                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                                Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
-                                        @forelse($submission->reviewAssignments as $assignment)
+                    {{-- ==================== AUTHOR VIEW (Blind Review Protocol) ==================== --}}
+                    @if (isset($isAuthorView) && $isAuthorView)
+                        @include('submissions.partials.review-author-view')
+
+                        {{-- ==================== EDITOR/ADMIN VIEW (Full Access) ==================== --}}
+                    @else
+                        {{-- Main Panel Area --}}
+                        <div class="lg:col-span-3 space-y-6">
+
+                            {{-- Reviewers Panel --}}
+                            <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                                <div
+                                    class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                    <h3 class="text-base font-bold text-gray-900">
+                                        <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i>Reviewers
+                                    </h3>
+                                    @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                                        <button @click="reviewerModalOpen = true; resetReviewerModal()"
+                                            class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
+                                            + Add Reviewer
+                                        </button>
+                                    @endif
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
                                             <tr>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="flex items-center">
-                                                        <div
-                                                            class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                                                            {{ strtoupper(substr($assignment->reviewer->name ?? 'R', 0, 1)) }}
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    Reviewer</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    Assigned</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    Due Date</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    Status</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    Recommendation</th>
+                                                <th
+                                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                                    Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @forelse($submission->reviewAssignments as $assignment)
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <div class="flex items-center">
+                                                            <div
+                                                                class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                                                                {{ strtoupper(substr($assignment->reviewer->name ?? 'R', 0, 1)) }}
+                                                            </div>
+                                                            <div class="ml-4">
+                                                                <div class="text-sm font-medium text-gray-900">
+                                                                    {{ $assignment->reviewer->name ?? 'Unknown' }}
+                                                                </div>
+                                                                <div class="text-xs text-gray-500">
+                                                                    {{ $assignment->reviewer->email ?? '' }}</div>
+                                                            </div>
                                                         </div>
-                                                        <div class="ml-4">
-                                                            <div class="text-sm font-medium text-gray-900">
-                                                                {{ $assignment->reviewer->name ?? 'Unknown' }}</div>
-                                                            <div class="text-xs text-gray-500">
-                                                                {{ $assignment->reviewer->email ?? '' }}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {{ $assignment->assigned_at?->format('M d, Y') ?? '-' }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    @if ($assignment->due_date)
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {{ $assignment->assigned_at?->format('M d, Y') ?? '-' }}
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        @if ($assignment->due_date)
+                                                            <span
+                                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $assignment->isOverdue() ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' }}">
+                                                                {{ $assignment->due_date->format('M d, Y') }}
+                                                                @if ($assignment->isOverdue())
+                                                                    <i class="fa-solid fa-exclamation-circle ml-1"></i>
+                                                                @endif
+                                                            </span>
+                                                        @else
+                                                            <span class="text-gray-400">-</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        @php
+                                                            $statusColors = [
+                                                                'pending' => 'bg-yellow-100 text-yellow-800',
+                                                                'accepted' => 'bg-blue-100 text-blue-800',
+                                                                'completed' => 'bg-green-100 text-green-800',
+                                                                'declined' => 'bg-red-100 text-red-800',
+                                                                'cancelled' => 'bg-gray-100 text-gray-600',
+                                                            ];
+                                                        @endphp
                                                         <span
-                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $assignment->isOverdue() ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' }}">
-                                                            {{ $assignment->due_date->format('M d, Y') }}
-                                                            @if ($assignment->isOverdue())
-                                                                <i class="fa-solid fa-exclamation-circle ml-1"></i>
-                                                            @endif
+                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$assignment->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                                            {{ $assignment->status_label }}
                                                         </span>
-                                                    @else
-                                                        <span class="text-gray-400">-</span>
-                                                    @endif
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    @php
-                                                        $statusColors = [
-                                                            'pending' => 'bg-yellow-100 text-yellow-800',
-                                                            'accepted' => 'bg-blue-100 text-blue-800',
-                                                            'completed' => 'bg-green-100 text-green-800',
-                                                            'declined' => 'bg-red-100 text-red-800',
-                                                            'cancelled' => 'bg-gray-100 text-gray-600',
-                                                        ];
-                                                    @endphp
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                        @if ($assignment->recommendation)
+                                                            <span
+                                                                class="font-medium text-{{ $assignment->recommendation_color }}-600">{{ $assignment->recommendation_label }}</span>
+                                                        @else
+                                                            <span class="text-gray-400 italic">Awaiting</span>
+                                                        @endif
+                                                    </td>
+                                                    <td
+                                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <form
+                                                            action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
+                                                            method="POST" class="inline"
+                                                            onsubmit="return confirm('Remove this reviewer?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="text-red-600 hover:text-red-900 text-xs">Unassign</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="6"
+                                                        class="px-6 py-8 text-center text-sm text-gray-500 italic">
+                                                        No reviewers assigned yet.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {{-- Review Files Panel --}}
+                            <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                                <div
+                                    class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                                    <h3 class="text-base font-bold text-gray-900">
+                                        <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>Review Files
+                                    </h3>
+                                </div>
+                                <div class="p-6 overflow-x-auto">
+                                    @forelse($submission->files->where('stage', 'review') as $file)
+                                        <div
+                                            class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors min-w-max">
+                                            <div class="flex items-center">
+                                                @php
+                                                    $extension = strtolower(
+                                                        pathinfo($file->file_name, PATHINFO_EXTENSION),
+                                                    );
+                                                    $iconClass = match ($extension) {
+                                                        'pdf' => 'fa-file-pdf text-red-500',
+                                                        'doc', 'docx' => 'fa-file-word text-blue-500',
+                                                        'xls', 'xlsx' => 'fa-file-excel text-green-500',
+                                                        'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
+                                                        default => 'fa-file-lines text-gray-500',
+                                                    };
+                                                    $viewableExtensions = [
+                                                        'pdf',
+                                                        'doc',
+                                                        'docx',
+                                                        'xls',
+                                                        'xlsx',
+                                                        'ppt',
+                                                        'pptx',
+                                                        'odt',
+                                                    ];
+                                                    $isViewable = in_array($extension, $viewableExtensions);
+                                                @endphp
+                                                <div
+                                                    class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-3">
+                                                    <i class="fa-solid {{ $iconClass }}"></i>
+                                                </div>
+                                                <div>
                                                     <span
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$assignment->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                                        {{ $assignment->status_label }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                    @if ($assignment->recommendation)
-                                                        <span
-                                                            class="font-medium text-{{ $assignment->recommendation_color }}-600">{{ $assignment->recommendation_label }}</span>
-                                                    @else
-                                                        <span class="text-gray-400 italic">Awaiting</span>
-                                                    @endif
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <form
-                                                        action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
-                                                        method="POST" class="inline"
-                                                        onsubmit="return confirm('Remove this reviewer?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                            class="text-red-600 hover:text-red-900 text-xs">Unassign</button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="6"
-                                                    class="px-6 py-8 text-center text-sm text-gray-500 italic">
-                                                    No reviewers assigned yet.
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {{-- Review Files Panel --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-                            <div
-                                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                                <h3 class="text-base font-bold text-gray-900">
-                                    <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>Review Files
-                                </h3>
-                            </div>
-                            <div class="p-6 overflow-x-auto">
-                                @forelse($submission->files->where('stage', 'review') as $file)
-                                    <div
-                                        class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors min-w-max">
-                                        <div class="flex items-center">
-                                            @php
-                                                $extension = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
-                                                $iconClass = match ($extension) {
-                                                    'pdf' => 'fa-file-pdf text-red-500',
-                                                    'doc', 'docx' => 'fa-file-word text-blue-500',
-                                                    'xls', 'xlsx' => 'fa-file-excel text-green-500',
-                                                    'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
-                                                    default => 'fa-file-lines text-gray-500',
-                                                };
-                                                $viewableExtensions = [
-                                                    'pdf',
-                                                    'doc',
-                                                    'docx',
-                                                    'xls',
-                                                    'xlsx',
-                                                    'ppt',
-                                                    'pptx',
-                                                    'odt',
-                                                ];
-                                                $isViewable = in_array($extension, $viewableExtensions);
-                                            @endphp
-                                            <div
-                                                class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-3">
-                                                <i class="fa-solid {{ $iconClass }}"></i>
+                                                        class="text-sm font-medium text-gray-700">{{ $file->file_name }}</span>
+                                                    <p class="text-xs text-gray-500">
+                                                        {{ number_format($file->file_size / 1024, 0) }} KB</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <span
-                                                    class="text-sm font-medium text-gray-700">{{ $file->file_name }}</span>
-                                                <p class="text-xs text-gray-500">
-                                                    {{ number_format($file->file_size / 1024, 0) }} KB</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            @if ($isViewable)
-                                                <a href="{{ route('files.preview', $file) }}" title="Preview"
-                                                    class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
-                                                    <i class="fa-solid fa-eye text-sm"></i>
+                                            <div class="flex items-center gap-1">
+                                                @if ($isViewable)
+                                                    <a href="{{ route('files.preview', $file) }}" title="Preview"
+                                                        class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                                        <i class="fa-solid fa-eye text-sm"></i>
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('files.download', $file) }}" title="Download"
+                                                    class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-emerald-600 hover:bg-emerald-50">
+                                                    <i class="fa-solid fa-download text-sm"></i>
                                                 </a>
-                                            @endif
-                                            <a href="{{ route('files.download', $file) }}" title="Download"
-                                                class="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-emerald-600 hover:bg-emerald-50">
-                                                <i class="fa-solid fa-download text-sm"></i>
-                                            </a>
+                                            </div>
                                         </div>
-                                    </div>
-                                @empty
-                                    <p class="text-sm text-gray-500 italic text-center py-4">No review files uploaded.
-                                    </p>
-                                @endforelse
+                                    @empty
+                                        <p class="text-sm text-gray-500 italic text-center py-4">No review files
+                                            uploaded.
+                                        </p>
+                                    @endforelse
+                                </div>
                             </div>
+
+                            {{-- Review Discussions - Stage 2 --}}
+                            <x-discussion-panel :submission="$submission" :stageId="2" stageName="review"
+                                :discussions="$allDiscussions" :participants="$participants" :journal="$journal" />
                         </div>
 
-                        {{-- Review Discussions - Stage 2 --}}
-                        <x-discussion-panel :submission="$submission" :stageId="2" stageName="review" :discussions="$allDiscussions"
-                            :participants="$participants" :journal="$journal" />
-                    </div>
+                        {{-- Sidebar --}}
+                        <div class="lg:col-span-1 space-y-6">
+                            {{-- Editor Decision Panel --}}
+                            @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Editor
+                                        Decision</h4>
 
-                    {{-- Sidebar --}}
-                    <div class="lg:col-span-1 space-y-6">
-                        {{-- Editor Decision Panel --}}
-                        @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
-                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Editor
-                                    Decision</h4>
-
-                                @if ($submission->stage_id == 2 && $submission->status != 3)
-                                    {{-- Active - Stage 2 and not declined --}}
-                                    <div class="space-y-3">
-                                        <form
-                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                                            method="POST">
-                                            @csrf
-                                            <input type="hidden" name="decision" value="accept">
-                                            <button type="submit"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                                                <i class="fa-solid fa-check mr-2"></i> Accept Submission
-                                            </button>
-                                        </form>
-                                        <form
-                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                                            method="POST">
-                                            @csrf
-                                            <input type="hidden" name="decision" value="request_revisions">
-                                            <button type="submit"
+                                    @if ($submission->stage_id == 2 && $submission->status != 3)
+                                        {{-- Active - Stage 2 and not declined --}}
+                                        <div class="space-y-3">
+                                            <form
+                                                action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                                                method="POST">
+                                                @csrf
+                                                <input type="hidden" name="decision" value="accept">
+                                                <button type="submit"
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                                    <i class="fa-solid fa-check mr-2"></i> Accept Submission
+                                                </button>
+                                            </form>
+                                            {{-- Request Revisions - Opens Modal --}}
+                                            <button type="button" @click="openRevisionModal()"
                                                 class="w-full inline-flex justify-center items-center px-4 py-2 border border-yellow-300 shadow-sm text-sm font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
                                                 <i class="fa-solid fa-pen mr-2"></i> Request Revisions
                                             </button>
-                                        </form>
-                                        <form
-                                            action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                                            method="POST"
-                                            onsubmit="return confirm('This will decline the submission. Continue?')">
-                                            @csrf
-                                            <input type="hidden" name="decision" value="decline">
-                                            <button type="submit"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
-                                                <i class="fa-solid fa-xmark mr-2"></i> Decline
-                                            </button>
-                                        </form>
+                                            <form
+                                                action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('This will decline the submission. Continue?')">
+                                                @csrf
+                                                <input type="hidden" name="decision" value="decline">
+                                                <button type="submit"
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                                                    <i class="fa-solid fa-xmark mr-2"></i> Decline
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        {{-- Disabled - Stage has passed or submission declined --}}
+                                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                                            <p class="text-sm text-gray-600 flex items-center">
+                                                <i class="fa-solid fa-check-circle text-gray-400 mr-2"></i>
+                                                @if ($submission->status == 3)
+                                                    Submission has been declined.
+                                                @elseif($submission->stage_id > 2)
+                                                    Review stage complete. Moved to
+                                                    <strong
+                                                        class="ml-1">{{ ucfirst($stageNames[$submission->stage_id] ?? 'next stage') }}</strong>.
+                                                @else
+                                                    Awaiting review stage.
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <button disabled
+                                            class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
+                                            <i class="fa-solid fa-check mr-2"></i> Accept Submission
+                                        </button>
+                                        <button disabled
+                                            class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
+                                            <i class="fa-solid fa-pen mr-2"></i> Request Revisions
+                                        </button>
+                                        <button disabled
+                                            class="w-full px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
+                                            <i class="fa-solid fa-xmark mr-2"></i> Decline
+                                        </button>
+                                    @endif
+                                </div>
+                            @endif
+
+                            {{-- Review Round Info --}}
+                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Review Round
+                                </h4>
+                                @php $currentRound = $submission->currentReviewRound(); @endphp
+                                @if ($currentRound)
+                                    <div class="text-center">
+                                        <span
+                                            class="text-3xl font-bold text-indigo-600">{{ $currentRound->round }}</span>
+                                        <p class="text-sm text-gray-500 mt-1">{{ $currentRound->status_label }}</p>
                                     </div>
                                 @else
-                                    {{-- Disabled - Stage has passed or submission declined --}}
-                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                                        <p class="text-sm text-gray-600 flex items-center">
-                                            <i class="fa-solid fa-check-circle text-gray-400 mr-2"></i>
-                                            @if ($submission->status == 3)
-                                                Submission has been declined.
-                                            @elseif($submission->stage_id > 2)
-                                                Review stage complete. Moved to
-                                                <strong
-                                                    class="ml-1">{{ ucfirst($stageNames[$submission->stage_id] ?? 'next stage') }}</strong>.
-                                            @else
-                                                Awaiting review stage.
-                                            @endif
-                                        </p>
-                                    </div>
-                                    <button disabled
-                                        class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
-                                        <i class="fa-solid fa-check mr-2"></i> Accept Submission
-                                    </button>
-                                    <button disabled
-                                        class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
-                                        <i class="fa-solid fa-pen mr-2"></i> Request Revisions
-                                    </button>
-                                    <button disabled
-                                        class="w-full px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
-                                        <i class="fa-solid fa-xmark mr-2"></i> Decline
-                                    </button>
+                                    <p class="text-sm text-gray-500 italic text-center">No review round started.</p>
                                 @endif
                             </div>
-                        @endif
-
-                        {{-- Review Round Info --}}
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Review Round</h4>
-                            @php $currentRound = $submission->currentReviewRound(); @endphp
-                            @if ($currentRound)
-                                <div class="text-center">
-                                    <span class="text-3xl font-bold text-indigo-600">{{ $currentRound->round }}</span>
-                                    <p class="text-sm text-gray-500 mt-1">{{ $currentRound->status_label }}</p>
-                                </div>
-                            @else
-                                <p class="text-sm text-gray-500 italic text-center">No review round started.</p>
-                            @endif
                         </div>
-                    </div>
+                    @endif {{-- End of isAuthorView conditional --}}
                 </div>
             </div>
 
@@ -3549,6 +3686,458 @@
                 </div>
             </div>
         </div>
+
+        {{-- ==================== REQUEST REVISIONS MODAL (OJS 3.3 Style) ==================== --}}
+        <div x-show="revisionModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="revision-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="revisionModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="resetRevisionModal()"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="revisionModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+
+                    {{-- Modal Header --}}
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-yellow-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div
+                                    class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-yellow-100">
+                                    <i class="fa-solid fa-pen-to-square text-yellow-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold text-gray-900" id="revision-modal-title">
+                                        Request Revisions
+                                    </h3>
+                                    <p class="text-sm text-gray-500">Configure revision request for the author</p>
+                                </div>
+                            </div>
+                            <button type="button" @click="resetRevisionModal()"
+                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-times text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Modal Body --}}
+                    <form
+                        action="{{ route('journal.workflow.request-revisions', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                        method="POST" @submit="revisionIsSubmitting = true">
+                        @csrf
+
+                        <div class="px-6 py-5 space-y-6 max-h-[70vh] overflow-y-auto">
+
+                            {{-- Section A: New Review Round --}}
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-3">
+                                    <i class="fa-solid fa-rotate text-indigo-500 mr-2"></i>
+                                    Require New Review Round
+                                </h4>
+                                <div class="space-y-3">
+                                    <label
+                                        class="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 bg-white hover:border-indigo-300 transition-colors"
+                                        :class="{ 'border-indigo-500 ring-2 ring-indigo-100': !revisionNewRound }">
+                                        <input type="radio" name="new_review_round" value="0"
+                                            x-model="revisionNewRound" :value="false"
+                                            class="mt-0.5 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-900">No new review round</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">Revisions will not be subject to a
+                                                new round of peer reviews.</p>
+                                        </div>
+                                    </label>
+                                    <label
+                                        class="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 bg-white hover:border-indigo-300 transition-colors"
+                                        :class="{ 'border-indigo-500 ring-2 ring-indigo-100': revisionNewRound }">
+                                        <input type="radio" name="new_review_round" value="1"
+                                            x-model="revisionNewRound" :value="true"
+                                            class="mt-0.5 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-900">Require new review
+                                                round</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">Revisions will be subject to a new
+                                                round of peer reviews.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Section B: Send Email --}}
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-3">
+                                    <i class="fa-solid fa-envelope text-blue-500 mr-2"></i>
+                                    Send Email
+                                </h4>
+                                <div class="space-y-3">
+                                    <label
+                                        class="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 bg-white hover:border-blue-300 transition-colors"
+                                        :class="{ 'border-blue-500 ring-2 ring-blue-100': revisionSendEmail }">
+                                        <input type="radio" name="send_email" value="1"
+                                            x-model="revisionSendEmail" :value="true"
+                                            class="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-900">Send email
+                                                notification</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">
+                                                Notify author(s): <span
+                                                    class="font-medium text-gray-700">{{ $submission->authors->first()?->name ?? 'Author' }}</span>
+                                            </p>
+                                        </div>
+                                    </label>
+                                    <label
+                                        class="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 bg-white hover:border-blue-300 transition-colors"
+                                        :class="{ 'border-blue-500 ring-2 ring-blue-100': !revisionSendEmail }">
+                                        <input type="radio" name="send_email" value="0"
+                                            x-model="revisionSendEmail" :value="false"
+                                            class="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-900">Do not send email</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">No email notification will be
+                                                sent.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Section C: Email Content --}}
+                            <div x-show="revisionSendEmail" x-transition
+                                class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-3">
+                                    <i class="fa-solid fa-file-lines text-teal-500 mr-2"></i>
+                                    Email Content
+                                </h4>
+                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                    <textarea name="email_body" id="revision-email-editor" class="hidden"></textarea>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">
+                                    <i class="fa-solid fa-info-circle mr-1"></i>
+                                    Include reviewer feedback and specific revision requirements.
+                                </p>
+                            </div>
+
+                            {{-- Section D: Review Attachments --}}
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-sm font-semibold text-gray-900">
+                                        <i class="fa-solid fa-paperclip text-purple-500 mr-2"></i>
+                                        Review Attachments
+                                    </h4>
+                                    <label
+                                        class="inline-flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors">
+                                        <i class="fa-solid fa-upload mr-1"></i>
+                                        Upload File
+                                        <input type="file" class="sr-only"
+                                            @change="uploadRevisionFile($event)">
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-3">Select files to share with the author(s).</p>
+
+                                {{-- Hidden inputs for selected files --}}
+                                <template x-for="(fileId, index) in revisionSelectedFiles" :key="fileId">
+                                    <input type="hidden" :name="'selected_files[' + index + ']'"
+                                        :value="fileId">
+                                </template>
+
+                                {{-- File List --}}
+                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                    <template x-if="revisionIsLoadingFiles">
+                                        <div class="px-4 py-6 text-center">
+                                            <i class="fa-solid fa-spinner fa-spin text-gray-400 text-lg"></i>
+                                            <p class="text-sm text-gray-500 mt-2">Loading files...</p>
+                                        </div>
+                                    </template>
+
+                                    <template
+                                        x-if="!revisionIsLoadingFiles && revisionAttachments.length === 0 && revisionUploadedFiles.length === 0">
+                                        <div class="px-4 py-6 text-center">
+                                            <i class="fa-solid fa-folder-open text-gray-300 text-2xl"></i>
+                                            <p class="text-sm text-gray-500 mt-2">No reviewer attachments available.
+                                            </p>
+                                        </div>
+                                    </template>
+
+                                    <template
+                                        x-if="!revisionIsLoadingFiles && (revisionAttachments.length > 0 || revisionUploadedFiles.length > 0)">
+                                        <ul class="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                                            {{-- Existing Reviewer Files --}}
+                                            <template x-for="file in revisionAttachments" :key="file.id">
+                                                <li class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                                                    @click="toggleRevisionFile(file.id)">
+                                                    <label class="flex items-center cursor-pointer">
+                                                        <input type="checkbox"
+                                                            :checked="isRevisionFileSelected(file.id)"
+                                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                                        <div class="ml-3 flex-1 min-w-0">
+                                                            <p class="text-sm font-medium text-gray-900 truncate"
+                                                                x-text="file.name"></p>
+                                                            <p class="text-xs text-gray-500">
+                                                                <span
+                                                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 mr-1">
+                                                                    <i class="fa-solid fa-user-check mr-1"></i>
+                                                                    <span x-text="file.uploader"></span>
+                                                                </span>
+                                                                <span x-text="file.uploaded_at"></span>
+                                                            </p>
+                                                        </div>
+                                                    </label>
+                                                </li>
+                                            </template>
+
+                                            {{-- Newly Uploaded Files --}}
+                                            <template x-for="file in revisionUploadedFiles" :key="file.id">
+                                                <li class="px-4 py-3 bg-green-50 border-l-4 border-green-400">
+                                                    <label class="flex items-center">
+                                                        <input type="checkbox" checked disabled
+                                                            class="h-4 w-4 text-green-600 border-gray-300 rounded cursor-not-allowed">
+                                                        <div class="ml-3 flex-1 min-w-0">
+                                                            <p class="text-sm font-medium text-gray-900 truncate"
+                                                                x-text="file.name"></p>
+                                                            <p class="text-xs text-green-600">
+                                                                <i class="fa-solid fa-check-circle mr-1"></i>
+                                                                Just uploaded
+                                                            </p>
+                                                        </div>
+                                                    </label>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </template>
+                                </div>
+
+                                <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+                                    <span>
+                                        <span x-text="revisionSelectedFiles.length"></span> file(s) selected
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {{-- Modal Footer --}}
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                            <button type="button" @click="resetRevisionModal()"
+                                class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                :disabled="revisionIsSubmitting || (revisionSendEmail && !revisionEmailBody)"
+                                class="inline-flex items-center px-4 py-2.5 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                <i class="fa-solid fa-gavel mr-2"></i>
+                                <span
+                                    x-text="revisionIsSubmitting ? 'Submitting...' : 'Record Editorial Decision'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== DECISION NOTIFICATION MODAL (Author View) ==================== --}}
+        <div x-show="showDecisionModal" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="decision-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="showDecisionModal" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="showDecisionModal = false; selectedDecision = null"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="showDecisionModal" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+
+                    {{-- Modal Header --}}
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-blue-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div
+                                    class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-indigo-100">
+                                    <i class="fa-solid fa-envelope-open-text text-indigo-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold text-gray-900" id="decision-modal-title"
+                                        x-text="selectedDecision?.type_label || 'Editorial Decision'"></h3>
+                                    <p class="text-sm text-gray-500" x-show="selectedDecision?.made_at"
+                                        x-text="selectedDecision?.made_at ? new Date(selectedDecision.made_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''">
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" @click="showDecisionModal = false; selectedDecision = null"
+                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-times text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Modal Body --}}
+                    <div class="px-6 py-6 max-h-[60vh] overflow-y-auto">
+                        {{-- Email Content --}}
+                        <div x-show="selectedDecision?.email_body" class="prose prose-sm max-w-none">
+                            <div x-html="selectedDecision?.email_body || ''"></div>
+                        </div>
+
+                        {{-- No Email Content --}}
+                        <div x-show="!selectedDecision?.email_body" class="text-center py-8">
+                            <i class="fa-solid fa-envelope-circle-check text-gray-300 text-4xl"></i>
+                            <p class="text-gray-500 mt-4">No detailed message was included with this decision.</p>
+                            <p class="text-sm text-gray-400 mt-1">Please contact the editor if you need more
+                                information.</p>
+                        </div>
+
+                        {{-- New Round Notice --}}
+                        <div x-show="selectedDecision?.new_review_round" class="mt-6 border-t border-gray-200 pt-4">
+                            <div class="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-3 rounded-lg">
+                                <i class="fa-solid fa-rotate"></i>
+                                <span class="text-sm font-medium">Your revised manuscript will undergo a new round of
+                                    peer review.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Modal Footer --}}
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+                        <button type="button" @click="showDecisionModal = false; selectedDecision = null"
+                            class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== REVISION UPLOAD MODAL (Author View) ==================== --}}
+        <div x-show="revisionUploadModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
+            aria-labelledby="revision-upload-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="revisionUploadModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
+                    @click="revisionUploadModalOpen = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="revisionUploadModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+
+                    {{-- Modal Header --}}
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-emerald-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div
+                                    class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-teal-100">
+                                    <i class="fa-solid fa-file-arrow-up text-teal-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-semibold text-gray-900"
+                                        id="revision-upload-modal-title">
+                                        Upload Revised Manuscript
+                                    </h3>
+                                    <p class="text-sm text-gray-500">Submit your revised files</p>
+                                </div>
+                            </div>
+                            <button type="button" @click="revisionUploadModalOpen = false"
+                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-times text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Modal Body --}}
+                    <form
+                        action="{{ route('journal.submissions.files.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                        method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="stage" value="revision">
+                        <input type="hidden" name="file_type" value="revision">
+
+                        <div class="px-6 py-6 space-y-4">
+                            <div
+                                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-teal-400 transition-colors">
+                                <input type="file" name="file" id="revisionFileInput" class="sr-only"
+                                    accept=".doc,.docx,.pdf,.odt,.rtf" required>
+                                <label for="revisionFileInput" class="cursor-pointer">
+                                    <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-4 block"></i>
+                                    <p class="text-sm font-medium text-gray-700">Click to upload your revised
+                                        manuscript</p>
+                                    <p class="text-xs text-gray-500 mt-1">DOC, DOCX, PDF, ODT (Max 10MB)</p>
+                                </label>
+                            </div>
+
+                            {{-- File Selected Preview --}}
+                            <div id="revisionFilePreview" class="hidden bg-teal-50 rounded-lg p-4">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-file-check text-teal-600 text-xl"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900" id="revisionFileName"></p>
+                                        <p class="text-xs text-gray-500" id="revisionFileSize"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p class="text-xs text-blue-700">
+                                    <i class="fa-solid fa-info-circle mr-1"></i>
+                                    Please ensure your revised manuscript addresses all reviewer comments before
+                                    uploading.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Modal Footer --}}
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                            <button type="button" @click="revisionUploadModalOpen = false"
+                                class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="inline-flex items-center px-4 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
+                                <i class="fa-solid fa-upload mr-2"></i> Upload Revision
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Preview selected file for revision upload
+            document.getElementById('revisionFileInput')?.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('revisionFilePreview');
+                const fileName = document.getElementById('revisionFileName');
+                const fileSize = document.getElementById('revisionFileSize');
+
+                if (file) {
+                    preview.classList.remove('hidden');
+                    fileName.textContent = file.name;
+                    fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                } else {
+                    preview.classList.add('hidden');
+                }
+            });
+        </script>
 
     </div>
     <style>

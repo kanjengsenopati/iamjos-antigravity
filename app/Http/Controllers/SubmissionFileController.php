@@ -14,13 +14,14 @@ class SubmissionFileController extends Controller
     /**
      * Upload a new file to submission.
      */
-    public function store(Request $request, Submission $submission): RedirectResponse|JsonResponse
+    public function store(Request $request, string $journalSlug, Submission $submission): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $submission);
 
         $validated = $request->validate([
             'file' => 'required|file|mimes:doc,docx,pdf,odt,rtf|max:20480', // 20MB max
             'file_type' => 'required|in:manuscript,revision,supplementary,galley',
+            'stage' => 'nullable|string|in:submission,review,revision,copyediting,production',
         ]);
 
         $file = $request->file('file');
@@ -34,6 +35,9 @@ class SubmissionFileController extends Controller
         // Store file
         $path = $file->store("submissions/{$submission->id}", 'local');
 
+        // Use submitted stage if provided, otherwise use submission's current stage
+        $fileStage = $validated['stage'] ?? $submission->stage;
+
         $submissionFile = SubmissionFile::create([
             'submission_id' => $submission->id,
             'uploaded_by' => $user->id,
@@ -43,7 +47,7 @@ class SubmissionFileController extends Controller
             'mime_type' => $file->getMimeType(),
             'file_size' => $file->getSize(),
             'version' => $version,
-            'stage' => $submission->stage,
+            'stage' => $fileStage,
         ]);
 
         if ($request->wantsJson()) {

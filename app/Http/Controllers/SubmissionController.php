@@ -372,19 +372,33 @@ class SubmissionController extends Controller
         // Ensure user can view this submission
         $this->authorize('view', $submission);
 
+        $user = auth()->user();
+
+        // Determine if user is the author (owns the submission) and NOT an editor
+        $isAuthorView = $submission->user_id === $user->id &&
+            !$user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+
+        // Base eager loading (common for all roles)
         $submission->load([
             'journal',
             'section',
             'issue',
             'authors',
             'files',
-            'discussions.user', // Load discussions with creator
-            'discussions.messages.user', // Load messages with user
-            'discussions.messages.files', // Load message files
-            'discussions.participants', // Load discussion participants
-            'editorialAssignments.user', // Load editors
-            'reviewAssignments.reviewer',
+            'discussions.user',
+            'discussions.messages.user',
+            'discussions.messages.files',
+            'discussions.participants',
+            'editorialAssignments.user',
         ]);
+
+        // Role-specific loading
+        if (!$isAuthorView) {
+            // Editor/Admin view: Load reviewers and all review data
+            $submission->load([
+                'reviewAssignments.reviewer',
+            ]);
+        }
 
         $issues = Issue::where('journal_id', $journal->id)
             ->orderBy('year', 'desc')
@@ -393,7 +407,6 @@ class SubmissionController extends Controller
             ->get();
 
         // Prepare participants for discussion modal (Author + Editors)
-        // Component handles self-display logic
         $participants = collect();
 
         // Add the submission author
@@ -408,13 +421,64 @@ class SubmissionController extends Controller
             }
         }
 
-        // Add current user if not already in list (may be an editor viewing)
-        $currentUser = auth()->user();
-        if (!$participants->contains('id', $currentUser->id)) {
-            $participants->push($currentUser);
+        // Add current user if not already in list
+        if (!$participants->contains('id', $user->id)) {
+            $participants->push($user);
         }
 
-        return view('submissions.show', compact('submission', 'journal', 'issues', 'participants'));
+        // ========== AUTHOR-SPECIFIC DATA ==========
+        $authorReviewData = [];
+        if ($isAuthorView) {
+            // 1. Promoted/Shared Files (Files the Editor shared with Author)
+            // Only files that have the decision_type metadata (promoted by editor)
+            // and NOT uploaded by the author themselves
+            $authorReviewData['promotedFiles'] = SubmissionFile::where('submission_id', $submission->id)
+                ->where('stage', 'revision')
+                ->where('uploaded_by', '!=', $user->id) // Exclude author's own uploads
+                ->whereJsonContains('metadata->decision_type', 'revision_request') // Only editor-promoted files
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // 2. Author's Revision Files (uploaded by the author)
+            $authorReviewData['revisionFiles'] = SubmissionFile::where('submission_id', $submission->id)
+                ->where('stage', 'revision')
+                ->where('uploaded_by', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // 3. Decision History (from submission metadata)
+            $authorReviewData['decisionHistory'] = collect($submission->metadata['decisions'] ?? [])
+                ->sortByDesc('made_at')
+                ->map(function ($decision) {
+                    return [
+                        'type' => $decision['type'] ?? 'decision',
+                        'type_label' => match ($decision['type'] ?? 'decision') {
+                            'revision_request' => 'Revisions Requested',
+                            'accept' => 'Submission Accepted',
+                            'decline' => 'Submission Declined',
+                            default => 'Editorial Decision',
+                        },
+                        'made_at' => $decision['made_at'] ?? null,
+                        'email_body' => $decision['email_body'] ?? null,
+                        'new_review_round' => $decision['new_review_round'] ?? false,
+                        'round' => $decision['round'] ?? 1,
+                    ];
+                })
+                ->values();
+
+            // 4. Current Review Round Info
+            $authorReviewData['currentRound'] = $submission->currentReviewRound();
+
+            // 5. All Review Rounds
+            $authorReviewData['reviewRounds'] = $submission->reviewRounds()
+                ->orderBy('round')
+                ->get();
+        }
+
+        return view('submissions.show', array_merge(
+            compact('submission', 'journal', 'issues', 'participants', 'isAuthorView'),
+            $isAuthorView ? ['authorReviewData' => $authorReviewData] : []
+        ));
     }
 
     /**
