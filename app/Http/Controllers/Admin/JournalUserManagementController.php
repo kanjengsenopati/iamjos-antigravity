@@ -26,7 +26,7 @@ class JournalUserManagementController extends Controller
     public function index(Request $request)
     {
         $journal = current_journal();
-        
+
         // Get user IDs that are registered in this journal
         $journalUserIds = JournalUserRole::where('journal_id', $journal->id)
             ->distinct()
@@ -228,23 +228,43 @@ class JournalUserManagementController extends Controller
     public function store(Request $request, $journal)
     {
         $journalModel = current_journal();
-        
+
         $request->validate([
-            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username',
+            'name' => 'required|string|max:255', // Preferred Public Name
+            'given_name' => 'required|string|max:255',
+            'family_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'username' => 'required|unique:users,username',
-            'password' => 'required|min:8',
+            'affiliation' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:2',
+            'phone' => 'nullable|string|max:50',
+            'mailing_address' => 'nullable|string',
+            'orcid_id' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
+            'password' => 'required|min:8|confirmed',
             'roles' => 'required|array|min:1',
             'roles.*' => 'exists:roles,name',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'username' => $request->username,
-            'password' => bcrypt($request->password),
-            'email_verified_at' => now(), // Auto-verify when created by admin
+        $userData = $request->only([
+            'username',
+            'name',
+            'given_name',
+            'family_name',
+            'email',
+            'affiliation',
+            'country',
+            'phone',
+            'mailing_address',
+            'orcid_id',
+            'bio'
         ]);
+
+        $userData['password'] = bcrypt($request->password);
+        $userData['email_verified_at'] = now(); // Auto-verify when created by admin
+        $userData['date_registered'] = now();
+
+        $user = User::create($userData);
 
         // Assign roles to user for THIS journal using JournalUserRole
         JournalUserRole::assignRoles($user, $journalModel, $request->roles);
@@ -259,15 +279,44 @@ class JournalUserManagementController extends Controller
     public function update(Request $request, $journal, User $user)
     {
         $journalModel = current_journal();
-        
+
         $request->validate([
-            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'name' => 'required|string|max:255', // Preferred Public Name
+            'given_name' => 'required|string|max:255',
+            'family_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'affiliation' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:2',
+            'phone' => 'nullable|string|max:50',
+            'mailing_address' => 'nullable|string',
+            'orcid_id' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
             'roles' => 'required|array|min:1',
             'roles.*' => 'exists:roles,name',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        $user->update($request->only('name', 'email'));
+        $userData = $request->only([
+            'username',
+            'name',
+            'given_name',
+            'family_name',
+            'email',
+            'affiliation',
+            'country',
+            'phone',
+            'mailing_address',
+            'orcid_id',
+            'bio'
+        ]);
+
+        // Handle Password Update
+        if ($request->filled('password')) {
+            $userData['password'] = bcrypt($request->password);
+        }
+
+        $user->update($userData);
 
         // Remove all existing roles for this user in THIS journal
         JournalUserRole::where('journal_id', $journalModel->id)
@@ -287,7 +336,7 @@ class JournalUserManagementController extends Controller
         $user->syncRoles($allUserRoles);
 
         return redirect()->route($this->getRoutePrefix() . '.index', ['journal' => $journalModel->slug])
-            ->with('success', 'User roles updated successfully.');
+            ->with('success', 'User profile and roles updated successfully.');
     }
 
     /**
@@ -298,13 +347,13 @@ class JournalUserManagementController extends Controller
     public function destroy($journal, User $user)
     {
         $journalModel = current_journal();
-        
+
         // Super Admins cannot be removed from journals
         if ($user->hasRole('Super Admin')) {
             return redirect()->route($this->getRoutePrefix() . '.index', ['journal' => $journalModel->slug])
                 ->with('error', 'Super Admins cannot be removed from journals.');
         }
-        
+
         // Remove all roles for this user in THIS journal
         $deleted = JournalUserRole::where('journal_id', $journalModel->id)
             ->where('user_id', $user->id)
@@ -318,7 +367,7 @@ class JournalUserManagementController extends Controller
                 ->pluck('role.name')
                 ->unique()
                 ->toArray();
-            
+
             // If user has no more roles, give them Reader as default
             if (empty($allUserRoles)) {
                 $allUserRoles = ['Reader'];
