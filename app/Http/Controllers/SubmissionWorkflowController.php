@@ -289,7 +289,7 @@ class SubmissionWorkflowController extends Controller
 
         $request->validate([
             'file' => 'required|file|max:10240', // 10MB
-            'stage' => 'required|string|in:submission,review,copyediting,production',
+            'stage' => 'required|string|in:submission,review,copyedit_draft,copyedited,production',
         ]);
 
         $file = $request->file('file');

@@ -314,6 +314,11 @@ Route::prefix('{journal}')->group(function () {
             // Multi-Round Review Workflow (OJS 3.3 Style)
             Route::post('/{submission}/create-new-round', [ReviewWorkflowController::class, 'createNewRound'])->name('create-new-round');
             Route::get('/{submission}/revision-files', [ReviewWorkflowController::class, 'getRevisionFiles'])->name('revision-files');
+            Route::get('/{submission}/promotable-files', [ReviewWorkflowController::class, 'getPromotableFiles'])->name('promotable-files');
+
+            // Copyediting Workflow (OJS 3.3 Draft Files Management)
+            Route::get('/{submission}/review-stage-files', [ReviewWorkflowController::class, 'getReviewStageFiles'])->name('review-stage-files');
+            Route::post('/{submission}/copy-review-to-draft', [ReviewWorkflowController::class, 'copyReviewFilesToDraft'])->name('copy-review-to-draft');
 
             // Enhanced Workflow Actions (OJS 3.3 Editorial Decisions)
             Route::get('/{submission}/available-files', [SubmissionWorkflowController::class, 'getAvailableFiles'])->name('available-files');

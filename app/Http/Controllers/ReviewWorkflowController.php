@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\SendDecisionEmailJob;
 
 class ReviewWorkflowController extends Controller
 {
@@ -105,6 +106,11 @@ class ReviewWorkflowController extends Controller
         $request->validate([
             'decision' => 'required|in:request_revisions,resubmit_for_review,accept,decline',
             'comments' => 'nullable|string',
+            // New validation rules for accept decision
+            'send_email' => 'sometimes|boolean',
+            'email_body' => 'nullable|required_if:send_email,true|string',
+            'selected_files' => 'nullable|array',
+            'selected_files.*' => 'exists:submission_files,id',
         ]);
 
         $reviewRound = $submission->currentReviewRound();
@@ -135,7 +141,36 @@ class ReviewWorkflowController extends Controller
                         $reviewRound->update(['status' => ReviewRound::STATUS_APPROVED]);
                     }
                     // Move to Copyediting stage (stage_id = 3)
-                    $submission->update(['stage_id' => 3]);
+                    // Status: queued_for_copyediting
+                    $submission->update([
+                        'stage_id' => 3, // Copyediting
+                        'status' => 'queued_for_copyediting',
+                        'accepted_at' => now(),
+                    ]);
+
+                    // Promote selected files to Copyediting stage as DRAFT files
+                    if ($request->has('selected_files')) {
+                        $filesToPromote = SubmissionFile::whereIn('id', $request->selected_files)->get();
+                        foreach ($filesToPromote as $file) {
+                            $newFile = $file->replicate();
+                            $newFile->stage = SubmissionFile::STAGE_COPYEDIT_DRAFT; // Draft files for copyediting
+                            $newFile->metadata = array_merge($file->metadata ?? [], [
+                                'promoted_from_review_round' => $reviewRound->round ?? 1,
+                                'decision_type' => 'accept',
+                                'promoted_at' => now()->toIso8601String(),
+                            ]);
+                            $newFile->save();
+                        }
+                    }
+
+                    // Email Handling
+                    if ($request->boolean('send_email', true)) {
+                        SendDecisionEmailJob::dispatch(
+                            $submission,
+                            $request->email_body,
+                            'accepted'
+                        );
+                    }
                     break;
 
                 case 'decline':
@@ -171,16 +206,83 @@ class ReviewWorkflowController extends Controller
     }
 
     /**
-     * Send submission to Production stage.
+     * Send submission to Production stage (OJS 3.3 Style).
+     * Handles email notification and file promotion from Copyediting to Production.
      */
-    public function sendToProduction(string $journalSlug, Submission $submission)
+    public function sendToProduction(Request $request, string $journalSlug, Submission $submission)
     {
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
-        $submission->update(['stage_id' => 4]);
+        $validated = $request->validate([
+            'send_email' => 'sometimes|boolean',
+            'email_body' => 'nullable|required_if:send_email,true|string',
+            'selected_files' => 'nullable|array',
+            'selected_files.*' => 'exists:submission_files,id',
+        ]);
 
-        return back()->with('success', 'Submission moved to Production.');
+        DB::transaction(function () use ($validated, $submission) {
+            // 1. Update submission stage to Production and status
+            $submission->update([
+                'stage_id' => 4, // Production
+                'status' => Submission::STATUS_IN_PRODUCTION ?? 'in_production',
+            ]);
+
+            // 2. Promote selected files to Production stage (PRODUCTION_READY)
+            if (!empty($validated['selected_files'])) {
+                $filesToPromote = SubmissionFile::whereIn('id', $validated['selected_files'])->get();
+                foreach ($filesToPromote as $file) {
+                    // Create a new file record with PRODUCTION stage
+                    $newFile = $file->replicate();
+                    $newFile->stage = SubmissionFile::STAGE_PRODUCTION_READY ?? 'production';
+                    $newFile->metadata = array_merge($file->metadata ?? [], [
+                        'promoted_from' => $file->stage,
+                        'promoted_from_copyediting' => true,
+                        'promoted_at' => now()->toIso8601String(),
+                        'promoted_by' => auth()->id(),
+                        'original_file_id' => $file->id,
+                    ]);
+                    $newFile->save();
+                }
+            }
+
+            // 3. Store decision in submission metadata
+            $metadata = $submission->metadata ?? [];
+            $metadata['decisions'] = $metadata['decisions'] ?? [];
+            $metadata['decisions'][] = [
+                'type' => 'send_to_production',
+                'email_sent' => $validated['send_email'] ?? false,
+                'email_body' => $validated['email_body'] ?? null,
+                'files_promoted' => $validated['selected_files'] ?? [],
+                'made_by' => auth()->id(),
+                'made_at' => now()->toIsoString(),
+            ];
+            $submission->update(['metadata' => $metadata]);
+
+            // 4. Log the event
+            SubmissionLog::log(
+                $submission,
+                SubmissionLog::EVENT_STAGE_CHANGED,
+                'Sent to Production',
+                auth()->user()->name . ' sent this submission to the Production stage.',
+                [
+                    'from_stage' => 3,
+                    'to_stage' => 4,
+                    'files_promoted' => count($validated['selected_files'] ?? []),
+                ]
+            );
+        });
+
+        // 5. Send email notification (outside transaction, queued)
+        if ($validated['send_email'] ?? false) {
+            SendDecisionEmailJob::dispatch(
+                $submission,
+                $validated['email_body'] ?? '',
+                'send_to_production'
+            );
+        }
+
+        return back()->with('success', 'Submission moved to Production stage.');
     }
 
     /**
@@ -559,5 +661,121 @@ class ReviewWorkflowController extends Controller
             });
 
         return response()->json($files);
+    }
+
+    /**
+     * Get promotable files (Reviewer Attachments + Revisions) for Accept Decision modal.
+     */
+    public function getPromotableFiles(string $journalSlug, Submission $submission)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+
+        // 1. Reviewer Files (stage = review)
+        $reviewerFiles = SubmissionFile::where('submission_id', $submission->id)
+            ->where('stage', 'review')
+            ->with('uploader:id,name')
+            ->get()
+            ->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'name' => $file->file_name,
+                    'size' => $file->file_size,
+                    'source' => 'Reviewer Attachment (' . ($file->uploader->name ?? 'Unknown') . ')',
+                    'created_at' => $file->created_at->format('M d, Y'),
+                    'type' => 'reviewer',
+                ];
+            });
+
+        // 2. Author Revisions (stage = revision)
+        $revisionFiles = SubmissionFile::where('submission_id', $submission->id)
+            ->where('stage', 'revision')
+            ->with('uploader:id,name')
+            ->get()
+            ->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'name' => $file->file_name,
+                    'size' => $file->file_size,
+                    'source' => 'Author Revision',
+                    'created_at' => $file->created_at->format('M d, Y'),
+                    'type' => 'revision',
+                ];
+            });
+
+        return response()->json([
+            'files' => $reviewerFiles->merge($revisionFiles)->values(),
+        ]);
+    }
+
+    /**
+     * Get review stage files for copying to Draft Files (Copyediting Stage).
+     * Returns files from the review stage that can be promoted to copyedit_draft.
+     */
+    public function getReviewStageFiles(string $journalSlug, Submission $submission)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+
+        $reviewFiles = SubmissionFile::where('submission_id', $submission->id)
+            ->where('stage', 'review')
+            ->with('uploader:id,name,email')
+            ->get()
+            ->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'name' => $file->file_name,
+                    'size' => $file->file_size,
+                    'uploader' => $file->uploader?->name ?? 'Unknown',
+                    'uploaded_at' => $file->created_at->format('M d, Y'),
+                    'type' => $file->file_type,
+                ];
+            });
+
+        return response()->json(['files' => $reviewFiles]);
+    }
+
+    /**
+     * Copy selected review files to Draft Files (copyedit_draft stage).
+     */
+    public function copyReviewFilesToDraft(Request $request, string $journalSlug, Submission $submission)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+
+        $request->validate([
+            'file_ids' => 'required|array',
+            'file_ids.*' => 'exists:submission_files,id',
+        ]);
+
+        $copiedFiles = [];
+        foreach ($request->file_ids as $fileId) {
+            $originalFile = SubmissionFile::findOrFail($fileId);
+
+            // Create a copy with copyedit_draft stage
+            $newFile = SubmissionFile::create([
+                'submission_id' => $submission->id,
+                'uploaded_by' => auth()->id(),
+                'file_path' => $originalFile->file_path, // Same path (reference)
+                'file_name' => $originalFile->file_name,
+                'file_type' => $originalFile->file_type,
+                'mime_type' => $originalFile->mime_type,
+                'file_size' => $originalFile->file_size,
+                'version' => $originalFile->version,
+                'stage' => SubmissionFile::STAGE_COPYEDIT_DRAFT,
+                'metadata' => array_merge(
+                    $originalFile->metadata ?? [],
+                    ['copied_from_review' => true, 'original_file_id' => $fileId]
+                ),
+            ]);
+
+            $copiedFiles[] = $newFile;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($copiedFiles) . ' file(s) copied to Draft Files.',
+            'files' => $copiedFiles,
+        ]);
     }
 }

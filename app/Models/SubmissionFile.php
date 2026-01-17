@@ -21,6 +21,16 @@ class SubmissionFile extends Model
     const TYPE_GALLEY = 'galley';
 
     /**
+     * File stage constants (OJS 3.3 compliant)
+     */
+    const STAGE_SUBMISSION = 'submission';
+    const STAGE_REVIEW = 'review';
+    const STAGE_COPYEDIT_DRAFT = 'copyedit_draft';  // Draft files in copyediting
+    const STAGE_COPYEDITED = 'copyedited';          // Final copyedited files
+    const STAGE_PRODUCTION = 'production';
+    const STAGE_PRODUCTION_READY = 'production_ready'; // Final galley files
+
+    /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
