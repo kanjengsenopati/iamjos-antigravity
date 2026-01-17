@@ -1,8 +1,8 @@
 @php
-    $journal = $journal ?? ((isset($attributes) ? $attributes->get('journal') : null) ?? current_journal());
-    $journalSlug =
-        $journalSlug ??
-        ((isset($attributes) ? $attributes->get('journalSlug') : null) ?? ($journal ? $journal->slug : null));
+$journal = $journal ?? ((isset($attributes) ? $attributes->get('journal') : null) ?? current_journal());
+$journalSlug =
+$journalSlug ??
+((isset($attributes) ? $attributes->get('journalSlug') : null) ?? ($journal ? $journal->slug : null));
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
@@ -291,10 +291,10 @@
 }">
 
     @php
-        $journal = current_journal();
-        $journalSlug = $journal ? $journal->slug : request()->route('journal');
-        $isAdminContext = request()->routeIs('journal.admin.*');
-        $usersRoutePrefix = $isAdminContext ? 'journal.admin.users' : 'journal.users';
+    $journal = current_journal();
+    $journalSlug = $journal ? $journal->slug : request()->route('journal');
+    $isAdminContext = request()->routeIs('journal.admin.*');
+    $usersRoutePrefix = $isAdminContext ? 'journal.admin.users' : 'journal.users';
     @endphp
 
     <!-- Mobile Sidebar Overlay -->
@@ -330,7 +330,8 @@
                     x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-90"
                     x-transition:enter-end="opacity-100 scale-100">
                     <p class="text-sm font-semibold text-gray-900 truncate">
-                        {{ $journal->abbreviation ?? Str::limit($journal->name ?? 'Journal', 15) }}</p>
+                        {{ $journal->abbreviation ?? Str::limit($journal->name ?? 'Journal', 15) }}
+                    </p>
                     <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium truncate">Switch Journal</p>
                 </div>
 
@@ -365,58 +366,58 @@
                 </div>
 
                 @php
-                    $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
-                    // Fallback: if user has no registered journals but is viewing a journal, show current
-                    if ($userJournals->isEmpty() && $journal) {
-                        $userJournals = collect([$journal]);
-                    }
+                $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
+                // Fallback: if user has no registered journals but is viewing a journal, show current
+                if ($userJournals->isEmpty() && $journal) {
+                $userJournals = collect([$journal]);
+                }
                 @endphp
 
                 <!-- Scrollable List -->
                 <div class="max-h-[320px] overflow-y-auto custom-scrollbar">
                     @forelse ($userJournals as $j)
-                        <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
-                            x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
-                            class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 group/item relative
+                    <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
+                        x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
+                        class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 group/item relative
                             {{ $journal && $journal->id == $j->id ? 'bg-primary-50/40' : '' }}">
 
-                            <!-- Left: Indicator/Icon -->
-                            <div
-                                class="mt-0.5 w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm transition-colors
+                        <!-- Left: Indicator/Icon -->
+                        <div
+                            class="mt-0.5 w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm transition-colors
                                 {{ $journal && $journal->id == $j->id ? 'bg-primary-600 text-white ring-2 ring-primary-100' : 'bg-gray-100 text-gray-600 group-hover/item:bg-white group-hover/item:text-primary-600 group-hover/item:ring-1 group-hover/item:ring-gray-200' }}">
-                                {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
-                            </div>
-
-                            <!-- Right: Details -->
-                            <div class="flex-1 min-w-0">
-                                <p
-                                    class="text-sm font-medium leading-tight truncate {{ $journal && $journal->id == $j->id ? 'text-primary-900' : 'text-gray-900' }}">
-                                    {{ $j->name }}
-                                </p>
-                                @if ($j->abbreviation)
-                                    <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $j->abbreviation }}</p>
-                                @endif
-                            </div>
-
-                            <!-- Active Check -->
-                            @if ($journal && $journal->id == $j->id)
-                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
-                                </div>
-                            @endif
-                        </a>
-                    @empty
-                        <div class="px-4 py-8 text-center bg-gray-50/50">
-                            <div
-                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-100">
-                                <i class="fa-solid fa-book-open text-gray-400"></i>
-                            </div>
-                            <p class="text-xs text-gray-500 font-medium">No journals found</p>
-                            <a href="{{ route('register') }}"
-                                class="mt-2 inline-block text-xs font-semibold text-primary-600 hover:text-primary-700">
-                                Join a journal
-                            </a>
+                            {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
                         </div>
+
+                        <!-- Right: Details -->
+                        <div class="flex-1 min-w-0">
+                            <p
+                                class="text-sm font-medium leading-tight truncate {{ $journal && $journal->id == $j->id ? 'text-primary-900' : 'text-gray-900' }}">
+                                {{ $j->name }}
+                            </p>
+                            @if ($j->abbreviation)
+                            <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $j->abbreviation }}</p>
+                            @endif
+                        </div>
+
+                        <!-- Active Check -->
+                        @if ($journal && $journal->id == $j->id)
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
+                        </div>
+                        @endif
+                    </a>
+                    @empty
+                    <div class="px-4 py-8 text-center bg-gray-50/50">
+                        <div
+                            class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-100">
+                            <i class="fa-solid fa-book-open text-gray-400"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 font-medium">No journals found</p>
+                        <a href="{{ route('register') }}"
+                            class="mt-2 inline-block text-xs font-semibold text-primary-600 hover:text-primary-700">
+                            Join a journal
+                        </a>
+                    </div>
                     @endforelse
 
 
@@ -443,166 +444,178 @@
         <nav class="flex-1 px-3 py-6 space-y-6 overflow-y-auto sidebar-scroll">
 
             @if ($journalSlug)
-                <!-- Group: Workflow -->
-                <div class="space-y-1">
-                    <div class="px-3 mb-2" x-show="!sidebarCollapsed">
-                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Workflow</span>
-                    </div>
-
-                    <!-- Dashboard -->
-                    <a href="{{ route('journal.dashboard', ['journal' => $journalSlug]) }}"
-                        class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
-                   {{ request()->routeIs('journal.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                        :title="sidebarCollapsed ? 'Dashboard' : ''">
-
-                        @if (request()->routeIs('journal.dashboard'))
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-600 rounded-r-full"
-                                x-show="!sidebarCollapsed"></div>
-                        @endif
-
-                        <i
-                            class="fa-solid fa-gauge-high w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.dashboard') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                        <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Dashboard</span>
-                    </a>
-
-                    <!-- Submissions (Single Menu - OJS 3.3 Style, tabs are in content page) -->
-                    @role('Author|Editor|Section Editor|Journal Manager|Admin|Super Admin')
-                        <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
-                            {{ request()->routeIs('journal.submissions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? 'Submissions' : ''">
-
-                            @if (request()->routeIs('journal.submissions.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
-
-                            <i
-                                class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 
-                                {{ request()->routeIs('journal.submissions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Submissions</span>
-                        </a>
-                    @endrole
-
-                    <!-- Reviewer: My Reviews -->
-                    @role('Reviewer')
-                        <a href="{{ route('journal.reviewer.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
-                   {{ request()->routeIs('journal.reviewer.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? 'My Reviews' : ''">
-
-                            @if (request()->routeIs('journal.reviewer.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
-
-                            <i
-                                class="fa-solid fa-clipboard-check w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.reviewer.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">My
-                                Reviews</span>
-                        </a>
-                    @endrole
-
-                    <!-- Issues -->
-                    @role('Journal Manager|Editor|Admin|Super Admin')
-                        <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
-                        {{ request()->routeIs('journal.issues.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? 'Issues' : ''">
-
-                            @if (request()->routeIs('journal.issues.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
-
-                            <i
-                                class="fa-solid fa-layer-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.issues.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Issues</span>
-                        </a>
-                    @endrole
+            <!-- Group: Workflow -->
+            <div class="space-y-1">
+                <div class="px-3 mb-2" x-show="!sidebarCollapsed">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Workflow</span>
                 </div>
 
-                <!-- Group: Management -->
+                <!-- Dashboard -->
+                <a href="{{ route('journal.dashboard', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
+                   {{ request()->routeIs('journal.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Dashboard' : ''">
+
+                    @if (request()->routeIs('journal.dashboard'))
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-600 rounded-r-full"
+                        x-show="!sidebarCollapsed"></div>
+                    @endif
+
+                    <i
+                        class="fa-solid fa-gauge-high w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.dashboard') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Dashboard</span>
+                </a>
+
+                <!-- Submissions (Single Menu - OJS 3.3 Style, tabs are in content page) -->
+                @role('Author|Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
+                            {{ request()->routeIs('journal.submissions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Submissions' : ''">
+
+                    @if (request()->routeIs('journal.submissions.*'))
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
+                        x-show="!sidebarCollapsed"></div>
+                    @endif
+
+                    <i
+                        class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 
+                                {{ request()->routeIs('journal.submissions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Submissions</span>
+                </a>
+                @endrole
+
+                <!-- Reviewer: My Reviews -->
+                @role('Reviewer')
+                <a href="{{ route('journal.reviewer.index', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
+                   {{ request()->routeIs('journal.reviewer.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'My Reviews' : ''">
+
+                    @if (request()->routeIs('journal.reviewer.*'))
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
+                        x-show="!sidebarCollapsed"></div>
+                    @endif
+
+                    <i
+                        class="fa-solid fa-clipboard-check w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.reviewer.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">My
+                        Reviews</span>
+                </a>
+                @endrole
+
+                <!-- Issues -->
                 @role('Journal Manager|Editor|Admin|Super Admin')
-                    <div class="space-y-1">
-                        <div class="px-3 mb-2 mt-6" x-show="!sidebarCollapsed">
-                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Settings</span>
-                        </div>
+                <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
+                        {{ request()->routeIs('journal.issues.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Issues' : ''">
 
-                        <!-- Users & Roles -->
-                        <div x-data="{ expanded: {{ request()->routeIs($usersRoutePrefix . '.*') ? 'true' : 'false' }} }">
-                            <button @click="expanded = !expanded"
-                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs($usersRoutePrefix . '.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                                :title="sidebarCollapsed ? 'Users & Roles' : ''">
-                                <div class="flex items-center gap-3">
-                                    <i
-                                        class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs($usersRoutePrefix . '.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Users & Roles</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
-                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
-                            </button>
+                    @if (request()->routeIs('journal.issues.*'))
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-600 rounded-r-full"
+                        x-show="!sidebarCollapsed"></div>
+                    @endif
 
-                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
-                                <div class="pl-10 pr-2 py-1 space-y-1">
-                                    <a href="{{ route($usersRoutePrefix . '.index', ['journal' => $journalSlug]) }}"
-                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.index') || request()->routeIs($usersRoutePrefix . '.create') || request()->routeIs($usersRoutePrefix . '.edit') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                        <i class="fa-solid fa-user-group w-4 text-center"></i>
-                                        Users
-                                    </a>
-                                    <a href="{{ route($usersRoutePrefix . '.roles', ['journal' => $journalSlug]) }}"
-                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.roles*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                        <i class="fa-solid fa-user-tag w-4 text-center"></i>
-                                        Roles
-                                    </a>
-                                    <a href="{{ route($usersRoutePrefix . '.access', ['journal' => $journalSlug]) }}"
-                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.access') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                        <i class="fa-solid fa-lock w-4 text-center"></i>
-                                        Site Access
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                    <i
+                        class="fa-solid fa-layer-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.issues.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Issues</span>
+                </a>
+                @endrole
+            </div>
 
-                        <!-- Announcements -->
-                        <a href="{{ route('journal.announcements.index', ['journal' => $journalSlug]) }}"
-                            class="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.announcements.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? 'Announcements' : ''">
+            <!-- Group: Management -->
+            @role('Journal Manager|Editor|Admin|Super Admin')
+            <div class="space-y-1">
+                <!-- Announcements -->
+                <a href="{{ route('journal.announcements.index', ['journal' => $journalSlug]) }}"
+                    class="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.announcements.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Announcements' : ''">
+                    <i
+                        class="fa-solid fa-bullhorn w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.announcements.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Announcements</span>
+                </a>
+
+                <div class="px-3 mb-2 mt-6" x-show="!sidebarCollapsed">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Settings</span>
+                </div>
+
+                <!-- Journal -->
+                <a href="{{ route('journal.settings.index', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.index') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Journal' : ''">
+                    <i
+                        class="fa-solid fa-book w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.index') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Journal</span>
+                </a>
+
+                <!-- Website -->
+                <a href="{{ route('journal.settings.website.edit', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.website*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Website' : ''">
+                    <i
+                        class="fa-solid fa-desktop w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.website*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Website</span>
+                </a>
+
+                <!-- Workflow -->
+                <a href="{{ route('journal.settings.workflow.index', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.workflow*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Workflow' : ''">
+                    <i
+                        class="fa-solid fa-sliders w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.workflow*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Workflow</span>
+                </a>
+
+                <!-- Distribution -->
+                <a href="{{ route('journal.settings.distribution.edit', ['journal' => $journalSlug]) }}"
+                    class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.distribution*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                    :title="sidebarCollapsed ? 'Distribution' : ''">
+                    <i
+                        class="fa-solid fa-globe w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.distribution*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Distribution</span>
+                </a>
+
+                <!-- Users & Roles -->
+                <div x-data="{ expanded: {{ request()->routeIs($usersRoutePrefix . '.*') ? 'true' : 'false' }} }">
+                    <button @click="expanded = !expanded"
+                        class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs($usersRoutePrefix . '.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                        :title="sidebarCollapsed ? 'Users & Roles' : ''">
+                        <div class="flex items-center gap-3">
                             <i
-                                class="fa-solid fa-bullhorn w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.announcements.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Announcements</span>
-                        </a>
+                                class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs($usersRoutePrefix . '.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Users & Roles</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
+                            :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
+                    </button>
 
-
-                        <!-- Settings -->
-                        <div x-data="{ expanded: {{ request()->routeIs('journal.settings.*') ? 'true' : 'false' }} }">
-                            <button @click="expanded = !expanded"
-                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                                :title="sidebarCollapsed ? 'Settings' : ''">
-                                <div class="flex items-center gap-3">
-                                    <i
-                                        class="fa-solid fa-gear w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Settings</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
-                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
-                            </button>
-
-                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
-                                <div class="pl-10 pr-2 py-1 space-y-1">
-                                    <a href="{{ route('journal.settings.index', ['journal' => $journalSlug]) }}"
-                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.index') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Journal</a>
-                                    <a href="{{ route('journal.settings.workflow.index', ['journal' => $journalSlug]) }}"
-                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.workflow*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Workflow</a>
-                                    <a href="{{ route('journal.settings.distribution.edit', ['journal' => $journalSlug]) }}"
-                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.distribution*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Distribution</a>
-                                    <a href="{{ route('journal.settings.website.edit', ['journal' => $journalSlug]) }}"
-                                        class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.website*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Website</a>
-                                </div>
-                            </div>
+                    <div x-show="expanded && !sidebarCollapsed" x-collapse>
+                        <div class="pl-10 pr-2 py-1 space-y-1">
+                            <a href="{{ route($usersRoutePrefix . '.index', ['journal' => $journalSlug]) }}"
+                                class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.index') || request()->routeIs($usersRoutePrefix . '.create') || request()->routeIs($usersRoutePrefix . '.edit') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                <i class="fa-solid fa-user-group w-4 text-center"></i>
+                                Users
+                            </a>
+                            <a href="{{ route($usersRoutePrefix . '.roles', ['journal' => $journalSlug]) }}"
+                                class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.roles*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                <i class="fa-solid fa-user-tag w-4 text-center"></i>
+                                Roles
+                            </a>
+                            <a href="{{ route($usersRoutePrefix . '.access', ['journal' => $journalSlug]) }}"
+                                class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.access') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                <i class="fa-solid fa-lock w-4 text-center"></i>
+                                Site Access
+                            </a>
+                            <a href="{{ route($usersRoutePrefix . '.notify', ['journal' => $journalSlug]) }}"
+                                class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.notify') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
+                                <i class="fa-solid fa-envelope w-4 text-center"></i>
+                                Notify Users
+                            </a>
                         </div>
                     </div>
-                @endrole
+                </div>
+            </div>
+            @endrole
             @endif
         </nav>
 
@@ -875,26 +888,27 @@
                             <div
                                 class="relative w-9 h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-white group-hover:ring-gray-200 transition-all">
                                 @if (Auth::user()->profile_photo_path)
-                                    <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                        alt="{{ Auth::user()->name }}" class="w-full h-full object-cover bg-gray-100"
-                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <!-- Fallback if Image Fails to Load -->
-                                    <div
-                                        class="hidden absolute inset-0 bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
-                                    </div>
+                                <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                    alt="{{ Auth::user()->name }}" class="w-full h-full object-cover bg-gray-100"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <!-- Fallback if Image Fails to Load -->
+                                <div
+                                    class="hidden absolute inset-0 bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                </div>
                                 @else
-                                    <div
-                                        class="w-full h-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
-                                    </div>
+                                <div
+                                    class="w-full h-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                </div>
                                 @endif
                             </div>
 
                             <!-- Name & Role (Hidden on mobile) -->
                             <div class="hidden sm:block text-left pr-2">
                                 <p class="text-sm font-semibold text-gray-900 leading-tight">
-                                    {{ Auth::user()->name ?? 'User' }}</p>
+                                    {{ Auth::user()->name ?? 'User' }}
+                                </p>
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span
                                         class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wide">
@@ -975,15 +989,15 @@
         <div class="flex-1 p-6 lg:p-8">
             <!-- Page Header (for x-slot) -->
             @isset($header)
-                <div class="mb-6">
-                    {{ $header }}
-                </div>
+            <div class="mb-6">
+                {{ $header }}
+            </div>
             @endisset
 
             @hasSection('content')
-                @yield('content')
+            @yield('content')
             @else
-                {{ $slot ?? '' }}
+            {{ $slot ?? '' }}
             @endif
         </div>
 
@@ -997,25 +1011,25 @@
 
     <!-- Flash Messages -->
     @if (session('success'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
-                <i class="fa-solid fa-check-circle text-emerald-600"></i>
-                <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
-                <button @click="show = false" class="text-emerald-500 hover:text-emerald-700"><i
-                        class="fa-solid fa-xmark"></i></button>
-            </div>
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
+            <i class="fa-solid fa-check-circle text-emerald-600"></i>
+            <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
+            <button @click="show = false" class="text-emerald-500 hover:text-emerald-700"><i
+                    class="fa-solid fa-xmark"></i></button>
         </div>
+    </div>
     @endif
 
     @if (session('error'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
-            <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
-                <i class="fa-solid fa-circle-exclamation text-red-600"></i>
-                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
-                <button @click="show = false" class="text-red-500 hover:text-red-700"><i
-                        class="fa-solid fa-xmark"></i></button>
-            </div>
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
+            <i class="fa-solid fa-circle-exclamation text-red-600"></i>
+            <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+            <button @click="show = false" class="text-red-500 hover:text-red-700"><i
+                    class="fa-solid fa-xmark"></i></button>
         </div>
+    </div>
     @endif
 
     @stack('scripts')

@@ -446,4 +446,90 @@ class JournalUserManagementController extends Controller
         // Logic to update journal settings regarding access
         return back()->with('success', 'Access settings updated.');
     }
+
+    /**
+     * Display the notify users form.
+     */
+    public function notify()
+    {
+        $journal = current_journal();
+        $routePrefix = $this->getRoutePrefix();
+
+        // Get all roles for the checkbox grid
+        $roles = Role::all();
+
+        return view('admin.journals.users.notify', compact('journal', 'routePrefix', 'roles'));
+    }
+
+    /**
+     * Send notification to selected roles.
+     * Uses chunking and queued jobs for scalability.
+     */
+    public function sendNotification(Request $request, $journal)
+    {
+        $journalModel = current_journal();
+
+        $request->validate([
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'exists:roles,name',
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string',
+            'send_copy' => 'nullable|boolean',
+        ]);
+
+        $selectedRoles = $request->input('roles');
+        $subject = $request->input('subject');
+        $body = $request->input('body');
+        $sendCopy = $request->boolean('send_copy');
+
+        // Get user IDs in this journal with selected roles
+        $roleIds = Role::whereIn('name', $selectedRoles)->pluck('id')->toArray();
+
+        $userIds = JournalUserRole::where('journal_id', $journalModel->id)
+            ->whereIn('role_id', $roleIds)
+            ->distinct()
+            ->pluck('user_id')
+            ->toArray();
+
+        // Also include Super Admins if selected (they're in all journals)
+        if (in_array('Super Admin', $selectedRoles)) {
+            $superAdminIds = User::role('Super Admin')->pluck('id')->toArray();
+            $userIds = array_unique(array_merge($userIds, $superAdminIds));
+        }
+
+        $totalUsers = count($userIds);
+
+        if ($totalUsers === 0) {
+            return back()
+                ->withInput()
+                ->with('error', 'No users found with the selected roles in this journal.');
+        }
+
+        // Chunk users and dispatch jobs (memory efficient)
+        User::whereIn('id', $userIds)->chunk(100, function ($users) use ($subject, $body, $journalModel) {
+            foreach ($users as $user) {
+                \App\Jobs\SendBroadcastNotificationJob::dispatch(
+                    $user,
+                    $subject,
+                    $body,
+                    $journalModel->name
+                );
+            }
+        });
+
+        // Send copy to self if requested
+        if ($sendCopy) {
+            $currentUser = auth()->user();
+            \App\Jobs\SendBroadcastNotificationJob::dispatch(
+                $currentUser,
+                $subject,
+                $body,
+                $journalModel->name
+            );
+        }
+
+        return redirect()
+            ->route($this->getRoutePrefix() . '.index', ['journal' => $journalModel->slug])
+            ->with('success', "Notification task queued for {$totalUsers} user(s).");
+    }
 }
