@@ -23,6 +23,8 @@ class Submission extends Model
     const STATUS_IN_REVIEW = 'in_review';
     const STATUS_REVISION_REQUIRED = 'revision_required';
     const STATUS_ACCEPTED = 'accepted';
+    const STATUS_QUEUED_FOR_COPYEDITING = 'queued_for_copyediting';
+    const STATUS_IN_PRODUCTION = 'in_production';
     const STATUS_REJECTED = 'rejected';
     const STATUS_PUBLISHED = 'published';
 

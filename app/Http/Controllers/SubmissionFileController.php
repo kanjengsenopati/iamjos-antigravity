@@ -21,7 +21,7 @@ class SubmissionFileController extends Controller
         $validated = $request->validate([
             'file' => 'required|file|mimes:doc,docx,pdf,odt,rtf|max:20480', // 20MB max
             'file_type' => 'required|in:manuscript,revision,supplementary,galley',
-            'stage' => 'nullable|string|in:submission,review,revision,copyediting,production',
+            'stage' => 'nullable|string|in:submission,review,revision,copyedit_draft,copyedited,production',
         ]);
 
         $file = $request->file('file');

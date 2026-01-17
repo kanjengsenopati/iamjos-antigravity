@@ -16,7 +16,7 @@ The AI must strictly adhere to this stack. No suggestions for React/Vue SPA or F
 
     Interactivity: Alpine.js (v3.x) - Used for Modals, Tabs, Wizards, Dropdowns, and Toggle Sidebar without page reloads.
 
-    Database: MySQL.
+    Database: Postgree
 
     Icons: FontAwesome (Free version).
 

@@ -20,7 +20,9 @@ class PublicationGalley extends Model
         'file_id',
         'label',
         'locale',
+        'url_path',
         'url_remote',
+        'is_remote',
         'seq',
     ];
 
@@ -31,7 +33,24 @@ class PublicationGalley extends Model
     {
         return [
             'seq' => 'integer',
+            'is_remote' => 'boolean',
         ];
+    }
+
+    // =====================================================
+    // ROUTE MODEL BINDING
+    // =====================================================
+
+    /**
+     * Get the route key name for Laravel's route model binding.
+     * Allows finding galley by url_path or id
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        // First try to find by url_path, then by id
+        return $this->where('url_path', $value)
+            ->orWhere('id', $value)
+            ->firstOrFail();
     }
 
     // =====================================================
@@ -63,7 +82,7 @@ class PublicationGalley extends Model
      */
     public function getDownloadUrlAttribute(): ?string
     {
-        if ($this->url_remote) {
+        if ($this->is_remote && $this->url_remote) {
             return $this->url_remote;
         }
 
@@ -75,16 +94,43 @@ class PublicationGalley extends Model
     }
 
     /**
+     * Get the public URL for this galley (for SEO)
+     */
+    public function getPublicUrlAttribute(): string
+    {
+        $identifier = $this->url_path ?? $this->id;
+        return route('journal.article.galley', [
+            'journal' => $this->submission->journal->slug,
+            'submission' => $this->submission->slug,
+            'galley' => $identifier,
+        ]);
+    }
+
+    /**
      * Get formatted label with icon
      */
     public function getLabelIconAttribute(): string
     {
         return match (strtolower($this->label)) {
-            'pdf' => 'fa-file-pdf text-red-500',
-            'html' => 'fa-file-code text-orange-500',
-            'epub' => 'fa-book text-purple-500',
-            'xml' => 'fa-file-code text-blue-500',
-            default => 'fa-file text-gray-500',
+            'pdf' => 'fa-file-pdf',
+            'html' => 'fa-file-code',
+            'epub' => 'fa-book',
+            'xml' => 'fa-file-code',
+            default => 'fa-file',
+        };
+    }
+
+    /**
+     * Get label color class
+     */
+    public function getLabelColorAttribute(): string
+    {
+        return match (strtolower($this->label)) {
+            'pdf' => 'bg-red-100 text-red-700',
+            'html' => 'bg-orange-100 text-orange-700',
+            'epub' => 'bg-purple-100 text-purple-700',
+            'xml' => 'bg-blue-100 text-blue-700',
+            default => 'bg-gray-100 text-gray-700',
         };
     }
 
@@ -107,7 +153,15 @@ class PublicationGalley extends Model
             'ru' => 'Russian',
         ];
 
-        return $locales[$this->locale] ?? ucfirst($this->locale);
+        return $locales[$this->locale] ?? ucfirst($this->locale ?? 'en');
+    }
+
+    /**
+     * Get type display name (Local or Remote)
+     */
+    public function getTypeNameAttribute(): string
+    {
+        return $this->is_remote ? 'Remote' : 'Local';
     }
 
     // =====================================================
@@ -120,5 +174,13 @@ class PublicationGalley extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('seq')->orderBy('created_at');
+    }
+
+    /**
+     * Filter by locale
+     */
+    public function scopeLocale($query, string $locale)
+    {
+        return $query->where('locale', $locale);
     }
 }
