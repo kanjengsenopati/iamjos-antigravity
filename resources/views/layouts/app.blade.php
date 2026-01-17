@@ -316,126 +316,77 @@ $journalSlug ??
         }">
 
         <!-- 1. Journal Context Switcher -->
-        <div class="h-16 px-4 flex items-center border-b border-gray-100 relative" x-data="{ open: false, search: '' }">
-            <button @click="open = !open"
-                class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left group">
-                <!-- Logo -->
-                <div
-                    class="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-sm group-hover:bg-primary-700 transition-colors">
-                    {{ $journal ? strtoupper(substr($journal->abbreviation ?? $journal->name, 0, 2)) : 'JM' }}
-                </div>
+        <div class="relative border-b border-gray-100" x-data="{ openJournalSwitcher: false }">
+            @php
+            $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
+            if ($userJournals->isEmpty() && $journal) {
+            $userJournals = collect([$journal]);
+            }
+            @endphp
 
-                <!-- Text (Hidden when collapsed) -->
-                <div class="min-w-0 flex-1" x-show="!sidebarCollapsed"
-                    x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-90"
-                    x-transition:enter-end="opacity-100 scale-100">
-                    <p class="text-sm font-semibold text-gray-900 truncate">
-                        {{ $journal->abbreviation ?? Str::limit($journal->name ?? 'Journal', 15) }}
-                    </p>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium truncate">Switch Journal</p>
-                </div>
-
-                <!-- Icon -->
-                <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-auto" x-show="!sidebarCollapsed"></i>
-            </button>
-
-            <!-- Dropdown Menu (Wider Popover) -->
-            <div x-show="open" @click.away="open = false" x-cloak x-transition:enter="transition ease-out duration-100"
-                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                class="absolute z-50 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden ring-1 ring-black ring-opacity-5"
-                :class="sidebarCollapsed ? 'left-16 top-2 origin-top-left' : 'left-2 top-14 origin-top-left'">
-
-                <!-- Header -->
-                <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                    <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">My Journals</span>
-                    <span class="text-[10px] text-gray-400 bg-white px-2 py-0.5 rounded border border-gray-200">Press
-                        Esc to close</span>
-                </div>
-
-                <!-- Search Input -->
-                <div class="p-2 border-b border-gray-100 bg-white sticky top-0 z-10">
-                    <div class="relative">
-                        <i
-                            class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input type="text" x-model="search" placeholder="Find journal..."
-                            class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 focus:bg-white transition-colors"
-                            autofocus>
+            <div class="flex items-center justify-between px-4 py-4 bg-white">
+                <!-- Left Action: Visit Site -->
+                <a href="{{ route('journal.public.home', ['journal' => $journal->slug]) }}" target="_blank"
+                    class="flex items-center gap-3 group flex-1 min-w-0" title="View Journal Homepage">
+                    <div
+                        class="w-10 h-10 rounded bg-indigo-600 flex items-center justify-center text-white font-bold shrink-0 transition-colors group-hover:bg-indigo-700">
+                        {{ strtoupper(substr($journal->abbreviation ?? $journal->name, 0, 2)) }}
                     </div>
-                </div>
 
-                @php
-                $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
-                // Fallback: if user has no registered journals but is viewing a journal, show current
-                if ($userJournals->isEmpty() && $journal) {
-                $userJournals = collect([$journal]);
-                }
-                @endphp
+                    <div class="truncate" x-show="!sidebarCollapsed" x-transition>
+                        <h2 class="text-sm font-bold text-gray-900 truncate group-hover:text-indigo-600 transition">
+                            {{ $journal->name }}
+                        </h2>
+                        <span class="text-xs text-gray-500 group-hover:text-indigo-500 transition">View Site
+                            &rarr;</span>
+                    </div>
+                </a>
 
-                <!-- Scrollable List -->
-                <div class="max-h-[320px] overflow-y-auto custom-scrollbar">
-                    @forelse ($userJournals as $j)
-                    <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
-                        x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
-                        class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 group/item relative
-                            {{ $journal && $journal->id == $j->id ? 'bg-primary-50/40' : '' }}">
+                <!-- Right Action: Switcher Toggle -->
+                <button @click="openJournalSwitcher = !openJournalSwitcher" x-show="!sidebarCollapsed"
+                    class="ml-2 p-1.5 rounded-md hover:bg-gray-100 text-gray-500 transition focus:outline-none border border-transparent hover:border-gray-200"
+                    title="Switch JournalContext">
+                    <svg class="w-5 h-5 transition-transform duration-200"
+                        :class="openJournalSwitcher ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
 
-                        <!-- Left: Indicator/Icon -->
-                        <div
-                            class="mt-0.5 w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm transition-colors
-                                {{ $journal && $journal->id == $j->id ? 'bg-primary-600 text-white ring-2 ring-primary-100' : 'bg-gray-100 text-gray-600 group-hover/item:bg-white group-hover/item:text-primary-600 group-hover/item:ring-1 group-hover/item:ring-gray-200' }}">
-                            {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
-                        </div>
-
-                        <!-- Right: Details -->
-                        <div class="flex-1 min-w-0">
-                            <p
-                                class="text-sm font-medium leading-tight truncate {{ $journal && $journal->id == $j->id ? 'text-primary-900' : 'text-gray-900' }}">
-                                {{ $j->name }}
-                            </p>
-                            @if ($j->abbreviation)
-                            <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $j->abbreviation }}</p>
+            <!-- Dropdown Menu -->
+            <div x-show="openJournalSwitcher" x-cloak x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-2"
+                class="absolute left-0 right-0 top-full bg-white border-b border-gray-200 shadow-lg z-50">
+                <div class="py-2">
+                    <p class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">
+                        Switch Journal
+                    </p>
+                    <div class="max-h-64 overflow-y-auto custom-scrollbar">
+                        @foreach ($userJournals as $j)
+                        <a href="{{ route('journal.dashboard', $j->slug) }}"
+                            class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="truncate">{{ $j->name }}</span>
+                            @if ($j->id === $journal->id)
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             @endif
-                        </div>
+                        </a>
+                        @endforeach
+                    </div>
 
-                        <!-- Active Check -->
-                        @if ($journal && $journal->id == $j->id)
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                            <div class="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
-                        </div>
-                        @endif
-                    </a>
-                    @empty
-                    <div class="px-4 py-8 text-center bg-gray-50/50">
-                        <div
-                            class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-100">
-                            <i class="fa-solid fa-book-open text-gray-400"></i>
-                        </div>
-                        <p class="text-xs text-gray-500 font-medium">No journals found</p>
-                        <a href="{{ route('register') }}"
-                            class="mt-2 inline-block text-xs font-semibold text-primary-600 hover:text-primary-700">
-                            Join a journal
+                    <div class="border-t border-gray-100 mt-1 pt-1">
+                        <a href="{{ route('journal.select') }}" class="block px-4 py-2 text-xs text-gray-500 hover:text-indigo-600 hover:bg-gray-50">
+                            <i class="fa-solid fa-grid-2 mr-1"></i> View All Journals
                         </a>
                     </div>
-                    @endforelse
-
-
-                </div>
-
-                <!-- Footer -->
-                <div class="bg-gray-50 border-t border-gray-200 p-2">
-                    <a href="{{ route('journal.select') }}"
-                        class="flex items-center justify-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 transition-all shadow-sm">
-                        <i class="fa-solid fa-grid-2"></i> View All Journals
-                        <i class="fa-solid fa-arrow-right text-[10px] opacity-50 ml-1"></i>
-                    </a>
                 </div>
             </div>
 
             <!-- Mobile Close Button -->
             <button @click="sidebarOpen = false"
-                class="lg:hidden absolute right-4 top-5 p-1 text-gray-400 hover:text-gray-600">
+                class="lg:hidden absolute right-4 top-5 p-1 text-gray-400 hover:text-gray-600 bg-white/80 rounded backdrop-blur-sm">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
