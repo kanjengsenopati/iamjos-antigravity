@@ -257,6 +257,10 @@ Route::prefix('{journal}')->group(function () {
             // 3. Site Access Options
             Route::get('/access', 'access')->name('access');
             Route::post('/access', 'updateAccess')->name('access.update');
+
+            // 4. Notify Users (Bulk Email)
+            Route::get('/notify', 'notify')->name('notify');
+            Route::post('/notify', 'sendNotification')->name('notify.send');
         });
 
         // --------- Submissions (Author) ---------
@@ -496,6 +500,10 @@ Route::prefix('{journal}')->group(function () {
                 // 3. Site Access Options
                 Route::get('/access', 'access')->name('access');
                 Route::post('/access', 'updateAccess')->name('access.update');
+
+                // 4. Notify Users (Bulk Email)
+                Route::get('/notify', 'notify')->name('notify');
+                Route::post('/notify', 'sendNotification')->name('notify.send');
             });
 
             // Journal Settings
