@@ -326,6 +326,7 @@ $journalSlug ??
 
             <div class="flex items-center justify-between px-4 py-4 bg-white">
                 <!-- Left Action: Visit Site -->
+                @if($journal)
                 <a href="{{ route('journal.public.home', ['journal' => $journal->slug]) }}" target="_blank"
                     class="flex items-center gap-3 group flex-1 min-w-0" title="View Journal Homepage">
                     <div
@@ -341,6 +342,21 @@ $journalSlug ??
                             &rarr;</span>
                     </div>
                 </a>
+                @else
+                <div class="flex items-center gap-3 group flex-1 min-w-0" title="No Journal Selected">
+                    <div
+                        class="w-10 h-10 rounded bg-gray-400 flex items-center justify-center text-white font-bold shrink-0">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+
+                    <div class="truncate" x-show="!sidebarCollapsed" x-transition>
+                        <h2 class="text-sm font-bold text-gray-900 truncate">
+                            IAMJOS
+                        </h2>
+                        <span class="text-xs text-gray-500">Select Journal &darr;</span>
+                    </div>
+                </div>
+                @endif
 
                 <!-- Right Action: Switcher Toggle -->
                 <button @click="openJournalSwitcher = !openJournalSwitcher" x-show="!sidebarCollapsed"
@@ -369,7 +385,7 @@ $journalSlug ??
                         <a href="{{ route('journal.dashboard', $j->slug) }}"
                             class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="truncate">{{ $j->name }}</span>
-                            @if ($j->id === $journal->id)
+                            @if ($journal && $j->id === $journal->id)
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             @endif
                         </a>
@@ -901,7 +917,8 @@ $journalSlug ??
                                     </svg>
                                     My Profile
                                 </a>
-                                <a href="#"
+                                @role('Super Admin')
+                                <a href="{{ route('admin.site.index') }}"
                                     class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
@@ -910,8 +927,9 @@ $journalSlug ??
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    Settings
+                                    Administration
                                 </a>
+                                @endrole
                             </div>
 
                             <!-- Logout -->

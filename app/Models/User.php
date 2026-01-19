@@ -36,6 +36,7 @@ class User extends Authenticatable
         'phone',
         'avatar',
         'orcid_id',
+        'homepage',
         'mailing_address',
         'signature',
         'locale',

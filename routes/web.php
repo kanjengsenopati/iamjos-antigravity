@@ -100,6 +100,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
     Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
+    Route::post('/profile/upload-image', [ProfileController::class, 'uploadImage'])->name('profile.upload.image');
 
     // --------- Notifications API (Global) ---------
     Route::prefix('notifications')->name('notifications.')->group(function () {

@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Intervention\Image\Laravel\Facades\Image;
 
 class ProfileController extends Controller
 {
@@ -31,17 +32,70 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
+            // Identity
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'affiliation' => ['nullable', 'string', 'max:255'],
+            'given_name' => ['nullable', 'string', 'max:255'],
+            'family_name' => ['nullable', 'string', 'max:255'],
+            'affiliation' => ['nullable', 'string', 'max:500'],
             'country' => ['nullable', 'string', 'max:100'],
-            'bio' => ['nullable', 'string', 'max:2000'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            
+            // Contact
+            // 'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s()]*$/'],
+            'mailing_address' => ['nullable', 'string', 'max:1000'],
+            
+            // Public Profile
+            'bio' => ['nullable', 'string', 'max:5000'],
+            'homepage' => ['nullable', 'url', 'max:500'],
+            'orcid_id' => ['nullable', 'string', 'max:50', 'regex:/^https?:\/\/orcid\.org\/\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$/'],
+        ], [
+            'orcid_id.regex' => 'The ORCID iD must be a valid URL format (e.g., https://orcid.org/0000-0001-2345-6789)',
+            'homepage.url' => 'The homepage must be a valid URL (e.g., https://example.com)',
+            'phone.regex' => 'The phone number may only contain numbers, spaces, and the + - ( ) characters.',
         ]);
+
+        // Sanitize Bio HTML (allow basic formatting tags only)
+        if (isset($validated['bio'])) {
+            $validated['bio'] = $this->sanitizeBio($validated['bio']);
+        }
 
         $user->update($validated);
 
         return back()->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Sanitize biography HTML content
+     * Allows only safe HTML tags for academic formatting
+     */
+    private function sanitizeBio(?string $bio): ?string
+    {
+        if (empty($bio)) {
+            return null;
+        }
+
+        // Define allowed tags (OJS 3.3 compatible + img for TinyMCE)
+        $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><a><img>';
+        
+        // Strip all tags except allowed ones
+        $cleaned = strip_tags($bio, $allowedTags);
+        
+        // Additional security: ensure links only have href attribute
+        $cleaned = preg_replace_callback(
+            '/<a\s+([^>]*?)>/i',
+            function($matches) {
+                if (preg_match('/href=["\']([^"\']*?)["\']/i', $matches[1], $href)) {
+                    // Only allow http/https links
+                    if (preg_match('/^https?:\/\//i', $href[1])) {
+                        return '<a href="' . htmlspecialchars($href[1], ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">';
+                    }
+                }
+                return '';
+            },
+            $cleaned
+        );
+        
+        return $cleaned;
     }
 
     /**
@@ -77,12 +131,42 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($user->avatar);
         }
 
-        // Store new avatar
-        $path = $request->file('avatar')->store('avatars', 'public');
+        // Store and optimize new avatar
+        $file = $request->file('avatar');
+        $filename = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $path = 'avatars/' . $filename;
+
+        // Resize and optimize the image
+        $image = Image::read($file);
+        $image->cover(400, 400); // Resize to 400x400
+        
+        // Save to storage
+        Storage::disk('public')->put($path, (string) $image->encode());
 
         $user->update(['avatar' => $path]);
 
         return back()->with('success', 'Avatar updated successfully.');
+    }
+
+    /**
+     * Delete user avatar.
+     */
+    /**
+     * Handle image upload from TinyMCE
+     */
+    public function uploadImage(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = 'journal_img_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('journal/images', $filename, 'public');
+            
+            return response()->json([
+                'location' => asset('storage/' . $path)
+            ]);
+        }
+        
+        return response()->json(['error' => 'No file uploaded'], 400);
     }
 
     /**
