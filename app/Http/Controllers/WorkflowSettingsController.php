@@ -69,7 +69,7 @@ class WorkflowSettingsController extends Controller
 
         if ($tab === 'submissions') {
             $validated = $request->validate([
-                'author_guidelines' => 'nullable|string',
+                'author_guidelines' => 'nullable',
                 'metadata_keywords' => 'boolean',
                 'metadata_references' => 'boolean',
                 'metadata_languages' => 'boolean',

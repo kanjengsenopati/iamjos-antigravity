@@ -2,11 +2,11 @@
     <x-slot name="title">Profile Settings</x-slot>
 
     <div class="min-h-screen bg-gray-50 -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
-        <div class="max-w-4xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             <!-- Header -->
             <div class="mb-8">
                 <a href="{{ route('dashboard') }}"
-                    class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
+                    class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -51,206 +51,332 @@
                 </div>
             @endif
 
-            <div class="space-y-8">
-                <!-- Avatar Section -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
-                        <h2 class="text-lg font-semibold text-white">Profile Picture</h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="flex items-center space-x-6" x-data="{ previewUrl: null }">
-                            <!-- Current Avatar -->
-                            <div class="relative">
-                                @if ($user->avatar_url)
-                                    <img x-show="!previewUrl" src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
-                                        class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
-                                @else
-                                    <div x-show="!previewUrl"
-                                        class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center border-4 border-white shadow-lg">
-                                        <span class="text-white text-2xl font-bold">{{ $user->initials }}</span>
-                                    </div>
-                                @endif
-                                <!-- Preview -->
-                                <img x-show="previewUrl" x-cloak :src="previewUrl"
-                                    class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
-                            </div>
+            <!-- Avatar Section (Standalone) -->
+            <div class="mb-6 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row items-center md:items-start gap-6" x-data="{ previewUrl: null }">
+                        <!-- Avatar Display -->
+                        <div class="relative">
+                            @if ($user->avatar_url)
+                                <img x-show="!previewUrl" src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
+                                    class="w-32 h-32 rounded-full object-cover border-4 border-primary-100 shadow-lg">
+                            @else
+                                <div x-show="!previewUrl"
+                                    class="w-32 h-32 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center border-4 border-primary-100 shadow-lg">
+                                    <span class="text-white text-4xl font-bold">{{ $user->initials }}</span>
+                                </div>
+                            @endif
+                            <!-- Preview -->
+                            <img x-show="previewUrl" x-cloak :src="previewUrl"
+                                class="w-32 h-32 rounded-full object-cover border-4 border-primary-100 shadow-lg">
+                        </div>
 
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-600 mb-4">
-                                    Upload a new avatar. Max file size: 2MB. Allowed formats: JPG, PNG, WebP.
-                                </p>
-                                <div class="flex flex-wrap gap-3">
-                                    <form action="{{ route('profile.avatar') }}" method="POST"
-                                        enctype="multipart/form-data" class="flex items-center gap-3">
+                        <!-- Avatar Actions -->
+                        <div class="flex-1 text-center md:text-left">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ $user->name }}</h3>
+                            <p class="text-sm text-gray-500 mb-4">{{ $user->email }}</p>
+                            <p class="text-xs text-gray-600 mb-4">
+                                Upload a new avatar. Max file size: 2MB. Allowed formats: JPG, PNG, WebP.
+                            </p>
+                            <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                                <form action="{{ route('profile.avatar') }}" method="POST"
+                                    enctype="multipart/form-data" class="flex items-center gap-3">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="file" name="avatar" id="avatar-input"
+                                        accept="image/jpeg,image/png,image/jpg,image/webp"
+                                        @change="if ($event.target.files[0]) { 
+                                            if ($event.target.files[0].size > 2 * 1024 * 1024) { 
+                                                alert('File size must be less than 2MB'); 
+                                                $event.target.value = ''; 
+                                            } else { 
+                                                previewUrl = URL.createObjectURL($event.target.files[0]); 
+                                            }
+                                        }"
+                                        class="hidden">
+                                    <label for="avatar-input"
+                                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">
+                                        <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Choose Image
+                                    </label>
+                                    <button x-show="previewUrl" x-cloak type="submit"
+                                        class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                        Upload
+                                    </button>
+                                </form>
+
+                                @if ($user->avatar)
+                                    <form action="{{ route('profile.avatar.delete') }}" method="POST">
                                         @csrf
-                                        @method('PATCH')
-                                        <input type="file" name="avatar" id="avatar-input"
-                                            accept="image/jpeg,image/png,image/jpg,image/webp"
-                                            @change="if ($event.target.files[0]) { 
-                                                if ($event.target.files[0].size > 2 * 1024 * 1024) { 
-                                                    alert('File size must be less than 2MB'); 
-                                                    $event.target.value = ''; 
-                                                } else { 
-                                                    previewUrl = URL.createObjectURL($event.target.files[0]); 
-                                                }
-                                            }"
-                                            class="hidden">
-                                        <label for="avatar-input"
-                                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">
-                                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            Choose Image
-                                        </label>
-                                        <button x-show="previewUrl" x-cloak type="submit"
-                                            class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors">
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="inline-flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
+                                            onclick="return confirm('Are you sure you want to remove your avatar?')">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
-                                            Upload
+                                            Remove
                                         </button>
                                     </form>
-
-                                    @if ($user->avatar)
-                                        <form action="{{ route('profile.avatar.delete') }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="inline-flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
-                                                onclick="return confirm('Are you sure you want to remove your avatar?')">
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                                Remove
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Profile Information -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
-                        <h2 class="text-lg font-semibold text-white">Profile Information</h2>
-                    </div>
-                    <form action="{{ route('profile.update') }}" method="POST" class="p-6">
-                        @csrf
-                        @method('PATCH')
+            <!-- Tabbed Interface -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+                x-data="{ activeTab: 'identity' }">
+                <!-- Tab Navigation -->
+                <div class="border-b border-gray-200 bg-gray-50">
+                    <nav class="flex overflow-x-auto -mb-px" aria-label="Tabs">
+                        <button @click="activeTab = 'identity'" type="button"
+                            :class="activeTab === 'identity' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            <i class="fa-solid fa-user mr-2"></i>
+                            Identity
+                        </button>
+                        <button @click="activeTab = 'contact'" type="button"
+                            :class="activeTab === 'contact' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            <i class="fa-solid fa-address-book mr-2"></i>
+                            Contact
+                        </button>
+                        <button @click="activeTab = 'public'" type="button"
+                            :class="activeTab === 'public' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            <i class="fa-solid fa-globe mr-2"></i>
+                            Public
+                        </button>
+                        <button @click="activeTab = 'password'" type="button"
+                            :class="activeTab === 'password' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            <i class="fa-solid fa-lock mr-2"></i>
+                            Password
+                        </button>
+                    </nav>
+                </div>
 
+                <!-- Tab Content -->
+                <form action="{{ route('profile.update') }}" method="POST" class="p-6">
+                    @csrf
+                    @method('PATCH')
+
+                    <!-- TAB 1: Identity -->
+                    <div x-show="activeTab === 'identity'" x-cloak>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Identity Information</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Name -->
-                            <div>
+                            <!-- Public Name -->
+                            <div class="md:col-span-2">
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Full Name <span class="text-red-500">*</span>
+                                    Public Name <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="name" id="name"
                                     value="{{ old('name', $user->name) }}" required
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('name') border-red-500 @enderror">
+                                <p class="mt-1 text-xs text-gray-500">Your public display name (how you want to be known)</p>
                                 @error('name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
 
-                            <!-- Email -->
+                            <!-- Given Name -->
+                            <div>
+                                <label for="given_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Given Name
+                                </label>
+                                <input type="text" name="given_name" id="given_name"
+                                    value="{{ old('given_name', $user->given_name) }}"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <p class="mt-1 text-xs text-gray-500">Your first/given name (optional)</p>
+                            </div>
+
+                            <!-- Family Name -->
+                            <div>
+                                <label for="family_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Family Name
+                                </label>
+                                <input type="text" name="family_name" id="family_name"
+                                    value="{{ old('family_name', $user->family_name) }}"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <p class="mt-1 text-xs text-gray-500">Your last/family name (optional)</p>
+                            </div>
+
+                            <!-- Affiliation -->
+                            <div class="md:col-span-2">
+                                <label for="affiliation" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Affiliation / Institution
+                                </label>
+                                <textarea name="affiliation" id="affiliation" rows="3"
+                                    placeholder="e.g., Department of Computer Science, University of Indonesia"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('affiliation', $user->affiliation) }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500">Your current institution or organization</p>
+                            </div>
+
+                            <!-- Country -->
+                            <div class="md:col-span-2">
+                                <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Country
+                                </label>
+                                <select name="country" id="country"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                    <option value="">Select a country</option>
+                                    @php
+                                        $countries = [
+                                            'Indonesia', 'Malaysia', 'Singapore', 'Thailand', 'Philippines',
+                                            'United States', 'United Kingdom', 'Australia', 'Canada', 'Germany',
+                                            'France', 'Japan', 'South Korea', 'China', 'India', 'Netherlands',
+                                            'Switzerland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Belgium',
+                                            'Austria', 'New Zealand', 'Brazil', 'Mexico', 'Argentina', 'Chile'
+                                        ];
+                                    @endphp
+                                    @foreach($countries as $country)
+                                        <option value="{{ $country }}" {{ old('country', $user->country) === $country ? 'selected' : '' }}>
+                                            {{ $country }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Contact -->
+                    <div x-show="activeTab === 'contact'" x-cloak>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Contact Information</h3>
+                        <div class="grid grid-cols-1 gap-6">
+                            <!-- Email (Read-only) -->
                             <div>
                                 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
                                     Email Address <span class="text-red-500">*</span>
                                 </label>
                                 <input type="email" name="email" id="email"
-                                    value="{{ old('email', $user->email) }}" required
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('email') border-red-500 @enderror">
-                                @error('email')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
+                                    value="{{ old('email', $user->email) }}" required disabled
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed">
+                                <p class="mt-1 text-xs text-gray-500">Email cannot be changed directly. Contact admin if needed.</p>
                             </div>
 
-                            <!-- Affiliation -->
-                            <div>
-                                <label for="affiliation" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Affiliation / Institution
-                                </label>
-                                <input type="text" name="affiliation" id="affiliation"
-                                    value="{{ old('affiliation', $user->affiliation) }}"
-                                    placeholder="e.g., University of Indonesia"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            </div>
-
-                            <!-- Country -->
-                            <div>
-                                <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Country
-                                </label>
-                                <input type="text" name="country" id="country"
-                                    value="{{ old('country', $user->country) }}" placeholder="e.g., Indonesia"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            </div>
-
-                            <!-- Phone -->
+                            <!-- Phone Number with WhatsApp -->
                             <div>
                                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Phone Number
+                                    Phone / WhatsApp Number
                                 </label>
-                                <input type="tel" name="phone" id="phone"
-                                    value="{{ old('phone', $user->phone) }}" placeholder="e.g., +62 812 3456 7890"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            </div>
-
-                            <!-- Role (Read-only) -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Role
-                                </label>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach ($user->roles as $role)
-                                        <span
-                                            class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                                            {{ $role->name }}
-                                        </span>
-                                    @endforeach
+                                <div class="relative">
+                                    <input type="tel" name="phone" id="phone"
+                                        value="{{ old('phone', $user->phone) }}"
+                                        placeholder="628123456789"
+                                        class="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                                <div class="mt-2 flex items-start">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fa-brands fa-whatsapp mr-1"></i>
+                                        WhatsApp Active
+                                    </span>
+                                    <p class="ml-2 text-xs text-gray-500">Ensure this number is active on WhatsApp for notifications. Format: 628...</p>
                                 </div>
                             </div>
 
-                            <!-- Bio -->
-                            <div class="md:col-span-2">
-                                <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Short Biography
+                            <!-- Mailing Address -->
+                            <div>
+                                <label for="mailing_address" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Mailing Address
                                 </label>
-                                <textarea name="bio" id="bio" rows="4"
-                                    placeholder="Tell us about yourself, your research interests, and expertise..."
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('bio', $user->bio) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">Maximum 2000 characters</p>
+                                <textarea name="mailing_address" id="mailing_address" rows="4"
+                                    placeholder="Enter your complete mailing address..."
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('mailing_address', $user->mailing_address) }}</textarea>
                             </div>
                         </div>
-
-                        <div class="mt-6 flex justify-end">
-                            <button type="submit"
-                                class="inline-flex items-center px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Change Password -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-700 to-gray-800 px-6 py-4">
-                        <h2 class="text-lg font-semibold text-white">Change Password</h2>
                     </div>
-                    <form action="{{ route('profile.password') }}" method="POST" class="p-6">
+
+                    <!-- TAB 3: Public Profile -->
+                    <div x-show="activeTab === 'public'" x-cloak>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Public Profile</h3>
+                        <div class="grid grid-cols-1 gap-6">
+                            <!-- Bio Statement with CKEditor 4 -->
+                            <div>
+                                <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Biography / Bio Statement
+                                </label>
+                                <textarea name="bio" id="bio" rows="6"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('bio', $user->bio) }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500">Maximum 5000 characters. This will be displayed on your public profile.</p>
+                            </div>
+
+                            <!-- Homepage URL -->
+                            <div>
+                                <label for="homepage" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Homepage URL
+                                </label>
+                                <div class="relative">
+                                    <input type="url" name="homepage" id="homepage"
+                                        value="{{ old('homepage', $user->homepage) }}"
+                                        placeholder="https://yourwebsite.com"
+                                        class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Your personal or institutional website</p>
+                            </div>
+
+                            <!-- ORCID iD -->
+                            <div>
+                                <label for="orcid_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg class="inline-block w-4 h-4 mr-1" viewBox="0 0 256 256" fill="#A6CE39">
+                                        <path d="M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z"/>
+                                        <g>
+                                            <path fill="#FFFFFF" d="M86.3,186.2H70.9V79.1h15.4v48.4V186.2z"/>
+                                            <path fill="#FFFFFF" d="M108.9,79.1h41.6c39.6,0,57,28.3,57,53.6c0,27.5-21.5,53.6-56.8,53.6h-41.8V79.1z M124.3,172.4h24.5c34.9,0,42.9-26.5,42.9-39.7c0-21.5-13.7-39.7-43.7-39.7h-23.7V172.4z"/>
+                                            <path fill="#FFFFFF" d="M88.7,56.8c0,5.5-4.5,10.1-10.1,10.1c-5.6,0-10.1-4.6-10.1-10.1c0-5.6,4.5-10.1,10.1-10.1C84.2,46.7,88.7,51.3,88.7,56.8z"/>
+                                        </g>
+                                    </svg>
+                                    ORCID iD
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="orcid_id" id="orcid_id"
+                                        value="{{ old('orcid_id', $user->orcid_id) }}"
+                                        placeholder="https://orcid.org/0000-0001-2345-6789"
+                                        class="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Your unique researcher identifier. Format: https://orcid.org/0000-0001-2345-6789</p>
+                                @error('orcid_id')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: Password -->
+                    <div x-show="activeTab === 'password'" x-cloak>
+                        <!-- Content moved to separate form below -->
+                    </div>
+
+                    <!-- Save Button (for tabs 1-3) -->
+                    <div x-show="activeTab !== 'password'" class="mt-8 flex justify-end border-t border-gray-200 pt-6">
+                        <button type="submit"
+                            class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Password Tab Content (Separate Form) -->
+                <div x-show="activeTab === 'password'" x-cloak class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Change Password</h3>
+                    <form action="{{ route('profile.password') }}" method="POST">
                         @csrf
                         @method('PATCH')
 
@@ -294,10 +420,10 @@
                             </div>
                         </div>
 
-                        <div class="mt-6 flex justify-end">
+                        <div class="mt-8 flex justify-end border-t border-gray-200 pt-6">
                             <button type="submit"
-                                class="inline-flex items-center px-6 py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="inline-flex items-center px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors shadow-sm">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                 </svg>
@@ -306,34 +432,109 @@
                         </div>
                     </form>
                 </div>
+            </div>
 
-                <!-- Account Stats -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            <div class="text-center p-4 bg-gray-50 rounded-xl">
-                                <p class="text-sm text-gray-500 mb-1">Member Since</p>
-                                <p class="text-lg font-semibold text-gray-900">
-                                    {{ $user->created_at->format('M d, Y') }}</p>
-                            </div>
-                            <div class="text-center p-4 bg-gray-50 rounded-xl">
-                                <p class="text-sm text-gray-500 mb-1">Email Verified</p>
-                                <p
-                                    class="text-lg font-semibold {{ $user->email_verified_at ? 'text-green-600' : 'text-yellow-600' }}">
-                                    {{ $user->email_verified_at ? 'Verified' : 'Pending' }}
-                                </p>
-                            </div>
-                            <div class="text-center p-4 bg-gray-50 rounded-xl">
-                                <p class="text-sm text-gray-500 mb-1">Total Submissions</p>
-                                <p class="text-lg font-semibold text-gray-900">{{ $user->submissions()->count() }}</p>
-                            </div>
+            <!-- Account Stats -->
+            <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div class="text-center p-4 bg-gray-50 rounded-xl">
+                            <p class="text-sm text-gray-500 mb-1">Member Since</p>
+                            <p class="text-lg font-semibold text-gray-900">
+                                {{ $user->created_at->format('M d, Y') }}</p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-xl">
+                            <p class="text-sm text-gray-500 mb-1">Email Verified</p>
+                            <p
+                                class="text-lg font-semibold {{ $user->email_verified_at ? 'text-green-600' : 'text-yellow-600' }}">
+                                {{ $user->email_verified_at ? 'Verified' : 'Pending' }}
+                            </p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-xl">
+                            <p class="text-sm text-gray-500 mb-1">Total Submissions</p>
+                            <p class="text-lg font-semibold text-gray-900">{{ $user->submissions()->count() }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    @push('styles')
+    <style>
+        /* CKEditor 4 Custom Styling */
+        .cke_chrome {
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.5rem !important;
+        }
+        .cke_top {
+            background: #f9fafb !important;
+            border-bottom: 1px solid #e5e7eb !important;
+            border-radius: 0.5rem 0.5rem 0 0 !important;
+        }
+        .cke_bottom {
+            background: #f9fafb !important;
+            border-top: 1px solid #e5e7eb !important;
+        }
+    </style>
+    @endpush
+
+    @push('scripts')
+    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+    <script>
+        tinymce.init({
+            selector: '#bio',
+            height: 350,
+            menubar: false,
+            plugins: 'lists link image table code autoresize',
+            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+            branding: false,
+            license_key: 'gpl',
+            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.withCredentials = false;
+                xhr.open('POST', '{{ route('profile.upload.image') }}');
+                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                xhr.upload.onprogress = (e) => {
+                    progress(e.loaded / e.total * 100);
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 403) {
+                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                        return;
+                    }
+
+                    if (xhr.status < 200 || xhr.status >= 300) {
+                        reject('HTTP Error: ' + xhr.status);
+                        return;
+                    }
+
+                    const json = JSON.parse(xhr.responseText);
+
+                    if (!json || typeof json.location != 'string') {
+                        reject('Invalid JSON: ' + xhr.responseText);
+                        return;
+                    }
+
+                    resolve(json.location);
+                };
+
+                xhr.onerror = () => {
+                    reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                };
+
+                const formData = new FormData();
+                formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                xhr.send(formData);
+            })
+        });
+    </script>
+    
+    @endpush
 </x-app-layout>
