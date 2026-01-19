@@ -15,8 +15,13 @@ class AuthController extends Controller
     /**
      * Menampilkan halaman login.
      */
-    public function index()
+    public function index(Request $request)
     {
+        // Store intended journal for post-login redirect
+        if ($request->has('intended_journal')) {
+            session(['intended_journal' => $request->query('intended_journal')]);
+        }
+        
         return view('admins.auth.login');
     }
 
@@ -62,15 +67,21 @@ class AuthController extends Controller
             /** @var \App\Models\User $user */
             $user = Auth::guard('web')->user();
 
+            // Super Admin always goes to site admin
             if ($user->hasRole('Super Admin')) {
+                session()->forget('intended_journal');
                 return redirect()->route('admin.site.index');
+            }
+
+            // Check if there's an intended journal from session
+            $intendedJournal = session('intended_journal');
+            if ($intendedJournal) {
+                session()->forget('intended_journal');
+                return redirect()->route('journal.dashboard', $intendedJournal);
             }
 
             return redirect()->route('journal.select');
         }
-
-
-
 
         // 5. Jika autentikasi gagal (password salah atau akun tidak aktif)
         // $user->recordFailedLoginAttempt(); // Catat percobaan gagal

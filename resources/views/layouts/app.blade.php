@@ -1001,6 +1001,8 @@ $journalSlug ??
     </div>
     @endif
 
+
+    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
     @stack('scripts')
 </body>
 
