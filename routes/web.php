@@ -469,6 +469,26 @@ Route::prefix('{journal}')->group(function () {
                 Route::put('/', 'update')->name('update');
                 Route::delete('/indexed-image', 'deleteIndexedImage')->name('indexed-image.delete');
             });
+
+            // Navigation Menu Manager
+            Route::controller(\App\Http\Controllers\Journal\NavigationController::class)->prefix('navigation')->name('navigation.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/items', 'storeItem')->name('items.store');
+                Route::put('/items/{item}', 'updateItem')->name('items.update');
+                Route::delete('/items/{item}', 'destroyItem')->name('items.destroy');
+                Route::post('/items/reorder', 'reorderItems')->name('items.reorder');
+            });
+
+            // Sidebar Block Manager
+            Route::controller(\App\Http\Controllers\Journal\SidebarController::class)->prefix('sidebar')->name('sidebar.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/', 'store')->name('store');
+                Route::put('/{block}', 'update')->name('update');
+                Route::delete('/{block}', 'destroy')->name('destroy');
+                Route::post('/{block}/toggle', 'toggle')->name('toggle');
+                Route::post('/reorder', 'reorder')->name('reorder');
+                Route::post('/system-block', 'addSystemBlock')->name('system-block');
+            });
         });
 
         // --------- Journal Admin Routes ---------

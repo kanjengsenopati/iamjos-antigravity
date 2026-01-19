@@ -45,6 +45,9 @@ class Journal extends Model
         'enable_clockss',
         'archiving_policy',
         'author_guidelines',
+        'summary',
+        'about',
+        'editorial_team_description',
     ];
 
     /**

@@ -19,9 +19,8 @@
 
     <!-- Alpine.js -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    
+
     <!-- TinyMCE -->
-    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -102,53 +101,53 @@
 
         <!-- Journal Switcher -->
         @php
-            $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
+        $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
         @endphp
         @if ($userJournals->count() > 0)
-            <div class="px-4 py-3 border-b border-slate-700/50" x-data="{ journalOpen: false, search: '' }">
-                <button @click="journalOpen = !journalOpen"
-                    class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors text-left group">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-sm">
-                        <i class="fa-solid fa-book-open text-xs"></i>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Switch Journal</p>
-                        <p class="text-sm font-medium text-white truncate">{{ $userJournals->count() }} Journal(s)</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"
-                        :class="{ 'rotate-180': journalOpen }"></i>
-                </button>
-
-                <!-- Journal Dropdown -->
-                <div x-show="journalOpen" x-cloak x-collapse class="mt-2">
-                    <!-- Search -->
-                    <div class="mb-2">
-                        <input type="text" x-model="search" placeholder="Search journal..."
-                            class="w-full px-3 py-1.5 text-xs bg-slate-800 border border-slate-700 rounded-md text-white placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <!-- Journal List -->
-                    <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
-                        @foreach ($userJournals as $j)
-                            <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
-                                x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
-                                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors group/j">
-                                <div
-                                    class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300 group-hover/j:bg-indigo-600 group-hover/j:text-white transition-colors">
-                                    {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
-                                </div>
-                                <span
-                                    class="text-sm text-slate-300 truncate group-hover/j:text-white">{{ $j->name }}</span>
-                            </a>
-                        @endforeach
-                    </div>
-                    <!-- View All -->
-                    <a href="{{ route('journal.select') }}"
-                        class="mt-2 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-800 rounded-lg hover:bg-slate-700 hover:text-white transition-colors">
-                        <i class="fa-solid fa-grid-2"></i> View All Journals
-                    </a>
+        <div class="px-4 py-3 border-b border-slate-700/50" x-data="{ journalOpen: false, search: '' }">
+            <button @click="journalOpen = !journalOpen"
+                class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors text-left group">
+                <div
+                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-sm">
+                    <i class="fa-solid fa-book-open text-xs"></i>
                 </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Switch Journal</p>
+                    <p class="text-sm font-medium text-white truncate">{{ $userJournals->count() }} Journal(s)</p>
+                </div>
+                <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"
+                    :class="{ 'rotate-180': journalOpen }"></i>
+            </button>
+
+            <!-- Journal Dropdown -->
+            <div x-show="journalOpen" x-cloak x-collapse class="mt-2">
+                <!-- Search -->
+                <div class="mb-2">
+                    <input type="text" x-model="search" placeholder="Search journal..."
+                        class="w-full px-3 py-1.5 text-xs bg-slate-800 border border-slate-700 rounded-md text-white placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <!-- Journal List -->
+                <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+                    @foreach ($userJournals as $j)
+                    <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
+                        x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors group/j">
+                        <div
+                            class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300 group-hover/j:bg-indigo-600 group-hover/j:text-white transition-colors">
+                            {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
+                        </div>
+                        <span
+                            class="text-sm text-slate-300 truncate group-hover/j:text-white">{{ $j->name }}</span>
+                    </a>
+                    @endforeach
+                </div>
+                <!-- View All -->
+                <a href="{{ route('journal.select') }}"
+                    class="mt-2 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-800 rounded-lg hover:bg-slate-700 hover:text-white transition-colors">
+                    <i class="fa-solid fa-grid-2"></i> View All Journals
+                </a>
             </div>
+        </div>
         @endif
 
         <!-- Navigation -->
@@ -252,7 +251,8 @@
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 transition-colors">
                 <div
                     class="w-9 h-9 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center text-sm font-semibold">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }} </div>
+                    {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+                </div>
                 <div class="flex-1 text-left">
                     <p class="text-sm font-medium text-white truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
                     <p class="text-xs text-slate-400 truncate">Super Admin</p>
@@ -514,46 +514,46 @@
 
     <!-- Flash Messages -->
     @if (session('success'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
-            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2"
-            x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
-            class="fixed bottom-6 right-6 z-50">
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
-                <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
-                <button @click="show = false" class="text-emerald-500 hover:text-emerald-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
+        class="fixed bottom-6 right-6 z-50">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
+            <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
             </div>
+            <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
+            <button @click="show = false" class="text-emerald-500 hover:text-emerald-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
+    </div>
     @endif
 
     @if (session('error'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
-            <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
-                <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </div>
-                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
-                <button @click="show = false" class="text-red-500 hover:text-red-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
+            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </div>
+            <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+            <button @click="show = false" class="text-red-500 hover:text-red-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
+    </div>
     @endif
 
     @stack('scripts')
