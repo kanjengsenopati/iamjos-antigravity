@@ -21,7 +21,7 @@ class AuthController extends Controller
         if ($request->has('intended_journal')) {
             session(['intended_journal' => $request->query('intended_journal')]);
         }
-        
+
         return view('admins.auth.login');
     }
 
