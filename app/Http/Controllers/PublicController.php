@@ -312,4 +312,121 @@ class PublicController extends Controller
 
         return view('public.article-reader', compact('journal', 'submission', 'galleyFile'));
     }
+
+    /**
+     * Download a publication galley file.
+     * CRITICAL for Google Scholar indexing - must stream the actual file.
+     */
+    public function downloadGalley(string $journalSlug, $article, $galley)
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        // Resolve article by ID or slug
+        $submission = Submission::where('journal_id', $journal->id)
+            ->where(function ($q) use ($article) {
+                $q->where('id', $article)
+                    ->orWhere('slug', $article);
+            })
+            ->published()
+            ->firstOrFail();
+
+        // Load galleys
+        $submission->load('galleys');
+
+        // Find the galley
+        $publicationGalley = $submission->galleys->find($galley);
+
+        if (!$publicationGalley) {
+            abort(404, 'Galley not found');
+        }
+
+        // If it's a remote galley, redirect to URL
+        if ($publicationGalley->is_remote && $publicationGalley->url_remote) {
+            return redirect($publicationGalley->url_remote);
+        }
+
+        // Get the associated file
+        if (!$publicationGalley->file_id) {
+            abort(404, 'File not found');
+        }
+
+        $file = \App\Models\SubmissionFile::find($publicationGalley->file_id);
+
+        if (!$file) {
+            abort(404, 'File not found');
+        }
+
+        // Stream the file for download
+        $disk = \Storage::disk('public');
+        
+        if (!$disk->exists($file->file_path)) {
+            abort(404, 'File not found on disk');
+        }
+
+        // Increment download counter (optional)
+        $publicationGalley->increment('views');
+
+        // Return file stream with proper headers for Google Scholar
+        return response()->stream(
+            function () use ($disk, $file) {
+                $stream = $disk->readStream($file->file_path);
+                fpassthru($stream);
+                fclose($stream);
+            },
+            200,
+            [
+                'Content-Type' => $file->mime_type ?? 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $file->original_name . '"',
+                'Content-Length' => $disk->size($file->file_path),
+                'Cache-Control' => 'public, max-age=86400',
+            ]
+        );
+    }
+
+    /**
+     * View a galley inline (for HTML galleys or embedded PDF viewer).
+     */
+    public function viewGalley(string $journalSlug, $article, $galley)
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        // Resolve article by ID or slug
+        $submission = Submission::where('journal_id', $journal->id)
+            ->where(function ($q) use ($article) {
+                $q->where('id', $article)
+                    ->orWhere('slug', $article);
+            })
+            ->published()
+            ->firstOrFail();
+
+        // Load galleys
+        $submission->load(['galleys', 'authors', 'section', 'issue']);
+
+        // Find the galley
+        $publicationGalley = $submission->galleys->find($galley);
+
+        if (!$publicationGalley) {
+            abort(404, 'Galley not found');
+        }
+
+        // If it's a remote galley, redirect
+        if ($publicationGalley->is_remote && $publicationGalley->url_remote) {
+            return redirect($publicationGalley->url_remote);
+        }
+
+        // Get website settings
+        $settings = $journal->getWebsiteSettings();
+
+        // Increment view counter
+        $publicationGalley->increment('views');
+
+        return view('journal.public.galley-viewer', [
+            'journal' => $journal,
+            'article' => $submission,
+            'galley' => $publicationGalley,
+            'issue' => $submission->issue,
+            'settings' => $settings,
+        ]);
+    }
 }
+

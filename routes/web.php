@@ -147,6 +147,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
     // About Page Settings
     Route::get('/about-settings', [SiteAdminController::class, 'editAbout'])->name('about.edit');
     Route::put('/about-settings', [SiteAdminController::class, 'updateAbout'])->name('about.update');
+
+    // Site Appearance - Page Builder (New Block-Based System)
+    Route::controller(\App\Http\Controllers\Admin\SiteAppearanceController::class)
+        ->prefix('site-appearance')
+        ->name('site.appearance.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/reorder', 'reorder')->name('reorder');
+            Route::post('/{block}/toggle', 'toggle')->name('toggle');
+            Route::get('/{block}/edit', 'edit')->name('edit');
+            Route::put('/{block}', 'update')->name('update');
+            Route::get('/{block}/config', 'getConfig')->name('config');
+            Route::put('/{block}/config', 'updateConfig')->name('config.update');
+            Route::post('/{block}/reset', 'reset')->name('reset');
+            Route::delete('/{block}/logo', 'deleteLogo')->name('logo.delete');
+        });
 });
 
 // =====================================================
@@ -219,8 +235,19 @@ Route::prefix('{journal}')->group(function () {
     Route::get('/search', [SearchController::class, 'index'])->name('journal.public.search');
     Route::get('/search/quick', [SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
     Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
-    Route::get('/article/{submission}', [PublicController::class, 'article'])->name('journal.public.article');
-    Route::get('/article/{submission}/view', [PublicController::class, 'articleReader'])->name('journal.public.article.reader');
+    
+    // --------- Article Routes (Google Scholar Indexing) ---------
+    // These routes support both ID and slug for SEO flexibility
+    Route::get('/article/{article}', [PublicController::class, 'article'])->name('journal.public.article');
+    Route::get('/article/{article}/view', [PublicController::class, 'articleReader'])->name('journal.public.article.reader');
+    
+    // Article View (alias route for SEO with clean URL structure)
+    Route::get('/article/{article}/view', [PublicController::class, 'article'])->name('journal.article.view');
+    
+    // Article Galley Download (CRITICAL for Google Scholar - must stream the actual file)
+    Route::get('/article/{article}/galley/{galley}/download', [PublicController::class, 'downloadGalley'])->name('journal.article.download');
+    Route::get('/article/{article}/galley/{galley}', [PublicController::class, 'viewGalley'])->name('journal.article.galley');
+
 
     // =====================================================
     // JOURNAL-SCOPED DASHBOARD ROUTES (Protected)

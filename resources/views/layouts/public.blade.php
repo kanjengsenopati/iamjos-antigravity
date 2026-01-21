@@ -19,18 +19,43 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- SEO Meta Tags --}}
+    {{-- Basic SEO Meta Tags --}}
     <title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
     <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
-    <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication' }}">
+    <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
+    <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url()->current() }}">
 
-    {{-- Open Graph --}}
-    <meta property="og:title" content="{{ $title ?? $journal->name }}">
-    <meta property="og:description" content="{{ $description ?? $journal->description }}">
+    {{-- Default Open Graph Tags (can be overridden by child views) --}}
+    <meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
     <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ $title ?? $journal->name }}">
+    <meta property="og:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
     @if($journal->logo_path ?? false)
         <meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
     @endif
+
+    {{-- Twitter Card Tags --}}
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ $title ?? $journal->name }}">
+    <meta name="twitter:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
+
+    {{-- ============================================ --}}
+    {{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS --}}
+    {{-- Child views can push additional meta tags here --}}
+    {{-- ============================================ --}}
+    @stack('meta_tags')
+
+    {{-- Dublin Core Metadata (Alternative for Scholar) --}}
+    <meta name="DC.Title" content="{{ $title ?? $journal->name }}">
+    <meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
+    @if($journal->issn_online)
+        <meta name="DC.Identifier" content="ISSN {{ $journal->issn_online }}">
+    @endif
+
 
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
