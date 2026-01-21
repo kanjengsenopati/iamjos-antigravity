@@ -31,6 +31,9 @@ class Journal extends Model
         'visible',
         'logo_path',
         'thumbnail_path',
+        'homepage_image_path',
+        'show_homepage_image_in_header',
+        'page_footer',
         'settings',
         'license_terms',
         'license_url',
@@ -62,6 +65,7 @@ class Journal extends Model
             'enable_oai' => 'boolean',
             'enable_lockss' => 'boolean',
             'enable_clockss' => 'boolean',
+            'show_homepage_image_in_header' => 'boolean',
         ];
     }
 

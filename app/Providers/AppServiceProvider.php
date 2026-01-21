@@ -9,7 +9,9 @@ use App\Policies\IssuePolicy;
 use App\Policies\SubmissionPolicy;
 use App\Policies\ReviewAssignmentPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\View\Composers\PublicLayoutComposer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,5 +41,11 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
         });
+
+        // Register View Composer for Public Layout (both regular and component versions)
+        View::composer([
+            'layouts.public',
+            'components.layouts.public',
+        ], PublicLayoutComposer::class);
     }
 }

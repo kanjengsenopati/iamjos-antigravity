@@ -11,7 +11,7 @@
             <p class="mt-1 text-sm text-gray-500">Customize sidebar widgets for your journal's public pages.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
-            <button @click="showAddCustomModal = true"
+            <button @click="openAddModal()"
                 class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                 <i class="fa-solid fa-plus mr-2"></i>
                 Add Custom Block
@@ -191,7 +191,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">HTML Content *</label>
-                            <textarea x-model="newBlock.content" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"
+                            <textarea id="new-block-content" x-model="newBlock.content" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"
                                 placeholder="<p>Your custom HTML content here...</p>"></textarea>
                             <p class="mt-1 text-xs text-gray-500">You can use HTML tags for formatting</p>
                         </div>
@@ -240,7 +240,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
-                            <textarea x-model="editingBlock.content" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"></textarea>
+                            <textarea id="edit-block-content" x-model="editingBlock.content" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"></textarea>
                         </div>
                     </div>
 
@@ -262,7 +262,8 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
 <script>
     function sidebarManager() {
         return {
@@ -282,6 +283,70 @@
                     handle: '.fa-grip-vertical',
                     ghostClass: 'opacity-50',
                     onEnd: () => this.saveOrder(el)
+                });
+            },
+
+            // TinyMCE Initialization with Image Upload
+            initTinyMCE(selector, initialContent = '') {
+                // Remove existing instance if any
+                if (tinymce.get(selector)) {
+                    tinymce.get(selector).remove();
+                }
+
+                tinymce.init({
+                    selector: '#' + selector,
+                    height: 300,
+                    menubar: false,
+                    branding: false,
+                    license_key: 'gpl',
+                    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+                    toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | image link code',
+                    content_style: 'body { font-family:Inter,sans-serif; font-size:14px }',
+                    setup: function(editor) {
+                        editor.on('init', function() {
+                            editor.setContent(initialContent);
+                        });
+                    },
+                    // Image Upload Handler
+                    images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.withCredentials = false;
+                        xhr.open('POST', '{{ route('journal.upload.image', $journal->slug) }}');
+                        xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                        xhr.upload.onprogress = (e) => {
+                            progress(e.loaded / e.total * 100);
+                        };
+
+                        xhr.onload = () => {
+                            if (xhr.status === 403) {
+                                reject({
+                                    message: 'HTTP Error: ' + xhr.status,
+                                    remove: true
+                                });
+                                return;
+                            }
+                            if (xhr.status < 200 || xhr.status >= 300) {
+                                reject('HTTP Error: ' + xhr.status);
+                                return;
+                            }
+
+                            const json = JSON.parse(xhr.responseText);
+                            if (!json || typeof json.location != 'string') {
+                                reject('Invalid JSON: ' + xhr.responseText);
+                                return;
+                            }
+                            resolve(json.location);
+                        };
+
+                        xhr.onerror = () => {
+                            reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                        };
+
+                        const formData = new FormData();
+                        formData.append('file', blobInfo.blob(), blobInfo.filename());
+                        xhr.send(formData);
+                    })
                 });
             },
 
@@ -332,7 +397,21 @@
                 }
             },
 
+            openAddModal() {
+                this.showAddCustomModal = true;
+                this.newBlock = {
+                    title: '',
+                    icon: '',
+                    content: ''
+                };
+                // Small delay to ensure modal is rendered
+                setTimeout(() => this.initTinyMCE('new-block-content', ''), 50);
+            },
+
             async addCustomBlock() {
+                // Get content from TinyMCE
+                const content = tinymce.get('new-block-content') ? tinymce.get('new-block-content').getContent() : this.newBlock.content;
+
                 try {
                     const response = await fetch('{{ route("journal.settings.sidebar.store", $journal->slug) }}', {
                         method: 'POST',
@@ -344,7 +423,7 @@
                             type: 'custom',
                             title: this.newBlock.title,
                             icon: this.newBlock.icon || 'fa-solid fa-cube',
-                            content: this.newBlock.content
+                            content: content
                         })
                     });
                     const data = await response.json();
@@ -363,9 +442,14 @@
                     ...block
                 };
                 this.showEditModal = true;
+                // Init TinyMCE with content
+                setTimeout(() => this.initTinyMCE('edit-block-content', block.content || ''), 50);
             },
 
             async updateBlock() {
+                // Get content from TinyMCE
+                const content = tinymce.get('edit-block-content') ? tinymce.get('edit-block-content').getContent() : this.editingBlock.content;
+
                 try {
                     const response = await fetch(`{{ url($journal->slug . '/settings/sidebar') }}/${this.editingBlock.id}`, {
                         method: 'PUT',
@@ -373,7 +457,10 @@
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify(this.editingBlock)
+                        body: JSON.stringify({
+                            ...this.editingBlock,
+                            content: content
+                        })
                     });
                     const data = await response.json();
                     if (data.success) {

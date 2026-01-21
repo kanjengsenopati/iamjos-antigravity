@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Journal;
 use App\Http\Controllers\Controller;
 use App\Models\NavigationMenu;
 use App\Models\NavigationItem;
-use App\Models\SidebarBlock;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;

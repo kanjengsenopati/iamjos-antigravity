@@ -27,7 +27,7 @@
                 <button @click="activeMenu = '{{ $menu->id }}'"
                     :class="activeMenu === '{{ $menu->id }}' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
-                    <i class="fa-solid {{ $menu->location === 'primary' ? 'fa-bars' : ($menu->location === 'user_top' ? 'fa-user' : ($menu->location === 'footer' ? 'fa-shoe-prints' : 'fa-columns')) }} mr-2"></i>
+                    <i class="fa-solid {{ $menu->location === 'primary' ? 'fa-bars' : ($menu->location === 'user_top' ? 'fa-user' : 'fa-shoe-prints') }} mr-2"></i>
                     {{ $menu->name }}
                 </button>
                 @endforeach

@@ -2,9 +2,6 @@
 @php
 $primaryColor = $settings['primary_color'] ?? '#0369a1';
 $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
-
-// OJS 3.3 Logic: Show homepage image in body only if NOT used as header background
-$showHomepageImageInBody = $journal->homepage_image_path && !$journal->show_homepage_image_in_header;
 @endphp
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$journal->name . ' - Home'">
@@ -22,15 +19,6 @@ $showHomepageImageInBody = $journal->homepage_image_path && !$journal->show_home
                 </div>
                 <a href="#announcements" class="text-sm text-amber-600 hover:underline">View all</a>
             </div>
-        </div>
-    @endif
-
-    {{-- Homepage Image (OJS 3.3: Show in body when NOT used as header background) --}}
-    @if($showHomepageImageInBody)
-        <div class="mb-8">
-            <img src="{{ Storage::url($journal->homepage_image_path) }}" 
-                 alt="{{ $journal->name }}"
-                 class="w-full h-auto rounded-lg shadow-md">
         </div>
     @endif
 
@@ -120,7 +108,7 @@ $showHomepageImageInBody = $journal->homepage_image_path && !$journal->show_home
                                 <i class="fa-solid fa-book-open mr-2"></i>
                                 Browse Issue
                             </a>
-                            @if($currentIssue->cover_path || ($currentIssue->metadata['pdf_path'] ?? false))
+                            @if($currentIssue->cover_path || $currentIssue->metadata['pdf_path'] ?? false)
                                 <a href="#" 
                                    class="inline-flex items-center px-4 py-2 text-sm font-medium border rounded-lg transition-colors hover:bg-slate-50"
                                    style="color: {{ $primaryColor }}; border-color: {{ $primaryColor }};">
@@ -159,28 +147,23 @@ $showHomepageImageInBody = $journal->homepage_image_path && !$journal->show_home
             @endforeach
 
             {{-- Articles without Section --}}
-            @php
-                $uncategorizedArticles = collect();
-                if (isset($groupedArticles[null])) {
-                    $uncategorizedArticles = $groupedArticles[null];
-                } elseif (isset($groupedArticles[""])) {
-                    $uncategorizedArticles = $groupedArticles[""];
-                } elseif (isset($groupedArticles[0])) {
-                    $uncategorizedArticles = $groupedArticles[0];
-                }
-            @endphp
-            @if($uncategorizedArticles->isNotEmpty())
-                <div class="mb-8">
-                    <h4 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                        Articles
-                    </h4>
-                    <div class="space-y-4">
-                        @foreach($uncategorizedArticles as $article)
-                            <x-article-card :article="$article" :journal="$journal" />
-                        @endforeach
+            @if(isset($groupedArticles[null]) || isset($groupedArticles[""]) || isset($groupedArticles[0]))
+                @php
+                    $uncategorizedArticles = $groupedArticles[null] ?? $groupedArticles[""] ?? $groupedArticles[0] ?? collect();
+                @endphp
+                @if($uncategorizedArticles->isNotEmpty())
+                    <div class="mb-8">
+                        <h4 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            Articles
+                        </h4>
+                        <div class="space-y-4">
+                            @foreach($uncategorizedArticles as $article)
+                                <x-article-card :article="$article" :journal="$journal" />
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
             @endif
 
             {{-- No Articles Message --}}
