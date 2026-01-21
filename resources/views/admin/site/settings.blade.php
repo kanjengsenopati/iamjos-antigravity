@@ -106,6 +106,24 @@
                 </div>
             </div>
 
+            <!-- Site Appearance Quick Link -->
+            <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-paintbrush text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-indigo-900">Customize Portal</h3>
+                        <p class="mt-2 text-sm text-indigo-800">
+                            Want to change the look of the home page? Use the Drag & Drop Page Builder.
+                        </p>
+                        <a href="{{ route('admin.site.appearance.index') }}" class="inline-flex items-center mt-3 text-sm font-semibold text-indigo-700 hover:text-indigo-900">
+                            Go to Page Builder <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white border border-gray-200 rounded-2xl p-6">
                 <h3 class="font-bold text-gray-900 mb-4">Environment Config</h3>
                 <div class="space-y-3">
