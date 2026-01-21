@@ -1,318 +1,215 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'IAMJOS') - Portal Jurnal Akademik</title>
-    <meta name="description" content="@yield('description', 'Platform Jurnal Akademik Indonesia')">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- SEO Meta Tags --}}
+    <title>@yield('title', 'IAMJOS') - Indonesian Academic Journal System</title>
+    <meta name="description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals and research articles across multiple disciplines.' }}">
+    <meta name="keywords" content="academic journals, research, publications, open access, Indonesia, scholarly articles">
+    <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url()->current() }}">
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {{-- Open Graph --}}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', 'IAMJOS')">
+    <meta property="og:description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals.' }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="IAMJOS">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f5f3ff',
-                            100: '#ede9fe',
-                            200: '#ddd6fe',
-                            300: '#c4b5fd',
-                            400: '#a78bfa',
-                            500: '#8b5cf6',
-                            600: '#7c3aed',
-                            700: '#6d28d9',
-                            800: '#5b21b6',
-                            900: '#4c1d95',
-                            950: '#2e1065',
-                        },
-                        accent: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            200: '#c7d2fe',
-                            300: '#a5b4fc',
-                            400: '#818cf8',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                            800: '#3730a3',
-                            900: '#312e81',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        display: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-                        serif: ['Playfair Display', 'Georgia', 'serif'],
-                    },
-                    typography: {
-                        DEFAULT: {
-                            css: {
-                                maxWidth: 'none',
-                            },
-                        },
-                    },
-                }
-            }
-        }
-    </script>
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="@yield('title', 'IAMJOS')">
 
-    <!-- Alpine.js -->
+    {{-- Fonts --}}
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800&family=merriweather:400,700&display=swap" rel="stylesheet">
+
+    {{-- Font Awesome --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    {{-- Alpine.js --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    {{-- Vite --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         [x-cloak] { display: none !important; }
-
-        /* Custom Scrollbar */
+        
+        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c4b5fd; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Glassmorphism */
-        .glass {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-
-        /* Hero Background Pattern */
-        .hero-pattern {
-            background-image:
-                radial-gradient(at 40% 20%, hsla(262, 83%, 58%, 0.3) 0px, transparent 50%),
-                radial-gradient(at 80% 0%, hsla(225, 89%, 67%, 0.2) 0px, transparent 50%),
-                radial-gradient(at 0% 50%, hsla(280, 75%, 70%, 0.2) 0px, transparent 50%),
-                radial-gradient(at 80% 50%, hsla(340, 65%, 68%, 0.15) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, hsla(269, 100%, 77%, 0.2) 0px, transparent 50%),
-                radial-gradient(at 80% 100%, hsla(240, 80%, 70%, 0.15) 0px, transparent 50%);
-        }
-
-        /* Floating Animation */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        /* Smooth scroll */
-        html { scroll-behavior: smooth; }
-
-        /* Prose styles for content */
-        .prose-content h1, .prose-content h2, .prose-content h3, .prose-content h4 {
-            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-            font-weight: 700;
-            color: #1f2937;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        .prose-content h1 { font-size: 2.25rem; }
-        .prose-content h2 { font-size: 1.875rem; }
-        .prose-content h3 { font-size: 1.5rem; }
-        .prose-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #4b5563; }
-        .prose-content ul, .prose-content ol { margin-bottom: 1.5rem; padding-left: 1.5rem; }
-        .prose-content li { margin-bottom: 0.5rem; color: #4b5563; }
-        .prose-content a { color: #7c3aed; text-decoration: underline; }
-        .prose-content a:hover { color: #6d28d9; }
-        .prose-content blockquote {
-            border-left: 4px solid #8b5cf6;
-            padding-left: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: #6b7280;
-        }
-
-        @stack('styles')
+        /* Line clamp utilities */
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     </style>
+
+    @stack('styles')
 </head>
 
-<body class="font-sans bg-gray-50 text-gray-900 antialiased" x-data="{ mobileMenu: false, scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 50)">
-
-    <!-- Navbar -->
-    <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white shadow-sm">
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <!-- Logo -->
-                <a href="{{ route('portal.home') }}" class="flex items-center space-x-3 group">
-                    <div class="w-12 h-12 bg-gradient-to-br from-primary-500 via-accent-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-primary-500/30 transition-shadow">
-                        <span class="text-white font-bold text-xl font-display">I</span>
-                    </div>
-                    <div class="hidden sm:block">
-                        <h1 class="text-xl font-bold font-display text-gray-900">IAMJOS</h1>
-                        <p class="text-xs -mt-0.5 text-gray-500">Portal Jurnal Akademik</p>
-                    </div>
+<body class="antialiased font-sans bg-gray-50 text-gray-900" x-data="{ mobileMenuOpen: false }">
+    {{-- ============================================ --}}
+    {{-- NAVIGATION BAR --}}
+    {{-- ============================================ --}}
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                {{-- Logo --}}
+                <a href="{{ route('portal.home') }}" class="flex items-center gap-3">
+                    @if(isset($settings['site_logo']) && $settings['site_logo'])
+                        <img src="{{ Storage::url($settings['site_logo']) }}" alt="IAMJOS" class="h-10">
+                    @else
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                            IJ
+                        </div>
+                    @endif
+                    <span class="font-bold text-gray-900 hidden sm:block">IAMJOS</span>
                 </a>
 
-                <!-- Desktop Navigation -->
-                <nav class="hidden lg:flex items-center space-x-8">
-                    <a href="{{ route('portal.home') }}" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors {{ request()->routeIs('portal.home') ? 'text-primary-600' : '' }}">
-                        Beranda
-                    </a>
-                    <a href="{{ route('portal.journals') }}" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors {{ request()->routeIs('portal.journals') ? 'text-primary-600' : '' }}">
-                        Jurnal
-                    </a>
-                    <a href="{{ route('portal.about') }}" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors {{ request()->routeIs('portal.about') ? 'text-primary-600' : '' }}">
-                        Tentang Kami
-                    </a>
-                </nav>
+                {{-- Desktop Menu --}}
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="{{ route('portal.home') }}" class="text-gray-600 hover:text-gray-900 font-medium">Home</a>
+                    <a href="{{ route('portal.journals') }}" class="text-gray-900 font-medium">Journals</a> {{-- Active --}}
+                    <a href="{{ route('portal.about') }}" class="text-gray-600 hover:text-gray-900 font-medium">About</a>
+                    <a href="{{ route('portal.search') }}" class="text-gray-600 hover:text-gray-900 font-medium">Search</a>
+                </div>
 
-                <!-- Auth Buttons -->
-                <div class="flex items-center space-x-4">
+                {{-- Auth Buttons --}}
+                <div class="flex items-center gap-3">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="hidden sm:inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-primary-600 to-accent-600 text-white hover:from-primary-700 hover:to-accent-700 transition-all shadow-lg shadow-primary-500/25">
-                            <i class="fas fa-th-large mr-2"></i>
+                        <a href="{{ route('dashboard') }}"
+                           class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+                            <i class="fa-solid fa-gauge-high mr-2"></i>
                             Dashboard
                         </a>
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="flex items-center gap-2">
+                                @if(auth()->user()->avatar)
+                                    <img src="{{ Storage::url(auth()->user()->avatar) }}" class="w-8 h-8 rounded-full">
+                                @else
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                    </div>
+                                @endif
+                            </button>
+                            <div x-show="open" @click.away="open = false" x-cloak
+                                 class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     @else
-                        <a href="{{ route('login') }}" class="hidden sm:inline-flex text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">
-                            Masuk
+                        <a href="{{ route('login') }}"
+                           class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+                            Login
                         </a>
-                        <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-primary-600 to-accent-600 text-white hover:from-primary-700 hover:to-accent-700 transition-all shadow-lg shadow-primary-500/25">
-                            Daftar
+                        <a href="{{ route('register') }}"
+                           class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700">
+                            Register
                         </a>
                     @endauth
 
-                    <!-- Mobile Menu Button -->
-                    <button @click="mobileMenu = !mobileMenu" class="lg:hidden p-2 rounded-lg text-gray-600 hover:text-primary-600 hover:bg-gray-100 transition-colors">
-                        <i class="fas" :class="mobileMenu ? 'fa-times' : 'fa-bars'" class="text-xl"></i>
+                    {{-- Mobile Menu Toggle --}}
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 text-gray-600">
+                        <i class="fa-solid fa-bars text-xl"></i>
                     </button>
                 </div>
             </div>
-        </nav>
+        </div>
 
-        <!-- Mobile Menu -->
-        <div x-show="mobileMenu" x-cloak
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 -translate-y-4"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-4"
-             class="lg:hidden bg-white border-t shadow-xl">
-            <div class="px-4 py-6 space-y-4">
-                <a href="{{ route('portal.home') }}" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Beranda</a>
-                <a href="{{ route('portal.journals') }}" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Jurnal</a>
-                <a href="{{ route('portal.about') }}" @click="mobileMenu = false" class="block text-gray-600 hover:text-primary-600 font-medium">Tentang Kami</a>
-                @guest
-                    <a href="{{ route('login') }}" class="block text-gray-600 hover:text-primary-600 font-medium">Masuk</a>
-                @endguest
+        {{-- Mobile Menu --}}
+        <div x-show="mobileMenuOpen" x-cloak @click.away="mobileMenuOpen = false"
+             class="md:hidden bg-white border-t border-gray-200 py-4">
+            <div class="max-w-7xl mx-auto px-4 space-y-3">
+                <a href="{{ route('portal.home') }}" class="block text-gray-700 hover:text-blue-600 py-2">Home</a>
+                <a href="{{ route('portal.journals') }}" class="block text-gray-700 hover:text-blue-600 py-2">Journals</a>
+                <a href="{{ route('portal.about') }}" class="block text-gray-700 hover:text-blue-600 py-2">About</a>
+                <a href="{{ route('portal.search') }}" class="block text-gray-700 hover:text-blue-600 py-2">Search</a>
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="pt-20">
+    {{-- Spacer for fixed nav --}}
+    <div class="h-16"></div>
+
+    {{-- ============================================ --}}
+    {{-- MAIN CONTENT --}}
+    {{-- ============================================ --}}
+    <main>
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white">
-        @php
-            $footerContent = \App\Models\SiteContent::getAll();
-        @endphp
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-                <!-- About -->
-                <div class="lg:col-span-2">
-                    <div class="flex items-center space-x-3 mb-6">
-                        <div class="w-12 h-12 bg-gradient-to-br from-primary-500 via-accent-500 to-pink-500 rounded-xl flex items-center justify-center">
-                            <span class="text-white font-bold text-xl font-display">I</span>
+    {{-- ============================================ --}}
+    {{-- FOOTER --}}
+    {{-- ============================================ --}}
+    <footer class="bg-slate-900 text-slate-300 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                {{-- About --}}
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
+                            IJ
                         </div>
-                        <div>
-                            <h3 class="text-xl font-bold font-display">IAMJOS</h3>
-                            <p class="text-sm text-gray-400">Portal Jurnal Akademik</p>
-                        </div>
+                        <span class="font-bold text-white">IAMJOS</span>
                     </div>
-                    <p class="text-gray-400 mb-6 max-w-md leading-relaxed">
-                        {{ $footerContent['footer_about'] ?? 'IAMJOS adalah platform open-access untuk publikasi dan penyebaran karya ilmiah di Indonesia.' }}
+                    <p class="text-slate-400 text-sm mb-4 max-w-md">
+                        {{ $settings['footer_description'] ?? 'Indonesian Academic Journal System - A modern platform for hosting and managing academic journals with OJS 3.3 feature parity.' }}
                     </p>
-                    <!-- Social Links -->
-                    <div class="flex items-center space-x-4">
-                        @if(!empty($footerContent['social_facebook']))
-                            <a href="{{ $footerContent['social_facebook'] }}" target="_blank" class="w-10 h-10 bg-gray-800 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                        @endif
-                        @if(!empty($footerContent['social_twitter']))
-                            <a href="{{ $footerContent['social_twitter'] }}" target="_blank" class="w-10 h-10 bg-gray-800 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                        @endif
-                        @if(!empty($footerContent['social_instagram']))
-                            <a href="{{ $footerContent['social_instagram'] }}" target="_blank" class="w-10 h-10 bg-gray-800 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                        @endif
-                        @if(!empty($footerContent['social_youtube']))
-                            <a href="{{ $footerContent['social_youtube'] }}" target="_blank" class="w-10 h-10 bg-gray-800 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                                <i class="fab fa-youtube"></i>
-                            </a>
-                        @endif
-                    </div>
                 </div>
 
-                <!-- Quick Links -->
+                {{-- Quick Links --}}
                 <div>
-                    <h4 class="text-lg font-semibold mb-6">Tautan Cepat</h4>
-                    <ul class="space-y-3">
-                        <li><a href="{{ route('portal.journals') }}" class="text-gray-400 hover:text-white transition-colors">Daftar Jurnal</a></li>
-                        <li><a href="{{ route('portal.about') }}" class="text-gray-400 hover:text-white transition-colors">Tentang Kami</a></li>
-                        <li><a href="{{ route('portal.search') }}" class="text-gray-400 hover:text-white transition-colors">Cari Artikel</a></li>
-                        @guest
-                            <li><a href="{{ route('register') }}" class="text-gray-400 hover:text-white transition-colors">Daftar Akun</a></li>
-                            <li><a href="{{ route('login') }}" class="text-gray-400 hover:text-white transition-colors">Masuk</a></li>
-                        @endguest
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{{ route('portal.journals') }}" class="text-slate-400 hover:text-white transition-colors">All Journals</a></li>
+                        <li><a href="{{ route('portal.search') }}" class="text-slate-400 hover:text-white transition-colors">Search Articles</a></li>
+                        <li><a href="{{ route('portal.about') }}" class="text-slate-400 hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="{{ route('login') }}" class="text-slate-400 hover:text-white transition-colors">Author Login</a></li>
                     </ul>
                 </div>
 
-                <!-- Contact -->
+                {{-- Contact --}}
                 <div>
-                    <h4 class="text-lg font-semibold mb-6">Kontak</h4>
-                    <ul class="space-y-4">
-                        @if(!empty($footerContent['footer_address']))
-                            <li class="flex items-start">
-                                <i class="fas fa-map-marker-alt text-primary-400 mt-1 mr-3"></i>
-                                <span class="text-gray-400">{{ $footerContent['footer_address'] }}</span>
-                            </li>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Contact</h4>
+                    <ul class="space-y-2 text-sm text-slate-400">
+                        @if($settings['contact_email'] ?? false)
+                            <li><i class="fa-solid fa-envelope mr-2"></i>{{ $settings['contact_email'] }}</li>
                         @endif
-                        @if(!empty($footerContent['footer_email']))
-                            <li class="flex items-center">
-                                <i class="fas fa-envelope text-primary-400 mr-3"></i>
-                                <a href="mailto:{{ $footerContent['footer_email'] }}" class="text-gray-400 hover:text-white transition-colors">{{ $footerContent['footer_email'] }}</a>
-                            </li>
+                        @if($settings['contact_phone'] ?? false)
+                            <li><i class="fa-solid fa-phone mr-2"></i>{{ $settings['contact_phone'] }}</li>
                         @endif
-                        @if(!empty($footerContent['footer_phone']))
-                            <li class="flex items-center">
-                                <i class="fas fa-phone text-primary-400 mr-3"></i>
-                                <a href="tel:{{ $footerContent['footer_phone'] }}" class="text-gray-400 hover:text-white transition-colors">{{ $footerContent['footer_phone'] }}</a>
-                            </li>
+                        @if($settings['contact_address'] ?? false)
+                            <li><i class="fa-solid fa-location-dot mr-2"></i>{{ $settings['contact_address'] }}</li>
                         @endif
                     </ul>
                 </div>
             </div>
-        </div>
 
-        <!-- Bottom Bar -->
-        <div class="border-t border-gray-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p class="text-gray-500 text-sm">
-                        &copy; {{ date('Y') }} IAMJOS. All rights reserved.
-                    </p>
-                </div>
+            {{-- Bottom Bar --}}
+            <div class="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
+                <p>© {{ date('Y') }} IAMJOS. All rights reserved.</p>
+                <p class="mt-4 md:mt-0">
+                    Powered by <strong class="text-slate-400">IAMJOS</strong> - Indonesian Academic Journal System
+                </p>
             </div>
         </div>
     </footer>
 
     @stack('scripts')
 </body>
+
 </html>
