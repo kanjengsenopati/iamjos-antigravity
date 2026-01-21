@@ -239,19 +239,37 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     {{-- Dynamic Navigation Bar --}}
     <x-public.navbar :journal="$journal" :primary-menu="$primaryMenu ?? collect()" :user-menu="$userMenu ?? collect()" />
 
-    {{-- Main Content Area with Sidebar --}}
+    {{-- ============================================ --}}
+    {{-- MAIN LAYOUT CONTAINER --}}
+    {{-- ============================================ --}}
     <div class="min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="lg:grid lg:grid-cols-4 lg:gap-8">
-                {{-- Main Content (3/4 width on desktop) --}}
-                <main class="lg:col-span-3">
+            {{-- FLEX WRAPPER: Column on Mobile, Row on Desktop --}}
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+
+                {{-- LEFT COLUMN: Main Content (75% on desktop) --}}
+                <main class="w-full lg:w-3/4 min-w-0">
+                    {{-- Flash Messages --}}
+                    @if(session('success'))
+                        <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+                    @if(session('error'))
+                        <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    {{-- Page Content --}}
                     {{ $slot }}
                 </main>
 
-                {{-- Right Sidebar (1/4 width on desktop) --}}
-                <aside class="mt-8 lg:mt-0 space-y-6">
+                {{-- RIGHT COLUMN: Sidebar (25% on desktop) --}}
+                <aside class="w-full lg:w-1/4 flex-shrink-0 space-y-6">
                     <x-public.sidebar :journal="$journal" :sidebar-blocks="$sidebarBlocks ?? collect()" />
                 </aside>
+
             </div>
         </div>
     </div>
