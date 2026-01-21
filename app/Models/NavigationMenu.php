@@ -13,12 +13,11 @@ class NavigationMenu extends Model
     use HasFactory, HasUuids;
 
     /**
-     * Menu location constants
+     * Menu location constants - Header Navigation Only
      */
     public const LOCATION_PRIMARY = 'primary';
     public const LOCATION_USER_TOP = 'user_top';
     public const LOCATION_FOOTER = 'footer';
-    public const LOCATION_SIDEBAR = 'sidebar';
 
     protected $fillable = [
         'journal_id',
@@ -135,7 +134,7 @@ class NavigationMenu extends Model
     }
 
     /**
-     * Get all available locations
+     * Get all available locations (Header Navigation Only)
      */
     public static function getLocations(): array
     {
@@ -143,7 +142,6 @@ class NavigationMenu extends Model
             self::LOCATION_PRIMARY => 'Primary Header',
             self::LOCATION_USER_TOP => 'User Topbar',
             self::LOCATION_FOOTER => 'Footer',
-            self::LOCATION_SIDEBAR => 'Sidebar',
         ];
     }
 }
