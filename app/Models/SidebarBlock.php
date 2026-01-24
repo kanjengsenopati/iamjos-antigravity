@@ -29,49 +29,49 @@ class SidebarBlock extends Model
     public const SYSTEM_BLOCKS = [
         'information' => [
             'name' => 'Information',
-            'component' => 'sidebar.information-block',
+            'component' => 'public.blocks.information-block',
             'icon' => 'fa-solid fa-info-circle',
             'description' => 'Displays journal information and key details.',
         ],
         'login' => [
             'name' => 'Login',
-            'component' => 'sidebar.login-block',
+            'component' => 'public.blocks.login-block',
             'icon' => 'fa-solid fa-sign-in-alt',
             'description' => 'User login form for the sidebar.',
         ],
         'language' => [
             'name' => 'Language Selector',
-            'component' => 'sidebar.language-block',
+            'component' => 'public.blocks.language-block',
             'icon' => 'fa-solid fa-globe',
             'description' => 'Language switcher dropdown.',
         ],
         'submit' => [
             'name' => 'Submit Article',
-            'component' => 'sidebar.submit-block',
+            'component' => 'public.blocks.make-submission-block',
             'icon' => 'fa-solid fa-paper-plane',
             'description' => 'Call-to-action button for article submission.',
         ],
         'search' => [
             'name' => 'Search',
-            'component' => 'sidebar.search-block',
+            'component' => 'public.blocks.search-block',
             'icon' => 'fa-solid fa-search',
             'description' => 'Search form for the journal.',
         ],
         'current-issue' => [
             'name' => 'Current Issue',
-            'component' => 'sidebar.current-issue-block',
+            'component' => 'public.blocks.current-issue-block',
             'icon' => 'fa-solid fa-book-open',
             'description' => 'Displays the current issue details.',
         ],
         'categories' => [
             'name' => 'Categories',
-            'component' => 'sidebar.categories-block',
+            'component' => 'public.blocks.categories-block',
             'icon' => 'fa-solid fa-tags',
             'description' => 'List of article categories.',
         ],
         'announcements' => [
             'name' => 'Recent Announcements',
-            'component' => 'sidebar.announcements-block',
+            'component' => 'public.blocks.announcements-block',
             'icon' => 'fa-solid fa-bullhorn',
             'description' => 'Recent journal announcements.',
         ],
@@ -225,9 +225,9 @@ class SidebarBlock extends Model
     public static function createDefaultBlocks(string $journalId): void
     {
         $defaults = [
-            ['type' => 'system', 'component_name' => 'sidebar.information-block', 'title' => 'Information', 'icon' => 'fa-solid fa-info-circle', 'order' => 1],
-            ['type' => 'system', 'component_name' => 'sidebar.submit-block', 'title' => 'Submit Article', 'icon' => 'fa-solid fa-paper-plane', 'order' => 2],
-            ['type' => 'system', 'component_name' => 'sidebar.current-issue-block', 'title' => 'Current Issue', 'icon' => 'fa-solid fa-book-open', 'order' => 3],
+            ['type' => 'system', 'component_name' => 'public.blocks.information-block', 'title' => 'Information', 'icon' => 'fa-solid fa-info-circle', 'order' => 1],
+            ['type' => 'system', 'component_name' => 'public.blocks.make-submission-block', 'title' => 'Submit Article', 'icon' => 'fa-solid fa-paper-plane', 'order' => 2],
+            ['type' => 'system', 'component_name' => 'public.blocks.current-issue-block', 'title' => 'Current Issue', 'icon' => 'fa-solid fa-book-open', 'order' => 3],
         ];
 
         foreach ($defaults as $block) {

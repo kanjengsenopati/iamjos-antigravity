@@ -91,7 +91,7 @@ class SidebarController extends Controller
     /**
      * Update a sidebar block
      */
-    public function update(Request $request, SidebarBlock $block): JsonResponse
+    public function update(Request $request, string $journal, SidebarBlock $block): JsonResponse
     {
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -113,7 +113,7 @@ class SidebarController extends Controller
     /**
      * Delete a sidebar block
      */
-    public function destroy(SidebarBlock $block): JsonResponse
+    public function destroy(string $journal, SidebarBlock $block): JsonResponse
     {
         $block->delete();
 
@@ -126,7 +126,7 @@ class SidebarController extends Controller
     /**
      * Toggle active status of a sidebar block
      */
-    public function toggle(SidebarBlock $block): JsonResponse
+    public function toggle(string $journal, SidebarBlock $block): JsonResponse
     {
         $block->update(['is_active' => !$block->is_active]);
 

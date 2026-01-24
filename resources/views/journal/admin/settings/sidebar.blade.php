@@ -494,18 +494,41 @@
                 if (!confirm('Are you sure you want to delete this block?')) return;
 
                 try {
-                    const response = await fetch(`{{ url($journal->slug . '/settings/sidebar') }}/${blockId}`, {
+                    // Use named route pattern logic manually for reliability
+                    const baseUrl = '{{ route("journal.settings.sidebar.index", $journal->slug) }}';
+                    // Remove query params if any, ensure trailing slash handling
+                    const cleanBaseUrl = baseUrl.split('?')[0].replace(/\/$/, '');
+                    
+                    const response = await fetch(`${cleanBaseUrl}/${blockId}`, {
                         method: 'DELETE',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
                         }
                     });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Server Error:', response.status, errorText);
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            alert(errorJson.message || 'Error deleting block');
+                        } catch (e) {
+                            alert('Error deleting block: Server returned ' + response.status);
+                        }
+                        return;
+                    }
+
                     const data = await response.json();
                     if (data.success) {
                         location.reload();
+                    } else {
+                        alert(data.message || 'Failed to delete block');
                     }
                 } catch (error) {
                     console.error('Delete failed:', error);
+                    alert('Network error occurred while deleting.');
                 }
             }
         };

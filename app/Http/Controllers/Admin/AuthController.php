@@ -93,12 +93,31 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        // Capture current journal context before session invalidation
+        // 1. Capture current journal context before session invalidation
         $journalSlug = $request->route('journal');
 
-        // Also check session for journal context as fallback
+        // 2. Check session as fallback
         if (!$journalSlug) {
             $journalSlug = session('login_journal_slug');
+        }
+
+        // 3. Fallback: Check Referer/Previous URL
+        // If the user hit the global /logout route from a journal page, we want to send them back to that journal.
+        if (!$journalSlug) {
+            $previousUrl = url()->previous();
+            $path = parse_url($previousUrl, PHP_URL_PATH);
+            if ($path) {
+                // Assuming journal applications are at /{slug}/...
+                $segments = explode('/', trim($path, '/'));
+                if (!empty($segments)) {
+                    $potentialSlug = $segments[0];
+                    // Verify if this slug is actually a journal to avoid redirecting to 'admin' or 'login' as a slug
+                    // We only redirect if it's a valid journal
+                    if (Journal::where('slug', $potentialSlug)->exists()) {
+                        $journalSlug = $potentialSlug;
+                    }
+                }
+            }
         }
 
         // Logout the user
@@ -109,7 +128,7 @@ class AuthController extends Controller
 
         // Redirect based on context
         if ($journalSlug) {
-            // Verify the journal still exists
+            // Verify the journal still exists and is enabled
             $journal = Journal::where('slug', $journalSlug)->where('enabled', true)->first();
             if ($journal) {
                 return redirect()->route('journal.public.home', ['journal' => $journalSlug])

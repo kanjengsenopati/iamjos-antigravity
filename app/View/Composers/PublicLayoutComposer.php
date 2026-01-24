@@ -40,7 +40,7 @@ class PublicLayoutComposer
             'primaryMenu' => $primaryMenu,
             'userMenu' => $userMenu,
             'footerMenu' => $footerMenu,
-            'sidebarBlocks' => $sidebarBlocks,
+            'sidebarBlocks' => $sidebarBlocks ?? collect(),
             'journal' => $journal,
         ]);
     }

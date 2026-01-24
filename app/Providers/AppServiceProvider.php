@@ -49,6 +49,17 @@ class AppServiceProvider extends ServiceProvider
             'components.layouts.public',
         ], PublicLayoutComposer::class);
 
+        // Also register PublicSidebarComposer to the layouts because they check $sidebarBlocks->isNotEmpty()
+        View::composer([
+            'layouts.public',
+            'components.layouts.public',
+        ], \App\View\Composers\PublicSidebarComposer::class);
+
+        // Register View Composer for Public Sidebar
+        View::composer([
+            'components.public.sidebar',
+        ], \App\View\Composers\PublicSidebarComposer::class);
+
         // Register View Composer for Portal/Site Layout
         View::composer([
             'layouts.portal',
