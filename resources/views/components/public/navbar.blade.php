@@ -10,113 +10,132 @@ $secondaryColor = $journal->getWebsiteSettings()['secondary_color'] ?? '#7c3aed'
 <nav class="sticky top-0 z-50 shadow-sm" style="background: {{ $primaryColor }};" x-data="{ mobileOpen: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-12">
-            {{-- Desktop Navigation --}}
-            <div class="hidden md:flex items-center space-x-1 flex-1">
-                @if($primaryMenu->isNotEmpty())
-                    @foreach($primaryMenu as $item)
-                        @if($item->is_divider ?? false)
-                            <div class="w-px h-5 bg-white/20 mx-2"></div>
-                        @elseif(($item->children ?? collect())->isNotEmpty())
-                            {{-- Dropdown Menu --}}
-                            <div x-data="{ open: false }" class="relative">
-                                <button @click="open = !open" @click.outside="open = false"
-                                    class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+            {{-- Left Side: Logo & Menu --}}
+            <div class="flex items-center gap-6 flex-1">
+                {{-- Logo (Visible on all screens) --}}
+                <a href="{{ route('journal.public.home', $journal->slug) }}" class="flex items-center gap-2 flex-shrink-0">
+                    @if($journal->logo_path)
+                        <img src="{{ Storage::url($journal->logo_path) }}" 
+                             alt="{{ $journal->name }}" 
+                             class="h-8 w-auto brightness-0 invert">
+                    @else
+                        <div class="h-8 w-8 rounded flex items-center justify-center bg-white/20 text-white font-bold text-sm">
+                            {{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}
+                        </div>
+                        <span class="text-white font-bold text-lg hidden sm:block truncate max-w-[200px]">
+                            {{ $journal->abbreviation ?? Str::limit($journal->name, 20) }}
+                        </span>
+                    @endif
+                </a>
+
+                {{-- Desktop Navigation (Menu Items) --}}
+                <div class="hidden md:flex items-center space-x-1">
+                    @if($primaryMenu->isNotEmpty())
+                        @foreach($primaryMenu as $item)
+                            @if($item->is_divider ?? false)
+                                <div class="w-px h-5 bg-white/20 mx-2"></div>
+                            @elseif(($item->children ?? collect())->isNotEmpty())
+                                {{-- Dropdown Menu --}}
+                                <div x-data="{ open: false }" class="relative">
+                                    <button @click="open = !open" @click.outside="open = false"
+                                        class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                                        @if($item->icon ?? false)
+                                            <i class="{{ $item->icon }} text-white/70 text-xs"></i>
+                                        @endif
+                                        {{ $item->label }}
+                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                                    </button>
+                                    
+                                    {{-- Dropdown Panel --}}
+                                    <div x-show="open" x-cloak
+                                        x-transition:enter="transition ease-out duration-150"
+                                        x-transition:enter-start="opacity-0 -translate-y-1"
+                                        x-transition:enter-end="opacity-100 translate-y-0"
+                                        x-transition:leave="transition ease-in duration-100"
+                                        x-transition:leave-start="opacity-100 translate-y-0"
+                                        x-transition:leave-end="opacity-0 -translate-y-1"
+                                        class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
+                                        @foreach($item->children as $child)
+                                            @if($child->is_divider ?? false)
+                                                <hr class="my-2 border-slate-100">
+                                            @else
+                                                <a href="{{ $child->resolved_url }}" target="{{ $child->target ?? '_self' }}"
+                                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                                                    @if($child->icon ?? false)
+                                                        <i class="{{ $child->icon }} text-slate-400 w-4 text-center"></i>
+                                                    @endif
+                                                    {{ $child->label }}
+                                                </a>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                {{-- Regular Link --}}
+                                <a href="{{ $item->resolved_url }}" target="{{ $item->target ?? '_self' }}"
+                                    class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
+                                    {{ request()->url() === $item->resolved_url ? 'bg-white/15 text-white' : '' }}">
                                     @if($item->icon ?? false)
                                         <i class="{{ $item->icon }} text-white/70 text-xs"></i>
                                     @endif
                                     {{ $item->label }}
-                                    <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
-                                </button>
-                                
-                                {{-- Dropdown Panel --}}
-                                <div x-show="open" x-cloak
-                                    x-transition:enter="transition ease-out duration-150"
-                                    x-transition:enter-start="opacity-0 -translate-y-1"
-                                    x-transition:enter-end="opacity-100 translate-y-0"
-                                    x-transition:leave="transition ease-in duration-100"
-                                    x-transition:leave-start="opacity-100 translate-y-0"
-                                    x-transition:leave-end="opacity-0 -translate-y-1"
-                                    class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                                    @foreach($item->children as $child)
-                                        @if($child->is_divider ?? false)
-                                            <hr class="my-2 border-slate-100">
-                                        @else
-                                            <a href="{{ $child->resolved_url }}" target="{{ $child->target ?? '_self' }}"
-                                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-                                                @if($child->icon ?? false)
-                                                    <i class="{{ $child->icon }} text-slate-400 w-4 text-center"></i>
-                                                @endif
-                                                {{ $child->label }}
-                                            </a>
-                                        @endif
-                                    @endforeach
-                                </div>
+                                </a>
+                            @endif
+                        @endforeach
+                    @else
+                        {{-- Default Navigation Links --}}
+                        <a href="{{ route('journal.public.home', $journal->slug) }}"
+                            class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
+                            {{ request()->routeIs('journal.public.home') ? 'bg-white/15 text-white' : '' }}">
+                            <i class="fa-solid fa-house mr-1.5 text-xs"></i> Home
+                        </a>
+                        <a href="{{ route('journal.public.about', $journal->slug) }}"
+                            class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
+                            {{ request()->routeIs('journal.public.about') ? 'bg-white/15 text-white' : '' }}">
+                            <i class="fa-solid fa-info-circle mr-1.5 text-xs"></i> About
+                        </a>
+                        <a href="{{ route('journal.public.current', $journal->slug) }}"
+                            class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
+                            {{ request()->routeIs('journal.public.current') ? 'bg-white/15 text-white' : '' }}">
+                            <i class="fa-solid fa-book-open mr-1.5 text-xs"></i> Current
+                        </a>
+                        <a href="{{ route('journal.public.archives', $journal->slug) }}"
+                            class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
+                            {{ request()->routeIs('journal.public.archives') ? 'bg-white/15 text-white' : '' }}">
+                            <i class="fa-solid fa-archive mr-1.5 text-xs"></i> Archives
+                        </a>
+                        
+                        {{-- About Dropdown --}}
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open" @click.outside="open = false"
+                                class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                                <i class="fa-solid fa-ellipsis-h text-xs"></i> More
+                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                            </button>
+                            <div x-show="open" x-cloak
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 -translate-y-1"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
+                                <a href="{{ route('journal.public.editorial-team', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                    <i class="fa-solid fa-users text-slate-400 w-4 text-center"></i> Editorial Team
+                                </a>
+                                <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                    <i class="fa-solid fa-file-alt text-slate-400 w-4 text-center"></i> Author Guidelines
+                                </a>
+                                <hr class="my-2 border-slate-100">
+                                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                    <i class="fa-solid fa-search text-slate-400 w-4 text-center"></i> Search
+                                </a>
                             </div>
-                        @else
-                            {{-- Regular Link --}}
-                            <a href="{{ $item->resolved_url }}" target="{{ $item->target ?? '_self' }}"
-                                class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
-                                {{ request()->url() === $item->resolved_url ? 'bg-white/15 text-white' : '' }}">
-                                @if($item->icon ?? false)
-                                    <i class="{{ $item->icon }} text-white/70 text-xs"></i>
-                                @endif
-                                {{ $item->label }}
-                            </a>
-                        @endif
-                    @endforeach
-                @else
-                    {{-- Default Navigation Links --}}
-                    <a href="{{ route('journal.public.home', $journal->slug) }}"
-                        class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
-                        {{ request()->routeIs('journal.public.home') ? 'bg-white/15 text-white' : '' }}">
-                        <i class="fa-solid fa-house mr-1.5 text-xs"></i> Home
-                    </a>
-                    <a href="{{ route('journal.public.about', $journal->slug) }}"
-                        class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
-                        {{ request()->routeIs('journal.public.about') ? 'bg-white/15 text-white' : '' }}">
-                        <i class="fa-solid fa-info-circle mr-1.5 text-xs"></i> About
-                    </a>
-                    <a href="{{ route('journal.public.current', $journal->slug) }}"
-                        class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
-                        {{ request()->routeIs('journal.public.current') ? 'bg-white/15 text-white' : '' }}">
-                        <i class="fa-solid fa-book-open mr-1.5 text-xs"></i> Current
-                    </a>
-                    <a href="{{ route('journal.public.archives', $journal->slug) }}"
-                        class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
-                        {{ request()->routeIs('journal.public.archives') ? 'bg-white/15 text-white' : '' }}">
-                        <i class="fa-solid fa-archive mr-1.5 text-xs"></i> Archives
-                    </a>
-                    
-                    {{-- About Dropdown --}}
-                    <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" @click.outside="open = false"
-                            class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                            <i class="fa-solid fa-ellipsis-h text-xs"></i> More
-                            <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
-                        </button>
-                        <div x-show="open" x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 -translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                            <a href="{{ route('journal.public.editorial-team', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                <i class="fa-solid fa-users text-slate-400 w-4 text-center"></i> Editorial Team
-                            </a>
-                            <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                <i class="fa-solid fa-file-alt text-slate-400 w-4 text-center"></i> Author Guidelines
-                            </a>
-                            <hr class="my-2 border-slate-100">
-                            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                <i class="fa-solid fa-search text-slate-400 w-4 text-center"></i> Search
-                            </a>
                         </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
 
-            {{-- Right Side: Search & Submit --}}
-            <div class="hidden md:flex items-center space-x-3">
-                {{-- Search Button --}}
+            {{-- Right Side: User Menu & Actions --}}
+            <div class="hidden md:flex items-center space-x-4">
+                {{-- Search Trigger --}}
                 <div x-data="{ searchOpen: false }" class="relative">
                     <button @click="searchOpen = !searchOpen; $nextTick(() => $refs.searchInput?.focus())"
                         class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
@@ -147,12 +166,76 @@ $secondaryColor = $journal->getWebsiteSettings()['secondary_color'] ?? '#7c3aed'
                     </div>
                 </div>
 
-                {{-- Submit Button --}}
-                <a href="{{ route('journal.submissions.create', $journal->slug) }}"
-                    class="inline-flex items-center px-4 py-2 text-sm font-medium bg-white text-slate-800 rounded-lg hover:bg-slate-50 transition-all shadow-sm">
-                    <i class="fa-solid fa-paper-plane mr-2 text-xs" style="color: {{ $primaryColor }};"></i>
-                    Submit
-                </a>
+                @auth
+                    {{-- OJS 3.3 Style User Dropdown --}}
+                    <div x-data="{ open: false }" class="relative">
+                        {{-- Trigger --}}
+                        <button @click="open = !open" @click.outside="open = false" 
+                                class="flex items-center gap-2 text-sm text-white focus:outline-none hover:text-white/90 transition group">
+                            
+                            {{-- Avatar --}}
+                            <img class="h-8 w-8 rounded-full object-cover border-2 border-white/20 group-hover:border-white/40 transition" 
+                                 src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=random' }}" 
+                                 alt="{{ Auth::user()->name }}" />
+                            
+                            {{-- Name & Chevron --}}
+                            <span class="font-medium max-w-[120px] truncate hidden lg:block">{{ Auth::user()->name }}</span>
+                            <i class="fa-solid fa-chevron-down text-white/70 text-xs transition-transform duration-200" 
+                               :class="{'rotate-180': open}"></i>
+                        </button>
+            
+                        {{-- Dropdown Menu --}}
+                        <div x-show="open" x-cloak
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50 origin-top-right">
+                            
+                            {{-- Header --}}
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Signed in as</p>
+                                <p class="text-sm font-medium text-slate-900 truncate">{{ Auth::user()->name }}</p>
+                            </div>
+            
+                            {{-- Menu Items --}}
+                            <div class="py-1">
+                                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                                    <i class="fa-solid fa-gauge-high text-slate-400 w-4 text-center"></i>
+                                    Dashboard
+                                </a>
+                
+                                <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                                    <i class="fa-solid fa-user-circle text-slate-400 w-4 text-center"></i>
+                                    View Profile
+                                </a>
+                            </div>
+            
+                            <div class="border-t border-gray-100 my-1"></div>
+            
+                            {{-- Logout --}}
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3">
+                                    <i class="fa-solid fa-sign-out-alt text-red-400 w-4 text-center"></i>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    {{-- Guest Links --}}
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('login') }}" class="text-sm font-medium text-white/90 hover:text-white transition">
+                            Login
+                        </a>
+                        <a href="{{ route('register') }}" class="text-sm font-medium bg-white text-slate-900 px-4 py-2 rounded-full hover:bg-slate-100 transition shadow-sm">
+                            Register
+                        </a>
+                    </div>
+                @endauth
             </div>
 
             {{-- Mobile Menu Button --}}

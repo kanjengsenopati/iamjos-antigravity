@@ -141,45 +141,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 </head>
 
 <body class="antialiased font-sans bg-slate-50 text-slate-900" x-data="{ mobileMenuOpen: false }">
-    {{-- Top Bar (Dark) --}}
-    <div class="bg-slate-900 text-white text-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-8">
-                {{-- Left: Language Switcher (placeholder) --}}
-                <div class="flex items-center space-x-4">
-                    <span class="text-slate-400">
-                        <i class="fa-solid fa-globe mr-1"></i>
-                        English
-                    </span>
-                </div>
 
-                {{-- Right: User Links --}}
-                <div class="flex items-center space-x-4">
-                    @auth
-                        <a href="{{ route('journal.dashboard', $journal->slug) }}" class="text-slate-300 hover:text-white transition-colors">
-                            <i class="fa-solid fa-gauge-high mr-1"></i> Dashboard
-                        </a>
-                        <span class="text-slate-600">|</span>
-                        <span class="text-slate-300">{{ auth()->user()->name }}</span>
-                        <span class="text-slate-600">|</span>
-                        <form action="{{ route('journal.logout', $journal->slug) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="text-slate-300 hover:text-white transition-colors">
-                                <i class="fa-solid fa-sign-out-alt mr-1"></i> Logout
-                            </button>
-                        </form>
-                    @else
-                        <a href="{{ route('journal.login', $journal->slug) }}" class="text-slate-300 hover:text-white transition-colors">
-                            <i class="fa-solid fa-sign-in-alt mr-1"></i> Login
-                        </a>
-                        <a href="{{ route('journal.register', $journal->slug) }}" class="text-slate-300 hover:text-white transition-colors">
-                            <i class="fa-solid fa-user-plus mr-1"></i> Register
-                        </a>
-                    @endauth
-                </div>
-            </div>
-        </div>
-    </div>
 
     {{-- ============================================ --}}
     {{-- BRANDING HEADER (OJS 3.3 Logic) --}}
