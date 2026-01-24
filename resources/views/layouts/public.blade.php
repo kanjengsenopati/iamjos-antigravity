@@ -142,10 +142,6 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 
 <body class="antialiased font-sans bg-slate-50 text-slate-900" x-data="{ mobileMenuOpen: false }">
 
-
-    {{-- ============================================ --}}
-    {{-- BRANDING HEADER (OJS 3.3 Logic) --}}
-    {{-- ============================================ --}}
     @if($showImageInHeader)
         {{-- CASE 1: Homepage Image as Header Background --}}
         <header class="relative min-h-[200px] md:min-h-[280px] flex items-center"
@@ -233,16 +229,14 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     {{-- Dynamic Navigation Bar --}}
     <x-public.navbar :journal="$journal" :primary-menu="$primaryMenu ?? collect()" :user-menu="$userMenu ?? collect()" />
 
-    {{-- ============================================ --}}
     {{-- MAIN LAYOUT CONTAINER --}}
-    {{-- ============================================ --}}
     <div class="min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {{-- FLEX WRAPPER: Column on Mobile, Row on Desktop --}}
             <div class="flex flex-col lg:flex-row gap-8 items-start">
 
-                {{-- LEFT COLUMN: Main Content (75% on desktop) --}}
-                <main class="w-full lg:w-3/4 min-w-0">
+                {{-- LEFT COLUMN: Main Content --}}
+                <main class="w-full {{ $sidebarBlocks->isNotEmpty() ? 'lg:w-3/4' : '' }} min-w-0 transition-all duration-300">
                     {{-- Flash Messages --}}
                     @if(session('success'))
                         <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
@@ -259,10 +253,13 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                     {{ $slot }}
                 </main>
 
-                {{-- RIGHT COLUMN: Sidebar (25% on desktop) --}}
-                <aside class="w-full lg:w-1/4 flex-shrink-0 space-y-6">
-                    <x-public.sidebar :journal="$journal" :sidebar-blocks="$sidebarBlocks ?? collect()" />
-                </aside>
+                {{-- RIGHT COLUMN: Sidebar (Only render if blocks exist) --}}
+              
+                @if($sidebarBlocks->isNotEmpty())
+                    <aside class="w-full lg:w-1/4 flex-shrink-0 space-y-6">
+                        <x-public.sidebar :journal="$journal" />
+                    </aside>
+                @endif
 
             </div>
         </div>

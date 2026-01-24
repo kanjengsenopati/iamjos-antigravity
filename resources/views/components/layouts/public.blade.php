@@ -241,8 +241,8 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
             {{-- FLEX WRAPPER: Column on Mobile, Row on Desktop --}}
             <div class="flex flex-col lg:flex-row gap-8 items-start">
 
-                {{-- LEFT COLUMN: Main Content (75% on desktop) --}}
-                <main class="w-full lg:w-3/4 min-w-0">
+                {{-- LEFT COLUMN: Main Content --}}
+                <main class="w-full {{ $sidebarBlocks->isNotEmpty() ? 'lg:w-3/4' : '' }} min-w-0 transition-all duration-300">
                     {{-- Flash Messages --}}
                     @if(session('success'))
                         <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
@@ -259,10 +259,12 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                     {{ $slot }}
                 </main>
 
-                {{-- RIGHT COLUMN: Sidebar (25% on desktop) --}}
-                <aside class="w-full lg:w-1/4 flex-shrink-0 space-y-6">
-                    <x-public.sidebar :journal="$journal" :sidebar-blocks="$sidebarBlocks ?? collect()" />
-                </aside>
+                {{-- RIGHT COLUMN: Sidebar (Only render if blocks exist) --}}
+                @if($sidebarBlocks->isNotEmpty())
+                    <aside class="w-full lg:w-1/4 flex-shrink-0 space-y-6">
+                        <x-public.sidebar :journal="$journal" :sidebar-blocks="$sidebarBlocks" />
+                    </aside>
+                @endif
 
             </div>
         </div>
