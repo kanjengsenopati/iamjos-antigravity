@@ -69,6 +69,12 @@ class SiteContentBlock extends Model
     public static function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
+        
+        // Clear data caches used by PortalController
+        Cache::forget('featured_journals');
+        Cache::forget('portal_stats');
+        Cache::forget('all_journals');
+        Cache::forget('latest_articles');
     }
 
     /**

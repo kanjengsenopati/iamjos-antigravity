@@ -6,6 +6,7 @@ use App\Models\Issue;
 use App\Models\Journal;
 use App\Models\SiteContent;
 use App\Models\SiteContentBlock;
+use App\Models\SitePage;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -63,14 +64,25 @@ class PortalController extends Controller
         // Featured Journals
         if (in_array('featured_journals', $blockKeys)) {
             $data['featured_journals'] = [
-                'journals' => Cache::remember('featured_journals', 300, function () {
-                    return Journal::where('enabled', true)
-                        ->where('visible', true)
-                        ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
-                        ->withCount(['issues' => fn($q) => $q->where('is_published', true)])
-                        ->orderByDesc('submissions_count')
-                        ->take(8)
-                        ->get();
+                'journals' => Cache::remember('featured_journals', 300, function () use ($blocks) {
+                    $featuredBlock = $blocks->where('key', 'featured_journals')->first();
+                    $featuredIds = $featuredBlock->getConfig('featured_ids', []);
+
+                    if (!empty($featuredIds)) {
+                        // Use specifically selected journals
+                        return Journal::where('enabled', true)
+                            ->where('visible', true)
+                            ->whereIn('id', $featuredIds)
+                            ->orderBy('name')
+                            ->get();
+                    } else {
+                        // Fallback to auto-selection by submission count
+                        return Journal::where('enabled', true)
+                            ->where('visible', true)
+                            ->orderByDesc('created_at')
+                            ->take(8)
+                            ->get();
+                    }
                 }),
             ];
         }
@@ -213,5 +225,19 @@ class PortalController extends Controller
         ];
 
         return view('site.about', compact('settings', 'stats'));
+    }
+
+    /**
+     * Display a custom site page.
+     */
+    public function page(string $slug): View
+    {
+        $page = SitePage::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $settings = SiteContent::getAll();
+
+        return view('site.page', compact('page', 'settings'));
     }
 }

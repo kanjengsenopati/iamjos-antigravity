@@ -34,7 +34,7 @@ $journals = $data['journals'] ?? collect();
         @if($journals->isNotEmpty())
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ $columns }} gap-6">
                 @foreach($journals->take($limit) as $journal)
-                    <x-site.journal-card :journal="$journal" :show-badges="$showBadges" :show-stats="$showStats" />
+                    <x-site.journal-card :journal="$journal" />
                 @endforeach
             </div>
 

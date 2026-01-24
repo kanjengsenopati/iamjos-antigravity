@@ -187,15 +187,37 @@
                 <span>Site Settings</span>
             </a>
 
-            <!-- Portal Settings (Landing Page) -->
-            <a href="{{ route('admin.portal.edit') }}"
+            <!-- Site Appearance (Page Builder) -->
+            <a href="{{ route('admin.site.appearance.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                       {{ request()->routeIs('admin.portal.*') ? 'bg-purple-500/20 text-purple-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                       {{ request()->routeIs('admin.site.appearance.*') ? 'bg-purple-500/20 text-purple-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
-                <span>Public Settings</span>
+                <span>Page Builder</span>
+            </a>
+
+            <!-- Site Pages (CMS) -->
+            <a href="{{ route('admin.site-pages.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                       {{ request()->routeIs('admin.site-pages.*') ? 'bg-teal-500/20 text-teal-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Site Pages</span>
+            </a>
+
+            <!-- Site Navigation -->
+            <a href="{{ route('admin.site-navigation.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                       {{ request()->routeIs('admin.site-navigation.*') ? 'bg-orange-500/20 text-orange-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <span>Site Navigation</span>
             </a>
 
             <!-- About Page Settings -->

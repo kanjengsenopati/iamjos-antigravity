@@ -234,16 +234,16 @@
         </div>
     </div>
 
-    {{-- Block Configuration Modal --}}
+    {{-- Block Configuration Modal (Wide Mode) --}}
     <div x-show="showConfigModal" x-cloak
          class="fixed inset-0 z-50 overflow-y-auto"
          @keydown.escape.window="showConfigModal = false">
-        <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
             {{-- Backdrop --}}
             <div class="fixed inset-0 bg-gray-900/50 transition-opacity" @click="showConfigModal = false"></div>
 
-            {{-- Modal --}}
-            <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto">
+            {{-- Modal (Wide) --}}
+            <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-auto">
                 {{-- Header --}}
                 <div class="flex items-center justify-between p-6 border-b border-gray-200">
                     <div>
@@ -256,12 +256,13 @@
                 </div>
 
                 {{-- Body --}}
-                <div class="p-6 max-h-[60vh] overflow-y-auto">
+                <div class="p-6 max-h-[70vh] overflow-y-auto">
                     <div x-show="loadingConfig" class="text-center py-8">
                         <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-500"></i>
+                        <p class="text-gray-500 mt-2">Loading configuration...</p>
                     </div>
 
-                    <form x-show="!loadingConfig" @submit.prevent="saveConfig()">
+                    <div x-show="!loadingConfig">
                         {{-- Block Title --}}
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
@@ -269,41 +270,303 @@
                                    class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
 
-                        {{-- Dynamic Config Fields (rendered based on block type) --}}
-                        <div id="config-fields" class="space-y-4">
-                            {{-- Will be populated dynamically --}}
-                            <template x-if="currentBlock?.config">
-                                <div class="space-y-4">
-                                    <template x-for="(value, key) in currentBlock.config" :key="key">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2 capitalize" x-text="key.replace(/_/g, ' ')"></label>
-                                            
-                                            {{-- Text input for strings --}}
-                                            <template x-if="typeof value === 'string'">
-                                                <input type="text" x-model="currentBlock.config[key]"
-                                                       class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                            </template>
-
-                                            {{-- Checkbox for booleans --}}
-                                            <template x-if="typeof value === 'boolean'">
-                                                <label class="flex items-center gap-2">
-                                                    <input type="checkbox" x-model="currentBlock.config[key]"
-                                                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                                    <span class="text-sm text-gray-600">Enabled</span>
-                                                </label>
-                                            </template>
-
-                                            {{-- Number input for integers --}}
-                                            <template x-if="typeof value === 'number'">
-                                                <input type="number" x-model.number="currentBlock.config[key]"
-                                                       class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                            </template>
-                                        </div>
-                                    </template>
+                        {{-- Featured Journals Block - Special UI --}}
+                        <template x-if="currentBlock?.key === 'featured_journals'">
+                            <div class="space-y-6">
+                                {{-- Subtitle --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                    <input type="text" x-model="currentBlock.config.subtitle"
+                                           placeholder="e.g., Explore our top-rated journals"
+                                           class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
-                            </template>
-                        </div>
-                    </form>
+
+                                {{-- Display Count --}}
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Display Count</label>
+                                        <input type="number" x-model.number="currentBlock.config.display_count" min="1" max="12"
+                                               class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        <p class="text-xs text-gray-500 mt-1">Max journals to show on homepage</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Layout Style</label>
+                                        <select x-model="currentBlock.config.layout"
+                                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                            <option value="grid">Grid</option>
+                                            <option value="carousel">Carousel</option>
+                                            <option value="list">List</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{-- Journal Selection --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                                        Select Featured Journals
+                                        <span class="text-gray-400 font-normal">(click to select/deselect)</span>
+                                    </label>
+                                    
+                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-80 overflow-y-auto p-1">
+                                        <template x-for="journal in currentBlock.journals" :key="journal.id">
+                                            <label class="relative cursor-pointer">
+                                                <input type="checkbox" 
+                                                       :value="journal.id"
+                                                       :checked="isJournalSelected(journal.id)"
+                                                       @change="toggleJournalSelection(journal.id)"
+                                                       class="sr-only peer">
+                                                <div class="flex items-center gap-3 p-3 rounded-lg border-2 transition-all
+                                                            peer-checked:border-indigo-500 peer-checked:bg-indigo-50
+                                                            border-gray-200 hover:border-gray-300 hover:bg-gray-50">
+                                                    {{-- Journal Logo/Avatar --}}
+                                                    <div class="flex-shrink-0">
+                                                        <template x-if="journal.logo_path">
+                                                            <img :src="'/storage/' + journal.logo_path" 
+                                                                 class="w-10 h-10 rounded-lg object-cover">
+                                                        </template>
+                                                        <template x-if="!journal.logo_path">
+                                                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm"
+                                                                 x-text="(journal.abbreviation || journal.name).substring(0, 2).toUpperCase()">
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                    {{-- Journal Info --}}
+                                                    <div class="min-w-0 flex-1">
+                                                        <p class="font-medium text-gray-900 text-sm truncate" x-text="journal.name"></p>
+                                                        <p class="text-xs text-gray-500 truncate" x-text="journal.abbreviation || journal.slug"></p>
+                                                    </div>
+                                                    {{-- Check Icon --}}
+                                                    <div class="flex-shrink-0">
+                                                        <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center
+                                                                    peer-checked:border-indigo-500 peer-checked:bg-indigo-500"
+                                                             :class="isJournalSelected(journal.id) ? 'border-indigo-500 bg-indigo-500' : 'border-gray-300'">
+                                                            <i class="fa-solid fa-check text-white text-xs" 
+                                                               x-show="isJournalSelected(journal.id)"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </template>
+                                    </div>
+
+                                    {{-- Selection Summary --}}
+                                    <div class="mt-3 flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">
+                                            <span x-text="(currentBlock.config.featured_ids || []).length"></span> journals selected
+                                        </span>
+                                        <button type="button" @click="currentBlock.config.featured_ids = []"
+                                                class="text-red-600 hover:text-red-700 text-sm font-medium">
+                                            Clear Selection
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Statistics Counter Block - Special UI --}}
+                        <template x-if="currentBlock?.key === 'stats_counter'">
+                            <div class="space-y-6">
+                                {{-- Subtitle --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                    <input type="text" x-model="currentBlock.config.subtitle"
+                                           placeholder="e.g., Growing academic community"
+                                           class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                </div>
+
+                                {{-- Current Statistics Display --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Current Statistics</label>
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <template x-if="currentBlock.stats">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-blue-600" x-text="formatNumber(currentBlock.stats.journals || 0)"></div>
+                                                    <div class="text-sm text-gray-600">Active Journals</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-green-600" x-text="formatNumber(currentBlock.stats.submissions || 0)"></div>
+                                                    <div class="text-sm text-gray-600">Total Submissions</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-purple-600" x-text="formatNumber(currentBlock.stats.users || 0)"></div>
+                                                    <div class="text-sm text-gray-600">Registered Users</div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!currentBlock.stats">
+                                            <p class="text-sm text-gray-500">Loading statistics...</p>
+                                        </template>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">These statistics are automatically calculated from the database.</p>
+                                </div>
+
+                                {{-- Animation Settings --}}
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Animation Duration (ms)</label>
+                                        <input type="number" x-model.number="currentBlock.config.animation_duration" min="500" max="5000"
+                                               class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        <p class="text-xs text-gray-500 mt-1">How long each counter takes to animate</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Animation Delay (ms)</label>
+                                        <input type="number" x-model.number="currentBlock.config.animation_delay" min="0" max="1000"
+                                               class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        <p class="text-xs text-gray-500 mt-1">Delay between starting each counter</p>
+                                    </div>
+                                </div>
+
+                                {{-- Display Options --}}
+                                <div class="flex items-center gap-6">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" x-model="currentBlock.config.show_icons"
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="text-sm text-gray-700">Show Icons</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" x-model="currentBlock.config.animate_on_scroll"
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="text-sm text-gray-700">Animate on Scroll</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Subject Categories Block - Special UI --}}
+                        <template x-if="currentBlock?.key === 'subject_categories'">
+                            <div class="space-y-6">
+                                {{-- Subtitle --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                    <input type="text" x-model="currentBlock.config.subtitle"
+                                           placeholder="e.g., Find journals in your research area"
+                                           class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                </div>
+
+                                {{-- Layout Settings --}}
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Layout Style</label>
+                                        <select x-model="currentBlock.config.layout"
+                                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                            <option value="icon-grid">Icon Grid</option>
+                                            <option value="list">List</option>
+                                            <option value="dropdown">Dropdown</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Columns</label>
+                                        <input type="number" x-model.number="currentBlock.config.columns" min="2" max="8"
+                                               class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        <p class="text-xs text-gray-500 mt-1">Number of columns in grid layout</p>
+                                    </div>
+                                </div>
+
+                                {{-- Display Options --}}
+                                <div class="flex items-center gap-6">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" x-model="currentBlock.config.show_count"
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="text-sm text-gray-700">Show Journal Count</span>
+                                    </label>
+                                </div>
+
+                                {{-- Categories Management --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Subject Categories</label>
+                                    <div class="space-y-3">
+                                        <template x-for="(category, index) in currentBlock.config.categories" :key="index">
+                                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                <div class="flex-shrink-0">
+                                                    <i :class="category.icon" class="text-lg text-gray-600"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <input type="text" x-model="category.name"
+                                                           class="w-full text-sm font-medium bg-transparent border-0 focus:ring-0 p-0"
+                                                           placeholder="Category name">
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    <input type="text" x-model="category.icon"
+                                                           class="w-24 text-xs bg-white border border-gray-300 rounded px-2 py-1"
+                                                           placeholder="fa-icon">
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    <select x-model="category.color"
+                                                            class="text-xs bg-white border border-gray-300 rounded px-2 py-1">
+                                                        <option value="blue">Blue</option>
+                                                        <option value="red">Red</option>
+                                                        <option value="green">Green</option>
+                                                        <option value="purple">Purple</option>
+                                                        <option value="amber">Amber</option>
+                                                        <option value="indigo">Indigo</option>
+                                                        <option value="pink">Pink</option>
+                                                        <option value="gray">Gray</option>
+                                                    </select>
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    <button @click="removeCategory(index)"
+                                                            class="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
+                                                        <i class="fa-solid fa-trash text-sm"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    {{-- Add New Category --}}
+                                    <button @click="addCategory()"
+                                            class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <i class="fa-solid fa-plus mr-2"></i>
+                                        Add Category
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Generic Config Fields for other blocks --}}
+                        <template x-if="currentBlock?.key !== 'featured_journals' && currentBlock?.key !== 'stats_counter' && currentBlock?.key !== 'subject_categories'">
+                            <div class="space-y-4">
+                                <template x-if="currentBlock?.config">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <template x-for="(value, key) in currentBlock.config" :key="key">
+                                            <div :class="{'md:col-span-2': typeof value === 'string' && value.length > 50}">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2 capitalize" 
+                                                       x-text="key.replace(/_/g, ' ')"></label>
+                                                
+                                                {{-- Textarea for long strings --}}
+                                                <template x-if="typeof value === 'string' && value.length > 50">
+                                                    <textarea x-model="currentBlock.config[key]" rows="3"
+                                                              class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                                </template>
+
+                                                {{-- Text input for short strings --}}
+                                                <template x-if="typeof value === 'string' && value.length <= 50">
+                                                    <input type="text" x-model="currentBlock.config[key]"
+                                                           class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                                </template>
+
+                                                {{-- Checkbox for booleans --}}
+                                                <template x-if="typeof value === 'boolean'">
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" x-model="currentBlock.config[key]"
+                                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                        <span class="text-sm text-gray-600">Enabled</span>
+                                                    </label>
+                                                </template>
+
+                                                {{-- Number input for integers --}}
+                                                <template x-if="typeof value === 'number'">
+                                                    <input type="number" x-model.number="currentBlock.config[key]"
+                                                           class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Footer --}}
@@ -334,6 +597,7 @@ function pageBuilder() {
         loadingConfig: false,
         currentBlock: null,
         activeBlocks: @json($blocks->where('is_active', true)->values()),
+        journals: @json($journals),
         
         init() {
             this.initSortable();
@@ -413,12 +677,92 @@ function pageBuilder() {
 
             try {
                 const response = await fetch(`{{ url('admin/site-appearance') }}/${blockId}/config`);
-                this.currentBlock = await response.json();
+                const data = await response.json();
+                
+                // Ensure config object exists with defaults
+                if (!data.config) {
+                    data.config = {};
+                }
+                
+                // For featured_journals, ensure featured_ids array exists
+                if (data.key === 'featured_journals') {
+                    data.config.featured_ids = data.config.featured_ids || [];
+                    data.config.subtitle = data.config.subtitle || '';
+                    data.config.display_count = data.config.display_count || 6;
+                    data.config.layout = data.config.layout || 'grid';
+                    // Attach journals list to block for template access
+                    data.journals = data.journals || this.journals;
+                }
+
+                // For statistics_counter, set defaults and attach stats
+                if (data.key === 'stats_counter') {
+                    data.config.subtitle = data.config.subtitle || '';
+                    data.config.animation_duration = data.config.animation_duration || 2000;
+                    data.config.animation_delay = data.config.animation_delay || 200;
+                    data.config.show_icons = data.config.show_icons !== undefined ? data.config.show_icons : true;
+                    data.config.animate_on_scroll = data.config.animate_on_scroll !== undefined ? data.config.animate_on_scroll : true;
+                    // Stats are already attached from the API response
+                }
+
+                // For subject_categories, set defaults and ensure categories array exists
+                if (data.key === 'subject_categories') {
+                    data.config.subtitle = data.config.subtitle || '';
+                    data.config.layout = data.config.layout || 'icon-grid';
+                    data.config.columns = data.config.columns || 6;
+                    data.config.show_count = data.config.show_count !== undefined ? data.config.show_count : true;
+                    data.config.categories = data.config.categories || [];
+                    // Categories are already attached from the API response
+                }
+                
+                this.currentBlock = data;
             } catch (error) {
                 this.showNotification('Failed to load configuration', 'error');
             } finally {
                 this.loadingConfig = false;
             }
+        },
+
+        // Helper for Featured Journals selection
+        isJournalSelected(journalId) {
+            if (!this.currentBlock?.config?.featured_ids) return false;
+            return this.currentBlock.config.featured_ids.includes(journalId);
+        },
+
+        toggleJournalSelection(journalId) {
+            if (!this.currentBlock.config.featured_ids) {
+                this.currentBlock.config.featured_ids = [];
+            }
+            
+            const index = this.currentBlock.config.featured_ids.indexOf(journalId);
+            if (index > -1) {
+                this.currentBlock.config.featured_ids.splice(index, 1);
+            } else {
+                this.currentBlock.config.featured_ids.push(journalId);
+            }
+        },
+
+        // Helper for Subject Categories
+        addCategory() {
+            if (!this.currentBlock.config.categories) {
+                this.currentBlock.config.categories = [];
+            }
+            
+            this.currentBlock.config.categories.push({
+                name: 'New Category',
+                icon: 'fa-circle',
+                color: 'blue'
+            });
+        },
+
+        removeCategory(index) {
+            if (this.currentBlock.config.categories && confirm('Are you sure you want to remove this category?')) {
+                this.currentBlock.config.categories.splice(index, 1);
+            }
+        },
+
+        // Helper for formatting numbers
+        formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
         },
 
         async saveConfig() {

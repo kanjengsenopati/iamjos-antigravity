@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Journal;
 use App\Models\SiteContentBlock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +26,13 @@ class SiteAppearanceController extends Controller
         // Group blocks by category for the admin UI
         $blocksByCategory = $blocks->groupBy('category');
 
-        return view('admin.site-appearance.index', compact('blocks', 'blocksByCategory'));
+        // Fetch all journals for Featured Journals block selection
+        $journals = Journal::select('id', 'name', 'abbreviation', 'slug', 'logo_path')
+            ->where('enabled', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.site-appearance.index', compact('blocks', 'blocksByCategory', 'journals'));
     }
 
     /**
@@ -69,7 +76,15 @@ class SiteAppearanceController extends Controller
      */
     public function edit(SiteContentBlock $block)
     {
-        return view('admin.site-appearance.edit-block', compact('block'));
+        $stats = [];
+        if ($block->key === 'stats_counter') {
+            // Example stats: total journals, submissions, users
+            $stats['journals'] = \App\Models\Journal::where('enabled', true)->count();
+            $stats['submissions'] = \DB::table('submissions')->count();
+            $stats['users'] = \DB::table('users')->count();
+            // Add more stats as needed
+        }
+        return view('admin.site-appearance.edit-block', compact('block', 'stats'));
     }
 
     /**
@@ -122,14 +137,39 @@ class SiteAppearanceController extends Controller
      */
     public function getConfig(SiteContentBlock $block)
     {
-        return response()->json([
+        $data = [
             'id' => $block->id,
             'key' => $block->key,
             'title' => $block->title,
             'description' => $block->description,
-            'config' => $block->config,
+            'config' => $block->config ?? [],
             'is_active' => $block->is_active,
-        ]);
+        ];
+
+        // For featured_journals block, include journals list
+        if ($block->key === 'featured_journals') {
+            $data['journals'] = Journal::select('id', 'name', 'abbreviation', 'slug', 'logo_path')
+                ->where('enabled', true)
+                ->orderBy('name')
+                ->get();
+        }
+
+        // For statistics_counter block, include portal stats
+        if ($block->key === 'stats_counter') {
+            $data['stats'] = [
+                'journals' => \App\Models\Journal::where('enabled', true)->count(),
+                'submissions' => \DB::table('submissions')->count(),
+                'users' => \DB::table('users')->count(),
+                // Add more stats as needed
+            ];
+        }
+
+        // For subject_categories block, ensure categories array exists
+        if ($block->key === 'subject_categories') {
+            $data['categories'] = $block->getConfig('categories', []);
+        }
+
+        return response()->json($data);
     }
 
     /**
@@ -140,6 +180,12 @@ class SiteAppearanceController extends Controller
         $request->validate([
             'title' => 'nullable|string|max:255',
             'config' => 'nullable|array',
+            'config.featured_ids' => 'nullable|array',
+            'config.featured_ids.*' => 'exists:journals,id',
+            'config.categories' => 'nullable|array',
+            'config.categories.*.name' => 'required|string|max:255',
+            'config.categories.*.icon' => 'required|string|max:255',
+            'config.categories.*.color' => 'required|string|in:blue,red,green,purple,amber,indigo,pink,gray',
         ]);
 
         if ($request->has('title')) {
@@ -147,10 +193,20 @@ class SiteAppearanceController extends Controller
         }
 
         if ($request->has('config')) {
-            $block->config = array_merge($block->config ?? [], $request->input('config'));
+            // Merge config but ensure arrays are replaced, not merged
+            $existingConfig = $block->config ?? [];
+            $newConfig = $request->input('config');
+            
+            // For array values like featured_ids, replace entirely instead of merging
+            foreach ($newConfig as $key => $value) {
+                $existingConfig[$key] = $value;
+            }
+            
+            $block->config = $existingConfig;
         }
 
         $block->save();
+        SiteContentBlock::clearCache();
 
         return response()->json([
             'success' => true,
