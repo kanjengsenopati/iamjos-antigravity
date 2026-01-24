@@ -42,7 +42,6 @@ use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\ApplicationSettingController;
 use App\Http\Controllers\Admin\DashboardController as LegacyDashboardController;
 use App\Http\Controllers\Admin\SiteAdminController;
-use App\Http\Controllers\Admin\PortalSettingsController;
 use App\Http\Controllers\PortalController;
 
 // =====================================================
@@ -53,6 +52,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
 Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
 Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
 Route::get('/about', [PortalController::class, 'about'])->name('portal.about');
+Route::get('/page/{slug}', [PortalController::class, 'page'])->name('site.page');
 
 // File downloads (public for galley files)
 Route::get('/files/{file}/download', [SubmissionFileController::class, 'download'])->name('files.download');
@@ -60,9 +60,11 @@ Route::get('/files/{file}/preview', [SubmissionFileController::class, 'preview']
 Route::get('/files/{file}/serve', [SubmissionFileController::class, 'serve'])->name('files.serve'); // Signed URL access
 
 // =====================================================
-// AUTH ROUTES
+// AUTH ROUTES (Portal Context - Global)
 // =====================================================
 Route::get('/login', [AuthController::class, 'index'])->name('login');
+Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Registration Routes
 use App\Http\Controllers\Admin\RegisterController;
@@ -75,16 +77,13 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'post'])->name
 Route::get('/change-password', [ForgotPasswordController::class, 'changePassword'])->name('change-password');
 Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('reset-password');
 
-Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
 // Google OAuth Routes
 use App\Http\Controllers\Admin\SocialAuthController;
 
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-// Journal-specific Google OAuth (e.g., /journals/my-journal/auth/google)
-Route::get('/journals/{journal}/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
+
+
 
 // =====================================================
 // JOURNAL SELECTION (Protected)
@@ -140,10 +139,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
     Route::put('/journals/{journal}', [JournalController::class, 'update'])->name('journals.update');
     Route::delete('/journals/{journal}', [JournalController::class, 'destroy'])->name('journals.destroy');
 
-    // Portal Settings (Landing Page CMS)
-    Route::get('/portal-settings', [PortalSettingsController::class, 'edit'])->name('portal.edit');
-    Route::put('/portal-settings', [PortalSettingsController::class, 'update'])->name('portal.update');
-
     // About Page Settings
     Route::get('/about-settings', [SiteAdminController::class, 'editAbout'])->name('about.edit');
     Route::put('/about-settings', [SiteAdminController::class, 'updateAbout'])->name('about.update');
@@ -162,6 +157,33 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
             Route::put('/{block}/config', 'updateConfig')->name('config.update');
             Route::post('/{block}/reset', 'reset')->name('reset');
             Route::delete('/{block}/logo', 'deleteLogo')->name('logo.delete');
+        });
+
+    // Site Pages (CMS)
+    Route::controller(\App\Http\Controllers\Admin\SitePageController::class)
+        ->prefix('site-pages')
+        ->name('site-pages.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{sitePage}/edit', 'edit')->name('edit');
+            Route::put('/{sitePage}', 'update')->name('update');
+            Route::delete('/{sitePage}', 'destroy')->name('destroy');
+            Route::post('/{sitePage}/toggle', 'toggle')->name('toggle');
+            Route::post('/reorder', 'reorder')->name('reorder');
+        });
+
+    // Site Navigation
+    Route::controller(\App\Http\Controllers\Admin\SiteNavigationController::class)
+        ->prefix('site-navigation')
+        ->name('site-navigation.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/items', 'storeItem')->name('items.store');
+            Route::put('/items/{item}', 'updateItem')->name('items.update');
+            Route::delete('/items/{item}', 'destroyItem')->name('items.destroy');
+            Route::post('/items/reorder', 'reorderItems')->name('items.reorder');
         });
 });
 
@@ -224,6 +246,16 @@ Route::post('translate_post', [TranslateController::class, 'translatePost'])->na
 // These come AFTER all other routes to catch journal slugs
 // =====================================================
 Route::prefix('{journal}')->group(function () {
+
+    // --------- Journal-Scoped Auth Routes (/{journal}/login) ---------
+    Route::middleware(['journal.detect'])->group(function () {
+        Route::get('/login', [AuthController::class, 'index'])->name('journal.login');
+        Route::post('/login', [AuthController::class, 'authenticate'])->name('journal.authenticate');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('journal.logout');
+        Route::get('/register', [RegisterController::class, 'create'])->name('journal.register');
+        Route::post('/register', [RegisterController::class, 'store'])->name('journal.register.store');
+        Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
+    });
 
     // --------- Public Journal Pages ---------
     Route::get('/', [JournalHomepageController::class, 'index'])->name('journal.public.home');

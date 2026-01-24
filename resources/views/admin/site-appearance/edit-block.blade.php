@@ -283,6 +283,77 @@
                             </div>
                             @break
 
+                        {{-- Statistics Counter Block --}}
+                        @case('stats_counter')
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                                    <input type="text" name="config[title]" value="{{ $block->getConfig('title', 'Platform Statistics') }}"
+                                           class="w-full rounded-lg border-gray-300">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                    <input type="text" name="config[subtitle]" value="{{ $block->getConfig('subtitle') }}"
+                                           class="w-full rounded-lg border-gray-300">
+                                </div>
+
+                                {{-- Current Statistics --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Statistics</label>
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        @if(isset($stats))
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-blue-600">{{ number_format($stats['journals'] ?? 0) }}</div>
+                                                    <div class="text-sm text-gray-600">Active Journals</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-green-600">{{ number_format($stats['submissions'] ?? 0) }}</div>
+                                                    <div class="text-sm text-gray-600">Total Submissions</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-purple-600">{{ number_format($stats['users'] ?? 0) }}</div>
+                                                    <div class="text-sm text-gray-600">Registered Users</div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <p class="text-sm text-gray-500">Loading statistics...</p>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">These statistics are automatically calculated from the database.</p>
+                                </div>
+
+                                {{-- Configuration Options --}}
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Animation Duration (ms)</label>
+                                        <input type="number" name="config[animation_duration]" value="{{ $block->getConfig('animation_duration', 2000) }}" min="500" max="5000"
+                                               class="w-full rounded-lg border-gray-300">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Animation Delay (ms)</label>
+                                        <input type="number" name="config[animation_delay]" value="{{ $block->getConfig('animation_delay', 200) }}" min="0" max="1000"
+                                               class="w-full rounded-lg border-gray-300">
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-6">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" name="config[show_icons]" value="1" 
+                                               {{ $block->getConfig('show_icons', true) ? 'checked' : '' }}
+                                               class="rounded border-gray-300 text-blue-600">
+                                        <span class="text-sm text-gray-700">Show Icons</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" name="config[animate_on_scroll]" value="1" 
+                                               {{ $block->getConfig('animate_on_scroll', true) ? 'checked' : '' }}
+                                               class="rounded border-gray-300 text-blue-600">
+                                        <span class="text-sm text-gray-700">Animate on Scroll</span>
+                                    </label>
+                                </div>
+                            </div>
+                            @break
+
                         {{-- Default for other blocks --}}
                         @default
                             <div class="space-y-4">

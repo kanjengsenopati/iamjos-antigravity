@@ -156,16 +156,23 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                 {{-- Right: User Links --}}
                 <div class="flex items-center space-x-4">
                     @auth
-                        <a href="{{ route('dashboard') }}" class="text-slate-300 hover:text-white transition-colors">
+                        <a href="{{ route('journal.dashboard', $journal->slug) }}" class="text-slate-300 hover:text-white transition-colors">
                             <i class="fa-solid fa-gauge-high mr-1"></i> Dashboard
                         </a>
                         <span class="text-slate-600">|</span>
                         <span class="text-slate-300">{{ auth()->user()->name }}</span>
+                        <span class="text-slate-600">|</span>
+                        <form action="{{ route('journal.logout', $journal->slug) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="text-slate-300 hover:text-white transition-colors">
+                                <i class="fa-solid fa-sign-out-alt mr-1"></i> Logout
+                            </button>
+                        </form>
                     @else
-                        <a href="{{ route('login') }}" class="text-slate-300 hover:text-white transition-colors">
+                        <a href="{{ route('journal.login', $journal->slug) }}" class="text-slate-300 hover:text-white transition-colors">
                             <i class="fa-solid fa-sign-in-alt mr-1"></i> Login
                         </a>
-                        <a href="{{ route('register') }}" class="text-slate-300 hover:text-white transition-colors">
+                        <a href="{{ route('journal.register', $journal->slug) }}" class="text-slate-300 hover:text-white transition-colors">
                             <i class="fa-solid fa-user-plus mr-1"></i> Register
                         </a>
                     @endauth
@@ -359,7 +366,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                     <ul class="space-y-2 text-sm">
                         <li><a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Author Guidelines</a></li>
                         <li><a href="{{ route('journal.submissions.create', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Submit Manuscript</a></li>
-                        <li><a href="{{ route('login') }}" class="text-slate-400 hover:text-white transition-colors">Login / Register</a></li>
+                        <li><a href="{{ route('journal.login', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Login / Register</a></li>
                     </ul>
 
                     {{-- Social Links --}}

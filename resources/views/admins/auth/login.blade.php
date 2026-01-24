@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | {{ config('app.name', 'IAMJOS') }}</title>
-    <meta name="description" content="Indonesian Academic Journal System - Login">
+    <title>Login | {{ $journal->name ?? config('app.name', 'IAMJOS') }}</title>
+    <meta name="description" content="{{ $journal ? $journal->name . ' - Login' : 'Indonesian Academic Journal System - Login' }}">
     <meta name="robots" content="noindex, nofollow">
 
     <!-- Fonts -->
@@ -41,10 +41,17 @@
 
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen flex" x-data="{ showPassword: false }">
-        <!-- Left Side - Brand Panel -->
-        <div
-            class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 relative overflow-hidden">
-            <!-- Abstract Pattern Overlay -->
+        <!-- Left Side - Brand Panel (Dynamic based on Journal Context) -->
+        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden"
+            @if($journal && ($branding['cover_url'] ?? null))
+                style="background-image: url('{{ $branding['cover_url'] }}'); background-size: cover; background-position: center;"
+            @endif
+        >
+            <!-- Background Gradient Overlay -->
+            <div class="absolute inset-0 {{ $journal ? 'bg-gradient-to-br from-gray-900/90 via-gray-800/85 to-gray-900/90' : 'bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900' }}"></div>
+
+            <!-- Abstract Pattern Overlay (only for portal context) -->
+            @unless($journal)
             <div class="absolute inset-0 opacity-10">
                 <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <defs>
@@ -55,61 +62,98 @@
                     <rect width="100" height="100" fill="url(#grid)" />
                 </svg>
             </div>
+            @endunless
 
-            <!-- Floating Circles -->
-            <div
-                class="absolute top-20 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse">
-            </div>
-            <div class="absolute bottom-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
-                style="animation-delay: 1s;"></div>
-            <div class="absolute top-1/2 left-1/3 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
-                style="animation-delay: 2s;"></div>
+            <!-- Floating Circles (animated background elements) -->
+            <div class="absolute top-20 left-20 w-72 h-72 {{ $journal ? 'bg-white' : 'bg-indigo-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 {{ $journal ? 'bg-white' : 'bg-purple-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 1s;"></div>
+            <div class="absolute top-1/2 left-1/3 w-64 h-64 {{ $journal ? 'bg-white' : 'bg-blue-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
 
             <!-- Content -->
             <div class="relative z-10 flex flex-col justify-center px-12 xl:px-20 w-full">
                 <!-- Logo -->
                 <div class="mb-12">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <i class="fas fa-book-open text-2xl text-white"></i>
-                        </div>
-                        <span class="text-2xl font-bold text-white tracking-tight">IAMJOS</span>
+                        @if($journal && ($branding['logo_url'] ?? null))
+                            <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}" class="h-12 w-auto object-contain">
+                        @else
+                            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <i class="fas fa-book-open text-2xl text-white"></i>
+                            </div>
+                        @endif
+                        <span class="text-2xl font-bold text-white tracking-tight">
+                            {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                        </span>
                     </div>
                 </div>
 
                 <!-- Heading -->
                 <h1 class="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-                    Advance Your<br>
-                    <span class="text-indigo-300">Academic Research</span>
+                    @if($journal)
+                        {{ $branding['headline'] }}
+                    @else
+                        Advance Your<br>
+                        <span class="text-indigo-300">Academic Research</span>
+                    @endif
                 </h1>
 
                 <!-- Tagline -->
-                <p class="text-lg text-indigo-200 leading-relaxed max-w-md mb-12">
-                    A modern platform for managing academic journal submissions, peer reviews, and publications with
-                    streamlined workflows.
+                <p class="text-lg {{ $journal ? 'text-gray-200' : 'text-indigo-200' }} leading-relaxed max-w-md mb-12">
+                    {{ $branding['tagline'] ?? $branding['description'] }}
                 </p>
 
-                <!-- Features -->
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4 text-indigo-100">
-                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-paper-plane text-sm"></i>
+                <!-- Features (show different content based on context) -->
+                @if($journal)
+                    <!-- Journal-specific info -->
+                    <div class="space-y-4">
+                        @if($journal->issn_print || $journal->issn_online)
+                        <div class="flex items-center gap-4 text-gray-100">
+                            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-barcode text-sm"></i>
+                            </div>
+                            <span class="text-sm">
+                                @if($journal->issn_print)ISSN Print: {{ $journal->issn_print }}@endif
+                                @if($journal->issn_print && $journal->issn_online) | @endif
+                                @if($journal->issn_online)ISSN Online: {{ $journal->issn_online }}@endif
+                            </span>
                         </div>
-                        <span class="text-sm">Streamlined Submission Process</span>
-                    </div>
-                    <div class="flex items-center gap-4 text-indigo-100">
-                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-users text-sm"></i>
+                        @endif
+                        <div class="flex items-center gap-4 text-gray-100">
+                            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-paper-plane text-sm"></i>
+                            </div>
+                            <span class="text-sm">Submit Your Manuscript</span>
                         </div>
-                        <span class="text-sm">Collaborative Peer Review</span>
-                    </div>
-                    <div class="flex items-center gap-4 text-indigo-100">
-                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-chart-line text-sm"></i>
+                        <div class="flex items-center gap-4 text-gray-100">
+                            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-tasks text-sm"></i>
+                            </div>
+                            <span class="text-sm">Track Submission Progress</span>
                         </div>
-                        <span class="text-sm">Editorial Workflow Management</span>
                     </div>
-                </div>
+                @else
+                    <!-- Portal features -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 text-indigo-100">
+                            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-paper-plane text-sm"></i>
+                            </div>
+                            <span class="text-sm">Streamlined Submission Process</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-indigo-100">
+                            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-sm"></i>
+                            </div>
+                            <span class="text-sm">Collaborative Peer Review</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-indigo-100">
+                            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-line text-sm"></i>
+                            </div>
+                            <span class="text-sm">Editorial Workflow Management</span>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -119,17 +163,25 @@
                 <!-- Mobile Logo -->
                 <div class="lg:hidden mb-10 text-center">
                     <div class="inline-flex items-center gap-3">
-                        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-book-open text-xl text-white"></i>
-                        </div>
-                        <span class="text-xl font-bold text-gray-900">IAMJOS</span>
+                        @if($journal && ($branding['logo_url'] ?? null))
+                            <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}" class="h-10 w-auto object-contain">
+                        @else
+                            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-book-open text-xl text-white"></i>
+                            </div>
+                        @endif
+                        <span class="text-xl font-bold text-gray-900">
+                            {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                        </span>
                     </div>
                 </div>
 
                 <!-- Header -->
                 <div class="mb-8">
                     <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-                    <p class="text-gray-500">Please enter your details to sign in.</p>
+                    <p class="text-gray-500">
+                        Sign in to {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                    </p>
                 </div>
 
                 <!-- Alert Messages -->
@@ -154,8 +206,8 @@
                     </div>
                 @endif
 
-                <!-- Login Form -->
-                <form action="{{ route('authenticate') }}" method="POST" class="space-y-5">
+                <!-- Login Form (Dynamic Action based on Context) -->
+                <form action="{{ $journal ? route('journal.authenticate', $journal->slug) : route('authenticate') }}" method="POST" class="space-y-5">
                     @csrf
 
                     <!-- Email Field -->
@@ -225,16 +277,36 @@
                 <!-- Register Link -->
                 <p class="mt-8 text-center text-sm text-gray-500">
                     Don't have an account?
-                    <a href="{{ route('register') }}"
+                    <a href="{{ $journal ? route('journal.register', $journal->slug) : route('register') }}"
                         class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
                         Create account
                     </a>
                 </p>
 
+                <!-- Back to Journal/Portal Link -->
+                @if($journal)
+                <p class="mt-4 text-center text-sm text-gray-500">
+                    <a href="{{ route('journal.public.home', $journal->slug) }}"
+                        class="text-gray-600 hover:text-indigo-600 transition-colors">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to {{ $journal->abbreviation ?? $journal->name }}
+                    </a>
+                </p>
+                @else
+                <p class="mt-4 text-center text-sm text-gray-500">
+                    <a href="{{ route('portal.home') }}"
+                        class="text-gray-600 hover:text-indigo-600 transition-colors">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                    </a>
+                </p>
+                @endif
+
                 <!-- Footer -->
                 <div class="mt-12 pt-8 border-t border-gray-200">
                     <p class="text-center text-xs text-gray-400">
-                        © {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. Indonesian Academic Journal System.
+                        © {{ date('Y') }} {{ $journal ? $journal->name : config('app.name', 'IAMJOS') }}.
+                        @unless($journal)
+                            Indonesian Academic Journal System.
+                        @endunless
                     </p>
                 </div>
             </div>

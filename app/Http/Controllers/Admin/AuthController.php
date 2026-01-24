@@ -7,30 +7,43 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Admin\AuthRequest;
 use App\Models\Admin;
+use App\Models\Journal;
 use App\Models\User;
 use Carbon\Carbon;
 
 class AuthController extends Controller
 {
     /**
-     * Menampilkan halaman login.
+     * Display the login page with context-aware branding.
+     *
+     * Portal Context: /login - Generic IAMJOS branding
+     * Journal Context: /journal/{slug}/login - Journal-specific branding
      */
     public function index(Request $request)
     {
-        // Store intended journal for post-login redirect
+        // Get journal context from service container (set by DetectJournalContext middleware)
+        $journal = app()->bound('currentJournal') ? app('currentJournal') : null;
+
+        // Store intended journal for post-login redirect (backward compatibility)
         if ($request->has('intended_journal')) {
             session(['intended_journal' => $request->query('intended_journal')]);
         }
 
-        return view('admins.auth.login');
+        // Prepare branding data based on context
+        $branding = $this->getBrandingData($journal);
+
+        return view('admins.auth.login', compact('journal', 'branding'));
     }
 
     /**
-     * Menangani proses autentikasi.
+     * Handle authentication with context-aware redirects.
      */
     public function authenticate(AuthRequest $request)
     {
         $credentials = $request->validated();
+
+        // Get journal context
+        $journal = app()->bound('currentJournal') ? app('currentJournal') : null;
 
         // Determine if input is email or username
         $loginInput = $credentials['email'];
@@ -39,85 +52,149 @@ class AuthController extends Controller
         // Find user by either email or username
         $user = User::where($fieldType, $loginInput)->first();
 
-        // 2. Guard Clause: Jika user tidak ada, langsung kembalikan error.
-        // Pesan dibuat umum untuk keamanan.
+        // Guard Clause: User not found
         if (!$user) {
             return back()->with('warning', 'Email/Username atau password tidak sesuai.')
                 ->withInput($request->only('email'));
         }
 
-        // 3. Guard Clause: Jika akun user sedang terblokir.
-        // if ($user->isBlocked()) {
-        //     $blockMessage = "Akun Anda ditangguhkan hingga " . $user->blocked_until->format('d-m-Y H:i') . ". Silakan hubungi administrator.";
-        //     return back()->with('warning', $blockMessage)
-        //         ->withInput($request->only('email'));
-        // }
+        // Check if user account is disabled
+        if ($user->disabled) {
+            return back()->with('warning', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.')
+                ->withInput($request->only('email'));
+        }
 
-        // 4. Coba lakukan autentikasi dengan kredensial & status aktif
-        // Prepare credentials for Auth generic attempt
+        // Prepare credentials for authentication
         $authCredentials = [
             $fieldType => $loginInput,
             'password' => $credentials['password']
         ];
 
-        // Menggunakan guard 'admin' adalah praktik yang baik untuk memisahkan sesi user biasa dan admin
+        // Attempt authentication
         if (Auth::guard('web')->attempt($authCredentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             /** @var \App\Models\User $user */
             $user = Auth::guard('web')->user();
 
-            // Super Admin always goes to site admin
-            if ($user->hasRole('Super Admin')) {
-                session()->forget('intended_journal');
-                return redirect()->route('admin.site.index');
-            }
+            // Update last login timestamp
+            $user->update(['date_last_login' => now()]);
 
-            // Check if there's an intended journal from session
-            $intendedJournal = session('intended_journal');
-            if ($intendedJournal) {
-                session()->forget('intended_journal');
-                return redirect()->route('journal.dashboard', $intendedJournal);
-            }
-
-            return redirect()->route('journal.select');
+            // Determine redirect based on context
+            return $this->handlePostLoginRedirect($user, $journal);
         }
 
-        // 5. Jika autentikasi gagal (password salah atau akun tidak aktif)
-        // $user->recordFailedLoginAttempt(); // Catat percobaan gagal
-
-        // Cek lagi apakah percobaan ini menyebabkan akun terblokir
-        // if ($user->isBlocked()) {
-        //     $blockMessage = "Anda telah salah memasukkan password sebanyak " . Admin::MAX_LOGIN_ATTEMPTS . " kali. Akun Anda ditangguhkan selama 2 jam.";
-        //     return back()->with('warning', $blockMessage)
-        //         ->withInput($request->only('email'));
-        // }
-
-        // $remainingAttempts = Admin::MAX_LOGIN_ATTEMPTS - $user->login_attempts;
-        // $warningMessage = $remainingAttempts > 0
-        //     ? 'Password tidak sesuai. Kesempatan tersisa ' . $remainingAttempts . ' kali.'
-        //     : 'Password tidak sesuai.';
-
-        // return back()->with('warning', $warningMessage)
-        //     ->withInput($request->only('email'));
         return back()->with('warning', 'Email/Username atau password tidak sesuai.')
             ->withInput($request->only('email'));
     }
 
     /**
-     * Menangani proses logout.
+     * Handle logout with context-aware redirects.
      */
     public function logout(Request $request)
     {
-        // Sesuaikan dengan guard yang digunakan saat login
+        // Capture current journal context before session invalidation
+        $journalSlug = $request->route('journal');
+
+        // Also check session for journal context as fallback
+        if (!$journalSlug) {
+            $journalSlug = session('login_journal_slug');
+        }
+
+        // Logout the user
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Redirect based on context
+        if ($journalSlug) {
+            // Verify the journal still exists
+            $journal = Journal::where('slug', $journalSlug)->where('enabled', true)->first();
+            if ($journal) {
+                return redirect()->route('journal.public.home', ['journal' => $journalSlug])
+                    ->with('success', 'Anda berhasil logout.');
+            }
+        }
+
+        // Default: redirect to portal home
+        return redirect()->route('portal.home')
+            ->with('success', 'Anda berhasil logout.');
     }
 
+    /**
+     * Handle post-login redirect based on user role and context.
+     */
+    protected function handlePostLoginRedirect(User $user, ?Journal $journal)
+    {
+        // Super Admin always goes to site admin dashboard
+        if ($user->hasRole('Super Admin')) {
+            session()->forget(['intended_journal', 'login_journal_slug']);
+            return redirect()->route('admin.site.index');
+        }
+
+        // Priority 1: Journal context from current route
+        if ($journal) {
+            session()->forget(['intended_journal', 'login_journal_slug']);
+            return redirect()->route('journal.dashboard', ['journal' => $journal->slug]);
+        }
+
+        // Priority 2: Intended journal from query parameter or session
+        $intendedJournal = session('intended_journal');
+        if ($intendedJournal) {
+            session()->forget('intended_journal');
+            return redirect()->route('journal.dashboard', ['journal' => $intendedJournal]);
+        }
+
+        // Priority 3: Journal stored in session from context middleware
+        $loginJournalSlug = session('login_journal_slug');
+        if ($loginJournalSlug) {
+            session()->forget('login_journal_slug');
+            return redirect()->route('journal.dashboard', ['journal' => $loginJournalSlug]);
+        }
+
+        // Priority 4: If user has only one journal, go directly to it
+        $userJournals = $user->registeredJournals();
+        if ($userJournals->count() === 1) {
+            return redirect()->route('journal.dashboard', ['journal' => $userJournals->first()->slug]);
+        }
+
+        // Default: Go to journal selection page
+        return redirect()->route('journal.select');
+    }
+
+    /**
+     * Get branding data based on context.
+     */
+    protected function getBrandingData(?Journal $journal): array
+    {
+        if ($journal) {
+            return [
+                'name' => $journal->name,
+                'acronym' => $journal->abbreviation ?? $journal->name,
+                'description' => $journal->description ?? $journal->summary ?? 'Academic Journal Publishing Platform',
+                'logo_url' => $journal->logo_path ? asset('storage/' . $journal->logo_path) : null,
+                'cover_url' => $journal->homepage_image_path ? asset('storage/' . $journal->homepage_image_path) : null,
+                'headline' => $journal->name,
+                'tagline' => $journal->description ?? 'Submit, Review, and Publish Academic Research',
+            ];
+        }
+
+        // Default portal branding
+        return [
+            'name' => config('app.name', 'IAMJOS'),
+            'acronym' => 'IAMJOS',
+            'description' => 'Indonesian Academic Journal System',
+            'logo_url' => null,
+            'cover_url' => null,
+            'headline' => 'Advance Your Academic Research',
+            'tagline' => 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.',
+        ];
+    }
+
+    /**
+     * Legacy method for accessing from office (kept for backward compatibility).
+     */
     public function accessFromOffice($id)
     {
         // Find the admin by ID

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\View\Composers\PublicLayoutComposer;
+use App\View\Composers\SiteLayoutComposer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,5 +48,13 @@ class AppServiceProvider extends ServiceProvider
             'layouts.public',
             'components.layouts.public',
         ], PublicLayoutComposer::class);
+
+        // Register View Composer for Portal/Site Layout
+        View::composer([
+            'layouts.portal',
+            'site.*',
+            'components.site.navbar',
+            'components.site.footer',
+        ], SiteLayoutComposer::class);
     }
 }
