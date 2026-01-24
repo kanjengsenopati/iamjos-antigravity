@@ -228,67 +228,85 @@ $currentColor = match (true) {
             </div>
         </div>
 
-        <!-- Section 4: Role Options -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="p-6 border-b border-gray-100">
-                <h2 class="text-lg font-semibold text-gray-900">4. Role Options</h2>
-                <p class="text-sm text-gray-500">Additional settings for user interaction and visibility.</p>
+        <!-- Section 4: Role Options (Refactored) -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="text-base font-bold text-slate-900 leading-6">4. Role Options</h3>
+                <p class="text-sm text-slate-500 mt-1">Additional configuration for visibility and user capabilities.</p>
             </div>
-            <div class="p-6 space-y-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <label for="self_register" class="text-sm font-medium text-gray-900">Allow user
-                            self-registration</label>
-                        <p class="text-xs text-gray-500">Users can select this role when registering an account.</p>
-                    </div>
-                    @php
-                        // Mock self_register logic (e.g. Reader/Author are open)
-                        $isSelfRegister = $currentLevel == 'reader' || $currentLevel == 'author';
-                    @endphp
-                    <button type="button" x-data="{ on: {{ $isSelfRegister ? 'true' : 'false' }} }" @click="on = !on"
-                        :class="{ 'bg-indigo-600': on, 'bg-gray-200': !on }"
-                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2">
-                        <span aria-hidden="true" :class="{ 'translate-x-5': on, 'translate-x-0': !on }"
-                            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                        <input type="checkbox" name="allow_self_registration" x-model="on" class="hidden">
-                    </button>
-                </div>
-                <hr class="border-gray-100">
 
-                <div class="flex items-center justify-between">
-                    <div>
-                        <label for="show_title" class="text-sm font-medium text-gray-900">Show role title in contributor
-                            list</label>
-                        <p class="text-xs text-gray-500">Displays the role name next to the user's name in publication
-                            details.</p>
+            <div class="px-6 pb-2">
+                
+                {{-- OPTION 1: Self Registration --}}
+                <div class="flex items-center justify-between py-5 border-b border-slate-100 group">
+                    <div class="flex flex-col pr-8 max-w-2xl">
+                        <label for="allow_registration" class="text-sm font-semibold text-slate-800 cursor-pointer group-hover:text-indigo-600 transition-colors">
+                            Allow user self-registration
+                        </label>
+                        <span class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                            Users can select this role when registering an account. Useful for Authors and Reviewers.
+                        </span>
                     </div>
-                    <button type="button" x-data="{ on: true }" @click="on = !on"
-                        :class="{ 'bg-indigo-600': on, 'bg-gray-200': !on }"
-                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2">
-                        <span aria-hidden="true" :class="{ 'translate-x-5': on, 'translate-x-0': !on }"
-                            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                        <input type="checkbox" name="show_in_contributors" x-model="on" class="hidden">
-                    </button>
+                    
+                    {{-- Toggle Switch --}}
+                    <div class="flex-shrink-0 ml-4">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            @php
+                                // Mock logic until DB column exists
+                                $allowRegistration = $currentLevel == 'author' || $currentLevel == 'reviewer';
+                            @endphp
+                            <input type="checkbox" name="allow_registration" id="allow_registration" value="1" 
+                                   class="sr-only peer" 
+                                   {{ $allowRegistration ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600 shadow-sm inner-shadow"></div>
+                        </label>
+                    </div>
                 </div>
-                <hr class="border-gray-100">
 
-                <div class="flex items-center justify-between">
-                    <div>
-                        <label for="allow_submission" class="text-sm font-medium text-gray-900">Allow this role to make
-                            new submissions</label>
-                        <p class="text-xs text-gray-500">Users with this role can start the submission wizard.</p>
+                {{-- OPTION 2: Contributor List --}}
+                <div class="flex items-center justify-between py-5 border-b border-slate-100 group">
+                    <div class="flex flex-col pr-8 max-w-2xl">
+                        <label for="show_contributor" class="text-sm font-semibold text-slate-800 cursor-pointer group-hover:text-indigo-600 transition-colors">
+                            Show role title in contributor list
+                        </label>
+                        <span class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                            Displays the role name next to the user's name in publication details.
+                        </span>
                     </div>
-                    @php
-                        $canSubmit = $currentLevel == 'author';
-                    @endphp
-                    <button type="button" x-data="{ on: {{ $canSubmit ? 'true' : 'false' }} }" @click="on = !on"
-                        :class="{ 'bg-indigo-600': on, 'bg-gray-200': !on }"
-                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2">
-                        <span aria-hidden="true" :class="{ 'translate-x-5': on, 'translate-x-0': !on }"
-                            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                        <input type="checkbox" name="allow_submission" x-model="on" class="hidden">
-                    </button>
+                    
+                    <div class="flex-shrink-0 ml-4">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_contributor" id="show_contributor" value="1" 
+                                   class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600 shadow-sm inner-shadow"></div>
+                        </label>
+                    </div>
                 </div>
+
+                {{-- OPTION 3: Make Submissions --}}
+                <div class="flex items-center justify-between py-5 group">
+                    <div class="flex flex-col pr-8 max-w-2xl">
+                        <label for="allow_submission" class="text-sm font-semibold text-slate-800 cursor-pointer group-hover:text-indigo-600 transition-colors">
+                            Allow this role to make new submissions
+                        </label>
+                        <span class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                            Users with this role can start the submission wizard. Typically enabled for Authors.
+                        </span>
+                    </div>
+                    
+                    <div class="flex-shrink-0 ml-4">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                             @php
+                                $allowSubmission = $currentLevel == 'author';
+                            @endphp
+                            <input type="checkbox" name="allow_submission" id="allow_submission" value="1" 
+                                   class="sr-only peer" 
+                                   {{ $allowSubmission ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600 shadow-sm inner-shadow"></div>
+                        </label>
+                    </div>
+                </div>
+
             </div>
         </div>
 
