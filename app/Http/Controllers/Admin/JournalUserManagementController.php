@@ -174,11 +174,17 @@ class JournalUserManagementController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:roles,name|max:255',
+            'permission_level' => 'required|integer|min:0|max:5',
         ]);
 
         $role = Role::create([
             'name' => $request->name,
-            'guard_name' => 'web'
+            'guard_name' => 'web',
+            'permission_level' => $request->permission_level,
+            'permit_submission' => $request->boolean('permit_submission', false),
+            'permit_review' => $request->boolean('permit_review', false),
+            'permit_copyediting' => $request->boolean('permit_copyediting', false),
+            'permit_production' => $request->boolean('permit_production', false),
         ]);
 
         return redirect()->route($this->getRoutePrefix() . '.roles', ['journal' => current_journal()->slug])
@@ -199,9 +205,17 @@ class JournalUserManagementController extends Controller
         $role = Role::findOrFail($role);
         $request->validate([
             'name' => 'required|max:255|unique:roles,name,' . $role->id,
+            'permission_level' => 'required|integer|min:0|max:5',
         ]);
 
-        $role->update(['name' => $request->name]);
+        $role->update([
+            'name' => $request->name,
+            'permission_level' => $request->permission_level,
+            'permit_submission' => $request->boolean('permit_submission', false),
+            'permit_review' => $request->boolean('permit_review', false),
+            'permit_copyediting' => $request->boolean('permit_copyediting', false),
+            'permit_production' => $request->boolean('permit_production', false),
+        ]);
 
         return redirect()->route($this->getRoutePrefix() . '.roles', ['journal' => $journal])
             ->with('success', "Role updated successfully.");
