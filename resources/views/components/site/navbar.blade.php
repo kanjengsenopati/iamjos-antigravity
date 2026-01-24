@@ -46,7 +46,6 @@
                     <a href="{{ route('portal.home') }}" class="{{ request()->routeIs('portal.home') ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900' }} font-medium">Home</a>
                     <a href="{{ route('portal.journals') }}" class="{{ request()->routeIs('portal.journals') ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900' }} font-medium">Journals</a>
                     <a href="{{ route('portal.about') }}" class="{{ request()->routeIs('portal.about') ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900' }} font-medium">About</a>
-                    <a href="{{ route('portal.search') }}" class="{{ request()->routeIs('portal.search') ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900' }} font-medium">Search</a>
                 @endif
             </div>
 
@@ -86,7 +85,7 @@
                     </div>
                 @else
                     <a href="{{ route('login') }}"
-                       class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+                       class="inline-flex items-center px-6 py-2 text-sm font-medium text-gray-700 bg-white border-2 border-gray-200 hover:border-blue-600 hover:text-blue-600 rounded-xl transition-all mr-2">
                         Login
                     </a>
                     <a href="{{ route('register') }}"

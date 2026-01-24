@@ -37,6 +37,7 @@
 
     {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 
     <style>
         [x-cloak] { display: none !important; }
@@ -93,7 +94,7 @@
     {{-- DYNAMIC FOOTER --}}
     {{-- ============================================ --}}
     <x-site.footer :footerMenu="$footerMenu ?? null" :settings="$settings ?? []" />
-
+    @livewireScripts
     @stack('scripts')
 </body>
 

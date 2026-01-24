@@ -1,153 +1,94 @@
-{{-- Hero Search Block - Premium Academic Style --}}
+{{-- Hero Search Block - Modern Light SaaS Style (PrebuiltUI) --}}
 @props(['block', 'data' => []])
 
 @php
-$config = $block->config ?? [];
-$headline = $config['headline'] ?? 'Discover Academic Excellence';
-$subheadline = $config['subheadline'] ?? 'Search across peer-reviewed journals and scholarly articles';
-$backgroundType = $config['background_type'] ?? 'gradient';
-$backgroundGradient = $config['background_gradient'] ?? 'from-slate-900 via-blue-900 to-indigo-900';
-$backgroundImage = $config['background_image'] ?? null;
-$showStats = $config['show_stats'] ?? true;
-$showPopularTopics = $config['show_popular_topics'] ?? true;
-$popularTopics = $config['popular_topics'] ?? ['AI', 'Education', 'Economics', 'Health'];
-
-$totalJournals = $data['total_journals'] ?? 0;
-$totalArticles = $data['total_articles'] ?? 0;
+    $config = $block->config ?? [];
+    
+    // Data (Optional binding, keeping it available if needed in future)
+    $journalsCount = $data['total_journals'] ?? 50; 
+    
+    // Headline configuration if dynamically passed, otherwise default to the requested text
+    $headline = $config['headline'] ?? 'Discover Academic Excellence with IAMJOS.';
+    $subheadline = $config['subheadline'] ?? 'A secure, open-access platform for managing academic journal submissions, peer reviews, and publications.';
 @endphp
 
-<section class="relative min-h-[500px] md:min-h-[600px] flex items-center justify-center overflow-hidden"
-    @if($backgroundType === 'image' && $backgroundImage)
-        style="background-image: url('{{ Storage::url($backgroundImage) }}'); background-size: cover; background-position: center;"
-    @endif
->
-    {{-- Background --}}
-    @if($backgroundType === 'gradient')
-        <div class="absolute inset-0 bg-gradient-to-br {{ $backgroundGradient }}"></div>
-    @elseif($backgroundType === 'image' && $backgroundImage)
-        <div class="absolute inset-0 bg-slate-900/70"></div>
-    @else
-        <div class="absolute inset-0 bg-slate-900"></div>
-    @endif
-
-    {{-- Animated Background Pattern --}}
-    <div class="absolute inset-0 opacity-10">
-        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/>
-                </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)"/>
-        </svg>
+<section class="w-full bg-white pt-24 pb-32 relative overflow-hidden">
+    {{-- Optional: Very subtle background decoration (mesh/blob) to make it not look "broken" plain white, but keeping it strictly white-dominant as requested --}}
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-100/50 rounded-full blur-[100px] opacity-60"></div>
+        <div class="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-[120px] opacity-60"></div>
     </div>
 
-    {{-- Floating Elements (Decoration) --}}
-    <div class="absolute top-20 left-10 w-20 h-20 bg-blue-500/20 rounded-full blur-2xl animate-pulse"></div>
-    <div class="absolute bottom-20 right-10 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
 
-    {{-- Content --}}
-    <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-        {{-- Badge --}}
-        <div class="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm mb-6 border border-white/20">
-            <i class="fa-solid fa-graduation-cap mr-2 text-blue-400"></i>
-            Indonesian Academic Journal System
+        {{-- 1. SOCIAL PROOF (Avatars & Stars) --}}
+        <div class="flex flex-col sm:flex-row items-center gap-4 mb-8">
+            {{-- Avatars --}}
+            <div class="flex -space-x-3 overflow-hidden">
+                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
+                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
+                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
+                <img class="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
+                <div class="h-10 w-10 rounded-full ring-2 ring-white bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 border border-slate-200 shadow-sm">+99</div>
+            </div>
+            
+            {{-- Stars & Text --}}
+            <div class="flex flex-col items-start">
+                <div class="flex text-indigo-500 mb-0.5">
+                    {{-- 5 Stars --}}
+                    @for($i=0; $i<5; $i++)
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    @endfor
+                </div>
+                <span class="text-sm text-slate-600 font-medium">Trusted by {{ $journalsCount }}+ Institutions</span>
+            </div>
         </div>
 
-        {{-- Headline --}}
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            {!! $headline !!}
+        {{-- 2. HEADLINE (Big & Bold with Gradient) --}}
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 max-w-4xl leading-[1.1]">
+            Discover 
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+                Academic Excellence
+            </span>
+            <br class="hidden md:block" />
+            with IAMJOS.
         </h1>
 
-        {{-- Subheadline with Stats --}}
-        <p class="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            @if($showStats && ($totalJournals > 0 || $totalArticles > 0))
-                Search across <span class="font-bold text-white">{{ number_format($totalJournals) }}</span> journals and 
-                <span class="font-bold text-white">{{ number_format($totalArticles) }}</span> peer-reviewed articles
-            @else
-                {{ $subheadline }}
-            @endif
+        {{-- 3. SUBTITLE --}}
+        <p class="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed font-normal">
+            {{ $subheadline }}
         </p>
 
-        {{-- Search Bar --}}
-        <form action="{{ route('portal.search') }}" method="GET" class="max-w-3xl mx-auto">
-            <div class="relative flex items-center bg-white rounded-2xl shadow-2xl overflow-hidden p-2">
-                {{-- Search Icon --}}
-                <div class="absolute left-6 text-gray-400">
-                    <i class="fa-solid fa-search text-xl"></i>
+        {{-- 4. SEARCH BAR (The Replica) --}}
+        {{-- 4. SEARCH BAR (Pixel Perfect) --}}
+        <form action="{{ route('portal.journals') }}" method="GET" class="w-full max-w-2xl relative mx-auto mt-8">
+            <div class="relative flex items-center">
+                
+                {{-- INPUT FIELD --}}
+                <input type="text"
+                       name="search"
+                       class="w-full h-16 pl-6 pr-40 rounded-2xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 text-lg shadow-xl shadow-indigo-100/50 transition-all"
+                       placeholder="Search title, author, or keyword..."
+                >
+
+                {{-- BUTTON (Floating Inside) --}}
+                <div class="absolute right-2 top-2 bottom-2">
+                    <button type="submit" 
+                            class="h-full px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 flex items-center justify-center">
+                        Search
+                    </button>
                 </div>
 
-                {{-- Input --}}
-                <input type="text" 
-                       name="q" 
-                       placeholder="Search articles, authors, journals, DOIs..."
-                       class="flex-1 w-full py-5 pl-14 pr-4 text-lg text-gray-900 placeholder-gray-400 border-0 focus:ring-0 focus:outline-none"
-                       autocomplete="off">
-
-                {{-- Search Button --}}
-                <button type="submit" 
-                        class="hidden md:flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl">
-                    <i class="fa-solid fa-search mr-2"></i>
-                    Search
-                </button>
             </div>
-
-            {{-- Mobile Search Button --}}
-            <button type="submit" 
-                    class="md:hidden w-full mt-3 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
-                <i class="fa-solid fa-search mr-2"></i>
-                Search
-            </button>
         </form>
 
-        {{-- Popular Topics --}}
-        @if($showPopularTopics && count($popularTopics) > 0)
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <span class="text-sm text-blue-200">Popular:</span>
-                @foreach($popularTopics as $topic)
-                    <a href="{{ route('portal.search', ['q' => $topic]) }}"
-                       class="px-4 py-2 bg-white/10 backdrop-blur-sm text-white text-sm rounded-full hover:bg-white/20 border border-white/20 transition-all">
-                        {{ $topic }}
-                    </a>
-                @endforeach
-            </div>
-        @endif
+        {{-- 5. QUICK TAGS --}}
+        <div class="mt-8 flex flex-wrap justify-center items-center gap-2 text-sm text-slate-500">
+            <span class="font-medium text-slate-400">Popular:</span>
+            <a href="{{ route('portal.journals', ['search' => 'Engineering']) }}" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">Engineering</a>
+            <a href="{{ route('portal.journals', ['search' => 'Health']) }}" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">Health</a>
+            <a href="{{ route('portal.journals', ['search' => 'Economy']) }}" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">Economics</a>
+        </div>
 
-        {{-- Quick Stats --}}
-        @if($showStats)
-            <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-                <div class="text-center">
-                    <div class="text-3xl md:text-4xl font-bold text-white" data-count="{{ $totalJournals }}">
-                        {{ number_format($totalJournals) }}
-                    </div>
-                    <div class="text-sm text-blue-200 mt-1">Journals</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl md:text-4xl font-bold text-white" data-count="{{ $totalArticles }}">
-                        {{ number_format($totalArticles) }}
-                    </div>
-                    <div class="text-sm text-blue-200 mt-1">Articles</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl md:text-4xl font-bold text-white" data-count="{{ $data['total_authors'] ?? 0 }}">
-                        {{ number_format($data['total_authors'] ?? 0) }}
-                    </div>
-                    <div class="text-sm text-blue-200 mt-1">Authors</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl md:text-4xl font-bold text-white">
-                        50+
-                    </div>
-                    <div class="text-sm text-blue-200 mt-1">Countries</div>
-                </div>
-            </div>
-        @endif
-    </div>
-
-    {{-- Bottom Wave --}}
-    <div class="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-16 md:h-24 fill-gray-50">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C57.14,118.92,134.3,89.4,198.11,79.57,261.91,69.73,264.36,67.22,321.39,56.44Z"/>
-        </svg>
     </div>
 </section>
