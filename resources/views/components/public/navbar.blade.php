@@ -12,21 +12,6 @@ $secondaryColor = $journal->getWebsiteSettings()['secondary_color'] ?? '#7c3aed'
         <div class="flex items-center justify-between h-12">
             {{-- Left Side: Logo & Menu --}}
             <div class="flex items-center gap-6 flex-1">
-                {{-- Logo (Visible on all screens) --}}
-                <a href="{{ route('journal.public.home', $journal->slug) }}" class="flex items-center gap-2 flex-shrink-0">
-                    @if($journal->logo_path)
-                        <img src="{{ Storage::url($journal->logo_path) }}" 
-                             alt="{{ $journal->name }}" 
-                             class="h-8 w-auto brightness-0 invert">
-                    @else
-                        <div class="h-8 w-8 rounded flex items-center justify-center bg-white/20 text-white font-bold text-sm">
-                            {{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}
-                        </div>
-                        <span class="text-white font-bold text-lg hidden sm:block truncate max-w-[200px]">
-                            {{ $journal->abbreviation ?? Str::limit($journal->name, 20) }}
-                        </span>
-                    @endif
-                </a>
 
                 {{-- Desktop Navigation (Menu Items) --}}
                 <div class="hidden md:flex items-center space-x-1">
@@ -216,7 +201,7 @@ $secondaryColor = $journal->getWebsiteSettings()['secondary_color'] ?? '#7c3aed'
                             <div class="border-t border-gray-100 my-1"></div>
             
                             {{-- Logout --}}
-                            <form method="POST" action="{{ route('logout') }}">
+                            <form method="POST" action="{{ isset($journal) ? route('journal.logout', $journal->slug) : route('logout') }}">
                                 @csrf
                                 <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3">
                                     <i class="fa-solid fa-sign-out-alt text-red-400 w-4 text-center"></i>
