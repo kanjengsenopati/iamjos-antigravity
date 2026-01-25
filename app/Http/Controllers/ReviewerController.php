@@ -35,37 +35,41 @@ class ReviewerController extends Controller
         $user = auth()->user();
         $journal = $this->getJournal();
 
-        // Get all review assignments for this reviewer in this journal
+        // Filter assignments based on simple tab status
+        $status = request('status', 'pending');
+
         $assignments = ReviewAssignment::where('reviewer_id', $user->id)
             ->whereHas('submission', function ($query) use ($journal) {
                 $query->where('journal_id', $journal->id);
-            })
-            ->with(['submission' => function ($query) {
-                $query->with(['journal', 'section']);
-            }])
-            ->orderByRaw("CASE 
-                WHEN status = 'pending' THEN 1 
-                WHEN status = 'accepted' THEN 2 
-                WHEN status = 'completed' THEN 3 
-                ELSE 4 
-            END")
-            ->orderBy('due_date', 'asc')
-            ->paginate(15);
+            });
 
-        // Count by status for this journal
+        // Apply filters
+        if ($status === 'pending') {
+            $assignments->where('status', ReviewAssignment::STATUS_PENDING);
+        } elseif ($status === 'in_progress') {
+            $assignments->where('status', ReviewAssignment::STATUS_ACCEPTED);
+        } elseif ($status === 'completed') {
+            $assignments->where('status', ReviewAssignment::STATUS_COMPLETED);
+        }
+
+        $assignments = $assignments->with(['submission' => function ($query) {
+            $query->with(['journal', 'section']);
+        }])
+            ->orderBy('due_date', 'asc') // Consistent sorting
+            ->paginate(15)
+            ->withQueryString();
+
+        // Count by status for this journal (for tabs)
         $statusCounts = [
             'pending' => ReviewAssignment::where('reviewer_id', $user->id)
                 ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
                 ->where('status', 'pending')->count(),
-            'accepted' => ReviewAssignment::where('reviewer_id', $user->id)
+            'in_progress' => ReviewAssignment::where('reviewer_id', $user->id) // 'accepted' status
                 ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
                 ->where('status', 'accepted')->count(),
             'completed' => ReviewAssignment::where('reviewer_id', $user->id)
                 ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
                 ->where('status', 'completed')->count(),
-            'overdue' => ReviewAssignment::where('reviewer_id', $user->id)
-                ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
-                ->overdue()->count(),
         ];
 
         return view('reviewer.index', compact('assignments', 'statusCounts', 'journal'));
