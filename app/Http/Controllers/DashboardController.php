@@ -21,6 +21,43 @@ class DashboardController extends Controller
             abort(404, 'Journal context not found.');
         }
 
+        // 1. CHECK FOR REVIEWER ROLE (and NOT Journal Manager/Editor/Admin)
+        // We want to show the specialized dashboard ONLY for users who are primarily Reviewers.
+        // If they have higher privileges, they should see the standard dashboard with more tools.
+        $hasHigherRole = $user->hasAnyRole(['Journal Manager', 'Editor', 'Section Editor', 'Admin', 'Super Admin']);
+
+        if ($user->hasRole('Reviewer') && !$hasHigherRole) {
+
+            // Fetch Data specific for Reviewer
+            $assignments = ReviewAssignment::where('reviewer_id', $user->id)
+                ->whereHas('submission', function ($query) use ($journal) {
+                    $query->where('journal_id', $journal->id);
+                })
+                ->with('submission')
+                ->whereIn('status', [
+                    ReviewAssignment::STATUS_PENDING,
+                    ReviewAssignment::STATUS_ACCEPTED
+                ])
+                ->orderBy('due_date', 'asc')
+                ->get();
+
+            // Calculate Stats
+            $stats = [
+                'pending'   => $assignments->count(),
+                'completed' => ReviewAssignment::where('reviewer_id', $user->id)
+                    ->whereHas('submission', function ($query) use ($journal) {
+                        $query->where('journal_id', $journal->id);
+                    })
+                    ->where('status', ReviewAssignment::STATUS_COMPLETED)
+                    ->count(),
+            ];
+
+            // Return NEW View
+            return view('dashboard.reviewer', compact('assignments', 'stats', 'journal'));
+        }
+
+        // 2. FALLBACK FOR EVERYONE ELSE (Author, Reader, Editor, Admin, etc.)
+
         // Get user's submission stats for this journal
         $submissionStats = [
             'total' => Submission::where('user_id', $user->id)
@@ -58,7 +95,7 @@ class DashboardController extends Controller
                 ->count();
         }
 
-        // For reviewers: get pending reviews for this journal
+        // For reviewers (who are also editors/admins): get pending reviews for this journal
         $pendingReviews = 0;
         if ($user->hasRole('Reviewer')) {
             $pendingReviews = ReviewAssignment::where('reviewer_id', $user->id)
