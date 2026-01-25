@@ -9,6 +9,7 @@ use App\Notifications\ReviewCompleted;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 
 class ReviewerController extends Controller
 {
@@ -151,7 +152,7 @@ class ReviewerController extends Controller
 
         $validated = $request->validate([
             'recommendation' => 'required|in:accept,minor_revision,major_revision,resubmit,reject',
-            'comments_for_author' => 'required|string|min:50',
+            'comments_for_author' => 'required|string|min:10',
             'comments_for_editor' => 'nullable|string',
         ]);
 
@@ -164,7 +165,11 @@ class ReviewerController extends Controller
         ]);
 
         // Notify editors that review is completed
-        $this->notifyEditorsReviewCompleted($assignment);
+        try {
+            $this->notifyEditorsReviewCompleted($assignment);
+        } catch (\Exception $e) {
+            Log::error('Failed to notify editors about completed review: ' . $e->getMessage());
+        }
 
         return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug])
             ->with('success', 'Review submitted successfully. Thank you for your contribution!');
