@@ -132,20 +132,20 @@
                                 </div>
                                 @php
                                     $statusColors = [
-                                        'draft' => 'bg-gray-100 text-gray-800',
-                                        'submitted' => 'bg-blue-100 text-blue-800',
-                                        'submission' => 'bg-blue-100 text-blue-800', // Handle legacy/alternate
-                                        'under_review' => 'bg-amber-100 text-amber-800',
-                                        'in_review' => 'bg-amber-100 text-amber-800',
-                                        'revision_required' => 'bg-orange-100 text-orange-800',
-                                        'accepted' => 'bg-green-100 text-green-800',
-                                        'rejected' => 'bg-red-100 text-red-800',
-                                        'published' => 'bg-emerald-100 text-emerald-800',
+                                        'gray' => 'bg-gray-100 text-gray-800',
+                                        'blue' => 'bg-blue-100 text-blue-800',
+                                        'amber' => 'bg-amber-100 text-amber-800',
+                                        'orange' => 'bg-orange-100 text-orange-800',
+                                        'green' => 'bg-green-100 text-green-800',
+                                        'cyan' => 'bg-cyan-100 text-cyan-800',
+                                        'purple' => 'bg-purple-100 text-purple-800',
+                                        'red' => 'bg-red-100 text-red-800',
+                                        'emerald' => 'bg-emerald-100 text-emerald-800',
                                     ];
-                                    $statusClass = $statusColors[$submission->status] ?? 'bg-gray-100 text-gray-800';
+                                    $statusClass = $statusColors[$submission->status_color] ?? 'bg-gray-100 text-gray-800';
                                 @endphp
                                 <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
-                                    {{ $submission->status_label ?? ucfirst(str_replace('_', ' ', $submission->status)) }}
+                                    {{ $submission->status_label }}
                                 </span>
                             </div>
                         @endforeach

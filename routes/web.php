@@ -43,6 +43,11 @@ use App\Http\Controllers\Admin\ApplicationSettingController;
 use App\Http\Controllers\Admin\DashboardController as LegacyDashboardController;
 use App\Http\Controllers\Admin\SiteAdminController;
 use App\Http\Controllers\PortalController;
+// Google OAuth Routes
+use App\Http\Controllers\Admin\SocialAuthController;
+
+// Registration Routes
+use App\Http\Controllers\Admin\RegisterController;
 
 // =====================================================
 // PORTAL HOME (List of all journals)
@@ -66,8 +71,6 @@ Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Registration Routes
-use App\Http\Controllers\Admin\RegisterController;
 
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::post('/register', [RegisterController::class, 'store']);
@@ -77,8 +80,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'post'])->name
 Route::get('/change-password', [ForgotPasswordController::class, 'changePassword'])->name('change-password');
 Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('reset-password');
 
-// Google OAuth Routes
-use App\Http\Controllers\Admin\SocialAuthController;
+
 
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
