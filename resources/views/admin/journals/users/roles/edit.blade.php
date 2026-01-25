@@ -168,7 +168,7 @@ $currentColor = match (true) {
         <!-- Section 3: Workflow Stage Access -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-gray-100">
-                <h2 class="text-lg font-semibold text-gray-900">3. Workflow Stage Access</h2>
+                <h2 class="text-lg font-semibold text-gray-900">3. Workflow Stage Assignment</h2>
                 <p class="text-sm text-gray-500">Configure which stages of the editorial workflow this role can access.</p>
             </div>
             <div class="p-6">
