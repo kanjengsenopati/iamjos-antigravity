@@ -208,6 +208,22 @@ class PublicationController extends Controller
             'date_published' => 'nullable|date',
         ]);
 
+        // Security: Verify issue belongs to the current journal
+        $currentJournal = current_journal();
+        $issue = Issue::find($validated['issue_id']);
+
+        if (!$issue || $issue->journal_id !== $currentJournal->id) {
+            return back()->with('error', 'Invalid issue selected.');
+        }
+
+        // Security: Verify section belongs to the current journal (if provided)
+        if (!empty($validated['section_id'])) {
+            $section = \App\Models\Section::find($validated['section_id']);
+            if (!$section || $section->journal_id !== $currentJournal->id) {
+                return back()->with('error', 'Invalid section selected.');
+            }
+        }
+
         $publication = $submission->getOrCreatePublication();
 
         $publication->update([
@@ -222,9 +238,8 @@ class PublicationController extends Controller
         $submission->update([
             'issue_id' => $validated['issue_id'],
             'section_id' => $validated['section_id'] ?? $submission->section_id,
+            'status' => Submission::STATUS_SCHEDULED,
         ]);
-
-        $issue = Issue::find($validated['issue_id']);
 
         return back()->with('success', "Scheduled for {$issue->identifier}");
     }

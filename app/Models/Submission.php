@@ -25,6 +25,7 @@ class Submission extends Model
     const STATUS_ACCEPTED = 'accepted';
     const STATUS_QUEUED_FOR_COPYEDITING = 'queued_for_copyediting';
     const STATUS_IN_PRODUCTION = 'in_production';
+    const STATUS_SCHEDULED = 'scheduled';
     const STATUS_REJECTED = 'rejected';
     const STATUS_PUBLISHED = 'published';
 
@@ -262,11 +263,21 @@ class Submission extends Model
     }
 
     /**
-     * Get the current (latest) publication version
+     * Get the current (latest) publication version as a relationship.
+     * Uses orderBy instead of latestOfMany for PostgreSQL UUID compatibility.
      */
-    public function currentPublication()
+    public function currentPublication(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->publications()->first();
+        return $this->hasOne(Publication::class, 'submission_id')->orderByDesc('version');
+    }
+
+    /**
+     * Get the current publication instance (non-relationship accessor).
+     * Use this method when you need the model instance directly.
+     */
+    public function getCurrentPublication(): ?Publication
+    {
+        return $this->currentPublication;
     }
 
     /**
@@ -274,7 +285,7 @@ class Submission extends Model
      */
     public function getOrCreatePublication(): Publication
     {
-        $publication = $this->currentPublication();
+        $publication = $this->currentPublication;
 
         if (!$publication) {
             $publication = Publication::create([
@@ -494,6 +505,7 @@ class Submission extends Model
             self::STATUS_ACCEPTED => 'Accepted',
             self::STATUS_QUEUED_FOR_COPYEDITING => 'Queued for Copyediting',
             self::STATUS_IN_PRODUCTION => 'In Production',
+            self::STATUS_SCHEDULED => 'Scheduled',
             self::STATUS_REJECTED => 'Rejected',
             self::STATUS_PUBLISHED => 'Published',
             default => ucwords(str_replace('_', ' ', $this->status)),
@@ -514,6 +526,7 @@ class Submission extends Model
             self::STATUS_ACCEPTED => 'green',
             self::STATUS_QUEUED_FOR_COPYEDITING => 'cyan',
             self::STATUS_IN_PRODUCTION => 'purple',
+            self::STATUS_SCHEDULED => 'indigo',
             self::STATUS_REJECTED => 'red',
             self::STATUS_PUBLISHED => 'emerald',
             default => 'gray',
