@@ -488,12 +488,15 @@ class Submission extends Model
         return match ($this->status) {
             self::STATUS_DRAFT => 'Draft',
             self::STATUS_SUBMITTED => 'Submitted',
+            self::STATUS_UNDER_REVIEW => 'Under Review',
             self::STATUS_IN_REVIEW => 'In Review',
             self::STATUS_REVISION_REQUIRED => 'Revision Required',
             self::STATUS_ACCEPTED => 'Accepted',
+            self::STATUS_QUEUED_FOR_COPYEDITING => 'Queued for Copyediting',
+            self::STATUS_IN_PRODUCTION => 'In Production',
             self::STATUS_REJECTED => 'Rejected',
             self::STATUS_PUBLISHED => 'Published',
-            default => ucfirst($this->status),
+            default => ucwords(str_replace('_', ' ', $this->status)),
         };
     }
 
@@ -505,9 +508,12 @@ class Submission extends Model
         return match ($this->status) {
             self::STATUS_DRAFT => 'gray',
             self::STATUS_SUBMITTED => 'blue',
-            self::STATUS_IN_REVIEW => 'yellow',
+            self::STATUS_UNDER_REVIEW => 'amber',
+            self::STATUS_IN_REVIEW => 'amber',
             self::STATUS_REVISION_REQUIRED => 'orange',
             self::STATUS_ACCEPTED => 'green',
+            self::STATUS_QUEUED_FOR_COPYEDITING => 'cyan',
+            self::STATUS_IN_PRODUCTION => 'purple',
             self::STATUS_REJECTED => 'red',
             self::STATUS_PUBLISHED => 'emerald',
             default => 'gray',
