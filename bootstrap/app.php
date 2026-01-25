@@ -17,6 +17,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            $journal = $request->route('journal');
+            if ($journal) {
+                $slug = $journal instanceof \App\Models\Journal ? $journal->slug : $journal;
+                return route('journal.login', $slug);
+            }
+            return route('login');
+        });
+
         $middleware->alias([
             'validate_api_key' => ValidateApiKey::class,
             'ads_rate_limit' => AdsTrackingRateLimit::class,
