@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\ReviewAssignment;
 use App\Notifications\SubmissionDecision;
 use App\Notifications\ReviewInvitation;
+use App\Services\WaGateway;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -214,6 +215,27 @@ class EditorDecisionController extends Controller
                 $notificationDecision,
                 $validated['comments'] ?? null
             ));
+
+            // Send WhatsApp notification based on decision type
+            $waTemplate = match ($validated['decision']) {
+                'accept' => 'submission_accepted',
+                'reject' => 'submission_rejected',
+                'revision' => 'revision_request',
+                default => 'decision_update',
+            };
+
+            $statusText = match ($validated['decision']) {
+                'accept' => 'Diterima',
+                'reject' => 'Ditolak',
+                'revision' => 'Perlu Revisi',
+                default => 'Diperbarui',
+            };
+
+            WaGateway::sendTemplate($submission->author, $waTemplate, [
+                'name' => $submission->author->name,
+                'title' => $submission->title,
+                'status' => $statusText,
+            ]);
         }
 
         $messages = [
