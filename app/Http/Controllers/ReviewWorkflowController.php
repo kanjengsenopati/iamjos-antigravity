@@ -64,12 +64,18 @@ class ReviewWorkflowController extends Controller
             // Notify the reviewer about the assignment
             $reviewer = User::find($request->reviewer_id);
             if ($reviewer) {
-                $reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
+                try {
+                    $reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
+                } catch (\Exception $e) {
+                    dd($e);
+                    Log::error('Failed to send review invitation notification: ' . $e->getMessage());
+                    // Continue execution, do not rollback transaction
+                }
 
                 // Log the event
-                \App\Models\SubmissionLog::log(
+                SubmissionLog::log(
                     $submission,
-                    \App\Models\SubmissionLog::EVENT_REVIEWER_ASSIGNED,
+                    SubmissionLog::EVENT_REVIEWER_ASSIGNED,
                     'Reviewer Assigned',
                     auth()->user()->name . " assigned {$reviewer->name} as peer reviewer (Round {$reviewRound->round}).",
                     ['reviewer_id' => $reviewer->id, 'round' => $reviewRound->round]
