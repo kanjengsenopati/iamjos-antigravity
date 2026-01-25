@@ -2004,7 +2004,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
 
         {{-- ==================== PUBLICATION TAB ==================== --}}
         @php
-        $publication = $submission->currentPublication() ?? $submission->getOrCreatePublication();
+        $publication = $submission->currentPublication ?? $submission->getOrCreatePublication();
         $pubStatus = $publication->status ?? 1;
         $pubAuthors =
         $publication->authors && $publication->authors->isNotEmpty()
@@ -2130,7 +2130,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                     <div class="flex items-center gap-2">
                         @if ($pubStatus == 3)
                         <form
-                            action="{{ route('journal.workflow.publication.unpublish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            action="{{ route('journal.workflow.publication.unpublish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                             method="POST">
                             @csrf
                             <button type="submit" onclick="return confirm('Are you sure?')"
@@ -2140,7 +2140,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                         </form>
                         @elseif($pubStatus == 2)
                         <form
-                            action="{{ route('journal.workflow.publication.publish', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            action="{{ route('journal.workflow.publication.publish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                             method="POST">
                             @csrf
                             <button type="submit"
@@ -2376,7 +2376,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                                                     <i class="fa-solid fa-pen"></i>
                                                 </button>
                                                 <form
-                                                    action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->id, 'author' => $author->id]) }}"
+                                                    action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'author' => $author->id]) }}"
                                                     method="POST" class="inline"
                                                     onsubmit="return confirm('Remove this contributor?')">
                                                     @csrf
@@ -2421,7 +2421,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                             <p class="text-xs text-gray-500 mt-0.5">Keywords and other metadata for indexing.</p>
                         </div>
                         <form
-                            action="{{ route('journal.workflow.publication.metadata.update', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            action="{{ route('journal.workflow.publication.metadata.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                             method="POST" class="p-6 space-y-5">
                             @csrf
 
@@ -2492,7 +2492,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                             <p class="text-xs text-gray-500 mt-0.5">Schedule this publication to an issue.</p>
                         </div>
                         <form
-                            action="{{ route('journal.workflow.publication.issue.assign', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            action="{{ route('journal.workflow.publication.issue.assign', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                             method="POST" class="p-6 space-y-5">
                             @csrf
 
@@ -2576,7 +2576,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                             <div class="flex justify-between pt-4 border-t border-gray-100">
                                 @if ($publication->issue_id)
                                 <form
-                                    action="{{ route('journal.workflow.publication.unschedule', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                                    action="{{ route('journal.workflow.publication.unschedule', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                     method="POST">
                                     @csrf
                                     <button type="submit"
@@ -3126,7 +3126,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                             </p>
                         </div>
                         <form
-                            action="{{ route('journal.workflow.publication.license.update', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
+                            action="{{ route('journal.workflow.publication.license.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                             method="POST" class="p-6 space-y-5">
                             @csrf
 
@@ -3219,9 +3219,9 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                         <form
                             :action="editingContributor
                                     ?
-                                    '{{ url('/' . $journal->slug . '/workflow') }}/' + '{{ $submission->id }}' +
+                                    '{{ url('/' . $journal->slug . '/workflow') }}/' + '{{ $submission->slug }}' +
                                     '/publication/contributor/' + editingContributor.id :
-                                    '{{ route('journal.workflow.publication.contributor.store', ['journal' => $journal->slug, 'submission' => $submission->id]) }}'"
+                                    '{{ route('journal.workflow.publication.contributor.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}'"
                             method="POST" class="space-y-4">
                             @csrf
                             <template x-if="editingContributor">

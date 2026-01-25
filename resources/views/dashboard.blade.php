@@ -139,6 +139,7 @@
                                         'green' => 'bg-green-100 text-green-800',
                                         'cyan' => 'bg-cyan-100 text-cyan-800',
                                         'purple' => 'bg-purple-100 text-purple-800',
+                                        'indigo' => 'bg-indigo-100 text-indigo-800',
                                         'red' => 'bg-red-100 text-red-800',
                                         'emerald' => 'bg-emerald-100 text-emerald-800',
                                     ];

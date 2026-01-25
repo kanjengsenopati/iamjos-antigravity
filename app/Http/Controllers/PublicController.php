@@ -212,42 +212,65 @@ class PublicController extends Controller
     }
 
     /**
-     * Display a single article.
+     * Display a single article (OJS 3.3 Style).
+     * 
+     * This page displays the full article metadata with proper Google Scholar
+     * indexing support (Highwire Press meta tags) and a 2-column layout.
      */
-    public function article(string $journalSlug, Submission $submission): View
+    public function article(string $journalSlug, Submission $article): View
     {
         $journal = $this->resolveJournal($journalSlug);
 
         // Ensure submission belongs to this journal
-        if ($submission->journal_id !== $journal->id) {
+        if ($article->journal_id !== $journal->id) {
             abort(404);
         }
 
-        if ($submission->status !== Submission::STATUS_PUBLISHED) {
+        // Only show published articles on public pages
+        if ($article->status !== Submission::STATUS_PUBLISHED) {
             abort(404);
         }
 
-        $submission->load([
-            'authors',
+        // Eager load all required relationships
+        $article->load([
+            'authors' => function ($q) {
+                $q->orderBy('sort_order');
+            },
             'section',
             'issue',
             'journal',
-            'files' => function ($q) {
-                $q->where('file_type', 'galley');
-            }
+            'galleys' => function ($q) {
+                $q->ordered();
+            },
+            'currentPublication',
         ]);
+
+        // Get the issue for additional metadata
+        $issue = $article->issue;
+
+        // Increment view count (optional - for analytics)
+        // $article->increment('views_count');
 
         // Related articles from same section in same journal
         $relatedArticles = Submission::where('journal_id', $journal->id)
-            ->where('section_id', $submission->section_id)
-            ->where('id', '!=', $submission->id)
+            ->where('section_id', $article->section_id)
+            ->where('id', '!=', $article->id)
             ->published()
-            ->with(['authors'])
+            ->with(['authors', 'section'])
             ->latest('published_at')
-            ->take(3)
+            ->take(5)
             ->get();
 
-        return view('public.article', compact('journal', 'submission', 'relatedArticles'));
+        // Get journal website settings for theming
+        $settings = $journal->getWebsiteSettings();
+
+        return view('journal.public.article', compact(
+            'journal',
+            'article',
+            'issue',
+            'relatedArticles',
+            'settings'
+        ));
     }
 
     /**
