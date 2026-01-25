@@ -63,7 +63,7 @@
                     <div class="hidden sm:block text-left">
                         <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name ?? 'User' }}</p>
                         <p class="text-xs text-gray-500">
-                            {{ Auth::user()->roles->first()->name ?? 'Member' }}
+                            {{ Auth::user()->primary_role_label }}
                         </p>
                     </div>
                     <!-- Chevron -->

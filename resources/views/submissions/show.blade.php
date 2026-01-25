@@ -5179,11 +5179,9 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                                                     <div class="flex items-center">
                                                         <i class="fa-solid fa-user mr-1.5 text-gray-400"></i>
                                                         <span class="font-medium text-gray-700">{{ $log->user->name }}</span>
-                                                        @if($log->user->roles->first())
                                                         <span class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                                                            {{ $log->user->roles->first()->name }}
+                                                            {{ $log->user->primary_role_label }}
                                                         </span>
-                                                        @endif
                                                     </div>
                                                     @endif
                                                 </div>
