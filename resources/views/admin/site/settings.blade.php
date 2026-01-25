@@ -11,65 +11,137 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Settings Form -->
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-2" x-data="{ activeTab: 'general' }">
+            <!-- Tabs Navigation -->
+            <div class="mb-6 flex space-x-2 border-b border-gray-200">
+                <button @click="activeTab = 'general'"
+                        :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'general', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'general' }"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    General Settings
+                </button>
+                <button @click="activeTab = 'whatsapp'"
+                        :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'whatsapp', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'whatsapp' }"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    WhatsApp Gateway
+                </button>
+            </div>
+
             <form action="{{ route('admin.site.settings.update') }}" method="POST"
                 class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 @csrf
 
-                <div class="p-6 border-b border-gray-100">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6">General Configuration</h2>
+                <!-- General Tab -->
+                <div x-show="activeTab === 'general'" class="animate-fade-in">
+                    <div class="p-6 border-b border-gray-100">
+                        <h2 class="text-lg font-bold text-gray-900 mb-6">General Configuration</h2>
 
-                    <div class="space-y-6">
-                        <!-- Site Title -->
-                        <div>
-                            <label for="site_title" class="block text-sm font-medium text-gray-700 mb-2">
-                                Site Title
-                            </label>
-                            <input type="text" id="site_title" name="site_title"
-                                value="{{ old('site_title', $settings['site_title']) }}"
-                                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="mt-1 text-xs text-gray-500">The main title displayed on the browser tab and meta tags.
-                            </p>
+                        <div class="space-y-6">
+                            <!-- Site Title -->
+                            <div>
+                                <label for="site_title" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Site Title
+                                </label>
+                                <input type="text" id="site_title" name="site_title"
+                                    value="{{ old('site_title', $siteSetting->site_title) }}"
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <p class="mt-1 text-xs text-gray-500">The main title displayed on the browser tab and meta tags.
+                                </p>
+                            </div>
+
+                            <!-- Site Intro -->
+                            <div>
+                                <label for="site_intro" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Site Introduction
+                                </label>
+                                <textarea id="site_intro" name="site_intro" rows="3"
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('site_intro', $siteSetting->site_intro) }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500">A brief description displayed on the portal homepage.</p>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Site Intro -->
-                        <div>
-                            <label for="site_intro" class="block text-sm font-medium text-gray-700 mb-2">
-                                Site Introduction
-                            </label>
-                            <textarea id="site_intro" name="site_intro" rows="3"
-                                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('site_intro', $settings['site_intro']) }}</textarea>
-                            <p class="mt-1 text-xs text-gray-500">A brief description displayed on the portal homepage.</p>
+                    <div class="p-6 border-b border-gray-100">
+                        <h2 class="text-lg font-bold text-gray-900 mb-6">Security & Routing</h2>
+
+                        <div class="space-y-6">
+                            <!-- Min Password Length -->
+                            <div>
+                                <label for="min_password_length" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Minimum Password Length
+                                </label>
+                                <input type="number" id="min_password_length" name="min_password_length" min="6"
+                                    max="32" value="{{ old('min_password_length', $siteSetting->min_password_length) }}"
+                                    class="w-full sm:w-1/2 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+
+                            <!-- Redirect to Journal -->
+                            <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                                <input type="checkbox" id="redirect_to_journal" name="redirect_to_journal" value="1"
+                                    {{ old('redirect_to_journal', $siteSetting->redirect_to_journal) ? 'checked' : '' }}
+                                    class="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                <label for="redirect_to_journal" class="cursor-pointer">
+                                    <span class="block text-sm font-medium text-gray-900">Redirect to Single Journal</span>
+                                    <span class="block text-xs text-gray-500 mt-1">
+                                        If enabled and only one active journal exists, visitors to the portal home will be
+                                        automatically redirected to that journal.
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-6 border-b border-gray-100">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6">Security & Routing</h2>
+                <!-- WhatsApp Tab -->
+                <div x-show="activeTab === 'whatsapp'" class="p-6 space-y-6 animate-fade-in-up" style="display: none;">
+                    
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                        <div class="flex">
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700">
+                                    Configure your WhatsApp Gateway provider here. These settings will be used to send automated notifications (Submission Ack, LoA, etc.).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="space-y-6">
-                        <!-- Min Password Length -->
+                    <div class="grid grid-cols-1 gap-6">
                         <div>
-                            <label for="min_password_length" class="block text-sm font-medium text-gray-700 mb-2">
-                                Minimum Password Length
+                            <label for="wa_api_url" class="block text-sm font-medium text-gray-700 mb-2">
+                                Gateway API Link
                             </label>
-                            <input type="number" id="min_password_length" name="min_password_length" min="6"
-                                max="32" value="{{ old('min_password_length', $settings['min_password_length']) }}"
-                                class="w-full sm:w-1/2 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <input id="wa_api_url" name="wa_api_url" type="url" 
+                                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                                value="{{ old('wa_api_url', $siteSetting->wa_api_url) }}" 
+                                placeholder="https://api.wa-gateway.com/v1/send">
+                            @error('wa_api_url')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
 
-                        <!-- Redirect to Journal -->
-                        <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                            <input type="checkbox" id="redirect_to_journal" name="redirect_to_journal" value="1"
-                                {{ old('redirect_to_journal', $settings['redirect_to_journal']) ? 'checked' : '' }}
-                                class="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                            <label for="redirect_to_journal" class="cursor-pointer">
-                                <span class="block text-sm font-medium text-gray-900">Redirect to Single Journal</span>
-                                <span class="block text-xs text-gray-500 mt-1">
-                                    If enabled and only one active journal exists, visitors to the portal home will be
-                                    automatically redirected to that journal.
-                                </span>
+                        <div>
+                            <label for="wa_sender_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                WhatsApp Number
                             </label>
+                            <input id="wa_sender_number" name="wa_sender_number" type="text" 
+                                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                                value="{{ old('wa_sender_number', $siteSetting->wa_sender_number) }}" 
+                                placeholder="628123456789">
+                            <p class="mt-1 text-xs text-gray-500">Format: 628xxx (Country code included).</p>
+                            @error('wa_sender_number')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="wa_device_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                Device ID / API Token
+                            </label>
+                            <input id="wa_device_id" name="wa_device_id" type="text" 
+                                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono" 
+                                value="{{ old('wa_device_id', $siteSetting->wa_device_id) }}">
+                            @error('wa_device_id')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ use App\Models\SubmissionFile;
 use App\Models\User;
 use App\Notifications\NewSubmissionNotification;
 use App\Notifications\SubmissionReceived;
+use App\Services\WaGateway;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -337,6 +338,12 @@ class SubmissionController extends Controller
             })->get();
 
             Notification::send($editorsAndManagers, new NewSubmissionNotification($submission));
+
+            // 3. Send WhatsApp notification to author
+            WaGateway::sendTemplate($user, 'submission_received', [
+                'name' => $user->name,
+                'title' => $submission->title,
+            ]);
 
             return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
                 ->with('success', 'Submission created successfully! Your article is now under review.');

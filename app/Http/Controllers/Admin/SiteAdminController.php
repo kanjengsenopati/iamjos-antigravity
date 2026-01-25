@@ -30,17 +30,19 @@ class SiteAdminController extends Controller
     /**
      * Display the site settings form.
      */
+    /**
+     * Display the site settings form.
+     */
     public function siteSettings()
     {
-        // In a real app, you'd fetch these from a Settings model or config
-        $settings = [
+        $siteSetting = \App\Models\SiteSetting::firstOrCreate([], [
             'site_title' => config('app.name'),
             'site_intro' => 'Welcome to our academic journal portal.',
-            'redirect_to_journal' => false,
             'min_password_length' => 8,
-        ];
+            'redirect_to_journal' => false,
+        ]);
 
-        return view('admin.site.settings', compact('settings'));
+        return view('admin.site.settings', compact('siteSetting'));
     }
 
     /**
@@ -62,10 +64,22 @@ class SiteAdminController extends Controller
             'site_intro' => 'nullable|string',
             'redirect_to_journal' => 'boolean',
             'min_password_length' => 'required|integer|min:6|max:32',
+            // WhatsApp Gateway Config
+            'wa_api_url' => 'nullable|url',
+            'wa_sender_number' => 'nullable|string|max:20',
+            'wa_device_id' => 'nullable|string|max:255',
         ]);
 
-        // Save settings to config or database
-        // For now, we'll just flash a success message
+        $settings = \App\Models\SiteSetting::first();
+        
+        // Handle boolean checkbox which might not be present in request
+        $validated['redirect_to_journal'] = $request->has('redirect_to_journal');
+
+        if ($settings) {
+            $settings->update($validated);
+        } else {
+            \App\Models\SiteSetting::create($validated);
+        }
 
         return back()->with('success', 'Site settings updated successfully.');
     }

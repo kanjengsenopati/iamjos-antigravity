@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Journal;
 use App\Models\JournalUserRole;
 use App\Models\Role;
+use App\Services\WaGateway;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -127,6 +128,11 @@ class RegisterController extends Controller
 
         // Fire the Registered event (for email verification, etc.)
         event(new Registered($user));
+
+        // Send WhatsApp welcome notification
+        WaGateway::sendTemplate($user, 'welcome', [
+            'name' => $user->name,
+        ]);
 
         // Log the user in
         Auth::login($user);
