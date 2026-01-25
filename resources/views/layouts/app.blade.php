@@ -879,7 +879,7 @@ $journalSlug ??
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span
                                         class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wide">
-                                        {{ Auth::user()->roles->first()->name ?? 'Member' }}
+                                        {{ Auth::user()->primary_role_label }}
                                     </span>
                                 </div>
                             </div>

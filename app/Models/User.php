@@ -156,11 +156,49 @@ class User extends Authenticatable
     }
 
     /**
-     * Get primary role name
+     * Get primary role name (legacy - for backward compatibility)
      */
     public function getPrimaryRoleAttribute(): string
     {
-        return $this->roles->first()?->name ?? 'Member';
+        return $this->primary_role_label;
+    }
+
+    /**
+     * Get the highest priority role name for display.
+     * 
+     * This accessor implements smart role selection where higher privilege
+     * roles take precedence. Reader is only shown if no other roles exist.
+     */
+    public function getPrimaryRoleLabelAttribute(): string
+    {
+        // Get all user roles (case-insensitive comparison)
+        $userRoles = $this->roles->pluck('name')->map(fn($name) => strtolower($name))->toArray();
+
+        // Define priority (check from most important to least)
+        // Order matters! First match wins.
+        $priorityList = [
+            'super admin' => 'Super Admin',
+            'admin' => 'Admin',
+            'journal manager' => 'Journal Manager',
+            'editor' => 'Editor',
+            'section editor' => 'Section Editor',
+            'guest editor' => 'Guest Editor',
+            'copyeditor' => 'Copyeditor',
+            'layout editor' => 'Layout Editor',
+            'proofreader' => 'Proofreader',
+            'reviewer' => 'Reviewer',
+            'author' => 'Author',
+            'reader' => 'Reader', // Lowest priority - only if nothing else
+        ];
+
+        foreach ($priorityList as $key => $label) {
+            if (in_array($key, $userRoles, true)) {
+                return $label;
+            }
+        }
+
+        // Fallback: return first role if exists, otherwise 'Guest'
+        return $this->roles->first()?->name ?? 'Guest';
     }
 
     /**
