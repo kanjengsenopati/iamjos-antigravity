@@ -8,6 +8,11 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Throwable;
 
 class JournalUserManagementController extends Controller
 {
@@ -90,10 +95,12 @@ class JournalUserManagementController extends Controller
     public function roles()
     {
         $journal = current_journal();
-        // Show all roles (roles are global, but assignments are per-journal)
-        $roles = Role::all();
+        // Show roles for current journal
+        $roles = Role::where('journal_id', $journal->id)->get();
 
         $routePrefix = $this->getRoutePrefix();
+        // Since roles are now scoped, we pass them as is.
+        // Also ensure roles-table view handles them (it just iterates).
         return view('admin.journals.users.roles', compact('journal', 'roles', 'routePrefix'));
     }
 
@@ -172,26 +179,71 @@ class JournalUserManagementController extends Controller
 
     public function storeRole(Request $request)
     {
+        $journal = current_journal();
+
+        // Map permission_level string/int to standard integer levels if needed
+        $permissionLevel = $request->input('permission_level');
+        if (!is_numeric($permissionLevel)) {
+            $permissionLevel = match (strtolower($permissionLevel)) {
+                'admin', 'manager', 'journal manager' => 1,
+                'editor', 'section editor' => 2,
+                'author' => 3,
+                'reviewer' => 4,
+                'reader' => 5,
+                default => 3
+            };
+            $request->merge(['permission_level' => $permissionLevel]);
+        }
+
         $request->validate([
-            'name' => 'required|unique:roles,name|max:255',
-            'permission_level' => 'required|integer|min:0|max:5',
+            'name' => [
+                'required',
+                'max:255',
+                Rule::unique('roles')->where(function ($query) use ($journal) {
+                    return $query->where('journal_id', $journal->id);
+                }),
+            ],
+            'permission_level' => 'required',
         ]);
 
-        $role = Role::create([
-            'name' => $request->name,
-            'guard_name' => 'web',
-            'permission_level' => $request->permission_level,
-            'permit_submission' => $request->boolean('permit_submission', false),
-            'permit_review' => $request->boolean('permit_review', false),
-            'permit_copyediting' => $request->boolean('permit_copyediting', false),
-            'permit_production' => $request->boolean('permit_production', false),
-            'allow_registration' => $request->boolean('allow_registration', false),
-            'show_contributor' => $request->boolean('show_contributor', false),
-            'allow_submission' => $request->boolean('allow_submission', false),
-        ]);
 
-        return redirect()->route($this->getRoutePrefix() . '.roles', ['journal' => current_journal()->slug])
-            ->with('success', "Role '{$role->name}' created successfully.");
+        DB::beginTransaction();
+
+        try {
+            $role = Role::create([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'guard_name' => 'web',
+                'journal_id' => $journal->id,
+                'permission_level' => $request->permission_level,
+                'permit_submission' => $request->boolean('permit_submission', false),
+                'permit_review' => $request->boolean('permit_review', false),
+                'permit_copyediting' => $request->boolean('permit_copyediting', false),
+                'permit_production' => $request->boolean('permit_production', false),
+                'allow_registration' => $request->boolean('allow_registration', false),
+                'show_contributor' => $request->boolean('show_contributor', false),
+                'allow_submission' => $request->boolean('allow_submission', false),
+                'is_system' => $request->boolean('is_system', false),
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route($this->getRoutePrefix() . '.roles', ['journal' => $journal->slug])
+                ->with('success', "Role '{$role->name}' created successfully.");
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Failed to create role', [
+                'journal_id' => $journal->id,
+                'request' => $request->all(),
+                'exception' => $e,
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to create role. Check logs for details.');
+        }
     }
 
     public function editRole($journal, $role)
@@ -208,10 +260,6 @@ class JournalUserManagementController extends Controller
         $role = Role::findOrFail($role);
 
         // Map permission_level string/int to standard integer levels if needed
-        // Assuming: 1=Manager, 2=Editor, 3=Author/Assistant, 4=Reviewer, 5=Reader
-        // But the input seems to be sending strings like 'author'.
-        // Let's sanitize/normalize this.
-
         $permissionLevel = $request->input('permission_level');
         if (!is_numeric($permissionLevel)) {
             $permissionLevel = match (strtolower($permissionLevel)) {
@@ -220,40 +268,63 @@ class JournalUserManagementController extends Controller
                 'author' => 3,
                 'reviewer' => 4,
                 'reader' => 5,
-                default => 3 // Default to assistant/author level
+                default => 3
             };
             $request->merge(['permission_level' => $permissionLevel]);
         }
 
         $request->validate([
-            'name' => 'required|max:255|unique:roles,name,' . $role->id,
-            // 'abbreviation' => 'required|max:255|unique:roles,abbreviation,' . $role->id, // Removed abbreviation unique check as it's not standard in basic Spatie migration without custom column
-            'permission_level' => 'required|integer',
+            'name' => [
+                'required',
+                'max:255',
+                Rule::unique('roles')->where(function ($query) use ($role) {
+                    return $query->where('journal_id', $role->journal_id);
+                })->ignore($role->id),
+            ],
+            'permission_level' => 'required',
             'stages' => 'nullable|array',
-            'allow_registration' => 'nullable', // Changed to nullable to support boolean checkbox behavior (sometimes omitted if unchecked in form submissions, though here strictly sent as 1/0 string)
+            'allow_registration' => 'nullable',
             'show_contributor' => 'nullable',
             'allow_submission' => 'nullable',
         ]);
 
-        // Extract stages from the array provided by frontend
         $stages = $request->input('stages', []);
 
-        $role->update([
-            'name' => $request->name,
-            'permission_level' => $request->permission_level,
-            // Check if stage exists in the submitted array
-            'permit_submission' => in_array('submission', $stages),
-            'permit_review' => in_array('review', $stages),
-            'permit_copyediting' => in_array('copyediting', $stages),
-            'permit_production' => in_array('production', $stages),
-            // Handle new explicit fields (force boolean)
-            'allow_registration' => $request->boolean('allow_registration'),
-            'show_contributor' => $request->boolean('show_contributor'),
-            'allow_submission' => $request->boolean('allow_submission'),
-        ]);
+        DB::beginTransaction();
 
-        return redirect()->route($this->getRoutePrefix() . '.roles', ['journal' => $journal])
-            ->with('success', "Role updated successfully.");
+        try {
+            $role->update([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'permission_level' => $request->permission_level,
+                'permit_submission' => in_array('submission', $stages),
+                'permit_review' => in_array('review', $stages),
+                'permit_copyediting' => in_array('copyediting', $stages),
+                'permit_production' => in_array('production', $stages),
+                'allow_registration' => $request->boolean('allow_registration'),
+                'show_contributor' => $request->boolean('show_contributor'),
+                'allow_submission' => $request->boolean('allow_submission'),
+                'is_system' => $request->boolean('is_system', $role->is_system),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route($this->getRoutePrefix() . '.roles', ['journal' => $journal])
+                ->with('success', "Role updated successfully.");
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Failed to update role', [
+                'role_id' => $role->id,
+                'journal' => $journal,
+                'request' => $request->all(),
+                'exception' => $e,
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to update role. Check logs for details.');
+        }
     }
 
     public function updateRolePermission(Request $request, $journal, Role $role)

@@ -39,7 +39,9 @@ class Role extends SpatieRole
         'allow_registration',
         'show_contributor',
         'allow_submission',
-        'journal_id' // Added in case roles become scoped later
+        'journal_id',
+        'slug',
+        'is_system'
     ];
 
     protected $casts = [
