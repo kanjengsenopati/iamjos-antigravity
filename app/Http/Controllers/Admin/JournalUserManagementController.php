@@ -185,6 +185,9 @@ class JournalUserManagementController extends Controller
             'permit_review' => $request->boolean('permit_review', false),
             'permit_copyediting' => $request->boolean('permit_copyediting', false),
             'permit_production' => $request->boolean('permit_production', false),
+            'allow_registration' => $request->boolean('allow_registration', false),
+            'show_contributor' => $request->boolean('show_contributor', false),
+            'allow_submission' => $request->boolean('allow_submission', false),
         ]);
 
         return redirect()->route($this->getRoutePrefix() . '.roles', ['journal' => current_journal()->slug])
@@ -203,22 +206,82 @@ class JournalUserManagementController extends Controller
     public function updateRole(Request $request, $journal, $role)
     {
         $role = Role::findOrFail($role);
+
+        // Map permission_level string/int to standard integer levels if needed
+        // Assuming: 1=Manager, 2=Editor, 3=Author/Assistant, 4=Reviewer, 5=Reader
+        // But the input seems to be sending strings like 'author'.
+        // Let's sanitize/normalize this.
+
+        $permissionLevel = $request->input('permission_level');
+        if (!is_numeric($permissionLevel)) {
+            $permissionLevel = match (strtolower($permissionLevel)) {
+                'admin', 'manager', 'journal manager' => 1,
+                'editor', 'section editor' => 2,
+                'author' => 3,
+                'reviewer' => 4,
+                'reader' => 5,
+                default => 3 // Default to assistant/author level
+            };
+            $request->merge(['permission_level' => $permissionLevel]);
+        }
+
         $request->validate([
             'name' => 'required|max:255|unique:roles,name,' . $role->id,
-            'permission_level' => 'required|integer|min:0|max:5',
+            // 'abbreviation' => 'required|max:255|unique:roles,abbreviation,' . $role->id, // Removed abbreviation unique check as it's not standard in basic Spatie migration without custom column
+            'permission_level' => 'required|integer',
+            'stages' => 'nullable|array',
+            'allow_registration' => 'nullable', // Changed to nullable to support boolean checkbox behavior (sometimes omitted if unchecked in form submissions, though here strictly sent as 1/0 string)
+            'show_contributor' => 'nullable',
+            'allow_submission' => 'nullable',
         ]);
+
+        // Extract stages from the array provided by frontend
+        $stages = $request->input('stages', []);
 
         $role->update([
             'name' => $request->name,
             'permission_level' => $request->permission_level,
-            'permit_submission' => $request->boolean('permit_submission', false),
-            'permit_review' => $request->boolean('permit_review', false),
-            'permit_copyediting' => $request->boolean('permit_copyediting', false),
-            'permit_production' => $request->boolean('permit_production', false),
+            // Check if stage exists in the submitted array
+            'permit_submission' => in_array('submission', $stages),
+            'permit_review' => in_array('review', $stages),
+            'permit_copyediting' => in_array('copyediting', $stages),
+            'permit_production' => in_array('production', $stages),
+            // Handle new explicit fields (force boolean)
+            'allow_registration' => $request->boolean('allow_registration'),
+            'show_contributor' => $request->boolean('show_contributor'),
+            'allow_submission' => $request->boolean('allow_submission'),
         ]);
 
         return redirect()->route($this->getRoutePrefix() . '.roles', ['journal' => $journal])
             ->with('success', "Role updated successfully.");
+    }
+
+    public function updateRolePermission(Request $request, $journal, Role $role)
+    {
+        $request->validate([
+            'field' => 'required|in:permit_submission,permit_review,permit_copyediting,permit_production,allow_registration,show_contributor,allow_submission',
+            'value' => 'required|boolean'
+        ]);
+
+        // Security: Protect Super Admin
+        if ($role->name === 'Super Admin' || $role->name === 'Admin') {
+            return response()->json(['success' => false, 'message' => 'Cannot modify critical system roles.'], 403);
+        }
+
+        $field = $request->input('field');
+        $value = $request->boolean('value');
+
+        // Force update the specific field
+        $role->$field = $value;
+        $role->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission updated.',
+            'role' => $role->name,
+            'field' => $field,
+            'new_value' => $value
+        ]);
     }
 
     public function destroyRole($journal, $role)

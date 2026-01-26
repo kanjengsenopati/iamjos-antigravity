@@ -211,155 +211,166 @@ class SubmissionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $journal = $this->getJournal();
-
-        // Count required checklists to validate all are checked
-        $requiredChecklistCount = SubmissionChecklist::where('journal_id', $journal->id)->count();
-
-        $validated = $request->validate([
-            'section_id' => 'required|uuid|exists:sections,id',
-            'requirements' => $requiredChecklistCount > 0 ? ['required', 'array', "size:$requiredChecklistCount"] : 'nullable',
-            'requirements.*' => 'required',
-            'manuscript' => 'required|file|mimes:doc,docx,pdf|max:10240',
-            'title' => 'required|string|max:500',
-            'subtitle' => 'nullable|string|max:500',
-            'abstract' => 'required|string',
-            'keywords' => 'nullable|string|max:500',
-
-            'authors' => 'required|array|min:1',
-            'authors.*.first_name' => 'required|string|max:255',
-            'authors.*.last_name' => 'required|string|max:255',
-            'authors.*.email' => 'required|email|max:255',
-            'authors.*.affiliation' => 'nullable|string|max:255',
-            'authors.*.country' => 'nullable|string|max:100',
-
-            'primary_contact' => 'required|integer|min:0',
-
-            'comments_for_editor' => 'nullable|string|max:5000',
-        ]);
-
         $user = auth()->user();
 
-        DB::beginTransaction();
+        // Race Condition Handling: Lock the submission process for this user
+        $lock = \Illuminate\Support\Facades\Cache::lock('submission_store_' . $user->id, 15);
+
+        if (!$lock->get()) {
+            return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
+                ->with('error', 'Your submission is being processed. Please do not submit again.');
+        }
 
         try {
-            // 1. Create Submission
-            $submission = Submission::create([
-                'journal_id' => $journal->id,
-                'user_id' => $user->id,
-                'section_id' => $validated['section_id'],
-                'title' => $validated['title'],
-                'subtitle' => $validated['subtitle'] ?? null,
-                'abstract' => $validated['abstract'],
-                'keywords' => $validated['keywords'] ?? null,
-                'status' => Submission::STATUS_SUBMITTED,
-                'stage' => Submission::STAGE_SUBMISSION,
-                'stage_id' => 1,
-                'submitted_at' => now(),
+            // Count required checklists to validate all are checked
+            $requiredChecklistCount = SubmissionChecklist::where('journal_id', $journal->id)->count();
+
+            $validated = $request->validate([
+                'section_id' => 'required|uuid|exists:sections,id',
+                'requirements' => $requiredChecklistCount > 0 ? ['required', 'array', "size:$requiredChecklistCount"] : 'nullable',
+                'requirements.*' => 'required',
+                'manuscript' => 'required|file|mimes:doc,docx,pdf|max:10240',
+                'title' => 'required|string|max:500',
+                'subtitle' => 'nullable|string|max:500',
+                'abstract' => 'required|string',
+                'keywords' => 'nullable|string|max:500',
+
+                'authors' => 'required|array|min:1',
+                'authors.*.first_name' => 'required|string|max:255',
+                'authors.*.last_name' => 'required|string|max:255',
+                'authors.*.email' => 'required|email|max:255',
+                'authors.*.affiliation' => 'nullable|string|max:255',
+                'authors.*.country' => 'nullable|string|max:100',
+
+                'primary_contact' => 'required|integer|min:0',
+
+                'comments_for_editor' => 'nullable|string|max:5000',
             ]);
 
-            // 2. Upload File
-            if ($request->hasFile('manuscript')) {
-                $file = $request->file('manuscript');
-                $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", 'local');
+            DB::beginTransaction();
 
-                $submission->update(['submission_file_path' => $path]);
-
-                SubmissionFile::create([
-                    'submission_id' => $submission->id,
-                    'uploaded_by' => $user->id,
-                    'file_path' => $path,
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_type' => SubmissionFile::TYPE_MANUSCRIPT,
-                    'mime_type' => $file->getMimeType(),
-                    'file_size' => $file->getSize(),
-                    'version' => 1,
+            try {
+                // 1. Create Submission
+                $submission = Submission::create([
+                    'journal_id' => $journal->id,
+                    'user_id' => $user->id,
+                    'section_id' => $validated['section_id'],
+                    'title' => $validated['title'],
+                    'subtitle' => $validated['subtitle'] ?? null,
+                    'abstract' => $validated['abstract'],
+                    'keywords' => $validated['keywords'] ?? null,
+                    'status' => Submission::STATUS_SUBMITTED,
                     'stage' => Submission::STAGE_SUBMISSION,
+                    'stage_id' => 1,
+                    'submitted_at' => now(),
                 ]);
-            }
 
-            // 3. Save Authors
-            foreach ($validated['authors'] as $index => $authorData) {
-                SubmissionAuthor::create([
-                    'submission_id' => $submission->id,
-                    'user_id' => ($authorData['email'] === $user->email) ? $user->id : null,
-                    'first_name' => $authorData['first_name'],
-                    'last_name' => $authorData['last_name'],
-                    'name' => $authorData['first_name'] . ' ' . $authorData['last_name'],
-                    'email' => $authorData['email'],
-                    'affiliation' => $authorData['affiliation'] ?? null,
-                    'country' => $authorData['country'] ?? null,
-                    'is_primary_contact' => (int)$validated['primary_contact'] === $index,
-                    'is_corresponding' => (int)$validated['primary_contact'] === $index,
-                    'sort_order' => $index,
+                // 2. Upload File
+                if ($request->hasFile('manuscript')) {
+                    $file = $request->file('manuscript');
+                    $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", 'local');
+
+                    $submission->update(['submission_file_path' => $path]);
+
+                    SubmissionFile::create([
+                        'submission_id' => $submission->id,
+                        'uploaded_by' => $user->id,
+                        'file_path' => $path,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_type' => SubmissionFile::TYPE_MANUSCRIPT,
+                        'mime_type' => $file->getMimeType(),
+                        'file_size' => $file->getSize(),
+                        'version' => 1,
+                        'stage' => Submission::STAGE_SUBMISSION,
+                    ]);
+                }
+
+                // 3. Save Authors
+                foreach ($validated['authors'] as $index => $authorData) {
+                    SubmissionAuthor::create([
+                        'submission_id' => $submission->id,
+                        'user_id' => ($authorData['email'] === $user->email) ? $user->id : null,
+                        'first_name' => $authorData['first_name'],
+                        'last_name' => $authorData['last_name'],
+                        'name' => $authorData['first_name'] . ' ' . $authorData['last_name'],
+                        'email' => $authorData['email'],
+                        'affiliation' => $authorData['affiliation'] ?? null,
+                        'country' => $authorData['country'] ?? null,
+                        'is_primary_contact' => (int)$validated['primary_contact'] === $index,
+                        'is_corresponding' => (int)$validated['primary_contact'] === $index,
+                        'sort_order' => $index,
+                    ]);
+                }
+
+                // 4. Create Discussion for "Comments for the Editor" (if provided)
+                if (!empty($validated['comments_for_editor'])) {
+                    $discussion = Discussion::create([
+                        'submission_id' => $submission->id,
+                        'user_id' => $user->id,
+                        'subject' => 'Comments for the Editor',
+                        'stage_id' => 1, // Submission stage
+                        'is_open' => true,
+                    ]);
+
+                    // create discussion participant
+                    DiscussionParticipant::create([
+                        'discussion_id' => $discussion->id,
+                        'user_id' => $user->id,
+                    ]);
+
+                    DiscussionMessage::create([
+                        'discussion_id' => $discussion->id,
+                        'user_id' => $user->id,
+                        'body' => $validated['comments_for_editor'],
+                    ]);
+                }
+
+                DB::commit();
+
+                // Log the submission event
+                \App\Models\SubmissionLog::log(
+                    $submission,
+                    \App\Models\SubmissionLog::EVENT_SUBMITTED,
+                    'Submission Created',
+                    "{$user->name} submitted the article for review.",
+                    ['section' => $submission->section->title ?? null]
+                );
+
+                // ====== NOTIFICATIONS ======
+                // 1. Notify the author that submission was received
+                $user->notify(new SubmissionReceived($submission));
+
+                // 2. Notify Journal Managers and Editors about the new submission
+                $editorsAndManagers = User::whereHas('roles', function ($q) {
+                    $q->whereIn('name', ['Journal Manager', 'Editor', 'Admin', 'Super Admin']);
+                })->get();
+
+                Notification::send($editorsAndManagers, new NewSubmissionNotification($submission));
+
+                // 3. Send WhatsApp notification to author
+                WaGateway::sendTemplate($user, 'submission_received', [
+                    'name' => $user->name,
+                    'title' => $submission->title,
                 ]);
-            }
 
-            // 4. Create Discussion for "Comments for the Editor" (if provided)
-            if (!empty($validated['comments_for_editor'])) {
-                $discussion = Discussion::create([
-                    'submission_id' => $submission->id,
+                return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
+                    ->with('success', 'Submission created successfully! Your article is now under review.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                // Log error for debugging
+                Log::error('Submission creation failed', [
                     'user_id' => $user->id,
-                    'subject' => 'Comments for the Editor',
-                    'stage_id' => 1, // Submission stage
-                    'is_open' => true,
+                    'journal_id' => $journal->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
 
-                // create discussion participant
-                DiscussionParticipant::create([
-                    'discussion_id' => $discussion->id,
-                    'user_id' => $user->id,
-                ]);
-
-                DiscussionMessage::create([
-                    'discussion_id' => $discussion->id,
-                    'user_id' => $user->id,
-                    'body' => $validated['comments_for_editor'],
-                ]);
+                return back()->withInput()
+                    ->with('error', 'Failed to create submission. Please try again.');
             }
-
-            DB::commit();
-
-            // Log the submission event
-            \App\Models\SubmissionLog::log(
-                $submission,
-                \App\Models\SubmissionLog::EVENT_SUBMITTED,
-                'Submission Created',
-                "{$user->name} submitted the article for review.",
-                ['section' => $submission->section->title ?? null]
-            );
-
-            // ====== NOTIFICATIONS ======
-            // 1. Notify the author that submission was received
-            $user->notify(new SubmissionReceived($submission));
-
-            // 2. Notify Journal Managers and Editors about the new submission
-            $editorsAndManagers = User::whereHas('roles', function ($q) {
-                $q->whereIn('name', ['Journal Manager', 'Editor', 'Admin', 'Super Admin']);
-            })->get();
-
-            Notification::send($editorsAndManagers, new NewSubmissionNotification($submission));
-
-            // 3. Send WhatsApp notification to author
-            WaGateway::sendTemplate($user, 'submission_received', [
-                'name' => $user->name,
-                'title' => $submission->title,
-            ]);
-
-            return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
-                ->with('success', 'Submission created successfully! Your article is now under review.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            // Log error for debugging
-            Log::error('Submission creation failed', [
-                'user_id' => $user->id,
-                'journal_id' => $journal->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Failed to create submission. Please try again.');
+        } finally {
+            $lock->release();
         }
     }
 
