@@ -145,6 +145,8 @@ class JournalController extends Controller
             'publisher' => 'nullable|string|max:255',
             'issn_print' => 'nullable|string|max:20',
             'issn_online' => 'nullable|string|max:20',
+            'summary' => 'nullable|string',
+            'show_summary' => 'boolean',
             'enabled' => 'boolean',
             'visible' => 'boolean',
             'logo' => 'nullable|image|max:2048',
@@ -156,6 +158,7 @@ class JournalController extends Controller
             'abbreviation' => $validated['abbreviation'],
             'description' => $validated['description'],
             'summary' => $validated['summary'] ?? null,
+            'show_summary' => $validated['show_summary'] ?? false,
             'about' => $validated['about'] ?? null,
             'editorial_team_description' => $validated['editorial_team_description'] ?? null,
             'publisher' => $validated['publisher'],
@@ -215,6 +218,7 @@ class JournalController extends Controller
                 'issn_print' => 'nullable|string|max:20',
                 'issn_online' => 'nullable|string|max:20',
                 'summary' => 'nullable|string',
+                'show_summary' => 'boolean',
                 'editorial_team' => 'nullable|string',
                 'about' => 'nullable|string',
             ]);
@@ -226,12 +230,13 @@ class JournalController extends Controller
                 'publisher' => $validated['publisher'],
                 'issn_print' => $validated['issn_print'],
                 'issn_online' => $validated['issn_online'],
+                'summary' => $validated['summary'] ?? null,
+                'show_summary' => $request->boolean('show_summary'),
             ]);
 
             // Save descriptions to settings JSONB
             $settings = $journal->settings ?? [];
             $settings['masthead'] = [
-                'summary' => $validated['summary'] ?? '',
                 'editorial_team' => $validated['editorial_team'] ?? '',
                 'about' => $validated['about'] ?? '',
             ];

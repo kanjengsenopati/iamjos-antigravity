@@ -304,6 +304,82 @@ class PublicController extends Controller
     }
 
     /**
+     * Information for Readers.
+     */
+    public function infoReaders(string $journalSlug): View
+    {
+        $journal = $this->resolveJournal($journalSlug);
+        $title = 'For Readers';
+        $content = $journal->info_readers;
+
+        return view('public.information', compact('journal', 'title', 'content'));
+    }
+
+    /**
+     * Information for Authors.
+     */
+    public function infoAuthors(string $journalSlug): View
+    {
+        $journal = $this->resolveJournal($journalSlug);
+        $title = 'For Authors';
+        $content = $journal->info_authors;
+
+        return view('public.information', compact('journal', 'title', 'content'));
+    }
+
+    /**
+     * Information for Librarians.
+     */
+    public function infoLibrarians(string $journalSlug): View
+    {
+        $journal = $this->resolveJournal($journalSlug);
+        $title = 'For Librarians';
+        $content = $journal->info_librarians;
+
+        return view('public.information', compact('journal', 'title', 'content'));
+    }
+
+    /**
+     * Display list of announcements.
+     */
+    public function announcements(string $journalSlug): View
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        if (!$journal->enable_announcements) {
+             abort(404);
+        }
+
+        $announcements = \App\Models\Announcement::where('journal_id', $journal->id)
+            ->where('is_active', true)
+            ->where('date_posted', '<=', now())
+            ->orderBy('date_posted', 'desc')
+            ->paginate(10);
+
+        return view('public.announcement.index', compact('journal', 'announcements'));
+    }
+
+    /**
+     * Display a specific announcement.
+     */
+    public function announcement(string $journalSlug, $id): View
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        if (!$journal->enable_announcements) {
+             abort(404);
+        }
+
+        $announcement = \App\Models\Announcement::where('journal_id', $journal->id)
+            ->where('is_active', true)
+            ->where('date_posted', '<=', now())
+            ->findOrFail($id);
+
+        return view('public.announcement.show', compact('journal', 'announcement'));
+    }
+}
+
+    /**
      * Display article in full-screen PDF reader.
      */
     public function articleReader(string $journalSlug, Submission $submission): View
@@ -381,7 +457,7 @@ class PublicController extends Controller
 
         // Stream the file for download
         $disk = \Storage::disk('public');
-        
+
         if (!$disk->exists($file->file_path)) {
             abort(404, 'File not found on disk');
         }
@@ -452,4 +528,3 @@ class PublicController extends Controller
         ]);
     }
 }
-

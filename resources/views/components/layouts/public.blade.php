@@ -321,118 +321,35 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     </div>
 
     {{-- Footer --}}
-    <footer class="bg-slate-900 text-slate-300 mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                {{-- Journal Info --}}
-                <div class="md:col-span-2">
-                    <div class="flex items-center space-x-3 mb-4">
-                        @if($journal->logo_path)
-                        <img src="{{ Storage::url($journal->logo_path) }}"
-                            alt="{{ $journal->name }}"
-                            class="h-12 w-auto brightness-0 invert opacity-80">
-                        @else
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
-                            style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
-                            {{ strtoupper(substr($journal->abbreviation ?? 'J', 0, 2)) }}
-                        </div>
-                        @endif
-                        <div>
-                            <h3 class="text-lg font-bold text-white">{{ $journal->abbreviation ?? $journal->name }}</h3>
-                            <p class="text-xs text-slate-400">{{ $journal->name }}</p>
-                        </div>
-                    </div>
-                    <p class="text-sm text-slate-400 mb-4 max-w-md">
-                        {{ $settings['footer_description'] ?? ($journal->description ?? 'A peer-reviewed scholarly journal.') }}
-                    </p>
-                    @if($journal->issn_online || $journal->issn_print)
-                    <div class="flex flex-wrap gap-4 text-sm">
-                        @if($journal->issn_online)
-                        <span class="bg-slate-800 px-3 py-1 rounded-full text-slate-300">
-                            <i class="fa-solid fa-globe mr-1 text-slate-500"></i>
-                            e-ISSN: {{ $journal->issn_online }}
-                        </span>
-                        @endif
-                        @if($journal->issn_print)
-                        <span class="bg-slate-800 px-3 py-1 rounded-full text-slate-300">
-                            <i class="fa-solid fa-print mr-1 text-slate-500"></i>
-                            p-ISSN: {{ $journal->issn_print }}
-                        </span>
-                        @endif
-                    </div>
-                    @endif
-                </div>
-
-                {{-- Quick Links --}}
-                <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Journal</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{{ route('journal.public.current', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Current Issue</a></li>
-                        <li><a href="{{ route('journal.public.archives', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Archives</a></li>
-                        <li><a href="{{ route('journal.public.about', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">About</a></li>
-                        <li><a href="{{ route('journal.public.editorial-team', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Editorial Board</a></li>
-                    </ul>
-                </div>
-
-                {{-- For Authors --}}
-                <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">For Authors</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Author Guidelines</a></li>
-                        <li><a href="{{ route('journal.submissions.create', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Submit Manuscript</a></li>
-                        <li><a href="{{ route('journal.login', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Login / Register</a></li>
-                    </ul>
-
-                    {{-- Social Links --}}
-                    @if(!empty($settings['social_facebook']) || !empty($settings['social_twitter']) || !empty($settings['social_linkedin']))
-                    <div class="flex space-x-3 mt-6">
-                        @if(!empty($settings['social_facebook']))
-                        <a href="{{ $settings['social_facebook'] }}" target="_blank"
-                            class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
-                            <i class="fa-brands fa-facebook-f"></i>
-                        </a>
-                        @endif
-                        @if(!empty($settings['social_twitter']))
-                        <a href="{{ $settings['social_twitter'] }}" target="_blank"
-                            class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-sky-500 hover:text-white transition-all">
-                            <i class="fa-brands fa-x-twitter"></i>
-                        </a>
-                        @endif
-                        @if(!empty($settings['social_linkedin']))
-                        <a href="{{ $settings['social_linkedin'] }}" target="_blank"
-                            class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all">
-                            <i class="fa-brands fa-linkedin-in"></i>
-                        </a>
-                        @endif
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Custom Page Footer (from admin settings) --}}
-            @if($journal->page_footer)
-            <div class="border-t border-slate-800 mt-8 pt-8">
-                <div class="prose prose-sm prose-invert max-w-none text-slate-400">
+    <footer class="bg-slate-900 text-slate-300 py-12 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {{-- 1. DYNAMIC PAGE FOOTER (From Admin HTML Editor) --}}
+            <div class="w-full mb-10 text-center">
+                @if(!empty($journal->page_footer))
+                {{-- Use 'prose-invert' for light text on dark bg --}}
+                <div class="prose prose-sm prose-invert max-w-none text-slate-400 mx-auto">
                     {!! $journal->page_footer !!}
                 </div>
-            </div>
-            @endif
-
-            {{-- Bottom Bar --}}
-            <div class="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-                <p>
-                    © {{ date('Y') }} {{ $journal->name ?? 'IAMJOS' }}.
-                    @if($journal->publisher)
-                    Published by {{ $journal->publisher }}.
+                @else
+                {{-- Default Fallback if empty --}}
+                <div class="space-y-2">
+                    <p>&copy; {{ date('Y') }} {{ $journal->name }}.</p>
+                    @if($journal->issn_online || $journal->issn_print)
+                    <p class="text-sm text-slate-500">
+                        {{ $journal->issn_online ? 'e-ISSN: ' . $journal->issn_online : '' }}
+                        {{ $journal->issn_print ? ' | p-ISSN: ' . $journal->issn_print : '' }}
+                    </p>
                     @endif
-                </p>
-                <div class="mt-4 md:mt-0 flex items-center space-x-4">
-                    <a href="{{ route('portal.home') }}" class="hover:text-white transition-colors">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Back to Portal
-                    </a>
-                    <span class="text-slate-700">|</span>
-                    <span class="text-slate-600">Powered by <strong class="text-slate-400">IAMJOS</strong></span>
                 </div>
+                @endif
+            </div>
+
+            {{-- 2. BRANDING --}}
+            <div class="flex justify-center items-center border-t border-slate-800 pt-8">
+                <a href="https://iamjos.id" target="_blank" class="group flex flex-col items-center opacity-70 hover:opacity-100 transition">
+                    <span class="text-xs font-medium text-slate-500 uppercase tracking-wider group-hover:text-slate-400">Platform & workflow by</span>
+                    <span class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">IAMJOS</span>
+                </a>
             </div>
         </div>
     </footer>

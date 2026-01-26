@@ -94,6 +94,27 @@ class WebsiteSettingsController extends Controller
             $journal->page_footer = $request->input('page_footer');
         }
 
+        // Handle Information Content (stored in journals table)
+        if ($request->has('info_readers')) {
+            $journal->info_readers = $request->input('info_readers');
+        }
+        if ($request->has('info_authors')) {
+            $journal->info_authors = $request->input('info_authors');
+        }
+        if ($request->has('info_librarians')) {
+            $journal->info_librarians = $request->input('info_librarians');
+        }
+
+        // Handle Announcement Settings (stored in journals table)
+        $journal->enable_announcements = $request->boolean('enable_announcements');
+        if ($request->has('announcements_introduction')) {
+            $journal->announcements_introduction = $request->input('announcements_introduction');
+        }
+        $journal->show_announcements_on_homepage = $request->boolean('show_announcements_on_homepage');
+        if ($request->has('num_announcements_homepage')) {
+            $journal->num_announcements_homepage = $request->input('num_announcements_homepage');
+        }
+
         // Save journal model changes
         $journal->save();
 

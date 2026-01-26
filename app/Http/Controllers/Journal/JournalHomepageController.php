@@ -23,10 +23,22 @@ class JournalHomepageController extends Controller
         // Get all website settings with defaults
         $settings = $this->getSettingsWithDefaults($journal);
 
-        // Get announcements if enabled
+        // Get announcements if enabled (New logic using journals table columns)
         $announcements = collect();
-        if ($settings['show_announcements']) {
-            $announcements = $this->getAnnouncements($journal);
+        // Check both the global enable switch AND the homepage display switch
+        if ($journal->enable_announcements && $journal->show_announcements_on_homepage) {
+            $count = $journal->num_announcements_homepage ?? 5; // Default to 5 if null
+            if ($count > 0) {
+                $announcements = Announcement::where('journal_id', $journal->id)
+                    ->where('is_active', true)
+                    ->where('date_posted', '<=', now())
+                    ->orderBy('date_posted', 'desc')
+                    ->take($count)
+                    ->get();
+            }
+        } elseif (!empty($settings['show_announcements'])) {
+            // Fallback to legacy setting if new columns are not yet in use or populated
+             $announcements = $this->getAnnouncements($journal);
         }
 
         // Get editorial team if enabled

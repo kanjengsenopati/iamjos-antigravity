@@ -49,8 +49,16 @@ class Journal extends Model
         'archiving_policy',
         'author_guidelines',
         'summary',
+        'show_summary',
         'about',
         'editorial_team_description',
+        'info_readers',
+        'info_authors',
+        'info_librarians',
+        'enable_announcements',
+        'announcements_introduction',
+        'show_announcements_on_homepage',
+        'num_announcements_homepage',
     ];
 
     /**
@@ -66,6 +74,7 @@ class Journal extends Model
             'enable_lockss' => 'boolean',
             'enable_clockss' => 'boolean',
             'show_homepage_image_in_header' => 'boolean',
+            'show_summary' => 'boolean',
         ];
     }
 
