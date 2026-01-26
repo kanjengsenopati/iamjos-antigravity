@@ -27,13 +27,13 @@
                     <div class="flex items-center text-sm text-gray-500">
                         <span class="flex items-center">
                             <i class="fa-regular fa-calendar mr-2"></i>
-                            {{ $announcement->date_posted->format('F d, Y') }}
+                            {{ $announcement->published_at ? $announcement->published_at->format('F d, Y') : $announcement->created_at->format('F d, Y') }}
                         </span>
                     </div>
                 </div>
 
                 <div class="prose prose-lg prose-indigo max-w-none text-gray-700">
-                    {!! $announcement->description !!}
+                    {!! $announcement->content !!}
                 </div>
             </div>
         </article>

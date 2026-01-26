@@ -352,8 +352,8 @@ class PublicController extends Controller
 
         $announcements = \App\Models\Announcement::where('journal_id', $journal->id)
             ->where('is_active', true)
-            ->where('date_posted', '<=', now())
-            ->orderBy('date_posted', 'desc')
+            ->where('published_at', '<=', now())
+            ->orderBy('published_at', 'desc')
             ->paginate(10);
 
         return view('public.announcement.index', compact('journal', 'announcements'));
@@ -372,12 +372,11 @@ class PublicController extends Controller
 
         $announcement = \App\Models\Announcement::where('journal_id', $journal->id)
             ->where('is_active', true)
-            ->where('date_posted', '<=', now())
+            ->where('published_at', '<=', now())
             ->findOrFail($id);
 
         return view('public.announcement.show', compact('journal', 'announcement'));
     }
-}
 
     /**
      * Display article in full-screen PDF reader.

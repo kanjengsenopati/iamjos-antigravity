@@ -34,7 +34,7 @@
                             <div class="flex items-center text-sm text-gray-500 mb-2">
                                 <span class="flex items-center">
                                     <i class="fa-regular fa-calendar mr-1"></i>
-                                    {{ $announcement->date_posted->format('F d, Y') }}
+                                    {{ $announcement->published_at ? $announcement->published_at->format('F d, Y') : $announcement->created_at->format('F d, Y') }}
                                 </span>
                             </div>
 
@@ -45,7 +45,7 @@
                             </a>
                             
                             <div class="mt-3 text-base text-gray-600 line-clamp-3">
-                                {!! strip_tags($announcement->description_short ?? $announcement->description) !!}
+                                {!! strip_tags($announcement->excerpt ?? $announcement->content) !!}
                             </div>
                             
                             <div class="mt-4">

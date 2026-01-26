@@ -31,8 +31,8 @@ class JournalHomepageController extends Controller
             if ($count > 0) {
                 $announcements = Announcement::where('journal_id', $journal->id)
                     ->where('is_active', true)
-                    ->where('date_posted', '<=', now())
-                    ->orderBy('date_posted', 'desc')
+                    ->where('published_at', '<=', now())
+                    ->orderBy('published_at', 'desc')
                     ->take($count)
                     ->get();
             }
