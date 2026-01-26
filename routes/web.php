@@ -530,6 +530,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::get('/', 'edit')->name('edit');
                 Route::put('/', 'update')->name('update');
                 Route::delete('/indexed-image', 'deleteIndexedImage')->name('indexed-image.delete');
+                Route::delete('/favicon', 'deleteFavicon')->name('favicon.delete');
             });
 
             // Navigation Menu Manager

@@ -1,6 +1,6 @@
 @php
-    $journal = current_journal();
-    $journalSlug = $journal->slug;
+$journal = current_journal();
+$journalSlug = $journal->slug;
 @endphp
 
 <x-app-layout :journal="$journal" :journalSlug="$journalSlug">
@@ -29,12 +29,12 @@
 
         {{-- Success Message --}}
         @if (session('success'))
-            <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-                <div class="flex items-center">
-                    <i class="fa-solid fa-check-circle text-green-500 mr-3"></i>
-                    <span class="text-green-800">{{ session('success') }}</span>
-                </div>
+        <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center">
+                <i class="fa-solid fa-check-circle text-green-500 mr-3"></i>
+                <span class="text-green-800">{{ session('success') }}</span>
             </div>
+        </div>
         @endif
 
         {{-- Tabs Navigation (OJS 3.3 Style) --}}
@@ -81,7 +81,7 @@
             {{-- Tab: SETUP (OJS 3.3 Parity) --}}
             {{-- ============================================ --}}
             <div x-show="activeTab === 'setup'" x-cloak class="space-y-6">
-                
+
                 {{-- Logo Upload --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <div class="flex items-start gap-6">
@@ -90,14 +90,14 @@
                             <p class="text-sm text-gray-500 mb-4">
                                 Upload a logo image to be displayed at the top of every journal page.
                             </p>
-                            
+
                             {{-- Current Logo Preview --}}
                             @if ($journal->logo_path)
-                                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                    <img src="{{ Storage::url($journal->logo_path) }}" alt="Current Logo"
-                                        class="max-h-20 w-auto">
-                                    <p class="text-xs text-gray-500 mt-2">Current Logo</p>
-                                </div>
+                            <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
+                                <img src="{{ Storage::url($journal->logo_path) }}" alt="Current Logo"
+                                    class="max-h-20 w-auto">
+                                <p class="text-xs text-gray-500 mt-2">Current Logo</p>
+                            </div>
                             @endif
 
                             {{-- File Input --}}
@@ -120,14 +120,14 @@
                             <p class="text-sm text-gray-500 mb-4">
                                 A small image that represents this journal. Used in journal listings and search results.
                             </p>
-                            
+
                             {{-- Current Thumbnail Preview --}}
                             @if ($journal->thumbnail_path)
-                                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                    <img src="{{ Storage::url($journal->thumbnail_path) }}" alt="Current Thumbnail"
-                                        class="max-h-24 w-auto rounded">
-                                    <p class="text-xs text-gray-500 mt-2">Current Thumbnail</p>
-                                </div>
+                            <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
+                                <img src="{{ Storage::url($journal->thumbnail_path) }}" alt="Current Thumbnail"
+                                    class="max-h-24 w-auto rounded">
+                                <p class="text-xs text-gray-500 mt-2">Current Thumbnail</p>
+                            </div>
                             @endif
 
                             {{-- File Input --}}
@@ -148,14 +148,14 @@
                             <p class="text-sm text-gray-500 mb-4">
                                 This image will be displayed prominently on the journal homepage.
                             </p>
-                            
+
                             {{-- Current Homepage Image Preview --}}
                             @if ($journal->homepage_image_path)
-                                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <img src="{{ Storage::url($journal->homepage_image_path) }}" alt="Homepage Image"
-                                        class="max-h-40 w-auto rounded-lg shadow-sm">
-                                    <p class="text-xs text-gray-500 mt-2">Current Homepage Image</p>
-                                </div>
+                            <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <img src="{{ Storage::url($journal->homepage_image_path) }}" alt="Homepage Image"
+                                    class="max-h-40 w-auto rounded-lg shadow-sm">
+                                <p class="text-xs text-gray-500 mt-2">Current Homepage Image</p>
+                            </div>
                             @endif
 
                             {{-- File Input --}}
@@ -169,7 +169,7 @@
                             <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <p class="text-sm text-blue-800 mb-3">
                                     <i class="fa-solid fa-info-circle mr-1"></i>
-                                    When a homepage image has been uploaded, you can choose to display it in the 
+                                    When a homepage image has been uploaded, you can choose to display it in the
                                     background of the header instead of its usual position on the homepage.
                                 </p>
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -189,10 +189,10 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">Page Footer</h3>
                     <p class="text-sm text-gray-500 mb-4">
-                        Custom HTML content that will appear at the bottom of every page. 
+                        Custom HTML content that will appear at the bottom of every page.
                         Use this for copyright notices, contact info, or additional links.
                     </p>
-                    
+
                     {{-- CKEditor/Rich Text Area --}}
                     <textarea name="page_footer" id="page_footer" rows="6"
                         class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
@@ -208,6 +208,44 @@
             {{-- Tab: APPEARANCE (Colors & Theme) --}}
             {{-- ============================================ --}}
             <div x-show="activeTab === 'appearance'" x-cloak class="space-y-6">
+                {{-- Favicon Upload --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="flex items-start gap-6">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-1">Favicon</h3>
+                            <p class="text-sm text-gray-500 mb-4">
+                                Upload a favicon to be displayed in the browser tab.
+                            </p>
+
+                            {{-- Current Favicon Preview --}}
+                            @if ($journal->favicon_path)
+                            <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
+                                <img src="{{ Storage::url($journal->favicon_path) }}" alt="Current Favicon"
+                                    class="h-8 w-8">
+                                <p class="text-xs text-gray-500 mt-2">Current Favicon</p>
+                                <button type="button"
+                                    onclick="if(confirm('Delete favicon?')) { 
+                                            fetch('{{ route('journal.settings.website.favicon.delete', $journalSlug) }}', {
+                                                method: 'DELETE',
+                                                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                            }).then(() => location.reload());
+                                        }"
+                                    class="text-red-600 text-xs mt-1 hover:underline">Remove</button>
+                            </div>
+                            @endif
+
+                            {{-- File Input --}}
+                            <div class="relative">
+                                <input type="file" name="favicon" accept=".ico,.png,.jpg,.svg,.webp"
+                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">
+                                Recommended: ICO, PNG or SVG. Max size: 1MB.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-6">Theme Colors</h3>
 
@@ -219,7 +257,7 @@
                                 <input type="color" name="primary_color" id="primary_color"
                                     value="{{ $settings['primary_color'] ?? '#4F46E5' }}"
                                     class="w-14 h-12 rounded-lg border border-gray-300 cursor-pointer p-1">
-                                <input type="text" id="primary_color_text" 
+                                <input type="text" id="primary_color_text"
                                     value="{{ $settings['primary_color'] ?? '#4F46E5' }}"
                                     class="flex-1 rounded-lg border-gray-300 text-sm font-mono" readonly>
                             </div>
@@ -311,30 +349,30 @@
                     </p>
 
                     @php
-                        $val = $settings['indexed_in_images'] ?? [];
-                        $indexedImages = is_array($val) ? $val : json_decode($val, true) ?? [];
+                    $val = $settings['indexed_in_images'] ?? [];
+                    $indexedImages = is_array($val) ? $val : json_decode($val, true) ?? [];
                     @endphp
 
                     @if (count($indexedImages) > 0)
-                        <div class="flex flex-wrap gap-4 mb-4">
-                            @foreach ($indexedImages as $image)
-                                <div class="relative group">
-                                    <img src="{{ Storage::url($image) }}" alt="Indexer"
-                                        class="h-16 w-auto object-contain bg-gray-50 rounded-lg border border-gray-200 p-2">
-                                    <button type="button"
-                                        onclick="if(confirm('Remove this logo?')) { 
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        @foreach ($indexedImages as $image)
+                        <div class="relative group">
+                            <img src="{{ Storage::url($image) }}" alt="Indexer"
+                                class="h-16 w-auto object-contain bg-gray-50 rounded-lg border border-gray-200 p-2">
+                            <button type="button"
+                                onclick="if(confirm('Remove this logo?')) { 
                                             fetch('{{ route('journal.settings.website.indexed-image.delete', $journalSlug) }}', {
                                                 method: 'DELETE',
                                                 headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
                                                 body: JSON.stringify({path: '{{ $image }}'})
                                             }).then(() => location.reload());
                                         }"
-                                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <i class="fa-solid fa-times text-xs"></i>
-                                    </button>
-                                </div>
-                            @endforeach
+                                class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <i class="fa-solid fa-times text-xs"></i>
+                            </button>
                         </div>
+                        @endforeach
+                    </div>
                     @endif
 
                     <input type="file" name="indexed_in_images[]" accept="image/*" multiple
@@ -452,11 +490,11 @@
             const primaryColor = document.getElementById('primary_color');
             const primaryText = document.getElementById('primary_color_text');
             const primaryPreview = document.getElementById('primary_preview');
-            
+
             const secondaryColor = document.getElementById('secondary_color');
             const secondaryText = document.getElementById('secondary_color_text');
             const secondaryPreview = document.getElementById('secondary_preview');
-            
+
             const gradientPreview = document.getElementById('gradient_preview');
 
             function updatePreviews() {
@@ -494,7 +532,10 @@
 
                 xhr.onload = () => {
                     if (xhr.status === 403) {
-                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                        reject({
+                            message: 'HTTP Error: ' + xhr.status,
+                            remove: true
+                        });
                         return;
                     }
 

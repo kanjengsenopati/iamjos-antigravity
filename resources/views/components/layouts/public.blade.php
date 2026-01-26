@@ -19,6 +19,11 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- Favicon --}}
+    @if($journal->favicon_path ?? false)
+    <link rel="icon" href="{{ Storage::url($journal->favicon_path) }}">
+    @endif
+
     {{-- Basic SEO Meta Tags --}}
     <title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
     <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
@@ -35,7 +40,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
     @if($journal->logo_path ?? false)
-        <meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
+    <meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
     @endif
 
     {{-- Twitter Card Tags --}}
@@ -53,7 +58,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="DC.Title" content="{{ $title ?? $journal->name }}">
     <meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
     @if($journal->issn_online)
-        <meta name="DC.Identifier" content="ISSN {{ $journal->issn_online }}">
+    <meta name="DC.Identifier" content="ISSN {{ $journal->issn_online }}">
     @endif
 
 
@@ -73,19 +78,61 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     {{-- Dynamic CSS Variables --}}
     <style>
         :root {
-            --primary-color: {{ $primaryColor }};
-            --secondary-color: {{ $secondaryColor }};
-            --primary-50: {{ $primaryColor }}10;
-            --primary-100: {{ $primaryColor }}20;
+            --primary-color: {
+                    {
+                    $primaryColor
+                }
+            }
+
+            ;
+
+            --secondary-color: {
+                    {
+                    $secondaryColor
+                }
+            }
+
+            ;
+
+            --primary-50: {
+                    {
+                    $primaryColor
+                }
+            }
+
+            10;
+
+            --primary-100: {
+                    {
+                    $primaryColor
+                }
+            }
+
+            20;
         }
 
-        [x-cloak] { display: none !important; }
+        [x-cloak] {
+            display: none !important;
+        }
 
         /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
 
         /* Gradient text utility */
         .text-gradient {
@@ -100,6 +147,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             transition: all 0.3s ease;
         }
+
         .btn-primary:hover {
             filter: brightness(1.1);
             transform: translateY(-1px);
@@ -110,6 +158,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
         .card-hover {
             transition: all 0.3s ease;
         }
+
         .card-hover:hover {
             transform: translateY(-4px);
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
@@ -122,6 +171,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
         .line-clamp-3 {
             display: -webkit-box;
             -webkit-line-clamp: 3;
@@ -147,87 +197,87 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     {{-- BRANDING HEADER (OJS 3.3 Logic) --}}
     {{-- ============================================ --}}
     @if($showImageInHeader)
-        {{-- CASE 1: Homepage Image as Header Background --}}
-        <header class="relative min-h-[200px] md:min-h-[280px] flex items-center"
-                style="background-image: url('{{ Storage::url($journal->homepage_image_path) }}'); background-size: cover; background-position: center;">
-            {{-- Dark Overlay for readability --}}
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/40"></div>
-            
-            {{-- Header Content --}}
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-                <div class="flex items-center space-x-6">
-                    {{-- Logo --}}
-                    @if($journal->logo_path)
-                        <img src="{{ Storage::url($journal->logo_path) }}" 
-                             alt="{{ $journal->name }}" 
-                             class="h-20 md:h-24 w-auto drop-shadow-lg">
-                    @else
-                        <div class="w-20 h-20 md:w-24 md:h-24 rounded-xl flex items-center justify-center text-white text-3xl font-bold shadow-lg"
-                             style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
-                            {{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}
-                        </div>
+    {{-- CASE 1: Homepage Image as Header Background --}}
+    <header class="relative min-h-[200px] md:min-h-[280px] flex items-center"
+        style="background-image: url('{{ Storage::url($journal->homepage_image_path) }}'); background-size: cover; background-position: center;">
+        {{-- Dark Overlay for readability --}}
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/40"></div>
+
+        {{-- Header Content --}}
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <div class="flex items-center space-x-6">
+                {{-- Logo --}}
+                @if($journal->logo_path)
+                <img src="{{ Storage::url($journal->logo_path) }}"
+                    alt="{{ $journal->name }}"
+                    class="h-20 md:h-24 w-auto drop-shadow-lg">
+                @else
+                <div class="w-20 h-20 md:w-24 md:h-24 rounded-xl flex items-center justify-center text-white text-3xl font-bold shadow-lg"
+                    style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
+                    {{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}
+                </div>
+                @endif
+
+                {{-- Journal Title & Description --}}
+                <div class="text-white">
+                    <h1 class="text-2xl md:text-4xl font-serif font-bold drop-shadow-lg">
+                        {{ $journal->name ?? 'Academic Journal' }}
+                    </h1>
+                    @if($journal->description)
+                    <p class="text-sm md:text-base text-white/80 mt-2 max-w-2xl drop-shadow">
+                        {{ Str::limit($journal->description, 150) }}
+                    </p>
                     @endif
-                    
-                    {{-- Journal Title & Description --}}
-                    <div class="text-white">
-                        <h1 class="text-2xl md:text-4xl font-serif font-bold drop-shadow-lg">
-                            {{ $journal->name ?? 'Academic Journal' }}
-                        </h1>
-                        @if($journal->description)
-                            <p class="text-sm md:text-base text-white/80 mt-2 max-w-2xl drop-shadow">
-                                {{ Str::limit($journal->description, 150) }}
-                            </p>
+                    {{-- ISSN Badges --}}
+                    @if($journal->issn_online || $journal->issn_print)
+                    <div class="flex flex-wrap gap-3 mt-4">
+                        @if($journal->issn_online)
+                        <span class="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white">
+                            e-ISSN: {{ $journal->issn_online }}
+                        </span>
                         @endif
-                        {{-- ISSN Badges --}}
-                        @if($journal->issn_online || $journal->issn_print)
-                            <div class="flex flex-wrap gap-3 mt-4">
-                                @if($journal->issn_online)
-                                    <span class="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white">
-                                        e-ISSN: {{ $journal->issn_online }}
-                                    </span>
-                                @endif
-                                @if($journal->issn_print)
-                                    <span class="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white">
-                                        p-ISSN: {{ $journal->issn_print }}
-                                    </span>
-                                @endif
-                            </div>
+                        @if($journal->issn_print)
+                        <span class="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white">
+                            p-ISSN: {{ $journal->issn_print }}
+                        </span>
                         @endif
                     </div>
+                    @endif
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
     @else
-        {{-- CASE 2: Standard Branding Header (No Background Image) --}}
-        <header class="bg-white border-b border-slate-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div class="flex items-center space-x-4">
-                    {{-- Logo --}}
-                    @if($journal->logo_path)
-                        <img src="{{ Storage::url($journal->logo_path) }}" 
-                             alt="{{ $journal->name }}" 
-                             class="h-16 w-auto">
-                    @else
-                        <div class="w-16 h-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold"
-                             style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
-                            {{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}
-                        </div>
+    {{-- CASE 2: Standard Branding Header (No Background Image) --}}
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center space-x-4">
+                {{-- Logo --}}
+                @if($journal->logo_path)
+                <img src="{{ Storage::url($journal->logo_path) }}"
+                    alt="{{ $journal->name }}"
+                    class="h-16 w-auto">
+                @else
+                <div class="w-16 h-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold"
+                    style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
+                    {{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}
+                </div>
+                @endif
+
+                {{-- Journal Title & Description --}}
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-900">
+                        {{ $journal->name ?? 'Academic Journal' }}
+                    </h1>
+                    @if($journal->description)
+                    <p class="text-sm text-slate-600 mt-1 max-w-2xl">
+                        {{ Str::limit($journal->description, 150) }}
+                    </p>
                     @endif
-                    
-                    {{-- Journal Title & Description --}}
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-900">
-                            {{ $journal->name ?? 'Academic Journal' }}
-                        </h1>
-                        @if($journal->description)
-                            <p class="text-sm text-slate-600 mt-1 max-w-2xl">
-                                {{ Str::limit($journal->description, 150) }}
-                            </p>
-                        @endif
-                    </div>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
     @endif
 
     {{-- Dynamic Navigation Bar --}}
@@ -245,14 +295,14 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                 <main class="w-full {{ $sidebarBlocks->isNotEmpty() ? 'lg:w-3/4' : '' }} min-w-0 transition-all duration-300">
                     {{-- Flash Messages --}}
                     @if(session('success'))
-                        <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
-                            {{ session('success') }}
-                        </div>
+                    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
+                        {{ session('success') }}
+                    </div>
                     @endif
                     @if(session('error'))
-                        <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-                            {{ session('error') }}
-                        </div>
+                    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                        {{ session('error') }}
+                    </div>
                     @endif
 
                     {{-- Page Content --}}
@@ -261,9 +311,9 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 
                 {{-- RIGHT COLUMN: Sidebar (Only render if blocks exist) --}}
                 @if($sidebarBlocks->isNotEmpty())
-                    <aside class="w-full lg:w-1/4 flex-shrink-0 space-y-6">
-                        <x-public.sidebar :journal="$journal" :sidebar-blocks="$sidebarBlocks" />
-                    </aside>
+                <aside class="w-full lg:w-1/4 flex-shrink-0 space-y-6">
+                    <x-public.sidebar :journal="$journal" :sidebar-blocks="$sidebarBlocks" />
+                </aside>
                 @endif
 
             </div>
@@ -278,14 +328,14 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                 <div class="md:col-span-2">
                     <div class="flex items-center space-x-3 mb-4">
                         @if($journal->logo_path)
-                            <img src="{{ Storage::url($journal->logo_path) }}" 
-                                 alt="{{ $journal->name }}" 
-                                 class="h-12 w-auto brightness-0 invert opacity-80">
+                        <img src="{{ Storage::url($journal->logo_path) }}"
+                            alt="{{ $journal->name }}"
+                            class="h-12 w-auto brightness-0 invert opacity-80">
                         @else
-                            <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
-                                 style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
-                                {{ strtoupper(substr($journal->abbreviation ?? 'J', 0, 2)) }}
-                            </div>
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
+                            style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
+                            {{ strtoupper(substr($journal->abbreviation ?? 'J', 0, 2)) }}
+                        </div>
                         @endif
                         <div>
                             <h3 class="text-lg font-bold text-white">{{ $journal->abbreviation ?? $journal->name }}</h3>
@@ -296,20 +346,20 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                         {{ $settings['footer_description'] ?? ($journal->description ?? 'A peer-reviewed scholarly journal.') }}
                     </p>
                     @if($journal->issn_online || $journal->issn_print)
-                        <div class="flex flex-wrap gap-4 text-sm">
-                            @if($journal->issn_online)
-                                <span class="bg-slate-800 px-3 py-1 rounded-full text-slate-300">
-                                    <i class="fa-solid fa-globe mr-1 text-slate-500"></i>
-                                    e-ISSN: {{ $journal->issn_online }}
-                                </span>
-                            @endif
-                            @if($journal->issn_print)
-                                <span class="bg-slate-800 px-3 py-1 rounded-full text-slate-300">
-                                    <i class="fa-solid fa-print mr-1 text-slate-500"></i>
-                                    p-ISSN: {{ $journal->issn_print }}
-                                </span>
-                            @endif
-                        </div>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        @if($journal->issn_online)
+                        <span class="bg-slate-800 px-3 py-1 rounded-full text-slate-300">
+                            <i class="fa-solid fa-globe mr-1 text-slate-500"></i>
+                            e-ISSN: {{ $journal->issn_online }}
+                        </span>
+                        @endif
+                        @if($journal->issn_print)
+                        <span class="bg-slate-800 px-3 py-1 rounded-full text-slate-300">
+                            <i class="fa-solid fa-print mr-1 text-slate-500"></i>
+                            p-ISSN: {{ $journal->issn_print }}
+                        </span>
+                        @endif
+                    </div>
                     @endif
                 </div>
 
@@ -335,45 +385,45 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 
                     {{-- Social Links --}}
                     @if(!empty($settings['social_facebook']) || !empty($settings['social_twitter']) || !empty($settings['social_linkedin']))
-                        <div class="flex space-x-3 mt-6">
-                            @if(!empty($settings['social_facebook']))
-                                <a href="{{ $settings['social_facebook'] }}" target="_blank" 
-                                   class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
-                                    <i class="fa-brands fa-facebook-f"></i>
-                                </a>
-                            @endif
-                            @if(!empty($settings['social_twitter']))
-                                <a href="{{ $settings['social_twitter'] }}" target="_blank"
-                                   class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-sky-500 hover:text-white transition-all">
-                                    <i class="fa-brands fa-x-twitter"></i>
-                                </a>
-                            @endif
-                            @if(!empty($settings['social_linkedin']))
-                                <a href="{{ $settings['social_linkedin'] }}" target="_blank"
-                                   class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all">
-                                    <i class="fa-brands fa-linkedin-in"></i>
-                                </a>
-                            @endif
-                        </div>
+                    <div class="flex space-x-3 mt-6">
+                        @if(!empty($settings['social_facebook']))
+                        <a href="{{ $settings['social_facebook'] }}" target="_blank"
+                            class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        @endif
+                        @if(!empty($settings['social_twitter']))
+                        <a href="{{ $settings['social_twitter'] }}" target="_blank"
+                            class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-sky-500 hover:text-white transition-all">
+                            <i class="fa-brands fa-x-twitter"></i>
+                        </a>
+                        @endif
+                        @if(!empty($settings['social_linkedin']))
+                        <a href="{{ $settings['social_linkedin'] }}" target="_blank"
+                            class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all">
+                            <i class="fa-brands fa-linkedin-in"></i>
+                        </a>
+                        @endif
+                    </div>
                     @endif
                 </div>
             </div>
 
             {{-- Custom Page Footer (from admin settings) --}}
             @if($journal->page_footer)
-                <div class="border-t border-slate-800 mt-8 pt-8">
-                    <div class="prose prose-sm prose-invert max-w-none text-slate-400">
-                        {!! $journal->page_footer !!}
-                    </div>
+            <div class="border-t border-slate-800 mt-8 pt-8">
+                <div class="prose prose-sm prose-invert max-w-none text-slate-400">
+                    {!! $journal->page_footer !!}
                 </div>
+            </div>
             @endif
 
             {{-- Bottom Bar --}}
             <div class="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
                 <p>
-                    © {{ date('Y') }} {{ $journal->name ?? 'IAMJOS' }}. 
+                    © {{ date('Y') }} {{ $journal->name ?? 'IAMJOS' }}.
                     @if($journal->publisher)
-                        Published by {{ $journal->publisher }}.
+                    Published by {{ $journal->publisher }}.
                     @endif
                 </p>
                 <div class="mt-4 md:mt-0 flex items-center space-x-4">
