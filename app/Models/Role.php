@@ -27,4 +27,30 @@ class Role extends SpatieRole
     const ROLE_ASSESSOR = 'Assessor';
     public $incrementing = false;
     protected $keyType = 'string';
+
+    protected $fillable = [
+        'name',
+        'guard_name',
+        'permission_level',
+        'permit_submission',
+        'permit_review',
+        'permit_copyediting',
+        'permit_production',
+        'allow_registration',
+        'show_contributor',
+        'allow_submission',
+        'journal_id',
+        'slug',
+        'is_system'
+    ];
+
+    protected $casts = [
+        'permit_submission' => 'boolean',
+        'permit_review' => 'boolean',
+        'permit_copyediting' => 'boolean',
+        'permit_production' => 'boolean',
+        'allow_registration' => 'boolean',
+        'show_contributor' => 'boolean',
+        'allow_submission' => 'boolean',
+    ];
 }

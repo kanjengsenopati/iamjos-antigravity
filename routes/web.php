@@ -269,15 +269,15 @@ Route::prefix('{journal}')->group(function () {
     Route::get('/search', [SearchController::class, 'index'])->name('journal.public.search');
     Route::get('/search/quick', [SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
     Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
-    
+
     // --------- Article Routes (Google Scholar Indexing) ---------
     // These routes support both ID and slug for SEO flexibility
     Route::get('/article/{article}', [PublicController::class, 'article'])->name('journal.public.article');
     Route::get('/article/{article}/view', [PublicController::class, 'articleReader'])->name('journal.public.article.reader');
-    
+
     // Article View (alias route for SEO with clean URL structure)
     Route::get('/article/{article}/view', [PublicController::class, 'article'])->name('journal.article.view');
-    
+
     // Article Galley Download (CRITICAL for Google Scholar - must stream the actual file)
     Route::get('/article/{article}/galley/{galley}/download', [PublicController::class, 'downloadGalley'])->name('journal.article.download');
     Route::get('/article/{article}/galley/{galley}', [PublicController::class, 'viewGalley'])->name('journal.article.galley');
@@ -315,6 +315,7 @@ Route::prefix('{journal}')->group(function () {
             Route::put('/roles/{role}', 'updateRole')->name('roles.update');
             Route::delete('/roles/{role}', 'destroyRole')->name('roles.destroy');
             Route::post('/roles/{role}/reset', 'resetRolePermissions')->name('roles.reset');
+            Route::post('/roles/{role}/toggle-permission', 'updateRolePermission')->name('roles.toggle-permission');
 
             // 3. Site Access Options
             Route::get('/access', 'access')->name('access');
@@ -578,6 +579,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::put('/roles/{role}', 'updateRole')->name('roles.update');
                 Route::delete('/roles/{role}', 'destroyRole')->name('roles.destroy');
                 Route::post('/roles/{role}/reset', 'resetRolePermissions')->name('roles.reset');
+                Route::post('/roles/{role}/toggle-permission', 'updateRolePermission')->name('roles.toggle-permission');
 
                 // 3. Site Access Options
                 Route::get('/access', 'access')->name('access');
