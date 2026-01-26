@@ -424,6 +424,13 @@ class SubmissionController extends Controller
             ->orderBy('number', 'desc')
             ->get();
 
+        $issueOptions = $issues->map(function ($issue) {
+            return [
+                'id' => $issue->id,
+                'label' => $issue->identifier . ($issue->published_at ? ' (Published)' : ' (Unpublished)'),
+            ];
+        })->values();
+
         // Prepare participants for discussion modal (Author + Editors)
         $participants = collect();
 
@@ -494,7 +501,7 @@ class SubmissionController extends Controller
         }
 
         return view('submissions.show', array_merge(
-            compact('submission', 'journal', 'issues', 'participants', 'isAuthorView'),
+            compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView'),
             $isAuthorView ? ['authorReviewData' => $authorReviewData] : []
         ));
     }
