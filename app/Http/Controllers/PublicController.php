@@ -202,7 +202,7 @@ class PublicController extends Controller
 
         $articles = Submission::where('issue_id', $issue->id)
             ->published()
-            ->with(['authors', 'section'])
+            ->with(['authors', 'section', 'galleys'])
             ->orderBy('created_at')
             ->get();
 
