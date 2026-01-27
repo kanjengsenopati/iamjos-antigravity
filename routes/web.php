@@ -264,6 +264,16 @@ Route::prefix('{journal}')->group(function () {
     Route::get('/current', [PublicController::class, 'currentIssue'])->name('journal.public.current');
     Route::get('/archives', [PublicController::class, 'archives'])->name('journal.public.archives');
     Route::get('/about', [PublicController::class, 'about'])->name('journal.public.about');
+    
+    // Announcements
+    Route::get('/announcement', [PublicController::class, 'announcements'])->name('journal.announcement.index');
+    Route::get('/announcement/{id}', [PublicController::class, 'announcement'])->name('journal.announcement.show');
+
+    // Information Pages (Readers, Authors, Librarians)
+    Route::get('/information/readers', [PublicController::class, 'infoReaders'])->name('journal.info.readers');
+    Route::get('/information/authors', [PublicController::class, 'infoAuthors'])->name('journal.info.authors');
+    Route::get('/information/librarians', [PublicController::class, 'infoLibrarians'])->name('journal.info.librarians');
+
     Route::get('/author-guidelines', [PublicController::class, 'authorGuidelines'])->name('journal.public.author-guidelines');
     Route::get('/editorial-team', [PublicController::class, 'editorialTeam'])->name('journal.public.editorial-team');
     Route::get('/search', [SearchController::class, 'index'])->name('journal.public.search');
@@ -530,6 +540,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::get('/', 'edit')->name('edit');
                 Route::put('/', 'update')->name('update');
                 Route::delete('/indexed-image', 'deleteIndexedImage')->name('indexed-image.delete');
+                Route::delete('/favicon', 'deleteFavicon')->name('favicon.delete');
             });
 
             // Navigation Menu Manager

@@ -47,6 +47,7 @@ class WebsiteSettingsController extends Controller
         // Validate file uploads
         $request->validate([
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'favicon' => 'nullable|mimes:ico,png,jpg,svg,webp|max:1024',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'homepage_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'indexed_in_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif,svg|max:2048',
@@ -59,6 +60,14 @@ class WebsiteSettingsController extends Controller
                 Storage::disk('public')->delete($journal->logo_path);
             }
             $journal->logo_path = $request->file('logo')->store("journals/{$journal->id}/appearance", 'public');
+        }
+
+        // Handle Favicon Upload (stored in journals table)
+        if ($request->hasFile('favicon')) {
+            if ($journal->favicon_path) {
+                Storage::disk('public')->delete($journal->favicon_path);
+            }
+            $journal->favicon_path = $request->file('favicon')->store("journals/{$journal->id}/appearance", 'public');
         }
 
         // Handle Thumbnail Upload (stored in journals table)
@@ -85,6 +94,27 @@ class WebsiteSettingsController extends Controller
             $journal->page_footer = $request->input('page_footer');
         }
 
+        // Handle Information Content (stored in journals table)
+        if ($request->has('info_readers')) {
+            $journal->info_readers = $request->input('info_readers');
+        }
+        if ($request->has('info_authors')) {
+            $journal->info_authors = $request->input('info_authors');
+        }
+        if ($request->has('info_librarians')) {
+            $journal->info_librarians = $request->input('info_librarians');
+        }
+
+        // Handle Announcement Settings (stored in journals table)
+        $journal->enable_announcements = $request->boolean('enable_announcements');
+        if ($request->has('announcements_introduction')) {
+            $journal->announcements_introduction = $request->input('announcements_introduction');
+        }
+        $journal->show_announcements_on_homepage = $request->boolean('show_announcements_on_homepage');
+        if ($request->has('num_announcements_homepage')) {
+            $journal->num_announcements_homepage = $request->input('num_announcements_homepage');
+        }
+
         // Save journal model changes
         $journal->save();
 
@@ -102,7 +132,7 @@ class WebsiteSettingsController extends Controller
             // Handle multi-file uploads (indexed_in_images)
             if ($config['type'] === 'json' && $name === 'indexed_in_images') {
                 $existingSetting = $journal->getWebsiteSetting('indexed_in_images', []);
-                
+
                 // Handle both array (already decoded) and string (raw JSON) formats
                 if (is_array($existingSetting)) {
                     $existingImages = $existingSetting;
@@ -158,7 +188,7 @@ class WebsiteSettingsController extends Controller
 
         $path = $request->input('path');
         $existingSetting = $journal->getWebsiteSetting('indexed_in_images', []);
-        
+
         // Handle both array and string formats
         if (is_array($existingSetting)) {
             $existingImages = $existingSetting;
@@ -193,6 +223,26 @@ class WebsiteSettingsController extends Controller
         if ($journal->logo_path) {
             Storage::disk('public')->delete($journal->logo_path);
             $journal->logo_path = null;
+            $journal->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete favicon image.
+     */
+    public function deleteFavicon()
+    {
+        $journal = current_journal();
+
+        if (!$journal) {
+            abort(404, 'Journal not found');
+        }
+
+        if ($journal->favicon_path) {
+            Storage::disk('public')->delete($journal->favicon_path);
+            $journal->favicon_path = null;
             $journal->save();
         }
 

@@ -157,7 +157,17 @@ $contactSettings = $journal->settings['contact'] ?? [];
                                 <!-- Journal Summary -->
                                 <div>
                                     <label for="summary" class="block text-sm font-medium text-gray-700 mb-1">Journal Summary</label>
-                                    <textarea name="summary" id="summary" rows="4" class="tinymce-editor w-full">{{ old('summary', $mastheadSettings['summary'] ?? '') }}</textarea>
+                                    <textarea name="summary" id="summary" rows="4" class="tinymce-editor w-full">{{ old('summary', $journal->summary ?? '') }}</textarea>
+
+                                    <div class="flex items-center gap-2 mt-3">
+                                        <input type="hidden" name="show_summary" value="0">
+                                        <input id="show_summary" name="show_summary" type="checkbox" value="1"
+                                            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                            {{ old('show_summary', $journal->show_summary) ? 'checked' : '' }}>
+                                        <label for="show_summary" class="text-sm text-gray-700">
+                                            Show the journal summary on the homepage
+                                        </label>
+                                    </div>
                                     <p class="mt-1 text-xs text-gray-500">This appears on the journal homepage.</p>
                                 </div>
 
