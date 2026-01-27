@@ -4,10 +4,11 @@
 --}}
 @props(['footerMenu' => null, 'settings' => []])
 
-<footer class="bg-slate-900 text-slate-300 mt-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {{-- About --}}
+@php
+// footerMenu is now a collection of navigation items
+$footerMenuItems = $footerMenu ?? collect();
+$hasFooterMenu = $footerMenuItems->isNotEmpty();
+@endphp
             <div class="md:col-span-2">
                 <div class="flex items-center gap-3 mb-4">
                     @if(isset($settings['site_logo']) && $settings['site_logo'])
@@ -28,14 +29,14 @@
             <div>
                 <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Quick Links</h4>
                 <ul class="space-y-2 text-sm">
-                    @if($footerMenu && $footerMenu->items->count() > 0)
-                        @foreach($footerMenu->items->where('is_active', true)->sortBy('order') as $item)
-                            @if($item->type !== 'divider')
+                    @if($hasFooterMenu)
+                        @foreach($footerMenuItems as $item)
+                            @if(!($item->is_divider ?? false))
                                 <li>
-                                    <a href="{{ $item->resolved_url }}" 
+                                    <a href="{{ $item->resolved_url }}"
                                        target="{{ $item->target }}"
                                        class="text-slate-400 hover:text-white transition-colors">
-                                        @if($item->icon)
+                                        @if($item->icon ?? false)
                                             <i class="{{ $item->icon }} mr-2"></i>
                                         @endif
                                         {{ $item->label }}
