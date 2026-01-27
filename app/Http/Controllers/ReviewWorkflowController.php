@@ -32,58 +32,80 @@ class ReviewWorkflowController extends Controller
         if ($submission->journal_id !== $journal->id) abort(404);
 
         $request->validate([
-            'reviewer_id' => 'required|exists:users,id',
-            'review_method' => 'required|in:double_blind,blind,open',
-            'response_due_date' => 'required|date|after_or_equal:today',
-            'review_due_date' => 'required|date|after:response_due_date',
+            'reviewer_id' => 'required',
+            'review_method' => 'required',
+            'response_due_date' => 'required|date',
+            'review_due_date' => 'required|date',
         ]);
 
-        DB::transaction(function () use ($request, $submission) {
-            // Ensure a review round exists
-            $reviewRound = $submission->currentReviewRound();
-            if (!$reviewRound) {
-                $reviewRound = ReviewRound::create([
-                    'submission_id' => $submission->id,
-                    'round' => 1,
-                    'status' => ReviewRound::STATUS_PENDING,
-                ]);
-            }
+        try {
+            DB::transaction(function () use ($request, $submission) {
 
-            $assignment = ReviewAssignment::create([
-                'submission_id' => $submission->id,
-                'review_round_id' => $reviewRound->id,
-                'reviewer_id' => $request->reviewer_id,
-                'review_method' => $request->review_method,
-                'response_due_date' => $request->response_due_date,
-                'due_date' => $request->review_due_date,
-                'assigned_at' => now(),
-                'round' => $reviewRound->round,
-                'status' => ReviewAssignment::STATUS_PENDING,
-            ]);
+                // Ensure a review round exists
+                $reviewRound = $submission->currentReviewRound();
 
-            // Notify the reviewer about the assignment
-            $reviewer = User::find($request->reviewer_id);
-            if ($reviewer) {
-                try {
-                    $reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
-                } catch (\Exception $e) {
-                    dd($e);
-                    Log::error('Failed to send review invitation notification: ' . $e->getMessage());
-                    // Continue execution, do not rollback transaction
+                if (!$reviewRound) {
+                    $reviewRound = ReviewRound::create([
+                        'submission_id' => $submission->id,
+                        'round' => 1,
+                        'status' => ReviewRound::STATUS_PENDING,
+                    ]);
                 }
 
-                // Log the event
-                SubmissionLog::log(
-                    $submission,
-                    SubmissionLog::EVENT_REVIEWER_ASSIGNED,
-                    'Reviewer Assigned',
-                    auth()->user()->name . " assigned {$reviewer->name} as peer reviewer (Round {$reviewRound->round}).",
-                    ['reviewer_id' => $reviewer->id, 'round' => $reviewRound->round]
-                );
-            }
-        });
+                $assignment = ReviewAssignment::create([
+                    'submission_id' => $submission->id,
+                    'review_round_id' => $reviewRound->id,
+                    'reviewer_id' => $request->reviewer_id,
+                    'review_method' => $request->review_method,
+                    'response_due_date' => $request->response_due_date,
+                    'due_date' => $request->review_due_date,
+                    'assigned_at' => now(),
+                    'round' => $reviewRound->round,
+                    'status' => ReviewAssignment::STATUS_PENDING,
+                ]);
 
-        return back()->with('success', 'Reviewer assigned successfully.');
+                // Notify reviewer
+                $reviewer = User::find($request->reviewer_id);
+
+                if ($reviewer) {
+                    try {
+                        $reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
+                    } catch (\Throwable $e) {
+                        Log::error('Review invitation notification failed', [
+                            'submission_id' => $submission->id,
+                            'reviewer_id' => $reviewer->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+
+                    SubmissionLog::log(
+                        $submission,
+                        SubmissionLog::EVENT_REVIEWER_ASSIGNED,
+                        'Reviewer Assigned',
+                        auth()->user()->name . " assigned {$reviewer->name} as peer reviewer (Round {$reviewRound->round}).",
+                        [
+                            'reviewer_id' => $reviewer->id,
+                            'round' => $reviewRound->round,
+                        ]
+                    );
+                }
+            });
+
+            return back()->with('success', 'Reviewer assigned successfully.');
+
+        } catch (\Throwable $e) {
+            Log::error('Assign reviewer failed', [
+                'submission_id' => $submission->id,
+                'journal_id' => $submission->journal_id,
+                'reviewer_id' => $request->reviewer_id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->with('error', 'Failed to assign reviewer. Please check logs.');
+        }
     }
 
     /**
