@@ -36,7 +36,7 @@ class ReviewerController extends Controller
         $journal = $this->getJournal();
 
         // Filter assignments based on simple tab status
-        $status = request('status', 'pending');
+        $status = request('status', 'myqueue');
 
         $assignments = ReviewAssignment::where('reviewer_id', $user->id)
             ->whereHas('submission', function ($query) use ($journal) {
@@ -44,11 +44,9 @@ class ReviewerController extends Controller
             });
 
         // Apply filters
-        if ($status === 'pending') {
-            $assignments->where('status', ReviewAssignment::STATUS_PENDING);
-        } elseif ($status === 'in_progress') {
-            $assignments->where('status', ReviewAssignment::STATUS_ACCEPTED);
-        } elseif ($status === 'completed') {
+        if ($status === 'myqueue') {
+            $assignments->whereIn('status', [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED]);
+        } elseif ($status === 'archives') {
             $assignments->where('status', ReviewAssignment::STATUS_COMPLETED);
         }
 
@@ -61,13 +59,10 @@ class ReviewerController extends Controller
 
         // Count by status for this journal (for tabs)
         $statusCounts = [
-            'pending' => ReviewAssignment::where('reviewer_id', $user->id)
+            'myqueue' => ReviewAssignment::where('reviewer_id', $user->id)
                 ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
-                ->where('status', 'pending')->count(),
-            'in_progress' => ReviewAssignment::where('reviewer_id', $user->id) // 'accepted' status
-                ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
-                ->where('status', 'accepted')->count(),
-            'completed' => ReviewAssignment::where('reviewer_id', $user->id)
+                ->whereIn('status', ['pending', 'accepted'])->count(),
+            'archives' => ReviewAssignment::where('reviewer_id', $user->id)
                 ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
                 ->where('status', 'completed')->count(),
         ];
