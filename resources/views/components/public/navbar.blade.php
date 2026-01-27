@@ -187,7 +187,7 @@ $secondaryColor = $journal->getWebsiteSettings()['secondary_color'] ?? '#7c3aed'
 
                         {{-- Menu Items --}}
                         <div class="py-1">
-                            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                            <a href="{{ route('journal.dashboard', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
                                 <i class="fa-solid fa-gauge-high text-slate-400 w-4 text-center"></i>
                                 Dashboard
                             </a>
