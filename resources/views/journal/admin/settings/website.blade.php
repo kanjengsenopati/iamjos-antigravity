@@ -291,6 +291,37 @@ $journalSlug = $journal->slug;
                             </div>
                         </div>
                     </div>
+
+                    {{-- NAVIGATION SETTINGS LINK --}}
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-800">Navigation</h3>
+                                <p class="text-sm text-slate-500">Configure your journal's primary navigation menus and links.</p>
+                            </div>
+                            <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}" 
+                               class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1">
+                                Navigation Management
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>
+                        </div>
+                        <div class="p-6 text-sm text-slate-600">
+                            <p class="mb-2">Use the Navigation Manager to:</p>
+                            <ul class="list-disc list-inside space-y-1 text-slate-500 ml-2">
+                                <li>Create custom menu items and links.</li>
+                                <li>Assign menus to the Primary Header or User Navigation.</li>
+                                <li>Reorder navigation items.</li>
+                            </ul>
+                            
+                            <div class="mt-4">
+                                <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
+                                    <i class="fa-solid fa-bars mr-2"></i>
+                                    Go to Navigation Manager
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Sub-tab: ADVANCED (Old Appearance Content) --}}
@@ -474,58 +505,7 @@ $journalSlug = $journal->slug;
             {{-- ============================================ --}}
             {{-- Tab: INFORMATION --}}
             {{-- ============================================ --}}
-            <div x-show="activeTab === 'information'" x-cloak class="space-y-6">
-                {{-- About the Journal --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">About the Journal</h3>
-                    <p class="text-sm text-gray-500 mb-4">
-                        The main description of your journal that will be displayed on the About page.
-                        This content supports rich HTML formatting.
-                    </p>
-                    <textarea name="about" id="about" rows="12"
-                        class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
-                        placeholder="Enter detailed information about your journal...">{{ $settings['about'] ?? '' }}</textarea>
-                    <p class="mt-2 text-xs text-gray-500">
-                        <i class="fa-solid fa-code mr-1"></i>
-                        HTML is allowed. Use formatting tags like &lt;p&gt;, &lt;strong&gt;, &lt;h2&gt;, &lt;ul&gt;, etc.
-                    </p>
-                </div>
-
-                {{-- Masthead Content --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Masthead Content</h3>
-                    <p class="text-sm text-gray-500 mb-4">
-                        Configure the main content sections that appear at the top of journal pages.
-                    </p>
-
-                    {{-- About Section --}}
-                    <div class="mb-6">
-                        <label for="masthead_about" class="block text-sm font-medium text-gray-700 mb-2">
-                            About Content
-                        </label>
-                        <textarea name="masthead[about]" id="masthead_about" rows="8"
-                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
-                            placeholder="Enter the main about content for your journal...">{{ $settings['masthead']['about'] ?? '' }}</textarea>
-                        <p class="mt-1 text-xs text-gray-500">
-                            <i class="fa-solid fa-code mr-1"></i>
-                            HTML is allowed. This content appears on the About page.
-                        </p>
-                    </div>
-
-                    {{-- Editorial Team Section --}}
-                    <div>
-                        <label for="masthead_editorial_team" class="block text-sm font-medium text-gray-700 mb-2">
-                            Editorial Team Content
-                        </label>
-                        <textarea name="masthead[editorial_team]" id="masthead_editorial_team" rows="8"
-                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
-                            placeholder="Enter editorial team information...">{{ $settings['masthead']['editorial_team'] ?? '' }}</textarea>
-                        <p class="mt-1 text-xs text-gray-500">
-                            <i class="fa-solid fa-code mr-1"></i>
-                            HTML is allowed. This content appears on the Editorial Team page.
-                        </p>
-                    </div>
-                </div>
+            <div x-show="activeTab === 'information'" x-cloak class="space-y-
 
                 {{-- Information for Readers --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

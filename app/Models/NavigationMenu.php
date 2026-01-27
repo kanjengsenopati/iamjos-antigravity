@@ -7,22 +7,22 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class NavigationMenu extends Model
 {
     use HasFactory, HasUuids;
 
     /**
-     * Menu location constants - Header Navigation Only
+     * Menu area constants - OJS 3.3 Compatible
      */
-    public const LOCATION_PRIMARY = 'primary';
-    public const LOCATION_USER_TOP = 'user_top';
-    public const LOCATION_FOOTER = 'footer';
+    public const AREA_PRIMARY = 'primary';
+    public const AREA_USER = 'user';
 
     protected $fillable = [
         'journal_id',
-        'name',
-        'location',
+        'title',
+        'area_name',
         'is_active',
     ];
 
@@ -46,41 +46,55 @@ class NavigationMenu extends Model
     }
 
     /**
-     * Get all items in this menu
+     * Get all item assignments for this menu
      */
-    public function items(): HasMany
+    public function assignments(): HasMany
     {
-        return $this->hasMany(NavigationItem::class, 'menu_id')->orderBy('order');
+        return $this->hasMany(NavigationMenuItemAssignment::class, 'menu_id')->orderBy('order');
     }
 
     /**
-     * Get only root-level items (no parent)
+     * Get root-level assignments (no parent)
      */
-    public function rootItems(): HasMany
+    public function rootAssignments(): HasMany
     {
-        return $this->hasMany(NavigationItem::class, 'menu_id')
+        return $this->hasMany(NavigationMenuItemAssignment::class, 'menu_id')
             ->whereNull('parent_id')
-            ->where('is_active', true)
             ->orderBy('order');
     }
 
     /**
-     * Get menu tree structure (nested items)
+     * Get menu tree structure (nested items via assignments)
      */
     public function getTreeAttribute(): \Illuminate\Support\Collection
     {
-        return $this->buildTree($this->rootItems()->with('activeChildren')->get());
+        return $this->rootAssignments()
+            ->with(['item', 'children.item'])
+            ->get()
+            ->filter(fn($a) => $a->item && $a->item->is_active);
     }
 
     /**
-     * Build nested tree from flat items
+     * Get preview of assigned items (comma separated titles)
      */
-    protected function buildTree($items): \Illuminate\Support\Collection
+    public function getItemsPreviewAttribute(): string
     {
-        return $items->map(function ($item) {
-            $item->children = $this->buildTree($item->activeChildren);
-            return $item;
-        });
+        $titles = $this->assignments()
+            ->with('item')
+            ->get()
+            ->pluck('item.title')
+            ->filter()
+            ->take(5)
+            ->toArray();
+
+        $preview = implode(', ', $titles);
+        $total = $this->assignments()->count();
+
+        if ($total > 5) {
+            $preview .= ' (+' . ($total - 5) . ' more)';
+        }
+
+        return $preview ?: 'No items assigned';
     }
 
     // =====================================================
@@ -96,23 +110,20 @@ class NavigationMenu extends Model
     }
 
     /**
-     * Scope by location
+     * Scope by area
      */
-    public function scopeLocation($query, string $location)
+    public function scopeArea($query, string $area)
     {
-        return $query->where('location', $location);
+        return $query->where('area_name', $area);
     }
 
     /**
-     * Scope by journal (or site-wide)
+     * Scope by journal
      */
     public function scopeForJournal($query, ?string $journalId)
     {
         if ($journalId) {
-            return $query->where(function ($q) use ($journalId) {
-                $q->where('journal_id', $journalId)
-                    ->orWhereNull('journal_id');
-            });
+            return $query->where('journal_id', $journalId);
         }
         return $query->whereNull('journal_id');
     }
@@ -122,25 +133,32 @@ class NavigationMenu extends Model
     // =====================================================
 
     /**
-     * Get menu for a specific location and journal
+     * Get menu for a specific area and journal
      */
-    public static function getMenu(string $location, ?string $journalId = null): ?self
+    public static function getMenu(string $area, ?string $journalId = null): ?self
     {
         return static::active()
-            ->location($location)
+            ->area($area)
             ->forJournal($journalId)
-            ->orderByRaw('journal_id IS NULL') // Prioritize journal-specific over site-wide
             ->first();
     }
 
     /**
-     * Get all available locations (Header Navigation Only - OJS 3.3 Compatible)
+     * Get all available areas (OJS 3.3 Compatible)
+     */
+    public static function getAreas(): array
+    {
+        return [
+            self::AREA_PRIMARY => 'Primary Navigation Menu',
+            self::AREA_USER => 'User Navigation Menu',
+        ];
+    }
+
+    /**
+     * @deprecated Use getAreas() instead
      */
     public static function getLocations(): array
     {
-        return [
-            self::LOCATION_PRIMARY => 'Primary Header',
-            self::LOCATION_USER_TOP => 'User Topbar',
-        ];
+        return self::getAreas();
     }
 }

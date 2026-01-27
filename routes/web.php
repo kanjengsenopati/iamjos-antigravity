@@ -192,50 +192,50 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
 // =====================================================
 // LEGACY ADMIN ROUTES (kept for backward compatibility)
 // =====================================================
-Route::group(['middleware' => ['auth'], 'prefix' => 'admin-legacy'], function () {
-    // Admin Management
-    Route::resource('admin', AdminController::class);
-    Route::resource('permission', PermissionController::class);
-    Route::resource('role', RoleController::class);
+// Route::group(['middleware' => ['auth'], 'prefix' => 'admin-legacy'], function () {
+//     // Admin Management
+//     Route::resource('admin', AdminController::class);
+//     Route::resource('permission', PermissionController::class);
+//     Route::resource('role', RoleController::class);
 
-    // Publisher Management
-    Route::prefix('publisher')->group(function () {
-        Route::post('import-data', [PublisherController::class, 'importData'])->name('publisher.import');
-        Route::get('export-data', [PublisherController::class, 'exportData'])->name('publisher.export');
-        Route::get('download-template', [PublisherController::class, 'downloadTemplate'])->name('publisher.template');
-    });
-    Route::resource('publisher', PublisherController::class)->whereUuid('publisher');
+//     // Publisher Management
+//     Route::prefix('publisher')->group(function () {
+//         Route::post('import-data', [PublisherController::class, 'importData'])->name('publisher.import');
+//         Route::get('export-data', [PublisherController::class, 'exportData'])->name('publisher.export');
+//         Route::get('download-template', [PublisherController::class, 'downloadTemplate'])->name('publisher.template');
+//     });
+//     Route::resource('publisher', PublisherController::class)->whereUuid('publisher');
 
-    // Author Management
-    Route::prefix('author')->group(function () {
-        Route::post('import-data', [LegacyAuthorController::class, 'importData'])->name('author.import');
-        Route::get('export-data', [LegacyAuthorController::class, 'exportData'])->name('author.export');
-        Route::get('download-template', [LegacyAuthorController::class, 'downloadTemplate'])->name('author.template');
-    });
-    Route::resource('author', LegacyAuthorController::class)->whereUuid('author');
+//     // Author Management
+//     Route::prefix('author')->group(function () {
+//         Route::post('import-data', [LegacyAuthorController::class, 'importData'])->name('author.import');
+//         Route::get('export-data', [LegacyAuthorController::class, 'exportData'])->name('author.export');
+//         Route::get('download-template', [LegacyAuthorController::class, 'downloadTemplate'])->name('author.template');
+//     });
+//     Route::resource('author', LegacyAuthorController::class)->whereUuid('author');
 
-    // Profile
-    Route::get('edit-profile-admin', [AdminController::class, 'editProfile'])
-        ->name('profile-admin.edit')->withoutMiddleware('permission:admin');
-    Route::put('edit-profile-admin', [AdminController::class, 'updateProfile'])
-        ->name('profile-admin.update')->withoutMiddleware('permission:admin');
+//     // Profile
+//     Route::get('edit-profile-admin', [AdminController::class, 'editProfile'])
+//         ->name('profile-admin.edit')->withoutMiddleware('permission:admin');
+//     Route::put('edit-profile-admin', [AdminController::class, 'updateProfile'])
+//         ->name('profile-admin.update')->withoutMiddleware('permission:admin');
 
-    // Dashboard
-    Route::get('dashboard', [LegacyDashboardController::class, 'index'])->name('dashboard.index');
+//     // Dashboard
+//     Route::get('dashboard', [LegacyDashboardController::class, 'index'])->name('dashboard.index');
 
-    // Article & Media Corner
-    Route::resource('article', ArticleController::class);
-    Route::patch('article/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('article.toggle-status');
+//     // Article & Media Corner
+//     Route::resource('article', ArticleController::class);
+//     Route::patch('article/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('article.toggle-status');
 
-    // Application Settings
-    Route::get('application-setting', [ApplicationSettingController::class, 'index'])->name('application-setting.index');
-    Route::post('application-setting/backup', [ApplicationSettingController::class, 'backupDatabase'])->name('application-setting.backup');
-    Route::get('application-setting/system-info', [ApplicationSettingController::class, 'getSystemInfo'])->name('application-setting.system-info');
-    Route::get('application-setting/database-info', [ApplicationSettingController::class, 'getDatabaseInfo'])->name('application-setting.database-info');
-    Route::post('application-setting/upload-ad-art', [ApplicationSettingController::class, 'uploadAdArt'])->name('application-setting.upload-ad-art');
-    Route::get('application-setting/download-ad-art', [ApplicationSettingController::class, 'downloadAdArt'])->name('application-setting.download-ad-art');
-    Route::delete('application-setting/delete-ad-art', [ApplicationSettingController::class, 'deleteAdArt'])->name('application-setting.delete-ad-art');
-});
+//     // Application Settings
+//     Route::get('application-setting', [ApplicationSettingController::class, 'index'])->name('application-setting.index');
+//     Route::post('application-setting/backup', [ApplicationSettingController::class, 'backupDatabase'])->name('application-setting.backup');
+//     Route::get('application-setting/system-info', [ApplicationSettingController::class, 'getSystemInfo'])->name('application-setting.system-info');
+//     Route::get('application-setting/database-info', [ApplicationSettingController::class, 'getDatabaseInfo'])->name('application-setting.database-info');
+//     Route::post('application-setting/upload-ad-art', [ApplicationSettingController::class, 'uploadAdArt'])->name('application-setting.upload-ad-art');
+//     Route::get('application-setting/download-ad-art', [ApplicationSettingController::class, 'downloadAdArt'])->name('application-setting.download-ad-art');
+//     Route::delete('application-setting/delete-ad-art', [ApplicationSettingController::class, 'deleteAdArt'])->name('application-setting.delete-ad-art');
+// });
 
 // =====================================================
 // TRANSLATE (Public)
@@ -550,10 +550,19 @@ Route::prefix('{journal}')->group(function () {
             // Navigation Menu Manager
             Route::controller(\App\Http\Controllers\Journal\NavigationController::class)->prefix('navigation')->name('navigation.')->group(function () {
                 Route::get('/', 'index')->name('index');
+                // Menus
+                Route::post('/menus', 'storeMenu')->name('menus.store');
+                Route::put('/menus/{menu}', 'updateMenu')->name('menus.update');
+                Route::delete('/menus/{menu}', 'destroyMenu')->name('menus.destroy');
+                // Items
                 Route::post('/items', 'storeItem')->name('items.store');
                 Route::put('/items/{item}', 'updateItem')->name('items.update');
                 Route::delete('/items/{item}', 'destroyItem')->name('items.destroy');
-                Route::post('/items/reorder', 'reorderItems')->name('items.reorder');
+                // Assignments
+                Route::post('/assign', 'assignItem')->name('assign');
+                Route::delete('/unassign/{assignment}', 'unassignItem')->name('unassign');
+                Route::post('/move-up/{assignment}', 'moveUp')->name('move-up');
+                Route::post('/move-down/{assignment}', 'moveDown')->name('move-down');
             });
 
             // Sidebar Block Manager
