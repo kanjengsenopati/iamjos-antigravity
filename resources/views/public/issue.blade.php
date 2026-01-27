@@ -36,6 +36,12 @@
                     <p class="text-xl text-gray-600 mb-4">{{ $issue->title }}</p>
                     @endif
 
+                    @if ($issue->description)
+                    <div class="prose max-w-none text-gray-700 mb-6">
+                        {!! $issue->description !!}
+                    </div>
+                    @endif
+
                     <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8">
                         <span>Published: {{ $issue->published_at?->format('F j, Y') }}</span>
                         <span>•</span>
@@ -50,33 +56,109 @@
                             <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                                 {{ $sectionName }}
                             </h2>
-                            <div class="space-y-4">
+                            <div class="space-y-8">
                                 @foreach ($sectionArticles as $article)
-                                <article class="group">
-                                    <h3
-                                        class="text-lg font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
-                                        <a
-                                            href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article]) }}">{{ $article->title }}</a>
-                                    </h3>
-                                    <p class="text-sm text-gray-500 mt-1">
-                                        {{ $article->authors->pluck('name')->join(', ') ?: 'Unknown Author' }}
-                                    </p>
-                                    <p class="text-sm text-gray-600 mt-2 line-clamp-2">
-                                        {{ Str::limit(strip_tags($article->abstract), 200) }}
-                                    </p>
-                                    <div class="mt-2 flex items-center gap-4">
-                                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article]) }}"
-                                            class="text-xs font-medium text-primary-600 hover:text-primary-700">
-                                            Read Article →
-                                        </a>
-                                        @if ($article->files->where('file_type', 'galley')->isNotEmpty())
-                                        <a href="#"
-                                            class="text-xs font-medium text-gray-500 hover:text-gray-700">
-                                            PDF
-                                        </a>
+                                <div class="flex flex-col md:flex-row gap-4 border-b border-gray-100 pb-6 last:border-0">
+                                    
+                                    {{-- MAIN CONTENT (Left) --}}
+                                    <div class="flex-1 min-w-0">
+                                        
+                                        {{-- 1. TITLE (Fix: Use Slug) --}}
+                                        <h4 class="text-lg font-bold text-blue-700 leading-tight mb-1">
+                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}" 
+                                               class="hover:underline">
+                                                {{ $article->title }}
+                                            </a>
+                                        </h4>
+
+                                        {{-- 2. SUBTITLE (If exists) --}}
+                                        @if(!empty($article->subtitle))
+                                            <div class="text-sm text-gray-600 font-medium mb-2">
+                                                {{ $article->subtitle }}
+                                            </div>
                                         @endif
+
+                                        {{-- 3. AUTHORS (Detailed List) --}}
+                                        <div class="mt-2 mb-3 space-y-1">
+                                            @if($article->authors->isNotEmpty())
+                                                @foreach($article->authors as $author)
+                                                    <div class="text-sm text-gray-700">
+                                                        <span class="font-bold">{{ $author->first_name }} {{ $author->last_name }}</span>
+                                                        @if($author->affiliation)
+                                                            <span class="text-gray-500">, {{ $author->affiliation }}</span>
+                                                        @endif
+                                                        @if($author->country)
+                                                            <span class="text-gray-500">, {{ $author->country }}</span>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <div class="text-sm text-gray-500 italic">No authors listed</div>
+                                            @endif
+                                        </div>
+
+                                        {{-- 4. DOI --}}
+                                        @if($article->doi)
+                                        <div class="flex items-center gap-2 mb-3 mt-3">
+                                            {{-- OJS DOI Badge Style --}}
+                                            <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 uppercase">
+                                                DOI
+                                            </span>
+                                            <a href="https://doi.org/{{ $article->doi }}" 
+                                               class="text-sm text-blue-600 hover:underline underline-offset-2 break-all"
+                                               target="_blank">
+                                                https://doi.org/{{ $article->doi }}
+                                            </a>
+                                        </div>
+                                        @endif
+
+                                        {{-- 5. ACTION BAR (Galleys + Metrics) --}}
+                                        <div class="flex flex-wrap items-center gap-4 mt-4">
+                                            {{-- Galley Buttons --}}
+                                            @if($article->galleys->isNotEmpty())
+                                                @foreach($article->galleys as $galley)
+                                                <a href="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id, 'galley' => $galley->id]) }}" 
+                                                   class="inline-flex items-center px-3 py-1.5 bg-gray-700 hover:bg-gray-800 text-white text-xs font-bold rounded shadow-sm transition group">
+                                                    <svg class="w-4 h-4 mr-1.5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                                        </path>
+                                                    </svg>
+                                                    {{ $galley->label ?? 'PDF' }}
+                                                </a>
+                                                @endforeach
+                                            @endif
+
+                                            {{-- Metrics --}}
+                                            <div class="flex items-center gap-3 text-xs text-gray-500 border-l border-gray-200 pl-4">
+                                                <span class="flex items-center gap-1" title="Abstract Views">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                        </path>
+                                                    </svg>
+                                                    {{ $article->views_count ?? 0 }} Views
+                                                </span>
+                                                <span class="flex items-center gap-1" title="File Downloads">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                                                        </path>
+                                                    </svg>
+                                                    {{ $article->downloads_count ?? 0 }} Downloads
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </article>
+
+                                    {{-- PAGE NUMBERS (Right Side) --}}
+                                    <div class="text-sm text-gray-500 font-mono whitespace-nowrap pt-1">
+                                        {{ $article->pages ?? '' }}
+                                    </div>
+
+                                </div>
                                 @endforeach
                             </div>
                         </div>
