@@ -6,6 +6,7 @@ use App\Models\Issue;
 use App\Models\Journal;
 use App\Models\Submission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PublicController extends Controller
@@ -248,8 +249,79 @@ class PublicController extends Controller
         // Get the issue for additional metadata
         $issue = $article->issue;
 
-        // Increment view count (optional - for analytics)
-        // $article->increment('views_count');
+        // =============================================
+        // ANALYTICS: Log Article View
+        // =============================================
+        $ip = request()->ip();
+        
+        // Simple bot detection (check user agent)
+        $userAgent = strtolower(request()->userAgent() ?? '');
+        $isBot = str_contains($userAgent, 'bot') || 
+                 str_contains($userAgent, 'crawler') || 
+                 str_contains($userAgent, 'spider');
+
+        if (!$isBot) {
+            // Mock location data (replace with actual GeoIP package like stevebauman/location)
+            $countryCode = 'ID'; // Default
+            $city = null;
+            
+            // Log the view
+            \DB::table('article_metrics')->insert([
+                'submission_id' => $article->id,
+                'type' => 'view',
+                'ip_address' => $ip,
+                'country_code' => $countryCode,
+                'city' => $city,
+                'date' => now()->toDateString(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // =============================================
+        // ANALYTICS: Prepare Chart Data (Last 12 Months)
+        // =============================================
+        $stats = \DB::table('article_metrics')
+            ->selectRaw("TO_CHAR(date, 'YYYY-MM') as month, type, count(*) as total")
+            ->where('submission_id', $article->id)
+            ->where('date', '>=', now()->subYear())
+            ->groupBy('month', 'type')
+            ->orderBy('month')
+            ->get();
+        
+        // Build complete month range for last 12 months
+        $months = collect();
+        for ($i = 11; $i >= 0; $i--) {
+            $months->push(now()->subMonths($i)->format('Y-m'));
+        }
+        
+        // Map data to months (fill missing months with 0)
+        $chartLabels = $months->values();
+        $viewsData = $months->mapWithKeys(function($month) use ($stats) {
+            $stat = $stats->where('month', $month)->where('type', 'view')->first();
+            return [$month => $stat ? $stat->total : 0];
+        })->values();
+        
+        $downloadsData = $months->mapWithKeys(function($month) use ($stats) {
+            $stat = $stats->where('month', $month)->where('type', 'download')->first();
+            return [$month => $stat ? $stat->total : 0];
+        })->values();
+
+        // =============================================
+        // ANALYTICS: Country Stats (Admin Only)
+        // =============================================
+        $countryStats = collect();
+        if (auth()->check() && auth()->user()->hasAnyRole(['admin', 'journal manager', 'editor'])) {
+            $countryStats = \DB::table('article_metrics')
+                ->select('country_code', \DB::raw('count(*) as total'))
+                ->where('submission_id', $article->id)
+                ->where('type', 'view')
+                ->whereNotNull('country_code')
+                ->groupBy('country_code')
+                ->orderByDesc('total')
+                ->limit(10)
+                ->get();
+        }
 
         // Related articles from same section in same journal
         $relatedArticles = Submission::where('journal_id', $journal->id)
@@ -269,7 +341,11 @@ class PublicController extends Controller
             'article',
             'issue',
             'relatedArticles',
-            'settings'
+            'settings',
+            'chartLabels',
+            'viewsData',
+            'downloadsData',
+            'countryStats'
         ));
     }
 
@@ -461,7 +537,32 @@ class PublicController extends Controller
             abort(404, 'File not found on disk');
         }
 
-        // Increment download counter (optional)
+        // =============================================
+        // ANALYTICS: Log Download
+        // =============================================
+        $ip = request()->ip();
+        $userAgent = strtolower(request()->userAgent() ?? '');
+        $isBot = str_contains($userAgent, 'bot') || 
+                 str_contains($userAgent, 'crawler') || 
+                 str_contains($userAgent, 'spider');
+
+        if (!$isBot) {
+            $countryCode = 'ID'; // Mock (replace with GeoIP)
+            $city = null;
+            
+            \DB::table('article_metrics')->insert([
+                'submission_id' => $submission->id,
+                'type' => 'download',
+                'ip_address' => $ip,
+                'country_code' => $countryCode,
+                'city' => $city,
+                'date' => now()->toDateString(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Increment download counter
         $publicationGalley->increment('views');
 
         // Return file stream with proper headers for Google Scholar
@@ -526,4 +627,157 @@ class PublicController extends Controller
             'settings' => $settings,
         ]);
     }
+
+    /**
+     * Export citation in RIS format (for EndNote, Zotero, Mendeley)
+     */
+    public function exportCitationRIS(string $journalSlug, $article)
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        // Resolve article by ID or slug
+        $submission = Submission::where('journal_id', $journal->id)
+            ->where(function ($q) use ($article) {
+                $q->Where('slug', $article);
+            })
+            ->with(['authors', 'issue', 'section'])
+            ->published()
+            ->firstOrFail();
+
+        $issue = $submission->issue;
+        $publicationDate = $issue?->published_at ?? $submission->published_at;
+
+        // Build RIS format
+        $ris = "TY  - JOUR\n";
+        $ris .= "TI  - {$submission->title}\n";
+        
+        // Authors
+        foreach ($submission->authors as $author) {
+            $lastName = $author->family_name ?? $author->last_name ?? '';
+            $firstName = $author->given_name ?? $author->first_name ?? '';
+            $ris .= "AU  - {$lastName}, {$firstName}\n";
+        }
+
+        // Publication details
+        $ris .= "T2  - {$journal->name}\n";
+        
+        if ($publicationDate) {
+            $ris .= "PY  - {$publicationDate->year}\n";
+            $ris .= "DA  - {$publicationDate->format('Y/m/d')}\n";
+        }
+        
+        if ($issue && $issue->volume) {
+            $ris .= "VL  - {$issue->volume}\n";
+        }
+        
+        if ($issue && $issue->number) {
+            $ris .= "IS  - {$issue->number}\n";
+        }
+        
+        if ($submission->pages) {
+            $pages = explode('-', $submission->pages);
+            $ris .= "SP  - " . trim($pages[0]) . "\n";
+            if (isset($pages[1])) {
+                $ris .= "EP  - " . trim($pages[1]) . "\n";
+            }
+        }
+        
+        if ($submission->doi) {
+            $ris .= "DO  - {$submission->doi}\n";
+            $ris .= "UR  - https://doi.org/{$submission->doi}\n";
+        }
+        
+        if ($submission->abstract) {
+            $abstractClean = strip_tags($submission->abstract);
+            $ris .= "AB  - {$abstractClean}\n";
+        }
+        
+        if ($submission->keywords && is_array($submission->keywords)) {
+            foreach ($submission->keywords as $keyword) {
+                $ris .= "KW  - {$keyword}\n";
+            }
+        }
+        
+        if ($journal->publisher) {
+            $ris .= "PB  - {$journal->publisher}\n";
+        }
+        
+        $ris .= "ER  - \n";
+
+        return response($ris)
+            ->header('Content-Type', 'application/x-research-info-systems')
+            ->header('Content-Disposition', 'attachment; filename="' . \Str::slug($submission->title) . '.ris"');
+    }
+
+    /**
+     * Export citation in BibTeX format
+     */
+    public function exportCitationBibTeX(string $journalSlug, $article)
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        // Resolve article by ID or slug
+        $submission = Submission::where('journal_id', $journal->id)
+            ->where(function ($q) use ($article) {
+                $q->Where('slug', $article);
+            })
+            ->with(['authors', 'issue', 'section'])
+            ->published()
+            ->firstOrFail();
+
+        $issue = $submission->issue;
+        $publicationDate = $issue?->published_at ?? $submission->published_at;
+
+        // Generate citation key (FirstAuthorLastName + Year)
+        $firstAuthor = $submission->authors->first();
+        $lastName = $firstAuthor ? ($firstAuthor->family_name ?? $firstAuthor->last_name ?? 'Author') : 'Author';
+        $year = $publicationDate?->year ?? now()->year;
+        $citationKey = Str::slug($lastName) . $year;
+
+        // Build BibTeX format
+        $bibtex = "@article{{$citationKey},\n";
+        $bibtex .= "  title = {{{$submission->title}}},\n";
+        
+        // Authors
+        $authors = $submission->authors->map(function($author) {
+            $lastName = $author->family_name ?? $author->last_name ?? '';
+            $firstName = $author->given_name ?? $author->first_name ?? '';
+            return "{$firstName} {$lastName}";
+        })->implode(' and ');
+        $bibtex .= "  author = {{{$authors}}},\n";
+        
+        $bibtex .= "  journal = {{{$journal->name}}},\n";
+        
+        if ($publicationDate) {
+            $bibtex .= "  year = {{{$publicationDate->year}}},\n";
+        }
+        
+        if ($issue && $issue->volume) {
+            $bibtex .= "  volume = {{{$issue->volume}}},\n";
+        }
+        
+        if ($issue && $issue->number) {
+            $bibtex .= "  number = {{{$issue->number}}},\n";
+        }
+        
+        if ($submission->pages) {
+            $bibtex .= "  pages = {{{$submission->pages}}},\n";
+        }
+        
+        if ($submission->doi) {
+            $bibtex .= "  doi = {{{$submission->doi}}},\n";
+            $bibtex .= "  url = {{https://doi.org/{$submission->doi}}},\n";
+        }
+        
+        if ($journal->publisher) {
+            $bibtex .= "  publisher = {{{$journal->publisher}}},\n";
+        }
+        
+        $bibtex .= "}\n";
+
+        return response($bibtex)
+            ->header('Content-Type', 'application/x-bibtex')
+            ->header('Content-Disposition', 'attachment; filename="' . \Str::slug($submission->title) . '.bib"');
+    }
 }
+
