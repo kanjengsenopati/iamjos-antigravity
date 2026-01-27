@@ -1,5 +1,6 @@
-<x-public-layout :journal="$journal">
-    @php $title = 'Home'; @endphp
+@php $title = 'Home'; @endphp
+
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
 
     <!-- Hero Section -->
     <section class="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white">
@@ -245,4 +246,4 @@
             </div>
         </div>
     </section>
-</x-public-layout>
+</x-layouts.public>

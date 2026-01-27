@@ -1,5 +1,6 @@
-<x-public-layout :journal="$journal">
-    @php $title = 'Archives'; @endphp
+@php $title = 'Archives'; @endphp
+
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
 
     <div class="container mx-auto px-4 lg:px-0">
 
@@ -14,25 +15,27 @@
         </nav>
 
         {{-- PAGE TITLE --}}
-        <h1 class="text-3xl font-bold text-slate-800 mb-10">
+        <h1 class="text-3xl font-bold text-slate-800 mb-12">
             Archives
         </h1>
 
-        {{-- ARCHIVES LIST --}}
+        {{-- ARCHIVE LIST --}}
         @if($issues->count())
             <div class="space-y-16">
 
                 @foreach($issues as $issue)
-                    <article class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
+                    {{-- ISSUE ROW --}}
+                    <article class="grid grid-cols-1 lg:grid-cols-[180px_minmax(0,1fr)] gap-8 items-start">
 
-                        {{-- COVER (LEFT) --}}
-                        <div>
-                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->id]) }}">
+                        {{-- COVER (STRICT SIZE) --}}
+                        <div class="w-[180px] max-w-full">
+                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->id]) }}"
+                               class="block">
                                 @if($issue->cover_path)
                                     <img
                                         src="{{ Storage::url($issue->cover_path) }}"
                                         alt="Cover Vol {{ $issue->volume }}"
-                                        class="w-full border border-slate-200 shadow-sm"
+                                        class="w-full h-auto aspect-[3/4] object-cover border border-slate-200 shadow-sm"
                                     >
                                 @else
                                     <div class="w-full aspect-[3/4] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs font-semibold uppercase">
@@ -42,10 +45,10 @@
                             </a>
                         </div>
 
-                        {{-- ISSUE INFORMATION (RIGHT) --}}
+                        {{-- ISSUE INFO --}}
                         <div class="min-w-0">
 
-                            {{-- ISSUE TITLE --}}
+                            {{-- TITLE --}}
                             <h2 class="text-2xl font-bold text-slate-900 leading-snug mb-2">
                                 <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->id]) }}"
                                    class="hover:text-primary-700 hover:underline">
@@ -58,22 +61,22 @@
                                 Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
                             </div>
 
-                            {{-- JOURNAL NAME + ISSN --}}
-                            <div class="text-slate-700 mb-4 leading-relaxed">
+                            {{-- JOURNAL + ISSN --}}
+                            <div class="text-slate-700 mb-5 leading-relaxed">
                                 <strong>{{ $journal->name }}</strong>
                                 @if($journal->print_issn || $journal->online_issn)
                                     :
                                 @endif
 
                                 @if($journal->print_issn)
-                                    ISSN:
+                                    ISSN
                                     <span class="text-primary-600">{{ $journal->print_issn }}</span>
                                     (CETAK)
                                 @endif
 
                                 @if($journal->online_issn)
                                     ,
-                                    ISSN:
+                                    ISSN
                                     <span class="text-primary-600">{{ $journal->online_issn }}</span>
                                     (ONLINE)
                                 @endif
@@ -93,7 +96,7 @@
             </div>
 
             {{-- PAGINATION --}}
-            <div class="mt-16">
+            <div class="mt-20">
                 {{ $issues->links() }}
             </div>
         @else
@@ -103,4 +106,4 @@
         @endif
 
     </div>
-</x-public-layout>
+</x-layouts.public>

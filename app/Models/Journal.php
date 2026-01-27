@@ -50,7 +50,6 @@ class Journal extends Model
         'author_guidelines',
         'summary',
         'show_summary',
-        'about',
         'editorial_team_description',
         'info_readers',
         'info_authors',

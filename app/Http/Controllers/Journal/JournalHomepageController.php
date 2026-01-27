@@ -79,6 +79,10 @@ class JournalHomepageController extends Controller
     private function getSettingsWithDefaults(Journal $journal): array
     {
         $defaults = [
+            // Content
+            'about' => '',
+            'masthead' => ['about' => '', 'editorial_team' => ''],
+
             // Appearance
             'hero_image' => null,
             'primary_color' => '#4F46E5',

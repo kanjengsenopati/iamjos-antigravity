@@ -475,6 +475,58 @@ $journalSlug = $journal->slug;
             {{-- Tab: INFORMATION --}}
             {{-- ============================================ --}}
             <div x-show="activeTab === 'information'" x-cloak class="space-y-6">
+                {{-- About the Journal --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">About the Journal</h3>
+                    <p class="text-sm text-gray-500 mb-4">
+                        The main description of your journal that will be displayed on the About page.
+                        This content supports rich HTML formatting.
+                    </p>
+                    <textarea name="about" id="about" rows="12"
+                        class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
+                        placeholder="Enter detailed information about your journal...">{{ $settings['about'] ?? '' }}</textarea>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <i class="fa-solid fa-code mr-1"></i>
+                        HTML is allowed. Use formatting tags like &lt;p&gt;, &lt;strong&gt;, &lt;h2&gt;, &lt;ul&gt;, etc.
+                    </p>
+                </div>
+
+                {{-- Masthead Content --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Masthead Content</h3>
+                    <p class="text-sm text-gray-500 mb-4">
+                        Configure the main content sections that appear at the top of journal pages.
+                    </p>
+
+                    {{-- About Section --}}
+                    <div class="mb-6">
+                        <label for="masthead_about" class="block text-sm font-medium text-gray-700 mb-2">
+                            About Content
+                        </label>
+                        <textarea name="masthead[about]" id="masthead_about" rows="8"
+                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
+                            placeholder="Enter the main about content for your journal...">{{ $settings['masthead']['about'] ?? '' }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">
+                            <i class="fa-solid fa-code mr-1"></i>
+                            HTML is allowed. This content appears on the About page.
+                        </p>
+                    </div>
+
+                    {{-- Editorial Team Section --}}
+                    <div>
+                        <label for="masthead_editorial_team" class="block text-sm font-medium text-gray-700 mb-2">
+                            Editorial Team Content
+                        </label>
+                        <textarea name="masthead[editorial_team]" id="masthead_editorial_team" rows="8"
+                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
+                            placeholder="Enter editorial team information...">{{ $settings['masthead']['editorial_team'] ?? '' }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">
+                            <i class="fa-solid fa-code mr-1"></i>
+                            HTML is allowed. This content appears on the Editorial Team page.
+                        </p>
+                    </div>
+                </div>
+
                 {{-- Information for Readers --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">For Readers</h3>

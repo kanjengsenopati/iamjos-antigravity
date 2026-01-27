@@ -32,6 +32,12 @@ class SearchController extends Controller
     public function index(Request $request, string $journalSlug): View
     {
         $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
+        $title = 'Search';
+
         $query = $request->get('q');
         $type = $request->get('type', 'all'); // all, title, author, keywords, abstract
         $year = $request->get('year');
@@ -100,7 +106,7 @@ class SearchController extends Controller
             ->sortDesc()
             ->values();
 
-        return view('public.search', compact('journal', 'query', 'type', 'year', 'results', 'totalFound', 'years'));
+        return view('public.search', compact('journal', 'settings', 'query', 'type', 'year', 'results', 'totalFound', 'years', 'title'));
     }
 
     /**
@@ -136,5 +142,56 @@ class SearchController extends Controller
             });
 
         return response()->json($results);
+    }
+
+    /**
+     * Get settings with defaults merged.
+     */
+    private function getSettingsWithDefaults(Journal $journal): array
+    {
+        $defaults = [
+            // Content
+            'about' => '',
+            'masthead' => ['about' => '', 'editorial_team' => ''],
+
+            // Appearance
+            'hero_image' => null,
+            'primary_color' => '#4F46E5',
+            'secondary_color' => '#7C3AED',
+
+            // Hero Content
+            'hero_title' => $journal->name,
+            'hero_description' => $journal->description ?? 'A peer-reviewed scholarly journal dedicated to advancing knowledge and research.',
+            'hero_tagline' => 'Peer-Reviewed • Open Access • Indexed',
+
+            // Stats
+            'stat_acceptance_rate' => '25%',
+            'stat_review_time' => '4 Weeks',
+            'stat_impact_factor' => 'N/A',
+            'stat_citations' => '1000+',
+
+            // Section Visibility
+            'show_announcements' => true,
+            'show_editorial_team' => true,
+            'show_indexed_in' => true,
+            'show_stats' => true,
+
+            // Indexed In
+            'indexed_in_images' => [],
+
+            // Footer
+            'footer_description' => $journal->description ?? 'A leading academic journal.',
+            'social_facebook' => '',
+            'social_twitter' => '',
+            'social_linkedin' => '',
+            'social_instagram' => '',
+            'contact_email' => '',
+            'contact_phone' => '',
+            'contact_address' => '',
+        ];
+
+        $actual = $journal->getWebsiteSettings();
+
+        return array_merge($defaults, $actual);
     }
 }
