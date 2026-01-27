@@ -146,8 +146,44 @@ class JournalUserManagementController extends Controller
             return back()->with('error', 'You cannot login as yourself.');
         }
 
+        // Store the original admin's ID before impersonating
+        session()->put('impersonator_id', auth()->id());
+        session()->put('impersonator_journal', $journal);
+
         Auth::login($user);
-        return redirect()->route('journal.dashboard', ['journal' => $journal]);
+        return redirect()->route('journal.dashboard', ['journal' => $journal])
+            ->with('success', "You are now logged in as {$user->name}");
+    }
+
+    /**
+     * Stop impersonating and return to admin account.
+     */
+    public function stopImpersonating()
+    {
+        // Check if currently impersonating
+        if (!session()->has('impersonator_id')) {
+            return redirect()->route('dashboard')
+                ->with('error', 'You are not currently impersonating anyone.');
+        }
+
+        // Retrieve admin ID and original journal
+        $adminId = session()->pull('impersonator_id');
+        $originalJournal = session()->pull('impersonator_journal');
+
+        // Switch back to admin
+        Auth::logout();
+        Auth::loginUsingId($adminId);
+
+        // Redirect back to user management page
+        $journal = current_journal() ?? \App\Models\Journal::where('slug', $originalJournal)->first();
+        
+        if ($journal) {
+            return redirect()->route('journal.users.index', ['journal' => $journal->slug])
+                ->with('success', 'Welcome back to your account.');
+        }
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Welcome back to your account.');
     }
 
     public function disable($journal, User $user)

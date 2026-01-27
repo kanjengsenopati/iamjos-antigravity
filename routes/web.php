@@ -305,6 +305,9 @@ Route::prefix('{journal}')->group(function () {
         // --------- Journal Dashboard ---------
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('journal.dashboard');
 
+        // Stop Impersonating (Outside role middleware to avoid 403)
+        Route::post('/users/stop-impersonating', [JournalUserManagementController::class, 'stopImpersonating'])->name('journal.users.stop-impersonating');
+
         // --------- User Management (General / Manager) ---------
         Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')->controller(JournalUserManagementController::class)->prefix('users')->name('journal.users.')->group(function () {
             // 1. All Users

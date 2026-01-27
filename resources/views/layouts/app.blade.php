@@ -932,20 +932,44 @@ $journalSlug ??
                                 @endrole
                             </div>
 
-                            <!-- Logout -->
+                            <!-- Logout / Stop Impersonating -->
                             <div class="border-t border-gray-100 py-1">
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit"
-                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                        </svg>
-                                        Sign Out
-                                    </button>
-                                </form>
+                                @if(session()->has('impersonator_id'))
+                                    {{-- STOP IMPERSONATING (OJS 3.3 Style) --}}
+                                    <div class="px-4 py-2 bg-amber-50 border-b border-amber-100">
+                                        <p class="text-xs font-medium text-amber-800 flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Viewing as {{ Auth::user()->name }}
+                                        </p>
+                                    </div>
+                                    <form method="POST" action="{{ route('journal.users.stop-impersonating', current_journal()->slug ?? 'default') }}">
+                                        @csrf
+                                        <button type="submit"
+                                            class="flex items-center w-full px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            Logout as {{ Auth::user()->name }}
+                                        </button>
+                                    </form>
+                                @else
+                                    {{-- STANDARD LOGOUT --}}
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            Sign Out
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>
