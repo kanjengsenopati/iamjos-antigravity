@@ -4,10 +4,11 @@
 --}}
 @props(['primaryMenu' => null, 'settings' => []])
 
-<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            {{-- Logo --}}
+@php
+// primaryMenu is now a collection of navigation items
+$primaryMenuItems = $primaryMenu ?? collect();
+$hasPrimaryMenu = $primaryMenuItems->isNotEmpty();
+@endphp
             <a href="{{ route('portal.home') }}" class="flex items-center gap-3">
                 @if(isset($settings['site_logo']) && $settings['site_logo'])
                     <img src="{{ Storage::url($settings['site_logo']) }}" alt="{{ $settings['site_name'] ?? 'IAMJOS' }}" class="h-10">
@@ -21,20 +22,21 @@
 
             {{-- Desktop Menu --}}
             <div class="hidden md:flex items-center gap-6">
-                @if($primaryMenu && $primaryMenu->items->count() > 0)
-                    @foreach($primaryMenu->items->where('is_active', true)->sortBy('order') as $item)
+                @if($hasPrimaryMenu)
+                    {{-- Dynamic Menu from Admin Settings --}}
+                    @foreach($primaryMenuItems as $item)
                         @php
                             $url = $item->resolved_url;
                             $isActive = request()->url() === $url;
                         @endphp
-                        
-                        @if($item->type === 'divider')
+
+                        @if($item->is_divider ?? false)
                             <span class="text-gray-300">|</span>
                         @else
-                            <a href="{{ $url }}" 
+                            <a href="{{ $url }}"
                                target="{{ $item->target }}"
                                class="{{ $isActive ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-900' }} font-medium transition-colors">
-                                @if($item->icon)
+                                @if($item->icon ?? false)
                                     <i class="{{ $item->icon }} mr-1"></i>
                                 @endif
                                 {{ $item->label }}
@@ -106,13 +108,13 @@
     <div x-show="mobileMenuOpen" x-cloak @click.away="mobileMenuOpen = false"
          class="md:hidden bg-white border-t border-gray-200 py-4">
         <div class="max-w-7xl mx-auto px-4 space-y-3">
-            @if($primaryMenu && $primaryMenu->items->count() > 0)
-                @foreach($primaryMenu->items->where('is_active', true)->sortBy('order') as $item)
-                    @if($item->type !== 'divider')
-                        <a href="{{ $item->resolved_url }}" 
+            @if($hasPrimaryMenu)
+                @foreach($primaryMenuItems as $item)
+                    @if(!($item->is_divider ?? false))
+                        <a href="{{ $item->resolved_url }}"
                            target="{{ $item->target }}"
                            class="block text-gray-700 hover:text-blue-600 py-2 font-medium">
-                            @if($item->icon)
+                            @if($item->icon ?? false)
                                 <i class="{{ $item->icon }} mr-2"></i>
                             @endif
                             {{ $item->label }}

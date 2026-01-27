@@ -26,9 +26,9 @@ class SiteLayoutComposer
 
         // Share data with the view
         $view->with([
-            'primaryMenu' => $menus['primary'] ?? null,
-            'userMenu' => $menus['user_top'] ?? null,
-            'footerMenu' => $menus['footer'] ?? null,
+            'primaryMenu' => $menus['primary']['items'] ?? collect(),
+            'userMenu' => $menus['user']['items'] ?? collect(),
+            'footerMenu' => $menus['footer']['items'] ?? collect(),
         ]);
     }
 
@@ -39,19 +39,26 @@ class SiteLayoutComposer
     {
         $menus = [];
 
-        foreach (NavigationMenu::getLocations() as $location => $name) {
+        foreach (NavigationMenu::getAreas() as $area => $name) {
             $menu = NavigationMenu::where('journal_id', null)
-                ->where('location', $location)
+                ->where('area_name', $area)
                 ->where('is_active', true)
-                ->with(['items' => function ($query) {
-                    $query->where('is_active', true)
-                        ->whereNull('parent_id')
+                ->with(['assignments' => function ($query) {
+                    $query->whereNull('parent_id')
                         ->orderBy('order')
-                        ->with(['activeChildren']);
+                        ->with(['item', 'children.item']);
                 }])
                 ->first();
 
-            $menus[$location] = $menu;
+            $items = collect();
+            if ($menu) {
+                $items = $this->buildNavItems($menu);
+            }
+
+            $menus[$area] = [
+                'menu' => $menu,
+                'items' => $items,
+            ];
         }
 
         return $menus;
@@ -63,5 +70,62 @@ class SiteLayoutComposer
     public static function clearCache(): void
     {
         Cache::forget('site_navigation_menus');
+    }
+
+    /**
+     * Build navigation items from menu assignments
+     */
+    private function buildNavItems(NavigationMenu $menu): \Illuminate\Support\Collection
+    {
+        $assignments = $menu->rootAssignments()
+            ->with(['item', 'children.item'])
+            ->get();
+
+        return $assignments->filter(fn($a) => $a->item && $a->item->is_active)
+            ->map(function ($assignment) {
+                $item = $assignment->item;
+
+                return (object) [
+                    'id' => $item->id,
+                    'label' => $item->title,
+                    'icon' => $item->icon,
+                    'target' => $item->target ?? '_self',
+                    'resolved_url' => $this->resolveItemUrl($item),
+                    'is_divider' => false,
+                    'children' => $assignment->children->filter(fn($c) => $c->item && $c->item->is_active)
+                        ->map(function ($child) {
+                            $childItem = $child->item;
+                            return (object) [
+                                'id' => $childItem->id,
+                                'label' => $childItem->title,
+                                'icon' => $childItem->icon,
+                                'target' => $childItem->target ?? '_self',
+                                'resolved_url' => $this->resolveItemUrl($childItem),
+                                'is_divider' => false,
+                            ];
+                        }),
+                ];
+            });
+    }
+
+    /**
+     * Resolve URL for a navigation item
+     */
+    private function resolveItemUrl($item): string
+    {
+        if ($item->type === 'custom' && $item->url) {
+            return $item->url;
+        }
+
+        if ($item->type === 'route' && $item->route_name) {
+            try {
+                return route($item->route_name);
+            } catch (\Exception $e) {
+                return '#';
+            }
+        }
+
+        // TODO: Handle page type
+        return '#';
     }
 }
