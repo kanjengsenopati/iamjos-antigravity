@@ -14,42 +14,30 @@ $journal = current_journal();
     <div class="border-b border-gray-200 mb-6">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
             @php
-            $currentStatus = request('status', 'pending');
+            $currentStatus = request('status', 'myqueue');
             @endphp
 
-            {{-- Pending Tab --}}
-            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug, 'status' => 'pending']) }}"
-                class="{{ $currentStatus === 'pending'
+            {{-- MyQueue Tab --}}
+            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug, 'status' => 'myqueue']) }}"
+                class="{{ $currentStatus === 'myqueue'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}
                     whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
-                Pending
-                <span class="{{ $currentStatus === 'pending' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900' }} ml-3 py-0.5 px-2.5 rounded-full text-xs font-medium md:inline-block">
-                    {{ $statusCounts['pending'] }}
+                My Queue
+                <span class="{{ $currentStatus === 'myqueue' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900' }} ml-3 py-0.5 px-2.5 rounded-full text-xs font-medium md:inline-block">
+                    {{ $statusCounts['myqueue'] }}
                 </span>
             </a>
 
-            {{-- In Progress Tab --}}
-            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug, 'status' => 'in_progress']) }}"
-                class="{{ $currentStatus === 'in_progress'
+            {{-- Archives Tab --}}
+            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug, 'status' => 'archives']) }}"
+                class="{{ $currentStatus === 'archives'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}
                     whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
-                In Progress
-                <span class="{{ $currentStatus === 'in_progress' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900' }} ml-3 py-0.5 px-2.5 rounded-full text-xs font-medium md:inline-block">
-                    {{ $statusCounts['in_progress'] }}
-                </span>
-            </a>
-
-            {{-- Completed Tab --}}
-            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug, 'status' => 'completed']) }}"
-                class="{{ $currentStatus === 'completed'
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}
-                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
-                Completed
-                <span class="{{ $currentStatus === 'completed' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900' }} ml-3 py-0.5 px-2.5 rounded-full text-xs font-medium md:inline-block">
-                    {{ $statusCounts['completed'] }}
+                Archives
+                <span class="{{ $currentStatus === 'archives' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900' }} ml-3 py-0.5 px-2.5 rounded-full text-xs font-medium md:inline-block">
+                    {{ $statusCounts['archives'] }}
                 </span>
             </a>
         </nav>
@@ -58,23 +46,17 @@ $journal = current_journal();
     <!-- Assignments List -->
     @if ($assignments->isEmpty())
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-        @if ($currentStatus === 'pending')
-        <div class="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fa-regular fa-clock text-yellow-400 text-2xl"></i>
-        </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-1">No Pending Requests</h3>
-        <p class="text-gray-500">You're all caught up! New review invitations will appear here.</p>
-        @elseif ($currentStatus === 'in_progress')
+        @if ($currentStatus === 'myqueue')
         <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fa-solid fa-spinner text-blue-400 text-2xl"></i>
+            <i class="fa-solid fa-list-check text-blue-400 text-2xl"></i>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-1">No Reviews in Progress</h3>
-        <p class="text-gray-500">Accept a pending invitation to start a review.</p>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">No Reviews in Your Queue</h3>
+        <p class="text-gray-500">You're all caught up! New review invitations will appear here.</p>
         @else
         <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fa-solid fa-check-double text-green-400 text-2xl"></i>
+            <i class="fa-solid fa-archive text-green-400 text-2xl"></i>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-1">No Completed Reviews</h3>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">No Archived Reviews</h3>
         <p class="text-gray-500">Reviews you complete will be archived here.</p>
         @endif
     </div>
