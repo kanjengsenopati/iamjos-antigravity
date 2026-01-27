@@ -292,6 +292,10 @@ Route::prefix('{journal}')->group(function () {
     Route::get('/article/{article}/galley/{galley}/download', [PublicController::class, 'downloadGalley'])->name('journal.article.download');
     Route::get('/article/{article}/galley/{galley}', [PublicController::class, 'viewGalley'])->name('journal.article.galley');
 
+    // Citation Export Routes
+    Route::get('/article/{article}/citation/ris', [PublicController::class, 'exportCitationRIS'])->name('citation.ris');
+    Route::get('/article/{article}/citation/bibtex', [PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');
+
 
     // =====================================================
     // JOURNAL-SCOPED DASHBOARD ROUTES (Protected)

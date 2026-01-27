@@ -12,6 +12,10 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
 @endphp
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$article->title . ' | ' . $journal->name">
+    
+    {{-- ============================================ --}}
+    {{-- GOOGLE SCHOLAR META TAGS (Keep existing) --}}
+    {{-- ============================================ --}}
     {{-- ============================================ --}}
     {{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS --}}
     {{-- CRITICAL for academic indexing --}}
@@ -72,7 +76,7 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
     {{-- Authors (One tag per author - CRITICAL) --}}
     @if($article->authors && $article->authors->isNotEmpty())
     @foreach($article->authors as $author)
-    <meta name="citation_author" content="{{ $author->full_name ?? ($author->given_name . ' ' . $author->family_name) }}">
+    <meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
     @if($author->affiliation)
     <meta name="citation_author_institution" content="{{ $author->affiliation }}">
     @endif
@@ -137,7 +141,7 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
             "author" => $article->authors?->map(function($author) {
                 $a = [
                     "@type" => "Person",
-                    "name" => $author->full_name ?? ($author->given_name . ' ' . $author->family_name),
+                    "name" => $author->full_name ?? ($author->last_name . ' ' . $author->first_name),
                 ];
                 if (!empty($author->affiliation)) {
                     $a["affiliation"] = [
@@ -191,23 +195,23 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
     {{-- ============================================ --}}
     {{-- BREADCRUMB NAVIGATION --}}
     {{-- ============================================ --}}
-    <nav class="text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
+    <nav class="text-sm text-slate-500 mb-8" aria-label="Breadcrumb">
         <ol class="flex flex-wrap items-center gap-2">
             <li>
-                <a href="{{ route('journal.public.home', $journal->slug) }}" class="hover:text-slate-700 hover:underline">
+                <a href="{{ route('journal.public.home', $journal->slug) }}" class="hover:text-primary-600 hover:underline">
                     <i class="fa-solid fa-home mr-1"></i>Home
                 </a>
             </li>
             <li class="text-slate-400">/</li>
             <li>
-                <a href="{{ route('journal.public.archives', $journal->slug) }}" class="hover:text-slate-700 hover:underline">
+                <a href="{{ route('journal.public.archives', $journal->slug) }}" class="hover:text-primary-600 hover:underline">
                     Archives
                 </a>
             </li>
             @if($issue)
             <li class="text-slate-400">/</li>
             <li>
-                <a href="{{ route('journal.public.issue', [$journal->slug, $issue->id]) }}" class="hover:text-slate-700 hover:underline">
+                <a href="{{ route('journal.public.issue', [$journal->slug, $issue->id]) }}" class="hover:text-primary-600 hover:underline">
                     Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
                 </a>
             </li>
@@ -220,297 +224,234 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
     </nav>
 
     {{-- ============================================ --}}
-    {{-- 2-COLUMN LAYOUT: MAIN + SIDEBAR --}}
+    {{-- 2-COLUMN LAYOUT: MAIN CONTENT + SIDEBAR --}}
+    {{-- OJS 3.3 FLAT DESIGN (NO CARDS) --}}
     {{-- ============================================ --}}
-    <div class="flex flex-col lg:flex-row gap-8">
+    <div class="flex flex-col lg:flex-row gap-12">
 
-        {{-- ============================================ --}}
-        {{-- MAIN CONTENT (Left - 3/4 width) --}}
-        {{-- ============================================ --}}
-        <main class="w-full lg:w-3/4">
+        {{-- ================= LEFT COLUMN (MAIN CONTENT - 75%) ================= --}}
+        <main class="w-full lg:w-3/4 min-w-0 space-y-10">
 
-            {{-- Article Card --}}
-            <article class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {{-- 1. TITLE --}}
+            <h1 class="text-3xl md:text-4xl font-serif font-bold text-slate-900 leading-tight">
+                {{ $article->title }}
+            </h1>
 
-                {{-- Section Badge --}}
-                @if($article->section)
-                <div class="px-6 pt-6">
-                    <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full"
-                        style="background: {{ $primaryColor }}15; color: {{ $primaryColor }};">
-                        <i class="fa-solid fa-folder-open mr-1.5"></i>
-                        {{ $article->section->name }}
-                    </span>
-                </div>
-                @endif
-
-                {{-- Title --}}
-                <header class="px-6 pt-4 pb-6">
-                    <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-900 leading-tight">
-                        {{ $article->title }}
-                    </h1>
-
-                    @if($article->subtitle)
-                    <p class="mt-2 text-lg text-slate-600">{{ $article->subtitle }}</p>
-                    @endif
-
-                    {{-- DOI Badge --}}
-                    @if($article->doi)
-                    <div class="mt-4">
-                        <a href="https://doi.org/{{ $article->doi }}" target="_blank" rel="noopener"
-                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                            <i class="fa-solid fa-link mr-2"></i>
-                            https://doi.org/{{ $article->doi }}
-                        </a>
-                    </div>
-                    @endif
-                </header>
-
-                {{-- Authors Section (OJS 3.3 Toggle Style) --}}
-                @if($article->authors && $article->authors->isNotEmpty())
-                <div class="px-6 pb-6 border-t border-slate-100 pt-6" x-data="{ activeAuthor: null }">
-                    <h2 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">
-                        <i class="fa-solid fa-users mr-2"></i>Authors
-                    </h2>
-
-                    <div class="space-y-3">
-                        @foreach($article->authors as $author)
-                        <div class="border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
-                            {{-- Author Name Row (Clickable to expand) --}}
-                            <button @click="activeAuthor = activeAuthor === {{ $loop->index }} ? null : {{ $loop->index }}"
-                                class="flex items-center gap-2 w-full text-left focus:outline-none group">
-                                {{-- Avatar --}}
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                                    style="background: {{ $primaryColor }};">
-                                    {{ strtoupper(substr($author->given_name ?? $author->full_name ?? 'A', 0, 1)) }}{{ strtoupper(substr($author->family_name ?? '', 0, 1)) }}
-                                </div>
-
-                                {{-- Name & Badges --}}
-                                <div class="flex-1">
-                                    <span class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors text-lg">
-                                        {{ $author->full_name ?? ($author->given_name . ' ' . $author->family_name) }}
-                                    </span>
-
-                                    {{-- Badges --}}
-                                    <span class="inline-flex items-center gap-2 ml-2">
-                                        @if($author->is_corresponding)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded" title="Corresponding Author">
-                                            <i class="fa-solid fa-envelope mr-1"></i>Corresponding
-                                        </span>
-                                        @endif
-                                        @if($author->orcid)
-                                        <a href="https://orcid.org/{{ $author->orcid }}" target="_blank"
-                                            class="text-green-600 hover:text-green-700" title="ORCID: {{ $author->orcid }}"
-                                            @click.stop>
-                                            <i class="fa-brands fa-orcid text-lg"></i>
-                                        </a>
-                                        @endif
-                                    </span>
-                                </div>
-
-                                {{-- Expand/Collapse Icon --}}
-                                <svg class="w-5 h-5 text-slate-400 transition-transform duration-200"
-                                    :class="{'rotate-180': activeAuthor === {{ $loop->index }}}"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-
-                            {{-- Author Details (Collapsible) --}}
-                            <div x-show="activeAuthor === {{ $loop->index }}"
-                                x-collapse
-                                x-cloak
-                                class="mt-3 ml-12 text-sm text-slate-600 space-y-2">
-                                @if($author->affiliation)
-                                <p class="flex items-start gap-2">
-                                    <i class="fa-solid fa-building text-slate-400 mt-0.5"></i>
-                                    <span>{{ $author->affiliation }}</span>
-                                </p>
-                                @endif
-                                @if($author->country)
-                                <p class="flex items-center gap-2">
-                                    <i class="fa-solid fa-globe text-slate-400"></i>
-                                    <span>{{ $author->country }}</span>
-                                </p>
-                                @endif
-                                @if($author->email && $author->is_corresponding)
-                                <p class="flex items-center gap-2">
-                                    <i class="fa-solid fa-envelope text-slate-400"></i>
-                                    <a href="mailto:{{ $author->email }}" class="text-blue-600 hover:underline">{{ $author->email }}</a>
-                                </p>
-                                @endif
-                                @if($author->bio)
-                                <div class="mt-2 text-slate-500 italic border-l-2 border-slate-200 pl-3">
-                                    {!! $author->bio !!}
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-
-                {{-- Article Meta Bar --}}
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
-                    @if($publicationDate)
-                    <div class="flex items-center gap-2">
-                        <i class="fa-regular fa-calendar text-slate-400"></i>
-                        <span>Published: <strong>{{ $publicationDate->format('F d, Y') }}</strong></span>
-                    </div>
-                    @endif
-                    @if($issue)
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-book text-slate-400"></i>
-                        <span>Vol. {{ $issue->volume }} No. {{ $issue->number }}</span>
-                    </div>
-                    @endif
-                    @if($article->pages)
-                    <div class="flex items-center gap-2">
-                        <i class="fa-regular fa-file-lines text-slate-400"></i>
-                        <span>Pages: {{ $article->pages }}</span>
-                    </div>
-                    @endif
-                </div>
-
-                {{-- Abstract Section --}}
-                @if($article->abstract)
-                <section class="px-6 py-6 border-t border-slate-200">
-                    <h2 class="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide flex items-center gap-2">
-                        <i class="fa-solid fa-align-left text-slate-400"></i>
-                        Abstract
-                    </h2>
-                    <div class="prose prose-slate max-w-none text-slate-700 leading-relaxed">
-                        {!! $article->abstract !!}
-                    </div>
-                </section>
-                @endif
-
-                {{-- Keywords --}}
-                @if($article->keywords && is_array($article->keywords) && count($article->keywords) > 0)
-                <section class="px-6 py-4 border-t border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-tags text-slate-400"></i>
-                        Keywords
-                    </h3>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($article->keywords as $keyword)
-                        <a href="{{ route('journal.public.search', ['journal' => $journal->slug, 'q' => $keyword]) }}"
-                            class="px-3 py-1 text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors">
-                            {{ $keyword }}
-                        </a>
-                        @endforeach
-                    </div>
-                </section>
-                @endif
-
-            </article>
-
-            {{-- References Section --}}
-            @if($article->references)
-            <section class="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide flex items-center gap-2">
-                    <i class="fa-solid fa-quote-left text-slate-400"></i>
-                    References
-                </h2>
-                <div class="prose prose-sm prose-slate max-w-none">
-                    {!! $article->references !!}
-                </div>
-            </section>
+            @if($article->subtitle)
+            <p class="text-xl text-slate-600 -mt-6">{{ $article->subtitle }}</p>
             @endif
 
-            {{-- How to Cite --}}
-            <section class="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-quote-right text-slate-400"></i>
-                    How to Cite
-                </h3>
-                <div id="citation-text" class="p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600 font-mono leading-relaxed">
-                    @php
-                    $authorList = $article->authors?->map(function($author) {
-                    $familyName = $author->family_name ?? explode(' ', $author->full_name ?? '')[count(explode(' ', $author->full_name ?? '')) - 1] ?? '';
-                    $givenName = $author->given_name ?? explode(' ', $author->full_name ?? '')[0] ?? '';
-                    return $familyName . ', ' . substr($givenName, 0, 1) . '.';
-                    })->implode(', ') ?? 'Author';
-                    @endphp
-                    {{ $authorList }} ({{ $issue?->year ?? $publicationDate?->year ?? now()->year }}). {{ $article->title }}.
-                    <em>{{ $journal->name }}</em>{{ $issue ? ', ' : '' }}@if($issue)<em>{{ $issue->volume }}</em>({{ $issue->number }})@endif{{ $article->pages ? ', ' . $article->pages : '' }}.
-                    {{ $article->doi ? 'https://doi.org/' . $article->doi : '' }}
-                </div>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('citation-text').textContent.trim()).then(() => { this.innerHTML = '<i class=\'fa-solid fa-check mr-1\'></i> Copied!'; setTimeout(() => { this.innerHTML = '<i class=\'fa-regular fa-copy mr-1\'></i> Copy Citation'; }, 2000); })"
-                    class="mt-3 text-sm font-medium hover:underline flex items-center gap-1" style="color: {{ $primaryColor }};">
-                    <i class="fa-regular fa-copy mr-1"></i> Copy Citation
-                </button>
-            </section>
+            {{-- 2. AUTHORS --}}
+            <div class="space-y-3">
+                @if($article->authors && $article->authors->isNotEmpty())
+                    @foreach($article->authors as $author)
+                    <div class="leading-snug">
+                        <div class="font-bold text-slate-900 text-lg">
+                            {{ $author->first_name }} {{ $author->last_name }}
+                            @if($author->is_corresponding)
+                            <span class="text-orange-500 text-sm ml-1" title="Corresponding Author">
+                                <i class="fa-solid fa-envelope"></i>
+                            </span>
+                            @endif
+                            @if($author->orcid)
+                            <a href="https://orcid.org/{{ $author->orcid }}" target="_blank" class="text-green-600 hover:text-green-700 ml-2" title="ORCID: {{ $author->orcid }}">
+                                <i class="fa-brands fa-orcid text-lg"></i>
+                            </a>
+                            @endif
+                        </div>
+                        @if($author->affiliation)
+                        <div class="text-slate-500 text-sm italic">{{ $author->affiliation }}</div>
+                        @endif
+                    </div>
+                    @endforeach
+                @endif
+            </div>
 
-            {{-- Related Articles --}}
-            @if($relatedArticles && $relatedArticles->isNotEmpty())
-            <section class="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-newspaper text-slate-400"></i>
-                    Related Articles
+            {{-- 3. DOI --}}
+            @if($article->doi)
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-slate-700">DOI:</span>
+                <a href="https://doi.org/{{ $article->doi }}" target="_blank" class="text-primary-600 hover:underline break-all">
+                    https://doi.org/{{ $article->doi }}
+                </a>
+            </div>
+            @endif
+
+            {{-- 4. KEYWORDS --}}
+            @if($article->keywords && is_array($article->keywords) && count($article->keywords) > 0)
+            <div>
+                <span class="font-bold text-slate-700">Keywords:</span>
+                <span class="text-slate-600">
+                    @foreach($article->keywords as $keyword)
+                        @if(!$loop->first), @endif
+                        <a href="{{ route('journal.public.search', ['journal' => $journal->slug, 'q' => $keyword]) }}" class="hover:text-primary-600 hover:underline">{{ $keyword }}</a>
+                    @endforeach
+                </span>
+            </div>
+            @endif
+
+            {{-- 5. ABSTRACT (Orange Underline) --}}
+            @if($article->abstract)
+            <div class="pt-6">
+                <h3 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
+                    Abstract
                 </h3>
-                <div class="space-y-4">
+                <div class="prose max-w-none text-slate-700 leading-relaxed text-justify">
+                    {!! $article->abstract !!}
+                </div>
+            </div>
+            @endif
+
+            {{-- 6. DOWNLOADS CHART (Orange Underline) --}}
+            <div class="pt-6">
+                <h3 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-6 pb-1 uppercase tracking-wide">
+                    Downloads
+                </h3>
+                
+                {{-- Summary Stats (Inline) --}}
+                <div class="flex gap-8 mb-6 text-center">
+                    <div>
+                        <div class="text-3xl font-bold text-blue-600">
+                            {{ number_format(array_sum(($viewsData ?? collect())->toArray())) }}
+                        </div>
+                        <div class="text-sm text-slate-600 mt-1">Total Views</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-green-600">
+                            {{ number_format(array_sum(($downloadsData ?? collect())->toArray())) }}
+                        </div>
+                        <div class="text-sm text-slate-600 mt-1">Total Downloads</div>
+                    </div>
+                </div>
+
+                {{-- Chart --}}
+                <div class="h-64 w-full">
+                    <canvas id="statsChart"></canvas>
+                </div>
+
+                {{-- Geographic Distribution (Admin Only) --}}
+                @if(auth()->check() && auth()->user()->hasAnyRole(['admin', 'journal manager', 'editor']) && !empty($countryStats))
+                <div class="mt-8 pt-6 border-t border-slate-200">
+                    <h4 class="text-lg font-bold text-slate-700 mb-4">
+                        <i class="fa-solid fa-globe mr-2"></i>
+                        Geographic Distribution (Top 10 Countries)
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-600">
+                                <tr>
+                                    <th class="px-4 py-2 text-left font-semibold">Country</th>
+                                    <th class="px-4 py-2 text-right font-semibold">Views</th>
+                                    <th class="px-4 py-2 text-left font-semibold">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @foreach($countryStats as $stat)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-4 py-3 font-medium text-slate-800">
+                                        <i class="fa-solid fa-flag mr-2 text-slate-400"></i>
+                                        {{ $stat->country_code }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-slate-700">
+                                        {{ number_format($stat->views) }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">
+                                                <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
+                                                    style="width: {{ $stat->percentage }}%"></div>
+                                            </div>
+                                            <span class="text-xs text-slate-500 min-w-[3rem] text-right">
+                                                {{ number_format($stat->percentage, 1) }}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @endif
+            </div>
+
+            {{-- 7. REFERENCES (Orange Underline) --}}
+            @if($article->references)
+            <div class="pt-6">
+                <h3 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
+                    References
+                </h3>
+                <div class="prose prose-sm max-w-none text-slate-600 text-sm leading-relaxed">
+                    {!! $article->references !!}
+                </div>
+            </div>
+            @endif
+
+            {{-- 8. SIMILAR ARTICLES (Blue Header) --}}
+            @if($relatedArticles && $relatedArticles->isNotEmpty())
+            <div class="pt-8 border-t border-slate-200">
+                <h3 class="text-xl font-bold text-primary-700 mb-4">
+                    <i class="fa-solid fa-newspaper mr-2"></i>Similar Articles
+                </h3>
+                <div class="space-y-3 text-slate-700">
                     @foreach($relatedArticles as $related)
-                    <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $related->slug ?? $related->id]) }}"
-                        class="block p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group">
-                        <h4 class="font-medium text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <div>
+                        @php
+                        $authors = $related->authors ? $related->authors->map(function($author) {
+                            return trim($author->first_name . ' ' . $author->last_name);
+                        })->implode(', ') : '';
+                        $issueLink = $related->issue ? route('journal.public.issue', [$journal->slug, $related->issue->id]) : '#';
+                        $issueText = $journal->name . ': Vol. ' . ($related->issue->volume ?? '-') . ' No. ' . ($related->issue->number ?? '-') . ' (' . ($related->issue->year ?? '-') . '): ' . ($related->issue->published_at ? $related->issue->published_at->format('F') : '') . ': ' . $journal->name;
+                        @endphp
+                        {{ $authors }}, 
+                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $related->slug ?? $related->id]) }}" 
+                           class="hover:text-primary-600 hover:underline font-medium">
                             {{ $related->title }}
-                        </h4>
-                        <p class="text-xs text-slate-500 mt-1">
-                            {{ $related->authors->pluck('full_name')->implode(', ') }}
-                        </p>
-                    </a>
+                        </a>, 
+                        <a href="{{ $issueLink }}" 
+                           class="hover:text-primary-600 hover:underline">
+                            {{ $issueText }}
+                        </a>
+                    </div>
                     @endforeach
                 </div>
-            </section>
+            </div>
             @endif
 
         </main>
 
-        {{-- ============================================ --}}
-        {{-- SIDEBAR (Right - 1/4 width) --}}
-        {{-- ============================================ --}}
+        {{-- ================= RIGHT COLUMN (SIDEBAR - 25%) ================= --}}
+        {{-- ================= RIGHT COLUMN (SIDEBAR - 25%) ================= --}}
         <aside class="w-full lg:w-1/4 space-y-6">
 
-            {{-- Cover Image --}}
-            @if($article->cover_image)
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <img src="{{ Storage::url($article->cover_image) }}"
-                    alt="{{ $article->title }}"
-                    class="w-full object-cover">
-            </div>
-            @elseif($issue && $issue->cover_image)
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <img src="{{ Storage::url($issue->cover_image) }}"
-                    alt="Issue Cover - Vol. {{ $issue->volume }} No. {{ $issue->number }}"
-                    class="w-full object-cover">
-            </div>
+            {{-- ISSUE COVER (Clickable - Links to Issue Page) --}}
+            @if($issue)
+                @if($issue->cover_path)
+                <a href="{{ route('journal.public.issue', [$journal->slug, $issue->id]) }}" 
+                   class="block hover:opacity-90 transition group">
+                    <img src="{{ Storage::url($issue->cover_path) }}"
+                        alt="{{ $issue->title }}"
+                        class="w-full rounded shadow-md border border-slate-200">
+                </a>
+               @endif
             @endif
 
-            {{-- Download Galleys / Full Text --}}
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-download text-slate-400"></i>
+            {{-- FULL TEXT BUTTONS (Teal/OJS Style) --}}
+            <div class="bg-slate-50 p-5 rounded border border-slate-200">
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i>
                     Full Text
-                </h3>
+                </h4>
 
                 @if($article->galleys && $article->galleys->isNotEmpty())
                 <div class="space-y-2">
                     @foreach($article->galleys as $galley)
                     <a href="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id, 'galley' => $galley->id]) }}"
-                        class="flex items-center justify-center gap-2 w-full text-center font-medium py-2.5 px-4 rounded-lg transition-all
-                                      {{ strtoupper($galley->label) === 'PDF' ? 'text-white shadow-md hover:shadow-lg' : 'text-slate-700 bg-slate-100 hover:bg-slate-200' }}"
-                        style="{{ strtoupper($galley->label) === 'PDF' ? 'background: linear-gradient(135deg, ' . $primaryColor . ', ' . $secondaryColor . ');' : '' }}">
-                        @if(strtoupper($galley->label) === 'PDF')
-                        <i class="fa-solid fa-file-pdf"></i>
-                        @elseif(strtoupper($galley->label) === 'XML')
-                        <i class="fa-solid fa-file-code"></i>
-                        @elseif(strtoupper($galley->label) === 'HTML')
-                        <i class="fa-brands fa-html5"></i>
-                        @else
-                        <i class="fa-solid fa-file-arrow-down"></i>
-                        @endif
-                        {{ $galley->label }}
+                        class="flex items-center justify-center w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded transition shadow-sm gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        {{ $galley->label ?? 'PDF' }}
                     </a>
                     @endforeach
                 </div>
@@ -522,16 +463,13 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
                 @endif
             </div>
 
-            {{-- Issue Information --}}
+            {{-- ISSUE INFORMATION --}}
             @if($issue)
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-book text-slate-400"></i>
-                    Issue
-                </h3>
+            <div class="bg-slate-50 p-5 rounded border border-slate-200">
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">Issue</h4>
                 <a href="{{ route('journal.public.issue', [$journal->slug, $issue->id]) }}"
-                    class="block p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group">
-                    <p class="font-semibold text-slate-800 group-hover:text-blue-600">
+                    class="block hover:text-primary-600 transition">
+                    <p class="font-semibold text-slate-800">
                         Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
                     </p>
                     @if($issue->title)
@@ -541,41 +479,205 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
             </div>
             @endif
 
-            {{-- Article Metadata Box --}}
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-info-circle text-slate-400"></i>
-                    Article Info
-                </h3>
+            {{-- HOW TO CITE --}}
+            {{-- <div class="bg-slate-50 p-5 rounded border border-slate-200">
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">How to Cite</h4>
+                <div class="bg-white p-3 border border-slate-300 rounded text-xs text-slate-600 italic leading-relaxed font-mono">
+                    @php
+                    $authorList = $article->authors?->map(function($author) {
+                        $familyName = $author->first_name ?? explode(' ', $author->first_name ?? '')[count(explode(' ', $author->first_name ?? '')) - 1] ?? '';
+                        $givenName = $author->last_name ?? explode(' ', $author->first_name ?? '')[0] ?? '';
+                        return $familyName . ', ' . substr($givenName, 0, 1) . '.';
+                    })->implode(', ') ?? 'Author';
+                    @endphp
+                    {{ $authorList }} ({{ $issue?->year ?? $publicationDate?->year ?? now()->year }}). {{ $article->title }}. 
+                    <em>{{ $journal->name }}</em>{{ $issue ? ', ' : '' }}@if($issue)<em>{{ $issue->volume }}</em>({{ $issue->number }})@endif{{ $article->pages ? ', ' . $article->pages : '' }}.
+                    @if($article->doi)https://doi.org/{{ $article->doi }}@endif
+                </div>
+                <button onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent.trim()).then(() => { this.innerHTML = '<i class=\'fa-solid fa-check mr-1\'></i> Copied!'; setTimeout(() => { this.innerHTML = '<i class=\'fa-regular fa-copy mr-1\'></i> Copy Citation'; }, 2000); })"
+                    class="mt-3 text-sm font-medium hover:underline flex items-center gap-1 text-primary-600">
+                    <i class="fa-regular fa-copy mr-1"></i> Copy Citation
+                </button>
+            </div> --}}
+            {{-- HOW TO CITE (OJS 3.3 STYLE) --}}
+            @php
+            $year = $issue?->year ?? $publicationDate?->year ?? now()->year;
 
-                <dl class="space-y-4 text-sm">
-                    {{-- Published Date --}}
+            /* ========= AUTHOR FORMAT ========= */
+
+            // APA: Last, F.
+            $authorsAPA = $article->authors?->map(function ($author) {
+                $last = trim($author->family_name ?? '');
+                $first = trim($author->given_name ?? '');
+                return $last
+                    ? $last . ', ' . mb_substr($first, 0, 1) . '.'
+                    : $first;
+            })->implode(', ') ?? 'Author';
+
+            // Full: First Last
+            $authorsFull = $article->authors?->map(function ($author) {
+                return trim(
+                    ($author->given_name ?? '') .
+                    ($author->family_name ? ' ' . $author->family_name : '')
+                );
+            })->implode(', ') ?? 'Author';
+
+            // IEEE/Vancouver: F. Last
+            $authorsIEEE = $article->authors?->map(function ($author) {
+                $first = trim($author->given_name ?? '');
+                $last = trim($author->family_name ?? '');
+                return ($first ? mb_substr($first, 0, 1) . '. ' : '') . $last;
+            })->implode(', ') ?? 'Author';
+
+            $journalName = $journal->name ?? '';
+            $volume = $issue?->volume;
+            $number = $issue?->number;
+            $pages = $article->pages;
+            $doiUrl = $article->doi ? 'https://doi.org/' . $article->doi : '';
+
+            /* ========= CITATION FORMATS ========= */
+
+            $citations = [
+                'ACM' =>
+                    "{$authorsFull}. {$year}. {$article->title}. <em>{$journalName}</em>"
+                    . ($volume ? ", {$volume}" : '')
+                    . ($number ? ", {$number}" : '')
+                    . ($pages ? ", {$pages}" : '')
+                    . ". DOI: {$doiUrl}",
+
+                'ACS' =>
+                    "{$authorsFull}. {$article->title}. <em>{$journalName}</em> {$year}"
+                    . ($volume ? ", {$volume}" : '')
+                    . ($number ? "({$number})" : '')
+                    . ($pages ? ", {$pages}" : '')
+                    . ". {$doiUrl}",
+
+                'APA' =>
+                    "{$authorsAPA} ({$year}). {$article->title}. <em>{$journalName}</em>"
+                    . ($volume ? ", {$volume}" : '')
+                    . ($number ? "({$number})" : '')
+                    . ($pages ? ", {$pages}" : '')
+                    . ". {$doiUrl}",
+
+                'ABNT' =>
+                    mb_strtoupper($authorsFull) . ". {$article->title}. {$journalName}, {$year}."
+                    . ($volume ? " v. {$volume}" : '')
+                    . ($number ? ", n. {$number}" : '')
+                    . ($pages ? ", p. {$pages}" : '')
+                    . ". Disponível em: {$doiUrl}",
+
+                'Chicago' =>
+                    "{$authorsFull}. {$year}. \"{$article->title}.\" <em>{$journalName}</em>"
+                    . ($volume ? " {$volume}" : '')
+                    . ($number ? ", no. {$number}" : '')
+                    . ($pages ? ": {$pages}" : '')
+                    . ". {$doiUrl}",
+
+                'Harvard' =>
+                    "{$authorsFull} ({$year}) '{$article->title}', <em>{$journalName}</em>"
+                    . ($volume ? ", vol. {$volume}" : '')
+                    . ($number ? ", no. {$number}" : '')
+                    . ($pages ? ", pp. {$pages}" : '')
+                    . ". Available at: {$doiUrl}",
+
+                'IEEE' =>
+                    "{$authorsIEEE}, \"{$article->title},\" <em>{$journalName}</em>"
+                    . ($volume ? ", vol. {$volume}" : '')
+                    . ($number ? ", no. {$number}" : '')
+                    . ($pages ? ", pp. {$pages}" : '')
+                    . ", {$year}. {$doiUrl}",
+
+                'MLA' =>
+                    "{$authorsFull}. \"{$article->title}.\" <em>{$journalName}</em>"
+                    . ($volume ? ", vol. {$volume}" : '')
+                    . ($number ? ", no. {$number}" : '')
+                    . ", {$year}"
+                    . ($pages ? ", pp. {$pages}" : '')
+                    . ". {$doiUrl}",
+
+                'Turabian' =>
+                    "{$authorsFull}. \"{$article->title}.\" {$journalName}"
+                    . ($volume ? " {$volume}" : '')
+                    . ($number ? ", no. {$number}" : '')
+                    . " ({$year})"
+                    . ($pages ? ": {$pages}" : '')
+                    . ". {$doiUrl}",
+
+                'Vancouver' =>
+                    "{$authorsIEEE}. {$article->title}. {$journalName}. {$year}"
+                    . ($volume ? ";{$volume}" : '')
+                    . ($number ? "({$number})" : '')
+                    . ($pages ? ":{$pages}" : '')
+                    . ". {$doiUrl}",
+            ];
+            @endphp
+
+            <div
+                x-data="{ format: 'APA', citations: @js($citations) }"
+                class="bg-slate-50 p-5 rounded border border-slate-200"
+            >
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">
+                    More Citation Formats
+                </h4>
+
+                <select
+                    x-model="format"
+                    class="w-full mb-3 border border-slate-300 rounded text-xs p-2 bg-white"
+                >
+                    <template x-for="(v, k) in citations" :key="k">
+                        <option x-text="k"></option>
+                    </template>
+                </select>
+
+                <div
+                    class="bg-white p-3 border rounded text-xs italic font-mono leading-relaxed"
+                    x-html="citations[format]"
+                ></div>
+
+                <button
+                    @click="
+                        navigator.clipboard.writeText(
+                            document.querySelector('[x-html]').innerText
+                        );
+                        $el.innerText='Copied';
+                        setTimeout(()=> $el.innerText='Copy Citation',2000);
+                    "
+                    class="mt-3 text-sm text-primary-600 hover:underline"
+                >
+                    Copy Citation
+                </button>
+
+                {{-- DOWNLOAD --}}
+                <div class="mt-5 border-t pt-3 text-xs text-slate-600">
+                    <p class="font-semibold mb-2">Download Citation</p>
+                    <a href="{{ route('citation.ris', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}" class="block hover:underline">
+                        ⬇ EndNote / Zotero / Mendeley (RIS)
+                    </a>
+                    <a href="{{ route('citation.bibtex', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}" class="block hover:underline">
+                        ⬇ BibTeX
+                    </a>
+                </div>
+            </div>
+
+
+
+
+            {{-- ARTICLE METADATA --}}
+            <div class="bg-slate-50 p-5 rounded border border-slate-200">
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">Article Info</h4>
+                <dl class="space-y-3 text-sm">
+                    @if($publicationDate)
                     <div>
                         <dt class="text-xs font-bold text-slate-400 uppercase">Published</dt>
-                        <dd class="text-slate-800 mt-1">{{ $publicationDate?->format('Y-m-d') ?? '-' }}</dd>
+                        <dd class="text-slate-800 mt-1">{{ $publicationDate->format('Y-m-d') }}</dd>
                     </div>
-
-                    {{-- Section --}}
+                    @endif
                     @if($article->section)
                     <div>
                         <dt class="text-xs font-bold text-slate-400 uppercase">Section</dt>
                         <dd class="text-slate-800 mt-1">{{ $article->section->name }}</dd>
                     </div>
                     @endif
-
-                    {{-- DOI --}}
-                    @if($article->doi)
-                    <div>
-                        <dt class="text-xs font-bold text-slate-400 uppercase">DOI</dt>
-                        <dd class="text-slate-800 mt-1 break-all">
-                            <a href="https://doi.org/{{ $article->doi }}" target="_blank" class="text-blue-600 hover:underline">
-                                {{ $article->doi }}
-                            </a>
-                        </dd>
-                    </div>
-                    @endif
-
-                    {{-- Pages --}}
                     @if($article->pages)
                     <div>
                         <dt class="text-xs font-bold text-slate-400 uppercase">Pages</dt>
@@ -585,34 +687,26 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
                 </dl>
             </div>
 
-            {{-- License / Copyright --}}
+            {{-- LICENSE --}}
             @php
                 $license = $article->license ?? $journal->default_license ?? 'CC BY 4.0';
             @endphp
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-scale-balanced text-slate-400"></i>
-                    License
-                </h3>
-                <div class="flex items-center gap-3">
-                    <img src="https://licensebuttons.net/l/by/4.0/88x31.png"
-                        alt="Creative Commons License"
-                        class="h-6">
-                    <p class="text-xs text-slate-600">
-                        This work is licensed under a
-                        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="text-blue-600 hover:underline">
-                            Creative Commons Attribution 4.0 International License
-                        </a>.
-                    </p>
-                </div>
+            <div class="bg-slate-50 p-5 rounded border border-slate-200">
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">License</h4>
+                <img src="https://licensebuttons.net/l/by/4.0/88x31.png"
+                    alt="Creative Commons License"
+                    class="mb-2">
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    This work is licensed under a
+                    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="text-blue-600 hover:underline">
+                        Creative Commons Attribution 4.0 International License
+                    </a>.
+                </p>
             </div>
 
-            {{-- Share Buttons --}}
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-share-nodes text-slate-400"></i>
-                    Share
-                </h3>
+            {{-- SHARE BUTTONS --}}
+            <div class="bg-slate-50 p-5 rounded border border-slate-200">
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">Share</h4>
                 <div class="flex gap-2">
                     <a href="https://twitter.com/intent/tweet?url={{ urlencode(url()->current()) }}&text={{ urlencode($article->title) }}"
                         target="_blank" rel="noopener"
@@ -634,14 +728,128 @@ $publicationDate = $issue?->published_at ?? $article->published_at;
                         class="flex-1 flex items-center justify-center py-2 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition-colors">
                         <i class="fa-brands fa-whatsapp"></i>
                     </a>
-                    <a href="mailto:?subject={{ urlencode($article->title) }}&body={{ urlencode(url()->current()) }}"
-                        class="flex-1 flex items-center justify-center py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-                        <i class="fa-solid fa-envelope"></i>
-                    </a>
                 </div>
             </div>
 
         </aside>
     </div>
+
+    {{-- ============================================ --}}
+    {{-- CHART.JS INITIALIZATION SCRIPT --}}
+    {{-- ============================================ --}}
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('statsChart');
+            if (!ctx) return;
+
+            const chartLabels = @json($chartLabels ?? []);
+            const viewsData = @json($viewsData ?? []);
+            const downloadsData = @json($downloadsData ?? []);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Views',
+                            data: viewsData,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: 'rgb(59, 130, 246)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        },
+                        {
+                            label: 'Downloads',
+                            data: downloadsData,
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: 'rgb(34, 197, 94)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: {
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 12
+                            },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 
 </x-layouts.public>
