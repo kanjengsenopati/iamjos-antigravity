@@ -1,80 +1,106 @@
 <x-public-layout :journal="$journal">
     @php $title = 'Archives'; @endphp
 
-    <section class="bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900">Archives</h1>
-                <p class="text-gray-500 mt-2">Browse all published issues</p>
+    <div class="container mx-auto px-4 lg:px-0">
+
+        {{-- BREADCRUMB --}}
+        <nav class="text-sm text-slate-500 mb-6">
+            <a href="{{ route('journal.public.home', $journal->slug) }}"
+               class="hover:text-primary-600">
+                Home
+            </a>
+            <span class="mx-2">/</span>
+            <span class="text-slate-700 font-medium">Archives</span>
+        </nav>
+
+        {{-- PAGE TITLE --}}
+        <h1 class="text-3xl font-bold text-slate-800 mb-10">
+            Archives
+        </h1>
+
+        {{-- ARCHIVES LIST --}}
+        @if($issues->count())
+            <div class="space-y-16">
+
+                @foreach($issues as $issue)
+                    <article class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
+
+                        {{-- COVER (LEFT) --}}
+                        <div>
+                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->id]) }}">
+                                @if($issue->cover_path)
+                                    <img
+                                        src="{{ Storage::url($issue->cover_path) }}"
+                                        alt="Cover Vol {{ $issue->volume }}"
+                                        class="w-full border border-slate-200 shadow-sm"
+                                    >
+                                @else
+                                    <div class="w-full aspect-[3/4] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs font-semibold uppercase">
+                                        No Cover
+                                    </div>
+                                @endif
+                            </a>
+                        </div>
+
+                        {{-- ISSUE INFORMATION (RIGHT) --}}
+                        <div class="min-w-0">
+
+                            {{-- ISSUE TITLE --}}
+                            <h2 class="text-2xl font-bold text-slate-900 leading-snug mb-2">
+                                <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->id]) }}"
+                                   class="hover:text-primary-700 hover:underline">
+                                    {{ $issue->title ?: "Vol. {$issue->volume} No. {$issue->number} ({$issue->year})" }}
+                                </a>
+                            </h2>
+
+                            {{-- META --}}
+                            <div class="text-base text-slate-500 mb-4">
+                                Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
+                            </div>
+
+                            {{-- JOURNAL NAME + ISSN --}}
+                            <div class="text-slate-700 mb-4 leading-relaxed">
+                                <strong>{{ $journal->name }}</strong>
+                                @if($journal->print_issn || $journal->online_issn)
+                                    :
+                                @endif
+
+                                @if($journal->print_issn)
+                                    ISSN:
+                                    <span class="text-primary-600">{{ $journal->print_issn }}</span>
+                                    (CETAK)
+                                @endif
+
+                                @if($journal->online_issn)
+                                    ,
+                                    ISSN:
+                                    <span class="text-primary-600">{{ $journal->online_issn }}</span>
+                                    (ONLINE)
+                                @endif
+                            </div>
+
+                            {{-- DESCRIPTION --}}
+                            @if($issue->description)
+                                <div class="prose max-w-none text-slate-700">
+                                    {!! $issue->description !!}
+                                </div>
+                            @endif
+
+                        </div>
+                    </article>
+                @endforeach
+
             </div>
 
-            <!-- Year Filter -->
-            @if ($years->isNotEmpty())
-                <div class="flex flex-wrap gap-2 mb-8">
-                    <a href="{{ route('journal.public.archives', ['journal' => $journal->slug]) }}"
-                        class="px-4 py-2 rounded-lg text-sm font-medium {{ !$year ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }} transition-colors">
-                        All Years
-                    </a>
-                    @foreach ($years as $y)
-                        <a href="{{ route('journal.public.archives', ['journal' => $journal->slug, 'year' => $y]) }}"
-                            class="px-4 py-2 rounded-lg text-sm font-medium {{ $year == $y ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }} transition-colors">
-                            {{ $y }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
+            {{-- PAGINATION --}}
+            <div class="mt-16">
+                {{ $issues->links() }}
+            </div>
+        @else
+            <div class="p-10 bg-slate-50 border border-slate-200 rounded text-center">
+                <p class="text-slate-500">No archives available.</p>
+            </div>
+        @endif
 
-            <!-- Issues Grid -->
-            @if ($issues->isEmpty())
-                <div class="bg-gray-50 rounded-xl p-12 text-center">
-                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                    </svg>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No issues published yet</h3>
-                    <p class="text-gray-500">Check back later for new publications.</p>
-                </div>
-            @else
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    @foreach ($issues as $issue)
-                        <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                            class="group">
-                            <div class="bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
-                                <!-- Cover -->
-                                <div
-                                    class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
-                                    @if ($issue->cover_path)
-                                        <img src="{{ Storage::url($issue->cover_path) }}" alt="Issue Cover"
-                                            class="w-full h-full object-cover">
-                                    @else
-                                        <div class="text-center text-white p-6">
-                                            <p class="text-sm font-medium">Vol. {{ $issue->volume }}</p>
-                                            <p class="text-3xl font-bold">No. {{ $issue->number }}</p>
-                                            <p class="text-sm mt-2">{{ $issue->year }}</p>
-                                        </div>
-                                    @endif
-                                </div>
-                                <!-- Info -->
-                                <div class="p-4 bg-white">
-                                    <h3
-                                        class="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-                                        {{ $issue->display_title }}
-                                    </h3>
-                                    <p class="text-sm text-gray-500 mt-1">
-                                        {{ $issue->submissions_count }} Articles
-                                    </p>
-                                </div>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-
-                <!-- Pagination -->
-                <div class="mt-8">
-                    {{ $issues->links() }}
-                </div>
-            @endif
-        </div>
-    </section>
+    </div>
 </x-public-layout>
