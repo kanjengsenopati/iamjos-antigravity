@@ -101,15 +101,21 @@ class IssueController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $journal = $this->getJournal();
+
         $validated = $request->validate([
             'volume' => 'required|integer|min:1',
             'number' => 'required|integer|min:1',
             'year' => 'required|integer|min:2000|max:2100',
             'title' => 'nullable|string|max:255',
+            'show_volume' => 'nullable|boolean',
+            'show_number' => 'nullable|boolean',
+            'show_year' => 'nullable|boolean',
+            'show_title' => 'nullable|boolean',
+            'description' => 'nullable|string',
+            'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,NULL,id,journal_id,' . $journal->id],
             'cover' => 'nullable|image|max:2048', // 2MB max
         ]);
-
-        $journal = $this->getJournal();
 
         // Check for duplicate
         $exists = Issue::where('journal_id', $journal->id)
@@ -123,14 +129,22 @@ class IssueController extends Controller
                 ->with('error', 'An issue with this volume, number, and year already exists.');
         }
 
-        $issue = Issue::create([
+        $issueData = [
             'journal_id' => $journal->id,
             'volume' => $validated['volume'],
             'number' => $validated['number'],
             'year' => $validated['year'],
-            'title' => $validated['title'],
+            'title' => $validated['title'] ?? null,
+            'show_volume' => $request->boolean('show_volume', true),
+            'show_number' => $request->boolean('show_number', true),
+            'show_year' => $request->boolean('show_year', true),
+            'show_title' => $request->boolean('show_title', false),
+            'description' => $validated['description'] ?? null,
+            'url_path' => $validated['url_path'] ?? null,
             'is_published' => false,
-        ]);
+        ];
+
+        $issue = Issue::create($issueData);
 
         // Upload cover
         if ($request->hasFile('cover')) {
@@ -209,15 +223,29 @@ class IssueController extends Controller
             'number' => 'required|integer|min:1',
             'year' => 'required|integer|min:2000|max:2100',
             'title' => 'nullable|string|max:255',
+            'show_volume' => 'nullable|boolean',
+            'show_number' => 'nullable|boolean',
+            'show_year' => 'nullable|boolean',
+            'show_title' => 'nullable|boolean',
+            'description' => 'nullable|string',
+            'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,' . $issue->id . ',id,journal_id,' . $journal->id],
             'cover' => 'nullable|image|max:2048',
         ]);
 
-        $issue->update([
+        $issueData = [
             'volume' => $validated['volume'],
             'number' => $validated['number'],
             'year' => $validated['year'],
-            'title' => $validated['title'],
-        ]);
+            'title' => $validated['title'] ?? null,
+            'show_volume' => $request->boolean('show_volume', true),
+            'show_number' => $request->boolean('show_number', true),
+            'show_year' => $request->boolean('show_year', true),
+            'show_title' => $request->boolean('show_title', false),
+            'description' => $validated['description'] ?? null,
+            'url_path' => $validated['url_path'] ?? null,
+        ];
+
+        $issue->update($issueData);
 
         // Upload new cover
         if ($request->hasFile('cover')) {

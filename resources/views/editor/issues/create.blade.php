@@ -47,7 +47,7 @@
                                 Issue Identification
                             </h3>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                                 <!-- Volume -->
                                 <div>
                                     <label for="volume" class="block text-sm font-medium text-gray-700 mb-1">
@@ -88,8 +88,36 @@
                                 </div>
                             </div>
 
-                            <p class="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
-                                <svg class="w-4 h-4 inline-block mr-1 text-gray-400" fill="none" stroke="currentColor"
+                            <!-- OJS 3.3 Display Toggles -->
+                            <div class="flex flex-wrap gap-6 mb-4 bg-gray-50 rounded-lg p-4">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="show_volume" value="1"
+                                        {{ old('show_volume', true) ? 'checked' : '' }}
+                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Volume</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="show_number" value="1"
+                                        {{ old('show_number', true) ? 'checked' : '' }}
+                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Number</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="show_year" value="1"
+                                        {{ old('show_year', true) ? 'checked' : '' }}
+                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Year</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="show_title" value="1"
+                                        {{ old('show_title', false) ? 'checked' : '' }}
+                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Title</span>
+                                </label>
+                            </div>
+
+                            <p class="text-sm text-gray-500 bg-blue-50 rounded-lg p-3 border border-blue-100">
+                                <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -118,6 +146,39 @@
                                     placeholder="e.g., Special Issue on AI in Education"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('title') border-red-500 @enderror">
                                 @error('title')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Description
+                            </h3>
+
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Issue Description <span class="text-gray-400">(Optional)</span>
+                                </label>
+                                <textarea id="description" name="description" rows="6"
+                                    placeholder="Enter detailed description for this issue..."
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                                <p class="mt-2 text-sm text-gray-500">
+                                    <svg class="w-4 h-4 inline-block mr-1 text-gray-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    You can use HTML formatting. A rich text editor (TinyMCE/CKEditor) can be integrated
+                                    here.
+                                </p>
+                                @error('description')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -171,6 +232,39 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- URL Path -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                </svg>
+                                Custom URL
+                            </h3>
+
+                            <div>
+                                <label for="url_path" class="block text-sm font-medium text-gray-700 mb-1">
+                                    URL Path <span class="text-gray-400">(Optional)</span>
+                                </label>
+                                <input type="text" id="url_path" name="url_path" value="{{ old('url_path') }}"
+                                    placeholder="e.g., vol1-no2-2026"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('url_path') border-red-500 @enderror">
+                                <p class="mt-2 text-sm text-gray-500">
+                                    <svg class="w-4 h-4 inline-block mr-1 text-gray-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    An optional path to use in the URL instead of the issue ID. Only letters, numbers,
+                                    dashes, and underscores allowed.
+                                </p>
+                                @error('url_path')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Form Footer -->
@@ -189,3 +283,59 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+<script>
+    tinymce.init({
+        selector: '#description',
+        height: 350,
+        menubar: false,
+        plugins: 'lists link image table code autoresize',
+        toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+        branding: false,
+        license_key: 'gpl',
+        images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.withCredentials = false;
+            xhr.open('POST', '{{ route('profile.upload.image') }}');
+            xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+            xhr.upload.onprogress = (e) => {
+                progress(e.loaded / e.total * 100);
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 403) {
+                    reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                    return;
+                }
+
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    reject('HTTP Error: ' + xhr.status);
+                    return;
+                }
+
+                const json = JSON.parse(xhr.responseText);
+
+                if (!json || typeof json.location != 'string') {
+                    reject('Invalid JSON: ' + xhr.responseText);
+                    return;
+                }
+
+                resolve(json.location);
+            };
+
+            xhr.onerror = () => {
+                reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+            };
+
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+            xhr.send(formData);
+        })
+    });
+</script>
+
+@endpush

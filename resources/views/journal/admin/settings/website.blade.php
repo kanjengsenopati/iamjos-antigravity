@@ -214,6 +214,23 @@ $journalSlug = $journal->slug;
                         </p>
                     </div>
 
+                    {{-- Additional Content (Homepage Bottom) --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Additional Content</h3>
+                        <p class="text-sm text-gray-500 mb-4">
+                            Any content entered here will appear on your homepage after the latest issue content.
+                            Use this to display "Indexed By" logos, sponsors, or partner institutions.
+                        </p>
+
+                        <textarea name="additional_content" id="additional_content" rows="6"
+                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
+                            placeholder="<p><strong>Indexed by:</strong> Google Scholar, Crossref, Dimensions...</p>">{{ $journal->additional_content }}</textarea>
+                        <p class="mt-2 text-xs text-gray-500">
+                            <i class="fa-solid fa-code mr-1"></i>
+                            HTML and images are allowed. This content appears centered at the bottom of your homepage.
+                        </p>
+                    </div>
+
                     {{-- Announcements --}}
                     <div x-data="{ enabled: {{ $journal->enable_announcements ? 'true' : 'false' }}, onHomepage: {{ $journal->show_announcements_on_homepage ? 'true' : 'false' }} }"
                         class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -532,7 +549,7 @@ $journalSlug = $journal->slug;
     </script>
     <script>
         tinymce.init({
-            selector: '#page_footer, #info_readers, #info_authors, #info_librarians, #announcements_introduction',
+            selector: '#page_footer, #info_readers, #info_authors, #info_librarians, #announcements_introduction, #additional_content',
             height: 350,
             menubar: false,
             plugins: 'lists link image table code autoresize',

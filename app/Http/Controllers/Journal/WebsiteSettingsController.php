@@ -94,6 +94,11 @@ class WebsiteSettingsController extends Controller
             $journal->page_footer = $request->input('page_footer');
         }
 
+        // Handle Additional Content (stored in journals table)
+        if ($request->has('additional_content')) {
+            $journal->additional_content = $request->input('additional_content');
+        }
+
         // Handle Information Content (stored in journals table)
         if ($request->has('info_readers')) {
             $journal->info_readers = $request->input('info_readers');
