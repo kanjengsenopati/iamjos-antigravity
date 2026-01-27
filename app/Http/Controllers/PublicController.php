@@ -136,13 +136,17 @@ class PublicController extends Controller
     {
         $journal = $this->resolveJournal($journalSlug);
 
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
         $issue = Issue::where('journal_id', $journal->id)
             ->published()
             ->latest()
             ->first();
 
         if (!$issue) {
-            return view('public.no-current-issue', compact('journal'));
+            $title = 'No Current Issue';
+            return view('public.no-current-issue', compact('journal', 'settings', 'title'));
         }
 
         $articles = Submission::where('issue_id', $issue->id)
@@ -151,7 +155,7 @@ class PublicController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        return view('public.issue', compact('journal', 'issue', 'articles'));
+        return view('public.issue', compact('journal', 'settings', 'issue', 'articles'));
     }
 
     /**
@@ -161,6 +165,9 @@ class PublicController extends Controller
     {
         $journal = $this->resolveJournal($journalSlug);
         $year = $request->get('year');
+
+        // Get settings with defaults (similar to JournalHomepageController)
+        $settings = $this->getSettingsWithDefaults($journal);
 
         $query = Issue::where('journal_id', $journal->id)
             ->published()
@@ -181,7 +188,7 @@ class PublicController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        return view('public.archives', compact('journal', 'issues', 'years', 'year'));
+        return view('public.archives', compact('journal', 'settings', 'issues', 'years', 'year'));
     }
 
     /**
@@ -190,6 +197,9 @@ class PublicController extends Controller
     public function issue(string $journalSlug, Issue $issue): View
     {
         $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
 
         // Ensure issue belongs to this journal
         if ($issue->journal_id !== $journal->id) {
@@ -209,7 +219,7 @@ class PublicController extends Controller
         // Group by section
         $articlesBySection = $articles->groupBy(fn($article) => $article->section?->name ?? 'Uncategorized');
 
-        return view('public.issue', compact('journal', 'issue', 'articles', 'articlesBySection'));
+        return view('public.issue', compact('journal', 'settings', 'issue', 'articles', 'articlesBySection'));
     }
 
     /**
@@ -355,8 +365,12 @@ class PublicController extends Controller
     public function about(string $journalSlug): View
     {
         $journal = $this->resolveJournal($journalSlug);
+        $about = $journal->settings['masthead']['about'] ?? '';
 
-        return view('public.about', compact('journal'));
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
+        return view('public.about', compact('journal', 'settings', 'about'));
     }
 
     /**
@@ -366,7 +380,10 @@ class PublicController extends Controller
     {
         $journal = $this->resolveJournal($journalSlug);
 
-        return view('public.author-guidelines', compact('journal'));
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
+        return view('public.author-guidelines', compact('journal', 'settings'));
     }
 
     /**
@@ -376,7 +393,10 @@ class PublicController extends Controller
     {
         $journal = $this->resolveJournal($journalSlug);
 
-        return view('public.editorial-team', compact('journal'));
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
+        return view('public.editorial-team', compact('journal', 'settings'));
     }
 
     /**
@@ -385,10 +405,14 @@ class PublicController extends Controller
     public function infoReaders(string $journalSlug): View
     {
         $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
         $title = 'For Readers';
         $content = $journal->info_readers;
 
-        return view('public.information', compact('journal', 'title', 'content'));
+        return view('public.information', compact('journal', 'settings', 'title', 'content'));
     }
 
     /**
@@ -397,10 +421,14 @@ class PublicController extends Controller
     public function infoAuthors(string $journalSlug): View
     {
         $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
         $title = 'For Authors';
         $content = $journal->info_authors;
 
-        return view('public.information', compact('journal', 'title', 'content'));
+        return view('public.information', compact('journal', 'settings', 'title', 'content'));
     }
 
     /**
@@ -409,10 +437,14 @@ class PublicController extends Controller
     public function infoLibrarians(string $journalSlug): View
     {
         $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+
         $title = 'For Librarians';
         $content = $journal->info_librarians;
 
-        return view('public.information', compact('journal', 'title', 'content'));
+        return view('public.information', compact('journal', 'settings', 'title', 'content'));
     }
 
     /**
@@ -421,6 +453,9 @@ class PublicController extends Controller
     public function announcements(string $journalSlug): View
     {
         $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
 
         if (!$journal->enable_announcements) {
              abort(404);
@@ -432,7 +467,9 @@ class PublicController extends Controller
             ->orderBy('published_at', 'desc')
             ->paginate(10);
 
-        return view('public.announcement.index', compact('journal', 'announcements'));
+        $title = 'Announcements';
+
+        return view('public.announcement.index', compact('journal', 'settings', 'announcements', 'title'));
     }
 
     /**
@@ -441,6 +478,9 @@ class PublicController extends Controller
     public function announcement(string $journalSlug, $id): View
     {
         $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
 
         if (!$journal->enable_announcements) {
              abort(404);
@@ -451,7 +491,9 @@ class PublicController extends Controller
             ->where('published_at', '<=', now())
             ->findOrFail($id);
 
-        return view('public.announcement.show', compact('journal', 'announcement'));
+        $title = $announcement->title;
+
+        return view('public.announcement.show', compact('journal', 'settings', 'announcement', 'title'));
     }
 
     /**
@@ -778,6 +820,57 @@ class PublicController extends Controller
         return response($bibtex)
             ->header('Content-Type', 'application/x-bibtex')
             ->header('Content-Disposition', 'attachment; filename="' . \Str::slug($submission->title) . '.bib"');
+    }
+
+    /**
+     * Get settings with defaults merged.
+     */
+    private function getSettingsWithDefaults(Journal $journal): array
+    {
+        $defaults = [
+            // Content
+            'about' => '',
+            'masthead' => ['about' => '', 'editorial_team' => ''],
+
+            // Appearance
+            'hero_image' => null,
+            'primary_color' => '#4F46E5',
+            'secondary_color' => '#7C3AED',
+
+            // Hero Content
+            'hero_title' => $journal->name,
+            'hero_description' => $journal->description ?? 'A peer-reviewed scholarly journal dedicated to advancing knowledge and research.',
+            'hero_tagline' => 'Peer-Reviewed • Open Access • Indexed',
+
+            // Stats
+            'stat_acceptance_rate' => '25%',
+            'stat_review_time' => '4 Weeks',
+            'stat_impact_factor' => 'N/A',
+            'stat_citations' => '1000+',
+
+            // Section Visibility
+            'show_announcements' => true,
+            'show_editorial_team' => true,
+            'show_indexed_in' => true,
+            'show_stats' => true,
+
+            // Indexed In
+            'indexed_in_images' => [],
+
+            // Footer
+            'footer_description' => $journal->description ?? 'A leading academic journal.',
+            'social_facebook' => '',
+            'social_twitter' => '',
+            'social_linkedin' => '',
+            'social_instagram' => '',
+            'contact_email' => '',
+            'contact_phone' => '',
+            'contact_address' => '',
+        ];
+
+        $actual = $journal->getWebsiteSettings();
+
+        return array_merge($defaults, $actual);
     }
 }
 

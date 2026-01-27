@@ -1,4 +1,4 @@
-<x-public-layout :journal="$journal" title="Search">
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
     <!-- Search Hero Section -->
     <section class="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 py-16 relative overflow-hidden">
         <!-- Background decoration -->
@@ -342,4 +342,4 @@
             @endif
         </div>
     </section>
-</x-public-layout>
+</x-layouts.public>

@@ -49,3 +49,30 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* Prose typography styles for content from CKEditor */
+.prose ol {
+    list-style-type: decimal;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+}
+
+.prose ul {
+    list-style-type: disc;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+}
+
+.prose li {
+    margin-bottom: 0.5em;
+}
+
+.prose ol li {
+    list-style-type: decimal;
+}
+
+.prose ul li {
+    list-style-type: disc;
+}

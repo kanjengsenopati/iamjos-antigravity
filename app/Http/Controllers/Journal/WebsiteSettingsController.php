@@ -281,6 +281,10 @@ class WebsiteSettingsController extends Controller
     private function getDefaultSettings(Journal $journal): array
     {
         return [
+            // Content
+            'about' => '',
+            'masthead' => ['about' => '', 'editorial_team' => ''],
+
             // Appearance
             'primary_color' => '#4F46E5',
             'secondary_color' => '#7C3AED',
@@ -311,6 +315,10 @@ class WebsiteSettingsController extends Controller
     private function getSettingsConfig(): array
     {
         return [
+            // Content
+            'about' => ['type' => 'string', 'group' => 'content'],
+            'masthead' => ['type' => 'json', 'group' => 'content'],
+
             // Appearance (colors only - images now in journals table)
             'primary_color' => ['type' => 'string', 'group' => 'appearance'],
             'secondary_color' => ['type' => 'string', 'group' => 'appearance'],

@@ -1,5 +1,6 @@
-<x-public-layout :journal="$journal">
-    <x-slot name="title">Announcements</x-slot>
+@php $title = 'Announcements'; @endphp
+
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="mb-8 border-b border-gray-200 pb-4">

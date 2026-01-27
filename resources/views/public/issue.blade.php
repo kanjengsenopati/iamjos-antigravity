@@ -1,5 +1,6 @@
-<x-public-layout :journal="$journal">
-    @php $title = $issue->display_title; @endphp
+@php $title = $issue->display_title; @endphp
+
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
 
     <!-- Issue Header -->
     <section class="bg-white border-b border-gray-200">
@@ -179,4 +180,4 @@
             </div>
         </div>
     </section>
-</x-public-layout>
+</x-layouts.public>

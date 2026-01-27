@@ -1,4 +1,4 @@
-<x-public-layout :journal="$journal">
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
     <x-slot name="title">{{ $title }}</x-slot>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -56,4 +56,4 @@
             </div>
         </div>
     </div>
-</x-public-layout>
+</x-layouts.public>
