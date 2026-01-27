@@ -201,7 +201,7 @@
 
                                                         <!-- Article Info -->
                                                         <div class="flex-1 min-w-0">
-                                                            <a href="{{ route('editor.show', $article) }}"
+                                                            <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $article]) }}"
                                                                 class="text-base font-semibold text-gray-900 hover:text-indigo-600 transition-colors line-clamp-2">
                                                                 {{ $article->title }}
                                                             </a>
