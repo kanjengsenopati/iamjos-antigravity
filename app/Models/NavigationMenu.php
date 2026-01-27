@@ -134,14 +134,13 @@ class NavigationMenu extends Model
     }
 
     /**
-     * Get all available locations (Header Navigation Only)
+     * Get all available locations (Header Navigation Only - OJS 3.3 Compatible)
      */
     public static function getLocations(): array
     {
         return [
             self::LOCATION_PRIMARY => 'Primary Header',
             self::LOCATION_USER_TOP => 'User Topbar',
-            self::LOCATION_FOOTER => 'Footer',
         ];
     }
 }
