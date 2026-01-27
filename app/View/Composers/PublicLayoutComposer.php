@@ -23,6 +23,11 @@ class PublicLayoutComposer
         // Fetch Primary Menu Items (location = 'primary')
         $primaryMenu = $this->getMenuItems($journal->id, NavigationMenu::LOCATION_PRIMARY);
 
+        // FALLBACK: If no custom primary menu exists, use OJS 3.3 defaults
+        if ($primaryMenu->isEmpty()) {
+            $primaryMenu = $this->getDefaultOJSMenu($journal);
+        }
+
         // Fetch User Menu Items (location = 'user_top')
         $userMenu = $this->getMenuItems($journal->id, NavigationMenu::LOCATION_USER_TOP);
 
@@ -123,5 +128,83 @@ class PublicLayoutComposer
         }
 
         return $item->url ?? '#';
+    }
+
+    /**
+     * Generate default OJS 3.3 menu structure.
+     * Returns a collection of objects mimicking NavigationItem structure.
+     * Order: Current | Archives | Announcements | About (Dropdown)
+     */
+    protected function getDefaultOJSMenu($journal): \Illuminate\Support\Collection
+    {
+        $menu = collect([]);
+
+        // 1. CURRENT (First item in OJS 3.3)
+        $menu->push((object)[
+            'label' => 'Current',
+            'resolved_url' => route('journal.public.current', ['journal' => $journal->slug]),
+            'children' => collect([]),
+            'target' => '_self',
+            'type' => 'route',
+            'is_active' => true,
+        ]);
+
+        // 2. ARCHIVES
+        $menu->push((object)[
+            'label' => 'Archives',
+            'resolved_url' => route('journal.public.archives', ['journal' => $journal->slug]),
+            'children' => collect([]),
+            'target' => '_self',
+            'type' => 'route',
+            'is_active' => true,
+        ]);
+
+        // 3. ANNOUNCEMENTS (Conditional - only if enabled)
+        if ($journal->enable_announcements) {
+            $menu->push((object)[
+                'label' => 'Announcements',
+                'resolved_url' => route('journal.announcement.index', ['journal' => $journal->slug]),
+                'children' => collect([]),
+                'target' => '_self',
+                'type' => 'route',
+                'is_active' => true,
+            ]);
+        }
+
+        // 4. ABOUT (Dropdown)
+        $aboutChildren = collect([
+            (object)[
+                'label' => 'About the Journal',
+                'resolved_url' => route('journal.public.about', ['journal' => $journal->slug]),
+                'target' => '_self',
+                'type' => 'route',
+                'is_active' => true,
+            ],
+            (object)[
+                'label' => 'Submissions',
+                'resolved_url' => route('journal.public.author-guidelines', ['journal' => $journal->slug]),
+                'target' => '_self',
+                'type' => 'route',
+                'is_active' => true,
+            ],
+            (object)[
+                'label' => 'Editorial Team',
+                'resolved_url' => route('journal.public.editorial-team', ['journal' => $journal->slug]),
+                'target' => '_self',
+                'type' => 'route',
+                'is_active' => true,
+            ],
+        ]);
+
+        $menu->push((object)[
+            'label' => 'About',
+            'resolved_url' => '#',
+            'children' => $aboutChildren,
+            'target' => '_self',
+            'type' => 'dropdown',
+            'is_active' => true,
+        ]);
+
+        return $menu;
     }
 }
