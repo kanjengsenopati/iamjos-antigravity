@@ -23,21 +23,23 @@ class NavigationServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Compose navigation data for public layouts
-        View::composer(['components.journal-public-layout', 'components.public-layout'], function ($view) {
-            $journal = current_journal();
+        // Target the actual layout component paths used in views
+        View::composer(['components.layouts.public', 'layouts.public', 'components.public.navbar'], function ($view) {
+            // Get journal from view data (passed as prop) or fall back to current_journal()
+            $viewData = $view->getData();
+            $journal = $viewData['journal'] ?? current_journal();
             $journalId = $journal?->id;
 
-            // Get Primary Navigation Menu
-            $primaryMenu = NavigationMenu::getMenu(NavigationMenu::LOCATION_PRIMARY, $journalId);
-            $primaryNavItems = $primaryMenu ? $primaryMenu->tree : collect();
+            // Get Primary Navigation Menu (OJS 3.3 uses area_name)
+            $primaryMenu = NavigationMenu::getMenu(NavigationMenu::AREA_PRIMARY, $journalId);
+            $primaryNavItems = $primaryMenu ? $this->buildNavItems($primaryMenu, $journal) : collect();
 
-            // Get User Top Navigation Menu
-            $userMenu = NavigationMenu::getMenu(NavigationMenu::LOCATION_USER_TOP, $journalId);
-            $userNavItems = $userMenu ? $userMenu->tree : collect();
+            // Get User Navigation Menu
+            $userMenu = NavigationMenu::getMenu(NavigationMenu::AREA_USER, $journalId);
+            $userNavItems = $userMenu ? $this->buildNavItems($userMenu, $journal) : collect();
 
-            // Get Footer Navigation Menu
-            $footerMenu = NavigationMenu::getMenu(NavigationMenu::LOCATION_FOOTER, $journalId);
-            $footerNavItems = $footerMenu ? $footerMenu->tree : collect();
+            // Footer is no longer used in OJS 3.3 style
+            $footerNavItems = collect();
 
             // Get Sidebar Blocks
             $sidebarBlocks = $journalId
@@ -55,6 +57,8 @@ class NavigationServiceProvider extends ServiceProvider
                 'footerNavItems' => $footerNavItems,
                 'sidebarBlocks' => $sidebarBlocks,
                 'leftSidebarBlocks' => $leftSidebarBlocks,
+                'primaryMenu' => $primaryNavItems,
+                'userMenu' => $userNavItems,
             ]);
         });
 
@@ -66,10 +70,10 @@ class NavigationServiceProvider extends ServiceProvider
                 return;
             }
 
-            // Get all menus for this journal
+            // Get all menus for this journal (OJS 3.3 uses assignments)
             $menus = NavigationMenu::where('journal_id', $journal->id)
-                ->with(['items' => function ($q) {
-                    $q->orderBy('order');
+                ->with(['assignments' => function ($q) {
+                    $q->orderBy('order')->with('item');
                 }])
                 ->get();
 
@@ -87,5 +91,65 @@ class NavigationServiceProvider extends ServiceProvider
                 'availableSystemBlocks' => $availableSystemBlocks,
             ]);
         });
+    }
+
+    /**
+     * Build navigation items from menu assignments
+     */
+    private function buildNavItems(NavigationMenu $menu, $journal): \Illuminate\Support\Collection
+    {
+        $assignments = $menu->rootAssignments()
+            ->with(['item', 'children.item'])
+            ->get();
+
+        return $assignments->filter(fn($a) => $a->item && $a->item->is_active)
+            ->map(function ($assignment) use ($journal) {
+                $item = $assignment->item;
+                
+                return (object) [
+                    'id' => $item->id,
+                    'label' => $item->title,
+                    'icon' => $item->icon,
+                    'target' => $item->target ?? '_self',
+                    'resolved_url' => $this->resolveItemUrl($item, $journal),
+                    'is_divider' => false,
+                    'children' => $assignment->children->filter(fn($c) => $c->item && $c->item->is_active)
+                        ->map(function ($child) use ($journal) {
+                            $childItem = $child->item;
+                            return (object) [
+                                'id' => $childItem->id,
+                                'label' => $childItem->title,
+                                'icon' => $childItem->icon,
+                                'target' => $childItem->target ?? '_self',
+                                'resolved_url' => $this->resolveItemUrl($childItem, $journal),
+                                'is_divider' => false,
+                            ];
+                        }),
+                ];
+            });
+    }
+
+    /**
+     * Resolve URL for a navigation item
+     */
+    private function resolveItemUrl($item, $journal): string
+    {
+        if ($item->type === 'custom' && $item->url) {
+            return $item->url;
+        }
+
+        if ($item->type === 'route' && $item->route_name) {
+            try {
+                if ($journal && str_starts_with($item->route_name, 'journal.')) {
+                    return route($item->route_name, ['journal' => $journal->slug]);
+                }
+                return route($item->route_name);
+            } catch (\Exception $e) {
+                return '#';
+            }
+        }
+
+        // TODO: Handle page type
+        return '#';
     }
 }
