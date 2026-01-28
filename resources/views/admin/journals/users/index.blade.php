@@ -207,6 +207,13 @@
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </a>
 
+                                        <!-- Merge User -->
+                                        <a href="{{ route($routePrefix . '.merge', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                            title="Merge This User">
+                                            <i class="fa-solid fa-code-merge"></i>
+                                        </a>
+
                                         <!-- Remove from Journal -->
                                         <form
                                             action="{{ route($routePrefix . '.destroy', ['journal' => $journal->slug, 'user' => $user->id]) }}"

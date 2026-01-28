@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JournalUserRole;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\MergeUserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -715,5 +716,79 @@ class JournalUserManagementController extends Controller
         return redirect()
             ->route($this->getRoutePrefix() . '.index', ['journal' => $journalModel->slug])
             ->with('success', "Notification task queued for {$totalUsers} user(s).");
+    }
+
+    /**
+     * Show merge user form
+     */
+    public function merge($journal, User $user)
+    {
+        $journal = current_journal();
+        $routePrefix = $this->getRoutePrefix();
+
+        // Prevent merging Super Admins
+        if ($user->hasRole('Super Admin')) {
+            return redirect()
+                ->route($routePrefix . '.index', ['journal' => $journal->slug])
+                ->with('error', 'Cannot merge a Super Admin account.');
+        }
+
+        $sourceUser = $user;
+
+        // Get potential target users (exclude source user and Super Admins)
+        $mergeService = new MergeUserService();
+        $potentialTargets = $mergeService->getPotentialTargets($sourceUser);
+
+        return view('admin.journals.users.merge', compact('journal', 'routePrefix', 'sourceUser', 'potentialTargets'));
+    }
+
+    /**
+     * Execute user merge
+     */
+    public function executeMerge(Request $request, $journal, User $user)
+    {
+        $journal = current_journal();
+        $routePrefix = $this->getRoutePrefix();
+
+        $request->validate([
+            'target_user_id' => 'required|exists:users,id|different:' . $user->id,
+            'confirmation_text' => 'required|in:MERGE',
+        ]);
+
+        // Prevent merging Super Admins
+        if ($user->hasRole('Super Admin')) {
+            return redirect()
+                ->route($routePrefix . '.index', ['journal' => $journal->slug])
+                ->with('error', 'Cannot merge a Super Admin account.');
+        }
+
+        $sourceUser = $user;
+        $targetUser = User::findOrFail($request->target_user_id);
+
+        // Prevent merging into Super Admin
+        if ($targetUser->hasRole('Super Admin')) {
+            return back()
+                ->withInput()
+                ->with('error', 'Cannot merge into a Super Admin account.');
+        }
+
+        try {
+            $mergeService = new MergeUserService();
+            $mergeService->merge($sourceUser, $targetUser);
+
+            return redirect()
+                ->route($routePrefix . '.index', ['journal' => $journal->slug])
+                ->with('success', "Successfully merged '{$sourceUser->name}' into '{$targetUser->name}'. All data has been transferred and the source account has been deleted.");
+        } catch (\Exception $e) {
+            Log::error('User merge failed', [
+                'source_user_id' => $sourceUser->id,
+                'target_user_id' => $targetUser->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to merge users: ' . $e->getMessage());
+        }
     }
 }
