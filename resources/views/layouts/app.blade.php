@@ -383,7 +383,7 @@ $journalSlug ??
                     </p>
                     <div class="max-h-64 overflow-y-auto custom-scrollbar">
                         @foreach ($userJournals as $j)
-                        <a href="{{ route('journal.dashboard', $j->slug) }}"
+                        <a href="{{ route('journal.submissions.index', $j->slug) }}"
                             class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="truncate">{{ $j->name }}</span>
                             @if ($journal && $j->id === $journal->id)
@@ -619,7 +619,7 @@ $journalSlug ??
                     </button>
 
                     <!-- Logo (visible on mobile when sidebar is hidden) -->
-                    <a href="{{ $journalSlug ? route('journal.dashboard', ['journal' => $journalSlug]) : url('/') }}"
+                    <a href="{{ $journalSlug ? route('journal.submissions.index', ['journal' => $journalSlug]) : url('/') }}"
                         class="lg:hidden ml-2 flex items-center space-x-2">
                         <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
@@ -633,7 +633,7 @@ $journalSlug ??
 
                     <!-- Breadcrumb (desktop) -->
                     <nav class="hidden lg:flex items-center space-x-2 text-sm">
-                        <a href="{{ $journalSlug ? route('journal.dashboard', ['journal' => $journalSlug]) : url('/') }}"
+                        <a href="{{ $journalSlug ? route('journal.submissions.index', ['journal' => $journalSlug]) : url('/') }}"
                             class="text-gray-500 hover:text-gray-700">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
