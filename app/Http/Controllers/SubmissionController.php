@@ -234,6 +234,7 @@ class SubmissionController extends Controller
                 'subtitle' => 'nullable|string|max:500',
                 'abstract' => 'required|string',
                 'keywords' => 'nullable|string|max:500',
+                'references' => 'nullable|string',
 
                 'authors' => 'required|array|min:1',
                 'authors.*.first_name' => 'required|string|max:255',
@@ -259,6 +260,7 @@ class SubmissionController extends Controller
                     'subtitle' => $validated['subtitle'] ?? null,
                     'abstract' => $validated['abstract'],
                     'keywords' => $validated['keywords'] ?? null,
+                    'references' => $validated['references'] ?? null,
                     'status' => Submission::STATUS_SUBMITTED,
                     'stage' => Submission::STAGE_SUBMISSION,
                     'stage_id' => 1,
@@ -542,6 +544,7 @@ class SubmissionController extends Controller
             'title' => 'required|string|max:500',
             'abstract' => 'required|string',
             'keywords' => 'nullable|string|max:500',
+            'references' => 'nullable|string',
             'section_id' => 'required|uuid',
         ]);
 

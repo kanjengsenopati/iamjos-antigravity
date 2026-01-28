@@ -260,7 +260,7 @@ Route::prefix('{journal}')->group(function () {
     Route::get('/current', [PublicController::class, 'currentIssue'])->name('journal.public.current');
     Route::get('/archives', [PublicController::class, 'archives'])->name('journal.public.archives');
     Route::get('/about', [PublicController::class, 'about'])->name('journal.public.about');
-    
+
     // Announcements
     Route::get('/announcement', [PublicController::class, 'announcements'])->name('journal.announcement.index');
     Route::get('/announcement/{id}', [PublicController::class, 'announcement'])->name('journal.announcement.show');
@@ -426,6 +426,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Journal\PublicationController::class, 'show'])->name('show');
                 Route::post('/title', [\App\Http\Controllers\Journal\PublicationController::class, 'updateTitleAbstract'])->name('title.update');
                 Route::post('/metadata', [\App\Http\Controllers\Journal\PublicationController::class, 'updateMetadata'])->name('metadata.update');
+                Route::post('/references', [\App\Http\Controllers\Journal\PublicationController::class, 'updateReferences'])->name('references.update');
                 Route::post('/license', [\App\Http\Controllers\Journal\PublicationController::class, 'updateLicense'])->name('license.update');
                 Route::post('/issue', [\App\Http\Controllers\Journal\PublicationController::class, 'assignIssue'])->name('issue.assign');
                 Route::post('/unschedule', [\App\Http\Controllers\Journal\PublicationController::class, 'unschedule'])->name('unschedule');
@@ -601,6 +602,8 @@ Route::prefix('{journal}')->group(function () {
                 Route::post('/{user}/disable', 'disable')->name('disable');
                 Route::post('/{user}/enable', 'enable')->name('enable');
                 Route::post('/{user}/email', 'email')->name('email');
+                Route::get('/{user}/merge', 'merge')->name('merge');
+                Route::post('/{user}/merge', 'executeMerge')->name('execute-merge');
 
                 // 2. Roles
                 Route::get('/roles', 'roles')->name('roles');

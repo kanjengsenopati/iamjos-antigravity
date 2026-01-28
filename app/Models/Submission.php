@@ -60,6 +60,7 @@ class Submission extends Model
         'accepted_at',
         'published_at',
         'metadata',
+        'references',
     ];
 
     /**

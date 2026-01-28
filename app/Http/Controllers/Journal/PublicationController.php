@@ -74,6 +74,25 @@ class PublicationController extends Controller
     }
 
     /**
+     * Update references
+     */
+    public function updateReferences(Request $request, $journal, Submission $submission)
+    {
+        $validated = $request->validate([
+            'references' => 'nullable|string',
+        ]);
+
+        // Update submission directly as the column exists on submissions table
+        $submission->update($validated);
+
+        // If the Publication model eventually gets a references column, we would update it here too.
+        // $publication = $submission->getOrCreatePublication();
+        // $publication->update($validated);
+
+        return back()->with('success', 'References updated successfully.');
+    }
+
+    /**
      * Update license and DOI
      */
     public function updateLicense(Request $request, $journal, Submission $submission)
