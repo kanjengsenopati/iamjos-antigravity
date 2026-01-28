@@ -33,9 +33,17 @@ class JournalSelectController extends Controller
             ]);
         }
 
-        // If only one journal exists, redirect directly to its submissions (OJS 3.3 style)
+        // If only one journal exists, redirect based on user role (OJS 3.3 style)
         if ($journals->count() === 1) {
-            return redirect()->route('journal.submissions.index', ['journal' => $journals->first()->slug]);
+            $journal = $journals->first();
+
+            // Reviewers go to their review assignments
+            if ($user->hasRole('Reviewer')) {
+                return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug]);
+            }
+
+            // All other users go to submissions
+            return redirect()->route('journal.submissions.index', ['journal' => $journal->slug]);
         }
 
         return view('journal-select', [
@@ -60,9 +68,17 @@ class JournalSelectController extends Controller
             return redirect()->route('journal.select');
         }
 
-        // If only one journal, redirect to its submissions (OJS 3.3 style)
+        // If only one journal, redirect based on user role (OJS 3.3 style)
         if ($journals->count() === 1) {
-            return redirect()->route('journal.submissions.index', ['journal' => $journals->first()->slug]);
+            $journal = $journals->first();
+
+            // Reviewers go to their review assignments
+            if ($user->hasRole('Reviewer')) {
+                return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug]);
+            }
+
+            // All other users go to submissions
+            return redirect()->route('journal.submissions.index', ['journal' => $journal->slug]);
         }
 
         // Otherwise show selection page
