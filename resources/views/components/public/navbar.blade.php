@@ -79,9 +79,9 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                             @endforeach
                         @else
                             {{-- Default User Navigation Links --}}
-                            <a href="{{ route('journal.dashboard', $journal->slug) }}"
+                            <a href="{{ route('journal.submissions.index', $journal->slug) }}"
                                 class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
-                                    {{ request()->routeIs('journal.dashboard') ? 'bg-white/15 text-white' : '' }}">
+                                    {{ request()->routeIs('journal.submissions.index') ? 'bg-white/15 text-white' : '' }}">
                                 <i class="fa-solid fa-gauge-high mr-1.5 text-xs"></i> Dashboard
                             </a>
                             <a href="{{ route('journal.submissions.index', $journal->slug) }}"
@@ -268,7 +268,7 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
 
                         {{-- Menu Items --}}
                         <div class="py-1">
-                            <a href="{{ route('journal.dashboard', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                            <a href="{{ route('journal.submissions.index', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
                                 <i class="fa-solid fa-gauge-high text-slate-400 w-4 text-center"></i>
                                 Dashboard
                             </a>
@@ -372,7 +372,7 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                     @endforeach
                 @else
                     {{-- Default User Navigation Links (Mobile) --}}
-                    <a href="{{ route('journal.dashboard', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                    <a href="{{ route('journal.submissions.index', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                         <i class="fa-solid fa-gauge-high text-slate-400 w-5 text-center"></i> Dashboard
                     </a>
                     <a href="{{ route('journal.submissions.index', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">

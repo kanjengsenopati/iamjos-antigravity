@@ -77,7 +77,7 @@
         {{-- 3. USER ACTIONS (Far Right) --}}
         <div class="flex items-center gap-3">
             @auth
-                <a href="{{ route('dashboard') }}" class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600">
+                <a href="{{ route('journal.select') }}" class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600">
                     <i class="fa-solid fa-gauge-high mr-2"></i>
                     Dashboard
                 </a>
