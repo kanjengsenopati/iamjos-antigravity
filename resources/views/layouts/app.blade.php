@@ -57,6 +57,7 @@ $journalSlug ??
         }
     </script>
 
+    @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -1027,7 +1028,9 @@ $journalSlug ??
 
 
     <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+    @livewireScripts
     @stack('scripts')
+
 </body>
 
 </html>
