@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Journal;
 use App\Models\SiteContent;
+use App\Models\SiteSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Session;
 
 class SiteAdminController extends Controller
@@ -35,11 +36,12 @@ class SiteAdminController extends Controller
      */
     public function siteSettings()
     {
-        $siteSetting = \App\Models\SiteSetting::firstOrCreate([], [
+        $siteSetting = SiteSetting::firstOrCreate([], [
             'site_title' => config('app.name'),
             'site_intro' => 'Welcome to our academic journal portal.',
             'min_password_length' => 8,
             'redirect_to_journal' => false,
+            'footer_content' => '',
         ]);
 
         return view('admin.site.settings', compact('siteSetting'));
@@ -62,6 +64,7 @@ class SiteAdminController extends Controller
         $validated = $request->validate([
             'site_title' => 'required|string|max:255',
             'site_intro' => 'nullable|string',
+            'footer_content' => 'nullable|string',
             'redirect_to_journal' => 'boolean',
             'min_password_length' => 'required|integer|min:6|max:32',
             // WhatsApp Gateway Config

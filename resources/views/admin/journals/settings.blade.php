@@ -63,11 +63,6 @@ $contactSettings = $journal->settings['contact'] ?? [];
                     <i class="fa-solid fa-tags mr-2"></i>
                     Categories
                 </button>
-                <a href="{{ route('journal.settings.navigation.index', $journal->slug) }}"
-                    class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors whitespace-nowrap">
-                    <i class="fa-solid fa-compass mr-2"></i>
-                    Navigation
-                </a>
                 <a href="{{ route('journal.settings.sidebar.index', $journal->slug) }}"
                     class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors whitespace-nowrap">
                     <i class="fa-solid fa-columns mr-2"></i>

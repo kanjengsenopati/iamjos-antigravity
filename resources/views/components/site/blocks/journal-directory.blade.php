@@ -115,11 +115,19 @@ $journals = $data['journals'] ?? collect();
                                 <span>{{ $journal->submissions_count ?? 0 }} Articles</span>
                             </div>
 
-                            {{-- Action --}}
-                            <a href="{{ route('journal.public.home', $journal->slug) }}"
-                               class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
-                                Visit
-                            </a>
+                            {{-- Actions --}}
+                            <div class="flex flex-col gap-2">
+                                <a href="{{ route('journal.public.home', $journal->slug) }}"
+                                   class="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 text-center">
+                                    View Journal
+                                </a>
+                                @if($journal->currentIssue)
+                                    <a href="{{ route('journal.public.current', $journal->slug) }}"
+                                       class="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 text-center">
+                                        Current Issue
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </template>
                 @endforeach

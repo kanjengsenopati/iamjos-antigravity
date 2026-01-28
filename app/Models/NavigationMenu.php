@@ -54,6 +54,14 @@ class NavigationMenu extends Model
     }
 
     /**
+     * Get all navigation items for this menu (site-level)
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(\App\Models\NavigationItem::class, 'menu_id')->orderBy('order');
+    }
+
+    /**
      * Get root-level assignments (no parent)
      */
     public function rootAssignments(): HasMany

@@ -28,6 +28,9 @@ class PortalController extends Controller
             return SiteContent::getAll();
         });
 
+        // Load navigation menus
+        $primaryMenu = $this->loadNavigationMenu('primary');
+
         // Lazy load data only for active blocks
         $blockData = $this->loadBlockData($blocks);
 
@@ -35,6 +38,7 @@ class PortalController extends Controller
             'blocks' => $blocks,
             'blockData' => $blockData,
             'settings' => $settings,
+            'primaryMenu' => $primaryMenu,
         ]);
     }
 
@@ -95,6 +99,7 @@ class PortalController extends Controller
                         ->where('visible', true)
                         ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
                         ->withCount(['issues' => fn($q) => $q->where('is_published', true)])
+                        ->with('currentIssue')
                         ->orderBy('name')
                         ->get();
                 }),
@@ -122,6 +127,35 @@ class PortalController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Load navigation menu items for a specific area.
+     */
+    protected function loadNavigationMenu(string $area): \Illuminate\Support\Collection
+    {
+        $menu = \App\Models\NavigationMenu::getMenu($area, null); // null = site-level
+
+        if (!$menu) {
+            return collect();
+        }
+
+        // Load assigned items with their menu item data
+        return $menu->assignments()
+            ->with('item')
+            ->whereHas('item', fn($q) => $q->where('is_active', true))
+            ->orderBy('order')
+            ->get()
+            ->map(function ($assignment) {
+                $item = $assignment->item;
+                return (object) [
+                    'label' => $item->title,
+                    'resolved_url' => $item->resolved_url,
+                    'target' => $item->target,
+                    'icon' => $item->icon,
+                    'is_divider' => $item->type === 'divider',
+                ];
+            });
     }
 
     /**

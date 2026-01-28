@@ -872,5 +872,31 @@ class PublicController extends Controller
 
         return array_merge($defaults, $actual);
     }
+
+    // =====================================================
+    // CUSTOM PAGES (Navigation Menu Items)
+    // =====================================================
+
+    /**
+     * Display a custom page created via Navigation Menu Items.
+     */
+    public function customPage(string $journalSlug, string $path): View
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        // Find the custom page by path
+        $page = \App\Models\NavigationMenuItem::where('journal_id', $journal->id)
+            ->where('type', 'page')
+            ->where('path', $path)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        return view('journal.public.custom-page', [
+            'journal' => $journal,
+            'page' => $page,
+            'journalSlug' => $journalSlug,
+        ]);
+    }
 }
+
 

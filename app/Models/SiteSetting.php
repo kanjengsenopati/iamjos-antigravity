@@ -14,6 +14,7 @@ class SiteSetting extends Model
     protected $fillable = [
         'site_title',
         'site_intro',
+        'footer_content',
         'min_password_length',
         'redirect_to_journal',
         'wa_api_url',

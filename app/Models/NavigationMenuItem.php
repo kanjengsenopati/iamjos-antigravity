@@ -25,6 +25,8 @@ class NavigationMenuItem extends Model
         'type',
         'url',
         'route_name',
+        'path',
+        'content',
         'related_id',
         'icon',
         'target',
@@ -84,9 +86,11 @@ class NavigationMenuItem extends Model
             }
         }
 
-        if ($this->type === self::TYPE_PAGE && $this->related_id) {
-            // TODO: Implement page URL resolution
-            return '#';
+        if ($this->type === self::TYPE_PAGE && $this->path) {
+            $journal = current_journal();
+            if ($journal) {
+                return route('journal.custom-page', ['journal' => $journal->slug, 'path' => $this->path]);
+            }
         }
 
         return '#';
@@ -122,17 +126,25 @@ class NavigationMenuItem extends Model
     public static function getAvailableRoutes(): array
     {
         return [
-            ['name' => 'journal.public.home', 'label' => 'Homepage'],
+            ['name' => 'journal.public.home', 'label' => 'Home'],
             ['name' => 'journal.public.about', 'label' => 'About'],
+            ['name' => 'journal.public.about-journal', 'label' => 'About the Journal'],
             ['name' => 'journal.public.editorial-team', 'label' => 'Editorial Team'],
-            ['name' => 'journal.public.current', 'label' => 'Current Issue'],
+            ['name' => 'journal.public.current', 'label' => 'Current'],
             ['name' => 'journal.public.archives', 'label' => 'Archives'],
-            ['name' => 'journal.public.author-guidelines', 'label' => 'Author Guidelines'],
             ['name' => 'journal.public.announcements', 'label' => 'Announcements'],
-            ['name' => 'journal.submissions.create', 'label' => 'Submit Article'],
-            ['name' => 'journal.login', 'label' => 'Login'],
-            ['name' => 'journal.register', 'label' => 'Register'],
+            ['name' => 'journal.public.author-guidelines', 'label' => 'Author Guidelines'],
+            ['name' => 'journal.submissions.create', 'label' => 'Submissions'],
+            ['name' => 'journal.public.privacy', 'label' => 'Privacy Statement'],
+            ['name' => 'journal.public.contact', 'label' => 'Contact'],
             ['name' => 'journal.public.search', 'label' => 'Search'],
+            ['name' => 'login', 'label' => 'Login'],
+            ['name' => 'register', 'label' => 'Register'],
+            ['name' => 'admin.dashboard', 'label' => 'Admin'],
+            ['name' => 'admin.settings.index', 'label' => 'Administration'],
+            ['name' => 'journal.admin.dashboard', 'label' => 'Dashboard'],
+            ['name' => 'profile.edit', 'label' => 'View Profile'],
+            ['name' => 'logout', 'label' => 'Logout'],
         ];
     }
 }
