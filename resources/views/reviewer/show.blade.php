@@ -361,7 +361,7 @@ $journal = current_journal();
                             <label for="comments_for_author" class="block text-sm font-medium text-gray-700 mb-2">
                                 Comments for Author <span class="text-red-500">*</span>
                             </label>
-                            <textarea name="comments_for_author" id="comments_for_author" rows="8" required
+                            <textarea name="comments_for_author" id="comments_for_author" rows="8"
                                 placeholder="Provide detailed feedback..."
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ old('comments_for_author') }}</textarea>
                             @error('comments_for_author')
@@ -430,7 +430,7 @@ $journal = current_journal();
                         <div>
                             <h4 class="text-sm font-medium text-gray-500 mb-1">Comments for Author</h4>
                             <div class="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4">
-                                {!! nl2br(e($assignment->comments_for_author)) !!}
+                                {!! $assignment->comments_for_author !!}
                             </div>
                         </div>
 
@@ -440,7 +440,7 @@ $journal = current_journal();
                             </h4>
                             <div
                                 class="prose prose-sm max-w-none text-gray-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                                {!! nl2br(e($assignment->comments_for_editor)) !!}
+                                {!! $assignment->comments_for_editor !!}
                             </div>
                         </div>
                         @endif
@@ -613,4 +613,59 @@ $journal = current_journal();
         </div>
 
     </div>
+     @push('scripts')
+    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+    <script>
+        tinymce.init({
+            selector:'#comments_for_editor, #comments_for_author',
+            height: 350,
+            menubar: false,
+            plugins: 'lists link image table code autoresize',
+            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+            branding: false,
+            license_key: 'gpl',
+            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.withCredentials = false;
+                xhr.open('POST', '{{ route('profile.upload.image') }}');
+                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                xhr.upload.onprogress = (e) => {
+                    progress(e.loaded / e.total * 100);
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 403) {
+                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                        return;
+                    }
+
+                    if (xhr.status < 200 || xhr.status >= 300) {
+                        reject('HTTP Error: ' + xhr.status);
+                        return;
+                    }
+
+                    const json = JSON.parse(xhr.responseText);
+
+                    if (!json || typeof json.location != 'string') {
+                        reject('Invalid JSON: ' + xhr.responseText);
+                        return;
+                    }
+
+                    resolve(json.location);
+                };
+
+                xhr.onerror = () => {
+                    reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                };
+
+                const formData = new FormData();
+                formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                xhr.send(formData);
+            })
+        });
+    </script>
+    
+    @endpush
 </x-app-layout>

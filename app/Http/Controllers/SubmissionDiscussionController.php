@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Discussion;
-use App\Models\DiscussionMessage;
-use App\Models\DiscussionFile;
-use App\Models\Submission;
 use App\Models\User;
-use App\Notifications\NewDiscussionMessageNotification;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use App\Models\Discussion;
+use App\Models\Submission;
+use App\Services\WaGateway;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\DiscussionFile;
+use App\Models\DiscussionMessage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Notifications\NewDiscussionMessageNotification;
 
 class SubmissionDiscussionController extends Controller
 {
@@ -282,10 +283,18 @@ class SubmissionDiscussionController extends Controller
 
         foreach ($participantsToNotify as $participant) {
             try {
+                // Send email notification
                 $participant->notify(new NewDiscussionMessageNotification($discussion, $message, $sender));
+
+                // Send WhatsApp notification
+                WaGateway::sendTemplate($participant, 'discussion_message', [
+                    'name' => $participant->name,
+                    'subject' => $discussion->subject,
+                    'title' => $discussion->submission->title ?? 'Naskah',
+                ]);
             } catch (\Exception $e) {
                 // Log but don't fail the request
-                \Log::warning('Failed to send discussion notification', [
+                Log::warning('Failed to send discussion notification', [
                     'discussion_id' => $discussion->id,
                     'participant_id' => $participant->id,
                     'error' => $e->getMessage(),

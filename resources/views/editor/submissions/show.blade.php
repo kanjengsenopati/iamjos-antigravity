@@ -316,7 +316,7 @@
                                                                 for Author</h4>
                                                             <div
                                                                 class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 prose prose-sm max-w-none">
-                                                                {!! nl2br(e($assignment->comments_for_author)) !!}
+                                                                {!! $assignment->comments_for_author !!}
                                                             </div>
                                                         </div>
 
@@ -335,7 +335,7 @@
                                                                 </h4>
                                                                 <div
                                                                     class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-gray-700">
-                                                                    {!! nl2br(e($assignment->comments_for_editor)) !!}
+                                                                    {!! $assignment->comments_for_editor !!}
                                                                 </div>
                                                             </div>
                                                         @endif
