@@ -280,6 +280,9 @@ Route::prefix('{journal}')->group(function () {
     Route::get('/search/quick', [SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
     Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
 
+    // Custom Pages (from Navigation Menu Items)
+    Route::get('/page/{path}', [PublicController::class, 'customPage'])->name('journal.custom-page');
+
     // --------- Article Routes (Google Scholar Indexing) ---------
     // These routes support both ID and slug for SEO flexibility
     Route::get('/article/{article}', [PublicController::class, 'article'])->name('journal.public.article');
@@ -560,7 +563,9 @@ Route::prefix('{journal}')->group(function () {
                 Route::put('/menus/{menu}', 'updateMenu')->name('menus.update');
                 Route::delete('/menus/{menu}', 'destroyMenu')->name('menus.destroy');
                 // Items
+                Route::get('/items/create', 'createItem')->name('items.create');
                 Route::post('/items', 'storeItem')->name('items.store');
+                Route::get('/items/{item}/edit', 'editItem')->name('items.edit');
                 Route::put('/items/{item}', 'updateItem')->name('items.update');
                 Route::delete('/items/{item}', 'destroyItem')->name('items.destroy');
                 // Assignments

@@ -57,6 +57,16 @@
                                     class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('site_intro', $siteSetting->site_intro) }}</textarea>
                                 <p class="mt-1 text-xs text-gray-500">A brief description displayed on the portal homepage.</p>
                             </div>
+
+                            <!-- Footer Content -->
+                            <div>
+                                <label for="footer_content" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Footer Content
+                                </label>
+                                <textarea id="footer_content" name="footer_content" rows="8"
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 tinymce-editor">{{ old('footer_content', $siteSetting->footer_content) }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500">Custom HTML content for the portal footer. Supports rich text formatting.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -228,3 +238,58 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+    <script>
+        tinymce.init({
+            selector: '#footer_content',
+            height: 350,
+            menubar: false,
+            plugins: 'lists link image table code autoresize',
+            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+            branding: false,
+            license_key: 'gpl',
+            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.withCredentials = false;
+                xhr.open('POST', '{{ route('profile.upload.image') }}');
+                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                xhr.upload.onprogress = (e) => {
+                    progress(e.loaded / e.total * 100);
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 403) {
+                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                        return;
+                    }
+
+                    if (xhr.status < 200 || xhr.status >= 300) {
+                        reject('HTTP Error: ' + xhr.status);
+                        return;
+                    }
+
+                    const json = JSON.parse(xhr.responseText);
+
+                    if (!json || typeof json.location != 'string') {
+                        reject('Invalid JSON: ' + xhr.responseText);
+                        return;
+                    }
+
+                    resolve(json.location);
+                };
+
+                xhr.onerror = () => {
+                    reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                };
+
+                const formData = new FormData();
+                formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                xhr.send(formData);
+            })
+        });
+    </script>
+@endpush

@@ -81,15 +81,24 @@
         </div>
     </div>
 
-    {{-- Card Footer: Action Button --}}
+    {{-- Card Footer: Action Buttons --}}
     <div class="px-5 pb-5">
-        <a href="{{ route('journal.public.home', $journal->slug) }}" 
-           class="block w-full text-center px-4 py-2.5 rounded-lg text-sm font-semibold border-2 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-           style="border-color: {{ $brandColor }}; color: {{ $brandColor }};"
-           onmouseover="this.style.backgroundColor='{{ $brandColor }}'; this.style.color='white';"
-           onmouseout="this.style.backgroundColor='transparent'; this.style.color='{{ $brandColor }}';">
-            <i class="fa-solid fa-arrow-right mr-1.5"></i>
-            Lihat Jurnal
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('journal.public.home', $journal->slug) }}"
+               class="flex-1 text-center px-3 py-2 rounded-lg text-xs font-semibold border-2 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+               style="border-color: {{ $brandColor }}; color: {{ $brandColor }};"
+               onmouseover="this.style.backgroundColor='{{ $brandColor }}'; this.style.color='white';"
+               onmouseout="this.style.backgroundColor='transparent'; this.style.color='{{ $brandColor }}';">
+                <i class="fa-solid fa-eye mr-1"></i>
+                View Journal
+            </a>
+            @if($journal->currentIssue)
+                <a href="{{ route('journal.public.current', $journal->slug) }}"
+                   class="flex-1 text-center px-3 py-2 rounded-lg text-xs font-semibold bg-green-600 text-white border-2 border-green-600 hover:bg-green-700 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                    <i class="fa-solid fa-newspaper mr-1"></i>
+                    Current Issue
+                </a>
+            @endif
+        </div>
     </div>
 </article>

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 #[ObservedBy([JournalObserver::class])]
@@ -95,6 +96,14 @@ class Journal extends Model
     public function issues(): HasMany
     {
         return $this->hasMany(Issue::class, 'journal_id');
+    }
+
+    /**
+     * Get the current (latest published) issue for this journal
+     */
+    public function currentIssue(): HasOne
+    {
+        return $this->hasOne(Issue::class, 'journal_id')->where('is_published', true)->latest('published_at');
     }
 
     /**

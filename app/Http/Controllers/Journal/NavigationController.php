@@ -32,6 +32,28 @@ class NavigationController extends Controller
     }
 
     /**
+     * Show the form for creating a new menu item
+     */
+    public function createItem(): View
+    {
+        $journal = current_journal();
+        $availableRoutes = NavigationMenuItem::getAvailableRoutes();
+
+        return view('journal.admin.settings.navigation.create', compact('journal', 'availableRoutes'));
+    }
+
+    /**
+     * Show the form for editing a menu item
+     */
+    public function editItem(string $journal, NavigationMenuItem $item): View
+    {
+        $journal = current_journal();
+        $availableRoutes = NavigationMenuItem::getAvailableRoutes();
+
+        return view('journal.admin.settings.navigation.edit', compact('journal', 'item', 'availableRoutes'));
+    }
+
+    /**
      * Get all menu items (system + custom) without duplicates
      */
     private function getAllMenuItems($journal): \Illuminate\Support\Collection
@@ -40,13 +62,23 @@ class NavigationController extends Controller
         $systemRouteNames = [
             'journal.public.home',
             'journal.public.about',
+            'journal.public.about-journal',
             'journal.public.editorial-team',
             'journal.public.current',
             'journal.public.archives',
-            'journal.public.author-guidelines',
             'journal.public.announcements',
+            'journal.public.author-guidelines',
             'journal.submissions.create',
+            'journal.public.privacy',
+            'journal.public.contact',
             'journal.public.search',
+            'login',
+            'register',
+            'admin.dashboard',
+            'admin.settings.index',
+            'journal.admin.dashboard',
+            'profile.edit',
+            'logout',
         ];
 
         // Get all DB items for this journal
@@ -62,13 +94,23 @@ class NavigationController extends Controller
         $systemConfigs = [
             'journal.public.home' => ['title' => 'Home', 'icon' => 'fa-solid fa-house'],
             'journal.public.about' => ['title' => 'About', 'icon' => 'fa-solid fa-info-circle'],
+            'journal.public.about-journal' => ['title' => 'About the Journal', 'icon' => 'fa-solid fa-info-circle'],
             'journal.public.editorial-team' => ['title' => 'Editorial Team', 'icon' => 'fa-solid fa-users'],
-            'journal.public.current' => ['title' => 'Current Issue', 'icon' => 'fa-solid fa-newspaper'],
+            'journal.public.current' => ['title' => 'Current', 'icon' => 'fa-solid fa-newspaper'],
             'journal.public.archives' => ['title' => 'Archives', 'icon' => 'fa-solid fa-archive'],
-            'journal.public.author-guidelines' => ['title' => 'Author Guidelines', 'icon' => 'fa-solid fa-book'],
             'journal.public.announcements' => ['title' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn'],
-            'journal.submissions.create' => ['title' => 'Submit Article', 'icon' => 'fa-solid fa-paper-plane'],
+            'journal.public.author-guidelines' => ['title' => 'Author Guidelines', 'icon' => 'fa-solid fa-book'],
+            'journal.submissions.create' => ['title' => 'Submissions', 'icon' => 'fa-solid fa-paper-plane'],
+            'journal.public.privacy' => ['title' => 'Privacy Statement', 'icon' => 'fa-solid fa-shield'],
+            'journal.public.contact' => ['title' => 'Contact', 'icon' => 'fa-solid fa-envelope'],
             'journal.public.search' => ['title' => 'Search', 'icon' => 'fa-solid fa-search'],
+            'login' => ['title' => 'Login', 'icon' => 'fa-solid fa-sign-in-alt'],
+            'register' => ['title' => 'Register', 'icon' => 'fa-solid fa-user-plus'],
+            'admin.dashboard' => ['title' => 'Admin', 'icon' => 'fa-solid fa-cog'],
+            'admin.settings.index' => ['title' => 'Administration', 'icon' => 'fa-solid fa-tools'],
+            'journal.admin.dashboard' => ['title' => 'Dashboard', 'icon' => 'fa-solid fa-tachometer-alt'],
+            'profile.edit' => ['title' => 'View Profile', 'icon' => 'fa-solid fa-user'],
+            'logout' => ['title' => 'Logout', 'icon' => 'fa-solid fa-sign-out-alt'],
         ];
 
         foreach ($systemConfigs as $routeName => $config) {
@@ -215,6 +257,8 @@ class NavigationController extends Controller
             'type' => 'required|in:custom,route,page',
             'url' => 'nullable|string|max:500',
             'route_name' => 'nullable|string|max:255',
+            'path' => 'nullable|string|max:255|unique:navigation_menu_items,path,NULL,id,journal_id,' . $journal->id,
+            'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'target' => 'in:_self,_blank',
         ]);
@@ -225,6 +269,8 @@ class NavigationController extends Controller
             'type' => $validated['type'],
             'url' => $validated['url'] ?? null,
             'route_name' => $validated['route_name'] ?? null,
+            'path' => $validated['path'] ?? null,
+            'content' => $validated['content'] ?? null,
             'icon' => $validated['icon'] ?? null,
             'target' => $validated['target'] ?? '_self',
             'is_active' => true,
@@ -251,6 +297,8 @@ class NavigationController extends Controller
             'type' => 'required|in:custom,route,page',
             'url' => 'nullable|string|max:500',
             'route_name' => 'nullable|string|max:255',
+            'path' => 'nullable|string|max:255|unique:navigation_menu_items,path,' . $item->id . ',id,journal_id,' . $item->journal_id,
+            'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'target' => 'in:_self,_blank',
         ]);
@@ -260,6 +308,8 @@ class NavigationController extends Controller
             'type' => $validated['type'],
             'url' => $validated['url'] ?? null,
             'route_name' => $validated['route_name'] ?? null,
+            'path' => $validated['path'] ?? null,
+            'content' => $validated['content'] ?? null,
             'icon' => $validated['icon'] ?? null,
             'target' => $validated['target'] ?? '_self',
         ]);
@@ -381,13 +431,23 @@ class NavigationController extends Controller
         $systemRoutes = [
             'journal.public.home' => ['title' => 'Home', 'icon' => 'fa-solid fa-house'],
             'journal.public.about' => ['title' => 'About', 'icon' => 'fa-solid fa-info-circle'],
+            'journal.public.about-journal' => ['title' => 'About the Journal', 'icon' => 'fa-solid fa-info-circle'],
             'journal.public.editorial-team' => ['title' => 'Editorial Team', 'icon' => 'fa-solid fa-users'],
-            'journal.public.current' => ['title' => 'Current Issue', 'icon' => 'fa-solid fa-newspaper'],
+            'journal.public.current' => ['title' => 'Current', 'icon' => 'fa-solid fa-newspaper'],
             'journal.public.archives' => ['title' => 'Archives', 'icon' => 'fa-solid fa-archive'],
-            'journal.public.author-guidelines' => ['title' => 'Author Guidelines', 'icon' => 'fa-solid fa-book'],
             'journal.public.announcements' => ['title' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn'],
-            'journal.submissions.create' => ['title' => 'Submit Article', 'icon' => 'fa-solid fa-paper-plane'],
+            'journal.public.author-guidelines' => ['title' => 'Author Guidelines', 'icon' => 'fa-solid fa-book'],
+            'journal.submissions.create' => ['title' => 'Submissions', 'icon' => 'fa-solid fa-paper-plane'],
+            'journal.public.privacy' => ['title' => 'Privacy Statement', 'icon' => 'fa-solid fa-shield'],
+            'journal.public.contact' => ['title' => 'Contact', 'icon' => 'fa-solid fa-envelope'],
             'journal.public.search' => ['title' => 'Search', 'icon' => 'fa-solid fa-search'],
+            'login' => ['title' => 'Login', 'icon' => 'fa-solid fa-sign-in-alt'],
+            'register' => ['title' => 'Register', 'icon' => 'fa-solid fa-user-plus'],
+            'admin.dashboard' => ['title' => 'Admin', 'icon' => 'fa-solid fa-cog'],
+            'admin.settings.index' => ['title' => 'Administration', 'icon' => 'fa-solid fa-tools'],
+            'journal.admin.dashboard' => ['title' => 'Dashboard', 'icon' => 'fa-solid fa-tachometer-alt'],
+            'profile.edit' => ['title' => 'View Profile', 'icon' => 'fa-solid fa-user'],
+            'logout' => ['title' => 'Logout', 'icon' => 'fa-solid fa-sign-out-alt'],
         ];
 
         $config = $systemRoutes[$routeName] ?? ['title' => $routeName, 'icon' => 'fa-solid fa-link'];

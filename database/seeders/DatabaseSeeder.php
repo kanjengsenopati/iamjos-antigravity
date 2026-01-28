@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
 
             // 3. Portal & Site Content (Public Pages)
             SiteContentSeeder::class,
+            PortalSeeder::class,
 
             // 4. Email Templates
             EmailTemplateSeeder::class,
