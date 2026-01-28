@@ -156,6 +156,7 @@ class WaGateway
             'submission_accepted' => "Halo {name}, selamat! Naskah Anda '{title}' telah diterima untuk dipublikasikan.",
             'submission_rejected' => "Halo {name}, mohon maaf naskah Anda '{title}' tidak dapat kami terima. Silakan cek dashboard untuk feedback dari editor.",
             'new_submission_notification' => "Halo {name}, ada naskah baru berjudul '{title}'. Silakan tinjau di dashboard.",
+            'reviewer_assigned' => "Halo {name}, Anda telah ditugaskan untuk mereview naskah '{title}' (Round {round}). Silakan cek dashboard untuk detailnya.",
         ];
 
         if (!isset($templates[$template])) {
