@@ -7,6 +7,7 @@ use App\Models\Journal;
 use App\Models\SiteContent;
 use App\Models\SiteContentBlock;
 use App\Models\SitePage;
+use App\Models\SiteSetting;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -250,15 +251,11 @@ class PortalController extends Controller
      */
     public function about(): View
     {
-        $settings = SiteContent::getAll();
 
-        $stats = [
-            'total_journals' => Journal::where('enabled', true)->count(),
-            'total_articles' => Submission::where('status', Submission::STATUS_PUBLISHED)->count(),
-            'total_authors' => User::role('Author')->count(),
-        ];
+        // Merge with site settings (for about_content from SiteSetting)
+        $siteSettings = SiteSetting::first();
 
-        return view('site.about', compact('settings', 'stats'));
+        return view('site.about', compact('siteSettings'));
     }
 
     /**

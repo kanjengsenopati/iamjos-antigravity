@@ -219,18 +219,6 @@
                 </svg>
                 <span>Site Navigation</span>
             </a>
-
-            <!-- About Page Settings -->
-            <a href="{{ route('admin.about.edit') }}"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                       {{ request()->routeIs('admin.about.*') ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>About Page</span>
-            </a>
-
             <!-- System & Maintenance -->
             <a href="{{ route('admin.site.system-info') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200

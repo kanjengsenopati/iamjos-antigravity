@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', $content['about_title'] ?? 'About Us')
+@section('title', $settings['about_title'] ?? 'About Us')
 @section('description', 'Tentang IAMJOS - Platform Jurnal Akademik Indonesia')
 
 @section('content')
@@ -23,7 +23,7 @@
 
             <!-- Title with Serif Font -->
             <h1 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold font-serif text-white mb-6 leading-tight">
-                {{ $content['about_title'] ?? 'Empowering Knowledge Sharing Worldwide' }}
+                {{ $settings['about_title'] ?? 'Empowering Knowledge Sharing Worldwide' }}
             </h1>
 
             <p class="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto">
@@ -37,7 +37,7 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Content Container -->
             <article class="prose-content">
-                {!! $content['about_content'] ?? '
+                {!! $settings['about_content'] ?? '
                 <h2>Selamat Datang di IAMJOS</h2>
                 <p>IAMJOS (Indonesian Academic Journal System) adalah platform publikasi jurnal akademik modern yang dirancang untuk mendukung ekosistem penelitian di Indonesia. Kami berkomitmen untuk menyediakan akses terbuka ke pengetahuan berkualitas tinggi dari berbagai disiplin ilmu.</p>
                 
