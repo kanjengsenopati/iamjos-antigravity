@@ -33,9 +33,9 @@ class JournalSelectController extends Controller
             ]);
         }
 
-        // If only one journal exists, redirect directly to its dashboard
+        // If only one journal exists, redirect directly to its submissions (OJS 3.3 style)
         if ($journals->count() === 1) {
-            return redirect()->route('journal.dashboard', ['journal' => $journals->first()->slug]);
+            return redirect()->route('journal.submissions.index', ['journal' => $journals->first()->slug]);
         }
 
         return view('journal-select', [
@@ -60,9 +60,9 @@ class JournalSelectController extends Controller
             return redirect()->route('journal.select');
         }
 
-        // If only one journal, redirect to it
+        // If only one journal, redirect to its submissions (OJS 3.3 style)
         if ($journals->count() === 1) {
-            return redirect()->route('journal.dashboard', ['journal' => $journals->first()->slug]);
+            return redirect()->route('journal.submissions.index', ['journal' => $journals->first()->slug]);
         }
 
         // Otherwise show selection page

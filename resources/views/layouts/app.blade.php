@@ -419,7 +419,7 @@ $journalSlug ??
                 </div>
 
                 <!-- Dashboard -->
-                <a href="{{ route('journal.dashboard', ['journal' => $journalSlug]) }}"
+                {{-- <a href="{{ route('journal.dashboard', ['journal' => $journalSlug]) }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
                    {{ request()->routeIs('journal.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
                     :title="sidebarCollapsed ? 'Dashboard' : ''">
@@ -432,7 +432,7 @@ $journalSlug ??
                     <i
                         class="fa-solid fa-gauge-high w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.dashboard') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                     <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Dashboard</span>
-                </a>
+                </a> --}}
 
                 <!-- Submissions (Single Menu - OJS 3.3 Style, tabs are in content page) -->
                 @role('Author|Editor|Section Editor|Journal Manager|Admin|Super Admin')
@@ -489,12 +489,9 @@ $journalSlug ??
                     <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Issues</span>
                 </a>
                 @endrole
-            </div>
 
-            <!-- Group: Management -->
-            @role('Journal Manager|Editor|Admin|Super Admin')
-            <div class="space-y-1">
                 <!-- Announcements -->
+                @role('Journal Manager|Editor|Admin|Super Admin')
                 <a href="{{ route('journal.announcements.index', ['journal' => $journalSlug]) }}"
                     class="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.announcements.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
                     :title="sidebarCollapsed ? 'Announcements' : ''">
@@ -502,7 +499,12 @@ $journalSlug ??
                         class="fa-solid fa-bullhorn w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.announcements.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                     <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Announcements</span>
                 </a>
+                @endrole
+            </div>
 
+            <!-- Group: Management -->
+            @role('Journal Manager|Editor|Admin|Super Admin')
+            <div class="space-y-1">
                 <div class="px-3 mb-2 mt-6" x-show="!sidebarCollapsed">
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Settings</span>
                 </div>
