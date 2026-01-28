@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class EditorDecisionController extends Controller
 {
@@ -217,25 +218,29 @@ class EditorDecisionController extends Controller
             ));
 
             // Send WhatsApp notification based on decision type
-            $waTemplate = match ($validated['decision']) {
-                'accept' => 'submission_accepted',
-                'reject' => 'submission_rejected',
-                'revision' => 'revision_request',
-                default => 'decision_update',
-            };
+            try {
+                $waTemplate = match ($validated['decision']) {
+                    'accept' => 'submission_accepted',
+                    'reject' => 'submission_rejected',
+                    'revision' => 'revision_request',
+                    default => 'decision_update',
+                };
 
-            $statusText = match ($validated['decision']) {
-                'accept' => 'Diterima',
-                'reject' => 'Ditolak',
-                'revision' => 'Perlu Revisi',
-                default => 'Diperbarui',
-            };
+                $statusText = match ($validated['decision']) {
+                    'accept' => 'Diterima',
+                    'reject' => 'Ditolak',
+                    'revision' => 'Perlu Revisi',
+                    default => 'Diperbarui',
+                };
 
-            WaGateway::sendTemplate($submission->author, $waTemplate, [
-                'name' => $submission->author->name,
-                'title' => $submission->title,
-                'status' => $statusText,
-            ]);
+                WaGateway::sendTemplate($submission->author, $waTemplate, [
+                    'name' => $submission->author->name,
+                    'title' => $submission->title,
+                    'status' => $statusText,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send WhatsApp notification for decision: ' . $e->getMessage());
+            }
         }
 
         $messages = [
