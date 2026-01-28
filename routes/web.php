@@ -260,7 +260,7 @@ Route::prefix('{journal}')->group(function () {
     Route::get('/current', [PublicController::class, 'currentIssue'])->name('journal.public.current');
     Route::get('/archives', [PublicController::class, 'archives'])->name('journal.public.archives');
     Route::get('/about', [PublicController::class, 'about'])->name('journal.public.about');
-    
+
     // Announcements
     Route::get('/announcement', [PublicController::class, 'announcements'])->name('journal.announcement.index');
     Route::get('/announcement/{id}', [PublicController::class, 'announcement'])->name('journal.announcement.show');
@@ -601,6 +601,8 @@ Route::prefix('{journal}')->group(function () {
                 Route::post('/{user}/disable', 'disable')->name('disable');
                 Route::post('/{user}/enable', 'enable')->name('enable');
                 Route::post('/{user}/email', 'email')->name('email');
+                Route::get('/{user}/merge', 'merge')->name('merge');
+                Route::post('/{user}/merge', 'executeMerge')->name('execute-merge');
 
                 // 2. Roles
                 Route::get('/roles', 'roles')->name('roles');
