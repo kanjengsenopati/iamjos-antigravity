@@ -508,6 +508,28 @@ class ReviewWorkflowController extends Controller
             }
         }
 
+        // Send WhatsApp notification to author
+        if ($author && $author->phone) {
+            try {
+                WaGateway::sendTemplate($author, 'revision_request', [
+                    'name' => $author->name,
+                    'title' => $submission->title,
+                ]);
+
+                // Log WhatsApp sent
+                SubmissionLog::log(
+                    $submission,
+                    'notification_sent',
+                    'WhatsApp Sent',
+                    "Revision request WhatsApp sent to {$author->name}.",
+                    ['recipient' => $author->name, 'type' => 'revision_request', 'channel' => 'whatsapp']
+                );
+            } catch (\Exception $e) {
+                \Log::error('Failed to send revision request WhatsApp: ' . $e->getMessage());
+                // Continue even if WhatsApp fails
+            }
+        }
+
         return back()->with('success', 'Revisions requested successfully.' .
             ($validated['new_review_round'] ? ' A new review round has been created.' : ''));
     }
