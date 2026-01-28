@@ -42,7 +42,7 @@ class WaGateway
 
         // 3. Check if WhatsApp credentials are configured
         $settings = SiteSetting::first();
-        
+
         if (!$settings || empty($settings->wa_api_url) || empty($settings->wa_device_id)) {
             Log::warning('WaGateway: WhatsApp credentials not configured in site_settings.', [
                 'has_api_url' => !empty($settings?->wa_api_url),
@@ -56,13 +56,13 @@ class WaGateway
 
         // 5. Dispatch Job (using afterResponse to not block user)
         try {
-            dispatch(new SendToWhatsappNotificationJob($phone, $message))->afterResponse();
-            
+            dispatch(new SendToWhatsappNotificationJob($phone, $message));
+
             Log::info('WaGateway: WhatsApp notification dispatched.', [
                 'phone' => self::maskPhone($phone),
                 'message_length' => strlen($message),
             ]);
-            
+
             return true;
         } catch (\Exception $e) {
             Log::error('WaGateway: Failed to dispatch WhatsApp job.', [
@@ -115,7 +115,7 @@ class WaGateway
         if (strlen($phone) <= 6) {
             return '****';
         }
-        
+
         return substr($phone, 0, 4) . '****' . substr($phone, -4);
     }
 
@@ -131,7 +131,7 @@ class WaGateway
     public static function sendTemplate(User $user, string $template, array $params = []): bool
     {
         $message = self::buildMessage($template, $params);
-        
+
         if (empty($message)) {
             return false;
         }
@@ -155,7 +155,7 @@ class WaGateway
             'revision_request' => "Halo {name}, editor meminta revisi untuk naskah '{title}'. Silakan cek dashboard untuk detailnya.",
             'submission_accepted' => "Halo {name}, selamat! Naskah Anda '{title}' telah diterima untuk dipublikasikan.",
             'submission_rejected' => "Halo {name}, mohon maaf naskah Anda '{title}' tidak dapat kami terima. Silakan cek dashboard untuk feedback dari editor.",
-            'new_submission_notification' => "Halo {name}, ada naskah baru berjudul '{title}' yang telah disubmit oleh {author}. Silakan tinjau di dashboard.",
+            'new_submission_notification' => "Halo {name}, ada naskah baru berjudul '{title}'. Silakan tinjau di dashboard.",
         ];
 
         if (!isset($templates[$template])) {
