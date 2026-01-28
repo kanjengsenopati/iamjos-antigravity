@@ -554,7 +554,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                                             @if ($userIsEditor && !$isCurrentUser)
                                             <div class="relative" x-data="{ openDropdown: false }">
                                                 <button @click="openDropdown = !openDropdown"
-                                                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors opacity-0 group-hover:opacity-100">
+                                                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
                                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                                 </button>
 
@@ -570,37 +570,36 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                                                     style="display: none;">
                                                     <div class="py-1">
                                                         {{-- Notify Action --}}
+                                                        @if($user->exists)
                                                         <button type="button"
                                                             class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                             <i class="fa-solid fa-envelope text-indigo-500 w-4"></i>
                                                             <span>Send Email</span>
                                                         </button>
-
-                                                        {{-- Edit Assignment (if editorial) --}}
-                                                        @if ($member['type'] === 'editorial')
-                                                        <button type="button"
-                                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                                                            <i class="fa-solid fa-pen text-blue-500 w-4"></i>
-                                                            <span>Edit Assignment</span>
-                                                        </button>
                                                         @endif
 
                                                         {{-- Login As (Super Admin Only) --}}
-                                                        @if ($userIsSuperAdmin)
-                                                        <a href="#"
-                                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                                                            <i class="fa-solid fa-user-shield text-purple-500 w-4"></i>
-                                                            <span>Login As User</span>
-                                                        </a>
+                                                        @if($userIsSuperAdmin && $user->exists)
+                                                        <form
+                                                            action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                            method="POST"
+                                                            class="inline">
+                                                            @csrf
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                                <i class="fa-solid fa-user-shield text-purple-500 w-4"></i>
+                                                                <span>Login As User</span>
+                                                            </button>
+                                                        </form>
                                                         @endif
 
                                                         <div class="border-t border-gray-100"></div>
 
                                                         {{-- Remove Action (Not for Authors) --}}
-                                                        @if ($role !== 'Author' && $member['type'] === 'editorial')
+                                                        @if ($member['type'] === 'editorial')
                                                         <form method="POST"
                                                             action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
-                                                            onsubmit="return confirm('Are you sure you want to remove this participant?');">
+                                                            onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit"

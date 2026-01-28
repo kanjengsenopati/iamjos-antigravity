@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\SendDecisionEmailJob;
+use App\Services\WaGateway;
 
 class ReviewWorkflowController extends Controller
 {
@@ -72,6 +73,22 @@ class ReviewWorkflowController extends Controller
                         $reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
                     } catch (\Throwable $e) {
                         Log::error('Review invitation notification failed', [
+                            'submission_id' => $submission->id,
+                            'reviewer_id' => $reviewer->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+
+                    // Send WhatsApp notification to reviewer
+                    try {
+                        WaGateway::sendTemplate($reviewer, 'reviewer_assigned', [
+                            'name' => $reviewer->name,
+                            'title' => $submission->title,
+                            'round' => $reviewRound->round,
+                        ]);
+                    } catch (\Throwable $e) {
+                        Log::error('WhatsApp notification failed for reviewer assignment', [
                             'submission_id' => $submission->id,
                             'reviewer_id' => $reviewer->id,
                             'error' => $e->getMessage(),
