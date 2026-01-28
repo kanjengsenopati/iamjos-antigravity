@@ -2,28 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Discussion;
-use App\Models\DiscussionMessage;
-use App\Models\DiscussionParticipant;
-use App\Models\EmailTemplate;
+use App\Models\User;
 use App\Models\Issue;
 use App\Models\Journal;
 use App\Models\Section;
-use App\Models\Submission;
-use App\Models\SubmissionAuthor;
-use App\Models\SubmissionChecklist;
-use App\Models\SubmissionFile;
-use App\Models\User;
-use App\Notifications\NewSubmissionNotification;
-use App\Notifications\SubmissionReceived;
-use App\Services\WaGateway;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use App\Models\Discussion;
+use App\Models\Submission;
+
+use Illuminate\Http\Request;
+use App\Models\EmailTemplate;
+use App\Models\SubmissionLog;
+use App\Models\SubmissionFile;
+use App\Models\SubmissionAuthor;
+use App\Models\DiscussionMessage;
+use Illuminate\Support\Facades\DB;
+use App\Models\SubmissionChecklist;
+use Illuminate\Support\Facades\Log;
+use App\Models\DiscussionParticipant;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\SendSubmissionNotifications;
 
 class SubmissionController extends Controller
 {
@@ -214,7 +214,7 @@ class SubmissionController extends Controller
         $user = auth()->user();
 
         // Race Condition Handling: Lock the submission process for this user
-        $lock = \Illuminate\Support\Facades\Cache::lock('submission_store_' . $user->id, 15);
+        $lock = Cache::lock('submission_store_' . $user->id, 15);
 
         if (!$lock->get()) {
             return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
@@ -328,30 +328,16 @@ class SubmissionController extends Controller
                 DB::commit();
 
                 // Log the submission event
-                \App\Models\SubmissionLog::log(
+                SubmissionLog::log(
                     $submission,
-                    \App\Models\SubmissionLog::EVENT_SUBMITTED,
+                    SubmissionLog::EVENT_SUBMITTED,
                     'Submission Created',
                     "{$user->name} submitted the article for review.",
                     ['section' => $submission->section->title ?? null]
                 );
 
-                // ====== NOTIFICATIONS ======
-                // 1. Notify the author that submission was received
-                $user->notify(new SubmissionReceived($submission));
-
-                // 2. Notify Journal Managers and Editors about the new submission
-                $editorsAndManagers = User::whereHas('roles', function ($q) {
-                    $q->whereIn('name', ['Journal Manager', 'Editor', 'Admin', 'Super Admin']);
-                })->get();
-
-                Notification::send($editorsAndManagers, new NewSubmissionNotification($submission));
-
-                // 3. Send WhatsApp notification to author
-                WaGateway::sendTemplate($user, 'submission_received', [
-                    'name' => $user->name,
-                    'title' => $submission->title,
-                ]);
+                // ====== NOTIFICATIONS (Background Job) ======
+                SendSubmissionNotifications::dispatch($submission, $user);
 
                 return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
                     ->with('success', 'Submission created successfully! Your article is now under review.');
