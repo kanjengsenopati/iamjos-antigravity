@@ -152,6 +152,38 @@ class AuthController extends Controller
             return redirect()->route('admin.site.index');
         }
 
+        // For reviewers, redirect to their review assignments (OJS 3.3 style)
+        if ($user->hasRole('Reviewer')) {
+            // Priority 1: Journal context from current route
+            if ($journal) {
+                session()->forget(['intended_journal', 'login_journal_slug']);
+                return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug]);
+            }
+
+            // Priority 2: Intended journal from query parameter or session
+            $intendedJournal = session('intended_journal');
+            if ($intendedJournal) {
+                session()->forget('intended_journal');
+                return redirect()->route('journal.reviewer.index', ['journal' => $intendedJournal]);
+            }
+
+            // Priority 3: Journal stored in session from context middleware
+            $loginJournalSlug = session('login_journal_slug');
+            if ($loginJournalSlug) {
+                session()->forget('login_journal_slug');
+                return redirect()->route('journal.reviewer.index', ['journal' => $loginJournalSlug]);
+            }
+
+            // Priority 4: If user has only one journal, go directly to its reviewer page
+            $userJournals = $user->registeredJournals();
+            if ($userJournals->count() === 1) {
+                return redirect()->route('journal.reviewer.index', ['journal' => $userJournals->first()->slug]);
+            }
+
+            // Default: Go to journal selection page
+            return redirect()->route('journal.select');
+        }
+
         // For all other users, redirect directly to submissions (OJS 3.3 style - no dashboard)
         // Priority 1: Journal context from current route
         if ($journal) {
