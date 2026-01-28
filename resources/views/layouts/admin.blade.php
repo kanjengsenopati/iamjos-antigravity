@@ -129,7 +129,7 @@
                 <!-- Journal List -->
                 <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
                     @foreach ($userJournals as $j)
-                    <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
+                    <a href="{{ route('journal.submissions.index', ['journal' => $j->slug]) }}"
                         x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
                         class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors group/j">
                         <div
