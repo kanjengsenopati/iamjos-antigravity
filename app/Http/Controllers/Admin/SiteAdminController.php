@@ -7,6 +7,7 @@ use App\Models\SiteContent;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Session;
@@ -64,7 +65,12 @@ class SiteAdminController extends Controller
         $validated = $request->validate([
             'site_title' => 'required|string|max:255',
             'site_intro' => 'nullable|string',
+            'about_content' => 'nullable|string',
             'footer_content' => 'nullable|string',
+            'header_color' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
+            'show_journal_summary' => 'boolean',
+            'header_bg_image' => 'boolean',
+            'homepage_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'redirect_to_journal' => 'boolean',
             'min_password_length' => 'required|integer|min:6|max:32',
             // WhatsApp Gateway Config
@@ -75,8 +81,18 @@ class SiteAdminController extends Controller
 
         $settings = \App\Models\SiteSetting::first();
         
-        // Handle boolean checkbox which might not be present in request
+        // Handle boolean checkboxes which might not be present in request
         $validated['redirect_to_journal'] = $request->has('redirect_to_journal');
+        $validated['show_journal_summary'] = $request->has('show_journal_summary');
+        $validated['header_bg_image'] = $request->has('header_bg_image');
+
+        // Handle file upload
+        if ($request->hasFile('homepage_image')) {
+            $file = $request->file('homepage_image');
+            $filename = 'homepage_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('site', $filename, 'public');
+            $validated['homepage_image'] = $path;
+        }
 
         if ($settings) {
             $settings->update($validated);
@@ -179,32 +195,5 @@ class SiteAdminController extends Controller
         } catch (\Exception $e) {
             return 'Unknown';
         }
-    }
-
-    /**
-     * Display the About Page settings form.
-     */
-    public function editAbout()
-    {
-        $content = SiteContent::getAll();
-
-        return view('admin.site.about-settings', compact('content'));
-    }
-
-    /**
-     * Update the About Page settings.
-     */
-    public function updateAbout(Request $request)
-    {
-        $validated = $request->validate([
-            'about_title' => 'required|string|max:255',
-            'about_content' => 'required|string',
-        ]);
-
-        // Save each field to site_contents
-        SiteContent::set('about_title', $validated['about_title'], 'about', 'text', 'About Page Title');
-        SiteContent::set('about_content', $validated['about_content'], 'about', 'html', 'About Page Content');
-
-        return back()->with('success', 'About page settings updated successfully.');
     }
 }

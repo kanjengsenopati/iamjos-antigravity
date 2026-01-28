@@ -141,10 +141,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
     Route::put('/journals/{journal}', [JournalController::class, 'update'])->name('journals.update');
     Route::delete('/journals/{journal}', [JournalController::class, 'destroy'])->name('journals.destroy');
 
-    // About Page Settings
-    Route::get('/about-settings', [SiteAdminController::class, 'editAbout'])->name('about.edit');
-    Route::put('/about-settings', [SiteAdminController::class, 'updateAbout'])->name('about.update');
-
     // Site Appearance - Page Builder (New Block-Based System)
     Route::controller(\App\Http\Controllers\Admin\SiteAppearanceController::class)
         ->prefix('site-appearance')
