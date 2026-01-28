@@ -6,6 +6,7 @@ use App\Models\Journal;
 use App\Models\ReviewAssignment;
 use App\Models\SubmissionFile;
 use App\Notifications\ReviewCompleted;
+use App\Services\WaGateway;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -87,6 +88,21 @@ class ReviewerController extends Controller
             'responded_at' => now(),
         ]);
 
+        // Notify editors via WhatsApp
+        try {
+            $assignment->load(['reviewer', 'submission']);
+            $editors = \App\Models\User::role(['Editor', 'Admin', 'Super Admin'])->get();
+            foreach ($editors as $editor) {
+                WaGateway::sendTemplate($editor, 'reviewer_accepted', [
+                    'name' => $editor->name,
+                    'reviewer_name' => $assignment->reviewer->name,
+                    'title' => $assignment->submission->title ?? 'Naskah',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send WhatsApp notification for reviewer acceptance: ' . $e->getMessage());
+        }
+
         return redirect()->route('journal.reviewer.show', ['journal' => $journal->slug, 'assignment' => $assignment])
             ->with('success', 'Review invitation accepted. You can now submit your review.');
     }
@@ -111,6 +127,21 @@ class ReviewerController extends Controller
             'responded_at' => now(),
             'metadata' => $metadata,
         ]);
+
+        // Notify editors via WhatsApp
+        try {
+            $assignment->load(['reviewer', 'submission']);
+            $editors = \App\Models\User::role(['Editor', 'Admin', 'Super Admin'])->get();
+            foreach ($editors as $editor) {
+                WaGateway::sendTemplate($editor, 'reviewer_declined', [
+                    'name' => $editor->name,
+                    'reviewer_name' => $assignment->reviewer->name,
+                    'title' => $assignment->submission->title ?? 'Naskah',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send WhatsApp notification for reviewer decline: ' . $e->getMessage());
+        }
 
         return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug])
             ->with('success', 'Review invitation declined.');
@@ -198,7 +229,14 @@ class ReviewerController extends Controller
         $editors = \App\Models\User::role(['Editor', 'Admin', 'Super Admin'])->get();
 
         foreach ($editors as $editor) {
+            // Send email notification
             $editor->notify(new ReviewCompleted($assignment));
+
+            // Send WhatsApp notification
+            WaGateway::sendTemplate($editor, 'review_submitted', [
+                'name' => $editor->name,
+                'title' => $assignment->submission->title ?? 'Naskah',
+            ]);
         }
     }
 }
