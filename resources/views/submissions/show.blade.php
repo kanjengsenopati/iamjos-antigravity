@@ -1202,6 +1202,192 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                             @endif
                         </div>
                         @endif
+
+                        {{-- Participants (Modernized - OJS 3.3 Style) --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
+                                </h4>
+                                @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                    class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
+                                    <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
+                                </button>
+                                @endrole
+                            </div>
+
+                            @php
+                            // Group participants by role
+                            $groupedParticipants = [
+                            'Journal Manager' => [],
+                            'Editor' => [],
+                            'Section Editor' => [],
+                            'Author' => [],
+                            'Reviewer' => [],
+                            ];
+
+                            // Add editorial assignments
+                            foreach (
+                            $submission->editorialAssignments->where('is_active', true)
+                            as $assignment
+                            ) {
+                            $roleName = ucfirst(str_replace('_', ' ', $assignment->role));
+                            if (!isset($groupedParticipants[$roleName])) {
+                            $groupedParticipants[$roleName] = [];
+                            }
+                            $groupedParticipants[$roleName][] = [
+                            'user' => $assignment->user,
+                            'role' => $roleName,
+                            'assignment_id' => $assignment->id,
+                            'type' => 'editorial',
+                            ];
+                            }
+
+                            // Add submitting author
+                            if ($submission->authors->first()) {
+                            $groupedParticipants['Author'][] = [
+                            'user' => $submission->authors->first(),
+                            'role' => 'Author',
+                            'type' => 'author',
+                            ];
+                            }
+
+                            // Role colors and initials
+                            $roleColors = [
+                            'Journal Manager' => 'bg-purple-500',
+                            'Editor' => 'bg-blue-500',
+                            'Section Editor' => 'bg-indigo-500',
+                            'Author' => 'bg-amber-500',
+                            'Reviewer' => 'bg-emerald-500',
+                            ];
+
+                            $userIsEditor = auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+                            $userIsSuperAdmin = auth()->user()->hasAnyRole(['Admin', 'Super Admin']);
+                            @endphp
+
+                            <div class="space-y-4">
+                                @foreach ($groupedParticipants as $role => $members)
+                                @if (count($members) > 0)
+                                {{-- Role Group Header --}}
+                                <div>
+                                    <h5
+                                        class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                                        {{ $role }}
+                                    </h5>
+                                    <div class="space-y-2">
+                                        @foreach ($members as $member)
+                                        @php
+                                        $user = $member['user'];
+                                        $isCurrentUser = $user->id === auth()->id();
+                                        $initials = strtoupper(substr($user->name, 0, 1));
+                                        if (str_contains($user->name, ' ')) {
+                                        $parts = explode(' ', $user->name);
+                                        $initials = strtoupper(
+                                        substr($parts[0], 0, 1) .
+                                        substr($parts[1] ?? '', 0, 1),
+                                        );
+                                        }
+                                        $avatarColor = $roleColors[$role] ?? 'bg-gray-500';
+                                        @endphp
+                                        {{-- User Item --}}
+                                        <div
+                                            class="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                                            {{-- Avatar --}}
+                                            <div
+                                                class="w-9 h-9 rounded-full {{ $avatarColor }} flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                {{ $initials }}
+                                            </div>
+                                            {{-- Name --}}
+                                            <div class="flex-1 min-w-0">
+                                                <p
+                                                    class="text-sm font-semibold text-gray-900 truncate">
+                                                    {{ $user->name }}
+                                                    @if ($isCurrentUser)
+                                                    <span class="text-xs text-indigo-600 font-normal">(You)</span>
+                                                    @endif
+                                                </p>
+                                                <p class="text-xs text-gray-500 truncate">
+                                                    {{ $user->email }}
+                                                </p>
+                                            </div>
+
+                                            {{-- Editor View: Full Action Dropdown --}}
+                                            @if ($userIsEditor && !$isCurrentUser)
+                                            <div class="relative" x-data="{ openDropdown: false }">
+                                                <button @click="openDropdown = !openDropdown"
+                                                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+
+                                                {{-- Dropdown Menu --}}
+                                                <div x-show="openDropdown" @click.away="openDropdown = false"
+                                                    x-transition:enter="transition ease-out duration-100"
+                                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                                    x-transition:leave="transition ease-in duration-75"
+                                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                                    class="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                                                    style="display: none;">
+                                                    <div class="py-1">
+                                                        {{-- Notify Action --}}
+                                                        @if($user->exists)
+                                                        <button type="button"
+                                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                            <i class="fa-solid fa-envelope text-indigo-500 w-4"></i>
+                                                            <span>Send Email</span>
+                                                        </button>
+                                                        @endif
+
+                                                        {{-- Login As (Super Admin Only) --}}
+                                                        @if($userIsSuperAdmin && $user->exists)
+                                                        <form
+                                                            action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                            method="POST"
+                                                            class="inline">
+                                                            @csrf
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                                <i class="fa-solid fa-user-shield text-purple-500 w-4"></i>
+                                                                <span>Login As User</span>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+
+                                                        <div class="border-t border-gray-100"></div>
+
+                                                        {{-- Remove Action (Not for Authors) --}}
+                                                        @if ($member['type'] === 'editorial')
+                                                        <form method="POST"
+                                                            action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
+                                                            onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                                <i class="fa-solid fa-trash w-4"></i>
+                                                                <span>Remove</span>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+                                @endforeach
+
+                                @if (array_sum(array_map('count', $groupedParticipants)) === 0)
+                                <p class="text-sm text-gray-400 italic text-center py-4">No participants
+                                    assigned
+                                </p>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                     @endif {{-- End of isAuthorView conditional --}}
                 </div>
@@ -1467,6 +1653,192 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                             @endif
                         </div>
                         @endif
+
+                        {{-- Participants (Modernized - OJS 3.3 Style) --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
+                                </h4>
+                                @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                    class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
+                                    <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
+                                </button>
+                                @endrole
+                            </div>
+
+                            @php
+                            // Group participants by role
+                            $groupedParticipants = [
+                            'Journal Manager' => [],
+                            'Editor' => [],
+                            'Section Editor' => [],
+                            'Author' => [],
+                            'Reviewer' => [],
+                            ];
+
+                            // Add editorial assignments
+                            foreach (
+                            $submission->editorialAssignments->where('is_active', true)
+                            as $assignment
+                            ) {
+                            $roleName = ucfirst(str_replace('_', ' ', $assignment->role));
+                            if (!isset($groupedParticipants[$roleName])) {
+                            $groupedParticipants[$roleName] = [];
+                            }
+                            $groupedParticipants[$roleName][] = [
+                            'user' => $assignment->user,
+                            'role' => $roleName,
+                            'assignment_id' => $assignment->id,
+                            'type' => 'editorial',
+                            ];
+                            }
+
+                            // Add submitting author
+                            if ($submission->authors->first()) {
+                            $groupedParticipants['Author'][] = [
+                            'user' => $submission->authors->first(),
+                            'role' => 'Author',
+                            'type' => 'author',
+                            ];
+                            }
+
+                            // Role colors and initials
+                            $roleColors = [
+                            'Journal Manager' => 'bg-purple-500',
+                            'Editor' => 'bg-blue-500',
+                            'Section Editor' => 'bg-indigo-500',
+                            'Author' => 'bg-amber-500',
+                            'Reviewer' => 'bg-emerald-500',
+                            ];
+
+                            $userIsEditor = auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+                            $userIsSuperAdmin = auth()->user()->hasAnyRole(['Admin', 'Super Admin']);
+                            @endphp
+
+                            <div class="space-y-4">
+                                @foreach ($groupedParticipants as $role => $members)
+                                @if (count($members) > 0)
+                                {{-- Role Group Header --}}
+                                <div>
+                                    <h5
+                                        class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                                        {{ $role }}
+                                    </h5>
+                                    <div class="space-y-2">
+                                        @foreach ($members as $member)
+                                        @php
+                                        $user = $member['user'];
+                                        $isCurrentUser = $user->id === auth()->id();
+                                        $initials = strtoupper(substr($user->name, 0, 1));
+                                        if (str_contains($user->name, ' ')) {
+                                        $parts = explode(' ', $user->name);
+                                        $initials = strtoupper(
+                                        substr($parts[0], 0, 1) .
+                                        substr($parts[1] ?? '', 0, 1),
+                                        );
+                                        }
+                                        $avatarColor = $roleColors[$role] ?? 'bg-gray-500';
+                                        @endphp
+                                        {{-- User Item --}}
+                                        <div
+                                            class="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                                            {{-- Avatar --}}
+                                            <div
+                                                class="w-9 h-9 rounded-full {{ $avatarColor }} flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                {{ $initials }}
+                                            </div>
+                                            {{-- Name --}}
+                                            <div class="flex-1 min-w-0">
+                                                <p
+                                                    class="text-sm font-semibold text-gray-900 truncate">
+                                                    {{ $user->name }}
+                                                    @if ($isCurrentUser)
+                                                    <span class="text-xs text-indigo-600 font-normal">(You)</span>
+                                                    @endif
+                                                </p>
+                                                <p class="text-xs text-gray-500 truncate">
+                                                    {{ $user->email }}
+                                                </p>
+                                            </div>
+
+                                            {{-- Editor View: Full Action Dropdown --}}
+                                            @if ($userIsEditor && !$isCurrentUser)
+                                            <div class="relative" x-data="{ openDropdown: false }">
+                                                <button @click="openDropdown = !openDropdown"
+                                                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+
+                                                {{-- Dropdown Menu --}}
+                                                <div x-show="openDropdown" @click.away="openDropdown = false"
+                                                    x-transition:enter="transition ease-out duration-100"
+                                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                                    x-transition:leave="transition ease-in duration-75"
+                                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                                    class="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                                                    style="display: none;">
+                                                    <div class="py-1">
+                                                        {{-- Notify Action --}}
+                                                        @if($user->exists)
+                                                        <button type="button"
+                                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                            <i class="fa-solid fa-envelope text-indigo-500 w-4"></i>
+                                                            <span>Send Email</span>
+                                                        </button>
+                                                        @endif
+
+                                                        {{-- Login As (Super Admin Only) --}}
+                                                        @if($userIsSuperAdmin && $user->exists)
+                                                        <form
+                                                            action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                            method="POST"
+                                                            class="inline">
+                                                            @csrf
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                                <i class="fa-solid fa-user-shield text-purple-500 w-4"></i>
+                                                                <span>Login As User</span>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+
+                                                        <div class="border-t border-gray-100"></div>
+
+                                                        {{-- Remove Action (Not for Authors) --}}
+                                                        @if ($member['type'] === 'editorial')
+                                                        <form method="POST"
+                                                            action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
+                                                            onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                                <i class="fa-solid fa-trash w-4"></i>
+                                                                <span>Remove</span>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+                                @endforeach
+
+                                @if (array_sum(array_map('count', $groupedParticipants)) === 0)
+                                <p class="text-sm text-gray-400 italic text-center py-4">No participants
+                                    assigned
+                                </p>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1701,108 +2073,188 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                             @endif
                         </div>
 
-                        {{-- Participants (Modern Team Card) --}}
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            {{-- Header --}}
-                            <div
-                                class="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                                <h4 class="text-sm font-bold text-gray-900">Participants</h4>
+                        {{-- Participants (Modernized - OJS 3.3 Style) --}}
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
+                                </h4>
                                 @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
                                 <button @click="assignEditorModalOpen = true; resetEditorModal()"
-                                    class="inline-flex items-center px-2.5 py-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors">
-                                    <i class="fa-solid fa-user-plus mr-1.5"></i> Assign
+                                    class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
+                                    <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
                                 </button>
                                 @endrole
                             </div>
 
-                            {{-- Participants List --}}
-                            <div class="divide-y divide-gray-100">
-                                {{-- Assigned Editors --}}
-                                @forelse($submission->editorialAssignments->where('is_active', true) as $assignment)
-                                <div
-                                    class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors group">
-                                    {{-- Avatar --}}
-                                    @if ($assignment->user->profile_photo_path ?? false)
-                                    <img src="{{ asset('storage/' . $assignment->user->profile_photo_path) }}"
-                                        class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
-                                        alt="{{ $assignment->user->name }}">
-                                    @else
-                                    <div
-                                        class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                                        {{ strtoupper(substr($assignment->user->name, 0, 1)) }}
-                                    </div>
-                                    @endif
+                            @php
+                            // Group participants by role
+                            $groupedParticipants = [
+                            'Journal Manager' => [],
+                            'Editor' => [],
+                            'Section Editor' => [],
+                            'Author' => [],
+                            'Reviewer' => [],
+                            ];
 
-                                    {{-- Info --}}
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-900 line-clamp-1">
-                                            {{ $assignment->user->name }}
-                                        </p>
-                                        <span
-                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 w-fit mt-0.5">
-                                            {{ ucfirst(str_replace('_', ' ', $assignment->role)) }}
-                                        </span>
-                                    </div>
+                            // Add editorial assignments
+                            foreach (
+                            $submission->editorialAssignments->where('is_active', true)
+                            as $assignment
+                            ) {
+                            $roleName = ucfirst(str_replace('_', ' ', $assignment->role));
+                            if (!isset($groupedParticipants[$roleName])) {
+                            $groupedParticipants[$roleName] = [];
+                            }
+                            $groupedParticipants[$roleName][] = [
+                            'user' => $assignment->user,
+                            'role' => $roleName,
+                            'assignment_id' => $assignment->id,
+                            'type' => 'editorial',
+                            ];
+                            }
 
-                                    {{-- Actions --}}
-                                    <div
-                                        class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button type="button"
-                                            @click="discussionModalOpen = true; discussionStageId = 4; resetDiscussionForm()"
-                                            class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                            title="Start Discussion">
-                                            <i class="fa-solid fa-envelope text-sm"></i>
-                                        </button>
+                            // Add submitting author
+                            if ($submission->authors->first()) {
+                            $groupedParticipants['Author'][] = [
+                            'user' => $submission->authors->first(),
+                            'role' => 'Author',
+                            'type' => 'author',
+                            ];
+                            }
+
+                            // Role colors and initials
+                            $roleColors = [
+                            'Journal Manager' => 'bg-purple-500',
+                            'Editor' => 'bg-blue-500',
+                            'Section Editor' => 'bg-indigo-500',
+                            'Author' => 'bg-amber-500',
+                            'Reviewer' => 'bg-emerald-500',
+                            ];
+
+                            $userIsEditor = auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+                            $userIsSuperAdmin = auth()->user()->hasAnyRole(['Admin', 'Super Admin']);
+                            @endphp
+
+                            <div class="space-y-4">
+                                @foreach ($groupedParticipants as $role => $members)
+                                @if (count($members) > 0)
+                                {{-- Role Group Header --}}
+                                <div>
+                                    <h5
+                                        class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                                        {{ $role }}
+                                    </h5>
+                                    <div class="space-y-2">
+                                        @foreach ($members as $member)
+                                        @php
+                                        $user = $member['user'];
+                                        $isCurrentUser = $user->id === auth()->id();
+                                        $initials = strtoupper(substr($user->name, 0, 1));
+                                        if (str_contains($user->name, ' ')) {
+                                        $parts = explode(' ', $user->name);
+                                        $initials = strtoupper(
+                                        substr($parts[0], 0, 1) .
+                                        substr($parts[1] ?? '', 0, 1),
+                                        );
+                                        }
+                                        $avatarColor = $roleColors[$role] ?? 'bg-gray-500';
+                                        @endphp
+                                        {{-- User Item --}}
+                                        <div
+                                            class="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                                            {{-- Avatar --}}
+                                            <div
+                                                class="w-9 h-9 rounded-full {{ $avatarColor }} flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                {{ $initials }}
+                                            </div>
+                                            {{-- Name --}}
+                                            <div class="flex-1 min-w-0">
+                                                <p
+                                                    class="text-sm font-semibold text-gray-900 truncate">
+                                                    {{ $user->name }}
+                                                    @if ($isCurrentUser)
+                                                    <span class="text-xs text-indigo-600 font-normal">(You)</span>
+                                                    @endif
+                                                </p>
+                                                <p class="text-xs text-gray-500 truncate">
+                                                    {{ $user->email }}
+                                                </p>
+                                            </div>
+
+                                            {{-- Editor View: Full Action Dropdown --}}
+                                            @if ($userIsEditor && !$isCurrentUser)
+                                            <div class="relative" x-data="{ openDropdown: false }">
+                                                <button @click="openDropdown = !openDropdown"
+                                                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+
+                                                {{-- Dropdown Menu --}}
+                                                <div x-show="openDropdown" @click.away="openDropdown = false"
+                                                    x-transition:enter="transition ease-out duration-100"
+                                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                                    x-transition:leave="transition ease-in duration-75"
+                                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                                    class="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                                                    style="display: none;">
+                                                    <div class="py-1">
+                                                        {{-- Notify Action --}}
+                                                        @if($user->exists)
+                                                        <button type="button"
+                                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                            <i class="fa-solid fa-envelope text-indigo-500 w-4"></i>
+                                                            <span>Send Email</span>
+                                                        </button>
+                                                        @endif
+
+                                                        {{-- Login As (Super Admin Only) --}}
+                                                        @if($userIsSuperAdmin && $user->exists)
+                                                        <form
+                                                            action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                            method="POST"
+                                                            class="inline">
+                                                            @csrf
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                                <i class="fa-solid fa-user-shield text-purple-500 w-4"></i>
+                                                                <span>Login As User</span>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+
+                                                        <div class="border-t border-gray-100"></div>
+
+                                                        {{-- Remove Action (Not for Authors) --}}
+                                                        @if ($member['type'] === 'editorial')
+                                                        <form method="POST"
+                                                            action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
+                                                            onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                                <i class="fa-solid fa-trash w-4"></i>
+                                                                <span>Remove</span>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
-                                @empty
-                                <div class="p-4 text-center">
-                                    <div
-                                        class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                                        <i class="fa-solid fa-user-slash text-gray-400"></i>
-                                    </div>
-                                    <p class="text-sm text-gray-500 italic">No editors assigned</p>
-                                    @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
-                                    <button @click="assignEditorModalOpen = true; resetEditorModal()"
-                                        class="mt-2 text-xs text-indigo-600 font-medium hover:text-indigo-800">
-                                        + Assign an editor
-                                    </button>
-                                    @endrole
-                                </div>
-                                @endforelse
+                                @endif
+                                @endforeach
 
-                                {{-- Author (Separator) --}}
-                                @if ($submission->authors->first())
-                                <div
-                                    class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors group bg-amber-50/30">
-                                    {{-- Avatar --}}
-                                    <div
-                                        class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                                        {{ strtoupper(substr($submission->authors->first()->name, 0, 1)) }}
-                                    </div>
-
-                                    {{-- Info --}}
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-900 line-clamp-1">
-                                            {{ $submission->authors->first()->name }}
-                                        </p>
-                                        <span
-                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 w-fit mt-0.5">
-                                            Author
-                                        </span>
-                                    </div>
-
-                                    {{-- Actions --}}
-                                    <div
-                                        class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button type="button"
-                                            @click="discussionModalOpen = true; discussionStageId = 4; resetDiscussionForm()"
-                                            class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                            title="Start Discussion">
-                                            <i class="fa-solid fa-envelope text-sm"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                                @if (array_sum(array_map('count', $groupedParticipants)) === 0)
+                                <p class="text-sm text-gray-400 italic text-center py-4">No participants
+                                    assigned
+                                </p>
                                 @endif
                             </div>
                         </div>
