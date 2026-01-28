@@ -227,6 +227,57 @@ class ReviewWorkflowController extends Controller
             }
         });
 
+        // Send notifications to author (outside transaction for better error handling)
+        $author = $submission->author ?? $submission->authors->first()?->user;
+
+        if ($author) {
+            // Determine WhatsApp template based on decision
+            $waTemplate = match ($request->decision) {
+                'accept' => 'submission_accepted',
+                'decline' => 'submission_rejected',
+                'request_revisions' => 'revision_request',
+                default => 'decision_update',
+            };
+
+            $statusText = match ($request->decision) {
+                'accept' => 'Diterima',
+                'decline' => 'Ditolak',
+                'request_revisions' => 'Perlu Revisi',
+                default => 'Diperbarui',
+            };
+
+            // Send WhatsApp notification
+            if ($author->phone) {
+                try {
+                    WaGateway::sendTemplate($author, $waTemplate, [
+                        'name' => $author->name,
+                        'title' => $submission->title,
+                        'status' => $statusText,
+                    ]);
+
+                    // Log WhatsApp sent
+                    SubmissionLog::log(
+                        $submission,
+                        'notification_sent',
+                        'WhatsApp Sent',
+                        "Decision notification WhatsApp sent to {$author->name} ({$request->decision}).",
+                        [
+                            'recipient' => $author->name,
+                            'type' => $request->decision,
+                            'channel' => 'whatsapp'
+                        ]
+                    );
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send WhatsApp notification for decision: ' . $e->getMessage(), [
+                        'submission_id' => $submission->id,
+                        'decision' => $request->decision,
+                        'author_id' => $author->id,
+                    ]);
+                    // Continue even if WhatsApp fails
+                }
+            }
+        }
+
         $messages = [
             'request_revisions' => 'Revisions requested from author.',
             'resubmit_for_review' => 'New review round created.',
