@@ -20,7 +20,7 @@ class NavigationController extends Controller
         $journal = current_journal();
 
         $menus = NavigationMenu::where('journal_id', $journal->id)
-            ->with(['assignments.item'])
+            ->with(['assignments.item', 'assignments.children.item'])
             ->get();
 
         // Get all items for this journal (system + custom merged properly)
@@ -112,7 +112,7 @@ class NavigationController extends Controller
     /**
      * Store a new menu
      */
-    public function storeMenu(Request $request): RedirectResponse
+    public function storeMenu(Request $request)
     {
         $journal = current_journal();
 
@@ -135,13 +135,21 @@ class NavigationController extends Controller
             'is_active' => true,
         ]);
 
+        // Check if request is AJAX
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu created successfully'
+            ]);
+        }
+
         return back()->with('success', 'Menu created successfully.');
     }
 
     /**
      * Update a menu
      */
-    public function updateMenu(Request $request, string $journal, NavigationMenu $menu): RedirectResponse
+    public function updateMenu(Request $request, string $journal, NavigationMenu $menu)
     {
         $journal = current_journal();
 
@@ -160,17 +168,33 @@ class NavigationController extends Controller
 
         $menu->update($validated);
 
+        // Check if request is AJAX
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu updated successfully'
+            ]);
+        }
+
         return back()->with('success', 'Menu updated successfully.');
     }
 
     /**
      * Delete a menu
      */
-    public function destroyMenu(string $journal, NavigationMenu $menu): RedirectResponse
+    public function destroyMenu(Request $request, string $journal, NavigationMenu $menu)
     {
         // Delete all assignments first
         $menu->assignments()->delete();
         $menu->delete();
+
+        // Check if request is AJAX
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu deleted successfully'
+            ]);
+        }
 
         return back()->with('success', 'Menu deleted successfully.');
     }
@@ -182,7 +206,7 @@ class NavigationController extends Controller
     /**
      * Store a new menu item
      */
-    public function storeItem(Request $request): RedirectResponse
+    public function storeItem(Request $request)
     {
         $journal = current_journal();
 
@@ -206,13 +230,21 @@ class NavigationController extends Controller
             'is_active' => true,
         ]);
 
+        // Check if request is AJAX
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu item created successfully'
+            ]);
+        }
+
         return back()->with('success', 'Menu item created successfully.');
     }
 
     /**
      * Update a menu item
      */
-    public function updateItem(Request $request, string $journal, NavigationMenuItem $item): RedirectResponse
+    public function updateItem(Request $request, string $journal, NavigationMenuItem $item)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -232,17 +264,33 @@ class NavigationController extends Controller
             'target' => $validated['target'] ?? '_self',
         ]);
 
+        // Check if request is AJAX
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu item updated successfully'
+            ]);
+        }
+
         return back()->with('success', 'Menu item updated successfully.');
     }
 
     /**
      * Delete a menu item
      */
-    public function destroyItem(string $journal, NavigationMenuItem $item): RedirectResponse
+    public function destroyItem(Request $request, string $journal, NavigationMenuItem $item)
     {
         // Delete all assignments first
         $item->assignments()->delete();
         $item->delete();
+
+        // Check if request is AJAX
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu item deleted successfully'
+            ]);
+        }
 
         return back()->with('success', 'Menu item deleted successfully.');
     }
@@ -254,17 +302,19 @@ class NavigationController extends Controller
     /**
      * Assign an item to a menu
      */
-    public function assignItem(Request $request): RedirectResponse
+    public function assignItem(Request $request)
     {
         $journal = current_journal();
-        
+
         $validated = $request->validate([
             'menu_id' => 'required|uuid|exists:navigation_menus,id',
             'menu_item_id' => 'required|string',
             'route_name' => 'nullable|string', // For system items
+            'parent_id' => 'nullable|uuid|exists:navigation_menu_item_assignments,id', // For submenu items
         ]);
 
         $menuItemId = $validated['menu_item_id'];
+        $parentId = $validated['parent_id'] ?? null;
 
         // Handle system items (virtual items not yet in DB)
         if (str_starts_with($menuItemId, 'system_') && !empty($validated['route_name'])) {
@@ -279,17 +329,38 @@ class NavigationController extends Controller
             ->exists();
 
         if (!$exists) {
+            // Get max order for the same level (same parent)
             $maxOrder = NavigationMenuItemAssignment::where('menu_id', $validated['menu_id'])
+                ->where('parent_id', $parentId)
                 ->max('order') ?? 0;
 
             NavigationMenuItemAssignment::create([
                 'menu_id' => $validated['menu_id'],
                 'menu_item_id' => $menuItemId,
+                'parent_id' => $parentId,
                 'order' => $maxOrder + 1,
             ]);
+
+            // Check if request is AJAX
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Item assigned to menu successfully'
+                ]);
+            }
+
+            return back()->with('success', 'Item assigned to menu.');
         }
 
-        return back()->with('success', 'Item assigned to menu.');
+        // Item already assigned
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item is already assigned to this menu'
+            ], 422);
+        }
+
+        return back()->with('error', 'Item is already assigned to this menu.');
     }
 
     /**
@@ -335,9 +406,17 @@ class NavigationController extends Controller
     /**
      * Unassign an item from a menu
      */
-    public function unassignItem(string $journal, NavigationMenuItemAssignment $assignment): RedirectResponse
+    public function unassignItem(Request $request, string $journal, NavigationMenuItemAssignment $assignment)
     {
         $assignment->delete();
+
+        // Check if request is AJAX
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item removed from menu successfully'
+            ]);
+        }
 
         return back()->with('success', 'Item removed from menu.');
     }
@@ -380,5 +459,38 @@ class NavigationController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Reorder menu items via AJAX (for drag & drop)
+     */
+    public function reorderItems(Request $request, string $journal): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*.id' => 'required|uuid',
+            'order.*.order' => 'required|integer|min:1',
+            'order.*.parent_id' => 'nullable|uuid'
+        ]);
+
+        try {
+            foreach ($request->order as $item) {
+                NavigationMenuItemAssignment::where('id', $item['id'])
+                    ->update([
+                        'order' => $item['order'],
+                        'parent_id' => $item['parent_id'] ?? null
+                    ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu items reordered successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reorder menu items: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

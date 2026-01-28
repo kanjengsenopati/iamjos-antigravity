@@ -568,6 +568,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::delete('/unassign/{assignment}', 'unassignItem')->name('unassign');
                 Route::post('/move-up/{assignment}', 'moveUp')->name('move-up');
                 Route::post('/move-down/{assignment}', 'moveDown')->name('move-down');
+                Route::post('/reorder', 'reorderItems')->name('reorder');
             });
 
             // Sidebar Block Manager
