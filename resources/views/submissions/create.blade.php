@@ -227,6 +227,13 @@
                             placeholder="keyword1, keyword2, keyword3" value="{{ old('keywords') }}">
                         <p class="text-xs text-gray-500 mt-1">Separate keywords with commas.</p>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">References</label>
+                        <textarea name="references" x-model="references" rows="5"
+                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="Paste your references here..."></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Provide a list of references for your work.</p>
+                    </div>
                 </div>
 
                 <!-- Contributors -->
@@ -323,6 +330,10 @@
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Contributors</dt>
                         <dd class="mt-1 text-sm text-gray-900" x-text="authors.length + ' author(s)'"></dd>
+                    </div>
+                    <div x-show="references">
+                        <dt class="text-sm font-medium text-gray-500">References</dt>
+                        <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line truncate max-w-xs" x-text="references"></dd>
                     </div>
                 </dl>
 
@@ -474,6 +485,7 @@
             abstractHtml: '',
             fileName: '',
             fileSize: '',
+            references: '{{ old('references', '') }}',
             primaryContactIndex: 0,
             authors: [
                 @php

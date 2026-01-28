@@ -2473,23 +2473,33 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                         </form>
                     </div>
 
-                    {{-- ====== REFERENCES (Placeholder) ====== --}}
+                    {{-- ====== REFERENCES ====== --}}
                     <div x-show="pubTab === 'references'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
                             <h3 class="text-base font-bold text-gray-900">References</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">Manage article references and citations.</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Manage article references for indexing.</p>
                         </div>
-                        <div class="p-12 text-center">
-                            <div
-                                class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fa-solid fa-quote-left text-gray-400 text-xl"></i>
+                        <form
+                            action="{{ route('journal.workflow.publication.references.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                            method="POST" class="p-6 space-y-5">
+                            @csrf
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">References</label>
+                                <textarea name="references" rows="15"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm leading-6"
+                                    placeholder="Paste your references here...">{{ old('references', $submission->references) }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500">Provide a list of references for your work.</p>
                             </div>
-                            <p class="text-sm font-medium text-gray-900">References Management</p>
-                            <p class="text-xs text-gray-500 mt-1">This feature will be available in a future
-                                update.
-                            </p>
-                        </div>
+
+                            <div class="flex justify-end pt-4 border-t border-gray-100">
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    <i class="fa-solid fa-save mr-2"></i> Save References
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
                     {{-- ====== ISSUE (SCHEDULING) ====== --}}

@@ -426,6 +426,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Journal\PublicationController::class, 'show'])->name('show');
                 Route::post('/title', [\App\Http\Controllers\Journal\PublicationController::class, 'updateTitleAbstract'])->name('title.update');
                 Route::post('/metadata', [\App\Http\Controllers\Journal\PublicationController::class, 'updateMetadata'])->name('metadata.update');
+                Route::post('/references', [\App\Http\Controllers\Journal\PublicationController::class, 'updateReferences'])->name('references.update');
                 Route::post('/license', [\App\Http\Controllers\Journal\PublicationController::class, 'updateLicense'])->name('license.update');
                 Route::post('/issue', [\App\Http\Controllers\Journal\PublicationController::class, 'assignIssue'])->name('issue.assign');
                 Route::post('/unschedule', [\App\Http\Controllers\Journal\PublicationController::class, 'unschedule'])->name('unschedule');
