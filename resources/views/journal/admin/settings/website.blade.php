@@ -292,33 +292,66 @@ $journalSlug = $journal->slug;
                         </div>
                     </div>
 
-                    {{-- NAVIGATION SETTINGS LINK --}}
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                            <div>
-                                <h3 class="text-lg font-semibold text-slate-800">Navigation</h3>
-                                <p class="text-sm text-slate-500">Configure your journal's primary navigation menus and links.</p>
+                    {{-- NAVIGATION & SIDEBAR SETTINGS --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Navigation & Layout</h3>
+                        <p class="text-sm text-gray-500 mb-6">
+                            Configure your journal's navigation menus and sidebar content.
+                        </p>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {{-- Navigation Manager Card --}}
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-bars text-slate-600"></i>
+                                        <span class="font-medium text-slate-800">Navigation</span>
+                                    </div>
+                                    <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
+                                       class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        Manage
+                                    </a>
+                                </div>
+                                <div class="p-4">
+                                    <p class="text-sm text-slate-600 mb-3">Configure primary navigation menus and links.</p>
+                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
+                                        <li>• Create custom menu items</li>
+                                        <li>• Assign to header/user navigation</li>
+                                        <li>• Reorder menu items</li>
+                                    </ul>
+                                    <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
+                                       class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-bars mr-1.5"></i>
+                                        Navigation Manager
+                                    </a>
+                                </div>
                             </div>
-                            <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}" 
-                               class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1">
-                                Navigation Management
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                            </a>
-                        </div>
-                        <div class="p-6 text-sm text-slate-600">
-                            <p class="mb-2">Use the Navigation Manager to:</p>
-                            <ul class="list-disc list-inside space-y-1 text-slate-500 ml-2">
-                                <li>Create custom menu items and links.</li>
-                                <li>Assign menus to the Primary Header or User Navigation.</li>
-                                <li>Reorder navigation items.</li>
-                            </ul>
-                            
-                            <div class="mt-4">
-                                <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}" 
-                                   class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
-                                    <i class="fa-solid fa-bars mr-2"></i>
-                                    Go to Navigation Manager
-                                </a>
+
+                            {{-- Sidebar Manager Card --}}
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-columns text-slate-600"></i>
+                                        <span class="font-medium text-slate-800">Sidebar</span>
+                                    </div>
+                                    <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
+                                       class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        Manage
+                                    </a>
+                                </div>
+                                <div class="p-4">
+                                    <p class="text-sm text-slate-600 mb-3">Configure sidebar content and layout.</p>
+                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
+                                        <li>• Add custom content blocks</li>
+                                        <li>• Configure widgets and modules</li>
+                                        <li>• Reorder sidebar elements</li>
+                                    </ul>
+                                    <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
+                                       class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-columns mr-1.5"></i>
+                                        Sidebar Manager
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
