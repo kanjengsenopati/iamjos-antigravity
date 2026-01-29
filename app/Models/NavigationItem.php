@@ -12,6 +12,8 @@ class NavigationItem extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $table = 'navigation_menu_items';
+
     /**
      * Item type constants
      */

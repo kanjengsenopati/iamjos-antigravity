@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\NavigationMenu;
-use App\Models\NavigationItem;
+use App\Models\NavigationMenuItem;
+use App\Models\NavigationMenuItemAssignment;
 use App\Models\SitePage;
 use App\View\Composers\SiteLayoutComposer;
 use Illuminate\Http\Request;
@@ -28,8 +29,8 @@ class SiteNavigationController extends Controller
         $menus = collect();
         foreach (NavigationMenu::getLocations() as $location => $name) {
             $menu = NavigationMenu::firstOrCreate(
-                ['journal_id' => null, 'location' => $location],
-                ['name' => $name, 'is_active' => true]
+                ['journal_id' => null, 'area_name' => $location],
+                ['title' => $name, 'is_active' => true]
             );
             $menus->push($menu->load(['items' => fn($q) => $q->orderBy('order')]));
         }
@@ -50,7 +51,7 @@ class SiteNavigationController extends Controller
     {
         $validated = $request->validate([
             'menu_id' => 'required|uuid|exists:navigation_menus,id',
-            'parent_id' => 'nullable|uuid|exists:navigation_items,id',
+            'parent_id' => 'nullable|uuid|exists:navigation_menu_items,id',
             'label' => 'required|string|max:255',
             'type' => 'required|in:custom,page,route,divider',
             'url' => 'nullable|string|max:500',
@@ -71,7 +72,7 @@ class SiteNavigationController extends Controller
         }
 
         // Get next order
-        $maxOrder = NavigationItem::where('menu_id', $validated['menu_id'])
+        $maxOrder = NavigationMenuItem::where('menu_id', $validated['menu_id'])
             ->where('parent_id', $validated['parent_id'] ?? null)
             ->max('order') ?? 0;
 
@@ -85,18 +86,25 @@ class SiteNavigationController extends Controller
             }
         }
 
-        $item = NavigationItem::create([
-            'menu_id' => $validated['menu_id'],
-            'parent_id' => $validated['parent_id'] ?? null,
-            'label' => $validated['label'],
+        $item = NavigationMenuItem::create([
+            'journal_id' => null, // Site level
+            'title' => $validated['label'],
             'type' => $validated['type'],
             'url' => $validated['url'] ?? null,
             'route_name' => $validated['route_name'] ?? null,
-            'route_params' => $validated['route_params'] ?? null,
+            'path' => $validated['route_params'] ?? null,
+            'related_id' => $validated['page_id'] ?? null,
             'icon' => $validated['icon'] ?? null,
             'target' => $validated['target'] ?? '_self',
-            'order' => $maxOrder + 1,
             'is_active' => true,
+        ]);
+
+        // Create assignment to the menu
+        NavigationMenuItemAssignment::create([
+            'menu_id' => $validated['menu_id'],
+            'menu_item_id' => $item->id,
+            'parent_id' => $validated['parent_id'] ?? null,
+            'order' => $maxOrder + 1,
         ]);
 
         // Clear navigation cache
@@ -112,10 +120,10 @@ class SiteNavigationController extends Controller
     /**
      * Update a navigation item
      */
-    public function updateItem(Request $request, NavigationItem $item): JsonResponse
+    public function updateItem(Request $request, NavigationMenuItem $item): JsonResponse
     {
         // Verify item belongs to a site menu
-        if ($item->menu->journal_id !== null) {
+        if ($item->journal_id !== null) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot edit journal menu items from here.',
@@ -140,11 +148,24 @@ class SiteNavigationController extends Controller
             if ($page) {
                 $validated['url'] = route('site.page', $page->slug);
                 $validated['route_name'] = 'site.page';
-                $validated['route_params'] = ['slug' => $page->slug];
+                $validated['path'] = ['slug' => $page->slug];
             }
         }
 
         unset($validated['page_id']); // Remove before update
+
+        // Map label to title
+        if (isset($validated['label'])) {
+            $validated['title'] = $validated['label'];
+            unset($validated['label']);
+        }
+
+        // Map route_params to path
+        if (isset($validated['route_params'])) {
+            $validated['path'] = $validated['route_params'];
+            unset($validated['route_params']);
+        }
+
         $item->update($validated);
 
         // Clear navigation cache
@@ -160,10 +181,10 @@ class SiteNavigationController extends Controller
     /**
      * Delete a navigation item
      */
-    public function destroyItem(NavigationItem $item): JsonResponse
+    public function destroyItem(NavigationMenuItem $item): JsonResponse
     {
         // Verify item belongs to a site menu
-        if ($item->menu->journal_id !== null) {
+        if ($item->journal_id !== null) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete journal menu items from here.',
@@ -188,13 +209,13 @@ class SiteNavigationController extends Controller
     {
         $validated = $request->validate([
             'items' => 'required|array',
-            'items.*.id' => 'required|uuid|exists:navigation_items,id',
+            'items.*.id' => 'required|uuid|exists:navigation_menu_item_assignments,id',
             'items.*.order' => 'required|integer|min:0',
-            'items.*.parent_id' => 'nullable|uuid|exists:navigation_items,id',
+            'items.*.parent_id' => 'nullable|uuid|exists:navigation_menu_item_assignments,id',
         ]);
 
         foreach ($validated['items'] as $itemData) {
-            NavigationItem::where('id', $itemData['id'])->update([
+            NavigationMenuItemAssignment::where('id', $itemData['id'])->update([
                 'order' => $itemData['order'],
                 'parent_id' => $itemData['parent_id'] ?? null,
             ]);

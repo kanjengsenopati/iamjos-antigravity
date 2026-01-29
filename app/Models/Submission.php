@@ -369,6 +369,14 @@ class Submission extends Model
     }
 
     /**
+     * Alias for logs() - activity logs
+     */
+    public function activityLogs(): HasMany
+    {
+        return $this->logs();
+    }
+
+    /**
      * Get publication galleys for this submission
      */
     public function galleys(): HasMany

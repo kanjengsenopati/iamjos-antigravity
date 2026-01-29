@@ -112,6 +112,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/clear-read', [NotificationController::class, 'clearRead'])->name('clear-read');
         Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
     });
+
+    // --------- Submission Log History (AJAX) ---------
+    Route::get('/submissions/{submission}/log-history', [\App\Http\Controllers\Admin\SubmissionController::class, 'logHistory'])
+        ->name('submission.log.history');
 });
 
 // =====================================================

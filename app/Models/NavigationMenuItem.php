@@ -147,4 +147,9 @@ class NavigationMenuItem extends Model
             ['name' => 'logout', 'label' => 'Logout'],
         ];
     }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
 }

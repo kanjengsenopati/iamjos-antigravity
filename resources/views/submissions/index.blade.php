@@ -292,6 +292,17 @@
                                     <span>Last activity recorded on
                                         {{ $submission->updated_at->format('l, F j, Y') }}.</span>
                                 </p>
+
+                                <!-- Activity Log & Notes Button (for Archives) -->
+                                @if ($filter === 'archives')
+                                    <div class="pt-2">
+                                        <button type="button" 
+                                                onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
+                                                class="text-sm font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1 transition">
+                                            Activity Log & Notes
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </li>
@@ -340,4 +351,56 @@
             </div>
         @endif
     </div>
+
+    {{-- Activity Log & Notes Modal --}}
+    <div id="logModalBackdrop" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 hidden">
+        <div class="bg-white w-full max-w-4xl rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {{-- Content will be injected here --}}
+            <div id="logModalContent" class="h-full">
+                {{-- Loading Spinner Default --}}
+                <div class="flex items-center justify-center h-64">
+                    <svg class="animate-spin h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    {{-- Modal Script --}}
+    <script>
+        function openLogModal(url) {
+            const modal = document.getElementById('logModalBackdrop');
+            const content = document.getElementById('logModalContent');
+            
+            // 1. Show Modal with Loading State
+            modal.classList.remove('hidden');
+            content.innerHTML = '<div class="flex items-center justify-center h-64"><svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div>';
+
+            // 2. Fetch Data
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    content.innerHTML = '<div class="p-6 text-center text-red-500">Failed to load data.</div>';
+                });
+        }
+
+        function closeLogModal() {
+            document.getElementById('logModalBackdrop').classList.add('hidden');
+        }
+
+        // Close on click outside
+        document.getElementById('logModalBackdrop').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLogModal();
+            }
+        });
+    </script>
 </x-app-layout>
