@@ -513,7 +513,7 @@ function navigationManager(initialData) {
             <p class="mt-1 text-sm text-gray-500">Configure navigation menus and menu items for your journal. OJS 3.3 compatible.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="{{ route('journal.settings.index', $journal->slug) }}"
+            <a href="{{ route('journal.settings.website.edit', $journal->slug) }}"
                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i>
                 Back to Settings

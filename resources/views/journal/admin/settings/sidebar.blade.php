@@ -16,7 +16,7 @@
                 <i class="fa-solid fa-plus mr-2"></i>
                 Add Custom Block
             </button>
-            <a href="{{ route('journal.settings.index', $journal->slug) }}"
+            <a href="{{ route('journal.settings.website.edit', $journal->slug) }}"
                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i>
                 Back to Settings
