@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Issue;
 use App\Models\Journal;
-use App\Models\Submission;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
+use App\Models\Submission;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PublicController extends Controller
 {
@@ -543,19 +545,22 @@ class PublicController extends Controller
         $journal = $this->resolveJournal($journalSlug);
 
         // Resolve article by ID or slug
-        $submission = Submission::where('journal_id', $journal->id)
-            ->where(function ($q) use ($article) {
-                $q->where('id', $article)
-                    ->orWhere('slug', $article);
-            })
-            ->published()
-            ->firstOrFail();
+        $submissionQuery = Submission::where('journal_id', $journal->id)
+            ->published();
+
+        if (\Str::isUuid($article)) {
+            $submissionQuery->where('id', $article);
+        } else {
+            $submissionQuery->where('slug', $article);
+        }
+
+        $submission = $submissionQuery->firstOrFail();
 
         // Load galleys
         $submission->load('galleys');
 
         // Find the galley
-        $publicationGalley = $submission->galleys->find($galley);
+        $publicationGalley = $submission->galleys->where('id', $galley)->first();
 
         if (!$publicationGalley) {
             abort(404, 'Galley not found');
@@ -578,7 +583,7 @@ class PublicController extends Controller
         }
 
         // Stream the file for download
-        $disk = \Storage::disk('public');
+        $disk = Storage::disk('local');
 
         if (!$disk->exists($file->file_path)) {
             abort(404, 'File not found on disk');
@@ -597,7 +602,7 @@ class PublicController extends Controller
             $countryCode = 'ID'; // Mock (replace with GeoIP)
             $city = null;
             
-            \DB::table('article_metrics')->insert([
+            DB::table('article_metrics')->insert([
                 'submission_id' => $submission->id,
                 'type' => 'download',
                 'ip_address' => $ip,
@@ -610,7 +615,7 @@ class PublicController extends Controller
         }
 
         // Increment download counter
-        $publicationGalley->increment('views');
+        // $publicationGalley->increment('views'); // Column 'views' does not exist
 
         // Return file stream with proper headers for Google Scholar
         return response()->stream(
@@ -637,19 +642,22 @@ class PublicController extends Controller
         $journal = $this->resolveJournal($journalSlug);
 
         // Resolve article by ID or slug
-        $submission = Submission::where('journal_id', $journal->id)
-            ->where(function ($q) use ($article) {
-                $q->where('id', $article)
-                    ->orWhere('slug', $article);
-            })
-            ->published()
-            ->firstOrFail();
+        $submissionQuery = Submission::where('journal_id', $journal->id)
+            ->published();
+
+        if (Str::isUuid($article)) {
+            $submissionQuery->where('id', $article);
+        } else {
+            $submissionQuery->where('slug', $article);
+        }
+
+        $submission = $submissionQuery->firstOrFail();
 
         // Load galleys
         $submission->load(['galleys', 'authors', 'section', 'issue']);
 
         // Find the galley
-        $publicationGalley = $submission->galleys->find($galley);
+        $publicationGalley = $submission->galleys->where('id', $galley)->first();
 
         if (!$publicationGalley) {
             abort(404, 'Galley not found');
@@ -664,7 +672,7 @@ class PublicController extends Controller
         $settings = $journal->getWebsiteSettings();
 
         // Increment view counter
-        $publicationGalley->increment('views');
+        // $publicationGalley->increment('views'); // Column 'views' does not exist
 
         return view('journal.public.galley-viewer', [
             'journal' => $journal,
