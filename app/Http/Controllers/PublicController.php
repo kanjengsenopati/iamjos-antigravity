@@ -151,11 +151,16 @@ class PublicController extends Controller
 
         $articles = Submission::where('issue_id', $issue->id)
             ->published()
-            ->with(['authors', 'section'])
+            ->with(['authors', 'section', 'galleys' => function ($q) {
+                $q->ordered();
+            }])
             ->orderBy('created_at')
             ->get();
 
-        return view('public.issue', compact('journal', 'settings', 'issue', 'articles'));
+        // Group by section
+        $articlesBySection = $articles->groupBy(fn($article) => $article->section?->name ?? 'Uncategorized');
+
+        return view('public.issue', compact('journal', 'settings', 'issue', 'articles', 'articlesBySection'));
     }
 
     /**
