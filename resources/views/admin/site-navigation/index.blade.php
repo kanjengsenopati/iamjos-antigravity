@@ -38,12 +38,12 @@
             <div class="border-b border-gray-200">
                 <nav class="flex -mb-px">
                     @foreach($menus as $menu)
-                        <button @click="activeTab = '{{ $menu->location }}'"
-                                :class="activeTab === '{{ $menu->location }}' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        <button @click="activeTab = '{{ $menu->area_name }}'"
+                                :class="activeTab === '{{ $menu->area_name }}' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                 class="px-6 py-4 text-sm font-medium border-b-2 transition-colors">
-                            {{ $menu->name }}
+                            {{ $menu->title }}
                             <span class="ml-2 text-xs px-2 py-0.5 rounded-full" 
-                                  :class="activeTab === '{{ $menu->location }}' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500'">
+                                  :class="activeTab === '{{ $menu->area_name }}' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500'">
                                 {{ $menu->items->count() }}
                             </span>
                         </button>
@@ -53,7 +53,7 @@
 
             {{-- Tab Content --}}
             @foreach($menus as $menu)
-                <div x-show="activeTab === '{{ $menu->location }}'" x-cloak class="p-6">
+                <div x-show="activeTab === '{{ $menu->area_name }}'" x-cloak class="p-6">
                     {{-- Add Item Button --}}
                     <div class="flex items-center justify-between mb-6">
                         <p class="text-sm text-gray-500">Drag items to reorder. Click to edit.</p>
@@ -67,20 +67,20 @@
                     {{-- Menu Items --}}
                     @if($menu->items->count() > 0)
                         <div class="space-y-2" id="menu-{{ $menu->id }}" data-menu-id="{{ $menu->id }}">
-                            @foreach($menu->items->sortBy('order') as $item)
+                            @foreach($menu->items->sortBy('order') as $assignment)
                                 <div class="menu-item flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-indigo-200 cursor-move"
-                                     data-item-id="{{ $item->id }}">
+                                     data-item-id="{{ $assignment->id }}">
                                     {{-- Drag Handle --}}
                                     <div class="drag-handle text-gray-400 hover:text-gray-600">
                                         <i class="fa-solid fa-grip-vertical"></i>
                                     </div>
 
                                     {{-- Item Icon --}}
-                                    <div class="w-8 h-8 rounded-lg {{ $item->type === 'divider' ? 'bg-gray-200' : 'bg-blue-100' }} flex items-center justify-center flex-shrink-0">
-                                        @if($item->type === 'divider')
+                                    <div class="w-8 h-8 rounded-lg {{ $assignment->item->type === 'divider' ? 'bg-gray-200' : 'bg-blue-100' }} flex items-center justify-center flex-shrink-0">
+                                        @if($assignment->item->type === 'divider')
                                             <i class="fa-solid fa-minus text-gray-500"></i>
-                                        @elseif($item->icon)
-                                            <i class="{{ $item->icon }} text-blue-600"></i>
+                                        @elseif($assignment->item->icon)
+                                            <i class="{{ $assignment->item->icon }} text-blue-600"></i>
                                         @else
                                             <i class="fa-solid fa-link text-blue-600"></i>
                                         @endif
@@ -88,36 +88,36 @@
 
                                     {{-- Item Details --}}
                                     <div class="flex-1 min-w-0">
-                                        <div class="font-medium text-gray-900">{{ $item->label }}</div>
+                                        <div class="font-medium text-gray-900">{{ $assignment->item->title }}</div>
                                         <div class="text-xs text-gray-500 truncate">
-                                            @if($item->type === 'route')
-                                                <span class="text-indigo-600">Route:</span> {{ $item->route_name }}
-                                            @elseif($item->type === 'divider')
+                                            @if($assignment->item->type === 'route')
+                                                <span class="text-indigo-600">Route:</span> {{ $assignment->item->route_name }}
+                                            @elseif($assignment->item->type === 'divider')
                                                 <span class="text-gray-400">— Divider —</span>
                                             @else
-                                                {{ $item->url ?? '#' }}
+                                                {{ $assignment->item->url ?? '#' }}
                                             @endif
                                         </div>
                                     </div>
 
                                     {{-- Status & Type Badges --}}
                                     <div class="flex items-center gap-2">
-                                        <span class="text-xs px-2 py-1 rounded-full {{ $item->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
-                                            {{ $item->is_active ? 'Active' : 'Hidden' }}
+                                        <span class="text-xs px-2 py-1 rounded-full {{ $assignment->item->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
+                                            {{ $assignment->item->is_active ? 'Active' : 'Hidden' }}
                                         </span>
                                         <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 capitalize">
-                                            {{ $item->type }}
+                                            {{ $assignment->item->type }}
                                         </span>
                                     </div>
 
                                     {{-- Actions --}}
                                     <div class="flex items-center gap-1">
-                                        <button @click="openEditModal('{{ $item->id }}', {{ json_encode($item) }})"
+                                        <button @click="openEditModal('{{ $assignment->item->id }}', {{ json_encode($assignment->item) }})"
                                                 class="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
                                                 title="Edit">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
-                                        <button @click="deleteItem('{{ $item->id }}')"
+                                        <button @click="deleteItem('{{ $assignment->item->id }}')"
                                                 class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
                                                 title="Delete">
                                             <i class="fa-solid fa-trash"></i>
@@ -260,7 +260,7 @@
 <script>
 function navigationManager() {
     return {
-        activeTab: '{{ $menus->first()?->location ?? "primary" }}',
+        activeTab: '{{ $menus->first()?->area_name ?? "primary" }}',
         showModal: false,
         editingItem: null,
         currentMenuId: null,
@@ -310,7 +310,7 @@ function navigationManager() {
             this.editingItem = itemId;
             this.currentMenuId = item.menu_id;
             this.formData = {
-                label: item.label,
+                label: item.title,
                 type: item.type,
                 url: item.url || '',
                 route_name: item.route_name || '',

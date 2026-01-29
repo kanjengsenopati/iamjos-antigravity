@@ -1,159 +1,235 @@
 {{--
-    Dynamic Portal Navigation Component (OJS 3.3 Style)
-    Uses $publicMenu from PublicNavigationComposer
+Dynamic Portal Navigation Component (OJS 3.3 Style)
 --}}
-@props(['publicMenu' => null, 'settings' => []])
+@props(['primaryMenu' => null, 'userMenu' => null, 'settings' => []])
 
-{{-- NAVBAR CONTAINER --}}
-<header class="bg-white border-b border-slate-200 sticky top-0 z-50 font-sans" x-data="{ mobileMenuOpen: false }">
+@php
+    // Use passed menu data or fallback to direct queries if not provided
+    $primaryMenuItems = $primaryMenu ?? collect();
+    $userMenuItems = $userMenu ?? collect();
+@endphp
+
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
     <div class="container mx-auto px-4 h-16 flex items-center justify-between">
 
-        {{-- 1. LOGO --}}
-        <div class="flex-shrink-0 flex items-center gap-3">
-            <a href="{{ route('portal.home') }}" class="flex items-center gap-2">
-                @if(isset($settings['site_logo']) && $settings['site_logo'])
-                    <img src="{{ Storage::url($settings['site_logo']) }}" alt="{{ $settings['site_name'] ?? 'IAMJOS' }}" class="h-8 w-auto">
-                @else
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                        IJ
-                    </div>
-                @endif
-                <span class="text-sm font-bold text-slate-800 tracking-tight hidden sm:block">{{ $settings['site_name'] ?? 'IAMJOS' }}</span>
-            </a>
-        </div>
+        {{-- LOGO --}}
+        <a href="{{ route('portal.home') }}" class="flex items-center gap-2">
+            @if(!empty($settings['site_logo']))
+                <img src="{{ Storage::url($settings['site_logo']) }}" class="h-8">
+            @else
+                <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                    IJ
+                </div>
+            @endif
+            <span class="hidden sm:block font-bold text-slate-800">
+                {{ $settings['site_name'] ?? 'IAMJOS' }}
+            </span>
+        </a>
 
-        {{-- 2. DYNAMIC MENU ITEMS (Center/Right) --}}
+        {{-- PRIMARY MENU --}}
         <nav class="hidden md:flex items-center gap-1">
-            @foreach($publicMenu ?? [] as $item)
-
-                {{-- CASE A: DROPDOWN (Has Children) --}}
-                @if($item->children->isNotEmpty())
+            @foreach($primaryMenuItems as $item)
+                {{-- DROPDOWN --}}
+                @if(isset($item->children) && $item->children->isNotEmpty())
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open"
-                            class="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition
-                            {{ $item->is_active ? 'text-blue-600 bg-blue-50' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50' }}">
-
-                            {{-- Icon (If exists) --}}
-                            @if(!empty($item->icon)) <i class="{{ $item->icon }}"></i> @endif
-
-                            {{ $item->label }}
-
-                            {{-- Arrow Icon --}}
-                            <svg class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <button
+                            @click="open = !open"
+                            class="px-3 py-2 text-sm font-medium rounded-md flex items-center gap-1
+                            text-slate-600 hover:bg-slate-50"
+                        >
+                            @if($item->icon)
+                                <i class="{{ $item->icon }}"></i>
+                            @endif
+                            <span>{{ $item->label }}</span>
+                            <svg class="w-4 h-4 transition-transform" :class="open && 'rotate-180'"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </button>
 
-                        {{-- Dropdown Body --}}
-                        <div x-show="open"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             class="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-100 rounded-md shadow-lg py-1 z-50"
-                             style="display: none;">
+                        <div x-show="open" x-transition
+                             class="absolute mt-2 w-48 bg-white border rounded-md shadow z-50">
                             @foreach($item->children as $child)
-                                <a href="{{ $child->url }}" target="{{ $child->target }}"
-                                   class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600">
-                                   {{ $child->label }}
+                                <a href="{{ $child->resolved_url }}"
+                                   target="{{ $child->target }}"
+                                   class="block px-4 py-2 text-sm hover:bg-slate-50">
+                                    {{ $child->label }}
                                 </a>
                             @endforeach
                         </div>
                     </div>
-
-                {{-- CASE B: SINGLE LINK --}}
                 @else
-                    <a href="{{ $item->url }}" target="{{ $item->target }}"
-                       class="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition
-                       {{ $item->is_active ? 'text-blue-600 bg-blue-50' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50' }}">
-
-                        {{-- Icon (If exists) --}}
-                        @if(!empty($item->icon)) <i class="{{ $item->icon }}"></i> @endif
-
-                        {{ $item->label }}
+                    {{-- SINGLE LINK --}}
+                    <a href="{{ $item->resolved_url }}"
+                       target="{{ $item->target }}"
+                       class="px-3 py-2 text-sm font-medium rounded-md
+                       text-slate-600 hover:bg-slate-50">
+                        @if($item->icon)
+                            <i class="{{ $item->icon }}"></i>
+                        @endif
+                        <span>{{ $item->label }}</span>
                     </a>
                 @endif
-
             @endforeach
         </nav>
 
-        {{-- 3. USER ACTIONS (Far Right) --}}
+        {{-- USER ACTION --}}
         <div class="flex items-center gap-3">
             @auth
-                <a href="{{ route('journal.select') }}" class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600">
-                    <i class="fa-solid fa-gauge-high mr-2"></i>
-                    Dashboard
-                </a>
-
-                {{-- User Avatar / Dropdown --}}
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="flex items-center gap-2">
-                        @if(auth()->user()->avatar)
-                            <img src="{{ Storage::url(auth()->user()->avatar) }}" class="w-8 h-8 rounded-full object-cover">
-                        @else
-                            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
+                {{-- Authenticated User Menu --}}
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                    <button @click="open = !open"
+                            class="flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900 transition-colors">
+                        {{-- User Avatar --}}
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                            @if(auth()->user()->avatar)
+                                <img src="{{ Storage::url(auth()->user()->avatar) }}"
+                                     alt="{{ auth()->user()->name }}"
+                                     class="w-8 h-8 rounded-full object-cover">
+                            @else
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                            </div>
-                        @endif
+                            @endif
+                        </div>
+                        {{-- User Name --}}
+                        <span class="hidden lg:block font-medium">{{ auth()->user()->name }}</span>
+                        {{-- Dropdown Arrow --}}
+                        <svg class="w-4 h-4 transition-transform" :class="open && 'rotate-180'"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
                     </button>
-                    <div x-show="open" @click.away="open = false" x-cloak
-                         class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                        <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                            <i class="fa-solid fa-user mr-2 text-gray-400"></i>
-                            Profile
-                        </a>
-                        <hr class="my-1 border-gray-100">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                <i class="fa-solid fa-right-from-bracket mr-2 text-gray-400"></i>
+
+                    {{-- Dropdown Menu --}}
+                    <div x-show="open" x-transition
+                         class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                        <div class="py-1">
+                            <a href="{{ route('journal.select') }}"
+                               class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
+                                <i class="fa-solid fa-tachometer-alt mr-2"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ route('profile.edit') }}"
+                               class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
+                                <i class="fa-solid fa-user-edit mr-2"></i>
+                                Edit Profile
+                            </a>
+                            <hr class="border-slate-200 my-1">
+                            <a href="{{ route('logout') }}"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                               class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
+                                <i class="fa-solid fa-sign-out-alt mr-2"></i>
                                 Logout
-                            </button>
-                        </form>
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                                @csrf
+                            </form>
+                        </div>
                     </div>
                 </div>
             @else
-                <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 hover:text-blue-600">Login</a>
-                <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700">Register</a>
+                {{-- Guest User Actions --}}
+                @if($userMenuItems->isNotEmpty())
+                    {{-- Custom User Menu Items --}}
+                    @foreach($userMenuItems as $item)
+                        <a href="{{ $item->resolved_url }}"
+                           class="hidden md:block text-sm text-slate-600 hover:text-blue-600">
+                            {{ $item->label }}
+                        </a>
+                    @endforeach
+                @else
+                    {{-- Default Login/Register --}}
+                    <a href="{{ route('login') }}" class="text-sm text-slate-600 hover:text-blue-600">Login</a>
+                    <a href="{{ route('register') }}"
+                       class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                        Register
+                    </a>
+                @endif
             @endauth
 
-            {{-- Mobile Menu Toggle --}}
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 text-slate-600">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
         </div>
-
     </div>
 </header>
 
-{{-- Mobile Menu --}}
-<div x-show="mobileMenuOpen" x-cloak @click.away="mobileMenuOpen = false"
-     class="md:hidden bg-white border-t border-slate-200 py-4">
-    <div class="container mx-auto px-4 space-y-3">
-        @foreach($publicMenu ?? [] as $item)
-            @if($item->children->isNotEmpty())
-                <div x-data="{ open: false }">
-                    <button @click="open = !open" class="flex items-center justify-between w-full text-left text-slate-700 hover:text-blue-600 py-2 font-medium">
-                        @if(!empty($item->icon)) <i class="{{ $item->icon }} mr-2"></i> @endif
+{{-- MOBILE MENU --}}
+<div x-show="mobileMenuOpen" x-cloak class="md:hidden bg-white border-t">
+    <div class="px-4 py-3 space-y-2">
+        {{-- Primary Menu Items --}}
+        @foreach($primaryMenuItems as $item)
+            @if(isset($item->children) && $item->children->isNotEmpty())
+                <details>
+                    <summary class="py-2 font-medium cursor-pointer">
                         {{ $item->label }}
-                        <svg class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div x-show="open" class="ml-4 space-y-1" x-transition>
+                    </summary>
+                    <div class="ml-4">
                         @foreach($item->children as $child)
-                            <a href="{{ $child->url }}" target="{{ $child->target }}" class="block text-slate-600 hover:text-blue-600 py-1">
+                            <a href="{{ $child->resolved_url }}"
+                               class="block py-1 text-slate-600">
                                 {{ $child->label }}
                             </a>
                         @endforeach
                     </div>
-                </div>
+                </details>
             @else
-                <a href="{{ $item->url }}" target="{{ $item->target }}" class="block text-slate-700 hover:text-blue-600 py-2 font-medium">
-                    @if(!empty($item->icon)) <i class="{{ $item->icon }} mr-2"></i> @endif
+                <a href="{{ $item->resolved_url }}" class="block py-2 font-medium">
                     {{ $item->label }}
                 </a>
             @endif
         @endforeach
 
-        @guest
+        {{-- User Menu Section --}}
+        @auth
             <hr class="border-slate-200 my-2">
-            <a href="{{ route('login') }}" class="block text-slate-700 hover:text-blue-600 py-2">Login</a>
-        @endguest
+            <div class="py-2">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        @if(auth()->user()->avatar)
+                            <img src="{{ Storage::url(auth()->user()->avatar) }}"
+                                 alt="{{ auth()->user()->name }}"
+                                 class="w-10 h-10 rounded-full object-cover">
+                        @else
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        @endif
+                    </div>
+                    <span class="font-medium text-slate-900">{{ auth()->user()->name }}</span>
+                </div>
+                <div class="space-y-1">
+                    <a href="{{ route('journal.select') }}"
+                       class="block py-2 text-slate-700 hover:text-blue-600">
+                        <i class="fa-solid fa-tachometer-alt mr-2"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('profile.edit') }}"
+                       class="block py-2 text-slate-700 hover:text-blue-600">
+                        <i class="fa-solid fa-user-edit mr-2"></i>
+                        Edit Profile
+                    </a>
+                    <a href="{{ route('logout') }}"
+                       onclick="event.preventDefault(); document.getElementById('mobile-logout-form').submit();"
+                       class="block py-2 text-slate-700 hover:text-blue-600">
+                        <i class="fa-solid fa-sign-out-alt mr-2"></i>
+                        Logout
+                    </a>
+                    <form id="mobile-logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                        @csrf
+                    </form>
+                </div>
+            </div>
+        @else
+            @if($userMenuItems->isNotEmpty())
+                <hr class="border-slate-200 my-2">
+                @foreach($userMenuItems as $item)
+                    <a href="{{ $item->resolved_url }}" class="block py-2 font-medium">
+                        {{ $item->label }}
+                    </a>
+                @endforeach
+            @else
+                <hr class="border-slate-200 my-2">
+                <a href="{{ route('login') }}" class="block py-2 font-medium">Login</a>
+                <a href="{{ route('register') }}" class="block py-2 font-medium text-blue-600">Register</a>
+            @endif
+        @endauth
     </div>
 </div>

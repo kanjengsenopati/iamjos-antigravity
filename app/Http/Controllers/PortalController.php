@@ -199,7 +199,7 @@ class PortalController extends Controller
             match ($sort) {
                 'newest' => $articlesQuery->latest('published_at'),
                 'oldest' => $articlesQuery->oldest('published_at'),
-                default => $articlesQuery->latest('published_at'),
+                default => $articlesQuery->latest('published_at'), // relevance falls back to latest
             };
 
             $articles = $articlesQuery->paginate(20);
