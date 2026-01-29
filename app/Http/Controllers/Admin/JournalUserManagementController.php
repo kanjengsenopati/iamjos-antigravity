@@ -152,7 +152,7 @@ class JournalUserManagementController extends Controller
         session()->put('impersonator_journal', $journal);
 
         Auth::login($user);
-        return redirect()->route('journal.dashboard', ['journal' => $journal])
+        return redirect()->route('journal.submissions.index', ['journal' => $journal])
             ->with('success', "You are now logged in as {$user->name}");
     }
 
