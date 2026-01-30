@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Models\ArticleMetric;
 
 class Submission extends Model
 {
@@ -385,6 +386,14 @@ class Submission extends Model
     }
 
     /**
+     * Get article metrics for this submission
+     */
+    public function articleMetrics(): HasMany
+    {
+        return $this->hasMany(ArticleMetric::class, 'submission_id');
+    }
+
+    /**
      * Check if submission has at least one galley
      */
     public function hasGalleys(): bool
@@ -552,6 +561,22 @@ class Submission extends Model
         }
 
         return array_map('trim', explode(',', $this->keywords));
+    }
+
+    /**
+     * Get total views count from article metrics
+     */
+    public function getViewsCountAttribute(): int
+    {
+        return $this->articleMetrics()->where('type', ArticleMetric::TYPE_VIEW)->count();
+    }
+
+    /**
+     * Get total downloads count from article metrics
+     */
+    public function getDownloadsCountAttribute(): int
+    {
+        return $this->articleMetrics()->where('type', ArticleMetric::TYPE_DOWNLOAD)->count();
     }
 
     /**
