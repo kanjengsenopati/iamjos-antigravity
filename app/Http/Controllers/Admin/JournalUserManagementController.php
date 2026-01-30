@@ -132,7 +132,7 @@ class JournalUserManagementController extends Controller
         $routePrefix = $this->getRoutePrefix();
 
         // Get all assignable roles (exclude Super Admin for security)
-        $roles = Role::whereNotIn('name', ['Super Admin'])->get();
+        $roles = Role::where('journal_id', $journal->id)->get();
 
         // Get user's current roles in THIS journal (not global Spatie roles)
         $userRoleNames = JournalUserRole::getUserRolesInJournal($user, $journal)->pluck('name')->toArray();
@@ -140,8 +140,14 @@ class JournalUserManagementController extends Controller
         return view('admin.journals.users.edit', compact('journal', 'user', 'routePrefix', 'roles', 'userRoleNames'));
     }
 
-    public function loginAs($journal, User $user)
+    public function loginAs($journalSlug, User $user)
     {
+        // Get the journal model from slug
+        $journal = \App\Models\Journal::where('slug', $journalSlug)->first();
+        if (!$journal) {
+            abort(404, 'Journal not found.');
+        }
+
         // Security check: Only super admin or admin should do this
         if (Auth::user()->id === $user->id) {
             return back()->with('error', 'You cannot login as yourself.');
@@ -149,9 +155,51 @@ class JournalUserManagementController extends Controller
 
         // Store the original admin's ID before impersonating
         session()->put('impersonator_id', auth()->id());
-        session()->put('impersonator_journal', $journal);
+        session()->put('impersonator_journal', $journalSlug);
 
         Auth::login($user);
+
+        // Redirect based on user role
+        if ($user->hasRole('Reviewer')) {
+            // Priority 1: Journal context from current route
+            if ($journal) {
+                session()->forget(['intended_journal', 'login_journal_slug']);
+                return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug])
+                    ->with('success', "You are now logged in as {$user->name}");
+            }
+
+            // Priority 2: Intended journal from query parameter or session
+            $intendedJournal = session('intended_journal');
+            if ($intendedJournal) {
+                session()->forget('intended_journal');
+                return redirect()->route('journal.reviewer.index', ['journal' => $intendedJournal])
+                    ->with('success', "You are now logged in as {$user->name}");
+            }
+
+            // Priority 3: Journal stored in session from context middleware
+            $loginJournalSlug = session('login_journal_slug');
+            if ($loginJournalSlug) {
+                session()->forget('login_journal_slug');
+                return redirect()->route('journal.reviewer.index', ['journal' => $loginJournalSlug])
+                    ->with('success', "You are now logged in as {$user->name}");
+            }
+
+            // Priority 4: If user has only one journal, go directly to its reviewer page
+            $userJournals = $user->registeredJournals();
+            if ($userJournals->count() === 1) {
+                return redirect()->route('journal.reviewer.index', ['journal' => $userJournals->first()->slug])
+                    ->with('success', "You are now logged in as {$user->name}");
+            }
+
+            // Default: Go to journal selection page
+            return redirect()->route('journal.select')
+                ->with('success', "You are now logged in as {$user->name}");
+        } elseif ($user->hasRole('Author')) {
+            // For authors, redirect to their submissions page
+            return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
+                ->with('success', "You are now logged in as {$user->name}");
+        }
+
         return redirect()->route('journal.submissions.index', ['journal' => $journal])
             ->with('success', "You are now logged in as {$user->name}");
     }
@@ -177,7 +225,7 @@ class JournalUserManagementController extends Controller
 
         // Redirect back to user management page
         $journal = current_journal() ?? \App\Models\Journal::where('slug', $originalJournal)->first();
-        
+
         if ($journal) {
             return redirect()->route('journal.users.index', ['journal' => $journal->slug])
                 ->with('success', 'Welcome back to your account.');
