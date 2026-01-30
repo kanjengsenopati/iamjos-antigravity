@@ -24,91 +24,7 @@ $journal = current_journal();
         </div>
     </x-slot>
 
-    <div class="max-w-7xl mx-auto py-6" x-data="{
-        discussionModalOpen: false,
-        fileWizardOpen: false,
-        discussionFiles: [],
-        wizardStep: 1,
-        tempUploadedFile: null,
-        editorInstance: null,
-        messageBody: '',
-        discussionStageId: 2, // Review Stage
-    
-        initEditor() {
-            if (this.editorInstance) return;
-            ClassicEditor
-                .create(document.querySelector('#discussion-editor'), {
-                    simpleUpload: {
-                        uploadUrl: '{{ route('journal.discussion.upload-image', ['journal' => $journal->slug]) }}',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    }
-                })
-                .then(editor => {
-                    this.editorInstance = editor;
-                    editor.model.document.on('change:data', () => {
-                        this.messageBody = editor.getData();
-                    });
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
-    
-        resetDiscussionForm() {
-            this.discussionFiles = [];
-            this.messageBody = '';
-            if (this.editorInstance) {
-                this.editorInstance.setData('');
-            }
-        },
-    
-        submitDiscussion() {
-            if (!this.messageBody || this.messageBody.trim() === '') {
-                alert('Message is required');
-                return;
-            }
-            document.querySelector('#discussion-form').submit();
-        },
-    
-        handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-    
-            let formData = new FormData();
-            formData.append('file', file);
-    
-            fetch('{{ route('journal.discussion.upload-file', $journal->slug) }}', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    this.tempUploadedFile = data;
-                    this.wizardStep = 2;
-                })
-                .catch(err => alert('Upload failed'));
-        },
-    
-        completeWizard() {
-            if (this.tempUploadedFile) {
-                this.discussionFiles.push(this.tempUploadedFile);
-            }
-            this.wizardStep = 1;
-            this.tempUploadedFile = null;
-            this.fileWizardOpen = false;
-        },
-    
-        addAnotherFile() {
-            if (this.tempUploadedFile) {
-                this.discussionFiles.push(this.tempUploadedFile);
-            }
-            this.wizardStep = 1;
-            this.tempUploadedFile = null;
-        }
-    }" x-init="$watch('discussionModalOpen', value => { if (value) setTimeout(() => initEditor(), 100); })">
+    <div class="max-w-7xl mx-auto py-6">
 
         <div class="grid lg:grid-cols-3 gap-6">
             <!-- Left Column: Manuscript Details -->
@@ -227,103 +143,14 @@ $journal = current_journal();
                 </div>
 
                 <!-- Review Discussions -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Review Discussions</h3>
-                        <button @click="discussionModalOpen = true; resetDiscussionForm()"
-                            class="text-sm text-primary-600 font-medium hover:text-primary-800">
-                            + Add Discussion
-                        </button>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        {{-- Filter discussions for Stage 2 (Review) --}}
-                        @forelse($submission->discussions->where('stage_id', 2) as $discussion)
-                        <details class="group">
-                            <summary
-                                class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg">
-                                <div class="flex items-center gap-4">
-                                    <i class="fa-regular fa-comments text-gray-400 group-open:text-primary-500"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900 group-open:text-primary-600">
-                                            {{ $discussion->subject }}
-                                        </p>
-                                        <p class="text-xs text-gray-500">
-                                            From {{ $discussion->user->name }} •
-                                            {{ $discussion->created_at->format('M d') }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        {{ $discussion->messages->count() }} replies
-                                    </span>
-                                    <i
-                                        class="fa-solid fa-chevron-down text-gray-400 transform group-open:rotate-180 transition-transform"></i>
-                                </div>
-                            </summary>
-                            <div class="px-4 py-4 bg-gray-50 border-t border-gray-100 space-y-4 rounded-b-lg">
-                                @foreach ($discussion->messages as $message)
-                                <div class="flex gap-3">
-                                    <div class="flex-shrink-0">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-xs font-bold">
-                                            {{ substr($message->user->name, 0, 1) }}
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex-1">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <span
-                                                class="text-xs font-semibold text-gray-900">{{ $message->user->name }}</span>
-                                            <span
-                                                class="text-xs text-gray-400">{{ $message->created_at->format('M d, H:i') }}</span>
-                                        </div>
-                                        <div class="prose prose-sm text-gray-700 max-w-none">
-                                            {!! $message->body !!}
-                                        </div>
-                                        @if ($message->files->count() > 0)
-                                        <div class="mt-3 border-t border-gray-100 pt-2">
-                                            <p class="text-xs font-bold text-gray-500 mb-1">Attached Files:
-                                            </p>
-                                            <ul class="space-y-1">
-                                                @foreach ($message->files as $file)
-                                                <li>
-                                                    <a href="{{ route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->id]) }}"
-                                                        class="text-xs text-blue-600 hover:underline flex items-center">
-                                                        <i class="fa-solid fa-paperclip mr-1"></i>
-                                                        {{ $file->original_name }}
-                                                    </a>
-                                                </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                @endforeach
-                                {{-- Reply Form --}}
-                                <div class="mt-4 pl-11">
-                                    <form
-                                        action="{{ route('journal.discussion.reply', ['journal' => $journal->slug, 'submission' => $submission->id, 'discussion' => $discussion->id]) }}"
-                                        method="POST">
-                                        @csrf
-                                        <div class="flex gap-2">
-                                            <input type="text" name="body" placeholder="Write a reply..."
-                                                class="flex-1 shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                            <button type="submit"
-                                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none">Reply</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </details>
-                        @empty
-                        <div class="px-6 py-4 text-center text-sm text-gray-500 italic">
-                            No discussions started in this stage.
-                        </div>
-                        @endforelse
-                    </div>
+                <div class="mb-6">
+                    <x-discussion-panel
+                        :submission="$submission"
+                        :stageId="2"
+                        stageName="Review"
+                        :discussions="$submission->discussions"
+                        :participants="$participants"
+                        :journal="$journal" />
                 </div>
 
                 <!-- Review Form (only if not completed) -->
@@ -492,132 +319,14 @@ $journal = current_journal();
             </div>
         </div>
 
-        <!-- Discussion Modal (Triggered by 'Add Discussion') -->
-        <div x-show="discussionModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
-            aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div @click="discussionModalOpen = false"
-                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
-                <div
-                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full sm:p-6">
-                    <div>
-                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100">
-                            <i class="fa-regular fa-comments text-indigo-600 text-lg"></i>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-5">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Start a Review Discussion
-                            </h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">
-                                    Discussions are a good way to communicate with editors about reviews, delays, or
-                                    other concerns.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 sm:mt-6">
-                        <form id="discussion-form"
-                            action="{{ route('journal.discussion.create', ['journal' => $journal->slug, 'submission' => $submission->id]) }}"
-                            method="POST">
-                            @csrf
-                            <input type="hidden" name="stage_id" :value="discussionStageId">
-
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Subject</label>
-                                    <input type="text" name="subject" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Message</label>
-                                    <div class="mt-1">
-                                        <textarea id="discussion-editor" name="body" class="block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                                    </div>
-                                </div>
-
-                                {{-- Attached Files Display --}}
-                                <template x-if="discussionFiles.length > 0">
-                                    <div class="mt-4">
-                                        <p class="text-sm font-medium text-gray-700 mb-2">Attached Files:</p>
-                                        <ul class="border border-gray-200 rounded-md divide-y divide-gray-200">
-                                            <template x-for="file in discussionFiles" :key="file.id">
-                                                <li class="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
-                                                    <div class="w-0 flex-1 flex items-center">
-                                                        <i
-                                                            class="fa-solid fa-paperclip text-gray-400 flex-shrink-0"></i>
-                                                        <span class="ml-2 flex-1 w-0 truncate"
-                                                            x-text="file.original_name"></span>
-                                                    </div>
-                                                    <input type="hidden" name="files[]" :value="file.id">
-                                                </li>
-                                            </template>
-                                        </ul>
-                                    </div>
-                                </template>
-
-                                <div class="mt-4">
-                                    <button type="button" @click="fileWizardOpen = true"
-                                        class="text-sm text-indigo-600 hover:text-indigo-500 font-medium flex items-center">
-                                        <i class="fa-solid fa-paperclip mr-1"></i> Attach File
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                        <button type="button" @click="submitDiscussion()"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
-                            Create Discussion
-                        </button>
-                        <button type="button" @click="discussionModalOpen = false"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- File Upload Wizard Modal (Reuse logic or simplify) --}}
-        <div x-show="fileWizardOpen" style="display: none;" class="fixed inset-0 z-[60] overflow-y-auto"
-            aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div @click="fileWizardOpen = false"
-                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-                <div
-                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-                    <div x-show="wizardStep === 1">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Upload File</h3>
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700">Select File</label>
-                            <input type="file" @change="handleFileUpload($event)"
-                                class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                        </div>
-                    </div>
-                    <div x-show="wizardStep === 2">
-                        <div class="text-center">
-                            <i class="fa-solid fa-check-circle text-green-500 text-4xl mb-3"></i>
-                            <h3 class="text-lg font-medium text-gray-900">File Uploaded!</h3>
-                            <button @click="completeWizard()"
-                                class="mt-4 w-full bg-indigo-600 text-white rounded-md py-2">Attach to
-                                Discussion</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </div>
-     @push('scripts')
+    @push('scripts')
     <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
     <script>
         tinymce.init({
-            selector:'#comments_for_editor, #comments_for_author',
+            selector: '#comments_for_editor, #comments_for_author',
             height: 350,
             menubar: false,
             plugins: 'lists link image table code autoresize',
@@ -636,7 +345,10 @@ $journal = current_journal();
 
                 xhr.onload = () => {
                     if (xhr.status === 403) {
-                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                        reject({
+                            message: 'HTTP Error: ' + xhr.status,
+                            remove: true
+                        });
                         return;
                     }
 
@@ -666,6 +378,6 @@ $journal = current_journal();
             })
         });
     </script>
-    
+
     @endpush
 </x-app-layout>

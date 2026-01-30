@@ -30,7 +30,7 @@ class SubmissionDiscussionController extends Controller
         $user = auth()->user();
 
         // Editors can always participate
-        if ($user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+        if ($user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin', 'Reviewer'])) {
             return true;
         }
 
@@ -54,8 +54,9 @@ class SubmissionDiscussionController extends Controller
      * - Participants: Users selected + current user (creator) always included
      * - Notification: All participants except creator receive notification
      */
-    public function store(Request $request, string $journalSlug, Submission $submission)
+    public function store(Request $request, string $journalSlug, $id)
     {
+        $submission = Submission::findOrFail($id);
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
@@ -63,7 +64,6 @@ class SubmissionDiscussionController extends Controller
         if (!$this->canParticipate($submission)) {
             abort(403, 'You do not have permission to create discussions for this submission.');
         }
-
         $request->validate([
             'subject' => 'required|string|max:255',
             'body' => 'required|string',

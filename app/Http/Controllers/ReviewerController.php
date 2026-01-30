@@ -157,7 +157,7 @@ class ReviewerController extends Controller
 
         // Load submission with blind review (hide author info)
         $submission = $assignment->submission;
-        $submission->load(['journal', 'section']);
+        $submission->load(['journal', 'section', 'editorialAssignments.user']);
 
         // Get manuscript files (latest version only)
         $manuscriptFiles = SubmissionFile::where('submission_id', $submission->id)
@@ -165,7 +165,15 @@ class ReviewerController extends Controller
             ->orderBy('version', 'desc')
             ->get();
 
-        return view('reviewer.show', compact('assignment', 'submission', 'manuscriptFiles', 'journal'));
+        // Prepare participants for discussion (Editors only, NO AUTHORS for blind review)
+        $participants = collect();
+        foreach ($submission->editorialAssignments->where('is_active', true) as $editAssignment) {
+            if ($editAssignment->user && !$participants->contains('id', $editAssignment->user->id)) {
+                $participants->push($editAssignment->user);
+            }
+        }
+
+        return view('reviewer.show', compact('assignment', 'submission', 'manuscriptFiles', 'journal', 'participants'));
     }
 
     /**
@@ -238,5 +246,55 @@ class ReviewerController extends Controller
                 'title' => $assignment->submission->title ?? 'Naskah',
             ]);
         }
+    }
+    /**
+     * Assign a reviewer (Editor Action).
+     */
+    public function assign(Request $request, \App\Models\Submission $submission)
+    {
+        // Ensure user has editor role in the journal
+        $journal = $submission->journal;
+        if (!auth()->user()->hasRoleInJournal(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'], $journal)) {
+            abort(403, 'Unauthorized');
+        }
+
+        $request->validate([
+            'reviewer_id' => 'required|exists:users,id',
+        ]);
+
+        $reviewRound = $submission->currentReviewRound();
+
+        // Ensure a review round exists
+        if (!$reviewRound) {
+            $reviewRound = \App\Models\ReviewRound::create([
+                'submission_id' => $submission->id,
+                'round' => 1,
+                'status' => \App\Models\ReviewRound::STATUS_PENDING,
+            ]);
+        }
+
+        // Check if already assigned
+        $exists = ReviewAssignment::where('review_round_id', $reviewRound->id)
+            ->where('reviewer_id', $request->reviewer_id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Reviewer already assigned.'], 422);
+        }
+
+        // Create Assignment
+        ReviewAssignment::create([
+            'submission_id' => $submission->id,
+            'review_round_id' => $reviewRound->id,
+            'reviewer_id' => $request->reviewer_id,
+            'review_method' => 'double_blind', // Default
+            'response_due_date' => now()->addWeeks(1),
+            'due_date' => now()->addWeeks(4),
+            'assigned_at' => now(),
+            'round' => $reviewRound->round,
+            'status' => ReviewAssignment::STATUS_PENDING,
+        ]);
+
+        return response()->json(['message' => 'Reviewer assigned successfully']);
     }
 }
