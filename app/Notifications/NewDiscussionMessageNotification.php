@@ -2,13 +2,14 @@
 
 namespace App\Notifications;
 
-use App\Models\Discussion;
-use App\Models\DiscussionMessage;
 use App\Models\User;
+use App\Models\Discussion;
 use Illuminate\Bus\Queueable;
+use App\Models\ReviewAssignment;
+use App\Models\DiscussionMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
 /**
  * Notification sent to discussion participants when a new message is posted.
@@ -46,7 +47,19 @@ class NewDiscussionMessageNotification extends Notification
     {
         $submission = $this->discussion->submission;
         $journal = $submission->journal;
-        $url = url("/{$journal->slug}/submissions/{$submission->slug}");
+
+        // Check if user is reviewer
+        $isReviewer = $notifiable->hasRole('Reviewer');
+
+        if ($isReviewer) {
+            // For reviewer, link to reviewer show page
+            $assignment = ReviewAssignment::where('submission_id', $submission->id)
+                ->where('reviewer_id', $notifiable->id)
+                ->first();
+            $url = $assignment ? route('journal.reviewer.show', ['journal' => $journal->slug, 'assignment' => $assignment->id]) : url("/{$journal->slug}/submissions/{$submission->slug}");
+        } else {
+            $url = url("/{$journal->slug}/submissions/{$submission->slug}");
+        }
 
         return (new MailMessage)
             ->subject('New Message in Discussion: ' . $this->discussion->subject)
@@ -67,11 +80,24 @@ class NewDiscussionMessageNotification extends Notification
         $submission = $this->discussion->submission;
         $journal = $submission->journal;
 
+        // Check if user is reviewer
+        $isReviewer = $notifiable->hasRole('Reviewer');
+
+        if ($isReviewer) {
+            // For reviewer, link to reviewer show page
+            $assignment = ReviewAssignment::where('submission_id', $submission->id)
+                ->where('reviewer_id', $notifiable->id)
+                ->first();
+            $url = $assignment ? "/{$journal->slug}/reviewer/{$assignment->id}" : "/{$journal->slug}/submissions/{$submission->slug}?open_discussion={$this->discussion->id}";
+        } else {
+            $url = "/{$journal->slug}/submissions/{$submission->slug}?open_discussion={$this->discussion->id}";
+        }
+
         return [
             'type' => 'new_discussion_message',
             'title' => 'New Discussion Message',
             'message' => "{$this->sender->name} posted a message in \"{$this->discussion->subject}\".",
-            'url' => "/{$journal->slug}/submissions/{$submission->slug}?open_discussion={$this->discussion->id}",
+            'url' => $url,
             'notification_type' => 'info',
             'icon' => 'fa-comments',
             'discussion_id' => $this->discussion->id,
