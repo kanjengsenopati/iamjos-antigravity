@@ -14,27 +14,27 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
 
 <x-app-layout>
     <x-slot name="title">{{ $submission->title }}</x-slot>
-    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
 
     <div x-data="submissionWorkflow({
-        defaultStage: '{{ $defaultStage }}',
-        stageId: {{ $submission->stage_id }},
+        defaultStage: {{ json_encode($defaultStage) }},
+        stageId: {{ $submission->stage_id ?? 1 }},
         currentReviewRound: {{ $submission->currentReviewRound()?->round ?? 1 }},
         maxReviewRound: {{ $submission->reviewRounds()->max('round') ?? 1 }},
-        authorName: '{{ addslashes($submission->author->name ?? 'Author') }}',
-        journalName: '{{ addslashes($journal->name) }}',
-        submissionTitle: '{{ addslashes($submission->title) }}',
-        promotableFilesUrl: '{{ route('journal.workflow.promotable-files', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}',
-        revisionFilesUrl: '{{ route('journal.workflow.revision-files', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}',
-        searchReviewersUrl: '{{ route('journal.workflow.reviewers.search', $journal->slug) }}',
-        uploadImageUrl: '{{ route('journal.discussion.upload-image', ['journal' => $journal->slug]) }}',
-        uploadFileUrl: '{{ route('journal.discussion.upload-file', $journal->slug) }}',
-        availableFilesUrl: '{{ route('journal.workflow.available-files', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}',
-        reviewerAttachmentsUrl: '{{ route('journal.workflow.reviewer-attachments', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}',
-        uploadDecisionFileUrl: '{{ route('journal.workflow.upload-decision-file', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}',
-        csrfToken: '{{ csrf_token() }}',
-        firstAuthorName: '{{ addslashes($submission->authors->first()?->name ?? 'Author') }}',
-        submissionCode: '{{ $submission->submission_code }}'
+        authorName: {{ json_encode($submission->author->name ?? 'Author') }},
+        journalName: {{ json_encode($journal->name) }},
+        submissionTitle: {{ json_encode($submission->title) }},
+        promotableFilesUrl: {{ json_encode(route('journal.workflow.promotable-files', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
+        revisionFilesUrl: {{ json_encode(route('journal.workflow.revision-files', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
+        searchReviewersUrl: {{ json_encode(route('journal.workflow.reviewers.search', $journal->slug)) }},
+        uploadImageUrl: {{ json_encode(route('journal.discussion.upload-image', ['journal' => $journal->slug])) }},
+        uploadFileUrl: {{ json_encode(route('journal.discussion.upload-file', $journal->slug)) }},
+        availableFilesUrl: {{ json_encode(route('journal.workflow.available-files', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
+        reviewerAttachmentsUrl: {{ json_encode(route('journal.workflow.reviewer-attachments', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
+        uploadDecisionFileUrl: {{ json_encode(route('journal.workflow.upload-decision-file', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
+        csrfToken: {{ json_encode(csrf_token()) }},
+        firstAuthorName: {{ json_encode($submission->authors?->first()?->name ?? 'Author') }},
+        submissionCode: {{ json_encode($submission->submission_code ?? '') }}
     })">
 
         {{-- Header Section --}}
@@ -113,7 +113,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
             </div>
             <div class="mt-2 text-sm text-gray-500">
                 <span class="font-medium text-gray-900">
-                    {{ $submission->authors->first()->name ?? 'Unknown Author' }}
+                    {{ $submission->authors?->first()?->name ?? 'Unknown Author' }}
                 </span>
                 <span class="mx-2">•</span>
                 Submitted
@@ -1844,7 +1844,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
             </div>
 
             @php
-            $issueOptions = $issues->map(function ($i) {
+            $issueOptions = ($issues ?? collect())->map(function ($i) {
             $title = $i->title ? " - {$i->title}" : '';
             $status = $i->is_published ? ' [Published]' : ' [Future]';
             return [
@@ -1858,7 +1858,7 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
             <div x-show="activeStage === 'production'" class="bg-gray-50/50 min-h-screen pt-6"
                 x-data="{
                         scheduleModalOpen: false,
-                        issues: {{ json_encode($issueOptions) }},
+                        issues: @json($issueOptions),
                         selectedIssueId: '{{ $submission->issue_id ?? '' }}',
                         isLoadingIssues: false,
                     
@@ -2465,10 +2465,31 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
         @php
         $publication = $submission->currentPublication ?? $submission->getOrCreatePublication();
         $pubStatus = $publication->status ?? 1;
-        $pubAuthors =
-        $publication->authors && $publication->authors->isNotEmpty()
-        ? $publication->authors
-        : $submission->authors;
+        $pubAuthors = ($publication->authors?->isNotEmpty() ? $publication->authors->map(fn($a) => [
+        'id' => $a->id,
+        'name' => $a->name,
+        'email' => $a->email ?? '',
+        'orcid' => $a->orcid ?? '',
+        'orcid_url' => $a->orcid_url ?? '',
+        'affiliation' => $a->affiliation ?? '',
+        'country' => $a->country ?? '',
+        'is_corresponding' => $a->is_corresponding ?? false,
+        'include_in_browse' => $a->include_in_browse ?? true,
+        'given_name' => $a->given_name ?? '',
+        'family_name' => $a->family_name ?? '',
+        ]) : $submission->authors->map(fn($a) => [
+        'id' => $a->id,
+        'name' => $a->name,
+        'email' => $a->email ?? '',
+        'orcid' => $a->orcid ?? '',
+        'orcid_url' => $a->orcid_url ?? '',
+        'affiliation' => $a->affiliation ?? '',
+        'country' => $a->country ?? '',
+        'is_corresponding' => $a->is_corresponding ?? false,
+        'include_in_browse' => $a->include_in_browse ?? true,
+        'given_name' => $a->given_name ?? '',
+        'family_name' => $a->family_name ?? '',
+        ])) ?? [];
         @endphp
         <div x-show="activeTab === 'publication'" x-cloak x-data="{
                 pubTab: 'title',
@@ -2781,14 +2802,14 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                                             <div class="flex items-center">
                                                 <div
                                                     class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold mr-3">
-                                                    {{ strtoupper(substr($author->name, 0, 1)) }}
+                                                    {{ strtoupper(substr($author['name'], 0, 1)) }}
                                                 </div>
                                                 <div>
                                                     <p class="text-sm font-medium text-gray-900">
-                                                        {{ $author->name }}
+                                                        {{ $author['name'] }}
                                                     </p>
-                                                    @if ($author->orcid)
-                                                    <a href="{{ $author->orcid_url }}" target="_blank"
+                                                    @if ($author['orcid'])
+                                                    <a href="{{ $author['orcid_url'] }}" target="_blank"
                                                         class="text-xs text-green-600 hover:underline">
                                                         <i class="fa-brands fa-orcid mr-0.5"></i> ORCID
                                                     </a>
@@ -2797,20 +2818,20 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $author->email }}
+                                            {{ $author['email'] }}
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                                            {{ $author->affiliation ?? '-' }}
+                                            {{ $author['affiliation'] ?? '-' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                                            @if ($author->is_corresponding)
+                                            @if ($author['is_corresponding'])
                                             <i class="fa-solid fa-check-circle text-emerald-500"></i>
                                             @else
                                             <span class="text-gray-300">-</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                                            @if ($author->include_in_browse ?? true)
+                                            @if ($author['include_in_browse'] ?? true)
                                             <i class="fa-solid fa-check-circle text-emerald-500"></i>
                                             @else
                                             <span class="text-gray-300">-</span>
@@ -2821,21 +2842,21 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                                             <div class="flex items-center justify-end gap-1">
                                                 <button type="button"
                                                     @click="openContributorModal({
-                                                                id: '{{ $author->id }}',
-                                                                given_name: '{{ $author->given_name ?? '' }}',
-                                                                family_name: '{{ $author->family_name ?? '' }}',
-                                                                email: '{{ $author->email }}',
-                                                                affiliation: '{{ $author->affiliation ?? '' }}',
-                                                                country: '{{ $author->country ?? '' }}',
-                                                                orcid: '{{ $author->orcid ?? '' }}',
-                                                                is_corresponding: {{ $author->is_corresponding ? 'true' : 'false' }},
-                                                                include_in_browse: {{ $author->include_in_browse ?? true ? 'true' : 'false' }}
+                                                                id: '{{ $author['id'] }}',
+                                                                given_name: '{{ $author['given_name'] ?? '' }}',
+                                                                family_name: '{{ $author['family_name'] ?? '' }}',
+                                                                email: '{{ $author['email'] }}',
+                                                                affiliation: '{{ $author['affiliation'] ?? '' }}',
+                                                                country: '{{ $author['country'] ?? '' }}',
+                                                                orcid: '{{ $author['orcid'] ?? '' }}',
+                                                                is_corresponding: {{ $author['is_corresponding'] ? 'true' : 'false' }},
+                                                                include_in_browse: {{ $author['include_in_browse'] ?? true ? 'true' : 'false' }}
                                                             })"
                                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </button>
                                                 <form
-                                                    action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'author' => $author->id]) }}"
+                                                    action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'author' => $author['id']]) }}"
                                                     method="POST" class="inline"
                                                     onsubmit="return confirm('Remove this contributor?')">
                                                     @csrf
@@ -6343,7 +6364,6 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                 declineModalOpen: false,
                 declineReason: '',
                 showActivityLog: false,
-                sendToProductionModalOpen: false,
                 notifyAuthor: true,
 
                 // Request Revisions Modal (OJS 3.3 Style)
@@ -6362,26 +6382,6 @@ $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
                     this.$watch('discussionModalOpen', value => {
                         if (value) setTimeout(() => this.initEditor(), 100);
                     });
-                },
-
-                openAcceptModal() {
-                    this.acceptModalOpen = true;
-                    this.acceptSendEmail = true;
-                    this.acceptEmailBody = `Dear ${config.authorName},\n\nWe have reached a decision regarding your submission to ${config.journalName}, "${config.submissionTitle}".\n\nOur decision is to: Accept Submission.`;
-                    this.loadFilesForAcceptance();
-                },
-
-                async loadFilesForAcceptance() {
-                    this.acceptIsLoading = true;
-                    try {
-                        const res = await fetch(config.promotableFilesUrl);
-                        const data = await res.json();
-                        this.acceptFiles = data.files;
-                        this.acceptSelectedFiles = this.acceptFiles.filter(f => f.type === 'revision').map(f => f.id);
-                    } catch (e) {
-                        console.error('Failed to load promotable files:', e);
-                    }
-                    this.acceptIsLoading = false;
                 },
 
                 toggleAcceptFile(fileId) {
