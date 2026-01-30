@@ -54,9 +54,16 @@ class SubmissionDiscussionController extends Controller
      * - Participants: Users selected + current user (creator) always included
      * - Notification: All participants except creator receive notification
      */
-    public function store(Request $request, string $journalSlug, $id)
+    public function store(Request $request, string $journalSlug, $submission)
     {
-        $submission = Submission::findOrFail($id);
+        // $submission = Submission::findOrFail($id);cari berdasarkan slug ataupun id
+       $submissionModel = Submission::where('slug', $submission);
+
+        if (Str::isUuid($submission)) {
+            $submissionModel->orWhere('id', $submission);
+        }
+
+        $submission = $submissionModel->firstOrFail();
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
@@ -64,6 +71,7 @@ class SubmissionDiscussionController extends Controller
         if (!$this->canParticipate($submission)) {
             abort(403, 'You do not have permission to create discussions for this submission.');
         }
+
         $request->validate([
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
@@ -74,7 +82,6 @@ class SubmissionDiscussionController extends Controller
             'attached_files.*.id' => 'required|exists:discussion_files,id',
             'attached_files.*.name' => 'nullable|string|max:255',
         ]);
-
         $discussion = null;
         $firstMessage = null;
         $currentUserId = auth()->id();
