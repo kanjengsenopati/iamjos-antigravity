@@ -157,7 +157,7 @@ class ReviewerController extends Controller
 
         // Load submission with blind review (hide author info)
         $submission = $assignment->submission;
-        $submission->load(['journal', 'section', 'editorialAssignments.user']);
+        $submission->load(['journal', 'section', 'editorialAssignments.user', 'authors.user']);
 
         // Get manuscript files (latest version only)
         $manuscriptFiles = SubmissionFile::where('submission_id', $submission->id)
@@ -165,11 +165,17 @@ class ReviewerController extends Controller
             ->orderBy('version', 'desc')
             ->get();
 
-        // Prepare participants for discussion (Editors only, NO AUTHORS for blind review)
+        // Prepare participants for discussion (Editors and Authors)
         $participants = collect();
         foreach ($submission->editorialAssignments->where('is_active', true) as $editAssignment) {
             if ($editAssignment->user && !$participants->contains('id', $editAssignment->user->id)) {
                 $participants->push($editAssignment->user);
+            }
+        }
+        // Add authors as participants
+        foreach ($submission->authors as $author) {
+            if ($author->user && !$participants->contains('id', $author->user->id)) {
+                $participants->push($author->user);
             }
         }
 
