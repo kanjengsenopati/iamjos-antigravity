@@ -463,6 +463,23 @@ Route::prefix('{journal}')->group(function () {
                 Route::post('/reorder', 'reorder')->name('reorder');
                 Route::post('/system-block', 'addSystemBlock')->name('system-block');
             });
+            // Statistics Dashboard (OJS 3.3+ Article Impact Report)
+            Route::controller(\App\Http\Controllers\Admin\Stats\ArticleStatsController::class)
+                ->prefix('statistics')
+                ->name('statistics.')
+                ->group(function () {
+                    Route::get('/articles', 'index')->name('articles');
+                    Route::get('/articles/data', 'getData')->name('articles.data');
+                });
+
+            // Statistics Dashboard - Editorial Activity
+            Route::controller(\App\Http\Controllers\Admin\Stats\EditorialStatsController::class)
+                ->prefix('statistics')
+                ->name('statistics.')
+                ->group(function () {
+                    Route::get('/editorial', 'index')->name('editorial');
+                    Route::get('/editorial/data', 'getData')->name('editorial.data');
+                });
         });
         // --------- Journal Admin Routes ---------
         Route::prefix('admin')->name('journal.admin.')->middleware('role:Admin|Super Admin')->group(function () {
