@@ -55,66 +55,205 @@ class NativeImportExportController extends Controller
         }
 
         $request->validate([
-            'xml_file' => 'required|file|mimes:xml,text|max:51200', // Max 50MB (increased for base64 files)
+            'xml_file' => 'required|file|mimes:xml,text|max:51200', // Max 50MB
         ]);
 
         try {
-            // Read content
             $content = file_get_contents($request->file('xml_file')->getRealPath());
 
-            // Clean namespaces to make parsing easier (OJS uses strict namespaces like pkp:primary_contact)
-            // This is a robust way to handle XML migration without complex namespace registry
+            // 1. Clean XML Namespaces (Crucial for parsing OJS exports easily)
             $content = str_replace(['<pkp:', '</pkp:'], ['<', '</'], $content);
             $xml = new SimpleXMLElement($content);
 
-            $importedCount = 0;
-
             DB::beginTransaction();
+            $processedCount = 0;
 
-            // 1. Normalize Input: Always treat as an array of articles
-            $articles = [];
-            if ($xml->getName() === 'article') {
-                $articles[] = $xml; // Single article export
-            } elseif ($xml->getName() === 'articles') {
-                foreach ($xml->article as $node) {
-                    $articles[] = $node;
-                }
-            } elseif (isset($xml->issue)) {
-                // If importing issues, we iterate through issues then their articles
-                foreach ($xml->issue as $issueNode) {
-                    $issue = $this->importIssue($issueNode, $journal);
-                    if (isset($issueNode->articles->article)) {
-                        foreach ($issueNode->articles->article as $articleNode) {
-                            $this->importArticleNode($articleNode, $journal, $issue); // Use new method
-                            $importedCount++;
+            // Normalize to array (Handle Single vs Multiple Articles)
+            $articles = ($xml->getName() === 'article') ? [$xml] : $xml->article;
+
+            foreach ($articles as $articleNode) {
+                // Get the main publication node (Metadata)
+                $publication = $articleNode->publication;
+                if (!$publication) continue;
+
+                // --- A. HANDLE USER & AUTHOR (The Submitter) ---
+                $primaryAuthorNode = null;
+                $authorsData = [];
+                $authorSequence = 0;
+
+                // Iterate authors to find primary contact and prepare data
+                if (isset($publication->authors->author)) {
+                    foreach ($publication->authors->author as $authNode) {
+                        $isPrimary = (string) $authNode['primary_contact'] === 'true';
+                        $email = (string) $authNode->email;
+                        if (empty($email)) $email = 'no-email-' . uniqid() . '@example.com';
+
+                        // Try to find existing user by email to link user_id
+                        $existingUser = \App\Models\User::where('email', $email)->first();
+
+                        $authorData = [
+                            'user_id' => $existingUser?->id,
+                            'given_name' => (string) $authNode->givenname,
+                            'family_name' => (string) ($authNode->familyname ?? ''),
+                            'email' => $email,
+                            'affiliation' => (string) $authNode->affiliation,
+                            'country' => (string) $authNode->country,
+                            'orcid' => (string) $authNode->orcid,
+                            'biography' => strip_tags((string) $authNode->biography),
+                            'is_primary_contact' => $isPrimary,
+                            'is_corresponding' => $isPrimary, // Assuming primary is corresponding
+                            'include_in_browse' => (string) ($authNode['include_in_browse'] ?? 'true') === 'true',
+                            'sort_order' => $authorSequence++,
+                        ];
+
+                        $authorsData[] = $authorData;
+
+                        if ($isPrimary) {
+                            $primaryAuthorNode = $authorData;
                         }
                     }
                 }
-                // If we processed issues, we might skip the dedicated article loop below unless there are mixed nodes
-                // For safety/simplicity in this specific request context which focuses on <article> root:
-                if (empty($articles) && $importedCount > 0) {
-                    DB::commit();
-                    return back()->with('success', "XML imported successfully. {$importedCount} articles processed from issues.");
-                }
-            }
 
-            foreach ($articles as $articleNode) {
-                $this->importArticleNode($articleNode, $journal);
-                $importedCount++;
+                // Fallback: If no primary contact marked, take the first author
+                if (!$primaryAuthorNode && count($authorsData) > 0) {
+                    $primaryAuthorNode = $authorsData[0];
+                    $authorsData[0]['is_primary_contact'] = true;
+                    $authorsData[0]['is_corresponding'] = true;
+                }
+
+                // Find or Create the User (Submitter)
+                $submitterUser = null;
+                if ($primaryAuthorNode) {
+                    $submitterUser = \App\Models\User::where('email', $primaryAuthorNode['email'])->first();
+                    
+                    if (!$submitterUser) {
+                        $submitterUser = \App\Models\User::create([
+                            'name' => trim($primaryAuthorNode['given_name'] . ' ' . $primaryAuthorNode['family_name']),
+                            'given_name' => $primaryAuthorNode['given_name'],
+                            'family_name' => $primaryAuthorNode['family_name'],
+                            'email' => $primaryAuthorNode['email'],
+                            'password' => bcrypt('password'), // Default password
+                            'username' => explode('@', $primaryAuthorNode['email'])[0] . rand(100, 999),
+                            'affiliation' => $primaryAuthorNode['affiliation'],
+                            'country' => $primaryAuthorNode['country'],
+                            'orcid_id' => $primaryAuthorNode['orcid'],
+                            'bio' => $primaryAuthorNode['biography'],
+                        ]);
+                    }
+
+                    // Update author data with created user_id
+                    foreach ($authorsData as &$aData) {
+                        if ($aData['email'] === $submitterUser->email) {
+                            $aData['user_id'] = $submitterUser->id;
+                        }
+                    }
+                }
+
+                // --- B. CREATE SUBMISSION ---
+                $dateSubmitted = (string) ($articleNode['date_submitted'] ?? now());
+
+                $submission = Submission::create([
+                    'journal_id' => $journal->id,
+                    'user_id' => $submitterUser ? $submitterUser->id : \Illuminate\Support\Facades\Auth::id(), // Link to actual submitter
+                    'section_id' => $journal->sections->first()->id ?? null,
+                    'title' => (string) $publication->title,
+                    'subtitle' => (string) ($publication->subtitle ?? null),
+                    'abstract' => strip_tags((string) $publication->abstract),
+                    'status' => Submission::STATUS_PUBLISHED, // Import as published to retain history
+                    'stage' => Submission::STAGE_PRODUCTION,
+                    'submitted_at' => $dateSubmitted,
+                    'published_at' => $dateSubmitted, // Set published date
+                    'language' => (string) ($publication['locale'] ?? 'en'),
+                ]);
+
+                // --- C. SAVE AUTHORS (Link to Submission) ---
+                foreach ($authorsData as $auth) {
+                    $fullName = trim($auth['given_name'] . ' ' . $auth['family_name']);
+                    
+                    SubmissionAuthor::create([
+                        'submission_id' => $submission->id,
+                        'user_id' => $auth['user_id'],
+                        'name' => $fullName,
+                        'given_name' => $auth['given_name'],
+                        'family_name' => $auth['family_name'],
+                        'first_name' => $auth['given_name'], // Redundant but requested
+                        'last_name' => $auth['family_name'], // Redundant but requested
+                        'preferred_public_name' => $fullName,
+                        'email' => $auth['email'],
+                        'affiliation' => $auth['affiliation'],
+                        'country' => $auth['country'],
+                        'orcid' => $auth['orcid'],
+                        'biography' => $auth['biography'],
+                        'is_primary_contact' => $auth['is_primary_contact'],
+                        'is_corresponding' => $auth['is_corresponding'],
+                        'include_in_browse' => $auth['include_in_browse'],
+                        'sort_order' => $auth['sort_order'],
+                    ]);
+                }
+
+                // --- D. HANDLE REFERENCES (Citations) ---
+                if (isset($publication->citations->citation)) {
+                    $citationsList = [];
+                    foreach ($publication->citations->citation as $cite) {
+                        $citationsList[] = trim((string) $cite);
+                    }
+                    // Save as text block in 'references' column
+                    $submission->references = implode("\n", $citationsList);
+                    $submission->save();
+                }
+
+                // --- E. HANDLE FILES (Fixing 404s) ---
+                if (isset($articleNode->submission_file)) {
+                    foreach ($articleNode->submission_file as $fileNode) {
+                        if (isset($fileNode->file->embed)) {
+                            $base64 = (string) $fileNode->file->embed;
+                            $originalFilename = (string) ($fileNode->name ?? 'file-' . uniqid() . '.pdf');
+                            $fileContent = base64_decode($base64);
+
+                            if ($fileContent) {
+                                // Standardized Path: journals/{id}/submissions/{sub_id}/{filename}
+                                // Ensure filename is clean
+                                $cleanFilename = \Illuminate\Support\Str::slug(pathinfo($originalFilename, PATHINFO_FILENAME))
+                                    . '.' . pathinfo($originalFilename, PATHINFO_EXTENSION);
+
+                                $storagePath = "journals/{$journal->id}/submissions/{$submission->id}/{$cleanFilename}";
+
+                                // Store in 'public' disk
+                                \Illuminate\Support\Facades\Storage::disk('public')->put($storagePath, $fileContent);
+
+                                // Create Database Record for File (SubmissionFile)
+                                // IMPORTANT: 'path' must be relative to storage/app/public
+                                SubmissionFile::create([
+                                    'submission_id' => $submission->id,
+                                    'uploaded_by' => $submission->user_id,
+                                    'file_path' => $storagePath,
+                                    'file_name' => $originalFilename,
+                                    'file_type' => SubmissionFile::TYPE_MANUSCRIPT, // Default type
+                                    'mime_type' => 'application/pdf', // Or detect mime type
+                                    'file_size' => strlen($fileContent),
+                                    'version' => 1,
+                                    'stage' => SubmissionFile::STAGE_SUBMISSION,
+                                    // 'genre' => (string) $fileNode['genre'] ?? 'Article Text', // if genre supported
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                $processedCount++;
             }
 
             DB::commit();
 
-            if ($importedCount === 0) {
-                return back()->with('error', 'XML structure matched, but no articles were processed. Check if <publication> tag exists for OJS 3.3 exports.');
+            if ($processedCount === 0) {
+                return back()->with('warning', 'XML parsed but no articles found. Check if root tag is <article> or <articles>.');
             }
 
-            return back()->with('success', "ETL Success: Imported {$importedCount} articles from OJS 3.3 XML.");
-
+            return back()->with('success', "Successfully imported $processedCount articles, users, and files.");
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Native XML Import Error: ' . $e->getMessage());
-            return back()->with('error', 'Failed to import XML: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')');
+            return back()->with('error', 'Import Failed: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')');
         }
     }
 
