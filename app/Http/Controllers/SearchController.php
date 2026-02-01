@@ -47,7 +47,7 @@ class SearchController extends Controller
         if ($query && strlen(trim($query)) >= 2) {
             $searchQuery = Submission::where('journal_id', $journal->id)
                 ->published()
-                ->with(['authors', 'section', 'issue', 'files' => function ($q) {
+                ->with(['authors', 'section', 'issue', 'currentPublication', 'files' => function ($q) {
                     $q->where('file_type', 'galley');
                 }]);
 
@@ -137,7 +137,7 @@ class SearchController extends Controller
                     'id' => $article->id,
                     'title' => $article->title,
                     'authors' => $article->authors->pluck('name')->join(', '),
-                    'url' => route('journal.public.article', ['journal' => $journal->slug, 'submission' => $article]),
+                    'url' => route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]),
                 ];
             });
 

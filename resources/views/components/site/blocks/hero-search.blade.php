@@ -25,10 +25,10 @@
         <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
             {{-- Avatars --}}
             <div class="flex -space-x-3 overflow-hidden">
-                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
-                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
-                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
-                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&h=64" alt="User Avatar"/>
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://upload.wikimedia.org/wikipedia/id/2/20/Logo_Universitas_Diponegoro.png" alt="User Avatar"/>
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Logo_universitas_stekom.png/500px-Logo_universitas_stekom.png" alt="User Avatar"/>
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://upload.wikimedia.org/wikipedia/id/thumb/c/ca/Logo_Politeknik_Ilmu_Pelayaran_Semarang.png/250px-Logo_Politeknik_Ilmu_Pelayaran_Semarang.png" alt="User Avatar"/>
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-sm" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvMqszmng2xrZgDfyqUf1CjS3Bv2AxHyRMNg&s" alt="User Avatar"/>
                 <div class="h-8 w-8 rounded-full ring-2 ring-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 shadow-sm">+99</div>
             </div>
             

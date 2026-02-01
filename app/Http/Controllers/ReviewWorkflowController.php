@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Jobs\SendDecisionEmailJob;
 use App\Services\WaGateway;
 
@@ -25,10 +25,28 @@ class ReviewWorkflowController extends Controller
     }
 
     /**
+     * Show the assign reviewer page.
+     */
+    public function assignReviewerPage(string $journalSlug, Submission $submission)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+
+        return view('submissions.review.assign', compact('journal', 'submission'));
+    }
+
+    /**
      * Assign a reviewer to the submission.
      */
-    public function assignReviewer(Request $request, string $journalSlug, Submission $submission)
+    public function assignReviewer(Request $request, string $journalSlug, $id)
     {
+        $submission = Submission::query()
+        ->when(
+            Str::isUuid($id),
+            fn ($q) => $q->where('id', $id),
+            fn ($q) => $q->where('slug', $id)
+        )
+        ->firstOrFail();
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
@@ -38,6 +56,22 @@ class ReviewWorkflowController extends Controller
             'response_due_date' => 'required|date',
             'review_due_date' => 'required|date',
         ]);
+
+        // Prevent duplicate assignment
+        $currentRound = $submission->currentReviewRound();
+        if ($currentRound) {
+            $existing = ReviewAssignment::where('submission_id', $submission->id)
+                ->where('review_round_id', $currentRound->id)
+                ->where('reviewer_id', $request->reviewer_id)
+                ->whereNotIn('status', [ReviewAssignment::STATUS_CANCELLED, ReviewAssignment::STATUS_DECLINED])
+                ->exists();
+
+            if ($existing) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'reviewer_id' => ['This reviewer is already assigned to this submission in the current round.']
+                ]);
+            }
+        }
 
         try {
             DB::transaction(function () use ($request, $submission) {
@@ -109,8 +143,8 @@ class ReviewWorkflowController extends Controller
                 }
             });
 
-            return back()->with('success', 'Reviewer assigned successfully.');
-
+            return redirect()->route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug])
+                ->with('success', 'Reviewer assigned successfully.');
         } catch (\Throwable $e) {
             Log::error('Assign reviewer failed', [
                 'submission_id' => $submission->id,
@@ -382,33 +416,71 @@ class ReviewWorkflowController extends Controller
     }
 
     /**
-     * Search reviewers/editors for assignment modals.
-     * Supports ?role=editor to search for editors instead of reviewers.
-     */
-    public function searchReviewers(Request $request, string $journalSlug)
-    {
-        $query = $request->get('q', '');
-        $roleFilter = $request->get('role', 'reviewer'); // Default to reviewer
+ * Search reviewers/editors for assignment modals.
+ * Supports ?role=editor to search for editors instead of reviewers.
+ */
+public function searchReviewers(Request $request, string $journalSlug)
+{
+    $query = $request->get('q', '');
+    $roleFilter = $request->get('role', 'reviewer'); // Default to reviewer
 
-        // Determine which roles to search for
-        $searchRoles = match ($roleFilter) {
-            'editor' => ['Editor', 'Section Editor', 'Journal Manager'],
-            default => ['Reviewer'],
-        };
+    // Determine which roles to search for
+    $searchRoles = match ($roleFilter) {
+        'editor' => ['Editor', 'Section Editor', 'Journal Manager'],
+        default => ['Reviewer'],
+    };
 
-        $users = User::whereHas('roles', function ($q) use ($searchRoles) {
-            $q->whereIn('name', $searchRoles);
+    $users = User::whereHas('roles', function ($q) use ($searchRoles) {
+        $q->whereIn('name', $searchRoles);
+    })
+        ->where(function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+                ->orWhere('email', 'like', "%{$query}%")
+                ->orWhere('affiliation', 'like', "%{$query}%");
         })
-            ->where(function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhere('email', 'like', "%{$query}%");
-            })
-            ->limit(10)
-            ->get(['id', 'name', 'email']);
+        ->limit(10)
+        ->get();
 
-        return response()->json($users);
-    }
+    // Transform users to include reviewer stats
+    $results = $users->map(function ($user) {
+        $assignments = $user->reviewAssignments;
 
+        $completed = $assignments->where('status', ReviewAssignment::STATUS_COMPLETED);
+        $active = $assignments->whereIn('status', [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED]);
+        $declined = $assignments->where('status', ReviewAssignment::STATUS_DECLINED);
+        $cancelled = $assignments->where('status', ReviewAssignment::STATUS_CANCELLED);
+
+        // Calculate avg completion days
+        $avgCompletionDays = $completed->avg(function ($assignment) {
+            if ($assignment->assigned_at && $assignment->completed_at) {
+                return $assignment->assigned_at->diffInDays($assignment->completed_at);
+            }
+            return null;
+        });
+
+        // Days since last assignment
+        $lastAssignment = $assignments->sortByDesc('assigned_at')->first();
+        $daysSinceLast = $lastAssignment && $lastAssignment->assigned_at 
+            ? $lastAssignment->assigned_at->diffInDays(now()) 
+            : null;
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'affiliation' => $user->affiliation,
+            'avg_rating' => $completed->avg('quality_rating'),
+            'active_count' => $active->count(),
+            'completed_count' => $completed->count(),
+            'declined_count' => $declined->count(),
+            'cancelled_count' => $cancelled->count(),
+            'days_since_last' => $daysSinceLast !== null ? $daysSinceLast . ' days' : 'Never',
+            'avg_completion_days' => $avgCompletionDays ? round($avgCompletionDays, 1) . ' days' : '-',
+        ];
+    });
+
+    return response()->json($results);
+}
     /**
      * Request revisions from author (OJS 3.3 style).
      * Handles new review round creation, file promotion, and email notification.

@@ -34,6 +34,7 @@ class Publication extends Model
         'subtitle',
         'abstract',
         'keywords',
+        'references',
         'pages',
         'url_path',
         'doi',
@@ -43,6 +44,7 @@ class Publication extends Model
         'license_url',
         'date_published',
         'metadata',
+        'cover_image_path',
     ];
 
     /**
