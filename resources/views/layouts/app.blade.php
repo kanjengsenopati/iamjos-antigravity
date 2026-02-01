@@ -595,6 +595,13 @@
                                 class="fa-solid fa-user-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.users') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Users</span>
                         </a>
+                        <a href="{{ route('journal.settings.statistics.reports', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('statistics.reports') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            :title="sidebarCollapsed ? 'Reports' : ''">
+                            <i
+                                class="fa-solid fa-file-export w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.reports') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Reports</span>
+                        </a>
                     </div>
                 @endrole
 
