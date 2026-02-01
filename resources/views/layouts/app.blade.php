@@ -588,6 +588,13 @@
                                 class="fa-solid fa-users-gear w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.editorial') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Editorial</span>
                         </a>
+                        <a href="{{ route('journal.settings.statistics.users', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('statistics.users') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            :title="sidebarCollapsed ? 'Users' : ''">
+                            <i
+                                class="fa-solid fa-user-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.users') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Users</span>
+                        </a>
                     </div>
                 @endrole
 
