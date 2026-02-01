@@ -2804,6 +2804,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 {{-- Right Content Area --}}
                 <div class="flex-1 min-w-0">
 
+                    {{-- WARNING: PUBLISHED --}}
+                    @if ($pubStatus == 3)
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg shadow-sm">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-lg"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-700">
+                                        <span class="font-bold block mb-0.5">This version has been published and can
+                                            not be edited.</span>
+                                        You must unpublish this version before making any changes.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- ====== TITLE & ABSTRACT ====== --}}
                     <div x-show="pubTab === 'title'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -2813,37 +2831,39 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.title.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                            method="POST" class="p-6 space-y-5">
+                            method="POST" class="p-6">
                             @csrf
+                            <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Title <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="text" name="title"
+                                        value="{{ old('title', $publication->title ?? $submission->title) }}"
+                                        required
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-lg font-medium">
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Title <span
-                                        class="text-red-500">*</span></label>
-                                <input type="text" name="title"
-                                    value="{{ old('title', $publication->title ?? $submission->title) }}" required
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-lg font-medium">
-                            </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                                    <input type="text" name="subtitle"
+                                        value="{{ old('subtitle', $publication->subtitle ?? $submission->subtitle) }}"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
-                                <input type="text" name="subtitle"
-                                    value="{{ old('subtitle', $publication->subtitle ?? $submission->subtitle) }}"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Abstract</label>
+                                    <textarea name="abstract" id="publicationAbstract" rows="8"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('abstract', $publication->abstract ?? $submission->abstract) }}</textarea>
+                                    <p class="mt-1 text-xs text-gray-500">HTML formatting is allowed.</p>
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Abstract</label>
-                                <textarea name="abstract" id="publicationAbstract" rows="8"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('abstract', $publication->abstract ?? $submission->abstract) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">HTML formatting is allowed.</p>
-                            </div>
-
-                            <div class="flex justify-end pt-4 border-t border-gray-100">
-                                <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
-                                    <i class="fa-solid fa-save mr-2"></i> Save
-                                </button>
-                            </div>
+                                <div class="flex justify-end pt-4 border-t border-gray-100">
+                                    <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-save mr-2"></i> Save
+                                    </button>
+                                </div>
+                            </fieldset>
                         </form>
                     </div>
 
@@ -2858,10 +2878,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             </div>
                             @role('Editor|Section Editor|Admin|Super Admin')
                                 <button @click="openContributorModal()"
-                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
+                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-plus mr-1.5"></i> Add Contributor
                                 </button>
-                                <button @click="openReorderModal()" :disabled="allAuthors.length < 2"
+                                <button @click="openReorderModal()"
+                                    :disabled="allAuthors.length < 2 || {{ $pubStatus == 3 ? 'true' : 'false' }}"
                                     class="ml-2 inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-arrow-down-short-wide mr-1.5"></i> Order
                                 </button>
@@ -2938,6 +2960,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 @role('Editor|Section Editor|Admin|Super Admin')
                                                     <div class="flex items-center justify-end gap-1">
                                                         <button type="button"
+                                                            :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
                                                             @click="openContributorModal({
                                                                 id: '{{ $author['id'] }}',
                                                                 given_name: '{{ $author['given_name'] ?? '' }}',
@@ -2949,7 +2972,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 is_corresponding: {{ $author['is_corresponding'] ? 'true' : 'false' }},
                                                                 include_in_browse: {{ $author['include_in_browse'] ?? true ? 'true' : 'false' }}
                                                             })"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed">
                                                             <i class="fa-solid fa-pen"></i>
                                                         </button>
                                                         <form
@@ -2959,7 +2982,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit"
-                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50">
+                                                                @if ($pubStatus == 3) disabled @endif
+                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed">
                                                                 <i class="fa-solid fa-trash"></i>
                                                             </button>
                                                         </form>
@@ -2999,26 +3023,27 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.metadata.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                            method="POST" class="p-6 space-y-5">
+                            method="POST" class="p-6">
                             @csrf
+                            <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
+                                    <input type="text" name="keywords"
+                                        value="{{ old('keywords', $publication->keywords ?? $submission->keywords) }}"
+                                        placeholder="Separate keywords with commas"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <p class="mt-1 text-xs text-gray-500">Enter keywords separated by commas (e.g.,
+                                        machine
+                                        learning, AI, neural networks)</p>
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
-                                <input type="text" name="keywords"
-                                    value="{{ old('keywords', $publication->keywords ?? $submission->keywords) }}"
-                                    placeholder="Separate keywords with commas"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                <p class="mt-1 text-xs text-gray-500">Enter keywords separated by commas (e.g.,
-                                    machine
-                                    learning, AI, neural networks)</p>
-                            </div>
-
-                            <div class="flex justify-end pt-4 border-t border-gray-100">
-                                <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
-                                    <i class="fa-solid fa-save mr-2"></i> Save
-                                </button>
-                            </div>
+                                <div class="flex justify-end pt-4 border-t border-gray-100">
+                                    <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-save mr-2"></i> Save
+                                    </button>
+                                </div>
+                            </fieldset>
                         </form>
                     </div>
 
@@ -3031,23 +3056,25 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.references.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                            method="POST" class="p-6 space-y-5">
+                            method="POST" class="p-6">
                             @csrf
+                            <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">References</label>
+                                    <textarea name="references" rows="15"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm leading-6"
+                                        placeholder="Paste your references here...">{{ old('references', $publication->references ?? $submission->references) }}</textarea>
+                                    <p class="mt-1 text-xs text-gray-500">Provide a list of references for your work.
+                                    </p>
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">References</label>
-                                <textarea name="references" rows="15"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm leading-6"
-                                    placeholder="Paste your references here...">{{ old('references', $publication->references ?? $submission->references) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">Provide a list of references for your work.</p>
-                            </div>
-
-                            <div class="flex justify-end pt-4 border-t border-gray-100">
-                                <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
-                                    <i class="fa-solid fa-save mr-2"></i> Save References
-                                </button>
-                            </div>
+                                <div class="flex justify-end pt-4 border-t border-gray-100">
+                                    <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-save mr-2"></i> Save References
+                                    </button>
+                                </div>
+                            </fieldset>
                         </form>
                     </div>
 
