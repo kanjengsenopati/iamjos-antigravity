@@ -499,6 +499,26 @@ Route::prefix('{journal}')->group(function () {
                     Route::post('/reports/preview', 'preview')->name('reports.preview');
                     Route::post('/reports/export', 'export')->name('reports.export');
                 });
+
+            // Tools & Import/Export
+            Route::controller(\App\Http\Controllers\Admin\ToolsController::class)
+                ->prefix('tools')
+                ->name('tools.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/permissions/reset', 'resetPermissions')->name('permissions.reset');
+                });
+
+            // Native XML Import/Export Plugin
+            Route::controller(\App\Http\Controllers\Admin\Tools\NativeImportExportController::class)
+                ->prefix('tools/importexport/native')
+                ->name('tools.native.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/import', 'import')->name('import');
+                    Route::post('/export/articles', 'exportArticles')->name('export.articles');
+                    Route::post('/export/issues', 'exportIssues')->name('export.issues');
+                });
         });
         // --------- Journal Admin Routes ---------
         Route::prefix('admin')->name('journal.admin.')->middleware('role:Admin|Super Admin')->group(function () {
