@@ -1,6 +1,6 @@
 @php
-$journal = current_journal();
-$journalSlug = $journal->slug;
+    $journal = current_journal();
+    $journalSlug = $journal->slug;
 @endphp
 
 <x-app-layout :journal="$journal" :journalSlug="$journalSlug">
@@ -29,12 +29,12 @@ $journalSlug = $journal->slug;
 
         {{-- Success Message --}}
         @if (session('success'))
-        <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <div class="flex items-center">
-                <i class="fa-solid fa-check-circle text-green-500 mr-3"></i>
-                <span class="text-green-800">{{ session('success') }}</span>
+            <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-check-circle text-green-500 mr-3"></i>
+                    <span class="text-green-800">{{ session('success') }}</span>
+                </div>
             </div>
-        </div>
         @endif
 
         {{-- Tabs Navigation (OJS 3.3 Style) --}}
@@ -79,12 +79,14 @@ $journalSlug = $journal->slug;
                 <div class="border-b border-gray-200 mb-4">
                     <nav class="-mb-px flex space-x-6">
                         <button type="button" @click="appearanceTab = 'setup'"
-                            :class="appearanceTab === 'setup' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            :class="appearanceTab === 'setup' ? 'border-indigo-500 text-indigo-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
                             Setup
                         </button>
                         <button type="button" @click="appearanceTab = 'advanced'"
-                            :class="appearanceTab === 'advanced' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            :class="appearanceTab === 'advanced' ? 'border-indigo-500 text-indigo-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
                             Advanced
                         </button>
@@ -104,16 +106,17 @@ $journalSlug = $journal->slug;
 
                                 {{-- Current Logo Preview --}}
                                 @if ($journal->logo_path)
-                                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                    <img src="{{ Storage::url($journal->logo_path) }}" alt="Current Logo"
-                                        class="max-h-20 w-auto">
-                                    <p class="text-xs text-gray-500 mt-2">Current Logo</p>
-                                </div>
+                                    <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
+                                        <img src="{{ Storage::url($journal->logo_path) }}" alt="Current Logo"
+                                            class="max-h-20 w-auto">
+                                        <p class="text-xs text-gray-500 mt-2">Current Logo</p>
+                                    </div>
                                 @endif
 
                                 {{-- File Input --}}
                                 <div class="relative">
-                                    <input type="file" name="logo" id="logo_input" accept="image/jpeg,image/png,image/webp"
+                                    <input type="file" name="logo" id="logo_input"
+                                        accept="image/jpeg,image/png,image/webp"
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                                 </div>
                                 <p class="mt-2 text-xs text-gray-500">
@@ -129,16 +132,17 @@ $journalSlug = $journal->slug;
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Journal Thumbnail</h3>
                                 <p class="text-sm text-gray-500 mb-4">
-                                    A small image that represents this journal. Used in journal listings and search results.
+                                    A small image that represents this journal. Used in journal listings and search
+                                    results.
                                 </p>
 
                                 {{-- Current Thumbnail Preview --}}
                                 @if ($journal->thumbnail_path)
-                                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                    <img src="{{ Storage::url($journal->thumbnail_path) }}" alt="Current Thumbnail"
-                                        class="max-h-24 w-auto rounded">
-                                    <p class="text-xs text-gray-500 mt-2">Current Thumbnail</p>
-                                </div>
+                                    <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
+                                        <img src="{{ Storage::url($journal->thumbnail_path) }}" alt="Current Thumbnail"
+                                            class="max-h-24 w-auto rounded">
+                                        <p class="text-xs text-gray-500 mt-2">Current Thumbnail</p>
+                                    </div>
                                 @endif
 
                                 {{-- File Input --}}
@@ -162,11 +166,11 @@ $journalSlug = $journal->slug;
 
                                 {{-- Current Homepage Image Preview --}}
                                 @if ($journal->homepage_image_path)
-                                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <img src="{{ Storage::url($journal->homepage_image_path) }}" alt="Homepage Image"
-                                        class="max-h-40 w-auto rounded-lg shadow-sm">
-                                    <p class="text-xs text-gray-500 mt-2">Current Homepage Image</p>
-                                </div>
+                                    <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                        <img src="{{ Storage::url($journal->homepage_image_path) }}"
+                                            alt="Homepage Image" class="max-h-40 w-auto rounded-lg shadow-sm">
+                                        <p class="text-xs text-gray-500 mt-2">Current Homepage Image</p>
+                                    </div>
                                 @endif
 
                                 {{-- File Input --}}
@@ -232,9 +236,8 @@ $journalSlug = $journal->slug;
                     </div>
 
                     {{-- Announcements --}}
-                    <div x-data="{ enabled: {{ $journal->enable_announcements ? 'true' : 'false' }}, onHomepage: {{ $journal->show_announcements_on_homepage ? 'true' : 'false' }} }"
-                        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        
+                    <div x-data="{ enabled: {{ $journal->enable_announcements ? 'true' : 'false' }}, onHomepage: {{ $journal->show_announcements_on_homepage ? 'true' : 'false' }} }" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+
                         <div class="mb-6">
                             <h3 class="text-lg font-semibold text-gray-900 mb-1">Announcements</h3>
                             <p class="text-sm text-gray-500">Manage news and events for your readers.</p>
@@ -245,44 +248,57 @@ $journalSlug = $journal->slug;
                             <div class="flex items-start">
                                 <div class="flex items-center h-5">
                                     <input type="hidden" name="enable_announcements" value="0">
-                                    <input id="enable_announcements" name="enable_announcements" type="checkbox" value="1" x-model="enabled"
+                                    <input id="enable_announcements" name="enable_announcements" type="checkbox"
+                                        value="1" x-model="enabled"
                                         class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                         {{ old('enable_announcements', $journal->enable_announcements) ? 'checked' : '' }}>
                                 </div>
                                 <div class="ml-3 text-sm">
-                                    <label for="enable_announcements" class="font-medium text-gray-700">Enable announcements</label>
-                                    <p class="text-gray-500">Announcements may be published to inform readers of journal news and events.</p>
+                                    <label for="enable_announcements" class="font-medium text-gray-700">Enable
+                                        announcements</label>
+                                    <p class="text-gray-500">Announcements may be published to inform readers of
+                                        journal news and events.</p>
                                 </div>
                             </div>
 
                             {{-- Settings Group (Visible if Enabled) --}}
-                            <div x-show="enabled" x-transition class="space-y-6 pl-6 border-l-2 border-gray-100 ml-2.5">
+                            <div x-show="enabled" x-transition
+                                class="space-y-6 pl-6 border-l-2 border-gray-100 ml-2.5">
                                 {{-- Introduction --}}
                                 <div>
-                                    <label for="announcements_introduction" class="block text-sm font-medium text-gray-700 mb-1">Introduction</label>
+                                    <label for="announcements_introduction"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Introduction</label>
                                     <textarea name="announcements_introduction" id="announcements_introduction" rows="3"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">{{ old('announcements_introduction', $journal->announcements_introduction) }}</textarea>
-                                    <p class="mt-1 text-xs text-gray-500">This text will appear at the top of the Announcements page.</p>
+                                    <p class="mt-1 text-xs text-gray-500">This text will appear at the top of the
+                                        Announcements page.</p>
                                 </div>
 
                                 <div class="border-t border-gray-100 pt-4">
                                     {{-- Homepage Toggle --}}
                                     <div class="flex items-start mb-4">
                                         <div class="flex items-center h-5">
-                                            <input type="hidden" name="show_announcements_on_homepage" value="0">
-                                            <input id="show_announcements_on_homepage" name="show_announcements_on_homepage" type="checkbox" value="1" x-model="onHomepage"
+                                            <input type="hidden" name="show_announcements_on_homepage"
+                                                value="0">
+                                            <input id="show_announcements_on_homepage"
+                                                name="show_announcements_on_homepage" type="checkbox" value="1"
+                                                x-model="onHomepage"
                                                 class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                                 {{ old('show_announcements_on_homepage', $journal->show_announcements_on_homepage) ? 'checked' : '' }}>
                                         </div>
                                         <div class="ml-3 text-sm">
-                                            <label for="show_announcements_on_homepage" class="font-medium text-gray-700">Display on Homepage</label>
+                                            <label for="show_announcements_on_homepage"
+                                                class="font-medium text-gray-700">Display on Homepage</label>
                                         </div>
                                     </div>
 
                                     {{-- Number Input --}}
                                     <div x-show="onHomepage" class="ml-8">
-                                        <label for="num_announcements_homepage" class="block text-sm font-medium text-gray-700 mb-1">How many announcements to display?</label>
-                                        <input type="number" id="num_announcements_homepage" name="num_announcements_homepage" min="1" max="10"
+                                        <label for="num_announcements_homepage"
+                                            class="block text-sm font-medium text-gray-700 mb-1">How many announcements
+                                            to display?</label>
+                                        <input type="number" id="num_announcements_homepage"
+                                            name="num_announcements_homepage" min="1" max="10"
                                             class="block w-24 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             value="{{ old('num_announcements_homepage', $journal->num_announcements_homepage) }}">
                                         <p class="mt-1 text-xs text-gray-500">Leave empty to display none.</p>
@@ -299,28 +315,30 @@ $journalSlug = $journal->slug;
                             Configure your journal's navigation menus and sidebar content.
                         </p>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {{-- Navigation Manager Card --}}
                             <div class="border border-slate-200 rounded-lg overflow-hidden">
-                                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <div
+                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-bars text-slate-600"></i>
                                         <span class="font-medium text-slate-800">Navigation</span>
                                     </div>
                                     <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
-                                       class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
                                         Manage
                                     </a>
                                 </div>
                                 <div class="p-4">
-                                    <p class="text-sm text-slate-600 mb-3">Configure primary navigation menus and links.</p>
+                                    <p class="text-sm text-slate-600 mb-3">Configure primary navigation menus and
+                                        links.</p>
                                     <ul class="text-xs text-slate-500 space-y-1 mb-3">
                                         <li>• Create custom menu items</li>
                                         <li>• Assign to header/user navigation</li>
                                         <li>• Reorder menu items</li>
                                     </ul>
                                     <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
-                                       class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
                                         <i class="fa-solid fa-bars mr-1.5"></i>
                                         Navigation Manager
                                     </a>
@@ -329,13 +347,14 @@ $journalSlug = $journal->slug;
 
                             {{-- Sidebar Manager Card --}}
                             <div class="border border-slate-200 rounded-lg overflow-hidden">
-                                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <div
+                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-columns text-slate-600"></i>
                                         <span class="font-medium text-slate-800">Sidebar</span>
                                     </div>
                                     <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
-                                       class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
                                         Manage
                                     </a>
                                 </div>
@@ -347,9 +366,38 @@ $journalSlug = $journal->slug;
                                         <li>• Reorder sidebar elements</li>
                                     </ul>
                                     <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
-                                       class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
                                         <i class="fa-solid fa-columns mr-1.5"></i>
                                         Sidebar Manager
+                                    </a>
+                                </div>
+                            </div>
+
+                            {{-- DOI Settings Card --}}
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <div
+                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-fingerprint text-slate-600"></i>
+                                        <span class="font-medium text-slate-800">DOI</span>
+                                    </div>
+                                    <a href="{{ route('journal.settings.doi.edit', $journalSlug) }}"
+                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        Manage
+                                    </a>
+                                </div>
+                                <div class="p-4">
+                                    <p class="text-sm text-slate-600 mb-3">Configure Digital Object Identifiers (DOI).
+                                    </p>
+                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
+                                        <li>• Set DOI prefix</li>
+                                        <li>• Configure suffix patterns</li>
+                                        <li>• Assign DOIs to content</li>
+                                    </ul>
+                                    <a href="{{ route('journal.settings.doi.edit', $journalSlug) }}"
+                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-fingerprint mr-1.5"></i>
+                                        DOI Settings
                                     </a>
                                 </div>
                             </div>
@@ -370,19 +418,19 @@ $journalSlug = $journal->slug;
 
                                 {{-- Current Favicon Preview --}}
                                 @if ($journal->favicon_path)
-                                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                    <img src="{{ Storage::url($journal->favicon_path) }}" alt="Current Favicon"
-                                        class="h-8 w-8">
-                                    <p class="text-xs text-gray-500 mt-2">Current Favicon</p>
-                                    <button type="button"
-                                        onclick="if(confirm('Delete favicon?')) { 
+                                    <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
+                                        <img src="{{ Storage::url($journal->favicon_path) }}" alt="Current Favicon"
+                                            class="h-8 w-8">
+                                        <p class="text-xs text-gray-500 mt-2">Current Favicon</p>
+                                        <button type="button"
+                                            onclick="if(confirm('Delete favicon?')) { 
                                                 fetch('{{ route('journal.settings.website.favicon.delete', $journalSlug) }}', {
                                                     method: 'DELETE',
                                                     headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
                                                 }).then(() => location.reload());
                                             }"
-                                        class="text-red-600 text-xs mt-1 hover:underline">Remove</button>
-                                </div>
+                                            class="text-red-600 text-xs mt-1 hover:underline">Remove</button>
+                                    </div>
                                 @endif
 
                                 {{-- File Input --}}
@@ -435,15 +483,18 @@ $journalSlug = $journal->slug;
                             <p class="text-sm text-gray-500 mb-3">Preview:</p>
                             <div class="flex gap-4">
                                 <div class="h-12 w-32 rounded-lg flex items-center justify-center text-white text-sm font-medium"
-                                    id="primary_preview" style="background-color: {{ $settings['primary_color'] ?? '#4F46E5' }};">
+                                    id="primary_preview"
+                                    style="background-color: {{ $settings['primary_color'] ?? '#4F46E5' }};">
                                     Primary
                                 </div>
                                 <div class="h-12 w-32 rounded-lg flex items-center justify-center text-white text-sm font-medium"
-                                    id="secondary_preview" style="background-color: {{ $settings['secondary_color'] ?? '#7C3AED' }};">
+                                    id="secondary_preview"
+                                    style="background-color: {{ $settings['secondary_color'] ?? '#7C3AED' }};">
                                     Secondary
                                 </div>
                                 <div class="h-12 flex-1 rounded-lg flex items-center justify-center text-white text-sm font-medium"
-                                    id="gradient_preview" style="background: linear-gradient(135deg, {{ $settings['primary_color'] ?? '#4F46E5' }}, {{ $settings['secondary_color'] ?? '#7C3AED' }});">
+                                    id="gradient_preview"
+                                    style="background: linear-gradient(135deg, {{ $settings['primary_color'] ?? '#4F46E5' }}, {{ $settings['secondary_color'] ?? '#7C3AED' }});">
                                     Gradient Preview
                                 </div>
                             </div>
@@ -461,7 +512,8 @@ $journalSlug = $journal->slug;
                     <p class="text-sm text-gray-500 mb-6">Control which sections appear on your journal homepage.</p>
 
                     <div class="space-y-4">
-                        <label class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                        <label
+                            class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                             <div>
                                 <span class="font-medium text-gray-900">Show Announcements</span>
                                 <p class="text-sm text-gray-500">Display the latest announcements section</p>
@@ -471,7 +523,8 @@ $journalSlug = $journal->slug;
                                 class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         </label>
 
-                        <label class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                        <label
+                            class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                             <div>
                                 <span class="font-medium text-gray-900">Show Editorial Team</span>
                                 <p class="text-sm text-gray-500">Display editors with their roles on homepage</p>
@@ -481,7 +534,8 @@ $journalSlug = $journal->slug;
                                 class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         </label>
 
-                        <label class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                        <label
+                            class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                             <div>
                                 <span class="font-medium text-gray-900">Show Indexed In</span>
                                 <p class="text-sm text-gray-500">Display indexing partner logos</p>
@@ -497,34 +551,35 @@ $journalSlug = $journal->slug;
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Indexing Databases</h3>
                     <p class="text-sm text-gray-500 mb-4">
-                        Upload logos of indexing databases where your journal is listed (Scopus, Google Scholar, DOAJ, etc.)
+                        Upload logos of indexing databases where your journal is listed (Scopus, Google Scholar, DOAJ,
+                        etc.)
                     </p>
 
                     @php
-                    $val = $settings['indexed_in_images'] ?? [];
-                    $indexedImages = is_array($val) ? $val : json_decode($val, true) ?? [];
+                        $val = $settings['indexed_in_images'] ?? [];
+                        $indexedImages = is_array($val) ? $val : json_decode($val, true) ?? [];
                     @endphp
 
                     @if (count($indexedImages) > 0)
-                    <div class="flex flex-wrap gap-4 mb-4">
-                        @foreach ($indexedImages as $image)
-                        <div class="relative group">
-                            <img src="{{ Storage::url($image) }}" alt="Indexer"
-                                class="h-16 w-auto object-contain bg-gray-50 rounded-lg border border-gray-200 p-2">
-                            <button type="button"
-                                onclick="if(confirm('Remove this logo?')) { 
+                        <div class="flex flex-wrap gap-4 mb-4">
+                            @foreach ($indexedImages as $image)
+                                <div class="relative group">
+                                    <img src="{{ Storage::url($image) }}" alt="Indexer"
+                                        class="h-16 w-auto object-contain bg-gray-50 rounded-lg border border-gray-200 p-2">
+                                    <button type="button"
+                                        onclick="if(confirm('Remove this logo?')) { 
                                             fetch('{{ route('journal.settings.website.indexed-image.delete', $journalSlug) }}', {
                                                 method: 'DELETE',
                                                 headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
                                                 body: JSON.stringify({path: '{{ $image }}'})
                                             }).then(() => location.reload());
                                         }"
-                                class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <i class="fa-solid fa-times text-xs"></i>
-                            </button>
+                                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <i class="fa-solid fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                            @endforeach
                         </div>
-                        @endforeach
-                    </div>
                     @endif
 
                     <input type="file" name="indexed_in_images[]" accept="image/*" multiple
@@ -538,7 +593,7 @@ $journalSlug = $journal->slug;
             {{-- ============================================ --}}
             {{-- Tab: INFORMATION --}}
             {{-- ============================================ --}}
-            <div x-show="activeTab === 'information'" x-cloak class="space-y-
+            <div x-show="activeTab === 'information'" x-cloak class="space-y-6">
 
                 {{-- Information for Readers --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -584,87 +639,88 @@ $journalSlug = $journal->slug;
 
     {{-- Color Picker JavaScript --}}
     @push('scripts')
-    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sync color pickers with text inputs
-            const primaryColor = document.getElementById('primary_color');
-            const primaryText = document.getElementById('primary_color_text');
-            const primaryPreview = document.getElementById('primary_preview');
+        <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Sync color pickers with text inputs
+                const primaryColor = document.getElementById('primary_color');
+                const primaryText = document.getElementById('primary_color_text');
+                const primaryPreview = document.getElementById('primary_preview');
 
-            const secondaryColor = document.getElementById('secondary_color');
-            const secondaryText = document.getElementById('secondary_color_text');
-            const secondaryPreview = document.getElementById('secondary_preview');
+                const secondaryColor = document.getElementById('secondary_color');
+                const secondaryText = document.getElementById('secondary_color_text');
+                const secondaryPreview = document.getElementById('secondary_preview');
 
-            const gradientPreview = document.getElementById('gradient_preview');
+                const gradientPreview = document.getElementById('gradient_preview');
 
-            function updatePreviews() {
-                if (primaryPreview) primaryPreview.style.backgroundColor = primaryColor.value;
-                if (primaryText) primaryText.value = primaryColor.value;
-                if (secondaryPreview) secondaryPreview.style.backgroundColor = secondaryColor.value;
-                if (secondaryText) secondaryText.value = secondaryColor.value;
-                if (gradientPreview) {
-                    gradientPreview.style.background = `linear-gradient(135deg, ${primaryColor.value}, ${secondaryColor.value})`;
+                function updatePreviews() {
+                    if (primaryPreview) primaryPreview.style.backgroundColor = primaryColor.value;
+                    if (primaryText) primaryText.value = primaryColor.value;
+                    if (secondaryPreview) secondaryPreview.style.backgroundColor = secondaryColor.value;
+                    if (secondaryText) secondaryText.value = secondaryColor.value;
+                    if (gradientPreview) {
+                        gradientPreview.style.background =
+                            `linear-gradient(135deg, ${primaryColor.value}, ${secondaryColor.value})`;
+                    }
                 }
-            }
 
-            if (primaryColor) primaryColor.addEventListener('input', updatePreviews);
-            if (secondaryColor) secondaryColor.addEventListener('input', updatePreviews);
-        });
-    </script>
-    <script>
-        tinymce.init({
-            selector: '#page_footer, #info_readers, #info_authors, #info_librarians, #announcements_introduction, #additional_content',
-            height: 350,
-            menubar: false,
-            plugins: 'lists link image table code autoresize',
-            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
-            branding: false,
-            license_key: 'gpl',
-            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.withCredentials = false;
-                xhr.open('POST', '{{ route('profile.upload.image') }}');
-                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+                if (primaryColor) primaryColor.addEventListener('input', updatePreviews);
+                if (secondaryColor) secondaryColor.addEventListener('input', updatePreviews);
+            });
+        </script>
+        <script>
+            tinymce.init({
+                selector: '#page_footer, #info_readers, #info_authors, #info_librarians, #announcements_introduction, #additional_content',
+                height: 350,
+                menubar: false,
+                plugins: 'lists link image table code autoresize',
+                toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+                branding: false,
+                license_key: 'gpl',
+                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.withCredentials = false;
+                    xhr.open('POST', '{{ route('profile.upload.image') }}');
+                    xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
 
-                xhr.upload.onprogress = (e) => {
-                    progress(e.loaded / e.total * 100);
-                };
+                    xhr.upload.onprogress = (e) => {
+                        progress(e.loaded / e.total * 100);
+                    };
 
-                xhr.onload = () => {
-                    if (xhr.status === 403) {
-                        reject({
-                            message: 'HTTP Error: ' + xhr.status,
-                            remove: true
-                        });
-                        return;
-                    }
+                    xhr.onload = () => {
+                        if (xhr.status === 403) {
+                            reject({
+                                message: 'HTTP Error: ' + xhr.status,
+                                remove: true
+                            });
+                            return;
+                        }
 
-                    if (xhr.status < 200 || xhr.status >= 300) {
-                        reject('HTTP Error: ' + xhr.status);
-                        return;
-                    }
+                        if (xhr.status < 200 || xhr.status >= 300) {
+                            reject('HTTP Error: ' + xhr.status);
+                            return;
+                        }
 
-                    const json = JSON.parse(xhr.responseText);
+                        const json = JSON.parse(xhr.responseText);
 
-                    if (!json || typeof json.location != 'string') {
-                        reject('Invalid JSON: ' + xhr.responseText);
-                        return;
-                    }
+                        if (!json || typeof json.location != 'string') {
+                            reject('Invalid JSON: ' + xhr.responseText);
+                            return;
+                        }
 
-                    resolve(json.location);
-                };
+                        resolve(json.location);
+                    };
 
-                xhr.onerror = () => {
-                    reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
-                };
+                    xhr.onerror = () => {
+                        reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                    };
 
-                const formData = new FormData();
-                formData.append('file', blobInfo.blob(), blobInfo.filename());
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
 
-                xhr.send(formData);
-            })
-        });
-    </script>
+                    xhr.send(formData);
+                })
+            });
+        </script>
     @endpush
 </x-app-layout>

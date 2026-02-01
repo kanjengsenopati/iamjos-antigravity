@@ -61,6 +61,12 @@ class Journal extends Model
         'announcements_introduction',
         'show_announcements_on_homepage',
         'num_announcements_homepage',
+        // DOI Settings (OJS 3.3 DOI Plugin)
+        'doi_enabled',
+        'doi_objects',
+        'doi_prefix',
+        'doi_suffix_type',
+        'doi_custom_pattern',
     ];
 
     /**
@@ -77,6 +83,9 @@ class Journal extends Model
             'enable_clockss' => 'boolean',
             'show_homepage_image_in_header' => 'boolean',
             'show_summary' => 'boolean',
+            // DOI Settings
+            'doi_enabled' => 'boolean',
+            'doi_objects' => 'array',
         ];
     }
 

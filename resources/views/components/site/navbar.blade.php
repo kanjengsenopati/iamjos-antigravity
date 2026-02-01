@@ -103,7 +103,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                     <div x-show="open" x-transition
                          class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
                         <div class="py-1">
-                            <a href="{{ route('journal.select') }}"
+                            <a href="{{ auth()->user()->hasRole('Super Admin') ? route('admin.site.index') : route('journal.select') }}"
                                class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
                                 <i class="fa-solid fa-tachometer-alt mr-2"></i>
                                 Dashboard
@@ -196,7 +196,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                     <span class="font-medium text-slate-900">{{ auth()->user()->name }}</span>
                 </div>
                 <div class="space-y-1">
-                    <a href="{{ route('journal.select') }}"
+                    <a href="{{ auth()->user()->hasRole('Super Admin') ? route('admin.site.index') : route('journal.select') }}"
                        class="block py-2 text-slate-700 hover:text-blue-600">
                         <i class="fa-solid fa-tachometer-alt mr-2"></i>
                         Dashboard

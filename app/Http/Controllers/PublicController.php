@@ -235,8 +235,14 @@ class PublicController extends Controller
      * This page displays the full article metadata with proper Google Scholar
      * indexing support (Highwire Press meta tags) and a 2-column layout.
      */
-    public function article(string $journalSlug, Submission $article): View
+    public function article(string $journalSlug, $slug): View
     {
+        $article = Submission::published()->where('slug', $slug)->first();
+        
+        if (!$article) {
+            abort(404);
+        }
+
         $journal = $this->resolveJournal($journalSlug);
 
         // Ensure submission belongs to this journal
@@ -265,10 +271,6 @@ class PublicController extends Controller
 
         // Get the issue for additional metadata
         $issue = $article->issue;
-
-        // =============================================
-        // ANALYTICS: Log Article View
-        // =============================================
         $ip = request()->ip();
         
         // Simple bot detection (check user agent)
@@ -283,7 +285,7 @@ class PublicController extends Controller
             $city = null;
             
             // Log the view
-            \DB::table('article_metrics')->insert([
+            DB::table('article_metrics')->insert([
                 'submission_id' => $article->id,
                 'type' => 'view',
                 'ip_address' => $ip,
@@ -298,7 +300,7 @@ class PublicController extends Controller
         // =============================================
         // ANALYTICS: Prepare Chart Data (Last 12 Months)
         // =============================================
-        $stats = \DB::table('article_metrics')
+        $stats = DB::table('article_metrics')
             ->selectRaw("TO_CHAR(date, 'YYYY-MM') as month, type, count(*) as total")
             ->where('submission_id', $article->id)
             ->where('date', '>=', now()->subYear())
@@ -329,8 +331,8 @@ class PublicController extends Controller
         // =============================================
         $countryStats = collect();
         if (auth()->check() && auth()->user()->hasAnyRole(['admin', 'journal manager', 'editor'])) {
-            $countryStats = \DB::table('article_metrics')
-                ->select('country_code', \DB::raw('count(*) as total'))
+            $countryStats = DB::table('article_metrics')
+                ->select('country_code', DB::raw('count(*) as total'))
                 ->where('submission_id', $article->id)
                 ->where('type', 'view')
                 ->whereNotNull('country_code')

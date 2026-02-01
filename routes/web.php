@@ -1,92 +1,64 @@
 <?php
-
-use Illuminate\Support\Facades\Route;
-
 // New Controllers
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\SubmissionController;
-use App\Http\Controllers\SubmissionWorkflowController;
-use App\Http\Controllers\SubmissionDiscussionController;
-use App\Http\Controllers\ReviewWorkflowController;
-use App\Http\Controllers\SubmissionFileController;
-use App\Http\Controllers\EditorialController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\IssueController;
-use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\ReviewerController;
-use App\Http\Controllers\EditorDecisionController;
+use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\JournalSelectController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\WorkflowSettingsController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\JournalController;
-use App\Http\Controllers\Admin\SectionController as AdminSectionController;
-use App\Http\Controllers\Admin\JournalUserManagementController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Journal\WebsiteSettingsController;
-use App\Http\Controllers\Journal\JournalHomepageController;
-
-// Legacy Controllers (keep for backward compatibility)
+use App\Http\Controllers\ReviewerController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EditorialController;
 use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\ArticleController;
-use App\Http\Controllers\Admin\TranslateController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\PublisherController;
-use App\Http\Controllers\Admin\AuthorController as LegacyAuthorController;
-use App\Http\Controllers\Admin\ForgotPasswordController;
-use App\Http\Controllers\Admin\ApplicationSettingController;
-use App\Http\Controllers\Admin\DashboardController as LegacyDashboardController;
-use App\Http\Controllers\Admin\SiteAdminController;
-use App\Http\Controllers\PortalController;
-// Google OAuth Routes
-use App\Http\Controllers\Admin\SocialAuthController;
-
-// Registration Routes
+use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Admin\JournalController;
+use App\Http\Controllers\JournalSelectController;
 use App\Http\Controllers\Admin\RegisterController;
-
+use App\Http\Controllers\EditorDecisionController;
+use App\Http\Controllers\ReviewWorkflowController;
+use App\Http\Controllers\SubmissionFileController;
+use App\Http\Controllers\Admin\SiteAdminController;
+use App\Http\Controllers\Admin\TranslateController;
+use App\Http\Controllers\Admin\SocialAuthController;
+use App\Http\Controllers\WorkflowSettingsController;
+use App\Http\Controllers\SubmissionWorkflowController;
+use App\Http\Controllers\Journal\PublicationController;
+use App\Http\Controllers\Admin\ForgotPasswordController;
+use App\Http\Controllers\SubmissionDiscussionController;
+use App\Http\Controllers\Journal\JournalHomepageController;
+use App\Http\Controllers\Journal\WebsiteSettingsController;
+use App\Http\Controllers\Journal\ProductionWorkflowController;
+use App\Http\Controllers\Admin\JournalUserManagementController;
+// Google OAuth Routes
 // =====================================================
 // PORTAL HOME (List of all journals)
 // =====================================================
-
 Route::get('/', [PortalController::class, 'index'])->name('portal.home');
 Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
 Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
 Route::get('/about', [PortalController::class, 'about'])->name('portal.about');
 Route::get('/page/{slug}', [PortalController::class, 'page'])->name('site.page');
-
 // File downloads (public for galley files)
 Route::get('/files/{file}/download', [SubmissionFileController::class, 'download'])->name('files.download');
 Route::get('/files/{file}/preview', [SubmissionFileController::class, 'preview'])->name('files.preview')->middleware('auth');
 Route::get('/files/{file}/serve', [SubmissionFileController::class, 'serve'])->name('files.serve'); // Signed URL access
-
 // =====================================================
 // AUTH ROUTES (Portal Context - Global)
 // =====================================================
 Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::post('/register', [RegisterController::class, 'store']);
-
 Route::get('/forgot-password', [ForgotPasswordController::class, 'index'])->name('forgot-password');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'post'])->name('success-forgot-password');
 Route::get('/change-password', [ForgotPasswordController::class, 'changePassword'])->name('change-password');
 Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('reset-password');
-
-
-
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-
-
-
 // =====================================================
 // JOURNAL SELECTION (Protected)
 // =====================================================
@@ -94,7 +66,6 @@ Route::middleware(['auth'])->group(function () {
     // Redirect /dashboard to journal selection or first journal
     Route::get('/dashboard', [JournalSelectController::class, 'redirectToDashboard'])->name('dashboard');
     Route::get('/select-journal', [JournalSelectController::class, 'index'])->name('journal.select');
-
     // --------- Profile Settings (Global, not per-journal) ---------
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -102,7 +73,6 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
     Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     Route::post('/profile/upload-image', [ProfileController::class, 'uploadImage'])->name('profile.upload.image');
-
     // --------- Notifications API (Global) ---------
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
@@ -112,31 +82,27 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/clear-read', [NotificationController::class, 'clearRead'])->name('clear-read');
         Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
     });
-
     // --------- Submission Log History (AJAX) ---------
     Route::get('/submissions/{submission}/log-history', [\App\Http\Controllers\Admin\SubmissionController::class, 'logHistory'])
         ->name('submission.log.history');
+    // Assign Reviewer (Prompt Requirement - Global)
+    // Route::post('/submissions/{submission}/assign-reviewer', [\App\Http\Controllers\ReviewerController::class, 'assign'])->name('submission.assign-reviewer');
 });
-
 // =====================================================
 // GLOBAL ADMIN ROUTES (Super Admin only - manages all journals)
 // =====================================================
-
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])->group(function () {
     // Site Administration Dashboard
     Route::get('/', [SiteAdminController::class, 'index'])->name('site.index');
-
     // Dedicated Pages
     Route::get('/site-setting', [SiteAdminController::class, 'siteSettings'])->name('site.settings.form');
     Route::get('/system-informations', [SiteAdminController::class, 'systemInfo'])->name('site.system-info');
-
     // Actions
     Route::post('/settings', [SiteAdminController::class, 'updateSettings'])->name('site.settings.update');
     Route::post('/expire-sessions', [SiteAdminController::class, 'expireSessions'])->name('site.expire-sessions');
     Route::post('/clear-cache', [SiteAdminController::class, 'clearDataCache'])->name('site.clear-cache');
     Route::post('/clear-templates', [SiteAdminController::class, 'clearTemplateCache'])->name('site.clear-templates');
     Route::post('/clear-logs', [SiteAdminController::class, 'clearScheduledTaskLogs'])->name('site.clear-logs');
-
     // Journal Management (create new journals, etc.)
     Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
     Route::get('/journals/create', [JournalController::class, 'create'])->name('journals.create');
@@ -144,7 +110,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
     Route::get('/journals/{journal}/edit', [JournalController::class, 'edit'])->name('journals.edit');
     Route::put('/journals/{journal}', [JournalController::class, 'update'])->name('journals.update');
     Route::delete('/journals/{journal}', [JournalController::class, 'destroy'])->name('journals.destroy');
-
     // Site Appearance - Page Builder (New Block-Based System)
     Route::controller(\App\Http\Controllers\Admin\SiteAppearanceController::class)
         ->prefix('site-appearance')
@@ -160,7 +125,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
             Route::post('/{block}/reset', 'reset')->name('reset');
             Route::delete('/{block}/logo', 'deleteLogo')->name('logo.delete');
         });
-
     // Site Pages (CMS)
     Route::controller(\App\Http\Controllers\Admin\SitePageController::class)
         ->prefix('site-pages')
@@ -175,7 +139,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
             Route::post('/{sitePage}/toggle', 'toggle')->name('toggle');
             Route::post('/reorder', 'reorder')->name('reorder');
         });
-
     // Site Navigation
     Route::controller(\App\Http\Controllers\Admin\SiteNavigationController::class)
         ->prefix('site-navigation')
@@ -188,67 +151,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
             Route::post('/items/reorder', 'reorderItems')->name('items.reorder');
         });
 });
-
-// =====================================================
-// LEGACY ADMIN ROUTES (kept for backward compatibility)
-// =====================================================
-// Route::group(['middleware' => ['auth'], 'prefix' => 'admin-legacy'], function () {
-//     // Admin Management
-//     Route::resource('admin', AdminController::class);
-//     Route::resource('permission', PermissionController::class);
-//     Route::resource('role', RoleController::class);
-
-//     // Publisher Management
-//     Route::prefix('publisher')->group(function () {
-//         Route::post('import-data', [PublisherController::class, 'importData'])->name('publisher.import');
-//         Route::get('export-data', [PublisherController::class, 'exportData'])->name('publisher.export');
-//         Route::get('download-template', [PublisherController::class, 'downloadTemplate'])->name('publisher.template');
-//     });
-//     Route::resource('publisher', PublisherController::class)->whereUuid('publisher');
-
-//     // Author Management
-//     Route::prefix('author')->group(function () {
-//         Route::post('import-data', [LegacyAuthorController::class, 'importData'])->name('author.import');
-//         Route::get('export-data', [LegacyAuthorController::class, 'exportData'])->name('author.export');
-//         Route::get('download-template', [LegacyAuthorController::class, 'downloadTemplate'])->name('author.template');
-//     });
-//     Route::resource('author', LegacyAuthorController::class)->whereUuid('author');
-
-//     // Profile
-//     Route::get('edit-profile-admin', [AdminController::class, 'editProfile'])
-//         ->name('profile-admin.edit')->withoutMiddleware('permission:admin');
-//     Route::put('edit-profile-admin', [AdminController::class, 'updateProfile'])
-//         ->name('profile-admin.update')->withoutMiddleware('permission:admin');
-
-//     // Dashboard
-//     Route::get('dashboard', [LegacyDashboardController::class, 'index'])->name('dashboard.index');
-
-//     // Article & Media Corner
-//     Route::resource('article', ArticleController::class);
-//     Route::patch('article/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('article.toggle-status');
-
-//     // Application Settings
-//     Route::get('application-setting', [ApplicationSettingController::class, 'index'])->name('application-setting.index');
-//     Route::post('application-setting/backup', [ApplicationSettingController::class, 'backupDatabase'])->name('application-setting.backup');
-//     Route::get('application-setting/system-info', [ApplicationSettingController::class, 'getSystemInfo'])->name('application-setting.system-info');
-//     Route::get('application-setting/database-info', [ApplicationSettingController::class, 'getDatabaseInfo'])->name('application-setting.database-info');
-//     Route::post('application-setting/upload-ad-art', [ApplicationSettingController::class, 'uploadAdArt'])->name('application-setting.upload-ad-art');
-//     Route::get('application-setting/download-ad-art', [ApplicationSettingController::class, 'downloadAdArt'])->name('application-setting.download-ad-art');
-//     Route::delete('application-setting/delete-ad-art', [ApplicationSettingController::class, 'deleteAdArt'])->name('application-setting.delete-ad-art');
-// });
-
 // =====================================================
 // TRANSLATE (Public)
 // =====================================================
 Route::get('translate', [TranslateController::class, 'index'])->name('translate');
 Route::post('translate_post', [TranslateController::class, 'translatePost'])->name('translate_post');
-
 // =====================================================
 // JOURNAL-SCOPED PUBLIC ROUTES (Per-Journal Frontend)
 // These come AFTER all other routes to catch journal slugs
 // =====================================================
 Route::prefix('{journal}')->group(function () {
-
     // --------- Journal-Scoped Auth Routes (/{journal}/login) ---------
     Route::middleware(['journal.detect'])->group(function () {
         Route::get('/login', [AuthController::class, 'index'])->name('journal.login');
@@ -258,59 +170,45 @@ Route::prefix('{journal}')->group(function () {
         Route::post('/register', [RegisterController::class, 'store'])->name('journal.register.store');
         Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
     });
-
     // --------- Public Journal Pages ---------
     Route::get('/', [JournalHomepageController::class, 'index'])->name('journal.public.home');
     Route::get('/current', [PublicController::class, 'currentIssue'])->name('journal.public.current');
     Route::get('/archives', [PublicController::class, 'archives'])->name('journal.public.archives');
     Route::get('/about', [PublicController::class, 'about'])->name('journal.public.about');
-
     // Announcements
     Route::get('/announcement', [PublicController::class, 'announcements'])->name('journal.announcement.index');
     Route::get('/announcement/{id}', [PublicController::class, 'announcement'])->name('journal.announcement.show');
-
     // Information Pages (Readers, Authors, Librarians)
     Route::get('/information/readers', [PublicController::class, 'infoReaders'])->name('journal.info.readers');
     Route::get('/information/authors', [PublicController::class, 'infoAuthors'])->name('journal.info.authors');
     Route::get('/information/librarians', [PublicController::class, 'infoLibrarians'])->name('journal.info.librarians');
-
     Route::get('/author-guidelines', [PublicController::class, 'authorGuidelines'])->name('journal.public.author-guidelines');
     Route::get('/editorial-team', [PublicController::class, 'editorialTeam'])->name('journal.public.editorial-team');
     Route::get('/search', [SearchController::class, 'index'])->name('journal.public.search');
     Route::get('/search/quick', [SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
     Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
-
     // Custom Pages (from Navigation Menu Items)
     Route::get('/page/{path}', [PublicController::class, 'customPage'])->name('journal.custom-page');
-
     // --------- Article Routes (Google Scholar Indexing) ---------
     // These routes support both ID and slug for SEO flexibility
     Route::get('/article/{article}', [PublicController::class, 'article'])->name('journal.public.article');
     Route::get('/article/{article}/view', [PublicController::class, 'articleReader'])->name('journal.public.article.reader');
-
     // Article View (alias route for SEO with clean URL structure)
-    Route::get('/article/{article}/view', [PublicController::class, 'article'])->name('journal.article.view');
-
+    // Route::get('/article/{article}/view', [PublicController::class, 'article'])->name('journal.article.view');
     // Article Galley Download (CRITICAL for Google Scholar - must stream the actual file)
     Route::get('/article/{article}/galley/{galley}/download', [PublicController::class, 'downloadGalley'])->name('journal.article.download');
     Route::get('/article/{article}/galley/{galley}', [PublicController::class, 'viewGalley'])->name('journal.article.galley');
-
     // Citation Export Routes
     Route::get('/article/{article}/citation/ris', [PublicController::class, 'exportCitationRIS'])->name('citation.ris');
     Route::get('/article/{article}/citation/bibtex', [PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');
-
-
     // =====================================================
     // JOURNAL-SCOPED DASHBOARD ROUTES (Protected)
     // =====================================================
     Route::middleware(['auth', 'journal.context'])->group(function () {
-
         // --------- Journal Dashboard ---------
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('journal.dashboard');
-
         // Stop Impersonating (Outside role middleware to avoid 403)
         Route::post('/users/stop-impersonating', [JournalUserManagementController::class, 'stopImpersonating'])->name('journal.users.stop-impersonating');
-
         // --------- User Management (General / Manager) ---------
         Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')->controller(JournalUserManagementController::class)->prefix('users')->name('journal.users.')->group(function () {
             // 1. All Users
@@ -328,7 +226,6 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/{user}/email', 'email')->name('email');
             Route::get('/{user}/merge', 'merge')->name('merge');
             Route::post('/{user}/merge', 'executeMerge')->name('execute-merge');
-
             // 2. Roles
             Route::get('/roles', 'roles')->name('roles');
             Route::get('/roles/create', 'createRole')->name('roles.create');
@@ -338,16 +235,13 @@ Route::prefix('{journal}')->group(function () {
             Route::delete('/roles/{role}', 'destroyRole')->name('roles.destroy');
             Route::post('/roles/{role}/reset', 'resetRolePermissions')->name('roles.reset');
             Route::post('/roles/{role}/toggle-permission', 'updateRolePermission')->name('roles.toggle-permission');
-
             // 3. Site Access Options
             Route::get('/access', 'access')->name('access');
             Route::post('/access', 'updateAccess')->name('access.update');
-
             // 4. Notify Users (Bulk Email)
             Route::get('/notify', 'notify')->name('notify');
             Route::post('/notify', 'sendNotification')->name('notify.send');
         });
-
         // --------- Submissions (Author) ---------
         Route::resource('submissions', SubmissionController::class)->names([
             'index' => 'journal.submissions.index',
@@ -358,14 +252,11 @@ Route::prefix('{journal}')->group(function () {
             'update' => 'journal.submissions.update',
             'destroy' => 'journal.submissions.destroy',
         ]);
-
         // --------- Submission Files ---------
         Route::post('/submissions/{submission}/files', [SubmissionFileController::class, 'store'])->name('journal.submissions.files.store');
         Route::delete('/files/{file}', [SubmissionFileController::class, 'destroy'])->name('journal.files.destroy');
-
         // --------- TinyMCE Image Upload ---------
         Route::post('/upload/image', [SubmissionController::class, 'uploadImage'])->name('journal.upload.image');
-
         // --------- Discussion (Shared) ---------
         Route::post('/discussion/upload-image', [SubmissionDiscussionController::class, 'uploadCkeditorImage'])->name('journal.discussion.upload-image');
         Route::post('/discussion/upload-file', [SubmissionDiscussionController::class, 'uploadDiscussionFile'])->name('journal.discussion.upload-file');
@@ -375,77 +266,71 @@ Route::prefix('{journal}')->group(function () {
         Route::post('/{submission}/discussion/{discussion}/close', [SubmissionDiscussionController::class, 'close'])->name('journal.discussion.close');
         Route::post('/{submission}/discussion/{discussion}/reopen', [SubmissionDiscussionController::class, 'reopen'])->name('journal.discussion.reopen');
         Route::put('/{submission}/discussion/{discussion}/message/{message}', [SubmissionDiscussionController::class, 'updateMessage'])->name('journal.discussion.message.update');
-
         // --------- Submission Workflow (OJS 3.3 Style) ---------
         Route::prefix('workflow')->name('journal.workflow.')->middleware('role:Editor|Section Editor|Admin|Super Admin')->group(function () {
             Route::post('/{submission}/file', [SubmissionWorkflowController::class, 'uploadFile'])->name('file.store');
             Route::post('/{submission}/discussion', [SubmissionWorkflowController::class, 'storeDiscussion'])->name('discussion.store');
-
             Route::get('/{submission}', [SubmissionWorkflowController::class, 'show'])->name('show');
             Route::post('/{submission}/assign-editor', [SubmissionWorkflowController::class, 'assignEditor'])->name('assign-editor');
             Route::delete('/{submission}/remove-editor/{assignment}', [SubmissionWorkflowController::class, 'removeEditor'])->name('remove-editor');
             Route::post('/{submission}/change-stage', [SubmissionWorkflowController::class, 'changeStage'])->name('change-stage');
             Route::post('/{submission}/schedule-publication', [SubmissionWorkflowController::class, 'schedulePublication'])->name('schedule-publication');
-
             // Review Workflow Routes
+            Route::get('/{submission}/assign-reviewer', [ReviewWorkflowController::class, 'assignReviewerPage'])->name('assign-reviewer-page');
             Route::get('/reviewers/search', [ReviewWorkflowController::class, 'searchReviewers'])->name('reviewers.search');
             Route::post('/{submission}/assign-reviewer', [ReviewWorkflowController::class, 'assignReviewer'])->name('assign-reviewer');
             Route::delete('/{submission}/unassign-reviewer/{assignment}', [ReviewWorkflowController::class, 'unassignReviewer'])->name('unassign-reviewer');
             Route::post('/{submission}/record-decision', [ReviewWorkflowController::class, 'recordDecision'])->name('record-decision');
             Route::post('/{submission}/promote-to-copyediting', [ReviewWorkflowController::class, 'promoteToCopyediting'])->name('promote-copyediting');
             Route::post('/{submission}/send-to-production', [ReviewWorkflowController::class, 'sendToProduction'])->name('send-production');
-
             // Enhanced Revision Request (OJS 3.3 Style Modal)
             Route::post('/{submission}/request-revisions', [ReviewWorkflowController::class, 'requestRevisions'])->name('request-revisions');
             Route::get('/{submission}/reviewer-attachments', [ReviewWorkflowController::class, 'getReviewerAttachments'])->name('reviewer-attachments');
             Route::post('/{submission}/upload-decision-file', [ReviewWorkflowController::class, 'uploadDecisionFile'])->name('upload-decision-file');
-
             // Multi-Round Review Workflow (OJS 3.3 Style)
             Route::post('/{submission}/create-new-round', [ReviewWorkflowController::class, 'createNewRound'])->name('create-new-round');
             Route::get('/{submission}/revision-files', [ReviewWorkflowController::class, 'getRevisionFiles'])->name('revision-files');
             Route::get('/{submission}/promotable-files', [ReviewWorkflowController::class, 'getPromotableFiles'])->name('promotable-files');
-
             // Copyediting Workflow (OJS 3.3 Draft Files Management)
             Route::get('/{submission}/review-stage-files', [ReviewWorkflowController::class, 'getReviewStageFiles'])->name('review-stage-files');
             Route::post('/{submission}/copy-review-to-draft', [ReviewWorkflowController::class, 'copyReviewFilesToDraft'])->name('copy-review-to-draft');
-
             // Enhanced Workflow Actions (OJS 3.3 Editorial Decisions)
             Route::get('/{submission}/available-files', [SubmissionWorkflowController::class, 'getAvailableFiles'])->name('available-files');
             Route::post('/{submission}/promote-to-review', [SubmissionWorkflowController::class, 'promoteToReview'])->name('promote-review');
             Route::post('/{submission}/skip-review', [SubmissionWorkflowController::class, 'skipReview'])->name('skip-review');
             Route::post('/{submission}/decline', [SubmissionWorkflowController::class, 'decline'])->name('decline');
-
             // Production Workflow Routes
-            Route::post('/{submission}/galley', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'storeGalley'])->name('galley.store');
-            Route::put('/{submission}/galley/{galley}', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'updateGalley'])->name('galley.update');
-            Route::delete('/{submission}/galley/{galley}', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'destroyGalley'])->name('galley.destroy');
-            Route::post('/{submission}/assign-issue', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'assignToIssue'])->name('assign-issue');
-            Route::post('/{submission}/unschedule', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'unschedule'])->name('unschedule');
-            Route::post('/{submission}/publish', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'publish'])->name('publish');
-            Route::post('/{submission}/unpublish', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'unpublish'])->name('unpublish');
-            Route::get('/issues', [\App\Http\Controllers\Journal\ProductionWorkflowController::class, 'getIssues'])->name('issues.list');
-
+            Route::post('/{submission}/galley', [ProductionWorkflowController::class, 'storeGalley'])->name('galley.store');
+            Route::put('/{submission}/galley/{galley}', [ProductionWorkflowController::class, 'updateGalley'])->name('galley.update');
+            Route::delete('/{submission}/galley/{galley}', [ProductionWorkflowController::class, 'destroyGalley'])->name('galley.destroy');
+            Route::post('/{submission}/assign-issue', [ProductionWorkflowController::class, 'assignToIssue'])->name('assign-issue');
+            Route::post('/{submission}/unschedule', [ProductionWorkflowController::class, 'unschedule'])->name('unschedule');
+            Route::post('/{submission}/publish', [ProductionWorkflowController::class, 'publish'])->name('publish');
+            Route::post('/{submission}/unpublish', [ProductionWorkflowController::class, 'unpublish'])->name('unpublish');
+            Route::get('/issues', [ProductionWorkflowController::class, 'getIssues'])->name('issues.list');
             // Publication Metadata Routes
             Route::prefix('{submission}/publication')->name('publication.')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Journal\PublicationController::class, 'show'])->name('show');
-                Route::post('/title', [\App\Http\Controllers\Journal\PublicationController::class, 'updateTitleAbstract'])->name('title.update');
-                Route::post('/metadata', [\App\Http\Controllers\Journal\PublicationController::class, 'updateMetadata'])->name('metadata.update');
-                Route::post('/references', [\App\Http\Controllers\Journal\PublicationController::class, 'updateReferences'])->name('references.update');
-                Route::post('/license', [\App\Http\Controllers\Journal\PublicationController::class, 'updateLicense'])->name('license.update');
-                Route::post('/issue', [\App\Http\Controllers\Journal\PublicationController::class, 'assignIssue'])->name('issue.assign');
-                Route::post('/unschedule', [\App\Http\Controllers\Journal\PublicationController::class, 'unschedule'])->name('unschedule');
-                Route::post('/publish', [\App\Http\Controllers\Journal\PublicationController::class, 'publish'])->name('publish');
-                Route::post('/unpublish', [\App\Http\Controllers\Journal\PublicationController::class, 'unpublish'])->name('unpublish');
-
+                Route::get('/', [PublicationController::class, 'show'])->name('show');
+                Route::post('/title', [PublicationController::class, 'updateTitleAbstract'])->name('title.update');
+                Route::post('/metadata', [PublicationController::class, 'updateMetadata'])->name('metadata.update');
+                Route::post('/references', [PublicationController::class, 'updateReferences'])->name('references.update');
+                Route::post('/license', [PublicationController::class, 'updateLicense'])->name('license.update');
+                Route::post('/issue', [PublicationController::class, 'assignIssue'])->name('issue.assign');
+                Route::post('/unschedule', [PublicationController::class, 'unschedule'])->name('unschedule');
+                Route::post('/publish', [PublicationController::class, 'publish'])->name('publish');
+                Route::post('/unpublish', [PublicationController::class, 'unpublish'])->name('unpublish');
                 // Contributors
-                Route::post('/contributor', [\App\Http\Controllers\Journal\PublicationController::class, 'storeContributor'])->name('contributor.store');
-                Route::put('/contributor/{author}', [\App\Http\Controllers\Journal\PublicationController::class, 'updateContributor'])->name('contributor.update');
-                Route::delete('/contributor/{author}', [\App\Http\Controllers\Journal\PublicationController::class, 'destroyContributor'])->name('contributor.destroy');
-                Route::post('/contributors/reorder', [\App\Http\Controllers\Journal\PublicationController::class, 'reorderContributors'])->name('contributors.reorder');
+                Route::post('/contributor', [PublicationController::class, 'storeContributor'])->name('contributor.store');
+                Route::put('/contributor/{author}', [PublicationController::class, 'updateContributor'])->name('contributor.update');
+                Route::delete('/contributor/{author}', [PublicationController::class, 'destroyContributor'])->name('contributor.destroy');
+                Route::post('/contributors/reorder', [PublicationController::class, 'reorderContributors'])->name('contributors.reorder');
+                // DOI Routes
+                Route::post('/doi/assign', [PublicationController::class, 'assignDoi'])->name('doi.assign');
+                Route::post('/doi/clear', [PublicationController::class, 'clearDoi'])->name('doi.clear');
+                Route::post('/doi/suffix', [PublicationController::class, 'updateDoiSuffix'])->name('doi.suffix');
+                Route::get('/sections', [PublicationController::class, 'getSections'])->name('sections.list');
             });
-            Route::get('/sections', [\App\Http\Controllers\Journal\PublicationController::class, 'getSections'])->name('sections.list');
         });
-
         // --------- Editorial (Editor) ---------
         Route::prefix('editorial')->name('journal.editorial.')->middleware('role:Editor|Admin|Super Admin')->group(function () {
             Route::get('/queue', [EditorialController::class, 'queue'])->name('queue');
@@ -455,7 +340,6 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/{submission}/reject', [EditorialController::class, 'reject'])->name('reject');
             Route::post('/{submission}/revision', [EditorialController::class, 'requestRevision'])->name('revision');
         });
-
         // --------- Issues (Editor) ---------
         Route::middleware('role:Editor|Admin|Super Admin')->group(function () {
             Route::resource('issues', IssueController::class)->names([
@@ -472,7 +356,6 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/issues/{issue}/add-articles', [IssueController::class, 'addArticles'])->name('journal.issues.add-articles');
             Route::delete('/issues/{issue}/remove-article/{submission}', [IssueController::class, 'removeArticle'])->name('journal.issues.remove-article');
         });
-
         // --------- Reviewer Workflow ---------
         Route::prefix('reviewer')->name('journal.reviewer.')->middleware('role:Reviewer|Editor|Admin|Super Admin')->group(function () {
             Route::get('/', [ReviewerController::class, 'index'])->name('index');
@@ -481,7 +364,6 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/{assignment}/decline', [ReviewerController::class, 'decline'])->name('decline');
             Route::post('/{assignment}/submit', [ReviewerController::class, 'submit'])->name('submit');
         });
-
         // --------- Editor Decision Workflow ---------
         Route::prefix('editor')->name('journal.editor.')->middleware('role:Editor|Admin|Super Admin')->group(function () {
             Route::get('/submission/{submission}', [EditorDecisionController::class, 'show'])->name('show');
@@ -490,7 +372,6 @@ Route::prefix('{journal}')->group(function () {
             Route::post('/submission/{submission}/decision', [EditorDecisionController::class, 'recordDecision'])->name('decision');
             Route::post('/submission/{submission}/send-to-review', [EditorDecisionController::class, 'sendToReview'])->name('send-to-review');
         });
-
         // --------- Announcements (Manager Level) ---------
         Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')->prefix('announcements')->name('journal.announcements.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Journal\AnnouncementController::class, 'index'])->name('index');
@@ -500,54 +381,44 @@ Route::prefix('{journal}')->group(function () {
             Route::delete('/{announcement}', [\App\Http\Controllers\Journal\AnnouncementController::class, 'destroy'])->name('destroy');
             Route::post('/{announcement}/toggle', [\App\Http\Controllers\Journal\AnnouncementController::class, 'toggleActive'])->name('toggle');
         });
-
         // --------- Journal Settings (Manager Level) ---------
         Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')->prefix('settings')->name('journal.settings.')->group(function () {
             Route::get('/', [JournalController::class, 'settings'])->name('index');
             Route::put('/', [JournalController::class, 'updateSettings'])->name('update');
-
             // Sections CRUD
             Route::post('/sections', [SectionController::class, 'store'])->name('sections.store');
             Route::put('/sections/{section}', [SectionController::class, 'update'])->name('sections.update');
             Route::delete('/sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy');
-
             // Categories CRUD
             Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
             Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
             Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-
             // Workflow Settings
             Route::prefix('workflow')->name('workflow.')->group(function () {
                 Route::get('/', [WorkflowSettingsController::class, 'index'])->name('index');
                 Route::put('/', [WorkflowSettingsController::class, 'updateSettings'])->name('update');
-
                 // Submission Checklists
                 Route::post('/checklists', [WorkflowSettingsController::class, 'storeChecklist'])->name('checklists.store');
                 Route::put('/checklists/{checklist}', [WorkflowSettingsController::class, 'updateChecklist'])->name('checklists.update');
                 Route::delete('/checklists/{checklist}', [WorkflowSettingsController::class, 'destroyChecklist'])->name('checklists.destroy');
-
                 // Review Forms
                 Route::post('/review-forms', [WorkflowSettingsController::class, 'storeReviewForm'])->name('review-forms.store');
                 Route::put('/review-forms/{reviewForm}', [WorkflowSettingsController::class, 'updateReviewForm'])->name('review-forms.update');
                 Route::delete('/review-forms/{reviewForm}', [WorkflowSettingsController::class, 'destroyReviewForm'])->name('review-forms.destroy');
-
                 // Library Files
                 Route::post('/library', [WorkflowSettingsController::class, 'storeLibraryFile'])->name('library.store');
                 Route::get('/library/{libraryFile}/download', [WorkflowSettingsController::class, 'downloadLibraryFile'])->name('library.download');
                 Route::delete('/library/{libraryFile}', [WorkflowSettingsController::class, 'destroyLibraryFile'])->name('library.destroy');
-
                 // Email Templates
                 Route::put('/email-templates/{emailTemplate}', [WorkflowSettingsController::class, 'updateEmailTemplate'])->name('email-templates.update');
                 Route::post('/email-templates/{emailTemplate}/toggle', [WorkflowSettingsController::class, 'toggleEmailTemplate'])->name('email-templates.toggle');
                 Route::post('/email-templates/{emailTemplate}/reset', [WorkflowSettingsController::class, 'resetEmailTemplate'])->name('email-templates.reset');
             });
-
             // Distribution Settings
             Route::controller(\App\Http\Controllers\Admin\DistributionSettingsController::class)->prefix('distribution')->name('distribution.')->group(function () {
                 Route::get('/', 'edit')->name('edit');
                 Route::put('/', 'update')->name('update');
             });
-
             // Website Settings (Homepage Customization)
             Route::controller(WebsiteSettingsController::class)->prefix('website')->name('website.')->group(function () {
                 Route::get('/', 'edit')->name('edit');
@@ -555,7 +426,13 @@ Route::prefix('{journal}')->group(function () {
                 Route::delete('/indexed-image', 'deleteIndexedImage')->name('indexed-image.delete');
                 Route::delete('/favicon', 'deleteFavicon')->name('favicon.delete');
             });
-
+            // DOI Settings (OJS 3.3 DOI Plugin)
+            Route::controller(\App\Http\Controllers\Journal\DoiSettingsController::class)->prefix('doi')->name('doi.')->group(function () {
+                Route::get('/', 'edit')->name('edit');
+                Route::put('/', 'update')->name('update');
+                Route::post('/reassign', 'reassign')->name('reassign');
+                Route::post('/preview', 'preview')->name('preview');
+            });
             // Navigation Menu Manager
             Route::controller(\App\Http\Controllers\Journal\NavigationController::class)->prefix('navigation')->name('navigation.')->group(function () {
                 Route::get('/', 'index')->name('index');
@@ -576,7 +453,6 @@ Route::prefix('{journal}')->group(function () {
                 Route::post('/move-down/{assignment}', 'moveDown')->name('move-down');
                 Route::post('/reorder', 'reorderItems')->name('reorder');
             });
-
             // Sidebar Block Manager
             Route::controller(\App\Http\Controllers\Journal\SidebarController::class)->prefix('sidebar')->name('sidebar.')->group(function () {
                 Route::get('/', 'index')->name('index');
@@ -588,7 +464,6 @@ Route::prefix('{journal}')->group(function () {
                 Route::post('/system-block', 'addSystemBlock')->name('system-block');
             });
         });
-
         // --------- Journal Admin Routes ---------
         Route::prefix('admin')->name('journal.admin.')->middleware('role:Admin|Super Admin')->group(function () {
             // User Management (New Journal Manager Dashboard)
@@ -608,7 +483,6 @@ Route::prefix('{journal}')->group(function () {
                 Route::post('/{user}/email', 'email')->name('email');
                 Route::get('/{user}/merge', 'merge')->name('merge');
                 Route::post('/{user}/merge', 'executeMerge')->name('execute-merge');
-
                 // 2. Roles
                 Route::get('/roles', 'roles')->name('roles');
                 Route::get('/roles/create', 'createRole')->name('roles.create');
@@ -618,21 +492,17 @@ Route::prefix('{journal}')->group(function () {
                 Route::delete('/roles/{role}', 'destroyRole')->name('roles.destroy');
                 Route::post('/roles/{role}/reset', 'resetRolePermissions')->name('roles.reset');
                 Route::post('/roles/{role}/toggle-permission', 'updateRolePermission')->name('roles.toggle-permission');
-
                 // 3. Site Access Options
                 Route::get('/access', 'access')->name('access');
                 Route::post('/access', 'updateAccess')->name('access.update');
-
                 // 4. Notify Users (Bulk Email)
                 Route::get('/notify', 'notify')->name('notify');
                 Route::post('/notify', 'sendNotification')->name('notify.send');
             });
-
             // Journal Settings
             Route::get('/settings', [JournalController::class, 'edit'])->name('settings');
             Route::put('/settings', [JournalController::class, 'update'])->name('settings.update');
             Route::post('/settings/options', [JournalController::class, 'updateSettings'])->name('settings.options');
-
             // Sections
             Route::resource('sections', SectionController::class)->names([
                 'index' => 'sections.index',

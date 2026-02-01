@@ -17,7 +17,8 @@
             </div>
 
             <!-- Search Form -->
-            <form action="{{ route('journal.public.search', ['journal' => $journal->slug]) }}" method="GET" class="space-y-4">
+            <form action="{{ route('journal.public.search', ['journal' => $journal->slug]) }}" method="GET"
+                class="space-y-4">
                 <!-- Main Search Input -->
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
@@ -144,7 +145,8 @@
                                         <!-- Title -->
                                         <h3
                                             class="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition-colors mb-2">
-                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'submission' => $article]) }}">
+                                            <a
+                                                href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}">
                                                 {{ $article->title }}
                                             </a>
                                         </h3>
@@ -183,7 +185,7 @@
 
                                         <!-- Actions -->
                                         <div class="flex items-center gap-4">
-                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'submission' => $article]) }}"
+                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
                                                 class="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
                                                 View Details
                                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
@@ -194,7 +196,7 @@
                                             </a>
 
                                             @if ($article->files->where('file_type', 'galley')->count() > 0)
-                                                <a href="{{ route('journal.public.article.reader', ['journal' => $journal->slug, 'submission' => $article]) }}"
+                                                <a href="{{ route('journal.public.article.reader', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
                                                     class="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -206,11 +208,14 @@
                                                 </a>
                                             @endif
 
-                                            @if ($article->doi)
-                                                <a href="https://doi.org/{{ $article->doi }}" target="_blank"
+                                            @php
+                                                $doi = $article->currentPublication->doi ?? $article->doi;
+                                            @endphp
+                                            @if ($doi)
+                                                <a href="https://doi.org/{{ $doi }}" target="_blank"
                                                     class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
                                                     <span class="font-medium">DOI:</span>
-                                                    <span class="ml-1">{{ $article->doi }}</span>
+                                                    <span class="ml-1">{{ $doi }}</span>
                                                 </a>
                                             @endif
                                         </div>
