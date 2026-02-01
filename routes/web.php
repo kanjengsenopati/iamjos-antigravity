@@ -489,6 +489,16 @@ Route::prefix('{journal}')->group(function () {
                     Route::get('/users', 'index')->name('users');
                     Route::get('/users/data', 'getData')->name('users.data');
                 });
+
+            // Statistics Dashboard - Report Generator
+            Route::controller(\App\Http\Controllers\Admin\Reports\ReportController::class)
+                ->prefix('statistics')
+                ->name('statistics.')
+                ->group(function () {
+                    Route::get('/reports', 'index')->name('reports');
+                    Route::post('/reports/preview', 'preview')->name('reports.preview');
+                    Route::post('/reports/export', 'export')->name('reports.export');
+                });
         });
         // --------- Journal Admin Routes ---------
         Route::prefix('admin')->name('journal.admin.')->middleware('role:Admin|Super Admin')->group(function () {
