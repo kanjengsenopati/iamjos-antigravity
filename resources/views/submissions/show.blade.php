@@ -3087,9 +3087,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.issue.assign', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                            method="POST" enctype="multipart/form-data" class="p-6 space-y-5">
+                            method="POST" enctype="multipart/form-data" class="p-6">
                             @csrf
-
+                            <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Issue <span
@@ -3224,11 +3224,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <div></div>
                                 @endif
                                 <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-calendar-check mr-2"></i>
                                     {{ $publication->issue_id ? 'Update Schedule' : 'Schedule' }}
                                 </button>
                             </div>
+                            </fieldset>
                         </form>
                     </div>
 
@@ -3352,7 +3353,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             </div>
                             @role('Editor|Section Editor|Admin|Super Admin')
                                 <button @click="openAddGalley()"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors">
+                                    @if ($pubStatus == 3) disabled @endif
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-plus mr-2"></i> Add Galley
                                 </button>
                             @endrole
@@ -3449,7 +3451,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 'url_remote' => $galley->url_remote,
                                                                 'is_remote' => $galley->is_remote,
                                                             ]) }})"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                                            @if ($pubStatus == 3) disabled @endif
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Edit">
                                                             <i class="fa-solid fa-pen"></i>
                                                         </button>
@@ -3460,7 +3463,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit"
-                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                                @if ($pubStatus == 3) disabled @endif
+                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                                 title="Delete">
                                                                 <i class="fa-solid fa-trash"></i>
                                                             </button>
@@ -3484,7 +3488,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         EPUB files so readers can access the article.</p>
                                                     @role('Editor|Section Editor|Admin|Super Admin')
                                                         <button @click="openAddGalley()"
-                                                            class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                                                            @if ($pubStatus == 3) disabled @endif
+                                                            class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                                             <i class="fa-solid fa-plus mr-2"></i> Add your first galley
                                                         </button>
                                                     @endrole
@@ -3794,8 +3799,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.license.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                            method="POST" class="p-6 space-y-5">
+                            method="POST" class="p-6">
                             @csrf
+                            <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
@@ -3828,10 +3834,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                             <div class="flex justify-end pt-4 border-t border-gray-100">
                                 <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-save mr-2"></i> Save
                                 </button>
                             </div>
+                            </fieldset>
                         </form>
                     </div>
 
@@ -3931,7 +3938,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                     {{-- Assign Button (shown when no DOI) --}}
                                     <button type="button" x-show="!currentDoi" @click="assignDoi()"
-                                        :disabled="isAssigning || !doiEnabled"
+                                        :disabled="isAssigning || !doiEnabled || {{ $pubStatus == 3 ? 'true' : 'false' }}"
                                         class="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
                                         <template x-if="isAssigning">
                                             <i class="fa-solid fa-spinner fa-spin mr-2"></i>
@@ -3944,7 +3951,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                     {{-- Clear Button (shown when DOI exists) --}}
                                     <button type="button" x-show="currentDoi" @click="clearDoi()"
-                                        :disabled="isClearing"
+                                        :disabled="isClearing || {{ $pubStatus == 3 ? 'true' : 'false' }}"
                                         class="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
                                         <template x-if="isClearing">
                                             <i class="fa-solid fa-spinner fa-spin mr-2"></i>
