@@ -911,24 +911,57 @@
                             class="flex items-center gap-3 p-1.5 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 
                             <!-- Avatar -->
-                            <div
-                                class="relative w-9 h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-white group-hover:ring-gray-200 transition-all">
-                                @if (Auth::user()->profile_photo_path)
-                                    <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
-                                        alt="{{ Auth::user()->name }}" class="w-full h-full object-cover bg-gray-100"
-                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <!-- Fallback if Image Fails to Load -->
+                            @if (session()->has('impersonator_id'))
+                                {{-- Impersonation Mode: Two Icons --}}
+                                <div class="relative w-11 h-9">
+                                    {{-- Icon 1: The "Mask" / Admin behind --}}
                                     <div
-                                        class="hidden absolute inset-0 bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                        class="absolute top-0 left-0 w-7 h-7 rounded-full bg-gray-800 border-2 border-white flex items-center justify-center text-gray-200 shadow-sm z-10">
+                                        <i class="fa-solid fa-user-secret text-[10px]"></i>
                                     </div>
-                                @else
+
+                                    {{-- Icon 2: The User being impersonated (front) --}}
                                     <div
-                                        class="w-full h-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                        class="absolute bottom-0 right-0 w-7 h-7 rounded-full overflow-hidden border-2 border-white shadow-md z-20">
+                                        @if (Auth::user()->profile_photo_path)
+                                            <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                                alt="{{ Auth::user()->name }}"
+                                                class="w-full h-full object-cover bg-gray-100"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div
+                                                class="hidden w-full h-full bg-primary-600 flex items-center justify-center text-white font-bold text-[10px]">
+                                                {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                            </div>
+                                        @else
+                                            <div
+                                                class="w-full h-full bg-primary-600 flex items-center justify-center text-white font-bold text-[10px]">
+                                                {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                            </div>
+                                        @endif
                                     </div>
-                                @endif
-                            </div>
+                                </div>
+                            @else
+                                {{-- Standard Mode: Single Avatar --}}
+                                <div
+                                    class="relative w-9 h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-white group-hover:ring-gray-200 transition-all">
+                                    @if (Auth::user()->profile_photo_path)
+                                        <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                            alt="{{ Auth::user()->name }}"
+                                            class="w-full h-full object-cover bg-gray-100"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <!-- Fallback if Image Fails to Load -->
+                                        <div
+                                            class="hidden absolute inset-0 bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                                            {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                        </div>
+                                    @else
+                                        <div
+                                            class="w-full h-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                                            {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
 
                             <!-- Name & Role (Hidden on mobile) -->
                             <div class="hidden sm:block text-left pr-2">
