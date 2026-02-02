@@ -2806,13 +2806,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                     {{-- WARNING: PUBLISHED --}}
                     @if ($pubStatus == 3)
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg shadow-sm">
+                        <div class="bg-red-600 border-l-4 border-red-800 p-4 mb-6 rounded-r-lg shadow-sm">
                             <div class="flex">
                                 <div class="flex-shrink-0">
-                                    <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-lg"></i>
+                                    <i class="fa-solid fa-triangle-exclamation text-white text-lg"></i>
                                 </div>
                                 <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">
+                                    <p class="text-sm text-white">
                                         <span class="font-bold block mb-0.5">This version has been published and can
                                             not be edited.</span>
                                         You must unpublish this version before making any changes.
@@ -3090,145 +3090,147 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             method="POST" enctype="multipart/form-data" class="p-6">
                             @csrf
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Issue <span
-                                            class="text-red-500">*</span></label>
-                                    <template x-if="isLoadingIssues">
-                                        <div class="flex items-center py-2 text-sm text-gray-500">
-                                            <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
-                                        </div>
-                                    </template>
-                                    <template x-if="!isLoadingIssues">
-                                        <select name="issue_id" required
-                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                            <option value="">-- Select Issue --</option>
-                                            <template x-for="issue in issues" :key="issue.id">
-                                                <option :value="issue.id"
-                                                    :selected="issue.id === '{{ $publication->issue_id ?? '' }}'"
-                                                    x-text="issue.label">
-                                                </option>
-                                            </template>
-                                        </select>
-                                    </template>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
-                                    <template x-if="isLoadingSections">
-                                        <div class="flex items-center py-2 text-sm text-gray-500">
-                                            <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
-                                        </div>
-                                    </template>
-                                    <template x-if="!isLoadingSections">
-                                        <select name="section_id"
-                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                            <option value="">-- Select Section --</option>
-                                            <template x-for="section in sections" :key="section.id">
-                                                <option :value="section.id"
-                                                    :selected="section
-                                                        .id ==
-                                                        '{{ $publication->section_id ?? ($submission->section_id ?? '') }}'"
-                                                    x-text="section.name"></option>
-                                            </template>
-                                        </select>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Pages</label>
-                                    <input type="text" name="pages"
-                                        value="{{ old('pages', $publication->pages ?? '') }}"
-                                        placeholder="e.g., 1-12"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date
-                                        Published</label>
-                                    <input type="date" name="date_published"
-                                        value="{{ old('date_published', $publication->date_published?->format('Y-m-d') ?? '') }}"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                            </div>
-
-                            {{-- URL Path & Cover Image --}}
-                            <div class="grid grid-cols-1 gap-5">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">URL Path <span
-                                            class="text-gray-400 font-normal">(Optional)</span></label>
-                                    <div class="flex items-center">
-                                        <span
-                                            class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm h-[42px]">
-                                            /article/
-                                        </span>
-                                        <input type="text" name="url_path"
-                                            value="{{ old('url_path', $publication->url_path ?? '') }}"
-                                            placeholder="custom-slug"
-                                            class="flex-1 rounded-r-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Issue <span
+                                                class="text-red-500">*</span></label>
+                                        <template x-if="isLoadingIssues">
+                                            <div class="flex items-center py-2 text-sm text-gray-500">
+                                                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
+                                            </div>
+                                        </template>
+                                        <template x-if="!isLoadingIssues">
+                                            <select name="issue_id" required
+                                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                <option value="">-- Select Issue --</option>
+                                                <template x-for="issue in issues" :key="issue.id">
+                                                    <option :value="issue.id"
+                                                        :selected="issue.id === '{{ $publication->issue_id ?? '' }}'"
+                                                        x-text="issue.label">
+                                                    </option>
+                                                </template>
+                                            </select>
+                                        </template>
                                     </div>
-                                    <p class="mt-1 text-xs text-gray-500">An optional path to use in the URL instead
-                                        of the ID.</p>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                                        <template x-if="isLoadingSections">
+                                            <div class="flex items-center py-2 text-sm text-gray-500">
+                                                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
+                                            </div>
+                                        </template>
+                                        <template x-if="!isLoadingSections">
+                                            <select name="section_id"
+                                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                <option value="">-- Select Section --</option>
+                                                <template x-for="section in sections" :key="section.id">
+                                                    <option :value="section.id"
+                                                        :selected="section
+                                                            .id ==
+                                                            '{{ $publication->section_id ?? ($submission->section_id ?? '') }}'"
+                                                        x-text="section.name"></option>
+                                                </template>
+                                            </select>
+                                        </template>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Pages</label>
+                                        <input type="text" name="pages"
+                                            value="{{ old('pages', $publication->pages ?? '') }}"
+                                            placeholder="e.g., 1-12"
+                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
 
-                                    @if ($publication->cover_image_path)
-                                        <div class="mb-3 flex items-start gap-4 p-3 bg-gray-50 border rounded-lg">
-                                            <img src="{{ Storage::url($publication->cover_image_path) }}"
-                                                alt="Cover Image"
-                                                class="h-20 w-auto rounded shadow-sm object-cover">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Date
+                                            Published</label>
+                                        <input type="date" name="date_published"
+                                            value="{{ old('date_published', $publication->date_published?->format('Y-m-d') ?? '') }}"
+                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                </div>
+
+                                {{-- URL Path & Cover Image --}}
+                                <div class="grid grid-cols-1 gap-5">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">URL Path <span
+                                                class="text-gray-400 font-normal">(Optional)</span></label>
+                                        <div class="flex items-center">
+                                            <span
+                                                class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm h-[42px]">
+                                                /article/
+                                            </span>
+                                            <input type="text" name="url_path"
+                                                value="{{ old('url_path', $publication->url_path ?? '') }}"
+                                                placeholder="custom-slug"
+                                                class="flex-1 rounded-r-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                        </div>
+                                        <p class="mt-1 text-xs text-gray-500">An optional path to use in the URL
+                                            instead
+                                            of the ID.</p>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Cover
+                                            Image</label>
+
+                                        @if ($publication->cover_image_path)
+                                            <div class="mb-3 flex items-start gap-4 p-3 bg-gray-50 border rounded-lg">
+                                                <img src="{{ Storage::url($publication->cover_image_path) }}"
+                                                    alt="Cover Image"
+                                                    class="h-20 w-auto rounded shadow-sm object-cover">
+                                                <div>
+                                                    <div class="text-sm font-medium text-gray-900">Current Cover</div>
+                                                    <div class="text-xs text-gray-500 mt-0.5">Upload a new image to
+                                                        replace.</div>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        <input type="file" name="cover_image" accept="image/*"
+                                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-colors">
+                                        <p class="mt-1 text-xs text-gray-500">Formats: JPG, PNG, WEBP.</p>
+                                    </div>
+                                </div>
+
+                                @if ($publication->issue_id)
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div class="flex items-center">
+                                            <i class="fa-solid fa-calendar-check text-blue-500 mr-3"></i>
                                             <div>
-                                                <div class="text-sm font-medium text-gray-900">Current Cover</div>
-                                                <div class="text-xs text-gray-500 mt-0.5">Upload a new image to
-                                                    replace.</div>
+                                                <p class="text-sm font-medium text-blue-800">Currently Scheduled</p>
+                                                <p class="text-xs text-blue-600">
+                                                    {{ $publication->issue->identifier ?? 'Unknown Issue' }}
+                                                </p>
                                             </div>
                                         </div>
-                                    @endif
-
-                                    <input type="file" name="cover_image" accept="image/*"
-                                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-colors">
-                                    <p class="mt-1 text-xs text-gray-500">Formats: JPG, PNG, WEBP.</p>
-                                </div>
-                            </div>
-
-                            @if ($publication->issue_id)
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <div class="flex items-center">
-                                        <i class="fa-solid fa-calendar-check text-blue-500 mr-3"></i>
-                                        <div>
-                                            <p class="text-sm font-medium text-blue-800">Currently Scheduled</p>
-                                            <p class="text-xs text-blue-600">
-                                                {{ $publication->issue->identifier ?? 'Unknown Issue' }}
-                                            </p>
-                                        </div>
                                     </div>
-                                </div>
-                            @endif
-
-                            <div class="flex justify-between pt-4 border-t border-gray-100">
-                                @if ($publication->issue_id)
-                                    <form
-                                        action="{{ route('journal.workflow.publication.unschedule', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                                        method="POST">
-                                        @csrf
-                                        <button type="submit"
-                                            class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-600 bg-white hover:bg-gray-50">
-                                            <i class="fa-solid fa-calendar-xmark mr-2"></i> Unschedule
-                                        </button>
-                                    </form>
-                                @else
-                                    <div></div>
                                 @endif
-                                <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fa-solid fa-calendar-check mr-2"></i>
-                                    {{ $publication->issue_id ? 'Update Schedule' : 'Schedule' }}
-                                </button>
-                            </div>
+
+                                <div class="flex justify-between pt-4 border-t border-gray-100">
+                                    @if ($publication->issue_id)
+                                        <form
+                                            action="{{ route('journal.workflow.publication.unschedule', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-600 bg-white hover:bg-gray-50">
+                                                <i class="fa-solid fa-calendar-xmark mr-2"></i> Unschedule
+                                            </button>
+                                        </form>
+                                    @else
+                                        <div></div>
+                                    @endif
+                                    <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-calendar-check mr-2"></i>
+                                        {{ $publication->issue_id ? 'Update Schedule' : 'Schedule' }}
+                                    </button>
+                                </div>
                             </fieldset>
                         </form>
                     </div>
@@ -3352,8 +3354,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     HTML, EPUB).</p>
                             </div>
                             @role('Editor|Section Editor|Admin|Super Admin')
-                                <button @click="openAddGalley()"
-                                    @if ($pubStatus == 3) disabled @endif
+                                <button @click="openAddGalley()" @if ($pubStatus == 3) disabled @endif
                                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-plus mr-2"></i> Add Galley
                                 </button>
@@ -3802,42 +3803,42 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             method="POST" class="p-6">
                             @csrf
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
+                                            Holder</label>
+                                        <input type="text" name="copyright_holder"
+                                            value="{{ old('copyright_holder', $publication->copyright_holder ?? '') }}"
+                                            placeholder="e.g., The Author(s)"
+                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
+                                            Year</label>
+                                        <input type="number" name="copyright_year"
+                                            value="{{ old('copyright_year', $publication->copyright_year ?? date('Y')) }}"
+                                            min="1900" max="2100"
+                                            class="block w-32 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
-                                        Holder</label>
-                                    <input type="text" name="copyright_holder"
-                                        value="{{ old('copyright_holder', $publication->copyright_holder ?? '') }}"
-                                        placeholder="e.g., The Author(s)"
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">License URL</label>
+                                    <input type="url" name="license_url"
+                                        value="{{ old('license_url', $publication->license_url ?? '') }}"
+                                        placeholder="https://creativecommons.org/licenses/by/4.0/"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <p class="mt-1 text-xs text-gray-500">Common licenses: CC BY 4.0, CC BY-SA 4.0, CC
+                                        BY-NC 4.0</p>
                                 </div>
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
-                                        Year</label>
-                                    <input type="number" name="copyright_year"
-                                        value="{{ old('copyright_year', $publication->copyright_year ?? date('Y')) }}"
-                                        min="1900" max="2100"
-                                        class="block w-32 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <div class="flex justify-end pt-4 border-t border-gray-100">
+                                    <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-save mr-2"></i> Save
+                                    </button>
                                 </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">License URL</label>
-                                <input type="url" name="license_url"
-                                    value="{{ old('license_url', $publication->license_url ?? '') }}"
-                                    placeholder="https://creativecommons.org/licenses/by/4.0/"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                <p class="mt-1 text-xs text-gray-500">Common licenses: CC BY 4.0, CC BY-SA 4.0, CC
-                                    BY-NC 4.0</p>
-                            </div>
-
-                            <div class="flex justify-end pt-4 border-t border-gray-100">
-                                <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fa-solid fa-save mr-2"></i> Save
-                                </button>
-                            </div>
                             </fieldset>
                         </form>
                     </div>
