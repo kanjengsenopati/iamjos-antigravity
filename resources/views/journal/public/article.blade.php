@@ -420,7 +420,28 @@
                         References
                     </h3>
                     <div class="prose prose-sm max-w-none text-slate-600 text-sm leading-relaxed">
-                        {!! nl2br(e($references)) !!}
+                        @php
+                            $safeReferences = e($references);
+                            $linkedReferences = preg_replace_callback(
+                                '/(https?:\/\/[^\s]+)/',
+                                function ($matches) {
+                                    $url = $matches[1];
+                                    $trailing = '';
+                                    if (preg_match('/[.,;]$/', $url, $m)) {
+                                        $url = substr($url, 0, -1);
+                                        $trailing = $m[0];
+                                    }
+                                    return '<a href="' .
+                                        $url .
+                                        '" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">' .
+                                        $url .
+                                        '</a>' .
+                                        $trailing;
+                                },
+                                $safeReferences,
+                            );
+                        @endphp
+                        {!! nl2br($linkedReferences) !!}
                     </div>
                 </div>
             @endif
