@@ -57,6 +57,25 @@ class OaiController extends Controller
                 }
                 return $this->listIdentifiers($journal, $request);
 
+            case 'ListSets':
+                // Mockup Sets OJS Structure
+                // Set 1: Jurnal Utama (Root)
+                // Set 2: Kategori "Articles" (Sub-set)
+                $sets = [
+                    (object) [
+                        'spec' => strtoupper($journal->abbreviation ?? $journal->path), // Contoh: JCO
+                        'name' => $journal->name,
+                    ],
+                    (object) [
+                        'spec' => strtoupper($journal->abbreviation ?? $journal->path) . ':ART', // Contoh: JCO:ART
+                        'name' => 'Articles',
+                    ]
+                ];
+                
+                // Return as text/html for "Classic" view
+                return response()->view('journal.public.oai.list_sets', compact('journal', 'sets'))
+                    ->header('Content-Type', 'text/html; charset=utf-8');
+
             case 'GetRecord':
                 if (!$identifier) {
                     return $this->errorResponse($journal, 'badArgument', 'Missing identifier');
@@ -81,6 +100,7 @@ class OaiController extends Controller
             ->whereNotNull('publications.date_published')
             ->select(
                 'submissions.id', 
+                'submissions.slug',
                 'publications.date_published as pub_date'
             )
             ->orderBy('publications.date_published', 'desc')
@@ -91,7 +111,7 @@ class OaiController extends Controller
             'journal' => $journal,
             'records' => $records,
             'verb' => 'ListIdentifiers'
-        ])->header('Content-Type', 'text/xml');
+        ])->header('Content-Type', 'text/html; charset=utf-8');
     }
 
     private function identify($journal)
@@ -109,14 +129,14 @@ class OaiController extends Controller
             'journal' => $journal,
             'earliestDate' => $earliestDate->toIso8601String(),
             'baseUrl' => route('journal.oai', $journal->slug)
-        ])->header('Content-Type', 'text/xml');
+        ])->header('Content-Type', 'text/html; charset=utf-8');
     }
 
     private function listMetadataFormats($journal)
     {
         return response()->view('journal.public.oai.metadata_formats', [
             'journal' => $journal
-        ])->header('Content-Type', 'text/xml');
+        ])->header('Content-Type', 'text/html; charset=utf-8');
     }
 
     private function listRecords($journal, Request $request)
@@ -179,16 +199,18 @@ class OaiController extends Controller
         $viewName = 'journal.public.oai.formats.' . $prefix; 
         
         // Fallback for oai_dc (since it is in the parent folder public/oai/) 
-        // Note: Check if oai_marc needs mapping. If view is missing, this will error. 
         if ($prefix === 'oai_dc') {
             $viewName = 'journal.public.oai.list_records';
         }
 
+        // FIX: Serve HTML for oai_dc (browser view), XML for others
+        $contentType = ($prefix === 'oai_dc') ? 'text/html; charset=utf-8' : 'text/xml';
+
         return response()->view($viewName, [
             'journal' => $journal,
             'records' => $records,
-            'verb' => $request->input('verb') // Pass verb to toggle between ListRecords/ListIdentifiers view logic
-        ])->header('Content-Type', 'text/xml');
+            'verb' => $request->input('verb') 
+        ])->header('Content-Type', $contentType);
     }
 
     private function getRecord($journal, $identifier, $metadataPrefix = 'oai_dc')
