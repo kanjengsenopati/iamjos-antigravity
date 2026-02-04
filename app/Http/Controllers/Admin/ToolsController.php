@@ -97,7 +97,7 @@ class ToolsController extends Controller
                 'description' => 'Export article metadata in CrossRef XML format for DOI registration and citation linking.',
                 'icon' => 'link',
                 'color' => 'blue',
-                'route' => '#',
+                'route' => route('journal.settings.tools.crossref.index', ['journal' => current_journal()->slug]),
                 'available' => true,
             ],
             [

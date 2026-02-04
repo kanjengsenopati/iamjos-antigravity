@@ -526,6 +526,12 @@ Route::prefix('{journal}')->group(function () {
                     Route::post('/export/articles', 'exportArticles')->name('export.articles');
                     Route::post('/export/issues', 'exportIssues')->name('export.issues');
                 });
+
+            // Crossref XML Export (DOI Registration)
+            Route::prefix('tools/importexport/crossref')->name('tools.crossref.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'index'])->name('index');
+                Route::post('/download', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'export'])->name('download');
+            });
         });
         // --------- Journal Admin Routes ---------
         Route::prefix('admin')->name('journal.admin.')->middleware('role:Admin|Super Admin')->group(function () {
