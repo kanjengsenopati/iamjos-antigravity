@@ -42,25 +42,9 @@
 
                     {{-- Relation (PDF URL) --}}
                     @php
-                        // Try to load galleys if not already loaded (though controller logic usually handles this, single record might be different)
-                        // However, OaiController.getRecord hydrates manually.
-                        // We need to check if 'galleys' relation is available or if we can fetch it.
-                        // The existing OaiController getRecord fetches via join but only hydrates 'publication'.
-                        // Ideally we should eager load galleys or fetch them.
-                        // For GetRecord query in OaiController (Step 823), it uses With(['authors', 'issue', 'section']).
-                        // Galleys are NOT eager loaded. We should add them in controller too.
-                        // But view logic:
-                        if (!$record->relationLoaded('galleys')) {
-                            // Fallback if not loaded
-                            $pdf = \App\Models\SubmissionFile::where('submission_id', $record->id)
-                                ->where('file_stage', 2)
-                                ->first(); // Rough guess or
-                            $pdf = null;
-                        } else {
-                            $pdf = $record->galleys->where('file_type', 'application/pdf')->first();
-                        }
+                        $pdf = $record->galleys->first();
                     @endphp
-                    @if (isset($pdf) && $pdf)
+                    @if ($pdf)
                         <dc:relation>
                             {{ route('journal.article.galley', ['journal' => $journal->slug, 'article' => $record->slug ?? $record->id, 'galley' => $pdf->id]) }}
                         </dc:relation>

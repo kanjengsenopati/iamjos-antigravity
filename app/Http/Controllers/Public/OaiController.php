@@ -10,258 +10,219 @@ use Carbon\Carbon;
 
 class OaiController extends Controller
 {
-    public function handle(Request $request, $journalPath)
+    public function handle(Request $request)
     {
+        // 1. Resolve Journal (From Route Parameter)
+        $journalPath = $request->route('journal');
+        // Support journal slug or path logic from previous context
         $journal = Journal::where('slug', $journalPath)
             ->orWhere('path', $journalPath)
             ->firstOrFail();
-
+        
+        // 2. Ambil Parameter
         $verb = $request->input('verb');
+        $inputs = $request->all();
+        
+        // 3. Validasi Verb
         $validVerbs = ['Identify', 'ListRecords', 'ListSets', 'ListMetadataFormats', 'ListIdentifiers', 'GetRecord'];
-
-        // 1. Validate Verb
         if (!$verb || !in_array($verb, $validVerbs)) {
-            return $this->errorResponse($journal, 'badVerb', 'Illegal OAI verb');
+            return $this->oaiError('badVerb', 'Illegal OAI verb');
         }
 
-        // 2. Validate MetadataPrefix (Required for ListRecords, ListIdentifiers, GetRecord)
+        // 4. Cek Resumption Token (Eksklusivitas)
+        // Jika ada resumptionToken, tidak boleh ada parameter lain (selain verb)
+        // Note: inputs includes 'journal' route param usually? No, $request->all() typically is GET/POST params.
+        // But strictly check inputs from query string is safer.
+        // Assuming $inputs strictly contains query parameters.
+        if ($request->has('resumptionToken')) {
+            // Count arguments. verb + resumptionToken = 2.
+            $paramCount = count($request->query()); 
+            if ($paramCount > 2) { 
+                return $this->oaiError('badArgument', 'resumptionToken is an exclusive argument');
+            }
+            // Karena kita belum support token beneran, return error token invalid
+            return $this->oaiError('badResumptionToken', 'Invalid resumptionToken');
+        }
+
+        // 5. Validasi MetadataPrefix (Wajib untuk List/Get kecuali ada token)
         if (in_array($verb, ['ListRecords', 'ListIdentifiers', 'GetRecord'])) {
-            if (!$request->has('metadataPrefix') && !$request->has('resumptionToken')) {
-                // GetRecord specifically requires it if no resumptionToken (which we don't support yet, but good practice)
-                return $this->errorResponse($journal, 'badArgument', 'Missing metadataPrefix');
+            if (!$request->has('metadataPrefix')) {
+                return $this->oaiError('badArgument', 'Missing metadataPrefix');
             }
-            if ($request->has('metadataPrefix') && $request->input('metadataPrefix') !== 'oai_dc' && !in_array($request->input('metadataPrefix'), ['marcxml', 'rfc1807', 'oai_marc'])) {
-                return $this->errorResponse($journal, 'cannotDisseminateFormat', 'Format not supported');
-            }
-        }
-
-        // 3. Validate Identifier (For GetRecord & ListMetadataFormats check)
-        if ($verb === 'GetRecord') {
-            $identifier = $request->input('identifier');
-            if (!$identifier) {
-                return $this->errorResponse($journal, 'badArgument', 'Missing identifier');
+            if ($request->input('metadataPrefix') !== 'oai_dc') {
+                return $this->oaiError('cannotDisseminateFormat', 'Only oai_dc is supported');
             }
         }
 
+        // 6. Validasi Tanggal (from & until)
+        if ($request->has('from') || $request->has('until')) {
+            try {
+                if ($request->has('from')) {
+                    Carbon::parse($request->input('from'));
+                }
+                if ($request->has('until')) {
+                    Carbon::parse($request->input('until'));
+                }
+            } catch (\Exception $e) {
+                // Jika Carbon gagal parse (misal inputnya "junk"), return badArgument
+                return $this->oaiError('badArgument', 'Invalid date format');
+            }
+        }
+
+        // 7. Validasi Identifier (Untuk GetRecord & ListMetadataFormats)
+        if (in_array($verb, ['GetRecord', 'ListMetadataFormats'])) {
+            if ($verb === 'GetRecord' && !$request->has('identifier')) {
+                return $this->oaiError('badArgument', 'Missing identifier');
+            }
+            // ListMetadataFormats allows identifier to be optional.
+        }
+
+        // ===============================================
+        // DISPATCHER
+        // ===============================================
         switch ($verb) {
             case 'Identify':
-                return $this->identify($journal);
+                // Re-implement Identify Logic within Handle or call method? User wants handle method replacement.
+                // Logic based on previous Identify method but simplified:
+                $earliestDate = Submission::where('journal_id', $journal->id)
+                    ->where('status', Submission::STATUS_PUBLISHED)
+                    ->min('updated_at'); // Using updated_at as datestamp basis, or publication date? OAI usually datestamp.
+                
+                // Fallback to publication date if we need specifically that, but user prompt used 'updated_at' for records.
+                $earliestDate = $earliestDate ? Carbon::parse($earliestDate) : now();
+
+                return response()->view('journal.public.oai.identify', [
+                    'journal' => $journal,
+                    'earliestDate' => $earliestDate->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z'),
+                    'baseUrl' => route('journal.oai', $journal->slug)
+                ])->header('Content-Type', 'text/xml');
 
             case 'ListMetadataFormats':
-                return $this->listMetadataFormats($journal);
+                // Logic cek identifier existance jika ada param identifier
+                if ($request->has('identifier')) {
+                     $id = $this->extractId($request->input('identifier'));
+                     if (!$id) {
+                         return $this->oaiError('idDoesNotExist', 'Invalid identifier format');
+                     }
+                     // Support UUID & Slug
+                     $exists = Submission::where('journal_id', $journal->id)
+                        ->where(function($q) use ($id) {
+                            $q->where('id', $id)->orWhere('slug', $id);
+                        })->exists();
 
-            case 'ListRecords':
-                return $this->listRecords($journal, $request);
-
-            case 'ListIdentifiers':
-                return $this->listIdentifiers($journal, $request);
+                     if (!$exists) {
+                         return $this->oaiError('idDoesNotExist', 'The specified identifier does not exist');
+                     }
+                }
+                return response()->view('journal.public.oai.metadata_formats', compact('journal'))
+                    ->header('Content-Type', 'text/xml');
 
             case 'ListSets':
-                $sets = [
-                    (object) [
-                        'spec' => strtoupper($journal->abbreviation ?? $journal->path),
-                        'name' => $journal->name,
-                    ],
-                    (object) [
-                        'spec' => strtoupper($journal->abbreviation ?? $journal->path) . ':ART',
-                        'name' => 'Articles',
-                    ]
+                 // Logic Sets Dummy
+                 $sets = [
+                    (object)['spec' => strtoupper($journal->abbreviation ?? 'JRN'), 'name' => $journal->name],
+                    (object)['spec' => strtoupper($journal->abbreviation ?? 'JRN') . ':ART', 'name' => 'Articles']
                 ];
                 return response()->view('journal.public.oai.list_sets', compact('journal', 'sets'))
                     ->header('Content-Type', 'text/xml');
 
+            case 'ListIdentifiers':
+            case 'ListRecords':
+                // Query Filter Tanggal
+                $query = Submission::where('journal_id', $journal->id)
+                    ->where('status', Submission::STATUS_PUBLISHED);
+                
+                // Use updated_at for OAI datestamp filtering
+                if ($request->has('from')) {
+                    $query->where('updated_at', '>=', Carbon::parse($request->input('from')));
+                }
+                if ($request->has('until')) {
+                    $query->where('updated_at', '<=', Carbon::parse($request->input('until')));
+                }
+                
+                // Eager Load Relations to prevent N+1 and ensure view has data
+                $query->with(['publication', 'authors', 'issue', 'journal', 'galleys']);
+
+                $records = $query->orderBy('updated_at', 'desc')->take(100)->get();
+
+                if ($records->isEmpty()) {
+                    return $this->oaiError('noRecordsMatch', 'No records found');
+                }
+
+                // If ListIdentifiers, we pass 'verb' => 'ListIdentifiers' if view needs it (Step 813 view logic used it?)
+                // Step 841 view uses $url->current() and hardcoded verb in request tag. Good.
+                $view = ($verb === 'ListIdentifiers') ? 'journal.public.oai.list_identifiers' : 'journal.public.oai.list_records';
+                return response()->view($view, compact('records', 'journal', 'verb'))
+                    ->header('Content-Type', 'text/xml');
+
             case 'GetRecord':
-                $identifier = $request->input('identifier');
-                $metadataPrefix = $request->input('metadataPrefix');
-                return $this->getRecord($journal, $identifier, $metadataPrefix);
+                $id = $this->extractId($request->input('identifier'));
+                if (!$id) {
+                     return $this->oaiError('idDoesNotExist', 'Invalid identifier format');
+                }
 
-            default:
-                return $this->errorResponse($journal, 'badVerb', 'Illegal OAI verb');
+                $recordRaw = Submission::where('journal_id', $journal->id)
+                    ->where(function($q) use ($id) {
+                        $q->where('id', $id)->orWhere('slug', $id);
+                    })
+                    ->where('status', Submission::STATUS_PUBLISHED)
+                    ->with(['publication', 'authors', 'issue', 'journal', 'galleys']) // Eager load
+                    ->first();
+
+                if (!$recordRaw) {
+                    return $this->oaiError('idDoesNotExist', 'Identifier not found');
+                }
+                
+                // Naming consistency for view: $record or $submission?
+                // Step 863 view uses $record.
+                $record = $recordRaw;
+                return response()->view('journal.public.oai.get_record', compact('record', 'journal'))
+                    ->header('Content-Type', 'text/xml');
         }
     }
 
-    private function listIdentifiers($journal, Request $request)
-    {
-        $records = \App\Models\Submission::join('publications', 'submissions.id', '=', 'publications.submission_id')
-            ->where('submissions.journal_id', $journal->id)
-            ->where('submissions.status', Submission::STATUS_PUBLISHED)
-            ->whereNotNull('publications.date_published')
-            ->select(
-                'submissions.id', 
-                'submissions.slug',
-                'submissions.updated_at',
-                'publications.date_published as pub_date'
-            )
-            ->orderBy('publications.date_published', 'desc')
-            ->limit(100) 
-            ->get();
+    // --- HELPER METHODS ---
 
-        return response()->view('journal.public.oai.list_identifiers', [
-            'journal' => $journal,
-            'records' => $records,
-            'verb' => 'ListIdentifiers'
-        ])->header('Content-Type', 'text/xml');
+    private function extractId($oaiString) {
+        // format: oai:domain:article/ID or just ID?
+        // Standard OAI Identifier: oai:archive:id
+        if (!$oaiString) return null;
+        $parts = explode('/', $oaiString);
+        return end($parts);
     }
 
-    private function identify($journal)
+    private function oaiError($code, $message)
     {
-        $earliestDate = Submission::join('publications', 'submissions.id', '=', 'publications.submission_id')
-            ->where('submissions.journal_id', $journal->id)
-            ->where('submissions.status', Submission::STATUS_PUBLISHED)
-            ->whereNotNull('publications.date_published')
-            ->min('publications.date_published');
-            
-        $earliestDate = $earliestDate ? Carbon::parse($earliestDate) : now();
+        // 1. Ambil URL dasar tanpa parameter query
+        $baseUrl = url()->current(); 
+
+        // 2. Susun atribut request. HANYA masukkan yang aman/valid.
+        // PENTING: Gunakan htmlspecialchars untuk mencegah XML broken (invalid"id)
+        $requestAttributes = '';
+        $verb = request('verb');
+        if ($verb) {
+            $requestAttributes .= ' verb="' . htmlspecialchars($verb, ENT_QUOTES) . '"';
+        }
         
-        return response()->view('journal.public.oai.identify', [
-            'journal' => $journal,
-            'earliestDate' => $earliestDate->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z'), // UTC Fix
-            'baseUrl' => route('journal.oai', $journal->slug)
-        ])->header('Content-Type', 'text/xml');
-    }
-
-    private function listMetadataFormats($journal)
-    {
-        return response()->view('journal.public.oai.metadata_formats', [
-            'journal' => $journal
-        ])->header('Content-Type', 'text/xml'); // Fixed to text/xml
-    }
-
-    private function listRecords($journal, Request $request)
-    {
-        $prefix = $request->input('metadataPrefix');
-        
-        $records = Submission::join('publications', 'submissions.id', '=', 'publications.submission_id')
-            ->where('submissions.journal_id', $journal->id)
-            ->where('submissions.status', Submission::STATUS_PUBLISHED)
-            ->whereNotNull('publications.date_published')
-            ->select(
-                'submissions.*',
-                'publications.title as pub_title',
-                'publications.abstract as pub_abstract',
-                'publications.date_published as pub_date',
-                'publications.keywords as pub_keywords',
-                'publications.doi as pub_doi'
-            )
-            ->with(['authors', 'issue', 'section', 'galleys']) // Added galleys for PDF links
-            ->orderBy('publications.date_published', 'desc')
-            ->limit(100)
-            ->get();
-
-        $records->transform(function ($submission) {
-            $pub = new \App\Models\Publication();
-            $pub->title = $submission->pub_title;
-            $pub->abstract = $submission->pub_abstract;
-            $pub->date_published = $submission->pub_date;
-            $pub->locale = 'en';
-            $pub->keywords = $submission->pub_keywords;
-            $pub->doi = $submission->pub_doi;
-            $submission->setRelation('publication', $pub);
-            return $submission;
-        });
-
-        $viewName = 'journal.public.oai.formats.' . $prefix; 
-        if ($prefix === 'oai_dc') {
-            $viewName = 'journal.public.oai.list_records';
+        // Hati-hati memasukkan identifier yang error ke atribut, lebih aman tidak dimasukkan
+        // jika itu menyebabkan error parsing, tapi validator OAI kadang memintanya.
+        // Kuncinya adalah htmlspecialchars(..., ENT_QUOTES).
+        if (request('identifier')) {
+            $requestAttributes .= ' identifier="' . htmlspecialchars(request('identifier'), ENT_QUOTES) . '"';
+        }
+        if (request('metadataPrefix')) {
+             $requestAttributes .= ' metadataPrefix="' . htmlspecialchars(request('metadataPrefix'), ENT_QUOTES) . '"';
         }
 
-        // Keep HTML for list_records if it's meant to be user friendly, OR change to XML if compliance required there too.
-        // Prompt says "replace content of oai/list_metadata_formats.blade.php" and "get_record", doesn't explicitly mention list_records rewrite in this step.
-        // But previous steps enforced XML/HTML separation.
-        // To strictly pass OAI validation, ListRecords MUST be XML.
-        // The View 'journal.public.oai.list_records' currently has HTML structure (from Step 780).
-        // If validation fails there, we should update it too. But for now, user focus is get_record and list_formats.
-        // I will keep the content type logic from Step 823: HTML for oai_dc browser view, XML for others?
-        // NO, OAI Validator checks ListRecords too. If ListRecords returns HTML, it fails.
-        // Step 726 set it to text/xml. But if the view content is HTML (Step 780), it's invalid XML.
-        // However, I wasn't asked to rewrite ListRecords in this step.
-        // I will stick to text/xml.
-        
-        $contentType = ($prefix === 'oai_dc') ? 'text/html; charset=utf-8' : 'text/xml';
-        // Wait, if I send text/html for oai_dc, validators might complain if they expect XML.
-        // Traditionally OJS serves XML with XSLT.
-        // I will check if I should enforce XML for all.
-        // Given "Goal: Fix all these issues to achieve 100% OAI Compliance", I should probably serve XML.
-        // But I dare not change ListRecords view content without explicit instruction as it is complex.
-        // I will return text/html for oai_dc as per previous state, assuming user relies on browser view for that one?
-        // Actually, if I look at Step 823 logic: `($prefix === 'oai_dc') ? 'text/html... : 'text/xml'`
-        // I will keep this unless the view is Pure XML.
-        
-        return response()->view($viewName, [
-            'journal' => $journal,
-            'records' => $records,
-            'verb' => $request->input('verb') 
-        ])->header('Content-Type', $contentType);
-    }
-
-    private function getRecord($journal, $identifier, $metadataPrefix = 'oai_dc')
-    {
-        // 1. Parse Identifier
-        $parts = explode('/', $identifier);
-        $candidate = end($parts);
-        if (str_contains($candidate, ':')) {
-             $parts = explode(':', $identifier);
-             $candidate = end($parts);
-        }
-        $id = $candidate;
-
-        $recordRaw = Submission::join('publications', 'submissions.id', '=', 'publications.submission_id')
-            ->where('submissions.journal_id', $journal->id)
-            ->where('submissions.id', $id)
-            ->where('submissions.status', Submission::STATUS_PUBLISHED)
-            ->select(
-                'submissions.*',
-                'publications.title as pub_title',
-                'publications.abstract as pub_abstract',
-                'publications.date_published as pub_date',
-                'publications.keywords as pub_keywords',
-                'publications.doi as pub_doi'
-            )
-            ->with(['authors', 'issue', 'section', 'galleys']) // Added eager load
-            ->first();
-
-        if (!$recordRaw) {
-            return $this->errorResponse($journal, 'idDoesNotExist', 'Record not found');
-        }
-
-        // Hydrate
-        $pub = new \App\Models\Publication();
-        $pub->title = $recordRaw->pub_title;
-        $pub->abstract = $recordRaw->pub_abstract;
-        $pub->date_published = $recordRaw->pub_date;
-        $pub->locale = 'en';
-        $pub->keywords = $recordRaw->pub_keywords;
-        $pub->doi = $recordRaw->pub_doi;
-        $recordRaw->setRelation('publication', $pub);
-        $record = $recordRaw;
-
-        if ($metadataPrefix === 'oai_dc') {
-            return response()->view('journal.public.oai.get_record', [
-                'journal' => $journal,
-                'record' => $record
-            ])->header('Content-Type', 'text/xml');
-        } else {
-             $records = collect([$record]);
-             $viewName = 'journal.public.oai.formats.' . $metadataPrefix;
-             
-             return response()->view($viewName, [
-                'journal' => $journal,
-                'records' => $records,
-                'verb' => 'GetRecord'
-            ])->header('Content-Type', 'text/xml');
-        }
-    }
-
-    private function errorResponse($journal, $code, $message)
-    {
+        // 3. XML String Manual (Lebih aman daripada View Blade untuk error handling)
         $xml = '<?xml version="1.0" encoding="UTF-8"?>
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-    <responseDate>' . now()->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') . '</responseDate>
-    <request>' . htmlspecialchars(request()->fullUrl()) . '</request>
-    <error code="' . $code . '">' . htmlspecialchars($message) . '</error>
-</OAI-PMH>';
+        <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+            <responseDate>' . now()->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') . '</responseDate>
+            <request' . $requestAttributes . '>' . htmlspecialchars($baseUrl) . '</request>
+            <error code="' . $code . '">' . htmlspecialchars($message) . '</error>
+        </OAI-PMH>';
 
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }

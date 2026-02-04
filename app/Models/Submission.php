@@ -269,7 +269,7 @@ class Submission extends Model
      */
     public function publication(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-         return $this->hasOne(Publication::class, 'submission_id')->latestOfMany('version');
+         return $this->hasOne(Publication::class, 'submission_id')->orderByDesc('version');
     }
 
     /**
