@@ -26,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('login');
         });
 
+        $middleware->validateCsrfTokens(except: [
+            '*/oai', // Allow OAI-PMH POST requests without CSRF token
+        ]);
+
         $middleware->alias([
             'validate_api_key' => ValidateApiKey::class,
             'ads_rate_limit' => AdsTrackingRateLimit::class,
