@@ -95,15 +95,34 @@
                         </resource>
                     </doi_data>
 
-                    {{-- CITATIONS / REFERENCES --}}
-                    @if (!empty($article->citations))
+                    {{-- REFERENCES / CITATION LIST --}}
+                    @if (!empty($article->references))
                         <citation_list>
-                            @foreach (explode("\n", $article->citations) as $key => $ref)
-                                @if (trim($ref))
-                                    <citation key="ref{{ $key + 1 }}">
-                                        <unstructured_citation>{{ trim($ref) }}</unstructured_citation>
-                                    </citation>
-                                @endif
+                            @php
+                                // Clean and split references
+                                $refs = preg_split('/\r\n|\r|\n/', $article->references);
+                                $refs = array_filter($refs, fn($value) => !is_null($value) && trim($value) !== '');
+                                $counter = 1;
+                            @endphp
+                            @foreach ($refs as $ref)
+                                @php
+                                    $ref = trim($ref);
+                                    $key = 'ref' . $counter++;
+                                    $doi = null;
+
+                                    // Regex to find a DOI (stand-alone or inside a URL like https://doi.org/...)
+                                    // Pattern matches strings starting with '10.' followed by digits, slash, and valid chars
+                                    if (preg_match('/(10\.\d{4,9}\/[-._;()\/:\w]+)/', $ref, $matches)) {
+                                        $doi = $matches[1];
+                                    }
+                                @endphp
+                                <citation key="{{ $key }}">
+                                    @if ($doi)
+                                        <doi>{{ $doi }}</doi>
+                                    @else
+                                        <unstructured_citation>{{ $ref }}</unstructured_citation>
+                                    @endif
+                                </citation>
                             @endforeach
                         </citation_list>
                     @endif
