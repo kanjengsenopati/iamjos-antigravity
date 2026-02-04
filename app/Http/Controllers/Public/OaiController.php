@@ -129,7 +129,7 @@ class OaiController extends Controller
             'journal' => $journal,
             'earliestDate' => $earliestDate->toIso8601String(),
             'baseUrl' => route('journal.oai', $journal->slug)
-        ])->header('Content-Type', 'text/html; charset=utf-8');
+        ])->header('Content-Type', 'text/xml');
     }
 
     private function listMetadataFormats($journal)
