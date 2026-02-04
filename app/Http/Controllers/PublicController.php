@@ -895,21 +895,41 @@ class PublicController extends Controller
     /**
      * Display a custom page created via Navigation Menu Items.
      */
+    /**
+     * Display a custom page created via Navigation Menu Items or Sidebar Blocks (Custom Pages).
+     */
     public function customPage(string $journalSlug, string $path): View
     {
         $journal = $this->resolveJournal($journalSlug);
 
-        // Find the custom page by path
+        // 1. Try Navigation Menu Item
         $page = \App\Models\NavigationMenuItem::where('journal_id', $journal->id)
             ->where('type', 'page')
             ->where('path', $path)
+            ->where('is_active', true)
+            ->first();
+
+        if ($page) {
+            return view('journal.public.custom-page', [
+                'journal' => $journal,
+                'page' => $page,
+                'content' => $page->content, // Assuming content field exists
+                'title' => $page->title,
+            ]);
+        }
+
+        // 2. Try Sidebar Block (Custom Page)
+        $blockPage = \App\Models\SidebarBlock::where('journal_id', $journal->id)
+            ->where('type', 'page')
+            ->where('slug', $path)
             ->where('is_active', true)
             ->firstOrFail();
 
         return view('journal.public.custom-page', [
             'journal' => $journal,
-            'page' => $page,
-            'journalSlug' => $journalSlug,
+            'page' => $blockPage, // Duck typing or separate variable
+            'content' => $blockPage->content,
+            'title' => $blockPage->show_title ? $blockPage->title : null,
         ]);
     }
 }

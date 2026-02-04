@@ -157,6 +157,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
 Route::get('translate', [TranslateController::class, 'index'])->name('translate');
 Route::post('translate_post', [TranslateController::class, 'translatePost'])->name('translate_post');
 // =====================================================
+// OAI-PMH (Google Scholar Indexing)
+// =====================================================
+Route::any('{journal}/oai', [App\Http\Controllers\Public\OaiController::class, 'handle'])->name('journal.oai');
+
+// =====================================================
 // JOURNAL-SCOPED PUBLIC ROUTES (Per-Journal Frontend)
 // These come AFTER all other routes to catch journal slugs
 // =====================================================

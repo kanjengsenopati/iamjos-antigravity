@@ -79,9 +79,12 @@ class SidebarBlock extends Model
 
     protected $fillable = [
         'journal_id',
-        'type',
+        'type', // 'system', 'block', 'page'
+        'slug',
         'title',
+        'show_title',
         'content',
+        'sidebar_content',
         'component_name',
         'icon',
         'settings',
@@ -95,6 +98,7 @@ class SidebarBlock extends Model
         return [
             'settings' => 'array',
             'is_active' => 'boolean',
+            'show_title' => 'boolean',
             'order' => 'integer',
         ];
     }
