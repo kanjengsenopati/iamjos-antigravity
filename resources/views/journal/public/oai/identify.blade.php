@@ -17,9 +17,13 @@
             $adminEmail = data_get($settings, 'contact.email', 'admin@iamjos.id');
         @endphp
         <adminEmail>{{ $adminEmail }}</adminEmail>
-        <earliestDatestamp>
-            {{ \App\Models\Submission::min('updated_at') ? \Carbon\Carbon::parse(\App\Models\Submission::min('updated_at'))->format('Y-m-d\TH:i:s\Z') : now()->format('Y-m-d\TH:i:s\Z') }}
-        </earliestDatestamp>
+        @php
+            $minDate = \App\Models\Submission::min('updated_at');
+            $earliest = $minDate
+                ? \Carbon\Carbon::parse($minDate)->format('Y-m-d\TH:i:s\Z')
+                : now()->format('Y-m-d\TH:i:s\Z');
+        @endphp
+        <earliestDatestamp>{{ $earliest }}</earliestDatestamp>
         <deletedRecord>persistent</deletedRecord>
         <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>
         <description>
