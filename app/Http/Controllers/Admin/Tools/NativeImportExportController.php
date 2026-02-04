@@ -369,6 +369,7 @@ class NativeImportExportController extends Controller
      */
     public function exportArticles(Request $request): StreamedResponse|RedirectResponse
     {
+        // 1. Setup & Data Fetching
         $journal = current_journal();
 
         if (!$journal) {
@@ -376,32 +377,30 @@ class NativeImportExportController extends Controller
         }
 
         $ids = $request->input('submission_ids', []);
-
+        
         if (empty($ids)) {
             return back()->with('error', 'Please select at least one article to export.');
         }
-
-        $submissions = Submission::whereIn('id', $ids)
+        
+        // Eager load relationships needed for the XML
+        // Ensure we load 'files' and 'authors'
+        $submissions = \App\Models\Submission::whereIn('id', $ids)
             ->where('journal_id', $journal->id)
-            ->with(['authors', 'issue', 'section', 'files'])
+            ->with(['authors', 'files', 'issue']) 
             ->get();
 
-        $filename = 'articles_export_' . date('Y-m-d_His') . '.xml';
+        if ($submissions->isEmpty()) {
+            return back()->with('error', 'No articles found.');
+        }
 
-        return response()->streamDownload(function () use ($submissions, $journal) {
-            $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><articles/>');
-            $xml->addAttribute('xmlns', 'http://iamjos.org/native');
-            $xml->addAttribute('journal', $journal->name);
-            $xml->addAttribute('exported_at', now()->toIso8601String());
+        // 2. Generate XML Filename
+        $filename = 'native-' . date('Ymd-His') . '-articles.xml';
 
-            foreach ($submissions as $submission) {
-                $this->appendArticleNode($xml, $submission);
-            }
-
-            echo $xml->asXML();
-        }, $filename, [
-            'Content-Type' => 'application/xml',
-        ]);
+        // 3. Stream Download (To handle large Base64 strings efficiently)
+        return response()->streamDownload(function () use ($submissions) {
+            // Render the Blade View as XML string
+            echo view('admin.tools.importexport.xml_export', compact('submissions'))->render();
+        }, $filename, ['Content-Type' => 'text/xml']);
     }
 
     /**
