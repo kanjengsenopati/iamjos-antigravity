@@ -31,8 +31,8 @@
             text-decoration: underline;
         }
 
-        /* Info Box */
-        .info-box {
+        /* Info Text */
+        .info-text {
             margin: 15px 0;
             font-size: 14px;
         }
@@ -42,7 +42,7 @@
             text-decoration: underline;
         }
 
-        /* Request Info Table (Top) */
+        /* Request Info Table */
         table.request-info {
             border-collapse: separate;
             border-spacing: 2px;
@@ -55,6 +55,8 @@
             font-weight: bold;
             padding: 3px 5px;
             text-align: right;
+            width: 150px;
+            white-space: nowrap;
         }
 
         .req-value {
@@ -62,16 +64,16 @@
             padding: 3px 5px;
         }
 
-        /* OAI Record Section */
-        h2.record-header {
+        /* Set Section Header */
+        h2.set-header {
             font-size: 18px;
             font-weight: bold;
             margin-top: 30px;
             margin-bottom: 5px;
         }
 
-        /* Data Table for Each Record */
-        table.record-table {
+        /* Set Data Table */
+        table.set-table {
             border-collapse: separate;
             border-spacing: 2px;
             margin-bottom: 10px;
@@ -85,7 +87,7 @@
             text-align: right;
             padding: 3px 5px;
             white-space: nowrap;
-            vertical-align: top;
+            width: 100px;
         }
 
         .value-cell {
@@ -93,7 +95,7 @@
             vertical-align: top;
         }
 
-        /* Small "Buttons" (oai_dc, formats, etc) */
+        /* Small Buttons (Identifiers, Records) */
         .mini-btn {
             background-color: #e0e0ff;
             font-size: 13px;
@@ -103,11 +105,18 @@
             text-decoration: none;
             cursor: pointer;
             border: 1px solid #ccc;
-            /* Optional: to make it look button-ish like screenshot */
         }
 
         .mini-btn:hover {
             text-decoration: underline;
+        }
+
+        /* Footer */
+        .footer-info {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -140,13 +149,13 @@
             style="margin-right: 10px; color: #0000CC; text-decoration: underline;">ListIdentifiers</a>
     </div>
 
-    <div class="info-box">
+    <div class="info-text">
         You are viewing an HTML version of the XML OAI response. To see the underlying XML use your web browsers view
-        source option. More information about this XSLT is at the <a href="#" class="bottom-link">bottom of the
+        source option. More information about this XSLT is at the <a href="#footer" class="bottom-link">bottom of the
             page</a>.
     </div>
 
-    {{-- Request Details Table --}}
+    {{-- Request Info Table --}}
     <table class="request-info">
         <tr>
             <td class="req-label">Datestamp of response</td>
@@ -158,51 +167,72 @@
         </tr>
     </table>
 
-    <p style="font-size: 14px;">Request was of type ListIdentifiers.</p>
+    <p style="font-size: 14px;">Request was of type ListSets.</p>
 
-    {{-- LOOP Identifiers --}}
-    @foreach ($records as $record)
-        {{-- Header Title for Each Block --}}
-        <h2 class="record-header">OAI Record Header</h2>
+    {{-- LOOP SETS --}}
+    @foreach ($sets as $set)
+        {{-- Header "Set" --}}
+        <h2 class="set-header">Set</h2>
 
-        <table class="record-table">
-            {{-- Row 1: OAI Identifier --}}
+        <table class="set-table">
+            {{-- Row 1: setName --}}
             <tr>
-                <td class="label-cell">OAI Identifier</td>
-                <td class="value-cell">
-                    oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->slug }}
-
-                    {{-- Fake Buttons mimicking OJS --}}
-                    <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'GetRecord', 'identifier' => 'oai:' . parse_url(config('app.url'), PHP_URL_HOST) . ':article/' . $record->slug, 'metadataPrefix' => 'oai_dc']) }}"
-                        class="mini-btn">oai_dc</a>
-                    <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListMetadataFormats', 'identifier' => 'oai:' . parse_url(config('app.url'), PHP_URL_HOST) . ':article/' . $record->slug]) }}"
-                        class="mini-btn">formats</a>
-                </td>
+                <td class="label-cell">setName</td>
+                <td class="value-cell">{{ $set->name }}</td>
             </tr>
 
-            {{-- Row 2: Datestamp --}}
-            <tr>
-                <td class="label-cell">Datestamp</td>
-                <td class="value-cell">
-                    {{ $record->pub_date ? \Carbon\Carbon::parse($record->pub_date)->format('Y-m-d\TH:i:s\Z') : now()->format('Y-m-d\TH:i:s\Z') }}
-                </td>
-            </tr>
-
-            {{-- Row 3: setSpec --}}
+            {{-- Row 2: setSpec + Buttons --}}
             <tr>
                 <td class="label-cell">setSpec</td>
                 <td class="value-cell">
-                    {{ $record->journal->abbreviation ?? 'JRN' }}:ART
+                    {{ $set->spec }}
 
-                    {{-- Fake Buttons mimicking OJS --}}
-                    <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListIdentifiers', 'metadataPrefix' => 'oai_dc', 'set' => ($record->journal->abbreviation ?? 'JRN') . 'ART']) }}"
+                    {{-- Tombol "Identifiers" menunjuk ke ListIdentifiers dengan filter set --}}
+                    <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListIdentifiers', 'metadataPrefix' => 'oai_dc', 'set' => $set->spec]) }}"
                         class="mini-btn">Identifiers</a>
-                    <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListRecords', 'metadataPrefix' => 'oai_dc', 'set' => ($record->journal->abbreviation ?? 'JRN') . ':ART']) }}"
+
+                    {{-- Tombol "Records" menunjuk ke ListRecords dengan filter set --}}
+                    <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListRecords', 'metadataPrefix' => 'oai_dc', 'set' => $set->spec]) }}"
                         class="mini-btn">Records</a>
                 </td>
             </tr>
         </table>
     @endforeach
+
+    {{-- Footer Navigation (Repeated) --}}
+    <div class="nav-links" style="margin-top: 30px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+        {{-- Identify --}}
+        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'Identify']) }}">Identify</a> |
+
+        {{-- ListRecords --}}
+        <a
+            href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListRecords', 'metadataPrefix' => 'oai_dc']) }}">ListRecords</a>
+        |
+
+        {{-- ListSets --}}
+        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListSets']) }}">ListSets</a> |
+
+        {{-- ListMetadataFormats --}}
+        <a
+            href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListMetadataFormats']) }}">ListMetadataFormats</a>
+        |
+
+        {{-- ListIdentifiers --}}
+        <a
+            href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListIdentifiers', 'metadataPrefix' => 'oai_dc']) }}">ListIdentifiers</a>
+    </div>
+
+    {{-- About XSLT Footer --}}
+    <div id="footer" class="footer-info">
+        <h2>About the XSLT</h2>
+        <p>An XSLT file has converted the <a href="#" class="bottom-link">OAI-PMH 2.0</a> responses into XHTML
+            which looks nice in a browser which supports XSLT such as Mozilla, Firebird and Internet Explorer. The XSLT
+            file was created by Christopher Gutteridge at the University of Southampton as part of the <a href="#"
+                class="bottom-link">GNU EPrints system</a>, and is freely redistributable under the <a href="#"
+                class="bottom-link">GPL</a>.</p>
+        <p>If you want to use the XSL file on your own OAI interface you may but due to the way XSLT works you must
+            install the XSL file on the same server as the OAI script, you can't just link to this copy.</p>
+    </div>
 
 </body>
 

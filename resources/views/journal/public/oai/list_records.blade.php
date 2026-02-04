@@ -1,90 +1,329 @@
-{!! '<' . '?xml version="1.0" encoding="UTF-8"?' . '>' !!}
-{!! '<' . '?xml-stylesheet type="text/xsl" href="' . asset('oai2.xsl') . '" ?' . '>' !!}
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-    <responseDate>{{ now()->toIso8601String() }}</responseDate>
-    <request verb="{{ $verb }}" metadataPrefix="oai_dc">{{ route('journal.oai', $journal->slug) }}</request>
+<!DOCTYPE html>
+<html>
 
-    <{{ $verb }}>
-        @foreach ($records as $record)
-            <record>
-                <header>
-                    {{-- ID Unik Global --}}
-                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}
-                    </identifier>
-                    <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}
-                    </datestamp>
-                    <setSpec>{{ $journal->slug }}</setSpec>
-                </header>
-                @if ($verb === 'ListRecords')
-                    <metadata>
-                        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
-                            xmlns:dc="http://purl.org/dc/elements/1.1/"
-                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                            xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+<head>
+    <title>OAI 2.0 Request Results</title>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 16px;
+            margin: 20px;
+            color: #000;
+        }
 
-                            {{-- 1. TITLE --}}
-                            <dc:title>{{ $record->publication->title ?? 'Untitled' }}</dc:title>
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
 
-                            {{-- 2. CREATOR (Authors) --}}
-                            @foreach ($record->authors as $author)
-                                <dc:creator>
-                                    {{ $author->last_name ? $author->last_name . ', ' . $author->first_name : $author->first_name }}
-                                </dc:creator>
-                            @endforeach
+        /* Navigation Links */
+        .nav-links {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
 
-                            {{-- 3. SUBJECT (Keywords) --}}
-                            @if (isset($record->publication->keywords) && is_array($record->publication->keywords))
-                                @foreach ($record->publication->keywords as $keyword)
-                                    <dc:subject>{{ trim($keyword) }}</dc:subject>
-                                @endforeach
-                            @elseif(isset($record->publication->keywords))
-                                @foreach (explode(',', $record->publication->keywords) as $keyword)
-                                    <dc:subject>{{ trim($keyword) }}</dc:subject>
-                                @endforeach
-                            @endif
+        .nav-links a {
+            margin-right: 10px;
+            color: #0000CC;
+            text-decoration: underline;
+        }
 
-                            {{-- 4. DESCRIPTION (Abstract) --}}
-                            <dc:description>{{ strip_tags($record->publication->abstract ?? '') }}</dc:description>
+        /* Info Box */
+        .info-box {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
 
-                            {{-- 5. PUBLISHER --}}
-                            <dc:publisher>{{ $journal->name }}</dc:publisher>
+        /* Request Info Table */
+        table.request-info {
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
 
-                            {{-- 6. DATE --}}
-                            <dc:date>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}
-                            </dc:date>
+        table.request-info td {
+            padding: 3px 5px;
+        }
 
-                            {{-- 7. TYPE --}}
-                            <dc:type>info:eu-repo/semantics/article</dc:type>
-                            <dc:type>info:eu-repo/semantics/publishedVersion</dc:type>
+        .label-bg {
+            background-color: #e0e0ff;
+            font-weight: bold;
+        }
 
-                            {{-- 8. FORMAT --}}
-                            <dc:format>application/pdf</dc:format>
+        /* OAI Record Container */
+        .oai-record {
+            border: 1px solid #ccc;
+            margin-bottom: 30px;
+        }
 
-                            {{-- 9. IDENTIFIER (URL Publik) --}}
-                            <dc:identifier>
-                                {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->slug ?? $record->id]) }}
-                            </dc:identifier>
+        /* Purple Header Bar */
+        .record-header-bar {
+            background-color: #e0e0ff;
+            padding: 5px 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #ccc;
+        }
 
-                            {{-- 10. SOURCE --}}
-                            <dc:source>{{ $journal->name }}</dc:source>
+        /* Inner Headers */
+        h2 {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 10px 5px 10px;
+        }
 
-                            {{-- 11. LANGUAGE --}}
-                            <dc:language>{{ $record->publication->locale ?? 'en' }}</dc:language>
+        h3 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 10px 5px 10px;
+        }
 
-                            {{-- 12. RIGHTS (Lisensi - Penting untuk Indexing) --}}
-                            {{-- Jika ada setting license_url di jurnal/publication --}}
-                            <dc:rights>http://creativecommons.org/licenses/by/4.0/</dc:rights>
+        /* Data Tables */
+        table.data-table {
+            width: 98%;
+            margin: 10px auto;
+            border-collapse: separate;
+            border-spacing: 1px;
+        }
 
-                            {{-- 13. DOI (Optional but important) --}}
-                            @if (isset($record->publication->doi) && $record->publication->doi)
-                                <dc:identifier>info:doi/{{ $record->publication->doi }}</dc:identifier>
-                            @endif
+        table.data-table td {
+            padding: 4px;
+            vertical-align: top;
+            font-size: 14px;
+        }
 
-                        </oai_dc:dc>
-                    </metadata>
+        /* OJS Style Specifics */
+        .label-cell {
+            background-color: #e0e0ff;
+            /* Purple for Header info */
+            font-weight: bold;
+            text-align: right;
+            width: 150px;
+            white-space: nowrap;
+        }
+
+        .dc-label-cell {
+            background-color: #ffffcc;
+            /* Yellow/Cream for Metadata */
+            font-weight: bold;
+            text-align: right;
+            width: 180px;
+            vertical-align: top;
+            color: #000;
+        }
+
+        .value-cell {
+            background-color: #fff;
+            text-align: left;
+        }
+
+        .xml-link {
+            color: #0000CC;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>OAI 2.0 Request Results</h1>
+
+    {{-- CORRECTED NAVIGATION LINKS --}}
+    <div class="nav-links"
+        style="margin-bottom: 20px; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+        {{-- Identify: No Params needed --}}
+        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'Identify']) }}"
+            style="margin-right: 10px; color: #0000CC; text-decoration: underline;">Identify</a> |
+
+        {{-- ListRecords: REQUIRES metadataPrefix --}}
+        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListRecords', 'metadataPrefix' => 'oai_dc']) }}"
+            style="margin-right: 10px; color: #0000CC; text-decoration: underline;">ListRecords</a> |
+
+        {{-- ListSets: No Params needed --}}
+        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListSets']) }}"
+            style="margin-right: 10px; color: #0000CC; text-decoration: underline;">ListSets</a> |
+
+        {{-- ListMetadataFormats: No Params needed --}}
+        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListMetadataFormats']) }}"
+            style="margin-right: 10px; color: #0000CC; text-decoration: underline;">ListMetadataFormats</a> |
+
+        {{-- ListIdentifiers: REQUIRES metadataPrefix --}}
+        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListIdentifiers', 'metadataPrefix' => 'oai_dc']) }}"
+            style="margin-right: 10px; color: #0000CC; text-decoration: underline;">ListIdentifiers</a>
+    </div>
+
+    <div class="info-box">
+        You are viewing an HTML version of the XML OAI response. To see the underlying XML use your web browsers view
+        source option.
+    </div>
+
+    {{-- Request Info --}}
+    <table class="request-info">
+        <tr>
+            <td class="label-bg">Datestamp of response</td>
+            <td>{{ now()->format('Y-m-d\TH:i:s\Z') }}</td>
+        </tr>
+        <tr>
+            <td class="label-bg" style="text-align: right;">Request URL</td>
+            <td>{{ url()->current() }}</td>
+        </tr>
+    </table>
+
+    <p>Request was of type ListRecords.</p>
+
+    {{-- LOOP RECORDS --}}
+    @foreach ($records as $record)
+        <div class="oai-record">
+
+            {{-- 1. PURPLE HEADER BAR --}}
+            <div class="record-header-bar">
+                OAI Record: oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->slug }}
+            </div>
+
+            {{-- 2. OAI RECORD HEADER --}}
+            <h2>OAI Record Header</h2>
+            <table class="data-table">
+                <tr>
+                    <td class="label-cell">OAI Identifier</td>
+                    <td class="value-cell">
+                        oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->slug }}
+                        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'GetRecord', 'metadataPrefix' => 'oai_dc', 'identifier' => 'oai:' . parse_url(config('app.url'), PHP_URL_HOST) . ':article/' . $record->id]) }}"
+                            style="background:#e0e0ff; padding:0 3px; text-decoration:none; color:#000;">oai_dc</a>
+                        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListMetadataFormats', 'identifier' => 'oai:' . parse_url(config('app.url'), PHP_URL_HOST) . ':article/' . $record->id]) }}"
+                            style="background:#e0e0ff; padding:0 3px; text-decoration:none; color:#000;">formats</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-cell">Datestamp</td>
+                    <td class="value-cell">{{ $record->updated_at->format('Y-m-d\TH:i:s\Z') }}</td>
+                </tr>
+                <tr>
+                    <td class="label-cell">setSpec</td>
+                    <td class="value-cell">
+                        {{ $record->journal->abbreviation ?? 'JRN' }}:ART
+                        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListIdentifiers', 'metadataPrefix' => 'oai_dc', 'set' => ($record->journal->abbreviation ?? 'JRN') . 'ART']) }}"
+                            style="background:#e0e0ff; padding:0 3px; font-weight:normal; text-decoration:none; color:#000;">Identifiers</a>
+                        <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListRecords', 'metadataPrefix' => 'oai_dc', 'set' => ($record->journal->abbreviation ?? 'JRN') . ':ART']) }}"
+                            style="background:#e0e0ff; padding:0 3px; font-weight:normal; text-decoration:none; color:#000;">Records</a>
+                    </td>
+                </tr>
+            </table>
+
+            {{-- 3. DUBLIN CORE METADATA (YELLOW LABELS) --}}
+            <h3>Dublin Core Metadata (oai_dc)</h3>
+            <table class="data-table">
+
+                {{-- Title --}}
+                <tr>
+                    <td class="dc-label-cell">Title</td>
+                    <td class="value-cell">{{ $record->title }}</td>
+                </tr>
+
+                {{-- Creators / Authors --}}
+                @foreach ($record->authors as $author)
+                    <tr>
+                        <td class="dc-label-cell">Author or Creator</td>
+                        <td class="value-cell">{{ $author->last_name }}, {{ $author->first_name }}</td>
+                    </tr>
+                @endforeach
+
+                {{-- Subjects --}}
+                @if ($record->keywords)
+                    @foreach (explode(',', $record->keywords) as $keyword)
+                        <tr>
+                            <td class="dc-label-cell">Subject and Keywords</td>
+                            <td class="value-cell">{{ trim($keyword) }}</td>
+                        </tr>
+                    @endforeach
                 @endif
-            </record>
-        @endforeach
-        </{{ $verb }}>
-</OAI-PMH>
+
+                {{-- Description (Abstract) --}}
+                <tr>
+                    <td class="dc-label-cell">Description</td>
+                    <td class="value-cell">{!! strip_tags($record->abstract) !!}</td>
+                </tr>
+
+                {{-- Publisher --}}
+                <tr>
+                    <td class="dc-label-cell">Publisher</td>
+                    <td class="value-cell">{{ $record->journal->publisher ?? $record->journal->name }}</td>
+                </tr>
+
+                {{-- Date --}}
+                <tr>
+                    <td class="dc-label-cell">Date</td>
+                    <td class="value-cell">{{ \Carbon\Carbon::parse($record->date_published)->format('Y-m-d') }}</td>
+                </tr>
+
+                {{-- Resource Type --}}
+                <tr>
+                    <td class="dc-label-cell">Resource Type</td>
+                    <td class="value-cell">info:eu-repo/semantics/article</td>
+                </tr>
+                <tr>
+                    <td class="dc-label-cell">Resource Type</td>
+                    <td class="value-cell">info:eu-repo/semantics/publishedVersion</td>
+                </tr>
+
+                {{-- Format --}}
+                <tr>
+                    <td class="dc-label-cell">Format</td>
+                    <td class="value-cell">application/pdf</td>
+                </tr>
+
+                {{-- Identifier --}}
+                <tr>
+                    <td class="dc-label-cell">Resource Identifier</td>
+                    <td class="value-cell">
+                        <a href="{{ route('journal.public.article', ['journal' => $record->journal->slug, 'article' => $record->slug ?? $record->id]) }}"
+                            class="xml-link">
+                            {{ route('journal.public.article', ['journal' => $record->journal->slug, 'article' => $record->slug ?? $record->id]) }}
+                        </a>
+                    </td>
+                </tr>
+
+                {{-- Source --}}
+                <tr>
+                    <td class="dc-label-cell">Source</td>
+                    <td class="value-cell">
+                        {{ $record->journal->name }}; Vol. {{ $record->issue->volume ?? 1 }} No.
+                        {{ $record->issue->number ?? 1 }} ({{ $record->issue->year ?? date('Y') }})
+                    </td>
+                </tr>
+
+                {{-- Language --}}
+                <tr>
+                    <td class="dc-label-cell">Language</td>
+                    <td class="value-cell">{{ $record->locale ?? 'en' }}</td>
+                </tr>
+
+                {{-- Relation (Biasanya OJS menyembunyikan URL panjang di sini) --}}
+                <td class="dc-label-cell">Relation</td>
+                <td class="value-cell">
+                    <a href="{{ route('journal.public.article', ['journal' => $record->journal->slug, 'article' => $record->slug ?? $record->id]) }}"
+                        class="xml-link">
+                        {{ route('journal.public.article', ['journal' => $record->journal->slug, 'article' => $record->slug ?? $record->id]) }}
+                    </a>
+                </td>
+
+                {{-- Rights --}}
+                <tr>
+                    <td class="dc-label-cell">Rights Management</td>
+                    <td class="value-cell">Copyright (c) {{ $record->issue->year ?? date('Y') }}
+                        {{ $record->journal->name }}</td>
+                </tr>
+                <tr>
+                    <td class="dc-label-cell">Rights Management</td>
+                    <td class="value-cell">
+                        <a href="https://creativecommons.org/licenses/by/4.0"
+                            class="xml-link">https://creativecommons.org/licenses/by/4.0</a>
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+    @endforeach
+
+</body>
+
+</html>
