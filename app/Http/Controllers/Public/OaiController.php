@@ -101,6 +101,7 @@ class OaiController extends Controller
             ->select(
                 'submissions.id', 
                 'submissions.slug',
+                'submissions.updated_at',
                 'publications.date_published as pub_date'
             )
             ->orderBy('publications.date_published', 'desc')
