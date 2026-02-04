@@ -47,26 +47,20 @@ class OaiController extends Controller
             }
         }
 
-        // 6. Validasi Tanggal (from & until)
+       // 6. Validasi Tanggal (from & until)
         if ($request->has('from') || $request->has('until')) {
-            // 6a. Granularity Mismatch Check
-            if ($request->has('from') && $request->has('until')) {
-                $lenFrom = strlen($request->input('from'));
-                $lenUntil = strlen($request->input('until'));
-                // Simple heuristic: Date (10) vs DateTime (>10)
-                if (($lenFrom <= 10 && $lenUntil > 10) || ($lenFrom > 10 && $lenUntil <= 10)) {
-                    return $this->oaiError('badArgument', 'Granularity mismatch between from and until');
-                }
+            $from = $request->input('from');
+            $until = $request->input('until');
+
+            // PERBAIKAN: Cek Granularity Mismatch
+            // Jika panjang string beda jauh (misal 10 karakter vs 20 karakter), return error
+            if ($from && $until && abs(strlen($from) - strlen($until)) > 5) {
+                return $this->oaiError('badArgument', 'Granularity mismatch between from and until');
             }
 
-            // 6b. Parse Check
             try {
-                if ($request->has('from')) {
-                    Carbon::parse($request->input('from'));
-                }
-                if ($request->has('until')) {
-                    Carbon::parse($request->input('until'));
-                }
+                if ($from) Carbon::parse($from);
+                if ($until) Carbon::parse($until);
             } catch (\Exception $e) {
                 return $this->oaiError('badArgument', 'Invalid date format');
             }
@@ -132,15 +126,18 @@ class OaiController extends Controller
                     $query->where('updated_at', '>=', Carbon::parse($request->input('from')));
                 }
                 if ($request->has('until')) {
-                    $untilDate = Carbon::parse($request->input('until'));
-                    // Fix Precision Issue: Include the full second (microseconds)
-                    if (strlen($request->input('until')) > 10) {
-                        $untilDate->endOfSecond(); 
+                    // PERBAIKAN: Gunakan endOfSecond()
+                    // Ini memaksa waktu menjadi .999999 agar mencakup seluruh milidetik di database
+                    $dateUntil = Carbon::parse($request->input('until'));
+                    
+                    // Cek jika formatnya tanggal saja (YYYY-MM-DD), ambil sampai akhir hari
+                    if (strlen($request->input('until')) <= 10) {
+                        $dateUntil->endOfDay();
                     } else {
-                        // Fix for Date Granularity: Include the full day
-                        $untilDate->endOfDay();
+                        // Jika format lengkap jam/menit, ambil sampai akhir detik
+                        $dateUntil->endOfSecond(); 
                     }
-                    $query->where('updated_at', '<=', $untilDate);
+                    $query->where('updated_at', '<=', $dateUntil);
                 }
                 
                 // Eager Load
@@ -189,32 +186,38 @@ class OaiController extends Controller
         return end($parts);
     }
 
-    private function oaiError($code, $message)
+   private function oaiError($code, $message)
     {
         $baseUrl = url()->current(); 
-
         $requestAttributes = '';
+        
+        // PERBAIKAN: Tambahkan parameter ENT_QUOTES
+        // Ini mengubah tanda kutip " menjadi &quot; agar XML tidak rusak
+        
         $verb = request('verb');
         if ($verb) {
             $requestAttributes .= ' verb="' . htmlspecialchars($verb, ENT_QUOTES) . '"';
         }
         
-        // STRICT XML ESCAPING FOR IDENTIFIER TO FIX MALFORMED XML ERROR
-        if (request('identifier')) {
-            $requestAttributes .= ' identifier="' . htmlspecialchars(request('identifier'), ENT_QUOTES) . '"';
-        }
-        if (request('metadataPrefix')) {
-             $requestAttributes .= ' metadataPrefix="' . htmlspecialchars(request('metadataPrefix'), ENT_QUOTES) . '"';
+        $identifier = request('identifier');
+        if ($identifier) {
+            $requestAttributes .= ' identifier="' . htmlspecialchars($identifier, ENT_QUOTES) . '"';
         }
 
+        $metadataPrefix = request('metadataPrefix');
+        if ($metadataPrefix) {
+             $requestAttributes .= ' metadataPrefix="' . htmlspecialchars($metadataPrefix, ENT_QUOTES) . '"';
+        }
+
+        // XML String Manual
         $xml = '<?xml version="1.0" encoding="UTF-8"?>
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-    <responseDate>' . now()->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') . '</responseDate>
-    <request' . $requestAttributes . '>' . htmlspecialchars($baseUrl) . '</request>
-    <error code="' . $code . '">' . htmlspecialchars($message) . '</error>
-</OAI-PMH>';
+        <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+            <responseDate>' . now()->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') . '</responseDate>
+            <request' . $requestAttributes . '>' . htmlspecialchars($baseUrl) . '</request>
+            <error code="' . $code . '">' . htmlspecialchars($message) . '</error>
+        </OAI-PMH>';
 
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
