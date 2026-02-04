@@ -9,12 +9,19 @@
         <baseURL>{{ route('journal.oai', $journal->slug) }}</baseURL>
         <protocolVersion>2.0</protocolVersion>
         @php
-            // 1. Normalisasi data (jika settings masih string JSON, decode dulu)
-            $settings = is_string($journal->settings) ? json_decode($journal->settings, true) : $journal->settings;
+            // Normalisasi settings
+            $settings = $journal->settings;
 
-            // 2. Ambil email menggunakan helper Laravel data_get agar aman dari error "undefined index"
-            // Syntax: data_get(target, key, default_value)
-            $adminEmail = data_get($settings, 'contact.email', 'admin@iamjos.id');
+            if (is_string($settings)) {
+                $settings = json_decode($settings, true);
+            }
+
+            $settings = is_array($settings) ? $settings : [];
+
+            // Prioritas email: principal → support → default
+            $adminEmail =
+                $settings['contact']['principal']['email'] ??
+                ($settings['contact']['support']['email'] ?? 'admin@iamjos.id');
         @endphp
         <adminEmail>{{ $adminEmail }}</adminEmail>
         @php
