@@ -13,6 +13,12 @@
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$article->title . ' | ' . $journal->name">
 
+    {{-- CANONICAL URL --}}
+    @push('meta_tags')
+        <link rel="canonical"
+            href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}" />
+    @endpush
+
     {{-- ============================================ --}}
     {{-- GOOGLE SCHOLAR META TAGS (Keep existing) --}}
     {{-- ============================================ --}}

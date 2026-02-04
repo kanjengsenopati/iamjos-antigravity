@@ -45,6 +45,7 @@ Route::get('/page/{slug}', [PortalController::class, 'page'])->name('site.page')
 Route::get('/files/{file}/download', [SubmissionFileController::class, 'download'])->name('files.download');
 Route::get('/files/{file}/preview', [SubmissionFileController::class, 'preview'])->name('files.preview')->middleware('auth');
 Route::get('/files/{file}/serve', [SubmissionFileController::class, 'serve'])->name('files.serve'); // Signed URL access
+Route::get('/sitemap.xml', [App\Http\Controllers\Public\SitemapController::class, 'index'])->name('sitemap'); // Dynamic Sitemap
 // =====================================================
 // AUTH ROUTES (Portal Context - Global)
 // =====================================================
