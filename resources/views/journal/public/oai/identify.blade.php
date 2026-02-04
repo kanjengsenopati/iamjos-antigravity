@@ -8,7 +8,15 @@
         <repositoryName>{{ $journal->name }}</repositoryName>
         <baseURL>{{ route('journal.oai', $journal->slug) }}</baseURL>
         <protocolVersion>2.0</protocolVersion>
-        <adminEmail>{{ $journal->email }}</adminEmail>
+        @php
+            // 1. Normalisasi data (jika settings masih string JSON, decode dulu)
+            $settings = is_string($journal->settings) ? json_decode($journal->settings, true) : $journal->settings;
+
+            // 2. Ambil email menggunakan helper Laravel data_get agar aman dari error "undefined index"
+            // Syntax: data_get(target, key, default_value)
+            $adminEmail = data_get($settings, 'contact.email', 'admin@iamjos.id');
+        @endphp
+        <adminEmail>{{ $adminEmail }}</adminEmail>
         <earliestDatestamp>
             {{ \App\Models\Submission::min('updated_at') ? \Carbon\Carbon::parse(\App\Models\Submission::min('updated_at'))->format('Y-m-d\TH:i:s\Z') : now()->format('Y-m-d\TH:i:s\Z') }}
         </earliestDatestamp>

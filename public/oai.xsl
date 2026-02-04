@@ -63,9 +63,29 @@
         <h2>OAI-Identifier</h2>
         <table class="info-table">
             <tr><td class="label-cell">Scheme</td><td class="value-cell">oai</td></tr>
-            <tr><td class="label-cell">Repository Identifier</td><td class="value-cell"><xsl:value-of select="substring-before(substring-after(oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:URL, '//'), '/')"/></td></tr>
+            <tr><td class="label-cell">Repository Identifier</td><td class="value-cell">
+                <xsl:variable name="fullUrl" select="oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:URL"/>
+                <xsl:variable name="noProtocol" select="substring-after($fullUrl, '//')"/>
+                <xsl:choose>
+                    <xsl:when test="contains($noProtocol, '/')">
+                        <xsl:value-of select="substring-before($noProtocol, '/')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$noProtocol"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </td></tr>
             <tr><td class="label-cell">Delimiter</td><td class="value-cell">:</td></tr>
-            <tr><td class="label-cell">Sample OAI Identifier</td><td class="value-cell">oai:<xsl:value-of select="substring-before(substring-after(oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:URL, '//'), '/')"/>:article/1</td></tr>
+            <tr><td class="label-cell">Sample OAI Identifier</td><td class="value-cell">oai:<xsl:variable name="fullUrl" select="oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:URL"/>
+                <xsl:variable name="noProtocol" select="substring-after($fullUrl, '//')"/>
+                <xsl:choose>
+                    <xsl:when test="contains($noProtocol, '/')">
+                        <xsl:value-of select="substring-before($noProtocol, '/')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$noProtocol"/>
+                    </xsl:otherwise>
+                </xsl:choose>:article/1</td></tr>
         </table>
 
         <h2>Unsupported Description Type</h2>
