@@ -227,7 +227,7 @@
                                                         @if ($submission->status === 'published') bg-emerald-100 text-emerald-700
                                                         @elseif($submission->status === 'accepted') bg-blue-100 text-blue-700
                                                         @else bg-slate-100 text-slate-600 @endif">
-                                                        {{ ucfirst($submission->status) }}
+                                                        {{ ucwords(str_replace('_', ' ', $submission->status)) }}
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-slate-500">

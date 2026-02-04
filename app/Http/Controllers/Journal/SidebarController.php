@@ -49,19 +49,49 @@ class SidebarController extends Controller
     /**
      * Store a new sidebar block
      */
+    /**
+     * Store a new sidebar block
+     */
     public function store(Request $request): JsonResponse
     {
         $journal = current_journal();
 
         $validated = $request->validate([
-            'type' => 'required|in:system,custom',
+            'type' => 'required|in:block,page',
             'title' => 'required|string|max:255',
-            'content' => 'nullable|string',
+            'sidebar_html' => 'nullable|string', // Teaser/Sidebar Content
+            'full_page_html' => 'nullable|string', // Full Page Content
+            // Keep legacy content support if needed, or just map above
             'component_name' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:100',
             'position' => 'in:left,right',
             'settings' => 'nullable|array',
+            'slug' => 'nullable|required_if:type,page|string|max:255|alpha_dash',
+            'show_title' => 'boolean',
         ]);
+
+        if ($validated['type'] === 'page') {
+             // Check unique slug per journal
+             $exists = SidebarBlock::where('journal_id', $journal->id)
+                ->where('slug', $validated['slug'])
+                ->exists();
+             if ($exists) {
+                 return response()->json(['message' => 'The page URL (slug) is already in use.'], 422);
+             }
+        }
+
+        // Map content based on type
+        $content = null;
+        $sidebarContent = null;
+
+        if ($validated['type'] === 'page') {
+            $content = $validated['full_page_html'] ?? '';
+            $sidebarContent = $validated['sidebar_html'] ?? '';
+        } else {
+            // Block type: content column holds the sidebar HTML
+            $content = $validated['sidebar_html'] ?? ''; // Map sidebar_html to content
+            $sidebarContent = null;
+        }
 
         // Get next order
         $maxOrder = SidebarBlock::forJournal($journal->id)
@@ -72,7 +102,10 @@ class SidebarController extends Controller
             'journal_id' => $journal->id,
             'type' => $validated['type'],
             'title' => $validated['title'],
-            'content' => $validated['content'] ?? null,
+            'content' => $content,
+            'sidebar_content' => $sidebarContent,
+            'slug' => $validated['type'] === 'page' ? $validated['slug'] : null,
+            'show_title' => $validated['show_title'] ?? true,
             'component_name' => $validated['component_name'] ?? null,
             'icon' => $validated['icon'] ?? null,
             'settings' => $validated['settings'] ?? null,
@@ -95,13 +128,50 @@ class SidebarController extends Controller
     {
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
+            'sidebar_html' => 'nullable|string',
+            'full_page_html' => 'nullable|string',
+             // Legacy
             'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'settings' => 'nullable|array',
             'is_active' => 'boolean',
+            'type' => 'sometimes|in:block,page',
+            'slug' => 'nullable|required_if:type,page|string|max:255|alpha_dash',
+            'show_title' => 'boolean',
         ]);
 
-        $block->update($validated);
+        if (isset($validated['type']) && $validated['type'] === 'page' && isset($validated['slug'])) {
+            // Unique check excluding current block
+            $exists = SidebarBlock::where('journal_id', $block->journal_id)
+               ->where('slug', $validated['slug'])
+               ->where('id', '!=', $block->id)
+               ->exists();
+            if ($exists) {
+                return response()->json(['message' => 'The page URL (slug) is already in use.'], 422);
+            }
+        }
+
+        // Prepare update data
+        $updateData = collect($validated)->except(['sidebar_html', 'full_page_html', 'content'])->toArray();
+
+        // Handle Content Mapping
+        // If sidebar_html is present in request, we assume it's a new format update
+        if ($request->has('sidebar_html') || $request->has('full_page_html')) {
+            $type = $validated['type'] ?? $block->type;
+            
+            if ($type === 'page') {
+                $updateData['content'] = $request->input('full_page_html', $block->content);
+                $updateData['sidebar_content'] = $request->input('sidebar_html', $block->sidebar_content);
+            } else {
+                $updateData['content'] = $request->input('sidebar_html', $block->content);
+                $updateData['sidebar_content'] = null;
+            }
+        } elseif ($request->has('content')) {
+            // Legacy/Direct update fallback
+            $updateData['content'] = $request->input('content');
+        }
+
+        $block->update($updateData);
 
         return response()->json([
             'success' => true,

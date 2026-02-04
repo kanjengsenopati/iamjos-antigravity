@@ -76,7 +76,8 @@
         {{-- Authors (One tag per author - CRITICAL) --}}
         @if ($article->authors && $article->authors->isNotEmpty())
             @foreach ($article->authors as $author)
-                <meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
+                <meta name="citation_author"
+                    content="{{ $author->last_name ? $author->last_name . ', ' . $author->first_name : $author->first_name }}">
                 @if ($author->affiliation)
                     <meta name="citation_author_institution" content="{{ $author->affiliation }}">
                 @endif
@@ -466,20 +467,22 @@
                                     $issueLink = $related->issue
                                         ? route('journal.public.issue', [$journal->slug, $related->issue->id])
                                         : '#';
-                                    $issueText =
-                                        $journal->name .
-                                        ': Vol. ' .
-                                        ($related->issue->volume ?? '-') .
-                                        ' No. ' .
-                                        ($related->issue->number ?? '-') .
-                                        ' (' .
-                                        ($related->issue->year ?? '-') .
-                                        '): ' .
-                                        ($related->issue->published_at
-                                            ? $related->issue->published_at->format('F')
-                                            : '') .
-                                        ': ' .
-                                        $journal->name;
+                                    $issueText = $journal->name;
+                                    if ($related->issue) {
+                                        $issueText .=
+                                            ': Vol. ' .
+                                            ($related->issue->volume ?? '-') .
+                                            ' No. ' .
+                                            ($related->issue->number ?? '-') .
+                                            ' (' .
+                                            ($related->issue->year ?? '-') .
+                                            '): ' .
+                                            ($related->issue->published_at
+                                                ? $related->issue->published_at->format('F')
+                                                : '') .
+                                            ': ' .
+                                            $journal->name;
+                                    }
                                 @endphp
                                 {{ $authors }},
                                 <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $related->slug ?? $related->id]) }}"

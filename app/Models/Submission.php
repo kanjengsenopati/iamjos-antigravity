@@ -265,6 +265,14 @@ class Submission extends Model
     }
 
     /**
+     * Get the publication (latest version).
+     */
+    public function publication(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+         return $this->hasOne(Publication::class, 'submission_id')->latestOfMany('version');
+    }
+
+    /**
      * Get the current (latest) publication version as a relationship.
      * Uses orderBy instead of latestOfMany for PostgreSQL UUID compatibility.
      */
