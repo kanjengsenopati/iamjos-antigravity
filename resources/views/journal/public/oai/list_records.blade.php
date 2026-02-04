@@ -176,7 +176,7 @@
 
             {{-- 1. PURPLE HEADER BAR --}}
             <div class="record-header-bar">
-                OAI Record: oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->slug }}
+                OAI Record: oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}
             </div>
 
             {{-- 2. OAI RECORD HEADER --}}
@@ -185,7 +185,7 @@
                 <tr>
                     <td class="label-cell">OAI Identifier</td>
                     <td class="value-cell">
-                        oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->slug }}
+                        oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}
                         <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'GetRecord', 'metadataPrefix' => 'oai_dc', 'identifier' => 'oai:' . parse_url(config('app.url'), PHP_URL_HOST) . ':article/' . $record->id]) }}"
                             style="background:#e0e0ff; padding:0 3px; text-decoration:none; color:#000;">oai_dc</a>
                         <a href="{{ route('journal.oai', ['journal' => $journal->slug, 'verb' => 'ListMetadataFormats', 'identifier' => 'oai:' . parse_url(config('app.url'), PHP_URL_HOST) . ':article/' . $record->id]) }}"
@@ -296,14 +296,26 @@
                     <td class="value-cell">{{ $record->locale ?? 'en' }}</td>
                 </tr>
 
-                {{-- Relation (Biasanya OJS menyembunyikan URL panjang di sini) --}}
-                <td class="dc-label-cell">Relation</td>
-                <td class="value-cell">
-                    <a href="{{ route('journal.public.article', ['journal' => $record->journal->slug, 'article' => $record->slug ?? $record->id]) }}"
-                        class="xml-link">
-                        {{ route('journal.public.article', ['journal' => $record->journal->slug, 'article' => $record->slug ?? $record->id]) }}
-                    </a>
-                </td>
+                {{-- Relation --}}
+                <tr>
+                    <td class="dc-label-cell">Relation</td>
+                    <td class="value-cell">
+                        @php
+                            $pdfGalley = $record->galleys?->first();
+                            $relationUrl = $pdfGalley
+                                ? route('journal.article.galley', [
+                                    'journal' => $record->journal->slug,
+                                    'article' => $record->slug ?? $record->id,
+                                    'galley' => $pdfGalley->id,
+                                ])
+                                : route('journal.public.article', [
+                                    'journal' => $record->journal->slug,
+                                    'article' => $record->slug ?? $record->id,
+                                ]);
+                        @endphp
+                        <a href="{{ $relationUrl }}" class="xml-link">{{ $relationUrl }}</a>
+                    </td>
+                </tr>
 
                 {{-- Rights --}}
                 <tr>

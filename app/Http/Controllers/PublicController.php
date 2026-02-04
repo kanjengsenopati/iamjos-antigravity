@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\RedirectResponse;
 
 class PublicController extends Controller
 {
@@ -229,29 +230,46 @@ class PublicController extends Controller
         return view('public.issue', compact('journal', 'settings', 'issue', 'articles', 'articlesBySection'));
     }
 
-    /**
-     * Display a single article (OJS 3.3 Style).
-     * 
-     * This page displays the full article metadata with proper Google Scholar
-     * indexing support (Highwire Press meta tags) and a 2-column layout.
-     */
-    public function article(string $journalSlug, $slug): View
+    public function article(string $journalSlug, $slug): \Illuminate\View\View|RedirectResponse
     {
-        $article = Submission::published()->where('slug', $slug)->first();
-        
-        if (!$article) {
-            abort(404);
-        }
-
+        // 1. Resolve Journal Terlebih Dahulu (Penting untuk validasi)
         $journal = $this->resolveJournal($journalSlug);
 
-        // Ensure submission belongs to this journal
-        if ($article->journal_id !== $journal->id) {
+        // =============================================
+        // LOGIKA BARU: HANDLER UUID (OAI-PMH Support)
+        // =============================================
+        // Jika parameter $slug ternyata adalah format UUID (misal dari OAI)
+        if (Str::isUuid($slug)) {
+            // Cari artikel berdasarkan ID (Primary Key)
+            $articleById = Submission::where('id', $slug)
+                ->where('journal_id', $journal->id)
+                ->where('status', Submission::STATUS_PUBLISHED)
+                ->first();
+
+            if ($articleById) {
+                // Lakukan 301 Redirect (Permanent) ke URL Slug yang cantik
+                // Ini agar Google meng-index URL Slug, bukan URL UUID
+                return redirect()->route('journal.public.article', [
+                    'journal' => $journal->path,
+                    'article' => $articleById->slug
+                ], 301);
+            }
+            
+            // Jika UUID valid tapi artikel tidak ketemu/tidak publish
             abort(404);
         }
 
-        // Only show published articles on public pages
-        if ($article->status !== Submission::STATUS_PUBLISHED) {
+        // =============================================
+        // LOGIKA LAMA: HANDLER SLUG (Normal View)
+        // =============================================
+        
+        // Cari artikel berdasarkan Slug
+        $article = Submission::published()
+            ->where('slug', $slug)
+            ->where('journal_id', $journal->id) // Optimasi: filter journal langsung di query
+            ->first();
+        
+        if (!$article) {
             abort(404);
         }
 
@@ -276,8 +294,8 @@ class PublicController extends Controller
         // Simple bot detection (check user agent)
         $userAgent = strtolower(request()->userAgent() ?? '');
         $isBot = str_contains($userAgent, 'bot') || 
-                 str_contains($userAgent, 'crawler') || 
-                 str_contains($userAgent, 'spider');
+                str_contains($userAgent, 'crawler') || 
+                str_contains($userAgent, 'spider');
 
         if (!$isBot) {
             // Mock location data (replace with actual GeoIP package like stevebauman/location)
@@ -367,6 +385,145 @@ class PublicController extends Controller
             'countryStats'
         ));
     }
+
+    /**
+     * Display a single article (OJS 3.3 Style).
+     * 
+     * This page displays the full article metadata with proper Google Scholar
+     * indexing support (Highwire Press meta tags) and a 2-column layout.
+     */
+    // public function article(string $journalSlug, $slug): View
+    // {
+    //     $article = Submission::published()->where('slug', $slug)->first();
+        
+    //     if (!$article) {
+    //         abort(404);
+    //     }
+
+    //     $journal = $this->resolveJournal($journalSlug);
+
+    //     // Ensure submission belongs to this journal
+    //     if ($article->journal_id !== $journal->id) {
+    //         abort(404);
+    //     }
+
+    //     // Only show published articles on public pages
+    //     if ($article->status !== Submission::STATUS_PUBLISHED) {
+    //         abort(404);
+    //     }
+
+    //     // Eager load all required relationships
+    //     $article->load([
+    //         'authors' => function ($q) {
+    //             $q->orderBy('sort_order');
+    //         },
+    //         'section',
+    //         'issue',
+    //         'journal',
+    //         'galleys' => function ($q) {
+    //             $q->ordered();
+    //         },
+    //         'currentPublication',
+    //     ]);
+
+    //     // Get the issue for additional metadata
+    //     $issue = $article->issue;
+    //     $ip = request()->ip();
+        
+    //     // Simple bot detection (check user agent)
+    //     $userAgent = strtolower(request()->userAgent() ?? '');
+    //     $isBot = str_contains($userAgent, 'bot') || 
+    //              str_contains($userAgent, 'crawler') || 
+    //              str_contains($userAgent, 'spider');
+
+    //     if (!$isBot) {
+    //         // Mock location data (replace with actual GeoIP package like stevebauman/location)
+    //         $countryCode = 'ID'; // Default
+    //         $city = null;
+            
+    //         // Log the view
+    //         DB::table('article_metrics')->insert([
+    //             'submission_id' => $article->id,
+    //             'type' => 'view',
+    //             'ip_address' => $ip,
+    //             'country_code' => $countryCode,
+    //             'city' => $city,
+    //             'date' => now()->toDateString(),
+    //             'created_at' => now(),
+    //             'updated_at' => now(),
+    //         ]);
+    //     }
+
+    //     // =============================================
+    //     // ANALYTICS: Prepare Chart Data (Last 12 Months)
+    //     // =============================================
+    //     $stats = DB::table('article_metrics')
+    //         ->selectRaw("TO_CHAR(date, 'YYYY-MM') as month, type, count(*) as total")
+    //         ->where('submission_id', $article->id)
+    //         ->where('date', '>=', now()->subYear())
+    //         ->groupBy('month', 'type')
+    //         ->orderBy('month')
+    //         ->get();
+        
+    //     // Build complete month range for last 12 months
+    //     $months = collect();
+    //     for ($i = 11; $i >= 0; $i--) {
+    //         $months->push(now()->subMonths($i)->format('Y-m'));
+    //     }
+        
+    //     // Map data to months (fill missing months with 0)
+    //     $chartLabels = $months->values();
+    //     $viewsData = $months->mapWithKeys(function($month) use ($stats) {
+    //         $stat = $stats->where('month', $month)->where('type', 'view')->first();
+    //         return [$month => $stat ? $stat->total : 0];
+    //     })->values();
+        
+    //     $downloadsData = $months->mapWithKeys(function($month) use ($stats) {
+    //         $stat = $stats->where('month', $month)->where('type', 'download')->first();
+    //         return [$month => $stat ? $stat->total : 0];
+    //     })->values();
+
+    //     // =============================================
+    //     // ANALYTICS: Country Stats (Admin Only)
+    //     // =============================================
+    //     $countryStats = collect();
+    //     if (auth()->check() && auth()->user()->hasAnyRole(['admin', 'journal manager', 'editor'])) {
+    //         $countryStats = DB::table('article_metrics')
+    //             ->select('country_code', DB::raw('count(*) as total'))
+    //             ->where('submission_id', $article->id)
+    //             ->where('type', 'view')
+    //             ->whereNotNull('country_code')
+    //             ->groupBy('country_code')
+    //             ->orderByDesc('total')
+    //             ->limit(10)
+    //             ->get();
+    //     }
+
+    //     // Related articles from same section in same journal
+    //     $relatedArticles = Submission::where('journal_id', $journal->id)
+    //         ->where('section_id', $article->section_id)
+    //         ->where('id', '!=', $article->id)
+    //         ->published()
+    //         ->with(['authors', 'section'])
+    //         ->latest('published_at')
+    //         ->take(5)
+    //         ->get();
+
+    //     // Get journal website settings for theming
+    //     $settings = $journal->getWebsiteSettings();
+
+    //     return view('journal.public.article', compact(
+    //         'journal',
+    //         'article',
+    //         'issue',
+    //         'relatedArticles',
+    //         'settings',
+    //         'chartLabels',
+    //         'viewsData',
+    //         'downloadsData',
+    //         'countryStats'
+    //     ));
+    // }
 
     /**
      * About the journal.

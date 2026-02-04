@@ -72,9 +72,9 @@ class OaiController extends Controller
                     ]
                 ];
                 
-                // Return as text/html for "Classic" view
+                // Return as text/xml for OAI Validation, Styled via XSLT
                 return response()->view('journal.public.oai.list_sets', compact('journal', 'sets'))
-                    ->header('Content-Type', 'text/html; charset=utf-8');
+                    ->header('Content-Type', 'text/xml');
 
             case 'GetRecord':
                 if (!$identifier) {
@@ -111,7 +111,7 @@ class OaiController extends Controller
             'journal' => $journal,
             'records' => $records,
             'verb' => 'ListIdentifiers'
-        ])->header('Content-Type', 'text/html; charset=utf-8');
+        ])->header('Content-Type', 'text/xml');
     }
 
     private function identify($journal)
