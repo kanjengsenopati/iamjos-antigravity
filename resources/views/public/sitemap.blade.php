@@ -27,7 +27,7 @@
                 <loc>
                     {{ route('journal.public.article', ['journal' => $article->journal->slug, 'article' => $article->slug ?? $article->id]) }}
                 </loc>
-                <lastmod>{{ \Carbon\Carbon::parse($article->pub_date)->format('Y-m-d') }}</lastmod>
+                <lastmod>{{ \Carbon\Carbon::parse($article->last_mod_date)->format('Y-m-d') }}</lastmod>
                 <changefreq>monthly</changefreq>
                 <priority>0.6</priority>
             </url>
