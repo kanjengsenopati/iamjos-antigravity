@@ -41,12 +41,64 @@ class WorkflowSettingsController extends Controller
             $emailTemplates = $journal->emailTemplates()->orderBy('key')->get();
         }
 
+        // Load Notification Templates (Per-Journal Logic)
+        $defaults = \App\Services\WaGateway::getDefaultTemplates();
+        $variables = \App\Services\WaGateway::getTemplateVariables();
+        
+        // Fetch existing overrides for this journal
+        $journalTemplates = \App\Models\NotificationTemplate::where('channel', 'whatsapp')
+            ->where('journal_id', $journal->id)
+            ->get()
+            ->keyBy('event_key');
+            
+        // Fetch global templates (for fallback if needed)
+        $globalTemplates = \App\Models\NotificationTemplate::where('channel', 'whatsapp')
+            ->whereNull('journal_id')
+            ->get()
+            ->keyBy('event_key');
+
+        $notificationTemplates = [];
+
+        foreach ($defaults as $key => $defaultBody) {
+            // Determine effective body and status
+            $templateObj = new \stdClass();
+            $templateObj->event_key = $key;
+            $templateObj->variables = $variables[$key] ?? [];
+            
+            // Priority 1: Journal Override
+            if ($journalTemplates->has($key)) {
+                $t = $journalTemplates->get($key);
+                $templateObj->id = $t->id; 
+                $templateObj->body = $t->body;
+                $templateObj->is_active = $t->is_active;
+                $templateObj->source = 'journal';
+            } 
+            // Priority 2: Global Configuration
+            elseif ($globalTemplates->has($key)) {
+                $t = $globalTemplates->get($key);
+                $templateObj->id = null; // Mark as null so UI knows it's inherited
+                $templateObj->body = $t->body;
+                $templateObj->is_active = $t->is_active;
+                $templateObj->source = 'global';
+            } 
+            // Priority 3: Hardcoded Default
+            else {
+                $templateObj->id = null;
+                $templateObj->body = $defaultBody;
+                $templateObj->is_active = true; // Default to active
+                $templateObj->source = 'default';
+            }
+            
+            $notificationTemplates[] = $templateObj;
+        }
+
         return view('admin.journals.workflow', compact(
             'journal',
             'checklists',
             'reviewForms',
             'libraryFiles',
-            'emailTemplates'
+            'emailTemplates',
+            'notificationTemplates'
         ));
     }
 
@@ -479,4 +531,39 @@ class WorkflowSettingsController extends Controller
 
         return back()->with('error', 'Could not find default template.');
     }
+
+    // =====================================================
+    // NOTIFICATION TEMPLATES
+    // =====================================================
+
+    /**
+     * Update a notification template.
+     */
+    public function updateNotificationTemplate(Request $request, string $journal, string $eventKey): RedirectResponse
+    {
+        $currentJournal = current_journal();
+        if (!$currentJournal) {
+             abort(404);
+        }
+
+        $validated = $request->validate([
+            'body' => 'required|string',
+            'is_active' => 'boolean',
+        ]);
+
+        \App\Models\NotificationTemplate::updateOrCreate(
+            [
+                'journal_id' => $currentJournal->id,
+                'event_key' => $eventKey,
+                'channel' => 'whatsapp'
+            ],
+            [
+                'body' => $validated['body'],
+                'is_active' => $request->boolean('is_active'),
+            ]
+        );
+
+        return back()->with('success', 'Notification template updated successfully.');
+    }
 }
+

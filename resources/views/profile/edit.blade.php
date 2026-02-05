@@ -62,7 +62,7 @@
                                     class="w-32 h-32 rounded-full object-cover border-4 border-primary-100 shadow-lg">
                             @else
                                 <div x-show="!previewUrl"
-                                    class="w-32 h-32 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center border-4 border-primary-100 shadow-lg">
+                                    class="w-32 h-32 rounded-full bg-primary-600 flex items-center justify-center border-4 border-primary-100 shadow-lg">
                                     <span class="text-white text-4xl font-bold">{{ $user->initials }}</span>
                                 </div>
                             @endif
@@ -123,8 +123,7 @@
                                             onclick="return confirm('Are you sure you want to remove your avatar?')">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                             Remove
@@ -138,31 +137,34 @@
             </div>
 
             <!-- Tabbed Interface -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
-                x-data="{ activeTab: 'identity' }">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden" x-data="{ activeTab: 'identity' }">
                 <!-- Tab Navigation -->
                 <div class="border-b border-gray-200 bg-gray-50">
                     <nav class="flex overflow-x-auto -mb-px" aria-label="Tabs">
                         <button @click="activeTab = 'identity'" type="button"
-                            :class="activeTab === 'identity' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            :class="activeTab === 'identity' ? 'border-primary-600 text-primary-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
                             <i class="fa-solid fa-user mr-2"></i>
                             Identity
                         </button>
                         <button @click="activeTab = 'contact'" type="button"
-                            :class="activeTab === 'contact' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            :class="activeTab === 'contact' ? 'border-primary-600 text-primary-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
                             <i class="fa-solid fa-address-book mr-2"></i>
                             Contact
                         </button>
                         <button @click="activeTab = 'public'" type="button"
-                            :class="activeTab === 'public' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            :class="activeTab === 'public' ? 'border-primary-600 text-primary-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
                             <i class="fa-solid fa-globe mr-2"></i>
                             Public
                         </button>
                         <button @click="activeTab = 'password'" type="button"
-                            :class="activeTab === 'password' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            :class="activeTab === 'password' ? 'border-primary-600 text-primary-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
                             <i class="fa-solid fa-lock mr-2"></i>
                             Password
@@ -187,7 +189,8 @@
                                 <input type="text" name="name" id="name"
                                     value="{{ old('name', $user->name) }}" required
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('name') border-red-500 @enderror">
-                                <p class="mt-1 text-xs text-gray-500">Your public display name (how you want to be known)</p>
+                                <p class="mt-1 text-xs text-gray-500">Your public display name (how you want to be
+                                    known)</p>
                                 @error('name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -236,15 +239,39 @@
                                     <option value="">Select a country</option>
                                     @php
                                         $countries = [
-                                            'Indonesia', 'Malaysia', 'Singapore', 'Thailand', 'Philippines',
-                                            'United States', 'United Kingdom', 'Australia', 'Canada', 'Germany',
-                                            'France', 'Japan', 'South Korea', 'China', 'India', 'Netherlands',
-                                            'Switzerland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Belgium',
-                                            'Austria', 'New Zealand', 'Brazil', 'Mexico', 'Argentina', 'Chile'
+                                            'Indonesia',
+                                            'Malaysia',
+                                            'Singapore',
+                                            'Thailand',
+                                            'Philippines',
+                                            'United States',
+                                            'United Kingdom',
+                                            'Australia',
+                                            'Canada',
+                                            'Germany',
+                                            'France',
+                                            'Japan',
+                                            'South Korea',
+                                            'China',
+                                            'India',
+                                            'Netherlands',
+                                            'Switzerland',
+                                            'Sweden',
+                                            'Norway',
+                                            'Denmark',
+                                            'Finland',
+                                            'Belgium',
+                                            'Austria',
+                                            'New Zealand',
+                                            'Brazil',
+                                            'Mexico',
+                                            'Argentina',
+                                            'Chile',
                                         ];
                                     @endphp
-                                    @foreach($countries as $country)
-                                        <option value="{{ $country }}" {{ old('country', $user->country) === $country ? 'selected' : '' }}>
+                                    @foreach ($countries as $country)
+                                        <option value="{{ $country }}"
+                                            {{ old('country', $user->country) === $country ? 'selected' : '' }}>
                                             {{ $country }}
                                         </option>
                                     @endforeach
@@ -265,7 +292,8 @@
                                 <input type="email" name="email" id="email"
                                     value="{{ old('email', $user->email) }}" required disabled
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed">
-                                <p class="mt-1 text-xs text-gray-500">Email cannot be changed directly. Contact admin if needed.</p>
+                                <p class="mt-1 text-xs text-gray-500">Email cannot be changed directly. Contact admin
+                                    if needed.</p>
                             </div>
 
                             <!-- Phone Number with WhatsApp -->
@@ -275,16 +303,17 @@
                                 </label>
                                 <div class="relative">
                                     <input type="tel" name="phone" id="phone"
-                                        value="{{ old('phone', $user->phone) }}"
-                                        placeholder="628123456789"
+                                        value="{{ old('phone', $user->phone) }}" placeholder="628123456789"
                                         class="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 </div>
                                 <div class="mt-2 flex items-start">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <i class="fa-brands fa-whatsapp mr-1"></i>
                                         WhatsApp Active
                                     </span>
-                                    <p class="ml-2 text-xs text-gray-500">Ensure this number is active on WhatsApp for notifications. Format: 628...</p>
+                                    <p class="ml-2 text-xs text-gray-500">Ensure this number is active on WhatsApp for
+                                        notifications. Format: 628...</p>
                                 </div>
                             </div>
 
@@ -311,7 +340,8 @@
                                 </label>
                                 <textarea name="bio" id="bio" rows="6"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('bio', $user->bio) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">Maximum 5000 characters. This will be displayed on your public profile.</p>
+                                <p class="mt-1 text-xs text-gray-500">Maximum 5000 characters. This will be displayed
+                                    on your public profile.</p>
                             </div>
 
                             <!-- Homepage URL -->
@@ -332,11 +362,14 @@
                             <div>
                                 <label for="orcid_id" class="block text-sm font-medium text-gray-700 mb-2">
                                     <svg class="inline-block w-4 h-4 mr-1" viewBox="0 0 256 256" fill="#A6CE39">
-                                        <path d="M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z"/>
+                                        <path
+                                            d="M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z" />
                                         <g>
-                                            <path fill="#FFFFFF" d="M86.3,186.2H70.9V79.1h15.4v48.4V186.2z"/>
-                                            <path fill="#FFFFFF" d="M108.9,79.1h41.6c39.6,0,57,28.3,57,53.6c0,27.5-21.5,53.6-56.8,53.6h-41.8V79.1z M124.3,172.4h24.5c34.9,0,42.9-26.5,42.9-39.7c0-21.5-13.7-39.7-43.7-39.7h-23.7V172.4z"/>
-                                            <path fill="#FFFFFF" d="M88.7,56.8c0,5.5-4.5,10.1-10.1,10.1c-5.6,0-10.1-4.6-10.1-10.1c0-5.6,4.5-10.1,10.1-10.1C84.2,46.7,88.7,51.3,88.7,56.8z"/>
+                                            <path fill="#FFFFFF" d="M86.3,186.2H70.9V79.1h15.4v48.4V186.2z" />
+                                            <path fill="#FFFFFF"
+                                                d="M108.9,79.1h41.6c39.6,0,57,28.3,57,53.6c0,27.5-21.5,53.6-56.8,53.6h-41.8V79.1z M124.3,172.4h24.5c34.9,0,42.9-26.5,42.9-39.7c0-21.5-13.7-39.7-43.7-39.7h-23.7V172.4z" />
+                                            <path fill="#FFFFFF"
+                                                d="M88.7,56.8c0,5.5-4.5,10.1-10.1,10.1c-5.6,0-10.1-4.6-10.1-10.1c0-5.6,4.5-10.1,10.1-10.1C84.2,46.7,88.7,51.3,88.7,56.8z" />
                                         </g>
                                     </svg>
                                     ORCID iD
@@ -347,7 +380,8 @@
                                         placeholder="https://orcid.org/0000-0001-2345-6789"
                                         class="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500">Your unique researcher identifier. Format: https://orcid.org/0000-0001-2345-6789</p>
+                                <p class="mt-1 text-xs text-gray-500">Your unique researcher identifier. Format:
+                                    https://orcid.org/0000-0001-2345-6789</p>
                                 @error('orcid_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -361,7 +395,8 @@
                     </div>
 
                     <!-- Save Button (for tabs 1-3) -->
-                    <div x-show="activeTab !== 'password'" class="mt-8 flex justify-end border-t border-gray-200 pt-6">
+                    <div x-show="activeTab !== 'password'"
+                        class="mt-8 flex justify-end border-t border-gray-200 pt-6">
                         <button type="submit"
                             class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -422,7 +457,7 @@
 
                         <div class="mt-8 flex justify-end border-t border-gray-200 pt-6">
                             <button type="submit"
-                                class="inline-flex items-center px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors shadow-sm">
+                                class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -464,77 +499,81 @@
     </div>
 
     @push('styles')
-    <style>
-        /* CKEditor 4 Custom Styling */
-        .cke_chrome {
-            border: 1px solid #d1d5db !important;
-            border-radius: 0.5rem !important;
-        }
-        .cke_top {
-            background: #f9fafb !important;
-            border-bottom: 1px solid #e5e7eb !important;
-            border-radius: 0.5rem 0.5rem 0 0 !important;
-        }
-        .cke_bottom {
-            background: #f9fafb !important;
-            border-top: 1px solid #e5e7eb !important;
-        }
-    </style>
+        <style>
+            /* CKEditor 4 Custom Styling */
+            .cke_chrome {
+                border: 1px solid #d1d5db !important;
+                border-radius: 0.5rem !important;
+            }
+
+            .cke_top {
+                background: #f9fafb !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                border-radius: 0.5rem 0.5rem 0 0 !important;
+            }
+
+            .cke_bottom {
+                background: #f9fafb !important;
+                border-top: 1px solid #e5e7eb !important;
+            }
+        </style>
     @endpush
 
     @push('scripts')
-    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
-    <script>
-        tinymce.init({
-            selector: '#bio',
-            height: 350,
-            menubar: false,
-            plugins: 'lists link image table code autoresize',
-            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
-            branding: false,
-            license_key: 'gpl',
-            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.withCredentials = false;
-                xhr.open('POST', '{{ route('profile.upload.image') }}');
-                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+        <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+        <script>
+            tinymce.init({
+                selector: '#bio',
+                height: 350,
+                menubar: false,
+                plugins: 'lists link image table code autoresize',
+                toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+                branding: false,
+                license_key: 'gpl',
+                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.withCredentials = false;
+                    xhr.open('POST', '{{ route('profile.upload.image') }}');
+                    xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
 
-                xhr.upload.onprogress = (e) => {
-                    progress(e.loaded / e.total * 100);
-                };
+                    xhr.upload.onprogress = (e) => {
+                        progress(e.loaded / e.total * 100);
+                    };
 
-                xhr.onload = () => {
-                    if (xhr.status === 403) {
-                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
-                        return;
-                    }
+                    xhr.onload = () => {
+                        if (xhr.status === 403) {
+                            reject({
+                                message: 'HTTP Error: ' + xhr.status,
+                                remove: true
+                            });
+                            return;
+                        }
 
-                    if (xhr.status < 200 || xhr.status >= 300) {
-                        reject('HTTP Error: ' + xhr.status);
-                        return;
-                    }
+                        if (xhr.status < 200 || xhr.status >= 300) {
+                            reject('HTTP Error: ' + xhr.status);
+                            return;
+                        }
 
-                    const json = JSON.parse(xhr.responseText);
+                        const json = JSON.parse(xhr.responseText);
 
-                    if (!json || typeof json.location != 'string') {
-                        reject('Invalid JSON: ' + xhr.responseText);
-                        return;
-                    }
+                        if (!json || typeof json.location != 'string') {
+                            reject('Invalid JSON: ' + xhr.responseText);
+                            return;
+                        }
 
-                    resolve(json.location);
-                };
+                        resolve(json.location);
+                    };
 
-                xhr.onerror = () => {
-                    reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
-                };
+                    xhr.onerror = () => {
+                        reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                    };
 
-                const formData = new FormData();
-                formData.append('file', blobInfo.blob(), blobInfo.filename());
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
 
-                xhr.send(formData);
-            })
-        });
-    </script>
-    
+                    xhr.send(formData);
+                })
+            });
+        </script>
     @endpush
 </x-app-layout>

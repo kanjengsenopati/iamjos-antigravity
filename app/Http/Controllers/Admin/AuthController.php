@@ -243,24 +243,4 @@ class AuthController extends Controller
             'tagline' => 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.',
         ];
     }
-
-    /**
-     * Legacy method for accessing from office (kept for backward compatibility).
-     */
-    public function accessFromOffice($id)
-    {
-        // Find the admin by ID
-        $admin = Admin::find($id);
-
-        // Check if admin exists
-        if (! $admin && $admin->is_operational == 0) {
-            return redirect()->route('login')->with('error', 'Maaf, Anda tidak memiliki akses ke CMS');
-        }
-
-        // Log in the admin using their ID
-        Auth::guard('web')->loginUsingId($id);
-
-        // Redirect to the dashboard with a success message
-        return redirect()->route('dashboard.index')->with('success', 'Berhasil Masuk ke Operational CMS');
-    }
 }

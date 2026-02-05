@@ -488,8 +488,12 @@ class SubmissionController extends Controller
                 ->get();
         }
 
+        // 6. Google Scholar SEO Analysis
+        $validator = new \App\Services\GoogleScholarValidator();
+        $seoAnalysis = $validator->validate($submission);
+
         return view('submissions.show', array_merge(
-            compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView'),
+            compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView', 'seoAnalysis'),
             $isAuthorView ? ['authorReviewData' => $authorReviewData] : []
         ));
     }
