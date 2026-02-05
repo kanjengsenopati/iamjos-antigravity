@@ -298,7 +298,7 @@ class SubmissionDiscussionController extends Controller
                     'name' => $participant->name,
                     'subject' => $discussion->subject,
                     'title' => $discussion->submission->title ?? 'Naskah',
-                ]);
+                ], $discussion->submission?->journal_id);
             } catch (\Exception $e) {
                 // Log but don't fail the request
                 Log::warning('Failed to send discussion notification', [
