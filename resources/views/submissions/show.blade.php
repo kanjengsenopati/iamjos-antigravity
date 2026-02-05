@@ -2798,6 +2798,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
                             <i class="fa-solid fa-book-open w-5 mr-2 text-center"></i> Issue
                         </button>
+                        <button @click="pubTab = 'seo'"
+                            :class="pubTab === 'seo' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-brands fa-google-scholar w-5 mr-2 text-center"></i> Google Scholar SEO
+                        </button>
                     </div>
                 </nav>
 
@@ -3076,6 +3082,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
                             </fieldset>
                         </form>
+                    </div>
+
+
+                    {{-- ====== SEO CHECK (Google Scholar) ====== --}}
+                    <div x-show="pubTab === 'seo'" class="h-full">
+                        <x-google-scholar-seo :analysis="$seoAnalysis" />
                     </div>
 
                     {{-- ====== ISSUE (SCHEDULING) ====== --}}

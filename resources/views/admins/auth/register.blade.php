@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,14 +33,21 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
-        [x-cloak] { display: none !important; }
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
+
 <body class="font-sans antialiased bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen">
     <!-- Background Pattern -->
     <div class="fixed inset-0 -z-10 overflow-hidden">
-        <div class="absolute -top-40 -right-40 w-80 h-80 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
-        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+        <div
+            class="absolute -top-40 -right-40 w-80 h-80 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70">
+        </div>
+        <div
+            class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70">
+        </div>
     </div>
 
     <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center" x-data="registerForm()">
@@ -47,7 +55,8 @@
             <!-- Logo & Header -->
             <div class="text-center mb-8">
                 <a href="/" class="inline-flex items-center gap-3 mb-6">
-                    <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                    <div
+                        class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i class="fas fa-book-open text-xl text-white"></i>
                     </div>
                     <span class="text-2xl font-bold text-gray-900">IAMJOS</span>
@@ -93,15 +102,10 @@
                                 <label for="given_name" class="block text-sm font-medium text-gray-700 mb-1.5">
                                     First Name <span class="text-red-500">*</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    id="given_name"
-                                    name="given_name"
-                                    value="{{ old('given_name') }}"
+                                <input type="text" id="given_name" name="given_name" value="{{ old('given_name') }}"
                                     placeholder="John"
                                     class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                    required
-                                >
+                                    required>
                                 @error('given_name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -112,15 +116,10 @@
                                 <label for="family_name" class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Last Name <span class="text-red-500">*</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    id="family_name"
-                                    name="family_name"
-                                    value="{{ old('family_name') }}"
-                                    placeholder="Doe"
+                                <input type="text" id="family_name" name="family_name"
+                                    value="{{ old('family_name') }}" placeholder="Doe"
                                     class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                    required
-                                >
+                                    required>
                                 @error('family_name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -135,15 +134,10 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-university text-gray-400 text-sm"></i>
                                     </div>
-                                    <input
-                                        type="text"
-                                        id="affiliation"
-                                        name="affiliation"
-                                        value="{{ old('affiliation') }}"
-                                        placeholder="University of Indonesia"
+                                    <input type="text" id="affiliation" name="affiliation"
+                                        value="{{ old('affiliation') }}" placeholder="University of Indonesia"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                        required
-                                    >
+                                        required>
                                 </div>
                                 @error('affiliation')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -159,37 +153,55 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-globe text-gray-400 text-sm"></i>
                                     </div>
-                                    <select
-                                        id="country"
-                                        name="country"
+                                    <select id="country" name="country"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors appearance-none bg-white"
-                                        required
-                                    >
+                                        required>
                                         <option value="">Select your country</option>
-                                        @foreach(config('countries', []) as $code => $name)
-                                            <option value="{{ $code }}" {{ old('country') == $code ? 'selected' : '' }}>{{ $name }}</option>
+                                        @foreach (config('countries', []) as $code => $name)
+                                            <option value="{{ $code }}"
+                                                {{ old('country') == $code ? 'selected' : '' }}>{{ $name }}
+                                            </option>
                                         @endforeach
                                         <!-- Fallback countries if config not available -->
-                                        @if(empty(config('countries')))
-                                            <option value="ID" {{ old('country') == 'ID' ? 'selected' : '' }}>Indonesia</option>
-                                            <option value="MY" {{ old('country') == 'MY' ? 'selected' : '' }}>Malaysia</option>
-                                            <option value="SG" {{ old('country') == 'SG' ? 'selected' : '' }}>Singapore</option>
-                                            <option value="TH" {{ old('country') == 'TH' ? 'selected' : '' }}>Thailand</option>
-                                            <option value="VN" {{ old('country') == 'VN' ? 'selected' : '' }}>Vietnam</option>
-                                            <option value="PH" {{ old('country') == 'PH' ? 'selected' : '' }}>Philippines</option>
-                                            <option value="AU" {{ old('country') == 'AU' ? 'selected' : '' }}>Australia</option>
-                                            <option value="JP" {{ old('country') == 'JP' ? 'selected' : '' }}>Japan</option>
-                                            <option value="KR" {{ old('country') == 'KR' ? 'selected' : '' }}>South Korea</option>
-                                            <option value="CN" {{ old('country') == 'CN' ? 'selected' : '' }}>China</option>
-                                            <option value="IN" {{ old('country') == 'IN' ? 'selected' : '' }}>India</option>
-                                            <option value="US" {{ old('country') == 'US' ? 'selected' : '' }}>United States</option>
-                                            <option value="GB" {{ old('country') == 'GB' ? 'selected' : '' }}>United Kingdom</option>
-                                            <option value="DE" {{ old('country') == 'DE' ? 'selected' : '' }}>Germany</option>
-                                            <option value="FR" {{ old('country') == 'FR' ? 'selected' : '' }}>France</option>
-                                            <option value="NL" {{ old('country') == 'NL' ? 'selected' : '' }}>Netherlands</option>
-                                            <option value="CA" {{ old('country') == 'CA' ? 'selected' : '' }}>Canada</option>
-                                            <option value="BR" {{ old('country') == 'BR' ? 'selected' : '' }}>Brazil</option>
-                                            <option value="OTHER" {{ old('country') == 'OTHER' ? 'selected' : '' }}>Other</option>
+                                        @if (empty(config('countries')))
+                                            <option value="ID" {{ old('country') == 'ID' ? 'selected' : '' }}>
+                                                Indonesia</option>
+                                            <option value="MY" {{ old('country') == 'MY' ? 'selected' : '' }}>
+                                                Malaysia</option>
+                                            <option value="SG" {{ old('country') == 'SG' ? 'selected' : '' }}>
+                                                Singapore</option>
+                                            <option value="TH" {{ old('country') == 'TH' ? 'selected' : '' }}>
+                                                Thailand</option>
+                                            <option value="VN" {{ old('country') == 'VN' ? 'selected' : '' }}>
+                                                Vietnam</option>
+                                            <option value="PH" {{ old('country') == 'PH' ? 'selected' : '' }}>
+                                                Philippines</option>
+                                            <option value="AU" {{ old('country') == 'AU' ? 'selected' : '' }}>
+                                                Australia</option>
+                                            <option value="JP" {{ old('country') == 'JP' ? 'selected' : '' }}>Japan
+                                            </option>
+                                            <option value="KR" {{ old('country') == 'KR' ? 'selected' : '' }}>South
+                                                Korea</option>
+                                            <option value="CN" {{ old('country') == 'CN' ? 'selected' : '' }}>China
+                                            </option>
+                                            <option value="IN" {{ old('country') == 'IN' ? 'selected' : '' }}>
+                                                India</option>
+                                            <option value="US" {{ old('country') == 'US' ? 'selected' : '' }}>
+                                                United States</option>
+                                            <option value="GB" {{ old('country') == 'GB' ? 'selected' : '' }}>
+                                                United Kingdom</option>
+                                            <option value="DE" {{ old('country') == 'DE' ? 'selected' : '' }}>
+                                                Germany</option>
+                                            <option value="FR" {{ old('country') == 'FR' ? 'selected' : '' }}>
+                                                France</option>
+                                            <option value="NL" {{ old('country') == 'NL' ? 'selected' : '' }}>
+                                                Netherlands</option>
+                                            <option value="CA" {{ old('country') == 'CA' ? 'selected' : '' }}>
+                                                Canada</option>
+                                            <option value="BR" {{ old('country') == 'BR' ? 'selected' : '' }}>
+                                                Brazil</option>
+                                            <option value="OTHER" {{ old('country') == 'OTHER' ? 'selected' : '' }}>
+                                                Other</option>
                                         @endif
                                     </select>
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -197,6 +209,29 @@
                                     </div>
                                 </div>
                                 @error('country')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Phone Number (Full Width) -->
+                            <div class="md:col-span-2">
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Phone Number (WhatsApp) <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-phone text-gray-400 text-sm"></i>
+                                    </div>
+                                    <input type="tel" id="phone" name="phone" value="{{ old('phone') }}"
+                                        placeholder="e.g. 6281234567890"
+                                        class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                        required>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                                    <i class="fab fa-whatsapp text-green-500"></i>
+                                    Please ensure this number is connected to WhatsApp.
+                                </p>
+                                @error('phone')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -222,15 +257,10 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-envelope text-gray-400 text-sm"></i>
                                     </div>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        value="{{ old('email') }}"
+                                    <input type="email" id="email" name="email" value="{{ old('email') }}"
                                         placeholder="john@university.edu"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                        required
-                                    >
+                                        required>
                                 </div>
                                 @error('email')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -246,15 +276,10 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-at text-gray-400 text-sm"></i>
                                     </div>
-                                    <input
-                                        type="text"
-                                        id="username"
-                                        name="username"
-                                        value="{{ old('username') }}"
-                                        placeholder="johndoe"
+                                    <input type="text" id="username" name="username"
+                                        value="{{ old('username') }}" placeholder="johndoe"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                        required
-                                    >
+                                        required>
                                 </div>
                                 <p class="mt-1 text-xs text-gray-500">Alphanumeric characters only, no spaces</p>
                                 @error('username')
@@ -271,20 +296,12 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-lock text-gray-400 text-sm"></i>
                                     </div>
-                                    <input
-                                        :type="show ? 'text' : 'password'"
-                                        id="password"
-                                        name="password"
+                                    <input :type="show ? 'text' : 'password'" id="password" name="password"
                                         placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                        required
-                                        minlength="8"
-                                    >
-                                    <button
-                                        type="button"
-                                        @click="show = !show"
-                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                                    >
+                                        required minlength="8">
+                                    <button type="button" @click="show = !show"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                                         <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
@@ -296,26 +313,20 @@
 
                             <!-- Confirm Password -->
                             <div x-data="{ show: false }">
-                                <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1.5">
+                                <label for="password_confirmation"
+                                    class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Confirm Password <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-lock text-gray-400 text-sm"></i>
                                     </div>
-                                    <input
-                                        :type="show ? 'text' : 'password'"
-                                        id="password_confirmation"
-                                        name="password_confirmation"
-                                        placeholder="••••••••"
+                                    <input :type="show ? 'text' : 'password'" id="password_confirmation"
+                                        name="password_confirmation" placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                        required
-                                    >
-                                    <button
-                                        type="button"
-                                        @click="show = !show"
-                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                                    >
+                                        required>
+                                    <button type="button" @click="show = !show"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                                         <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
@@ -338,22 +349,19 @@
                         <div class="space-y-4">
                             <!-- Privacy Policy Consent -->
                             <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                <input
-                                    type="checkbox"
-                                    id="privacy_consent"
-                                    name="privacy_consent"
-                                    value="1"
+                                <input type="checkbox" id="privacy_consent" name="privacy_consent" value="1"
                                     class="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    required
-                                    {{ old('privacy_consent') ? 'checked' : '' }}
-                                >
+                                    required {{ old('privacy_consent') ? 'checked' : '' }}>
                                 <div>
-                                    <label for="privacy_consent" class="text-sm font-medium text-gray-900 cursor-pointer">
+                                    <label for="privacy_consent"
+                                        class="text-sm font-medium text-gray-900 cursor-pointer">
                                         Privacy Policy Agreement <span class="text-red-500">*</span>
                                     </label>
                                     <p class="text-sm text-gray-600 mt-1">
                                         Yes, I agree to have my data collected and stored according to the
-                                        <a href="#" class="text-indigo-600 hover:text-indigo-500 underline">privacy statement</a>.
+                                        <a href="#"
+                                            class="text-indigo-600 hover:text-indigo-500 underline">privacy
+                                            statement</a>.
                                     </p>
                                 </div>
                             </div>
@@ -363,16 +371,13 @@
 
                             <!-- Notification Preferences -->
                             <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                <input
-                                    type="checkbox"
-                                    id="email_notifications"
-                                    name="email_notifications"
+                                <input type="checkbox" id="email_notifications" name="email_notifications"
                                     value="1"
                                     class="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    {{ old('email_notifications', true) ? 'checked' : '' }}
-                                >
+                                    {{ old('email_notifications', true) ? 'checked' : '' }}>
                                 <div>
-                                    <label for="email_notifications" class="text-sm font-medium text-gray-900 cursor-pointer">
+                                    <label for="email_notifications"
+                                        class="text-sm font-medium text-gray-900 cursor-pointer">
                                         Email Notifications
                                     </label>
                                     <p class="text-sm text-gray-600 mt-1">
@@ -391,7 +396,8 @@
                             </div>
                             <div>
                                 <h2 class="text-lg font-semibold text-gray-900">Register with Journals</h2>
-                                <p class="text-sm text-gray-500">Select the journals you want to participate in <span class="text-red-500">*</span></p>
+                                <p class="text-sm text-gray-500">Select the journals you want to participate in <span
+                                        class="text-red-500">*</span></p>
                             </div>
                         </div>
 
@@ -404,25 +410,26 @@
                             </div>
                         @enderror
 
-                        @if(isset($journals) && $journals->count() > 0)
+                        @if (isset($journals) && $journals->count() > 0)
                             <!-- Journal Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                @foreach($journals as $journal)
-                                    <div
-                                        class="relative rounded-xl border-2 transition-all duration-200 overflow-hidden"
-                                        :class="selectedJournals.includes('{{ $journal->id }}') ? 'border-indigo-300 bg-indigo-50/50' : 'border-gray-200 bg-white hover:border-gray-300'"
-                                    >
+                                @foreach ($journals as $journal)
+                                    <div class="relative rounded-xl border-2 transition-all duration-200 overflow-hidden"
+                                        :class="selectedJournals.includes('{{ $journal->id }}') ?
+                                            'border-indigo-300 bg-indigo-50/50' :
+                                            'border-gray-200 bg-white hover:border-gray-300'">
                                         <!-- Journal Card Content -->
                                         <div class="p-4">
                                             <!-- Header -->
                                             <div class="flex items-start gap-3 mb-4">
                                                 <!-- Journal Icon/Logo -->
-                                                <div
-                                                    class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
-                                                    :class="selectedJournals.includes('{{ $journal->id }}') ? 'bg-indigo-200 text-indigo-700' : 'bg-gray-100 text-gray-500'"
-                                                >
-                                                    @if($journal->logo_path)
-                                                        <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}" class="w-10 h-10 object-contain rounded">
+                                                <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                                                    :class="selectedJournals.includes('{{ $journal->id }}') ?
+                                                        'bg-indigo-200 text-indigo-700' : 'bg-gray-100 text-gray-500'">
+                                                    @if ($journal->logo_path)
+                                                        <img src="{{ Storage::url($journal->logo_path) }}"
+                                                            alt="{{ $journal->name }}"
+                                                            class="w-10 h-10 object-contain rounded">
                                                     @else
                                                         <i class="fas fa-book text-lg"></i>
                                                     @endif
@@ -433,8 +440,9 @@
                                                     <h3 class="font-semibold text-gray-900 text-sm leading-tight">
                                                         {{ $journal->name }}
                                                     </h3>
-                                                    @if($journal->abbreviation)
-                                                        <span class="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                                                    @if ($journal->abbreviation)
+                                                        <span
+                                                            class="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
                                                             {{ $journal->abbreviation }}
                                                         </span>
                                                     @endif
@@ -444,71 +452,65 @@
                                             <!-- Main Checkbox: Register as Author/Reader -->
                                             <label
                                                 class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors"
-                                                :class="selectedJournals.includes('{{ $journal->id }}') ? 'bg-indigo-100' : 'bg-gray-50 hover:bg-gray-100'"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    name="journals[]"
-                                                    value="{{ $journal->id }}"
+                                                :class="selectedJournals.includes('{{ $journal->id }}') ? 'bg-indigo-100' :
+                                                    'bg-gray-50 hover:bg-gray-100'">
+                                                <input type="checkbox" name="journals[]" value="{{ $journal->id }}"
                                                     class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                                     @change="toggleJournal('{{ $journal->id }}')"
                                                     :checked="selectedJournals.includes('{{ $journal->id }}')"
-                                                    {{ in_array($journal->id, old('journals', [])) ? 'checked' : '' }}
-                                                >
+                                                    {{ in_array($journal->id, old('journals', [])) ? 'checked' : '' }}>
                                                 <div>
-                                                    <span class="text-sm font-medium text-gray-900">Register as Author/Reader</span>
-                                                    <p class="text-xs text-gray-500 mt-0.5">Submit articles and access publications</p>
+                                                    <span class="text-sm font-medium text-gray-900">Register as
+                                                        Author/Reader</span>
+                                                    <p class="text-xs text-gray-500 mt-0.5">Submit articles and access
+                                                        publications</p>
                                                 </div>
                                             </label>
 
                                             <!-- Reviewer Checkbox (Conditional) -->
-                                            <div
-                                                class="mt-2 transition-all duration-200"
-                                                :class="selectedJournals.includes('{{ $journal->id }}') ? 'opacity-100' : 'opacity-40 pointer-events-none'"
-                                            >
+                                            <div class="mt-2 transition-all duration-200"
+                                                :class="selectedJournals.includes('{{ $journal->id }}') ? 'opacity-100' :
+                                                    'opacity-40 pointer-events-none'">
                                                 <label
                                                     class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors"
-                                                    :class="reviewerForJournal['{{ $journal->id }}'] ? 'bg-purple-100' : 'bg-gray-50 hover:bg-gray-100'"
-                                                >
-                                                    <input
-                                                        type="checkbox"
+                                                    :class="reviewerForJournal['{{ $journal->id }}'] ? 'bg-purple-100' :
+                                                        'bg-gray-50 hover:bg-gray-100'">
+                                                    <input type="checkbox"
                                                         name="reviewer_for_journal[{{ $journal->id }}]"
                                                         value="1"
                                                         class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                                                         @change="toggleReviewer('{{ $journal->id }}')"
                                                         :checked="reviewerForJournal['{{ $journal->id }}']"
                                                         :disabled="!selectedJournals.includes('{{ $journal->id }}')"
-                                                        {{ old('reviewer_for_journal.' . $journal->id) ? 'checked' : '' }}
-                                                    >
+                                                        {{ old('reviewer_for_journal.' . $journal->id) ? 'checked' : '' }}>
                                                     <div>
-                                                        <span class="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                                        <span
+                                                            class="text-sm font-medium text-gray-900 flex items-center gap-2">
                                                             <i class="fas fa-user-check text-purple-600 text-xs"></i>
                                                             Become a Reviewer
                                                         </span>
-                                                        <p class="text-xs text-gray-500 mt-0.5">Evaluate manuscript submissions</p>
+                                                        <p class="text-xs text-gray-500 mt-0.5">Evaluate manuscript
+                                                            submissions</p>
                                                     </div>
                                                 </label>
                                             </div>
 
                                             <!-- Reviewer Badge (when selected) -->
-                                            <div
-                                                x-show="reviewerForJournal['{{ $journal->id }}'] && selectedJournals.includes('{{ $journal->id }}')"
+                                            <div x-show="reviewerForJournal['{{ $journal->id }}'] && selectedJournals.includes('{{ $journal->id }}')"
                                                 x-transition:enter="transition ease-out duration-200"
                                                 x-transition:enter-start="opacity-0 transform scale-95"
                                                 x-transition:enter-end="opacity-100 transform scale-100"
-                                                class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium"
-                                            >
+                                                class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
                                                 <i class="fas fa-check-circle"></i>
                                                 Reviewer role requested
                                             </div>
                                         </div>
 
                                         <!-- Selected Indicator -->
-                                        <div
-                                            x-show="selectedJournals.includes('{{ $journal->id }}')"
-                                            class="absolute top-3 right-3"
-                                        >
-                                            <span class="flex items-center justify-center w-6 h-6 bg-indigo-600 rounded-full">
+                                        <div x-show="selectedJournals.includes('{{ $journal->id }}')"
+                                            class="absolute top-3 right-3">
+                                            <span
+                                                class="flex items-center justify-center w-6 h-6 bg-indigo-600 rounded-full">
                                                 <i class="fas fa-check text-white text-xs"></i>
                                             </span>
                                         </div>
@@ -517,10 +519,12 @@
                             </div>
 
                             <!-- Selection Summary -->
-                            <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200" x-show="selectedJournals.length > 0">
+                            <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                                x-show="selectedJournals.length > 0">
                                 <p class="text-sm text-gray-700">
                                     <i class="fas fa-info-circle text-indigo-500 mr-1"></i>
-                                    You will be registered with <span class="font-semibold" x-text="selectedJournals.length"></span> journal(s).
+                                    You will be registered with <span class="font-semibold"
+                                        x-text="selectedJournals.length"></span> journal(s).
                                 </p>
                             </div>
                         @else
@@ -534,10 +538,8 @@
 
                     <!-- Submit Button -->
                     <div class="pt-6 border-t border-gray-100">
-                        <button
-                            type="submit"
-                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center gap-2"
-                        >
+                        <button type="submit"
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center gap-2">
                             <i class="fas fa-user-plus"></i>
                             Create Account
                         </button>
@@ -548,7 +550,8 @@
                 <div class="px-6 lg:px-8 py-5 bg-gray-50 border-t border-gray-100">
                     <p class="text-center text-sm text-gray-600">
                         Already have an account?
-                        <a href="{{ route('login') }}" class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
+                        <a href="{{ route('login') }}"
+                            class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
                             Sign in
                         </a>
                     </p>
@@ -610,4 +613,5 @@
         }
     </script>
 </body>
+
 </html>
