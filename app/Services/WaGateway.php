@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Jobs\SendToWhatsappNotificationJob;
 use App\Models\User;
 use App\Models\SiteSetting;
+use App\Models\NotificationTemplate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WaGateway
 {
@@ -120,19 +122,21 @@ class WaGateway
     }
 
     /**
-     * Send WhatsApp notification to a User with a pre-built template.
-     * Convenience method for common notification scenarios.
+     * Send WhatsApp notification using Dynamic Template (DB or Default).
      *
      * @param User $user Target user
-     * @param string $template Template key (welcome, submission_received, decision)
+     * @param string $templateKey Template key (e.g. 'welcome', 'submission_received')
      * @param array $params Parameters to replace in message template
+     * @param int|null $journalId Journal ID context (optional). If null, uses global template only.
      * @return bool
      */
-    public static function sendTemplate(User $user, string $template, array $params = []): bool
+    public static function sendTemplate(User $user, string $templateKey, array $params = [], ?string $journalId = null): bool
     {
-        $message = self::buildMessage($template, $params);
+        // 1. Build Message (Logic DB + Fallback ada di sini)
+        $message = self::buildMessage($templateKey, $params, $journalId);
 
         if (empty($message)) {
+            Log::warning("WaGateway: Message content is empty for template '{$templateKey}'. Aborting send.");
             return false;
         }
 
@@ -140,15 +144,75 @@ class WaGateway
     }
 
     /**
-     * Build message from template key.
-     *
-     * @param string $template Template key
-     * @param array $params Parameters for placeholder replacement
-     * @return string|null
+     * Build message logic: Check Journal DB -> Check Global DB -> Fallback to Hardcode.
      */
-    private static function buildMessage(string $template, array $params): ?string
+    private static function buildMessage(string $key, array $params, ?string $journalId = null): ?string
     {
-        $templates = [
+        // 1. Ambil Default Templates (Hardcoded) sebagai Fallback Terakhir
+        $defaults = self::getDefaultTemplates();
+
+        // 2. Cek apakah Template Key valid/dikenali
+        if (!array_key_exists($key, $defaults)) {
+            Log::warning('WaGateway: Unknown template key.', ['template' => $key]);
+            return null;
+        }
+
+        $messageTemplate = null;
+
+        try {
+            // 3. Priority 1: Check Journal Specific Template
+            if ($journalId) {
+                $journalTemplate = NotificationTemplate::where('event_key', $key)
+                    ->where('channel', 'whatsapp')
+                    ->where('journal_id', $journalId)
+                    ->where('is_active', true)
+                    ->first();
+                
+                if ($journalTemplate && !empty($journalTemplate->body)) {
+                    $messageTemplate = $journalTemplate->body;
+                }
+            }
+
+            // 4. Priority 2: Check Global/System Template (journal_id IS NULL)
+            if (empty($messageTemplate)) {
+                $globalTemplate = NotificationTemplate::where('event_key', $key)
+                    ->where('channel', 'whatsapp')
+                    ->whereNull('journal_id')
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($globalTemplate && !empty($globalTemplate->body)) {
+                    $messageTemplate = $globalTemplate->body;
+                }
+            }
+
+        } catch (\Exception $e) {
+            // Jika error (misal migrasi belum jalan), abaikan dan lanjut pakai default
+            Log::warning('WaGateway: Failed to fetch custom template from DB. Using default.', ['error' => $e->getMessage()]);
+        }
+
+        // 5. Priority 3: Fallback ke Hardcoded Default
+        if (empty($messageTemplate)) {
+            $messageTemplate = $defaults[$key];
+        }
+
+        // 6. Replace Placeholders (Variables)
+        foreach ($params as $paramKey => $paramValue) {
+            $safeValue = is_array($paramValue) ? json_encode($paramValue) : (string) $paramValue;
+            $messageTemplate = str_replace('{' . $paramKey . '}', $safeValue, $messageTemplate);
+        }
+
+        return $messageTemplate;
+    }
+
+    /**
+     * Menyediakan Default Template (Hardcoded).
+     * Method ini dibuat public agar bisa dipanggil oleh Seeder/Controller 
+     * untuk mengisi database saat pertama kali fitur ini diinstall.
+     */
+    public static function getDefaultTemplates(): array
+    {
+        return [
             'welcome' => "Selamat datang {name} di IAMJOS. Akun Anda berhasil dibuat.",
             'submission_received' => "Halo {name}, naskah Anda berjudul '{title}' telah berhasil disubmit. Pantau statusnya di dashboard.",
             'decision_update' => "Halo {name}, ada update status untuk naskah '{title}'. Status saat ini: {status}. Silakan cek dashboard.",
@@ -162,19 +226,27 @@ class WaGateway
             'reviewer_accepted' => "Halo {name}, Reviewer {reviewer_name} telah menerima undangan review untuk naskah '{title}'.",
             'reviewer_declined' => "Halo {name}, Reviewer {reviewer_name} telah menolak undangan review untuk naskah '{title}'.",
         ];
-
-        if (!isset($templates[$template])) {
-            Log::warning('WaGateway: Unknown template key.', ['template' => $template]);
-            return null;
-        }
-
-        $message = $templates[$template];
-
-        // Replace placeholders
-        foreach ($params as $key => $value) {
-            $message = str_replace('{' . $key . '}', $value, $message);
-        }
-
-        return $message;
+    }
+    
+    /**
+     * Helper untuk mendapatkan daftar variabel yang tersedia per template.
+     * Berguna untuk ditampilkan di UI Settings.
+     */
+    public static function getTemplateVariables(): array
+    {
+        return [
+            'welcome' => ['name'],
+            'submission_received' => ['name', 'title'],
+            'decision_update' => ['name', 'title', 'status'],
+            'revision_request' => ['name', 'title'],
+            'submission_accepted' => ['name', 'title'],
+            'submission_rejected' => ['name', 'title'],
+            'new_submission_notification' => ['name', 'title'],
+            'reviewer_assigned' => ['name', 'title', 'round'],
+            'discussion_message' => ['name', 'subject', 'title'],
+            'review_submitted' => ['name', 'title'],
+            'reviewer_accepted' => ['name', 'reviewer_name', 'title'],
+            'reviewer_declined' => ['name', 'reviewer_name', 'title'],
+        ];
     }
 }

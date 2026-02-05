@@ -420,6 +420,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::put('/email-templates/{emailTemplate}', [WorkflowSettingsController::class, 'updateEmailTemplate'])->name('email-templates.update');
                 Route::post('/email-templates/{emailTemplate}/toggle', [WorkflowSettingsController::class, 'toggleEmailTemplate'])->name('email-templates.toggle');
                 Route::post('/email-templates/{emailTemplate}/reset', [WorkflowSettingsController::class, 'resetEmailTemplate'])->name('email-templates.reset');
+                Route::put('/notification-templates/{eventKey}', [WorkflowSettingsController::class, 'updateNotificationTemplate'])->name('notification-templates.update');
             });
             // Distribution Settings
             Route::controller(\App\Http\Controllers\Admin\DistributionSettingsController::class)->prefix('distribution')->name('distribution.')->group(function () {
