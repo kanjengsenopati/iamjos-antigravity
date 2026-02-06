@@ -6473,7 +6473,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
         }
     </style>
-    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
     <script>
         // File preview for Draft Files upload
         document.addEventListener('DOMContentLoaded', function() {

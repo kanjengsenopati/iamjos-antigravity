@@ -237,7 +237,7 @@ class EditorDecisionController extends Controller
                     'name' => $submission->author->name,
                     'title' => $submission->title,
                     'status' => $statusText,
-                ]);
+                ], $submission->journal_id);
             } catch (\Exception $e) {
                 Log::error('Failed to send WhatsApp notification for decision: ' . $e->getMessage());
             }

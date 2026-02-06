@@ -141,6 +141,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
             Route::post('/{sitePage}/toggle', 'toggle')->name('toggle');
             Route::post('/reorder', 'reorder')->name('reorder');
         });
+
     // Site Navigation
     Route::controller(\App\Http\Controllers\Admin\SiteNavigationController::class)
         ->prefix('site-navigation')
@@ -515,6 +516,16 @@ Route::prefix('{journal}')->group(function () {
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
                     Route::post('/permissions/reset', 'resetPermissions')->name('permissions.reset');
+                });
+
+            // OAI-PMH Import Tool (Journal Scoped)
+            Route::controller(\App\Http\Controllers\Admin\Tools\ImportController::class)
+                ->prefix('tools/import/oai')
+                ->name('tools.import.oai.') // Fixed: journal.settings.tools.import.oai.index
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/preview', 'preview')->name('preview');
+                    Route::post('/harvest', 'harvest')->name('harvest');
                 });
 
             // Native XML Import/Export Plugin

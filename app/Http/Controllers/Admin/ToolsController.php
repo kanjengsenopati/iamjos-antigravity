@@ -74,6 +74,15 @@ class ToolsController extends Controller
     {
         return [
             [
+                'key' => 'import_oai',
+                'title' => 'OAI-PMH Import',
+                'description' => 'Import articles and metadata from external OAI-PMH endpoints (e.g. OJS 3.x).',
+                'icon' => 'cloud-arrow-down',
+                'color' => 'indigo',
+                'route' => route('journal.settings.tools.import.oai.index', ['journal' => current_journal()->slug]),
+                'available' => true,
+            ],
+            [
                 'key' => 'native',
                 'title' => 'Native XML Plugin',
                 'description' => 'Import and export articles and issues in IAMJOS native XML format for backup or migration.',

@@ -97,7 +97,7 @@ class ReviewerController extends Controller
                     'name' => $editor->name,
                     'reviewer_name' => $assignment->reviewer->name,
                     'title' => $assignment->submission->title ?? 'Naskah',
-                ]);
+                ], $assignment->submission->journal_id);
             }
         } catch (\Exception $e) {
             Log::error('Failed to send WhatsApp notification for reviewer acceptance: ' . $e->getMessage());
@@ -137,7 +137,7 @@ class ReviewerController extends Controller
                     'name' => $editor->name,
                     'reviewer_name' => $assignment->reviewer->name,
                     'title' => $assignment->submission->title ?? 'Naskah',
-                ]);
+                ], $assignment->submission->journal_id);
             }
         } catch (\Exception $e) {
             Log::error('Failed to send WhatsApp notification for reviewer decline: ' . $e->getMessage());
@@ -250,7 +250,7 @@ class ReviewerController extends Controller
             WaGateway::sendTemplate($editor, 'review_submitted', [
                 'name' => $editor->name,
                 'title' => $assignment->submission->title ?? 'Naskah',
-            ]);
+            ], $assignment->submission->journal_id);
         }
     }
     /**
