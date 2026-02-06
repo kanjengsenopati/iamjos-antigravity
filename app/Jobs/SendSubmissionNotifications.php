@@ -54,7 +54,7 @@ class SendSubmissionNotifications implements ShouldQueue
             WaGateway::sendTemplate($this->author, 'submission_received', [
                 'name' => $this->author->name,
                 'title' => $this->submission->title,
-            ]);
+            ], $this->submission->journal_id);
 
             // 4. Send WhatsApp notification to Journal Managers and Editors
             foreach ($editorsAndManagers as $editor) {
@@ -62,7 +62,7 @@ class SendSubmissionNotifications implements ShouldQueue
                     'name' => $editor->name,
                     'title' => $this->submission->title,
                     'author' => $this->author->name,
-                ]);
+                ], $this->submission->journal_id);
             }
         } catch (\Exception $e) {
             Log::error('Failed to send submission notifications', [

@@ -120,7 +120,7 @@ class ReviewWorkflowController extends Controller
                             'name' => $reviewer->name,
                             'title' => $submission->title,
                             'round' => $reviewRound->round,
-                        ]);
+                        ], $submission->journal_id);
                     } catch (\Throwable $e) {
                         Log::error('WhatsApp notification failed for reviewer assignment', [
                             'submission_id' => $submission->id,
@@ -287,7 +287,7 @@ class ReviewWorkflowController extends Controller
                         'name' => $author->name,
                         'title' => $submission->title,
                         'status' => $statusText,
-                    ]);
+                    ], $submission->journal_id);
 
                     // Log WhatsApp sent
                     SubmissionLog::log(
@@ -637,7 +637,7 @@ public function searchReviewers(Request $request, string $journalSlug)
                 WaGateway::sendTemplate($author, 'revision_request', [
                     'name' => $author->name,
                     'title' => $submission->title,
-                ]);
+                ], $submission->journal_id);
 
                 // Log WhatsApp sent
                 SubmissionLog::log(

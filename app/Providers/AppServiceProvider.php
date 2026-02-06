@@ -11,6 +11,7 @@ use App\Policies\ReviewAssignmentPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Pagination\Paginator;
 use App\View\Composers\PublicLayoutComposer;
 use App\View\Composers\SiteLayoutComposer;
 
@@ -29,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::defaultView('vendor.pagination.tailwind');
+        // Paginator::defaultSimpleView('vendor.pagination.simple-tailwind');
+
         \Carbon\Carbon::setLocale('id');
 
         // Register Policies
