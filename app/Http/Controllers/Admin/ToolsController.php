@@ -83,6 +83,15 @@ class ToolsController extends Controller
                 'available' => true,
             ],
             [
+                'key' => 'scholar',
+                'title' => 'Scholar Watchdog Monitor',
+                'description' => 'Monitor the indexing status of your articles on Google Scholar and get notified of changes.',
+                'icon' => 'scholar',
+                'color' => 'blue',
+                'route' => route('journal.settings.stats.scholar.index', ['journal' => current_journal()->slug]),
+                'available' => true,
+            ],
+            [
                 'key' => 'native',
                 'title' => 'Native XML Plugin',
                 'description' => 'Import and export articles and issues in IAMJOS native XML format for backup or migration.',
