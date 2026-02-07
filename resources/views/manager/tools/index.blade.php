@@ -86,6 +86,10 @@
                                     <div
                                         class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-{{ $tool['color'] }}-50 text-{{ $tool['color'] }}-600 group-hover:bg-{{ $tool['color'] }}-100 transition-colors">
                                         @switch($tool['icon'])
+                                            @case('scholar')
+                                                <i class="fa-brands fa-google-scholar text-2xl"></i>
+                                            @break
+
                                             @case('code-bracket')
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
