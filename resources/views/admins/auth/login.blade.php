@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | {{ $journal->name ?? config('app.name', 'IAMJOS') }}</title>
-    <meta name="description" content="{{ $journal ? $journal->name . ' - Login' : 'Indonesian Academic Journal System - Login' }}">
+    <meta name="description"
+        content="{{ $journal ? $journal->name . ' - Login' : 'Indonesian Academic Journal System - Login' }}">
     <meta name="robots" content="noindex, nofollow">
 
     <!-- Fonts -->
@@ -32,6 +33,10 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    @if (($journal ?? false) && ($journal->is_recaptcha_enabled ?? false) && ($siteSetting->recaptcha_site_key ?? false))
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
+
     <style>
         [x-cloak] {
             display: none !important;
@@ -43,41 +48,46 @@
     <div class="min-h-screen flex" x-data="{ showPassword: false }">
         <!-- Left Side - Brand Panel (Dynamic based on Journal Context) -->
         <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden"
-            @if($journal && ($branding['cover_url'] ?? null))
-                style="background-image: url('{{ $branding['cover_url'] }}'); background-size: cover; background-position: center;"
-            @endif
-        >
+            @if ($journal && ($branding['cover_url'] ?? null)) style="background-image: url('{{ $branding['cover_url'] }}'); background-size: cover; background-position: center;" @endif>
             <!-- Background Gradient Overlay -->
-            <div class="absolute inset-0 {{ $journal ? 'bg-gradient-to-br from-gray-900/90 via-gray-800/85 to-gray-900/90' : 'bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900' }}"></div>
+            <div
+                class="absolute inset-0 {{ $journal ? 'bg-gradient-to-br from-gray-900/90 via-gray-800/85 to-gray-900/90' : 'bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900' }}">
+            </div>
 
             <!-- Abstract Pattern Overlay (only for portal context) -->
-            @unless($journal)
-            <div class="absolute inset-0 opacity-10">
-                <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <defs>
-                        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
-                        </pattern>
-                    </defs>
-                    <rect width="100" height="100" fill="url(#grid)" />
-                </svg>
-            </div>
+            @unless ($journal)
+                <div class="absolute inset-0 opacity-10">
+                    <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <defs>
+                            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
+                            </pattern>
+                        </defs>
+                        <rect width="100" height="100" fill="url(#grid)" />
+                    </svg>
+                </div>
             @endunless
 
             <!-- Floating Circles (animated background elements) -->
-            <div class="absolute top-20 left-20 w-72 h-72 {{ $journal ? 'bg-white' : 'bg-indigo-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-            <div class="absolute bottom-20 right-20 w-96 h-96 {{ $journal ? 'bg-white' : 'bg-purple-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 1s;"></div>
-            <div class="absolute top-1/2 left-1/3 w-64 h-64 {{ $journal ? 'bg-white' : 'bg-blue-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+            <div
+                class="absolute top-20 left-20 w-72 h-72 {{ $journal ? 'bg-white' : 'bg-indigo-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse">
+            </div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 {{ $journal ? 'bg-white' : 'bg-purple-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+                style="animation-delay: 1s;"></div>
+            <div class="absolute top-1/2 left-1/3 w-64 h-64 {{ $journal ? 'bg-white' : 'bg-blue-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+                style="animation-delay: 2s;"></div>
 
             <!-- Content -->
             <div class="relative z-10 flex flex-col justify-center px-12 xl:px-20 w-full">
                 <!-- Logo -->
                 <div class="mb-12">
                     <div class="flex items-center gap-3">
-                        @if($journal && ($branding['logo_url'] ?? null))
-                            <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}" class="h-12 w-auto object-contain">
+                        @if ($journal && ($branding['logo_url'] ?? null))
+                            <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}"
+                                class="h-12 w-auto object-contain">
                         @else
-                            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <div
+                                class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
                                 <i class="fas fa-book-open text-2xl text-white"></i>
                             </div>
                         @endif
@@ -89,7 +99,7 @@
 
                 <!-- Heading -->
                 <h1 class="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-                    @if($journal)
+                    @if ($journal)
                         {{ $branding['headline'] }}
                     @else
                         Advance Your<br>
@@ -103,20 +113,26 @@
                 </p>
 
                 <!-- Features (show different content based on context) -->
-                @if($journal)
+                @if ($journal)
                     <!-- Journal-specific info -->
                     <div class="space-y-4">
-                        @if($journal->issn_print || $journal->issn_online)
-                        <div class="flex items-center gap-4 text-gray-100">
-                            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-barcode text-sm"></i>
+                        @if ($journal->issn_print || $journal->issn_online)
+                            <div class="flex items-center gap-4 text-gray-100">
+                                <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-barcode text-sm"></i>
+                                </div>
+                                <span class="text-sm">
+                                    @if ($journal->issn_print)
+                                        ISSN Print: {{ $journal->issn_print }}
+                                    @endif
+                                    @if ($journal->issn_print && $journal->issn_online)
+                                        |
+                                    @endif
+                                    @if ($journal->issn_online)
+                                        ISSN Online: {{ $journal->issn_online }}
+                                    @endif
+                                </span>
                             </div>
-                            <span class="text-sm">
-                                @if($journal->issn_print)ISSN Print: {{ $journal->issn_print }}@endif
-                                @if($journal->issn_print && $journal->issn_online) | @endif
-                                @if($journal->issn_online)ISSN Online: {{ $journal->issn_online }}@endif
-                            </span>
-                        </div>
                         @endif
                         <div class="flex items-center gap-4 text-gray-100">
                             <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
@@ -163,8 +179,9 @@
                 <!-- Mobile Logo -->
                 <div class="lg:hidden mb-10 text-center">
                     <div class="inline-flex items-center gap-3">
-                        @if($journal && ($branding['logo_url'] ?? null))
-                            <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}" class="h-10 w-auto object-contain">
+                        @if ($journal && ($branding['logo_url'] ?? null))
+                            <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}"
+                                class="h-10 w-auto object-contain">
                         @else
                             <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-book-open text-xl text-white"></i>
@@ -207,7 +224,8 @@
                 @endif
 
                 <!-- Login Form (Dynamic Action based on Context) -->
-                <form action="{{ $journal ? route('journal.authenticate', $journal->slug) : route('authenticate') }}" method="POST" class="space-y-5">
+                <form action="{{ $journal ? route('journal.authenticate', $journal->slug) : route('authenticate') }}"
+                    method="POST" class="space-y-5">
                     @csrf
 
                     <!-- Email Field -->
@@ -267,6 +285,14 @@
                         </label>
                     </div>
 
+                    <!-- reCAPTCHA Widget -->
+                    @if (($journal ?? false) && ($journal->is_recaptcha_enabled ?? false) && ($siteSetting->recaptcha_site_key ?? false))
+                        <div class="g-recaptcha" data-sitekey="{{ $siteSetting->recaptcha_site_key }}"></div>
+                        @error('g-recaptcha-response')
+                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    @endif
+
                     <!-- Submit Button -->
                     <button type="submit"
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -284,27 +310,28 @@
                 </p>
 
                 <!-- Back to Journal/Portal Link -->
-                @if($journal)
-                <p class="mt-4 text-center text-sm text-gray-500">
-                    <a href="{{ route('journal.public.home', $journal->slug) }}"
-                        class="text-gray-600 hover:text-indigo-600 transition-colors">
-                        <i class="fas fa-arrow-left mr-1"></i> Back to {{ $journal->abbreviation ?? $journal->name }}
-                    </a>
-                </p>
+                @if ($journal)
+                    <p class="mt-4 text-center text-sm text-gray-500">
+                        <a href="{{ route('journal.public.home', $journal->slug) }}"
+                            class="text-gray-600 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to
+                            {{ $journal->abbreviation ?? $journal->name }}
+                        </a>
+                    </p>
                 @else
-                <p class="mt-4 text-center text-sm text-gray-500">
-                    <a href="{{ route('portal.home') }}"
-                        class="text-gray-600 hover:text-indigo-600 transition-colors">
-                        <i class="fas fa-arrow-left mr-1"></i> Back to Home
-                    </a>
-                </p>
+                    <p class="mt-4 text-center text-sm text-gray-500">
+                        <a href="{{ route('portal.home') }}"
+                            class="text-gray-600 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                        </a>
+                    </p>
                 @endif
 
                 <!-- Footer -->
                 <div class="mt-12 pt-8 border-t border-gray-200">
                     <p class="text-center text-xs text-gray-400">
                         © {{ date('Y') }} {{ $journal ? $journal->name : config('app.name', 'IAMJOS') }}.
-                        @unless($journal)
+                        @unless ($journal)
                             Indonesian Academic Journal System.
                         @endunless
                     </p>

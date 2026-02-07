@@ -532,9 +532,9 @@
                         </div>
                         <!-- Upload Form/Button could go here. For now, assuming modal trigger -->
                         <!-- NOTE: Implementation below is read-only list for now, as user didn't specify upload UI in Prompt,
-                                                                                 But based on previous file, there was likely an upload modal.
-                                                                                 I will keep the generic structure.
-                                                                            -->
+                                                                                                                     But based on previous file, there was likely an upload modal.
+                                                                                                                     I will keep the generic structure.
+                                                                                                                -->
                     </div>
 
                     @if ($libraryFiles->count() > 0)
@@ -603,106 +603,13 @@
                 <!-- ============================================ -->
                 <!-- TAB 4: EMAILS -->
                 <!-- ============================================ -->
+                <!-- ============================================ -->
+                <!-- TAB 4: EMAILS -->
+                <!-- ============================================ -->
                 <div x-show="activeTab === 'emails'" x-cloak>
-                    <form action="{{ route('journal.settings.workflow.update', ['journal' => $journal->slug]) }}"
-                        method="POST">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="tab" value="emails">
-
-                        <div class="space-y-10">
-                            <!-- Section: Email Config -->
-                            <div>
-                                <div class="flex items-center gap-3 mb-6">
-                                    <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                                        <i class="fa-solid fa-at text-pink-600"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-base font-semibold text-gray-900">Email Configuration</h3>
-                                        <p class="text-sm text-gray-500">Configure email sending settings.</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 gap-6">
-                                    <label class="block">
-                                        <span class="text-sm font-medium text-gray-700">Email Signature</span>
-                                        <textarea name="email_signature" rows="4"
-                                            class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                            placeholder="e.g., Kind regards, The Editorial Team">{{ old('email_signature', $journal->email_signature) }}</textarea>
-                                        <p class="mt-1 text-xs text-gray-500">Appended to the bottom of all system emails.
-                                        </p>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <hr class="border-gray-200">
-
-                            <!-- Section: Templates -->
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900 mb-4">Email Templates</h4>
-                                <div class="overflow-hidden rounded-xl border border-gray-200">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                                    Template Name / Subject</th>
-                                                <th
-                                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
-                                                    Enabled</th>
-                                                <th
-                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                                    Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            @foreach ($emailTemplates as $template)
-                                                <tr class="hover:bg-gray-50 transition-colors">
-                                                    <td class="px-4 py-4">
-                                                        <span
-                                                            class="text-sm font-medium text-gray-900">{{ $template->subject }}</span>
-                                                        @if ($template->is_custom)
-                                                            <span
-                                                                class="ml-2 px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">Modified</span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="px-4 py-4 text-center">
-                                                        <!-- Helper JS used for Toggle (POST) -->
-                                                        <button type="button"
-                                                            onclick="submitForm('{{ route('journal.settings.workflow.email-templates.toggle', ['journal' => $journal->slug, 'emailTemplate' => $template->id]) }}', 'POST')"
-                                                            class="relative inline-flex {{ $template->is_enabled ? 'bg-primary-600' : 'bg-gray-200' }} rounded-full w-10 h-5 transition-colors">
-                                                            <span
-                                                                class="absolute inset-0.5 {{ $template->is_enabled ? 'translate-x-5' : 'translate-x-0' }} w-4 h-4 bg-white rounded-full transition-transform"></span>
-                                                        </button>
-                                                    </td>
-                                                    <td class="px-4 py-4 text-right">
-                                                        <div class="flex items-center justify-end gap-2">
-                                                            @if ($template->is_custom)
-                                                                <!-- Helper JS used for Reset (POST) -->
-                                                                <button type="button"
-                                                                    onclick="submitForm('{{ route('journal.settings.workflow.email-templates.reset', ['journal' => $journal->slug, 'emailTemplate' => $template->id]) }}', 'POST', 'Reset this template to default?')"
-                                                                    class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded"
-                                                                    title="Reset to Default">
-                                                                    <i class="fa-solid fa-rotate-left text-sm"></i>
-                                                                </button>
-                                                            @endif
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-10 pt-6 border-t border-gray-200 flex justify-end">
-                            <button type="submit"
-                                class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                                <i class="fa-solid fa-check mr-2"></i>
-                                Save Email Settings
-                            </button>
-                        </div>
-                    </form>
+                    @include('journal.settings.workflow.partials._emails', [
+                        'emailTemplates' => $emailTemplates,
+                    ])
                 </div>
 
                 <!-- ============================================ -->

@@ -21,6 +21,8 @@ class SiteSetting extends Model
         'wa_api_url',
         'wa_sender_number',
         'wa_device_id',
+        'recaptcha_site_key',
+        'recaptcha_secret_key',
     ];
 
     protected $casts = [

@@ -426,6 +426,14 @@ class Submission extends Model
         return $this->editorialAssignments()->where('is_active', true)->exists();
     }
 
+    /**
+     * Get the index stat for this submission.
+     */
+    public function indexStat(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SubmissionIndexStat::class, 'submission_id');
+    }
+
     // =====================================================
     // STAGE CONSTANTS (OJS 3.3 Style)
     // =====================================================
