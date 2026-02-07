@@ -77,6 +77,9 @@ class SiteAdminController extends Controller
             'wa_api_url' => 'nullable|url',
             'wa_sender_number' => 'nullable|string|max:20',
             'wa_device_id' => 'nullable|string|max:255',
+            // Google reCAPTCHA Config
+            'recaptcha_site_key' => 'nullable|string|max:255',
+            'recaptcha_secret_key' => 'nullable|string|max:255',
         ]);
 
         $settings = \App\Models\SiteSetting::first();
@@ -85,6 +88,14 @@ class SiteAdminController extends Controller
         $validated['redirect_to_journal'] = $request->has('redirect_to_journal');
         $validated['show_journal_summary'] = $request->has('show_journal_summary');
         $validated['header_bg_image'] = $request->has('header_bg_image');
+
+        // Handle reCAPTCHA Keys
+        if ($request->has('recaptcha_site_key')) {
+            $validated['recaptcha_site_key'] = $request->input('recaptcha_site_key');
+        }
+        if ($request->has('recaptcha_secret_key')) {
+            $validated['recaptcha_secret_key'] = $request->input('recaptcha_secret_key');
+        }
 
         // Handle file upload
         if ($request->hasFile('homepage_image')) {

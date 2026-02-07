@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('publications', function (Blueprint $table) {
-            if (!Schema::hasColumn('publications', 'references')) {
-                $table->text('references')->nullable()->after('keywords');
-            }
+        Schema::table('journals', function (Blueprint $table) {
+            $table->boolean('is_recaptcha_enabled')->default(false)->after('status'); // Ensure appropriate placement if 'status' exists
         });
     }
 
@@ -23,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('publications', function (Blueprint $table) {
-            $table->dropColumn('references');
+        Schema::table('journals', function (Blueprint $table) {
+            $table->dropColumn('is_recaptcha_enabled');
         });
     }
 };

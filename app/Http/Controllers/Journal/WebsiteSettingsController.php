@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Journal;
 use App\Http\Controllers\Controller;
 use App\Models\Journal;
 use App\Models\JournalSetting;
+use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,7 +31,10 @@ class WebsiteSettingsController extends Controller
         // Merge with actual settings (actual takes precedence)
         $settings = array_merge($defaults, $settings);
 
-        return view('journal.admin.settings.website', compact('journal', 'settings'));
+        // Get Site Setting to access global reCAPTCHA keys
+        $siteSetting = SiteSetting::first();
+
+        return view('journal.admin.settings.website', compact('journal', 'settings', 'siteSetting'));
     }
 
     /**
@@ -118,6 +122,12 @@ class WebsiteSettingsController extends Controller
         $journal->show_announcements_on_homepage = $request->boolean('show_announcements_on_homepage');
         if ($request->has('num_announcements_homepage')) {
             $journal->num_announcements_homepage = $request->input('num_announcements_homepage');
+        }
+
+        // Handle Security/Recaptcha Toggle
+        if ($request->input('tab') === 'security' || $request->has('is_recaptcha_enabled')) {
+             // We only toggle the enablement here, keys are global
+             $journal->is_recaptcha_enabled = $request->boolean('is_recaptcha_enabled');
         }
 
         // Save journal model changes

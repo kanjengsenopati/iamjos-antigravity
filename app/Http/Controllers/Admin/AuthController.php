@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\AuthRequest;
 use App\Models\Admin;
 use App\Models\Journal;
 use App\Models\User;
+use App\Models\SiteSetting;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -32,7 +33,10 @@ class AuthController extends Controller
         // Prepare branding data based on context
         $branding = $this->getBrandingData($journal);
 
-        return view('admins.auth.login', compact('journal', 'branding'));
+        // Get global site settings
+        $siteSetting = SiteSetting::first();
+
+        return view('admins.auth.login', compact('journal', 'branding', 'siteSetting'));
     }
 
     /**
@@ -62,6 +66,14 @@ class AuthController extends Controller
         if ($user->disabled) {
             return back()->with('warning', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.')
                 ->withInput($request->only('email'));
+        }
+
+        // Validate reCAPTCHA only for journal context if enabled and global keys are present
+        $siteSetting = \App\Models\SiteSetting::first();
+        if ($journal && $journal->is_recaptcha_enabled && $siteSetting && $siteSetting->recaptcha_secret_key) {
+            $request->validate([
+                'g-recaptcha-response' => ['required', new \App\Rules\RecaptchaRule($siteSetting->recaptcha_secret_key)]
+            ]);
         }
 
         // Prepare credentials for authentication

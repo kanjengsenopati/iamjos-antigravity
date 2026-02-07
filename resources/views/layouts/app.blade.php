@@ -640,22 +640,6 @@
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Site
                                 Administration</span>
                         </a>
-
-                        <!-- OAI Import -->
-                        <a href="{{ route('admin.tools.import.oai.index') }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('admin.tools.import.*') ? 'bg-red-50 text-red-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? 'OAI Import' : ''">
-
-                            @if (request()->routeIs('admin.tools.import.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-red-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
-
-                            <i
-                                class="fa-solid fa-cloud-arrow-down w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('admin.tools.import.*') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Import Data
-                                (OAI)</span>
-                        </a>
                     </div>
                 @endrole
             @endif

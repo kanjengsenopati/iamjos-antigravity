@@ -453,6 +453,9 @@ class WorkflowSettingsController extends Controller
     /**
      * Update an email template.
      */
+    /**
+     * Update an email template.
+     */
     public function updateEmailTemplate(Request $request, string $journal, string $emailTemplateId): RedirectResponse
     {
         $currentJournal = current_journal();
@@ -470,13 +473,11 @@ class WorkflowSettingsController extends Controller
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
-            'is_enabled' => 'boolean',
         ]);
 
         $emailTemplate->update([
             'subject' => $validated['subject'],
             'body' => $validated['body'],
-            'is_enabled' => $request->boolean('is_enabled'),
             'is_custom' => true,
         ]);
 
@@ -486,23 +487,33 @@ class WorkflowSettingsController extends Controller
     /**
      * Toggle email template enabled status.
      */
-    public function toggleEmailTemplate(string $journal, string $emailTemplateId): RedirectResponse
+    public function toggleEmailTemplate(Request $request, string $journal, string $emailTemplateId)
     {
         $currentJournal = current_journal();
 
         if (!$currentJournal) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Journal not found'], 404);
+            }
             abort(404, 'Journal not found.');
         }
 
         $emailTemplate = EmailTemplate::findOrFail($emailTemplateId);
 
         if ($emailTemplate->journal_id !== $currentJournal->id) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             abort(403, 'Unauthorized.');
         }
 
         $emailTemplate->update([
             'is_enabled' => !$emailTemplate->is_enabled,
         ]);
+
+        if ($request->wantsJson()) {
+             return response()->json(['success' => true, 'is_enabled' => $emailTemplate->is_enabled]);
+        }
 
         $status = $emailTemplate->is_enabled ? 'enabled' : 'disabled';
         return back()->with('success', "Email template {$status} successfully.");

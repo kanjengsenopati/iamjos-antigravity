@@ -61,6 +61,13 @@
                     <i class="fa-solid fa-th-large mr-2"></i>
                     Sections
                 </button>
+                <button @click="activeTab = 'security'"
+                    :class="activeTab === 'security' ? 'border-indigo-500 text-indigo-600' :
+                        'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    <i class="fa-solid fa-shield-halved mr-2"></i>
+                    Security
+                </button>
             </nav>
         </div>
 
@@ -94,9 +101,9 @@
                 </div>
 
                 {{-- Sub-tab: SETUP (Old Setup Content) --}}
-                <div x-show="appearanceTab === 'setup'" class="space-y-6">
+                <div x-show="appearanceTab === 'setup'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Logo Upload --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Logo</h3>
@@ -127,7 +134,7 @@
                     </div>
 
                     {{-- Journal Thumbnail --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Journal Thumbnail</h3>
@@ -156,7 +163,7 @@
                     </div>
 
                     {{-- Homepage Image --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Homepage Image</h3>
@@ -201,7 +208,7 @@
                     </div>
 
                     {{-- Page Footer (Rich Text) --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <h3 class="text-lg font-semibold text-gray-900 mb-1">Page Footer</h3>
                         <p class="text-sm text-gray-500 mb-4">
                             Custom HTML content that will appear at the bottom of every page.
@@ -219,7 +226,7 @@
                     </div>
 
                     {{-- Additional Content (Homepage Bottom) --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <h3 class="text-lg font-semibold text-gray-900 mb-1">Additional Content</h3>
                         <p class="text-sm text-gray-500 mb-4">
                             Any content entered here will appear on your homepage after the latest issue content.
@@ -236,7 +243,8 @@
                     </div>
 
                     {{-- Announcements --}}
-                    <div x-data="{ enabled: {{ $journal->enable_announcements ? 'true' : 'false' }}, onHomepage: {{ $journal->show_announcements_on_homepage ? 'true' : 'false' }} }" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div x-data="{ enabled: {{ $journal->enable_announcements ? 'true' : 'false' }}, onHomepage: {{ $journal->show_announcements_on_homepage ? 'true' : 'false' }} }"
+                        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
 
                         <div class="mb-6">
                             <h3 class="text-lg font-semibold text-gray-900 mb-1">Announcements</h3>
@@ -309,7 +317,7 @@
                     </div>
 
                     {{-- NAVIGATION & SIDEBAR SETTINGS --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Navigation & Layout</h3>
                         <p class="text-sm text-gray-500 mb-6">
                             Configure your journal's navigation menus and sidebar content.
@@ -406,9 +414,9 @@
                 </div>
 
                 {{-- Sub-tab: ADVANCED (Old Appearance Content) --}}
-                <div x-show="appearanceTab === 'advanced'" class="space-y-6">
+                <div x-show="appearanceTab === 'advanced'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Favicon Upload --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Favicon</h3>
@@ -445,7 +453,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6">Theme Colors</h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -506,8 +514,8 @@
             {{-- ============================================ --}}
             {{-- Tab: SECTIONS (Visibility Toggles) --}}
             {{-- ============================================ --}}
-            <div x-show="activeTab === 'sections'" x-cloak class="space-y-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div x-show="activeTab === 'sections'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-6">Homepage Sections</h3>
                     <p class="text-sm text-gray-500 mb-6">Control which sections appear on your journal homepage.</p>
 
@@ -548,7 +556,7 @@
                 </div>
 
                 {{-- Indexed In Logos --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Indexing Databases</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Upload logos of indexing databases where your journal is listed (Scopus, Google Scholar, DOAJ,
@@ -593,10 +601,10 @@
             {{-- ============================================ --}}
             {{-- Tab: INFORMATION --}}
             {{-- ============================================ --}}
-            <div x-show="activeTab === 'information'" x-cloak class="space-y-6">
+            <div x-show="activeTab === 'information'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {{-- Information for Readers --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">For Readers</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Information for readers will be displayed on the journal's website.
@@ -606,7 +614,7 @@
                 </div>
 
                 {{-- Information for Authors --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">For Authors</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Information for authors will be displayed on the journal's website.
@@ -616,13 +624,69 @@
                 </div>
 
                 {{-- Information for Librarians --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">For Librarians</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Information for librarians will be displayed on the journal's website.
                     </p>
                     <textarea name="info_librarians" id="info_librarians" rows="6"
                         class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm">{{ $journal->info_librarians }}</textarea>
+                </div>
+            </div>
+
+            {{-- ============================================ --}}
+            {{-- Tab: SECURITY --}}
+            {{-- ============================================ --}}
+            <div x-show="activeTab === 'security'" x-cloak class="space-y-6">
+                {{-- reCAPTCHA Config --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-robot text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Google reCAPTCHA v2 (Checkbox)</h3>
+                            <p class="text-sm text-gray-500">Protect your login and register pages from bots.</p>
+                        </div>
+                    </div>
+
+                    @if ($siteSetting && $siteSetting->recaptcha_site_key && $siteSetting->recaptcha_secret_key)
+                        {{-- Enable/Disable Checkbox --}}
+                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                            <div class="relative flex items-start">
+                                <div class="flex h-5 items-center">
+                                    <input type="hidden" name="is_recaptcha_enabled" value="0">
+                                    <input id="is_recaptcha_enabled" name="is_recaptcha_enabled" type="checkbox"
+                                        value="1"
+                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        {{ old('is_recaptcha_enabled', $journal->is_recaptcha_enabled ?? false) ? 'checked' : '' }}>
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="is_recaptcha_enabled" class="font-medium text-gray-700">Enable
+                                        reCAPTCHA</label>
+                                    <p class="text-gray-500">Show the "I'm not a robot" checkbox on login forms.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                            <p class="text-sm text-blue-700">
+                                <i class="fa-solid fa-info-circle mr-2"></i>
+                                You are using global reCAPTCHA keys configured in Site Settings.
+                            </p>
+                        </div>
+                    @else
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-amber-800">Global Configuration Missing</h4>
+                                <p class="text-sm text-amber-700 mt-1">
+                                    reCAPTCHA cannot be enabled because the global API keys have not been configured by
+                                    the site administrator.
+                                </p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
