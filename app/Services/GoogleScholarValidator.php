@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 
 class GoogleScholarValidator
 {
+    const LABEL_REFERENCES = 'References & Citations';
+
     /**
      * Validate the submission against Google Scholar indexing guidelines.
      *
@@ -15,48 +17,57 @@ class GoogleScholarValidator
      */
     public function validate(Submission $submission): array
     {
+        // Resolve Publication (OJS 3.3 Style)
+        // If currentPublication exists (Latest Version), use it.
+        $publication = $submission->currentPublication ?? $submission->publications()->latest('version')->first();
+
+        // Fallback to Submission if no publication found (Draft/Legacy)
+        $data = $publication ?? $submission;
+
         $checks = [];
         $score = 0;
 
         // 1. Title Check
         // Weight: 20
-        $titleCheck = $this->checkTitle($submission->title);
+        $titleCheck = $this->checkTitle($data->title);
         $checks[] = $titleCheck;
         $score += $titleCheck['score'];
 
         // 2. Abstract Check
         // Weight: 20
-        $abstractCheck = $this->checkAbstract($submission->abstract);
+        $abstractCheck = $this->checkAbstract($data->abstract);
         $checks[] = $abstractCheck;
         $score += $abstractCheck['score'];
 
         // 3. Authors Check
         // Weight: 20
-        $authorsCheck = $this->checkAuthors($submission->authors);
+        $authorsCheck = $this->checkAuthors($data->authors);
         $checks[] = $authorsCheck;
         $score += $authorsCheck['score'];
 
         // 4. Keywords Check
         // Weight: 10
-        $keywordsCheck = $this->checkKeywords($submission->keywords);
+        $keywordsCheck = $this->checkKeywords($data->keywords);
         $checks[] = $keywordsCheck;
         $score += $keywordsCheck['score'];
 
         // 5. References Check
         // Weight: 10
-        $referencesCheck = $this->checkReferences($submission->references);
+        // Use 'citations' first (if parsed), fallback to 'references' text
+        $references = $data->citations ?? $data->references;
+        $referencesCheck = $this->checkReferences($references);
         $checks[] = $referencesCheck;
         $score += $referencesCheck['score'];
 
         // 6. Galley (PDF) Check
         // Weight: 10
-        $galleyCheck = $this->checkGalleys($submission);
+        $galleyCheck = $this->checkGalleys($submission); // Galleys usually stay on submission or linked via publication
         $checks[] = $galleyCheck;
         $score += $galleyCheck['score'];
 
         // 7. Publication Date Check
         // Weight: 10
-        $dateCheck = $this->checkPublicationDate($submission->published_at);
+        $dateCheck = $this->checkPublicationDate($data->date_published ?? $submission->published_at);
         $checks[] = $dateCheck;
         $score += $dateCheck['score'];
 
@@ -253,21 +264,39 @@ class GoogleScholarValidator
         ];
     }
 
-    private function checkReferences(?string $references): array
+    private function checkReferences($references): array
     {
         if (empty($references)) {
             return [
-                'label' => 'References',
+                'label' => self::LABEL_REFERENCES,
                 'status' => false,
                 'message' => 'No references provided. Google Scholar requires citations to trace the citation graph.',
                 'score' => 0
             ];
         }
 
+        // Handle string vs array/collection
+        $count = 0;
+        if (is_string($references)) {
+            // Count newlines as rough proxy for citation count
+            $count = substr_count($references, "\n") + 1;
+        } elseif (is_array($references) || $references instanceof \Traversable) {
+            $count = count($references);
+        }
+
+        if ($count < 10) {
+            return [
+                'label' => self::LABEL_REFERENCES,
+                'status' => 'warning',
+                'message' => "Reference count is low ($count). Google Scholar prefers at least 10+ robust citations.",
+                'score' => 5
+            ];
+        }
+
         return [
-            'label' => 'References',
+                'label' => self::LABEL_REFERENCES,
             'status' => true,
-            'message' => 'References are present.',
+            'message' => "Good number of references found ($count).",
             'score' => 10
         ];
     }

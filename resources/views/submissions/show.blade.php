@@ -2802,7 +2802,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             :class="pubTab === 'seo' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-brands fa-google-scholar w-5 mr-2 text-center"></i> Google Scholar SEO
+                            <i class="fa-brands fa-google-scholar w-5 mr-2 text-center"></i> Google Scholar Forecaster
                         </button>
                     </div>
                 </nav>
