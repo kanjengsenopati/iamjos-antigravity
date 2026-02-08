@@ -6,9 +6,16 @@
     <div class="space-y-6">
         {{-- Header --}}
         <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Scholar Watchdog</h1>
-                <p class="text-sm text-gray-500 mt-1">Real-time monitoring of article visibility on Google Scholar.</p>
+            <div class="flex items-center gap-4">
+                <a href="{{ route('journal.settings.tools.index', ['journal' => $journal->slug]) }}"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all shadow-sm"
+                    title="Back to Tools">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Scholar IAMJOS Monitor</h1>
+                    <p class="text-sm text-gray-500 mt-1">Real-time monitoring of article visibility on Google Scholar.</p>
+                </div>
             </div>
             <div>
                 <span
