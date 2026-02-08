@@ -153,11 +153,31 @@
             </div>
 
             <div class="p-6 space-y-4 h-full flex flex-col">
+                <!-- Malware Guard -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-900">Malware Guard</h3>
+                            <p class="text-sm text-gray-500 mt-1">Check system integrity and scan for suspicious files.</p>
+                            <a href="{{ route('admin.malware.index') }}"
+                                class="inline-block mt-3 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                                Open Scanner
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <!-- Expire Sessions -->
                 <div class="bg-gray-50 rounded-xl p-4">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
@@ -248,6 +268,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
