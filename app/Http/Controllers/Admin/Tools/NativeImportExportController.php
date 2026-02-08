@@ -386,7 +386,7 @@ class NativeImportExportController extends Controller
         // Ensure we load 'files' and 'authors'
         $submissions = \App\Models\Submission::whereIn('id', $ids)
             ->where('journal_id', $journal->id)
-            ->with(['authors', 'files', 'issue']) 
+            ->with(['authors', 'files', 'issue', 'currentPublication'])
             ->get();
 
         if ($submissions->isEmpty()) {
