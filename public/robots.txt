@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Halaman Admin/Login tidak perlu di-index Google
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /password/reset
+
+# GANTI Manual Link Ini Sesuai Domain Asli (PENTING)
+Sitemap: https://apps.iamjos.id/sitemap.xml
