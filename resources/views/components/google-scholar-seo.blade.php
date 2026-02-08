@@ -3,7 +3,7 @@
     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
         <h3 class="font-bold text-gray-900 flex items-center gap-2">
             <i class="fa-brands fa-google-scholar text-blue-500 text-lg"></i>
-            Google Scholar Crawl Forecast
+            Google Scholar Forecaster
         </h3>
 
         @php
