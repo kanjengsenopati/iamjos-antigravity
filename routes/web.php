@@ -153,6 +153,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
             Route::delete('/items/{item}', 'destroyItem')->name('items.destroy');
             Route::post('/items/reorder', 'reorderItems')->name('items.reorder');
         });
+        
+    // Malware Guard
+    Route::controller(\App\Http\Controllers\MalwareGuardController::class)
+        ->prefix('malware')
+        ->name('malware.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/status', 'status')->name('status');
+            Route::post('/scan/init', 'initScan')->name('scan.init');
+            Route::post('/scan/process', 'processBatch')->name('scan.process');
+            Route::post('/scan/cancel', 'cancel')->name('scan.cancel');
+            Route::post('/reset', 'reset')->name('reset');
+            Route::post('/{finding}/ignore', 'ignore')->name('ignore');
+            Route::delete('/{finding}', 'destroy')->name('destroy');
+        });
 });
 // =====================================================
 // TRANSLATE (Public)
@@ -591,6 +606,7 @@ Route::prefix('{journal}')->group(function () {
                 Route::get('/notify', 'notify')->name('notify');
                 Route::post('/notify', 'sendNotification')->name('notify.send');
             });
+
             // Journal Settings
             Route::get('/settings', [JournalController::class, 'edit'])->name('settings');
             Route::put('/settings', [JournalController::class, 'update'])->name('settings.update');
