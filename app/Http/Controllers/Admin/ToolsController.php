@@ -84,7 +84,7 @@ class ToolsController extends Controller
             ],
             [
                 'key' => 'scholar',
-                'title' => 'Scholar Watchdog Monitor',
+                'title' => 'Scholar IAMJOS Monitor',
                 'description' => 'Monitor the indexing status of your articles on Google Scholar and get notified of changes.',
                 'icon' => 'scholar',
                 'color' => 'blue',
