@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Scholar Watchdog Monitor - ' . $journal->name)
+@section('title', 'Scholar IAMJOS Monitor - ' . $journal->name)
 
 @section('content')
     <div class="space-y-6">
@@ -205,7 +205,7 @@
                                         })"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm">
                                     <i class="fa-solid fa-plus text-gray-400"></i>
-                                    Add to Watchdog
+                                    Add to Watchlist
                                 </button>
                             @else
                                 <div class="flex gap-2">
