@@ -194,13 +194,14 @@ class JournalUserManagementController extends Controller
             // Default: Go to journal selection page
             return redirect()->route('journal.select')
                 ->with('success', "You are now logged in as {$user->name}");
-        } elseif ($user->hasRole('Author')) {
-            // For authors, redirect to their submissions page
+        } elseif ($user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin', 'Author'])) {
+            // For editors, managers, admins, and authors: redirect to the submission list
             return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
                 ->with('success', "You are now logged in as {$user->name}");
         }
 
-        return redirect()->route('journal.submissions.index', ['journal' => $journal])
+        // Default fallback: Submission index using slug
+        return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
             ->with('success', "You are now logged in as {$user->name}");
     }
 
