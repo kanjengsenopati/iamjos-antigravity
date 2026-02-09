@@ -67,15 +67,12 @@ class Submission extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'submitted_at' => 'datetime',
-            'accepted_at' => 'datetime',
-            'published_at' => 'datetime',
-            'metadata' => 'array', // JSONB to array
-        ];
-    }
+    protected $casts = [
+        'submitted_at' => 'datetime',
+        'accepted_at' => 'datetime',
+        'published_at' => 'datetime',
+        'metadata' => 'array', // JSONB to array
+    ];
 
     // =====================================================
     // ROUTE MODEL BINDING

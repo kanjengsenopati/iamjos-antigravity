@@ -27,12 +27,11 @@ class ReviewRound extends Model
         'status',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'round' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'round' => 'integer',
+        'stage_id' => 'integer',
+        'status' => 'integer',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

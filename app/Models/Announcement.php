@@ -23,15 +23,12 @@ class Announcement extends Model
         'expires_at',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'is_active' => 'boolean',
-            'is_urgent' => 'boolean',
-            'published_at' => 'datetime',
-            'expires_at' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_urgent' => 'boolean',
+        'published_at' => 'datetime',
+        'expires_at' => 'datetime',
+    ];
 
     /**
      * Get the journal that owns the announcement.

@@ -37,21 +37,18 @@ class Issue extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'volume' => 'integer',
-            'number' => 'integer',
-            'year' => 'integer',
-            'show_volume' => 'boolean',
-            'show_number' => 'boolean',
-            'show_year' => 'boolean',
-            'show_title' => 'boolean',
-            'is_published' => 'boolean',
-            'published_at' => 'datetime',
-            'metadata' => 'array', // JSONB to array
-        ];
-    }
+    protected $casts = [
+        'volume' => 'integer',
+        'number' => 'integer',
+        'year' => 'integer',
+        'show_volume' => 'boolean',
+        'show_number' => 'boolean',
+        'show_year' => 'boolean',
+        'show_title' => 'boolean',
+        'is_published' => 'boolean',
+        'published_at' => 'datetime',
+        'metadata' => 'array', // JSONB to array
+    ];
 
     // =====================================================
     // RELATIONSHIPS

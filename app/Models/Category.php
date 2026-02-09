@@ -28,13 +28,10 @@ class Category extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'is_active' => 'boolean',
-            'sort_order' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+    ];
 
     /**
      * Boot the model

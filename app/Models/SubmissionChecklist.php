@@ -20,14 +20,11 @@ class SubmissionChecklist extends Model
         'is_active',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'is_required' => 'boolean',
-            'is_active' => 'boolean',
-            'sort_order' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'is_required' => 'boolean',
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

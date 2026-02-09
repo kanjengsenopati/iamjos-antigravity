@@ -36,7 +36,7 @@
 
     <div class="p-6">
         {{-- Score Section --}}
-        <div class="flex items-center justify-center mb-8 relative">
+        <div class="flex flex-col items-center justify-center mb-10">
             {{-- Circular Progress --}}
             <div class="relative w-32 h-32">
                 <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -47,10 +47,12 @@
                         cy="50" stroke-dasharray="251.2"
                         stroke-dashoffset="{{ 251.2 - (251.2 * $analysis['score']) / 100 }}" />
                 </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-3xl font-bold {{ $scoreColor }}">{{ $analysis['score'] }}</span>
-                    <span class="text-xs text-gray-500 uppercase font-semibold">SEO Score</span>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-4xl font-extrabold {{ $scoreColor }}">{{ $analysis['score'] }}</span>
                 </div>
+            </div>
+            <div class="mt-2 text-center">
+                <span class="text-xs text-gray-500 uppercase font-bold tracking-wider">Indexing Requirement Score</span>
             </div>
         </div>
 

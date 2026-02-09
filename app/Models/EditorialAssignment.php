@@ -23,16 +23,13 @@ class EditorialAssignment extends Model
         'date_notified',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'is_active' => 'boolean',
-            'can_edit' => 'boolean',
-            'can_access_editorial_history' => 'boolean',
-            'date_assigned' => 'datetime',
-            'date_notified' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'is_active' => 'boolean',
+        'can_edit' => 'boolean',
+        'can_access_editorial_history' => 'boolean',
+        'date_assigned' => 'datetime',
+        'date_notified' => 'datetime',
+    ];
 
     // Role constants
     const ROLE_EDITOR = 'editor';

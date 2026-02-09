@@ -23,14 +23,12 @@ class Discussion extends Model
         'closed_by',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'is_open' => 'boolean',
-            'stage_id' => 'integer',
-            'closed_at' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'is_open' => 'boolean',
+        'stage_id' => 'integer',
+        'closed_at' => 'datetime',
+        'is_active' => 'boolean',
+    ];
 
     /**
      * Get the submission this discussion belongs to.

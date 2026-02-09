@@ -13,6 +13,7 @@ class Publication extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
+
     /**
      * Publication status constants
      */
@@ -50,16 +51,13 @@ class Publication extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'version' => 'integer',
-            'status' => 'integer',
-            'copyright_year' => 'integer',
-            'date_published' => 'date',
-            'metadata' => 'array',
-        ];
-    }
+    protected $casts = [
+        'version' => 'integer',
+        'status' => 'integer',
+        'copyright_year' => 'integer',
+        'date_published' => 'date',
+        'metadata' => 'array',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

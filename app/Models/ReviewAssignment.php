@@ -54,19 +54,16 @@ class ReviewAssignment extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'quality_rating' => 'integer',
-            'assigned_at' => 'datetime',
-            'due_date' => 'datetime',
-            'response_due_date' => 'datetime',
-            'responded_at' => 'datetime',
-            'completed_at' => 'datetime',
-            'round' => 'integer',
-            'metadata' => 'array',
-        ];
-    }
+    protected $casts = [
+        'quality_rating' => 'integer',
+        'assigned_at' => 'datetime',
+        'due_date' => 'datetime',
+        'response_due_date' => 'datetime',
+        'responded_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'round' => 'integer',
+        'metadata' => 'array',
+    ];
 
     // =====================================================
     // RELATIONSHIPS
