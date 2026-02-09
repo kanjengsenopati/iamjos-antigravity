@@ -24,13 +24,14 @@ class EmailTemplate extends Model
         'is_custom',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'is_enabled' => 'boolean',
-            'is_custom' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'is_enabled' => 'boolean',
+        'is_custom' => 'boolean',
+        'can_edit' => 'boolean',
+        'can_disable' => 'boolean',
+        'is_active' => 'boolean',
+        'variables' => 'array',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

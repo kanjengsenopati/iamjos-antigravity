@@ -290,7 +290,7 @@ class NativeImportExportController extends Controller
         $submission = Submission::create([
             'journal_id' => $journal->id,
             'issue_id' => $issue?->id,
-            'user_id' => auth()->id() ?? 1, // Fallback to admin/system if no auth
+            'user_id' => auth()->id ?? 1, // Fallback to admin/system if no auth
             'title' => $title,
             'abstract' => strip_tags($abstract), // Clean HTML for consistency
             'status' => $status,
@@ -420,88 +420,35 @@ class NativeImportExportController extends Controller
             return back()->with('error', 'Please select at least one issue to export.');
         }
 
+        // Eager load relationships needed for the XML
         $issues = Issue::whereIn('id', $ids)
             ->where('journal_id', $journal->id)
-            ->with(['submissions.authors', 'submissions.section'])
+            ->with(['submissions.authors', 'submissions.section', 'submissions.files', 'submissions.currentPublication'])
             ->get();
 
-        $filename = 'issues_export_' . date('Y-m-d_His') . '.xml';
+        if ($issues->isEmpty()) {
+            return back()->with('error', 'No issues found.');
+        }
+
+        $filename = 'issues_export_ojs33_' . date('Y-m-d_His') . '.xml';
 
         return response()->streamDownload(function () use ($issues, $journal) {
-            $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><issues/>');
-            $xml->addAttribute('xmlns', 'http://iamjos.org/native');
-            $xml->addAttribute('journal', $journal->name);
-            $xml->addAttribute('exported_at', now()->toIso8601String());
-
-            foreach ($issues as $issue) {
-                $issueNode = $xml->addChild('issue');
-
-                // Issue identification
-                $identification = $issueNode->addChild('identification');
-                $identification->addChild('volume', (string) $issue->volume);
-                $identification->addChild('number', (string) $issue->number);
-                $identification->addChild('year', (string) $issue->year);
-                $identification->addChild('title', $this->escapeXml($issue->title ?? ''));
-                $identification->addChild('url_path', $this->escapeXml($issue->url_path ?? ''));
-
-                // Issue metadata
-                $issueNode->addChild('description', $this->escapeXml($issue->description ?? ''));
-                $issueNode->addChild('is_published', $issue->is_published ? 'true' : 'false');
-                $issueNode->addChild('published_at', $issue->published_at?->toIso8601String() ?? '');
-
-                // Nested articles
-                $articlesNode = $issueNode->addChild('articles');
-                foreach ($issue->submissions as $submission) {
-                    $this->appendArticleNode($articlesNode, $submission);
-                }
+            try {
+                \Illuminate\Support\Facades\Log::info('Starting XML Export for issues: ' . $issues->pluck('id')->join(', '));
+                // Render to string first to catch view errors
+                $content = view('xml.issue', compact('issues', 'journal'))->render();
+                echo $content;
+                \Illuminate\Support\Facades\Log::info('XML Export render completed.');
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('XML Export Error: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
+                throw $e;
             }
-
-            echo $xml->asXML();
         }, $filename, [
             'Content-Type' => 'application/xml',
         ]);
     }
 
-    /**
-     * Helper: Append article node to XML.
-     */
-    private function appendArticleNode(SimpleXMLElement $parent, Submission $submission): void
-    {
-        $article = $parent->addChild('article');
-        $article->addAttribute('id', $submission->id);
-        $article->addAttribute('status', $submission->status);
-
-        // Basic metadata
-        $article->addChild('submission_code', $this->escapeXml($submission->submission_code ?? ''));
-        $article->addChild('title', $this->escapeXml($submission->title));
-        $article->addChild('subtitle', $this->escapeXml($submission->subtitle ?? ''));
-        $article->addChild('abstract', $this->escapeXml($submission->abstract ?? ''));
-        $article->addChild('keywords', $this->escapeXml($submission->keywords ?? ''));
-        $article->addChild('references', $this->escapeXml($submission->references ?? ''));
-
-        // Section
-        if ($submission->section) {
-            $article->addChild('section', $this->escapeXml($submission->section->name));
-        }
-
-        // Dates
-        $datesNode = $article->addChild('dates');
-        $datesNode->addChild('submitted_at', $submission->submitted_at?->toIso8601String() ?? '');
-        $datesNode->addChild('accepted_at', $submission->accepted_at?->toIso8601String() ?? '');
-        $datesNode->addChild('published_at', $submission->published_at?->toIso8601String() ?? '');
-
-        // Authors
-        $authorsNode = $article->addChild('authors');
-        foreach ($submission->authors as $author) {
-            $authorNode = $authorsNode->addChild('author');
-            $authorNode->addChild('given_name', $this->escapeXml($author->given_name ?? ''));
-            $authorNode->addChild('family_name', $this->escapeXml($author->family_name ?? ''));
-            $authorNode->addChild('email', $this->escapeXml($author->email ?? ''));
-            $authorNode->addChild('affiliation', $this->escapeXml($author->affiliation ?? ''));
-            $authorNode->addChild('orcid', $this->escapeXml($author->orcid ?? ''));
-            $authorNode->addChild('is_primary', $author->is_primary ? 'true' : 'false');
-        }
-    }
 
     /**
      * Helper: Import article from XML node.
@@ -540,35 +487,5 @@ class NativeImportExportController extends Controller
 
         return $submission;
     }
-
-    /**
-     * Helper: Import issue from XML node.
-     */
-    private function importIssue(SimpleXMLElement $node, $journal): Issue
-    {
-        $identification = $node->identification ?? $node;
-
-        return Issue::create([
-            'journal_id' => $journal->id,
-            'volume' => (int) ($identification->volume ?? 1),
-            'number' => (int) ($identification->number ?? 1),
-            'year' => (int) ($identification->year ?? date('Y')),
-            'title' => (string) ($identification->title ?? ''),
-            'url_path' => (string) ($identification->url_path ?? ''),
-            'description' => (string) ($node->description ?? ''),
-            'is_published' => ((string) ($node->is_published ?? 'false')) === 'true',
-        ]);
-    }
-
-    /**
-     * Helper: Escape special characters for XML.
-     */
-    private function escapeXml(?string $value): string
-    {
-        if ($value === null) {
-            return '';
-        }
-
-        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-    }
 }
+

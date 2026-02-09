@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Admin\AuthRequest;
 use App\Models\Admin;
@@ -58,8 +59,9 @@ class AuthController extends Controller
 
         // Guard Clause: User not found
         if (!$user) {
-            return back()->with('warning', 'Email/Username atau password tidak sesuai.')
-                ->withInput($request->only('email'));
+            throw ValidationException::withMessages([
+                'email' => ['Email/Username atau password tidak sesuai.'],
+            ]);
         }
 
         // Check if user account is disabled
@@ -96,8 +98,9 @@ class AuthController extends Controller
             return $this->handlePostLoginRedirect($user, $journal);
         }
 
-        return back()->with('warning', 'Email/Username atau password tidak sesuai.')
-            ->withInput($request->only('email'));
+        throw ValidationException::withMessages([
+            'email' => ['Email/Username atau password tidak sesuai.'],
+        ]);
     }
 
     /**

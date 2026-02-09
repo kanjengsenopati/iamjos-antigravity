@@ -29,13 +29,11 @@ class PublicationGalley extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'seq' => 'integer',
-            'is_remote' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+        'metadata' => 'array',
+    ];
 
     // =====================================================
     // ROUTE MODEL BINDING

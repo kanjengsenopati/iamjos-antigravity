@@ -30,15 +30,12 @@ class Section extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'is_active' => 'boolean',
-            'meta_indexed' => 'boolean',
-            'meta_reviewed' => 'boolean',
-            'sort_order' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'is_active' => 'boolean',
+        'meta_indexed' => 'boolean',
+        'meta_reviewed' => 'boolean',
+        'sort_order' => 'integer',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

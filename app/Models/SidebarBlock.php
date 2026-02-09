@@ -93,15 +93,11 @@ class SidebarBlock extends Model
         'order',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'settings' => 'array',
-            'is_active' => 'boolean',
-            'show_title' => 'boolean',
-            'order' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+        'metadata' => 'array',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

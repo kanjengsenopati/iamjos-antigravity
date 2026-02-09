@@ -66,7 +66,7 @@ class SidebarController extends Controller
             'icon' => 'nullable|string|max:100',
             'position' => 'in:left,right',
             'settings' => 'nullable|array',
-            'slug' => 'nullable|required_if:type,page|string|max:255|alpha_dash',
+            'slug' => ($request->type === 'page') ? 'required|string|max:255|alpha_dash' : 'nullable|string|max:255|alpha_dash',
             'show_title' => 'boolean',
         ]);
 
@@ -136,7 +136,9 @@ class SidebarController extends Controller
             'settings' => 'nullable|array',
             'is_active' => 'boolean',
             'type' => 'sometimes|in:block,page',
-            'slug' => 'nullable|required_if:type,page|string|max:255|alpha_dash',
+            'slug' => ($request->input('type', $block->type) === 'page') 
+                ? 'required|string|max:255|alpha_dash' 
+                : 'nullable|string|max:255|alpha_dash',
             'show_title' => 'boolean',
         ]);
 

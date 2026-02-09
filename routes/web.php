@@ -50,11 +50,11 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 // =====================================================
 // AUTH ROUTES (Portal Context - Global)
 // =====================================================
-Route::get('/login', [AuthController::class, 'index'])->name('login');
-Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
+Route::get('/login', [AuthController::class, 'index'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate')->middleware('guest');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/register', [RegisterController::class, 'create'])->name('register');
-Route::post('/register', [RegisterController::class, 'store']);
+Route::get('/register', [RegisterController::class, 'create'])->name('register')->middleware('guest');
+Route::post('/register', [RegisterController::class, 'store'])->middleware('guest');
 Route::get('/forgot-password', [ForgotPasswordController::class, 'index'])->name('forgot-password');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'post'])->name('success-forgot-password');
 Route::get('/change-password', [ForgotPasswordController::class, 'changePassword'])->name('change-password');
@@ -186,11 +186,11 @@ Route::any('{journal}/oai', [App\Http\Controllers\Public\OaiController::class, '
 Route::prefix('{journal}')->group(function () {
     // --------- Journal-Scoped Auth Routes (/{journal}/login) ---------
     Route::middleware(['journal.detect'])->group(function () {
-        Route::get('/login', [AuthController::class, 'index'])->name('journal.login');
-        Route::post('/login', [AuthController::class, 'authenticate'])->name('journal.authenticate');
+        Route::get('/login', [AuthController::class, 'index'])->name('journal.login')->middleware('guest');
+        Route::post('/login', [AuthController::class, 'authenticate'])->name('journal.authenticate')->middleware('guest');
         Route::post('/logout', [AuthController::class, 'logout'])->name('journal.logout');
-        Route::get('/register', [RegisterController::class, 'create'])->name('journal.register');
-        Route::post('/register', [RegisterController::class, 'store'])->name('journal.register.store');
+        Route::get('/register', [RegisterController::class, 'create'])->name('journal.register')->middleware('guest');
+        Route::post('/register', [RegisterController::class, 'store'])->name('journal.register.store')->middleware('guest');
         Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
     });
     // --------- Public Journal Pages ---------

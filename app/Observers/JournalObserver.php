@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Journal;
+use App\Models\User;
 use App\Models\JournalUserRole;
 
 class JournalObserver
@@ -13,6 +14,8 @@ class JournalObserver
      */
     public function created(Journal $journal): void
     {
+        // Enroll current super admins as Journal Managers
+        $superAdmins = User::role('Super Admin')->get();
         // Only enroll Super Admins if the journal is enabled
         if ($journal->enabled) {
             JournalUserRole::enrollAllSuperAdminsInJournal($journal);

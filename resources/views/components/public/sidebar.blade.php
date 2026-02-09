@@ -15,7 +15,7 @@
             }
         @endphp
 
-        @if ($type === 'page')
+        @if ($type === 'page' && $block->slug)
             {{-- CASE 3: Custom Page Link + Teaser Content --}}
             {{-- CASE 3: Custom Page Link + Teaser Content (Clickable Card) --}}
             <a href="{{ route('journal.custom-page', ['journal' => $journal->slug, 'path' => $block->slug]) }}"

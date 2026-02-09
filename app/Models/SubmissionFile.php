@@ -49,14 +49,11 @@ class SubmissionFile extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'file_size' => 'integer',
-            'version' => 'integer',
-            'metadata' => 'array',
-        ];
-    }
+    protected $casts = [
+        'file_size' => 'integer',
+        'version' => 'integer',
+        'metadata' => 'array',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

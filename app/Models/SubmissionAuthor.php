@@ -40,14 +40,11 @@ class SubmissionAuthor extends Model
     /**
      * The attributes that should be cast.
      */
-    protected function casts(): array
-    {
-        return [
-            'is_corresponding' => 'boolean',
-            'is_primary_contact' => 'boolean',
-            'sort_order' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'sort_order' => 'integer',
+        'is_corresponding' => 'boolean',
+        'is_primary_contact' => 'boolean',
+    ];
 
     // =====================================================
     // RELATIONSHIPS

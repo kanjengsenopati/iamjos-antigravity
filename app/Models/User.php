@@ -59,21 +59,6 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'date_last_login' => 'datetime',
-            'date_registered' => 'datetime',
-            'privacy_consented_at' => 'datetime',
-            'must_change_password' => 'boolean',
-            'disabled' => 'boolean',
-            'inline_help' => 'boolean',
-            'email_notifications' => 'boolean',
-        ];
     }
 
     // =====================================================

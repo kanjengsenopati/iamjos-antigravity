@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sessions', function (Blueprint $table) {
-            $table->uuid('user_id')->nullable();
+            $table->uuid('user_id')->nullable()->index();
         });
     }
 
@@ -23,6 +23,7 @@ return new class extends Migration
     {
         Schema::table('sessions', function (Blueprint $table) {
             $table->dropColumn('user_id');
+            $table->dropIndex('sessions_user_id_index');
         });
     }
 };
