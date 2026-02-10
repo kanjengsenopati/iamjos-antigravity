@@ -233,7 +233,8 @@ class SubmissionController extends Controller
                 'title' => 'required|string|max:500',
                 'subtitle' => 'nullable|string|max:500',
                 'abstract' => 'required|string',
-                'keywords' => 'nullable|string|max:500',
+                'keywords' => 'nullable|array',
+                'keywords.*' => 'string|max:100',
                 'references' => 'nullable|string',
 
                 'authors' => 'required|array|min:1',
@@ -259,13 +260,26 @@ class SubmissionController extends Controller
                     'title' => $validated['title'],
                     'subtitle' => $validated['subtitle'] ?? null,
                     'abstract' => $validated['abstract'],
-                    'keywords' => $validated['keywords'] ?? null,
                     'references' => $validated['references'] ?? null,
                     'status' => Submission::STATUS_SUBMITTED,
                     'stage' => Submission::STAGE_SUBMISSION,
                     'stage_id' => 1,
                     'submitted_at' => now(),
                 ]);
+
+                // 1.5 Sync Keywords (Many-to-Many)
+                if (!empty($validated['keywords'])) {
+                    $keywordIds = [];
+                    foreach ($validated['keywords'] as $content) {
+                        $content = trim($content);
+                        if (empty($content)) {
+                            continue;
+                        }
+                        $keyword = \App\Models\Keyword::firstOrCreate(['content' => $content]);
+                        $keywordIds[] = $keyword->id;
+                    }
+                    $submission->keywords()->sync($keywordIds);
+                }
 
                 // 2. Upload File
                 if ($request->hasFile('manuscript')) {
@@ -547,12 +561,33 @@ class SubmissionController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:500',
             'abstract' => 'required|string',
-            'keywords' => 'nullable|string|max:500',
+            'keywords' => 'nullable|array',
+            'keywords.*' => 'string|max:100',
             'references' => 'nullable|string',
             'section_id' => 'required|uuid',
         ]);
 
-        $submission->update($validated);
+        // Update basic fields (excluding keywords)
+        $submission->update([
+            'title' => $validated['title'],
+            'abstract' => $validated['abstract'],
+            'references' => $validated['references'] ?? null,
+            'section_id' => $validated['section_id'],
+        ]);
+
+        // Sync keywords (many-to-many)
+        if (isset($validated['keywords'])) {
+            $keywordIds = [];
+            foreach ($validated['keywords'] as $content) {
+                $content = trim($content);
+                if (empty($content)) {
+                    continue;
+                }
+                $keyword = \App\Models\Keyword::firstOrCreate(['content' => $content]);
+                $keywordIds[] = $keyword->id;
+            }
+            $submission->keywords()->sync($keywordIds);
+        }
 
         return redirect()->route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission])
             ->with('success', 'Submission updated successfully.');
