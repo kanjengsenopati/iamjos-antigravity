@@ -180,6 +180,16 @@ Route::post('translate_post', [TranslateController::class, 'translatePost'])->na
 Route::any('{journal}/oai', [App\Http\Controllers\Public\OaiController::class, 'handle'])->name('journal.oai');
 
 // =====================================================
+// JOURNAL REGISTRATION (Explicit Binding for Priority)
+// =====================================================
+Route::middleware('guest')->group(function () {
+    Route::get('/{journal:slug}/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])
+        ->name('journal.register');
+    Route::post('/{journal:slug}/register', [\App\Http\Controllers\JournalRegisterController::class, 'register'])
+        ->name('journal.register.store');
+});
+
+// =====================================================
 // JOURNAL-SCOPED PUBLIC ROUTES (Per-Journal Frontend)
 // These come AFTER all other routes to catch journal slugs
 // =====================================================
@@ -189,8 +199,6 @@ Route::prefix('{journal}')->group(function () {
         Route::get('/login', [AuthController::class, 'index'])->name('journal.login')->middleware('guest');
         Route::post('/login', [AuthController::class, 'authenticate'])->name('journal.authenticate')->middleware('guest');
         Route::post('/logout', [AuthController::class, 'logout'])->name('journal.logout');
-        Route::get('/register', [RegisterController::class, 'create'])->name('journal.register')->middleware('guest');
-        Route::post('/register', [RegisterController::class, 'store'])->name('journal.register.store')->middleware('guest');
         Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
     });
     // --------- Public Journal Pages ---------
