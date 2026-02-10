@@ -18,6 +18,11 @@ class OaiController extends Controller
             ->orWhere('path', $journalPath)
             ->firstOrFail();
         
+        // 1.5 Landing Page (OJS 3.3 Style) - Show HTML page when verb is empty
+        if (!$request->has('verb')) {
+            return view('journal.oai.landing');
+        }
+        
         // 2. Ambil Parameter
         $verb = $request->input('verb');
         
