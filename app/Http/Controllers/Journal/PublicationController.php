@@ -51,14 +51,29 @@ class PublicationController extends Controller
     public function updateMetadata(Request $request, $journal, Submission $submission)
     {
         $validated = $request->validate([
-            'keywords' => 'nullable|string|max:1000',
+            'keywords' => 'nullable|array',
+            'keywords.*' => 'string|max:100',
         ]);
+
         $publication = $submission->getOrCreatePublication();
-        $publication->update($validated);
-        // Sync keywords to submission
+
+        // Sync keywords (many-to-many)
         if (isset($validated['keywords'])) {
-            $submission->update(['keywords' => $validated['keywords']]);
+            $keywordIds = [];
+            foreach ($validated['keywords'] as $content) {
+                $content = trim($content);
+                if (empty($content)) {
+                    continue;
+                }
+                $keyword = \App\Models\Keyword::firstOrCreate(['content' => $content]);
+                $keywordIds[] = $keyword->id;
+            }
+            $submission->keywords()->sync($keywordIds);
+            
+            // Update publication keywords as comma-separated string for backward compatibility
+            $publication->update(['keywords' => implode(', ', $validated['keywords'])]);
         }
+
         return back()->with('success', 'Metadata updated successfully.');
     }
     /**

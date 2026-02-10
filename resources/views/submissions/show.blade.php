@@ -3032,15 +3032,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             method="POST" class="p-6">
                             @csrf
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
-                                <div>
+                                <div x-data="keywordInputShow(@js($submission->keywords->pluck('content')->toArray()))">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
-                                    <input type="text" name="keywords"
-                                        value="{{ old('keywords', $publication->keywords ?? $submission->keywords) }}"
-                                        placeholder="Separate keywords with commas"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                    <p class="mt-1 text-xs text-gray-500">Enter keywords separated by commas (e.g.,
-                                        machine
-                                        learning, AI, neural networks)</p>
+                                    <input type="text" x-ref="keywordInput"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Type keyword and press Enter">
+                                    <p class="mt-1 text-xs text-gray-500">Press Enter or comma to add keywords. Start
+                                        typing to see suggestions.</p>
                                 </div>
 
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
@@ -7192,6 +7190,113 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 }
             }));
         });
+    </script>
+
+    {{-- Keyword Input (Tagify) for Publication Metadata --}}
+    <script>
+        function keywordInputShow(initialKeywords = []) {
+            return {
+                tagify: null,
+
+                init() {
+                    // Load Tagify CSS and JS
+                    if (!document.querySelector('link[href*="tagify"]')) {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = 'https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css';
+                        document.head.appendChild(link);
+                    }
+
+                    if (!window.Tagify) {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/@yaireo/tagify';
+                        script.onload = () => this.initializeTagify(initialKeywords);
+                        document.head.appendChild(script);
+                    } else {
+                        this.initializeTagify(initialKeywords);
+                    }
+                },
+
+                initializeTagify(initialKeywords) {
+                    const input = this.$refs.keywordInput;
+
+                    this.tagify = new Tagify(input, {
+                        delimiters: ",|Enter",
+                        maxTags: 20,
+                        dropdown: {
+                            enabled: 1,
+                            maxItems: 10,
+                            classname: "tagify__dropdown",
+                            closeOnSelect: true
+                        },
+                        whitelist: [],
+                        enforceWhitelist: false,
+                        editTags: {
+                            clicks: 1,
+                            keepInvalid: false
+                        }
+                    });
+
+                    // Add initial keywords
+                    if (initialKeywords && initialKeywords.length > 0) {
+                        this.tagify.addTags(initialKeywords);
+                    }
+
+                    // Fetch autocomplete suggestions
+                    let controller;
+                    this.tagify.on('input', (e) => {
+                        const value = e.detail.value;
+                        this.tagify.settings.whitelist.length = 0;
+
+                        if (value.length < 2) return;
+
+                        // Cancel previous request
+                        controller && controller.abort();
+                        controller = new AbortController();
+
+                        fetch(`/api/keywords?query=${encodeURIComponent(value)}`, {
+                                signal: controller.signal
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                this.tagify.settings.whitelist = data.map(k => k.content);
+                                this.tagify.dropdown.show(value);
+                            })
+                            .catch(err => {
+                                if (err.name !== 'AbortError') {
+                                    console.error('Keyword fetch error:', err);
+                                }
+                            });
+                    });
+
+                    // Create hidden inputs for form submission
+                    this.tagify.on('add remove', () => {
+                        this.updateHiddenInputs();
+                    });
+
+                    // Initial hidden inputs
+                    this.updateHiddenInputs();
+                },
+
+                updateHiddenInputs() {
+                    // Remove existing hidden keyword inputs
+                    const existingInputs = document.querySelectorAll('input[name^="keywords["]');
+                    existingInputs.forEach(input => input.remove());
+
+                    // Add new hidden inputs for each tag
+                    const tags = this.tagify.value;
+                    const form = this.$refs.keywordInput.closest('form');
+
+                    tags.forEach((tag, index) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `keywords[${index}]`;
+                        input.value = tag.value;
+                        form.appendChild(input);
+                    });
+                }
+            }
+        }
     </script>
 
 

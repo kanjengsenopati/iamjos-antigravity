@@ -52,7 +52,6 @@ class Submission extends Model
         'submission_code',
         'subtitle',
         'abstract',
-        'keywords',
         'submission_file_path',
         'status',
         'stage',
@@ -254,6 +253,15 @@ class Submission extends Model
     }
 
     /**
+     * Get all keywords for this submission (many-to-many)
+     */
+    public function keywords(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Keyword::class, 'submission_keyword')
+            ->withTimestamps();
+    }
+
+    /**
      * Get all publications (versions) for this submission
      */
     public function publications(): HasMany
@@ -303,7 +311,7 @@ class Submission extends Model
                 'title' => $this->title,
                 'subtitle' => $this->subtitle,
                 'abstract' => $this->abstract,
-                'keywords' => $this->keywords,
+                'keywords' => $this->keywords_string,
             ]);
 
             // Copy authors from submission to publication
@@ -565,15 +573,19 @@ class Submission extends Model
     }
 
     /**
-     * Get keywords as array
+     * Get keywords as array (for backward compatibility)
      */
     public function getKeywordsArrayAttribute(): array
     {
-        if (empty($this->keywords)) {
-            return [];
-        }
+        return $this->keywords()->pluck('content')->toArray();
+    }
 
-        return array_map('trim', explode(',', $this->keywords));
+    /**
+     * Get keywords as comma-separated string (for display)
+     */
+    public function getKeywordsStringAttribute(): string
+    {
+        return $this->keywords()->pluck('content')->implode(', ');
     }
 
     /**
