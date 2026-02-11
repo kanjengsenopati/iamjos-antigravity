@@ -142,6 +142,14 @@ class Journal extends Model
     }
 
     /**
+     * Get roles defined for this journal
+     */
+    public function roles(): HasMany
+    {
+        return $this->hasMany(Role::class, 'journal_id');
+    }
+
+    /**
      * Get all users registered with this journal
      */
     public function registeredUsers()

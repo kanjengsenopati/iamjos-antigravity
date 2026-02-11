@@ -88,7 +88,7 @@
 
                     <!-- Menu Items -->
                     <div class="py-1">
-                        <a href="{{ route('profile.edit') }}"
+                        <a href="{{ route('journal.profile.edit', request()->route('journal') ?? \App\Models\Journal::first()) }}"
                             class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">

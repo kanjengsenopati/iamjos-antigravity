@@ -21,33 +21,40 @@ class DetectJournalContext
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $journalSlug = $request->route('journal');
+        $journalParam = $request->route('journal');
+        $journal = null;
 
-        if ($journalSlug) {
-            // Find the journal by slug
-            $journal = Journal::where('slug', $journalSlug)->first();
+        if ($journalParam instanceof Journal) {
+            $journal = $journalParam;
+        } elseif (is_string($journalParam)) {
+            $journal = Journal::where('slug', $journalParam)->first();
+        }
 
-            if ($journal) {
-                // For disabled journals on public auth routes, show generic message
-                // Authenticated staff can still access via main dashboard routes
-                if (!$journal->enabled && !$request->user()) {
-                    abort(404, 'Journal not found.');
-                }
-
-                // Bind the journal to the service container for global access
-                app()->instance('currentJournal', $journal);
-
-                // Share with all views
-                view()->share('currentJournal', $journal);
-
-                // Store in session for redirect after login
-                session()->put('login_journal_slug', $journal->slug);
-            } else {
-                // Journal slug provided but not found
+        if ($journal) {
+            // For disabled journals on public auth routes, show generic message
+            // Authenticated staff can still access via main dashboard routes
+            if (!$journal->enabled && !$request->user()) {
                 abort(404, 'Journal not found.');
             }
+
+            // Bind the journal to the service container for global access
+            app()->instance('currentJournal', $journal);
+
+            // Share with all views
+            view()->share('currentJournal', $journal);
+
+            // Store in session for redirect after login
+            session()->put('login_journal_slug', $journal->slug);
         } else {
-            // No journal context - portal level
+            // No journal context - portal level (or invalid slug if param was provided)
+            
+            // If we are strictly under a journal prefix but failed to resolve, we should probably 404
+            // But this middleware is "Detect", implying optional? 
+            // The original code aborted 404 if slug provided but not found.
+            if ($journalParam && !$journal) {
+                 abort(404, 'Journal not found.');
+            }
+            
             app()->instance('currentJournal', null);
             view()->share('currentJournal', null);
         }

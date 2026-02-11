@@ -143,7 +143,8 @@
                                         'red' => 'bg-red-100 text-red-800',
                                         'emerald' => 'bg-emerald-100 text-emerald-800',
                                     ];
-                                    $statusClass = $statusColors[$submission->status_color] ?? 'bg-gray-100 text-gray-800';
+                                    $statusClass =
+                                        $statusColors[$submission->status_color] ?? 'bg-gray-100 text-gray-800';
                                 @endphp
                                 <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
                                     {{ $submission->status_label }}
@@ -194,7 +195,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('profile.edit') }}"
+                <a href="{{ route('journal.profile.edit', ['journal' => $currentJournal ? $currentJournal->slug : \App\Models\Journal::first()]) }}"
                     class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors group">
                     <div
                         class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">

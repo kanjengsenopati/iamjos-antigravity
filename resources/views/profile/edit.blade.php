@@ -1,4 +1,24 @@
 <x-app-layout>
+    @push('styles')
+        <style>
+            /* CKEditor 4 Custom Styling */
+            .cke_chrome {
+                border: 1px solid #d1d5db !important;
+                border-radius: 0.5rem !important;
+            }
+
+            .cke_top {
+                background: #f9fafb !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                border-radius: 0.5rem 0.5rem 0 0 !important;
+            }
+
+            .cke_bottom {
+                background: #f9fafb !important;
+                border-top: 1px solid #e5e7eb !important;
+            }
+        </style>
+    @endpush
     <x-slot name="title">Profile Settings</x-slot>
 
     <div class="min-h-screen bg-gray-50 -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
@@ -79,7 +99,7 @@
                                 Upload a new avatar. Max file size: 2MB. Allowed formats: JPG, PNG, WebP.
                             </p>
                             <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                                <form action="{{ route('profile.avatar') }}" method="POST"
+                                <form action="{{ route('journal.profile.avatar', $journal->slug) }}" method="POST"
                                     enctype="multipart/form-data" class="flex items-center gap-3">
                                     @csrf
                                     @method('PATCH')
@@ -115,7 +135,8 @@
                                 </form>
 
                                 @if ($user->avatar)
-                                    <form action="{{ route('profile.avatar.delete') }}" method="POST">
+                                    <form action="{{ route('journal.profile.avatar.delete', $journal->slug) }}"
+                                        method="POST">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
@@ -169,11 +190,20 @@
                             <i class="fa-solid fa-lock mr-2"></i>
                             Password
                         </button>
+                        {{-- @if ($journal && $availableRoles->isNotEmpty()) --}}
+                        <button @click="activeTab = 'roles'" type="button"
+                            :class="activeTab === 'roles' ? 'border-primary-600 text-primary-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            <i class="fa-solid fa-user-tag mr-2"></i>
+                            Roles
+                        </button>
+                        {{-- @endif --}}
                     </nav>
                 </div>
 
                 <!-- Tab Content -->
-                <form action="{{ route('profile.update') }}" method="POST" class="p-6">
+                <form action="{{ route('journal.profile.update', $journal->slug) }}" method="POST" class="p-6">
                     @csrf
                     @method('PATCH')
 
@@ -395,7 +425,7 @@
                     </div>
 
                     <!-- Save Button (for tabs 1-3) -->
-                    <div x-show="activeTab !== 'password'"
+                    <div x-show="['identity', 'contact', 'public'].includes(activeTab)"
                         class="mt-8 flex justify-end border-t border-gray-200 pt-6">
                         <button type="submit"
                             class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm">
@@ -411,7 +441,7 @@
                 <!-- Password Tab Content (Separate Form) -->
                 <div x-show="activeTab === 'password'" x-cloak class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-6">Change Password</h3>
-                    <form action="{{ route('profile.password') }}" method="POST">
+                    <form action="{{ route('journal.profile.password', $journal->slug) }}" method="POST">
                         @csrf
                         @method('PATCH')
 
@@ -467,6 +497,13 @@
                         </div>
                     </form>
                 </div>
+
+                <!-- Roles Tab Content (Separate Form) -->
+                @if ($journal && $availableRoles->isNotEmpty())
+                    <div x-show="activeTab === 'roles'" x-cloak class="p-6">
+                        @include('profile.partials.tab-roles')
+                    </div>
+                @endif
             </div>
 
             <!-- Account Stats -->
@@ -497,27 +534,9 @@
             </div>
         </div>
     </div>
+    </div>
 
-    @push('styles')
-        <style>
-            /* CKEditor 4 Custom Styling */
-            .cke_chrome {
-                border: 1px solid #d1d5db !important;
-                border-radius: 0.5rem !important;
-            }
 
-            .cke_top {
-                background: #f9fafb !important;
-                border-bottom: 1px solid #e5e7eb !important;
-                border-radius: 0.5rem 0.5rem 0 0 !important;
-            }
-
-            .cke_bottom {
-                background: #f9fafb !important;
-                border-top: 1px solid #e5e7eb !important;
-            }
-        </style>
-    @endpush
 
     @push('scripts')
         <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
@@ -533,7 +552,7 @@
                 images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
                     xhr.withCredentials = false;
-                    xhr.open('POST', '{{ route('profile.upload.image') }}');
+                    xhr.open('POST', '{{ route('journal.profile.upload.image', $journal->slug) }}');
                     xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
 
                     xhr.upload.onprogress = (e) => {

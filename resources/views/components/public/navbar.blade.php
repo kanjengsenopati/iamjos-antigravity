@@ -2,16 +2,16 @@
 @props(['journal', 'primaryMenu' => null, 'userMenu' => null])
 
 @php
-$primaryColor = $journal->getWebsiteSettings()['primary_color'] ?? '#0369a1';
-$secondaryColor = $journal->getWebsiteSettings()['secondary_color'] ?? '#7c3aed';
+    $primaryColor = $journal->getWebsiteSettings()['primary_color'] ?? '#0369a1';
+    $secondaryColor = $journal->getWebsiteSettings()['secondary_color'] ?? '#7c3aed';
 
-// Use passed menu or fallback to view composer data
-$primaryMenuItems = $primaryMenu ?? ($primaryNavItems ?? collect());
-$userMenuItems = $userMenu ?? ($userNavItems ?? collect());
+    // Use passed menu or fallback to view composer data
+    $primaryMenuItems = $primaryMenu ?? ($primaryNavItems ?? collect());
+    $userMenuItems = $userMenu ?? ($userNavItems ?? collect());
 
-// Check if menus have items
-$hasPrimaryMenu = $primaryMenuItems->isNotEmpty();
-$hasUserMenu = $userMenuItems->isNotEmpty();
+    // Check if menus have items
+    $hasPrimaryMenu = $primaryMenuItems->isNotEmpty();
+    $hasUserMenu = $userMenuItems->isNotEmpty();
 @endphp
 
 {{-- Primary Navigation Bar --}}
@@ -24,40 +24,42 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                 {{-- Desktop Navigation (Primary Menu - Always Visible) --}}
                 <div class="hidden md:flex items-center space-x-1">
                     {{-- Primary Menu Items (Always shown for all users) --}}
-                    @if($hasPrimaryMenu)
+                    @if ($hasPrimaryMenu)
                         {{-- Dynamic Primary Menu from Admin Settings --}}
-                        @foreach($primaryMenuItems as $item)
-                            @if($item->is_divider ?? false)
+                        @foreach ($primaryMenuItems as $item)
+                            @if ($item->is_divider ?? false)
                                 <div class="w-px h-5 bg-white/20 mx-2"></div>
                             @elseif(isset($item->children) && $item->children->isNotEmpty())
                                 {{-- Dropdown Menu --}}
                                 <div x-data="{ open: false }" class="relative">
                                     <button @click="open = !open" @click.outside="open = false"
                                         class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                                        @if($item->icon ?? false)
+                                        @if ($item->icon ?? false)
                                             <i class="{{ $item->icon }} text-white/70 text-xs"></i>
                                         @endif
                                         {{ $item->label }}
-                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                                            :class="{ 'rotate-180': open }"></i>
                                     </button>
 
                                     {{-- Dropdown Panel --}}
-                                    <div x-show="open" x-cloak
-                                        x-transition:enter="transition ease-out duration-150"
+                                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150"
                                         x-transition:enter-start="opacity-0 -translate-y-1"
                                         x-transition:enter-end="opacity-100 translate-y-0"
                                         x-transition:leave="transition ease-in duration-100"
                                         x-transition:leave-start="opacity-100 translate-y-0"
                                         x-transition:leave-end="opacity-0 -translate-y-1"
                                         class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                                        @foreach($item->children as $child)
-                                            @if($child->is_divider ?? false)
+                                        @foreach ($item->children as $child)
+                                            @if ($child->is_divider ?? false)
                                                 <hr class="my-2 border-slate-100">
                                             @else
-                                                <a href="{{ $child->resolved_url }}" target="{{ $child->target ?? '_self' }}"
+                                                <a href="{{ $child->resolved_url }}"
+                                                    target="{{ $child->target ?? '_self' }}"
                                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-                                                    @if($child->icon ?? false)
-                                                        <i class="{{ $child->icon }} text-slate-400 w-4 text-center"></i>
+                                                    @if ($child->icon ?? false)
+                                                        <i
+                                                            class="{{ $child->icon }} text-slate-400 w-4 text-center"></i>
                                                     @endif
                                                     {{ $child->label }}
                                                 </a>
@@ -70,7 +72,7 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                                 <a href="{{ $item->resolved_url }}" target="{{ $item->target ?? '_self' }}"
                                     class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
                                         {{ request()->url() === $item->resolved_url ? 'bg-white/15 text-white' : '' }}">
-                                    @if($item->icon ?? false)
+                                    @if ($item->icon ?? false)
                                         <i class="{{ $item->icon }} text-white/70 text-xs"></i>
                                     @endif
                                     {{ $item->label }}
@@ -105,21 +107,25 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                             <button @click="open = !open" @click.outside="open = false"
                                 class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
                                 <i class="fa-solid fa-ellipsis-h text-xs"></i> More
-                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                                    :class="{ 'rotate-180': open }"></i>
                             </button>
-                            <div x-show="open" x-cloak
-                                x-transition:enter="transition ease-out duration-150"
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150"
                                 x-transition:enter-start="opacity-0 -translate-y-1"
                                 x-transition:enter-end="opacity-100 translate-y-0"
                                 class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                                <a href="{{ route('journal.public.editorial-team', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                <a href="{{ route('journal.public.editorial-team', $journal->slug) }}"
+                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                                     <i class="fa-solid fa-users text-slate-400 w-4 text-center"></i> Editorial Team
                                 </a>
-                                <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                    <i class="fa-solid fa-file-alt text-slate-400 w-4 text-center"></i> Author Guidelines
+                                <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}"
+                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                    <i class="fa-solid fa-file-alt text-slate-400 w-4 text-center"></i> Author
+                                    Guidelines
                                 </a>
                                 <hr class="my-2 border-slate-100">
-                                <a href="{{ route('journal.public.search', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                <a href="{{ route('journal.public.search', $journal->slug) }}"
+                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                                     <i class="fa-solid fa-search text-slate-400 w-4 text-center"></i> Search
                                 </a>
                             </div>
@@ -132,38 +138,39 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
             <div class="hidden md:flex items-center space-x-4">
                 {{-- User Menu Items for Authenticated Users --}}
                 @auth
-                    @if($hasUserMenu)
-                        @foreach($userMenuItems as $item)
-                            @if($item->is_divider ?? false)
+                    @if ($hasUserMenu)
+                        @foreach ($userMenuItems as $item)
+                            @if ($item->is_divider ?? false)
                                 <div class="w-px h-5 bg-white/20 mx-2"></div>
                             @elseif(isset($item->children) && $item->children->isNotEmpty())
                                 {{-- Dropdown Menu --}}
                                 <div x-data="{ open: false }" class="relative">
                                     <button @click="open = !open" @click.outside="open = false"
                                         class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                                        @if($item->icon ?? false)
+                                        @if ($item->icon ?? false)
                                             <i class="{{ $item->icon }} text-white/70 text-xs"></i>
                                         @endif
                                         {{ $item->label }}
-                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                                            :class="{ 'rotate-180': open }"></i>
                                     </button>
 
                                     {{-- Dropdown Panel --}}
-                                    <div x-show="open" x-cloak
-                                        x-transition:enter="transition ease-out duration-150"
+                                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150"
                                         x-transition:enter-start="opacity-0 -translate-y-1"
                                         x-transition:enter-end="opacity-100 translate-y-0"
                                         x-transition:leave="transition ease-in duration-100"
                                         x-transition:leave-start="opacity-100 translate-y-0"
                                         x-transition:leave-end="opacity-0 -translate-y-1"
                                         class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                                        @foreach($item->children as $child)
-                                            @if($child->is_divider ?? false)
+                                        @foreach ($item->children as $child)
+                                            @if ($child->is_divider ?? false)
                                                 <hr class="my-2 border-slate-100">
                                             @else
-                                                <a href="{{ $child->resolved_url }}" target="{{ $child->target ?? '_self' }}"
+                                                <a href="{{ $child->resolved_url }}"
+                                                    target="{{ $child->target ?? '_self' }}"
                                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-                                                    @if($child->icon ?? false)
+                                                    @if ($child->icon ?? false)
                                                         <i class="{{ $child->icon }} text-slate-400 w-4 text-center"></i>
                                                     @endif
                                                     {{ $child->label }}
@@ -177,7 +184,7 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                                 <a href="{{ $item->resolved_url }}" target="{{ $item->target ?? '_self' }}"
                                     class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
                                         {{ request()->url() === $item->resolved_url ? 'bg-white/15 text-white' : '' }}">
-                                    @if($item->icon ?? false)
+                                    @if ($item->icon ?? false)
                                         <i class="{{ $item->icon }} text-white/70 text-xs"></i>
                                     @endif
                                     {{ $item->label }}
@@ -209,8 +216,7 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                     {{-- Search Dropdown --}}
                     <div x-show="searchOpen" x-cloak @click.outside="searchOpen = false"
                         x-transition:enter="transition ease-out duration-150"
-                        x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                         class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
                         <form action="{{ route('journal.public.search', $journal->slug) }}" method="GET">
                             <div class="relative">
@@ -231,74 +237,80 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                 </div>
 
                 @auth
-                {{-- OJS 3.3 Style User Dropdown --}}
-                <div x-data="{ open: false }" class="relative">
-                    {{-- Trigger --}}
-                    <button @click="open = !open" @click.outside="open = false"
-                        class="flex items-center gap-2 text-sm text-white focus:outline-none hover:text-white/90 transition group">
+                    {{-- OJS 3.3 Style User Dropdown --}}
+                    <div x-data="{ open: false }" class="relative">
+                        {{-- Trigger --}}
+                        <button @click="open = !open" @click.outside="open = false"
+                            class="flex items-center gap-2 text-sm text-white focus:outline-none hover:text-white/90 transition group">
 
-                        {{-- Avatar --}}
-                        <img class="h-8 w-8 rounded-full object-cover border-2 border-white/20 group-hover:border-white/40 transition"
-                            src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=random' }}"
-                            alt="{{ Auth::user()->name }}" />
+                            {{-- Avatar --}}
+                            <img class="h-8 w-8 rounded-full object-cover border-2 border-white/20 group-hover:border-white/40 transition"
+                                src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=random' }}"
+                                alt="{{ Auth::user()->name }}" />
 
-                        {{-- Name & Chevron --}}
-                        <span class="font-medium max-w-[120px] truncate hidden lg:block">{{ Auth::user()->name }}</span>
-                        <i class="fa-solid fa-chevron-down text-white/70 text-xs transition-transform duration-200"
-                            :class="{'rotate-180': open}"></i>
-                    </button>
+                            {{-- Name & Chevron --}}
+                            <span
+                                class="font-medium max-w-[120px] truncate hidden lg:block">{{ Auth::user()->name }}</span>
+                            <i class="fa-solid fa-chevron-down text-white/70 text-xs transition-transform duration-200"
+                                :class="{ 'rotate-180': open }"></i>
+                        </button>
 
-                    {{-- Dropdown Menu --}}
-                    <div x-show="open" x-cloak
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="transform opacity-0 scale-95"
-                        x-transition:enter-end="transform opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="transform opacity-100 scale-100"
-                        x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50 origin-top-right">
+                        {{-- Dropdown Menu --}}
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50 origin-top-right">
 
-                        {{-- Header --}}
-                        <div class="px-4 py-3 border-b border-gray-100">
-                            <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Signed in as</p>
-                            <p class="text-sm font-medium text-slate-900 truncate">{{ Auth::user()->name }}</p>
+                            {{-- Header --}}
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Signed in as</p>
+                                <p class="text-sm font-medium text-slate-900 truncate">{{ Auth::user()->name }}</p>
+                            </div>
+
+                            {{-- Menu Items --}}
+                            <div class="py-1">
+                                <a href="{{ route('journal.submissions.index', $journal->slug) }}"
+                                    class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                                    <i class="fa-solid fa-gauge-high text-slate-400 w-4 text-center"></i>
+                                    Dashboard
+                                </a>
+
+                                <a href="{{ route('journal.profile.edit', $journal->slug) }}"
+                                    class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                                    <i class="fa-solid fa-user-circle text-slate-400 w-4 text-center"></i>
+                                    View Profile
+                                </a>
+                            </div>
+
+                            <div class="border-t border-gray-100 my-1"></div>
+
+                            {{-- Logout --}}
+                            <form method="POST"
+                                action="{{ isset($journal) ? route('journal.logout', $journal->slug) : route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3">
+                                    <i class="fa-solid fa-sign-out-alt text-red-400 w-4 text-center"></i>
+                                    Logout
+                                </button>
+                            </form>
                         </div>
-
-                        {{-- Menu Items --}}
-                        <div class="py-1">
-                            <a href="{{ route('journal.submissions.index', $journal->slug) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
-                                <i class="fa-solid fa-gauge-high text-slate-400 w-4 text-center"></i>
-                                Dashboard
-                            </a>
-
-                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
-                                <i class="fa-solid fa-user-circle text-slate-400 w-4 text-center"></i>
-                                View Profile
-                            </a>
-                        </div>
-
-                        <div class="border-t border-gray-100 my-1"></div>
-
-                        {{-- Logout --}}
-                        <form method="POST" action="{{ isset($journal) ? route('journal.logout', $journal->slug) : route('logout') }}">
-                            @csrf
-                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3">
-                                <i class="fa-solid fa-sign-out-alt text-red-400 w-4 text-center"></i>
-                                Logout
-                            </button>
-                        </form>
                     </div>
-                </div>
                 @else
-                {{-- Guest Links --}}
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('journal.login', $journal->slug) }}" class="text-sm font-medium text-white/90 hover:text-white transition">
-                        Login
-                    </a>
-                    <a href="{{ route('journal.register', $journal->slug) }}" class="text-sm font-medium bg-white text-slate-900 px-4 py-2 rounded-full hover:bg-slate-100 transition shadow-sm">
-                        Register
-                    </a>
-                </div>
+                    {{-- Guest Links --}}
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('journal.login', $journal->slug) }}"
+                            class="text-sm font-medium text-white/90 hover:text-white transition">
+                            Login
+                        </a>
+                        <a href="{{ route('journal.register', $journal->slug) }}"
+                            class="text-sm font-medium bg-white text-slate-900 px-4 py-2 rounded-full hover:bg-slate-100 transition shadow-sm">
+                            Register
+                        </a>
+                    </div>
                 @endauth
             </div>
 
@@ -317,20 +329,16 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
     </div>
 
     {{-- Mobile Menu Drawer --}}
-    <div x-show="mobileOpen" x-cloak
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 -translate-y-4"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 translate-y-0"
+    <div x-show="mobileOpen" x-cloak x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 -translate-y-4"
         class="md:hidden border-t border-white/10 bg-white shadow-xl">
         <div class="px-4 py-4 space-y-1">
             {{-- Search Box (Mobile) --}}
             <form action="{{ route('journal.public.search', $journal->slug) }}" method="GET" class="mb-4">
                 <div class="relative">
-                    <input type="text" name="q"
-                        placeholder="Search articles..."
+                    <input type="text" name="q" placeholder="Search articles..."
                         class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="fa-solid fa-search text-slate-400"></i>
@@ -340,25 +348,25 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
 
             {{-- Mobile Menu Items --}}
             {{-- Primary Menu Items (Always shown for all users) --}}
-            @if($hasPrimaryMenu)
+            @if ($hasPrimaryMenu)
                 {{-- Dynamic Mobile Primary Menu --}}
-                @foreach($primaryMenuItems as $item)
-                    @if(!($item->is_divider ?? false))
+                @foreach ($primaryMenuItems as $item)
+                    @if (!($item->is_divider ?? false))
                         <a href="{{ $item->resolved_url }}" target="{{ $item->target ?? '_self' }}"
                             class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                            @if($item->icon ?? false)
+                            @if ($item->icon ?? false)
                                 <i class="{{ $item->icon }} text-slate-400 w-5 text-center"></i>
                             @endif
                             {{ $item->label }}
                         </a>
 
                         {{-- Nested Children (Mobile) --}}
-                        @if(isset($item->children) && $item->children->isNotEmpty())
-                            @foreach($item->children as $child)
-                                @if(!($child->is_divider ?? false))
+                        @if (isset($item->children) && $item->children->isNotEmpty())
+                            @foreach ($item->children as $child)
+                                @if (!($child->is_divider ?? false))
                                     <a href="{{ $child->resolved_url }}" target="{{ $child->target ?? '_self' }}"
                                         class="flex items-center gap-3 px-8 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">
-                                        @if($child->icon ?? false)
+                                        @if ($child->icon ?? false)
                                             <i class="{{ $child->icon }} text-slate-400 w-4 text-center"></i>
                                         @endif
                                         {{ $child->label }}
@@ -370,47 +378,53 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                 @endforeach
             @else
                 {{-- Default Mobile Primary Links --}}
-                <a href="{{ route('journal.public.home', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                <a href="{{ route('journal.public.home', $journal->slug) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                     <i class="fa-solid fa-house text-slate-400 w-5 text-center"></i> Home
                 </a>
-                <a href="{{ route('journal.public.about', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                <a href="{{ route('journal.public.about', $journal->slug) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                     <i class="fa-solid fa-info-circle text-slate-400 w-5 text-center"></i> About
                 </a>
-                <a href="{{ route('journal.public.current', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                <a href="{{ route('journal.public.current', $journal->slug) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                     <i class="fa-solid fa-book-open text-slate-400 w-5 text-center"></i> Current Issue
                 </a>
-                <a href="{{ route('journal.public.archives', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                <a href="{{ route('journal.public.archives', $journal->slug) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                     <i class="fa-solid fa-archive text-slate-400 w-5 text-center"></i> Archives
                 </a>
-                <a href="{{ route('journal.public.editorial-team', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                <a href="{{ route('journal.public.editorial-team', $journal->slug) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                     <i class="fa-solid fa-users text-slate-400 w-5 text-center"></i> Editorial Team
                 </a>
-                <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                     <i class="fa-solid fa-file-alt text-slate-400 w-5 text-center"></i> Author Guidelines
                 </a>
             @endif
 
             {{-- User Menu Items for Authenticated Users (Mobile) --}}
             @auth
-                @if($hasUserMenu)
+                @if ($hasUserMenu)
                     {{-- Dynamic Mobile User Menu --}}
-                    @foreach($userMenuItems as $item)
-                        @if(!($item->is_divider ?? false))
+                    @foreach ($userMenuItems as $item)
+                        @if (!($item->is_divider ?? false))
                             <a href="{{ $item->resolved_url }}" target="{{ $item->target ?? '_self' }}"
                                 class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                                @if($item->icon ?? false)
+                                @if ($item->icon ?? false)
                                     <i class="{{ $item->icon }} text-slate-400 w-5 text-center"></i>
                                 @endif
                                 {{ $item->label }}
                             </a>
 
                             {{-- Nested Children (Mobile) --}}
-                            @if(isset($item->children) && $item->children->isNotEmpty())
-                                @foreach($item->children as $child)
-                                    @if(!($child->is_divider ?? false))
+                            @if (isset($item->children) && $item->children->isNotEmpty())
+                                @foreach ($item->children as $child)
+                                    @if (!($child->is_divider ?? false))
                                         <a href="{{ $child->resolved_url }}" target="{{ $child->target ?? '_self' }}"
                                             class="flex items-center gap-3 px-8 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">
-                                            @if($child->icon ?? false)
+                                            @if ($child->icon ?? false)
                                                 <i class="{{ $child->icon }} text-slate-400 w-4 text-center"></i>
                                             @endif
                                             {{ $child->label }}
@@ -422,10 +436,12 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
                     @endforeach
                 @else
                     {{-- Default User Navigation Links (Mobile) --}}
-                    <a href="{{ route('journal.submissions.index', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                    <a href="{{ route('journal.submissions.index', $journal->slug) }}"
+                        class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                         <i class="fa-solid fa-gauge-high text-slate-400 w-5 text-center"></i> Dashboard
                     </a>
-                    <a href="{{ route('journal.submissions.index', $journal->slug) }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
+                    <a href="{{ route('journal.submissions.index', $journal->slug) }}"
+                        class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
                         <i class="fa-solid fa-paper-plane text-slate-400 w-5 text-center"></i> Submissions
                     </a>
                 @endif
@@ -443,17 +459,17 @@ $hasUserMenu = $userMenuItems->isNotEmpty();
 
             {{-- Mobile Auth Links --}}
             @guest
-            <div class="pt-4 border-t border-slate-100 mt-4 flex gap-3">
-                <a href="{{ route('journal.login', $journal->slug) }}" 
-                    class="flex-1 text-center px-4 py-2.5 text-sm font-medium border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
-                    Login
-                </a>
-                <a href="{{ route('journal.register', $journal->slug) }}" 
-                    class="flex-1 text-center px-4 py-2.5 text-sm font-medium text-white rounded-lg"
-                    style="background: {{ $primaryColor }};">
-                    Register
-                </a>
-            </div>
+                <div class="pt-4 border-t border-slate-100 mt-4 flex gap-3">
+                    <a href="{{ route('journal.login', $journal->slug) }}"
+                        class="flex-1 text-center px-4 py-2.5 text-sm font-medium border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
+                        Login
+                    </a>
+                    <a href="{{ route('journal.register', $journal->slug) }}"
+                        class="flex-1 text-center px-4 py-2.5 text-sm font-medium text-white rounded-lg"
+                        style="background: {{ $primaryColor }};">
+                        Register
+                    </a>
+                </div>
             @endguest
         </div>
     </div>
