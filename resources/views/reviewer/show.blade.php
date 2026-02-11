@@ -1,5 +1,5 @@
 @php
-$journal = current_journal();
+    $journal = current_journal();
 @endphp
 
 <x-app-layout>
@@ -77,17 +77,17 @@ $journal = current_journal();
 
                     <!-- Keywords -->
                     @if ($submission->keywords)
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-2">Keywords</h3>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach ($submission->keywords_array as $keyword)
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
-                                {{ $keyword }}
-                            </span>
-                            @endforeach
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-2">Keywords</h3>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($submission->keywords_array as $keyword)
+                                    <span
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
+                                        {{ $keyword }}
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
                     @endif
                 </div>
 
@@ -96,183 +96,178 @@ $journal = current_journal();
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Manuscript Files</h3>
 
                     @if ($manuscriptFiles->isEmpty())
-                    <p class="text-gray-500">No manuscript files available.</p>
+                        <p class="text-gray-500">No manuscript files available.</p>
                     @else
-                    <div class="space-y-3">
-                        @foreach ($manuscriptFiles as $file)
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div class="flex items-center min-w-0 flex-1 mr-4">
-                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <i class="fa-solid fa-file-pdf text-red-500"></i>
+                        <div class="space-y-3">
+                            @foreach ($manuscriptFiles as $file)
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center min-w-0 flex-1 mr-4">
+                                        <div
+                                            class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <i class="fa-solid fa-file-pdf text-red-500"></i>
+                                        </div>
+                                        <div class="ml-3 min-w-0 flex-1">
+                                            <p class="font-medium text-gray-900 truncate"
+                                                title="{{ $file->file_name }}">
+                                                {{ $file->file_name }}
+                                            </p>
+                                            <p class="text-sm text-gray-500 truncate">
+                                                {{ $file->file_type_label }} • Version {{ $file->version }} •
+                                                {{ $file->file_size_formatted }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0 flex items-center space-x-2">
+                                        @php
+                                            $extension = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
+                                            $viewableExtensions = [
+                                                'pdf',
+                                                'doc',
+                                                'docx',
+                                                'xls',
+                                                'xlsx',
+                                                'ppt',
+                                                'pptx',
+                                                'odt',
+                                            ];
+                                            $isViewable = in_array($extension, $viewableExtensions);
+                                        @endphp
+                                        <a href="{{ route('files.download', $file) }}"
+                                            class="inline-flex items-center px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+                                            <i class="fa-solid fa-download mr-1.5"></i>
+                                            Download
+                                        </a>
+                                    </div>
                                 </div>
-                                <div class="ml-3 min-w-0 flex-1">
-                                    <p class="font-medium text-gray-900 truncate" title="{{ $file->file_name }}">
-                                        {{ $file->file_name }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 truncate">
-                                        {{ $file->file_type_label }} • Version {{ $file->version }} •
-                                        {{ $file->file_size_formatted }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex-shrink-0 flex items-center space-x-2">
-                                @php
-                                $extension = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
-                                $viewableExtensions = [
-                                'pdf',
-                                'doc',
-                                'docx',
-                                'xls',
-                                'xlsx',
-                                'ppt',
-                                'pptx',
-                                'odt',
-                                ];
-                                $isViewable = in_array($extension, $viewableExtensions);
-                                @endphp
-                                <a href="{{ route('files.download', $file) }}"
-                                    class="inline-flex items-center px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-                                    <i class="fa-solid fa-download mr-1.5"></i>
-                                    Download
-                                </a>
-                            </div>
+                            @endforeach
                         </div>
-                        @endforeach
-                    </div>
                     @endif
                 </div>
 
                 <!-- Review Discussions -->
                 <div class="mb-6">
-                    <x-discussion-panel
-                        :submission="$submission"
-                        :stageId="2"
-                        stageName="Review"
-                        :discussions="$submission->discussions"
-                        :participants="$participants"
-                        :journal="$journal" />
+                    <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
+                        :participants="$participants" :journal="$journal" />
                 </div>
 
                 <!-- Review Form (only if not completed) -->
                 @if ($assignment->status !== 'completed')
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Submit Your Review</h3>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Submit Your Review</h3>
 
-                    <form
-                        action="{{ route('journal.reviewer.submit', ['journal' => $journal->slug, 'assignment' => $assignment]) }}"
-                        method="POST" x-data="{ recommendation: '{{ old('recommendation') }}' }">
-                        @csrf
+                        <form
+                            action="{{ route('journal.reviewer.submit', ['journal' => $journal->slug, 'assignment' => $assignment]) }}"
+                            method="POST" x-data="{ recommendation: '{{ old('recommendation') }}' }">
+                            @csrf
 
-                        <!-- Recommendation -->
-                        <div class="mb-6">
-                            <label for="recommendation" class="block text-sm font-medium text-gray-700 mb-2">
-                                Recommendation <span class="text-red-500">*</span>
-                            </label>
-                            <select name="recommendation" id="recommendation" x-model="recommendation" required
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="">Select your recommendation...</option>
-                                <option value="accept">Accept - Ready for publication</option>
-                                <option value="minor_revision">Minor Revision - Accept with minor changes</option>
-                                <option value="major_revision">Major Revision - Significant changes required
-                                </option>
-                                <option value="resubmit">Resubmit for Review - Needs substantial rework</option>
-                                <option value="reject">Reject - Not suitable for publication</option>
-                            </select>
-                            @error('recommendation')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
+                            <!-- Recommendation -->
+                            <div class="mb-6">
+                                <label for="recommendation" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Recommendation <span class="text-red-500">*</span>
+                                </label>
+                                <select name="recommendation" id="recommendation" x-model="recommendation" required
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                    <option value="">Select your recommendation...</option>
+                                    <option value="accept">Accept - Ready for publication</option>
+                                    <option value="minor_revision">Minor Revision - Accept with minor changes</option>
+                                    <option value="major_revision">Major Revision - Significant changes required
+                                    </option>
+                                    <option value="resubmit">Resubmit for Review - Needs substantial rework</option>
+                                    <option value="reject">Reject - Not suitable for publication</option>
+                                </select>
+                                @error('recommendation')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-                        <!-- Comments for Author -->
-                        <div class="mb-6">
-                            <label for="comments_for_author" class="block text-sm font-medium text-gray-700 mb-2">
-                                Comments for Author <span class="text-red-500">*</span>
-                            </label>
-                            <textarea name="comments_for_author" id="comments_for_author" rows="8"
-                                placeholder="Provide detailed feedback..."
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ old('comments_for_author') }}</textarea>
-                            @error('comments_for_author')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                            <p class="mt-1 text-xs text-gray-500">These comments will be visible to the author.</p>
-                        </div>
+                            <!-- Comments for Author -->
+                            <div class="mb-6">
+                                <label for="comments_for_author" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Comments for Author <span class="text-red-500">*</span>
+                                </label>
+                                <textarea name="comments_for_author" id="comments_for_author" rows="8" placeholder="Provide detailed feedback..."
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ old('comments_for_author') }}</textarea>
+                                @error('comments_for_author')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                                <p class="mt-1 text-xs text-gray-500">These comments will be visible to the author.</p>
+                            </div>
 
-                        <!-- Comments for Editor (Confidential) -->
-                        <div class="mb-6">
-                            <label for="comments_for_editor" class="block text-sm font-medium text-gray-700 mb-2">
-                                Confidential Comments for Editor
-                            </label>
-                            <textarea name="comments_for_editor" id="comments_for_editor" rows="4"
-                                placeholder="Optional: Share any confidential observations..."
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ old('comments_for_editor') }}</textarea>
-                            <p class="mt-1 text-xs text-gray-500 flex items-center">
-                                <svg class="w-4 h-4 mr-1 text-yellow-500" fill="currentColor"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                These comments are confidential and will only be visible to the editor.
-                            </p>
-                        </div>
+                            <!-- Comments for Editor (Confidential) -->
+                            <div class="mb-6">
+                                <label for="comments_for_editor" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Confidential Comments for Editor
+                                </label>
+                                <textarea name="comments_for_editor" id="comments_for_editor" rows="4"
+                                    placeholder="Optional: Share any confidential observations..."
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ old('comments_for_editor') }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500 flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                    These comments are confidential and will only be visible to the editor.
+                                </p>
+                            </div>
 
-                        <!-- Submit Button -->
-                        <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
-                            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
-                                class="text-sm font-medium text-gray-600 hover:text-gray-900">
-                                Save as Draft
-                            </a>
-                            <button type="submit"
-                                class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Submit Review
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                @else
-                <!-- Completed Review Summary -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Your Review</h3>
-                        <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            Completed {{ $assignment->completed_at?->format('M j, Y') }}
-                        </span>
+                            <!-- Submit Button -->
+                            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
+                                <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
+                                    class="text-sm font-medium text-gray-600 hover:text-gray-900">
+                                    Save as Draft
+                                </a>
+                                <button type="submit"
+                                    class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Submit Review
+                                </button>
+                            </div>
+                        </form>
                     </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500 mb-1">Recommendation</h4>
+                @else
+                    <!-- Completed Review Summary -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Your Review</h3>
                             <span
-                                class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-{{ $assignment->recommendation_color }}-100 text-{{ $assignment->recommendation_color }}-800">
-                                {{ $assignment->recommendation_label }}
+                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                Completed {{ $assignment->completed_at?->format('M j, Y') }}
                             </span>
                         </div>
 
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500 mb-1">Comments for Author</h4>
-                            <div class="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4">
-                                {!! $assignment->comments_for_author !!}
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500 mb-1">Recommendation</h4>
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-{{ $assignment->recommendation_color }}-100 text-{{ $assignment->recommendation_color }}-800">
+                                    {{ $assignment->recommendation_label }}
+                                </span>
                             </div>
-                        </div>
 
-                        @if ($assignment->comments_for_editor)
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500 mb-1">Confidential Comments for Editor
-                            </h4>
-                            <div
-                                class="prose prose-sm max-w-none text-gray-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                                {!! $assignment->comments_for_editor !!}
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500 mb-1">Comments for Author</h4>
+                                <div class="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4">
+                                    {!! $assignment->comments_for_author !!}
+                                </div>
                             </div>
+
+                            @if ($assignment->comments_for_editor)
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500 mb-1">Confidential Comments for Editor
+                                    </h4>
+                                    <div
+                                        class="prose prose-sm max-w-none text-gray-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                        {!! $assignment->comments_for_editor !!}
+                                    </div>
+                                </div>
+                            @endif
                         </div>
-                        @endif
                     </div>
-                </div>
                 @endif
             </div>
 
@@ -313,7 +308,8 @@ $journal = current_journal();
                             <i class="fa-regular fa-circle-question mr-2 text-gray-400"></i>
                             Need Help?
                         </h4>
-                        <p class="text-sm text-gray-500">Contact the editorial team if you have conflict of interest or technical issues.</p>
+                        <p class="text-sm text-gray-500">Contact the editorial team if you have conflict of interest or
+                            technical issues.</p>
                     </div>
                 </div>
             </div>
@@ -323,61 +319,60 @@ $journal = current_journal();
 
     </div>
     @push('scripts')
-    <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
-    <script>
-        tinymce.init({
-            selector: '#comments_for_editor, #comments_for_author',
-            height: 350,
-            menubar: false,
-            plugins: 'lists link image table code autoresize',
-            toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
-            branding: false,
-            license_key: 'gpl',
-            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.withCredentials = false;
-                xhr.open('POST', '{{ route('profile.upload.image') }}');
-                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+        <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+        <script>
+            tinymce.init({
+                selector: '#comments_for_editor, #comments_for_author',
+                height: 350,
+                menubar: false,
+                plugins: 'lists link image table code autoresize',
+                toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+                branding: false,
+                license_key: 'gpl',
+                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.withCredentials = false;
+                    xhr.open('POST', '{{ route('journal.profile.upload.image', $journal->slug) }}');
+                    xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
 
-                xhr.upload.onprogress = (e) => {
-                    progress(e.loaded / e.total * 100);
-                };
+                    xhr.upload.onprogress = (e) => {
+                        progress(e.loaded / e.total * 100);
+                    };
 
-                xhr.onload = () => {
-                    if (xhr.status === 403) {
-                        reject({
-                            message: 'HTTP Error: ' + xhr.status,
-                            remove: true
-                        });
-                        return;
-                    }
+                    xhr.onload = () => {
+                        if (xhr.status === 403) {
+                            reject({
+                                message: 'HTTP Error: ' + xhr.status,
+                                remove: true
+                            });
+                            return;
+                        }
 
-                    if (xhr.status < 200 || xhr.status >= 300) {
-                        reject('HTTP Error: ' + xhr.status);
-                        return;
-                    }
+                        if (xhr.status < 200 || xhr.status >= 300) {
+                            reject('HTTP Error: ' + xhr.status);
+                            return;
+                        }
 
-                    const json = JSON.parse(xhr.responseText);
+                        const json = JSON.parse(xhr.responseText);
 
-                    if (!json || typeof json.location != 'string') {
-                        reject('Invalid JSON: ' + xhr.responseText);
-                        return;
-                    }
+                        if (!json || typeof json.location != 'string') {
+                            reject('Invalid JSON: ' + xhr.responseText);
+                            return;
+                        }
 
-                    resolve(json.location);
-                };
+                        resolve(json.location);
+                    };
 
-                xhr.onerror = () => {
-                    reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
-                };
+                    xhr.onerror = () => {
+                        reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                    };
 
-                const formData = new FormData();
-                formData.append('file', blobInfo.blob(), blobInfo.filename());
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
 
-                xhr.send(formData);
-            })
-        });
-    </script>
-
+                    xhr.send(formData);
+                })
+            });
+        </script>
     @endpush
 </x-app-layout>

@@ -11,23 +11,52 @@ use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Intervention\Image\Laravel\Facades\Image;
+use App\Models\Role;
+use App\Models\Journal;
 
 class ProfileController extends Controller
 {
     /**
      * Display user profile edit form.
+     * Journal parameter is injected via route model binding.
      */
-    public function edit(): View
+    public function edit(Journal $journal): View
     {
         $user = Auth::user();
 
-        return view('profile.edit', compact('user'));
+        // Fetch roles available for self-registration in current journal
+        $availableRoles = Role::where('allow_registration', true)
+            ->where('journal_id', $journal->id)
+            ->get();
+
+        // Get current user's role IDs for this journal using JournalUserRole
+        $userRolesIds = $user->journalRoles()
+            ->where('journal_id', $journal->id)
+            ->pluck('role_id')
+            ->toArray();
+
+        // Fetch other enabled journals for enrollment section
+        $otherJournals = Journal::where('id', '!=', $journal->id)
+            ->where('enabled', true)
+            ->with(['roles' => function($query) {
+                $query->where('allow_registration', true);
+            }])
+            ->get();
+
+        // Optimize enrollment check: Get all journal IDs where user has a role via JournalUserRole
+        $enrolledJournalIds = $user->journalRoles()
+            ->pluck('journal_id')
+            ->unique()
+            ->toArray();
+
+        return view('profile.edit', compact('user', 'journal', 'availableRoles', 'userRolesIds', 'otherJournals', 'enrolledJournalIds'));
+
     }
 
     /**
      * Update user profile information.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, Journal $journal): RedirectResponse
     {
         $user = Auth::user();
 
@@ -61,7 +90,7 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
-        return back()->with('success', 'Profile updated successfully.');
+        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Profile updated successfully.');
     }
 
     /**
@@ -101,7 +130,7 @@ class ProfileController extends Controller
     /**
      * Update user password.
      */
-    public function updatePassword(Request $request): RedirectResponse
+    public function updatePassword(Request $request, Journal $journal): RedirectResponse
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
@@ -112,13 +141,13 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()->with('success', 'Password updated successfully.');
+        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Password updated successfully.');
     }
 
     /**
      * Update user avatar.
      */
-    public function updateAvatar(Request $request): RedirectResponse
+    public function updateAvatar(Request $request, Journal $journal): RedirectResponse
     {
         $request->validate([
             'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
@@ -145,7 +174,7 @@ class ProfileController extends Controller
 
         $user->update(['avatar' => $path]);
 
-        return back()->with('success', 'Avatar updated successfully.');
+        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Avatar updated successfully.');
     }
 
     /**
@@ -172,7 +201,7 @@ class ProfileController extends Controller
     /**
      * Delete user avatar.
      */
-    public function deleteAvatar(): RedirectResponse
+    public function deleteAvatar(Journal $journal): RedirectResponse
     {
         $user = Auth::user();
 
@@ -182,6 +211,108 @@ class ProfileController extends Controller
 
         $user->update(['avatar' => null]);
 
-        return back()->with('success', 'Avatar removed successfully.');
+        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Avatar removed successfully.');
+    }
+
+    /**
+     * Update user's self-registerable roles safely.
+     * CRITICAL SAFETY: This method prevents accidental removal of administrative roles.
+     * Algorithm:
+     * 1. Keep all existing roles that are NOT allowed for self-registration (e.g., Admin, Editor)
+     * 2. Merge with newly selected self-registerable roles
+     * 3. Sync the combined list
+     */
+    public function updateRoles(Request $request, Journal $journal): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'selected_roles' => 'nullable|array',
+            'selected_roles.*' => 'exists:roles,id',
+        ]);
+
+        // Step 1: Get user's current roles that are NOT allowed for self-registration
+        // These are administrative roles (Editor, Journal Manager, etc.) that must be preserved
+        // Use JournalUserRole to fetch these accurately
+        $keptRoles = $user->journalRoles()
+            ->where('journal_id', $journal->id)
+            ->with(['role' => function($query) {
+                $query->where('allow_registration', false);
+            }])
+            ->whereHas('role', function($query) {
+                $query->where('allow_registration', false);
+            })
+            ->pluck('role_id')
+            ->toArray();
+
+        // Step 2: Get the selected self-registerable roles from the request
+        $selectedRoles = $request->input('selected_roles', []);
+
+        // Step 3: Validate that selected roles are actually self-registerable for this journal
+        $validSelfRegisterableRoles = Role::where('journal_id', $journal->id)
+            ->where('allow_registration', true)
+            ->pluck('id')
+            ->toArray();
+
+        $validSelectedRoles = array_intersect($selectedRoles, $validSelfRegisterableRoles);
+
+        // Step 4: Merge kept administrative roles with valid selected roles
+        $finalRoles = array_unique(array_merge($keptRoles, $validSelectedRoles));
+
+        // Step 5: Sync only this journal's roles using JournalUserRole logic
+        // We delete all existing roles for this journal, then re-insert the final list
+        
+        // Remove all roles for this user in this journal first
+        \App\Models\JournalUserRole::where('journal_id', $journal->id)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        // Re-assign the final roles
+        foreach ($finalRoles as $roleId) {
+            \App\Models\JournalUserRole::create([
+                'journal_id' => $journal->id,
+                'user_id' => $user->id,
+                'role_id' => $roleId,
+            ]);
+        }
+
+        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Your roles have been updated successfully.');
+    }
+
+    /**
+     * Enroll user in a specific journal with selected roles.
+     */
+    public function enroll(Request $request, Journal $journal): RedirectResponse
+    {
+        $request->validate([
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'string', // Role names like "Author", "Reader"
+        ]);
+
+        $user = Auth::user();
+
+        // Get Role IDs for selected role names in THIS journal
+        // Ensure they are allowed for self-registration
+        $rolesToAssign = Role::where('journal_id', $journal->id)
+            ->whereIn('name', $request->roles)
+            ->where('allow_registration', true)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($rolesToAssign)) {
+            return back()->with('error', 'Invalid roles selected or roles not available for registration.');
+        }
+
+        // Attach roles without detaching existing ones (if any)
+        // Use JournalUserRole helper or manual create
+        foreach ($rolesToAssign as $roleId) {
+            \App\Models\JournalUserRole::firstOrCreate([
+                'journal_id' => $journal->id,
+                'user_id' => $user->id,
+                'role_id' => $roleId,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'You have successfully joined ' . $journal->name);
     }
 }

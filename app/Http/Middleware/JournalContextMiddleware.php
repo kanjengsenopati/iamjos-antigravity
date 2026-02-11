@@ -16,19 +16,24 @@ class JournalContextMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $journalSlug = $request->route('journal');
+        $journalParam = $request->route('journal');
+        $journal = null;
 
-        if (!$journalSlug) {
-            abort(404, 'Journal not specified.');
+        if ($journalParam instanceof Journal) {
+            $journal = $journalParam;
+        } elseif (is_string($journalParam)) {
+            $journal = Journal::where('slug', $journalParam)->first();
         }
-
-        // Find the journal by slug
-        $journal = Journal::where('slug', $journalSlug)
-            ->where('enabled', true)
-            ->first();
 
         if (!$journal) {
             abort(404, 'Journal not found.');
+        }
+        
+        // Enforce enabled check (originally part of query)
+        if (!$journal->enabled) {
+             // Optional: allow admin access or specific bypass?
+             // Original query: ->where('enabled', true)
+             abort(404, 'Journal not found.');
         }
 
         // Bind the journal to the service container for global access

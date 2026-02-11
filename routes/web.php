@@ -68,13 +68,18 @@ Route::middleware(['auth'])->group(function () {
     // Redirect /dashboard to journal selection or first journal
     Route::get('/dashboard', [JournalSelectController::class, 'redirectToDashboard'])->name('dashboard');
     Route::get('/select-journal', [JournalSelectController::class, 'index'])->name('journal.select');
-    // --------- Profile Settings (Global, not per-journal) ---------
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
-    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
+    // Fallback for legacy Profile route (Redirects to first journal)
+    Route::get('/profile', function () {
+        $journal = \App\Models\Journal::first();
+        if ($journal) {
+            return redirect()->route('journal.profile.edit', $journal->slug);
+        }
+        return redirect('/');
+    })->name('profile.edit');
+    
+    // Global Profile Image Upload (Used by TinyMCE in admin and journal contexts)
     Route::post('/profile/upload-image', [ProfileController::class, 'uploadImage'])->name('profile.upload.image');
+
     // --------- Notifications API (Global) ---------
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
@@ -193,13 +198,32 @@ Route::middleware('guest')->group(function () {
 // JOURNAL-SCOPED PUBLIC ROUTES (Per-Journal Frontend)
 // These come AFTER all other routes to catch journal slugs
 // =====================================================
-Route::prefix('{journal}')->group(function () {
+Route::prefix('{journal:slug}')->group(function () {
     // --------- Journal-Scoped Auth Routes (/{journal}/login) ---------
     Route::middleware(['journal.detect'])->group(function () {
         Route::get('/login', [AuthController::class, 'index'])->name('journal.login')->middleware('guest');
         Route::post('/login', [AuthController::class, 'authenticate'])->name('journal.authenticate')->middleware('guest');
         Route::post('/logout', [AuthController::class, 'logout'])->name('journal.logout');
         Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
+    });
+
+    // =====================================================
+    // SPECIFIC / HIGH PRIORITY ROUTES (Must be before wildcards)
+    // =====================================================
+    Route::middleware(['auth', 'journal.context'])->group(function () {
+        // --------- Journal Dashboard ---------
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('journal.dashboard');
+        // --------- Profile Settings (Journal-Scoped) ---------
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('journal.profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('journal.profile.update');
+        Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('journal.profile.password');
+        Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('journal.profile.avatar');
+        Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('journal.profile.avatar.delete');
+        Route::put('/profile/roles', [ProfileController::class, 'updateRoles'])->name('journal.profile.roles.update');
+        Route::post('/profile/upload-image', [ProfileController::class, 'uploadImage'])->name('journal.profile.upload.image');
+        
+        // Journal Enrollment
+        Route::post('/enroll', [ProfileController::class, 'enroll'])->name('journal.enroll');
     });
     // --------- Public Journal Pages ---------
     Route::get('/', [JournalHomepageController::class, 'index'])->name('journal.public.home');
@@ -236,8 +260,6 @@ Route::prefix('{journal}')->group(function () {
     // JOURNAL-SCOPED DASHBOARD ROUTES (Protected)
     // =====================================================
     Route::middleware(['auth', 'journal.context'])->group(function () {
-        // --------- Journal Dashboard ---------
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('journal.dashboard');
         // Stop Impersonating (Outside role middleware to avoid 403)
         Route::post('/users/stop-impersonating', [JournalUserManagementController::class, 'stopImpersonating'])->name('journal.users.stop-impersonating');
         // --------- User Management (General / Manager) ---------

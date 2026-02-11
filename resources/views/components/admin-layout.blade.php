@@ -130,7 +130,7 @@
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95" @click.away="open = false"
                                 class="absolute right-0 z-10 mt-2.5 w-48 origin-top-right rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
-                                <a href="{{ route('profile.edit') }}"
+                                <a href="{{ route('journal.profile.edit', request()->route('journal') ?? \App\Models\Journal::first()) }}"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     Your profile
                                 </a>
