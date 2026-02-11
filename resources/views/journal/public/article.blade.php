@@ -28,6 +28,7 @@
     {{-- ============================================ --}}
     @push('meta_tags')
         {{-- Highwire Press / Google Scholar Tags --}}
+        {{-- =================================== --}}
         <meta name="citation_title" content="{{ $article->title }}">
         <meta name="citation_journal_title" content="{{ $journal->name }}">
         @if ($journal->abbreviation)
@@ -84,31 +85,64 @@
             <meta name="citation_issn" content="{{ $journal->issn_print }}">
         @endif
 
-        {{-- Authors (One tag per author - CRITICAL) --}}
+        {{-- Authors (One tag per author - CRITICAL: First Last) --}}
         @if ($article->authors && $article->authors->isNotEmpty())
             @foreach ($article->authors as $author)
-                <meta name="citation_author"
-                    content="{{ $author->last_name ? $author->last_name . ', ' . $author->first_name : $author->first_name }}">
+                <meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
                 @if ($author->affiliation)
                     <meta name="citation_author_institution" content="{{ $author->affiliation }}">
                 @endif
             @endforeach
         @endif
 
-        {{-- Keywords --}}
-        @if ($article->keywords)
+        {{-- Keywords (Fixing the JSON bug: Output one tag per keyword) --}}
+        @if ($article->keywords && count($article->keywords) > 0)
             @php
-                $keywordsList = is_array($article->keywords) ? $article->keywords : explode(',', $article->keywords);
+                $rawKeywords = $article->keywords;
+                $processedKeywords = [];
+
+                // 1. Handle JSON String (Tagify output)
+                if (is_string($rawKeywords)) {
+                    $trimmed = trim($rawKeywords);
+                    if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
+                        $decoded = json_decode($trimmed, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $rawKeywords = $decoded; // Now it's an array
+        }
+    } else {
+        // Comma separated string
+        $rawKeywords = explode(',', $trimmed);
+    }
+}
+
+// 2. Iterate (Whether Collection, Array from JSON, or Array from explode)
+foreach ($rawKeywords as $k) {
+    $val = null;
+    if (is_object($k)) {
+        // Collection of Models or Objects
+        $val = $k->content ?? ($k->value ?? ($k->keyword ?? null));
+    } elseif (is_array($k)) {
+        // Array from JSON decode
+        $val = $k['content'] ?? ($k['value'] ?? ($k['keyword'] ?? null));
+                    } else {
+                        // String
+                        $val = $k;
+                    }
+
+                    if ($val) {
+                        $processedKeywords[] = trim((string) $val);
+                    }
+                }
             @endphp
-            @foreach ($keywordsList as $keyword)
-                <meta name="citation_keywords" content="{{ trim($keyword) }}">
+            @foreach ($processedKeywords as $keyword)
+                <meta name="citation_keywords" content="{{ $keyword }}">
             @endforeach
         @endif
 
         {{-- Abstract URL (Landing Page) --}}
         <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
 
-        {{-- PDF URL (CRITICAL - Must point to actual download, NOT view page) --}}
+        {{-- PDF URL (CRITICAL - Must point to actual download file) --}}
         @if ($pdfGalley)
             <meta name="citation_pdf_url"
                 content="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id, 'galley' => $pdfGalley->id]) }}">
