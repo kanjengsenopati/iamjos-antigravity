@@ -34,8 +34,10 @@
         uploadDecisionFileUrl: {{ json_encode(route('journal.workflow.upload-decision-file', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
         csrfToken: {{ json_encode(csrf_token()) }},
         firstAuthorName: {{ json_encode($submission->authors?->first()?->name ?? 'Author') }},
-        submissionCode: {{ json_encode($submission->submission_code ?? '') }}
+        submissionCode: {{ json_encode($submission->submission_code ?? '') }},
+        potentialEditors: {{ json_encode($potentialEditors) }}
     })">
+
 
         {{-- Header Section --}}
         <div class="mb-6">
@@ -4522,150 +4524,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
 
         {{-- ==================== ASSIGN EDITOR MODAL ==================== --}}
-        <div x-show="assignEditorModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
-            aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                {{-- Background overlay --}}
-                <div x-show="assignEditorModalOpen" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity"
-                    @click="assignEditorModalOpen = false"></div>
-
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                {{-- Modal Panel --}}
-                <div x-show="assignEditorModalOpen" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-
-                    <div class="sm:flex sm:items-start">
-                        <div
-                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <i class="fa-solid fa-user-plus text-indigo-600"></i>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Assign Editor
-                            </h3>
-                            <p class="mt-1 text-sm text-gray-500">
-                                Search and assign an editor to handle this submission.
-                            </p>
-                        </div>
-                    </div>
-
-                    <form
-                        action="{{ route('journal.workflow.assign-editor', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                        method="POST" class="mt-5">
-                        @csrf
-                        <div class="space-y-4">
-                            {{-- Editor Search --}}
-                            <div>
-                                <label for="editor-search"
-                                    class="block text-sm font-medium text-gray-700 mb-1">Search
-                                    Editor</label>
-                                <div class="relative">
-                                    <input type="text" id="editor-search" x-model="editorSearch"
-                                        @input.debounce.300ms="searchEditors()"
-                                        placeholder="Type to search editors..."
-                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        autocomplete="off">
-                                    <div x-show="isSearchingEditors" class="absolute right-3 top-2.5">
-                                        <i class="fa-solid fa-spinner fa-spin text-gray-400"></i>
-                                    </div>
-                                </div>
-
-                                {{-- Search Results Dropdown --}}
-                                <div x-show="editorResults.length > 0"
-                                    class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-                                    style="max-width: calc(100% - 2rem);">
-                                    <template x-for="editor in editorResults" :key="editor.id">
-                                        <div @click="selectEditor(editor)"
-                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50">
-                                            <div class="flex items-center">
-                                                <span class="font-medium block truncate"
-                                                    x-text="editor.name"></span>
-                                            </div>
-                                            <span class="text-gray-500 text-xs" x-text="editor.email"></span>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
-                            {{-- Selected Editor Display --}}
-                            <div x-show="selectedEditor"
-                                class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm"
-                                            x-text="selectedEditor?.name?.charAt(0)?.toUpperCase()">
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium text-gray-900"
-                                                x-text="selectedEditor?.name">
-                                            </p>
-                                            <p class="text-xs text-gray-500" x-text="selectedEditor?.email"></p>
-                                        </div>
-                                    </div>
-                                    <button type="button" @click="selectedEditor = null; editorSearch = ''"
-                                        class="text-gray-400 hover:text-gray-600">
-                                        <i class="fa-solid fa-times"></i>
-                                    </button>
-                                </div>
-                                <input type="hidden" name="user_id" :value="selectedEditor?.id">
-                            </div>
-
-                            {{-- Role Selection --}}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Assignment
-                                    Role</label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label
-                                        class="relative flex cursor-pointer rounded-lg border bg-white p-3 shadow-sm focus:outline-none"
-                                        :class="editorRole === 'editor' ? 'border-indigo-500 ring-2 ring-indigo-500' :
-                                            'border-gray-300'">
-                                        <input type="radio" name="role" value="editor" x-model="editorRole"
-                                            class="sr-only">
-                                        <span class="flex flex-1 flex-col text-center">
-                                            <i class="fa-solid fa-user-pen text-gray-500 text-lg mb-1"></i>
-                                            <span class="block text-xs font-medium text-gray-900">Editor</span>
-                                        </span>
-                                    </label>
-                                    <label
-                                        class="relative flex cursor-pointer rounded-lg border bg-white p-3 shadow-sm focus:outline-none"
-                                        :class="editorRole === 'section_editor' ?
-                                            'border-indigo-500 ring-2 ring-indigo-500' :
-                                            'border-gray-300'">
-                                        <input type="radio" name="role" value="section_editor"
-                                            x-model="editorRole" class="sr-only">
-                                        <span class="flex flex-1 flex-col text-center">
-                                            <i class="fa-solid fa-user-tag text-gray-500 text-lg mb-1"></i>
-                                            <span class="block text-xs font-medium text-gray-900">Section
-                                                Editor</span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                            <button type="submit" :disabled="!selectedEditor"
-                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:col-start-2 sm:text-sm">
-                                <i class="fa-solid fa-user-plus mr-2"></i> Assign Editor
-                            </button>
-                            <button type="button" @click="assignEditorModalOpen = false"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        @include('submissions.partials.modal-assign-editor')
 
         {{-- ==================== SEND TO REVIEW MODAL ==================== --}}
         <div x-show="sendToReviewModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
@@ -6555,13 +6414,49 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 // Assign Editor Modal State
                 assignEditorModalOpen: false,
                 editorSearch: '',
-                editorResults: [],
+                editorRoleFilter: '',
+                allEditors: config.potentialEditors || [],
                 selectedEditor: null,
                 editorRole: 'editor',
-                isSearchingEditors: false,
+                isSearchingEditors: false, // kept for compatibility if needed
 
-                // Reviewer Modal State
-                reviewerModalOpen: false,
+                get filteredEditors() {
+                    let editors = this.allEditors;
+
+                    // Text Search
+                    if (this.editorSearch) {
+                        const search = this.editorSearch.toLowerCase();
+                        editors = editors.filter(e =>
+                            e.name.toLowerCase().includes(search) ||
+                            e.email.toLowerCase().includes(search)
+                        );
+                    }
+
+                    // Role Filter
+                    if (this.editorRoleFilter) {
+                        editors = editors.filter(e =>
+                            e.role_names && e.role_names.includes(this.editorRoleFilter)
+                        );
+                    }
+
+                    return editors;
+                },
+
+                // Deprecated AJAX search (but kept just in case we need it later, or aliases to local filter)
+                async searchEditors() {
+                    // No-op: filtering is now computed local
+                },
+
+                selectEditor(editor) {
+                    this.selectedEditor = editor;
+                    // Dont clear search so list remains stable
+                },
+
+                resetEditorModal() {
+                    this.selectedEditor = null;
+                    this.editorSearch = '';
+                    this.editorRoleFilter = '';
+                },
                 selectedReviewer: null,
                 reviewerSearch: '',
                 reviewerResults: [],
