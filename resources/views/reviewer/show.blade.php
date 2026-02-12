@@ -58,7 +58,7 @@
                         <div>
                             <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Manuscript
                                 ID</span>
-                            <span class="text-gray-900">{{ substr($submission->id, 0, 8) }}</span>
+                            <span class="text-gray-900">{{ $submission->submission_code ?? 'N/A' }}</span>
                         </div>
                         <div>
                             <span
