@@ -196,4 +196,9 @@ class User extends Authenticatable
         }
         return null;
     }
+
+    public function submissionAuthors()
+    {
+        return $this->hasMany(SubmissionAuthor::class, 'user_id');
+    }
 }

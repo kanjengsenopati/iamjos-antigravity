@@ -40,9 +40,10 @@ class JournalUserManagementController extends Controller
             ->toArray();
 
         // Also include all Super Admins (they have access to all journals)
-        $superAdminIds = User::role('Super Admin')
-            ->pluck('id')
-            ->toArray();
+        $superAdminIds = User::whereHas('roles', function ($q) {
+            $q->where('name', 'Super Admin')
+                ->where('guard_name', 'web');
+        })->pluck('id')->toArray();
 
         // Merge and get unique user IDs
         $allUserIds = array_unique(array_merge($journalUserIds, $superAdminIds));
@@ -78,7 +79,7 @@ class JournalUserManagementController extends Controller
         $users = $query->paginate(10);
 
         // Get roles for filtering dropdown
-        $roles = Role::pluck('name');
+        $roles = Role::where('journal_id', $journal->id)->pluck('name')->toArray() ?? [];
 
         // Load each user's roles in this journal (includes Super Admin check)
         $users->getCollection()->transform(function ($user) use ($journal) {
@@ -121,7 +122,9 @@ class JournalUserManagementController extends Controller
         $routePrefix = $this->getRoutePrefix();
 
         // Get all assignable roles (exclude Super Admin for security)
-        $roles = Role::whereNotIn('name', ['Super Admin'])->get();
+        $roles = Role::where('journal_id', $journal->id)
+            ->whereNotIn('name', ['Super Admin'])
+            ->get();
 
         return view('admin.journals.users.create', compact('journal', 'routePrefix', 'roles'));
     }
@@ -631,14 +634,20 @@ class JournalUserManagementController extends Controller
             ->toArray();
 
         // Also exclude Super Admins since they're automatically in all journals
-        $superAdminIds = User::role('Super Admin')->pluck('id')->toArray();
+        $superAdminIds = User::whereHas('roles', function ($q) {
+            $q->where('name', Role::ROLE_SUPERADMIN)
+                ->where('guard_name', 'web');
+        })->pluck('id')->toArray();
+
         $excludeIds = array_unique(array_merge($existingUserIds, $superAdminIds));
 
         $availableUsers = User::whereNotIn('id', $excludeIds)
             ->orderBy('name')
             ->get();
 
-        $roles = Role::whereNotIn('name', ['Super Admin'])->get();
+        $roles = Role::where('journal_id', $journal->id)
+            ->whereNotIn('name', ['Super Admin'])
+            ->get();
 
         return view('admin.journals.users.enroll', compact('journal', 'routePrefix', 'availableUsers', 'roles'));
     }
@@ -725,9 +734,14 @@ class JournalUserManagementController extends Controller
             ->pluck('user_id')
             ->toArray();
 
-        // Also include Super Admins if selected (they're in all journals)
-        if (in_array('Super Admin', $selectedRoles)) {
-            $superAdminIds = User::role('Super Admin')->pluck('id')->toArray();
+            // Also include Super Admins if selected (they're in all journals)
+        if (in_array(Role::ROLE_SUPERADMIN, $selectedRoles)) {
+
+            $superAdminIds = User::whereHas('roles', function ($q) {
+                $q->where('name', Role::ROLE_SUPERADMIN)
+                ->where('guard_name', 'web');
+            })->pluck('id')->toArray();
+
             $userIds = array_unique(array_merge($userIds, $superAdminIds));
         }
 
