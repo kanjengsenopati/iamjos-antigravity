@@ -639,6 +639,12 @@ foreach ($rawKeywords as $k) {
                 /* ========= CITATION FORMATS ========= */
 
                 $citations = [
+                    'APA' =>
+                        "{$authorsAPA} ({$year}). {$article->title}. <em>{$journalName}</em>" .
+                        ($volume ? ", {$volume}" : '') .
+                        ($number ? "({$number})" : '') .
+                        ($pages ? ", {$pages}" : '') .
+                        ". {$doiUrl}",
                     'ACM' =>
                         "{$authorsFull}. {$year}. {$article->title}. <em>{$journalName}</em>" .
                         ($volume ? ", {$volume}" : '') .
@@ -651,15 +657,7 @@ foreach ($rawKeywords as $k) {
                         ($volume ? ", {$volume}" : '') .
                         ($number ? "({$number})" : '') .
                         ($pages ? ", {$pages}" : '') .
-                        ". {$doiUrl}",
-
-                    'APA' =>
-                        "{$authorsAPA} ({$year}). {$article->title}. <em>{$journalName}</em>" .
-                        ($volume ? ", {$volume}" : '') .
-                        ($number ? "({$number})" : '') .
-                        ($pages ? ", {$pages}" : '') .
-                        ". {$doiUrl}",
-
+                        ". {$doiUrl}",                   
                     'ABNT' =>
                         mb_strtoupper($authorsFull) .
                         ". {$article->title}. {$journalName}, {$year}." .
@@ -725,7 +723,7 @@ foreach ($rawKeywords as $k) {
                     </template>
                 </select>
 
-                <div class="bg-white p-3 border rounded text-xs italic font-mono leading-relaxed"
+                <div class="bg-white p-3 border rounded text-xs italic font-mono leading-relaxed break-words"
                     x-html="citations[format]"></div>
 
                 <button

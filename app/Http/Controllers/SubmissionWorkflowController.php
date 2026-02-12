@@ -90,7 +90,6 @@ class SubmissionWorkflowController extends Controller
 
         $validated = $request->validate([
             'user_id' => 'required|uuid|exists:users,id',
-            'role' => 'required|in:editor,section_editor,manager',
         ]);
 
         // Check if already assigned
@@ -103,26 +102,35 @@ class SubmissionWorkflowController extends Controller
             return back()->with('error', 'This user is already assigned to this submission.');
         }
 
+        // Determine role based on user's roles in this journal
+        $user = User::find($validated['user_id']);
+        $journalRole = $user->journalRoles()->where('journal_id', $journal->id)->first();
+        
+        // Default to 'editor' if no specific role found or if they are a manager/admin
+        $role = 'editor'; 
+        if ($journalRole && $journalRole->role->name === 'Section Editor') {
+            $role = 'section_editor';
+        }
+
         EditorialAssignment::create([
             'submission_id' => $submission->id,
             'user_id' => $validated['user_id'],
             'assigned_by' => auth()->id(),
-            'role' => $validated['role'],
+            'role' => $role,
             'date_assigned' => now(),
         ]);
 
         // Notify the assigned editor
-        $editor = User::find($validated['user_id']);
-        if ($editor) {
-            $editor->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
+        if ($user) {
+            $user->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
 
             // Log the event
             \App\Models\SubmissionLog::log(
                 $submission,
                 \App\Models\SubmissionLog::EVENT_EDITOR_ASSIGNED,
                 'Editor Assigned',
-                auth()->user()->name . " assigned {$editor->name} as " . ucfirst(str_replace('_', ' ', $validated['role'])) . ".",
-                ['editor_id' => $editor->id, 'role' => $validated['role']]
+                auth()->user()->name . " assigned {$user->name} as " . ucfirst(str_replace('_', ' ', $role)) . ".",
+                ['editor_id' => $user->id, 'role' => $role]
             );
         }
 

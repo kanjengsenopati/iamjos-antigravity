@@ -21,6 +21,7 @@ class Role extends SpatieRole
      * Jika Anda menggunakan versi Laravel lama, hapus baris "use HasUuids;" di atas
      * dan hapus tanda komentar dari dua baris di bawah ini.
      */
+    const ROLE_SUPERADMIN = 'Super Admin';
     const ROLE_ADMIN = 'Admin';
     const ROLE_PUBLISHER = 'Publisher';
     const ROLE_AUTHOR = 'Author';

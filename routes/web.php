@@ -263,7 +263,9 @@ Route::prefix('{journal:slug}')->group(function () {
         // Stop Impersonating (Outside role middleware to avoid 403)
         Route::post('/users/stop-impersonating', [JournalUserManagementController::class, 'stopImpersonating'])->name('journal.users.stop-impersonating');
         // --------- User Management (General / Manager) ---------
-        Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')->controller(JournalUserManagementController::class)->prefix('users')->name('journal.users.')->group(function () {
+        Route::
+        // middleware('role:Journal Manager|Editor|Admin|Super Admin')->
+        controller(JournalUserManagementController::class)->prefix('users')->name('journal.users.')->group(function () {
             // 1. All Users
             Route::get('/', 'index')->name('index');
             Route::get('/create', 'create')->name('create');
