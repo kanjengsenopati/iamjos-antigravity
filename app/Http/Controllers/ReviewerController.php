@@ -162,6 +162,7 @@ class ReviewerController extends Controller
         // Get manuscript files (latest version only)
         $manuscriptFiles = SubmissionFile::where('submission_id', $submission->id)
             ->whereIn('file_type', ['manuscript', 'revision'])
+            ->where('stage', 'review')
             ->orderBy('version', 'desc')
             ->get();
 
