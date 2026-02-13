@@ -46,6 +46,7 @@ class Publication extends Model
         'date_published',
         'metadata',
         'cover_image_path',
+        'url_path',
     ];
 
     /**
