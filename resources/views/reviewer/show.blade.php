@@ -91,6 +91,12 @@
                     @endif
                 </div>
 
+                <!-- Review Discussions -->
+                <div class="mb-6">
+                    <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
+                        :participants="$participants" :journal="$journal" />
+                </div>
+
                 <!-- Manuscript Files -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Manuscript Files</h3>
@@ -142,12 +148,6 @@
                             @endforeach
                         </div>
                     @endif
-                </div>
-
-                <!-- Review Discussions -->
-                <div class="mb-6">
-                    <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
-                        :participants="$participants" :journal="$journal" />
                 </div>
 
                 <!-- Review Form (only if not completed) -->

@@ -40,88 +40,94 @@
 
 
         {{-- Header Section --}}
-        <div class="mb-6">
-            <nav class="text-sm text-gray-500 mb-2">
+        <div class="mb-8">
+            <nav class="flex items-center text-sm text-gray-500 mb-4 transition-colors">
                 <a href="{{ route('journal.submissions.index', $journal->slug) }}"
-                    class="hover:text-indigo-600">Submissions</a>
+                    class="group flex items-center hover:text-indigo-600">
+                    <div
+                        class="mr-2 p-1 rounded-md bg-gray-100 group-hover:bg-indigo-50 text-gray-500 group-hover:text-indigo-600 transition-colors">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
+                    </div>
+                    Back to Submissions
+                </a>
             </nav>
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-                <div class="flex flex-wrap items-center gap-3">
-                    <h1 class="text-3xl font-bold text-gray-900 leading-tight">{{ $submission->title }}</h1>
-                    @php
-                        $stageColors = [
-                            1 => 'bg-blue-100 text-blue-800', // Submission
-                            2 => 'bg-yellow-100 text-yellow-800', // Review
-                            3 => 'bg-teal-100 text-teal-800', // Copyediting
-                            4 => 'bg-green-100 text-green-800', // Production
-                        ];
-                        $stageNames = [
-                            1 => 'Submission',
-                            2 => 'Review',
-                            3 => 'Copyediting',
-                            4 => 'Production',
-                        ];
-                        $currentStageColor = $stageColors[$submission->stage_id] ?? 'bg-gray-100 text-gray-800';
-                        $currentStageName = $stageNames[$submission->stage_id] ?? 'Unknown';
 
-                        // Status badge
-                        $statusColors = [
-                            1 => 'bg-gray-100 text-gray-700', // Submitted
-                            2 => 'bg-emerald-100 text-emerald-700', // Published
-                            3 => 'bg-red-100 text-red-700', // Rejected
-                            4 => 'bg-orange-100 text-orange-700', // Revision Required
-                            5 => 'bg-blue-100 text-blue-700', // In Review
-                            6 => 'bg-green-100 text-green-700', // Accepted
-                        ];
-                        $statusNames = [
-                            1 => 'Submitted',
-                            2 => 'Published',
-                            3 => 'Rejected',
-                            4 => 'Revision Required',
-                            5 => 'in_review',
-                            6 => 'Accepted',
-                        ];
-                        $statusColor = $statusColors[$submission->status] ?? 'bg-gray-100 text-gray-700';
-                        $statusName = $statusNames[$submission->status] ?? 'Unknown';
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <div class="flex-1 min-w-0 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-3">
+                        <h1 class="text-2xl font-bold text-gray-900 leading-snug break-words">
+                            {{ $submission->title }}
+                        </h1>
+                        @php
+                            $stageColors = [
+                                1 => 'bg-blue-100 text-blue-800 border-blue-200', // Submission
+                                2 => 'bg-amber-100 text-amber-800 border-amber-200', // Review
+                                3 => 'bg-teal-100 text-teal-800 border-teal-200', // Copyediting
+                                4 => 'bg-emerald-100 text-emerald-800 border-emerald-200', // Production
+                            ];
+                            $stageNames = [
+                                1 => 'Submission',
+                                2 => 'Review',
+                                3 => 'Copyediting',
+                                4 => 'Production',
+                            ];
+                            
+                            // Determine base stage color/name
+                            $currentStageColor = $stageColors[$submission->stage_id] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                            $currentStageName = $stageNames[$submission->stage_id] ?? 'Unknown';
 
-                        // Override stage for Declined/Published
-                        if ($submission->status == 3) {
-                            $currentStageColor = 'bg-red-100 text-red-800';
-                            $currentStageName = 'Declined';
-                        } elseif ($submission->status == 2) {
-                            $currentStageColor = 'bg-indigo-100 text-indigo-800';
-                            $currentStageName = 'Published';
-                        }
+                            // Override for special statuses
+                             if ($submission->status == 3) { // Declined
+                                $currentStageColor = 'bg-red-100 text-red-800 border-red-200';
+                                $currentStageName = 'Declined';
+                            } elseif ($submission->status == 2) { // Published
+                                $currentStageColor = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                                $currentStageName = 'Published';
+                            }
+                            
+                            $isRejected = $submission->status == 3;
+                        @endphp
+                        
+                        <div class="flex-shrink-0 pt-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ $currentStageColor }}">
+                                {{ $currentStageName }}
+                            </span>
+                        </div>
+                    </div>
 
-                        $isRejected = $submission->status == 3;
-                    @endphp
-                    <div class="flex gap-2">
-                        <span
-                            class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium {{ $currentStageColor }}">
-                            <i class="fa-solid fa-layer-group mr-1.5 text-xs"></i>
-                            {{ $currentStageName }}
-                        </span>
+                    <div class="flex flex-wrap items-center gap-y-2 text-sm text-gray-500">
+                        <div class="flex items-center mr-6">
+                            <span class="font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs mr-2 border border-gray-200">
+                                {{ $submission->submission_code }}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center mr-6">
+                            <div class="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mr-2">
+                                <i class="fa-regular fa-user text-xs"></i>
+                            </div>
+                            <span class="text-gray-900 font-medium">
+                                {{ $submission->authors?->first()?->name ?? 'Unknown Author' }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center">
+                            <i class="fa-regular fa-calendar text-gray-400 mr-2"></i>
+                            <span>
+                                {{ $submission->submitted_at?->format('M d, Y') ?? $submission->created_at->format('M d, Y') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Header Actions --}}
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3 pt-1">
                     <button @click="showActivityLog = true"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm">
                         <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500"></i>
                         Activity Log
                     </button>
                 </div>
-            </div>
-            <div class="mt-2 text-sm text-gray-500">
-                <span class="font-medium text-gray-900">
-                    {{ $submission->authors?->first()?->name ?? 'Unknown Author' }}
-                </span>
-                <span class="mx-2">•</span>
-                Submitted
-                {{ $submission->submitted_at?->format('M d, Y') ?? $submission->created_at->format('M d, Y') }}
-                <span class="mx-2">•</span>
-                <span class="font-mono text-gray-700">{{ $submission->submission_code }}</span>
             </div>
         </div>
 
@@ -648,6 +654,14 @@
 
             {{-- ==================== REVIEW STAGE ==================== --}}
             <div x-show="activeStage === 'review'" class="bg-gray-50/50 min-h-screen pt-6">
+            @if($submission->stage_id == 1)
+                <div class="flex flex-col items-center justify-center min-h-[400px]">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-lock text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">The review process has not yet been initiated.</h3>
+                </div>
+            @else
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
                     {{-- ==================== AUTHOR VIEW (Blind Review Protocol) ==================== --}}
@@ -1417,6 +1431,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         </div>
                     @endif {{-- End of isAuthorView conditional --}}
                 </div>
+            @endif
             </div>
 
             {{-- ==================== COPYEDITING STAGE ==================== --}}
@@ -2788,18 +2803,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
                             <i class="fa-solid fa-scale-balanced w-5 mr-2 text-center"></i> Permissions & Disclosure
                         </button>
-                        <button @click="pubTab = 'identifiers'"
-                            :class="pubTab === 'identifiers' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
-                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
-                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-fingerprint w-5 mr-2 text-center"></i> Identifiers
-                        </button>
                         <button @click="pubTab = 'issue'"
                             :class="pubTab === 'issue' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
                             <i class="fa-solid fa-book-open w-5 mr-2 text-center"></i> Issue
                         </button>
+                        <button @click="pubTab = 'identifiers'"
+                            :class="pubTab === 'identifiers' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                                'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
+                            class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
+                            <i class="fa-solid fa-fingerprint w-5 mr-2 text-center"></i> Identifiers
+                        </button>
+                      
                         <button @click="pubTab = 'seo'"
                             :class="pubTab === 'seo' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
@@ -3240,7 +3256,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                         <i class="fa-solid fa-calendar-check mr-2"></i>
-                                        {{ $publication->issue_id ? 'Update Schedule' : 'Schedule' }}
+                                        {{ $publication->issue_id ? 'Save' : 'Save' }}
                                     </button>
                                 </div>
                             </fieldset>
