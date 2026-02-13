@@ -108,7 +108,12 @@ class ProductionWorkflowController extends Controller
             ]);
         }
 
-        return back()->with('success', "Galley '{$galley->label}' has been created successfully.");
+        return redirect()->route('journal.workflow.show', [
+            'journal' => $journal,
+            'submission' => $submission->slug,
+            'tab' => 'publication',
+            'subtab' => 'galleys'
+        ])->with('success', "Galley '{$galley->label}' has been created successfully.");
     }
 
     /**
@@ -220,7 +225,12 @@ class ProductionWorkflowController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Galley updated successfully.');
+        return redirect()->route('journal.workflow.show', [
+            'journal' => $journal,
+            'submission' => $submission->slug,
+            'tab' => 'publication',
+            'subtab' => 'galleys'
+        ])->with('success', 'Galley updated successfully.');
     }
 
     /**
@@ -235,8 +245,13 @@ class ProductionWorkflowController extends Controller
         }
 
         $galley->delete();
-
-        return back()->with('success', 'Galley has been removed.');
+        
+        return redirect()->route('journal.workflow.show', [
+            'journal' => $journal,
+            'submission' => $submission->slug,
+            'tab' => 'publication',
+            'subtab' => 'galleys'
+        ])->with('success', 'Galley has been removed.');
     }
 
 

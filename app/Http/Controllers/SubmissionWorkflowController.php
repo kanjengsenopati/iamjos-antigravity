@@ -46,34 +46,93 @@ class SubmissionWorkflowController extends Controller
             abort(404);
         }
 
+        $user = auth()->user();
+
+        // Always false in this controller as it is workflow (editor/manager) view
+        $isAuthorView = false;
+
         $submission->load([
             'journal',
             'section',
             'issue',
             'authors',
             'files',
+            'discussions.user',
+            'discussions.messages.user',
+            'discussions.messages.files',
+            'discussions.participants',
             'editorialAssignments.user',
             'reviewAssignments.reviewer',
-            'discussions.messages',
         ]);
 
-        // Get available editors for assignment
-        $availableEditors = User::whereHas('roles', function ($q) use ($journal) {
-            $q->whereIn('name', ['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
-        })->get();
+        $issues = \App\Models\Issue::where('journal_id', $journal->id)
+            ->orderBy('year', 'desc')
+            ->orderBy('volume', 'desc')
+            ->orderBy('number', 'desc')
+            ->get();
 
-        // Get discussions grouped by stage
-        $discussions = $submission->discussions()
-            ->with(['user', 'messages.user'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->groupBy('stage_id');
+        $issueOptions = $issues->map(function ($issue) {
+            return [
+                'id' => $issue->id,
+                'label' => $issue->identifier . ($issue->published_at ? ' (Published)' : ' (Unpublished)'),
+            ];
+        })->values();
+
+        // Prepare participants for discussion modal (Author + Editors)
+        $participants = collect();
+        if ($submission->author) {
+            $participants->push($submission->author);
+        }
+        foreach ($submission->editorialAssignments->where('is_active', true) as $assignment) {
+            if ($assignment->user && !$participants->contains('id', $assignment->user->id)) {
+                $participants->push($assignment->user);
+            }
+        }
+        if (!$participants->contains('id', $user->id)) {
+            $participants->push($user);
+        }
+
+        // Potential Editors for Assignment
+        $activeEditorIds = $submission->editorialAssignments
+            ->where('is_active', true)
+            ->pluck('user_id')
+            ->filter()
+            ->toArray();
+
+        $potentialEditors = User::whereHas('journalRoles', function ($query) use ($journal) {
+            $query->where('journal_id', $journal->id)
+                  ->whereHas('role', function ($q) {
+                      $q->where('permit_submission', 1);
+                  });
+        })
+        ->whereDoesntHave('submissionAuthors', function ($q) use ($submission) {
+            $q->where('submission_id', $submission->id);
+        })
+        ->whereNotIn('id', $activeEditorIds)
+        ->with(['journalRoles' => function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)->with('role');
+        }])
+        ->get()
+        ->map(function ($user) {
+            $roles = $user->journalRoles->map(fn($jr) => $jr->role->name)->toArray();
+            $user->role_names = $roles;
+            $user->role_display = implode(', ', $roles);
+            return $user;
+        });
+
+        // SEO Analysis
+        $validator = new \App\Services\GoogleScholarValidator();
+        $seoAnalysis = $validator->validate($submission);
 
         return view('submissions.show', compact(
             'submission',
             'journal',
-            'availableEditors',
-            'discussions'
+            'issues',
+            'issueOptions',
+            'participants',
+            'isAuthorView',
+            'potentialEditors',
+            'seoAnalysis'
         ));
     }
 

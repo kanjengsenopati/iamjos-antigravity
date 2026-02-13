@@ -2584,7 +2584,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     )) ?? [];
         @endphp
         <div x-show="activeTab === 'publication'" x-cloak x-data="{
-            pubTab: 'title',
+            pubTab: (new URLSearchParams(window.location.search)).get('subtab') || 'title',
             contributorModalOpen: false,
             editingContributor: null,
             issues: {{ json_encode($issueOptions) }},
@@ -5998,8 +5998,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('submissionWorkflow', (config) => ({
-                activeTab: 'workflow',
+                activeTab: (new URLSearchParams(window.location.search)).get('tab') || 'workflow',
                 activeStage: config.defaultStage,
+
+                init() {
+                    // Check for URL parameters and clean them up after initialization
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('tab') || urlParams.has('subtab')) {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                },
+
                 fileModalOpen: false,
                 discussionModalOpen: false,
                 fileWizardOpen: false,
@@ -6710,7 +6719,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         });
 
                         if (response.ok) {
-                            window.location.reload();
+                            window.location.href = window.location.pathname + '?tab=publication&subtab=galleys';
                         } else {
                             const data = await response.json();
                             if (data.errors) {
