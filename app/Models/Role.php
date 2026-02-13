@@ -26,6 +26,19 @@ class Role extends SpatieRole
     const ROLE_PUBLISHER = 'Publisher';
     const ROLE_AUTHOR = 'Author';
     const ROLE_ASSESSOR = 'Assessor';
+
+    /**
+     * Permission Levels used for hierarchical access control
+     */
+    const LEVEL_SUPER_ADMIN = 1;
+    const LEVEL_ADMIN = 1;
+    const LEVEL_MANAGER = 1;
+    const LEVEL_EDITOR = 2;
+    const LEVEL_SECTION_EDITOR = 2;
+    const LEVEL_ASSISTANT = 3;
+    const LEVEL_REVIEWER = 4;
+    const LEVEL_AUTHOR = 5;
+    const LEVEL_READER = 6;
     public $incrementing = false;
     protected $keyType = 'string';
 

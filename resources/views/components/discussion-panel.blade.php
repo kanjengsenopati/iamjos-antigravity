@@ -2,7 +2,12 @@
 
 @php
     $currentUser = auth()->user();
-    $isEditor = $currentUser->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+    $isEditor = $currentUser->hasJournalPermission([
+        \App\Models\Role::LEVEL_EDITOR,
+        \App\Models\Role::LEVEL_SECTION_EDITOR,
+        \App\Models\Role::LEVEL_MANAGER,
+        \App\Models\Role::LEVEL_ADMIN
+    ], $journal->id);
     $stageDiscussions = $discussions->where('stage_id', $stageId);
 
     // Stage names for display

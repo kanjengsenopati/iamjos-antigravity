@@ -154,7 +154,7 @@
 
         {{-- UNASSIGNED WARNING BANNER --}}
         @if ($isUnassigned && !$isRejected)
-            @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+            @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                 <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
@@ -171,7 +171,7 @@
                         </button>
                     </div>
                 </div>
-            @endrole
+            @endjournalPermission
         @endif
 
         {{-- Main Navigation (Tabs) --}}
@@ -215,14 +215,14 @@
 
                     {{-- Main Panel Area --}}
                     <div
-                        class="{{ auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])? 'lg:col-span-3': 'lg:col-span-4' }} space-y-8">
+                        class="{{ auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)? 'lg:col-span-3': 'lg:col-span-4' }} space-y-8">
 
                         {{-- Files Panel --}}
                         <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
                             <div
                                 class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                 <h3 class="text-base font-bold text-gray-900">Submission Files</h3>
-                                @if (auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']) ||
+                                @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id) ||
                                         !$submission->submitted_at)
                                     <button @click="fileModalOpen = true"
                                         class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
@@ -353,14 +353,14 @@
 
 
                     {{-- Active Stage Placeholder for other tabs --}}
-                    @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                         <div class="lg:col-span-1 space-y-6">
                             {{-- Workflow Actions --}}
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow
                                     Actions
                                 </h4>
-                                @role('Editor|Section Editor|Admin|Super Admin')
+                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     @php
                                         $decisionMade = $submission->stage_id > 1 || $submission->status == 3;
                                     @endphp
@@ -445,7 +445,7 @@
                                     </div>
                                 @else
                                     <p class="text-sm text-gray-500 italic">Actions available to Editors.</p>
-                                @endrole
+                                @endjournalPermission
                             </div>
 
                             {{-- Participants (Modernized - OJS 3.3 Style) --}}
@@ -453,12 +453,12 @@
                                 <div class="flex justify-between items-center mb-4">
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
                                     </h4>
-                                    @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                         <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                             <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
                                         </button>
-                                    @endrole
+                                    @endjournalPermission
                                 </div>
 
                                 @php
@@ -508,16 +508,10 @@
 
                                     $userIsEditor = auth()
                                         ->user()
-                                        ->hasAnyRole([
-                                            'Editor',
-                                            'Section Editor',
-                                            'Journal Manager',
-                                            'Admin',
-                                            'Super Admin',
-                                        ]);
+                                        ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id);
                                     $userIsSuperAdmin = auth()
                                         ->user()
-                                        ->hasAnyRole(['Admin', 'Super Admin']);
+                                        ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER], $journal->id);
                                 @endphp
 
                                 <div class="space-y-4">
@@ -647,7 +641,7 @@
                                 </div>
                             </div>
                         </div>
-                    @endrole
+                    @endjournalPermission
 
                 </div>
             </div>
@@ -869,7 +863,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <h3 class="text-base font-bold text-gray-900">
                                         <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i>Reviewers
                                     </h3>
-                                    @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                                    @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                                         <a href="{{ route('journal.workflow.assign-reviewer-page', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
                                             <i class="fa-solid fa-plus mr-1"></i> Add Reviewer
@@ -1166,7 +1160,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         {{-- Sidebar --}}
                         <div class="lg:col-span-1 space-y-6">
                             {{-- Editor Decision Panel --}}
-                            @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                            @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                                 <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
                                         Editor
@@ -1233,12 +1227,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="flex justify-between items-center mb-4">
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
                                     </h4>
-                                    @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                         <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                             <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
                                         </button>
-                                    @endrole
+                                    @endjournalPermission
                                 </div>
 
                                 @php
@@ -1288,16 +1282,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                     $userIsEditor = auth()
                                         ->user()
-                                        ->hasAnyRole([
-                                            'Editor',
-                                            'Section Editor',
-                                            'Journal Manager',
-                                            'Admin',
-                                            'Super Admin',
-                                        ]);
+                                        ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id);
                                     $userIsSuperAdmin = auth()
                                         ->user()
-                                        ->hasAnyRole(['Admin', 'Super Admin']);
+                                        ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER], $journal->id);
                                 @endphp
 
                                 <div class="space-y-4">
@@ -1441,7 +1429,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div class="lg:col-span-3 space-y-6">
 
                         {{-- Draft Files (from Review Stage) - EDITOR ONLY --}}
-                        @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                        @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                             <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
                                 <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
                                     <div class="flex items-start justify-between">
@@ -1566,7 +1554,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     </table>
                                 </div>
                             </div>
-                        @endrole
+                        @endjournalPermission
 
                         {{-- Copyedited Files (Final Edited Versions) --}}
                         <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
@@ -1580,7 +1568,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             copyediting, ready for Production</p>
                                     </div>
                                     {{-- Authors can also upload copyedited files --}}
-                                    @if (auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']) ||
+                                    @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id) ||
                                             $submission->user_id === auth()->id())
                                         <button @click="fileModalOpen = true; uploadStage = 'copyedited'"
                                             class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
@@ -1702,7 +1690,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                     {{-- Sidebar --}}
                     <div class="lg:col-span-1 space-y-6">
-                        @if (auth()->user()->hasRole(['Editor', 'Section Editor', 'Admin', 'Super Admin']))
+                        @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow
                                     Actions
@@ -1748,12 +1736,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="flex justify-between items-center mb-4">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
                                 </h4>
-                                @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                         <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
                                     </button>
-                                @endrole
+                                @endjournalPermission
                             </div>
 
                             @php
@@ -1800,16 +1788,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                 $userIsEditor = auth()
                                     ->user()
-                                    ->hasAnyRole([
-                                        'Editor',
-                                        'Section Editor',
-                                        'Journal Manager',
-                                        'Admin',
-                                        'Super Admin',
-                                    ]);
+                                    ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id);
                                 $userIsSuperAdmin = auth()
                                     ->user()
-                                    ->hasAnyRole(['Admin', 'Super Admin']);
+                                    ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER], $journal->id);
                             @endphp
 
                             <div class="space-y-4">
@@ -2101,7 +2083,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         {{ $submission->issue->identifier }}
                                     </p>
                                 @endif
-                                @role('Editor|Section Editor|Admin|Super Admin')
+                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     <form
                                         action="{{ route('journal.workflow.unpublish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                         method="POST">
@@ -2112,7 +2094,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <i class="fa-solid fa-eye-slash mr-2"></i> Unpublish
                                         </button>
                                     </form>
-                                @endrole
+                                @endjournalPermission
                             @elseif($submission->issue_id)
                                 {{-- Scheduled State --}}
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -2126,7 +2108,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     </div>
                                 </div>
 
-                                @role('Editor|Section Editor|Admin|Super Admin')
+                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     @if (!$submission->hasGalleys())
                                         <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                                             <p class="text-xs text-amber-700">
@@ -2157,14 +2139,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             </button>
                                         </form>
                                     </div>
-                                @endrole
+                                @endjournalPermission
                             @else
                                 {{-- Not Scheduled State --}}
                                 <p class="text-sm text-gray-500 mb-4">
                                     This submission is not scheduled for publication yet.
                                 </p>
 
-                                @role('Editor|Section Editor|Admin|Super Admin')
+                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     <button @click="activeTab = 'publication'"
                                         class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors">
                                         <i class="fa-solid fa-arrow-right mr-2"></i> Go to Publication Tab
@@ -2172,7 +2154,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <p class="text-xs text-gray-500 mt-2 text-center">
                                         Manage galleys and schedule publication in the Publication tab.
                                     </p>
-                                @endrole
+                                @endjournalPermission
                             @endif
                         </div>
 
@@ -2181,12 +2163,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="flex justify-between items-center mb-4">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
                                 </h4>
-                                @role('Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                         <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
                                     </button>
-                                @endrole
+                                @endjournalPermission
                             </div>
 
                             @php
@@ -2233,16 +2215,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                 $userIsEditor = auth()
                                     ->user()
-                                    ->hasAnyRole([
-                                        'Editor',
-                                        'Section Editor',
-                                        'Journal Manager',
-                                        'Admin',
-                                        'Super Admin',
-                                    ]);
+                                    ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id);
                                 $userIsSuperAdmin = auth()
                                     ->user()
-                                    ->hasAnyRole(['Admin', 'Super Admin']);
+                                    ->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER], $journal->id);
                             @endphp
 
                             <div class="space-y-4">
@@ -2722,7 +2698,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     </div>
 
                     {{-- Main Action Button --}}
-                    @role('Editor|Section Editor|Admin|Super Admin')
+                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                         <div class="flex items-center gap-2">
                             @if ($pubStatus == 3)
                                 <form
@@ -2751,7 +2727,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </button>
                             @endif
                         </div>
-                    @endrole
+                    @endjournalPermission
                 </div>
             </div>
 
@@ -2900,7 +2876,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <p class="text-xs text-gray-500 mt-0.5">Manage authors and contributors for this
                                     publication.</p>
                             </div>
-                            @role('Editor|Section Editor|Admin|Super Admin')
+                            @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                 <button @click="openContributorModal()"
                                     :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
                                     class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -2911,7 +2887,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     class="ml-2 inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-arrow-down-short-wide mr-1.5"></i> Order
                                 </button>
-                            @endrole
+                            @endjournalPermission
                         </div>
 
                         <div class="overflow-x-auto">
@@ -2981,7 +2957,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                                @role('Editor|Section Editor|Admin|Super Admin')
+                                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                                     <div class="flex items-center justify-end gap-1">
                                                         <button type="button"
                                                             :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
@@ -3012,7 +2988,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             </button>
                                                         </form>
                                                     </div>
-                                                @endrole
+                                                @endjournalPermission
                                             </td>
                                         </tr>
                                     @empty
@@ -3381,12 +3357,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <p class="text-xs text-gray-500 mt-0.5">Final formats available to readers (PDF,
                                     HTML, EPUB).</p>
                             </div>
-                            @role('Editor|Section Editor|Admin|Super Admin')
+                            @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                 <button @click="openAddGalley()" @if ($pubStatus == 3) disabled @endif
                                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fa-solid fa-plus mr-2"></i> Add Galley
                                 </button>
-                            @endrole
+                            @endjournalPermission
                         </div>
 
                         {{-- Galleys Table --}}
@@ -3470,7 +3446,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 class="fa-solid fa-{{ $galley->is_remote ? 'external-link' : 'download' }}"></i>
                                                         </a>
                                                     @endif
-                                                    @role('Editor|Section Editor|Admin|Super Admin')
+                                                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                                         <button type="button"
                                                             @click="openEditGalley({{ json_encode([
                                                                 'id' => $galley->id,
@@ -3498,7 +3474,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 <i class="fa-solid fa-trash"></i>
                                                             </button>
                                                         </form>
-                                                    @endrole
+                                                    @endjournalPermission
                                                 </div>
                                             </td>
                                         </tr>
@@ -3515,13 +3491,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <p class="text-xs text-gray-500 mt-1 max-w-xs">Upload PDF, HTML,
                                                         or
                                                         EPUB files so readers can access the article.</p>
-                                                    @role('Editor|Section Editor|Admin|Super Admin')
+                                                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                                         <button @click="openAddGalley()"
                                                             @if ($pubStatus == 3) disabled @endif
                                                             class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                                             <i class="fa-solid fa-plus mr-2"></i> Add your first galley
                                                         </button>
-                                                    @endrole
+                                                    @endjournalPermission
                                                 </div>
                                             </td>
                                         </tr>
@@ -3547,275 +3523,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             </div>
                         @endif
 
-                        {{-- ========== ADD/EDIT GALLEY MODAL (Wide & Responsive) ========== --}}
-                        <div x-show="galleyModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
-                            role="dialog" aria-modal="true" @keydown.escape.window="galleyModalOpen = false">
-                            <div
-                                class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                {{-- Backdrop --}}
-                                <div x-show="galleyModalOpen" x-transition:enter="ease-out duration-300"
-                                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
-                                    x-transition:leave-end="opacity-0"
-                                    class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
-                                    @click="galleyModalOpen = false"></div>
 
-                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-
-                                {{-- Modal Panel (Wide) --}}
-                                <div x-show="galleyModalOpen" x-transition:enter="ease-out duration-300"
-                                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                                    x-transition:leave="ease-in duration-200"
-                                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                    class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle w-full max-w-3xl">
-
-                                    {{-- Header --}}
-                                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center">
-                                                <div
-                                                    class="flex-shrink-0 h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
-                                                    <i class="fa-solid fa-file-circle-plus text-white text-xl"></i>
-                                                </div>
-                                                <div class="ml-4">
-                                                    <h3 class="text-xl font-bold text-white"
-                                                        x-text="editingGalley ? 'Edit Galley' : 'Add Publication Galley'">
-                                                    </h3>
-                                                    <p class="text-sm text-indigo-100">
-                                                        Upload a file or link to an external source
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button @click="galleyModalOpen = false"
-                                                class="text-white/80 hover:text-white transition-colors">
-                                                <i class="fa-solid fa-times text-xl"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {{-- Form Body --}}
-                                    <div class="px-6 py-6 space-y-6">
-
-                                        {{-- Row 1: Label & Language --}}
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {{-- Galley Label --}}
-                                            <div>
-                                                <label class="block text-sm font-semibold text-gray-800 mb-2">
-                                                    Galley Label <span class="text-red-500">*</span>
-                                                </label>
-                                                <input type="text" x-model="galleyLabel" required
-                                                    placeholder="e.g., PDF, HTML, EPUB"
-                                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-base"
-                                                    :class="{ 'border-red-500': errors.label }">
-                                                <template x-if="errors.label">
-                                                    <p class="mt-1 text-xs text-red-600" x-text="errors.label[0]">
-                                                    </p>
-                                                </template>
-                                                <p class="mt-1 text-xs text-gray-500">Will be displayed as the
-                                                    download button label</p>
-                                            </div>
-
-                                            {{-- Language --}}
-                                            <div>
-                                                <label class="block text-sm font-semibold text-gray-800 mb-2">
-                                                    Language
-                                                </label>
-                                                <select x-model="galleyLocale"
-                                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-base">
-                                                    <option value="en">English</option>
-                                                    <option value="id">Indonesian</option>
-                                                    <option value="ar">Arabic</option>
-                                                    <option value="fr">French</option>
-                                                    <option value="de">German</option>
-                                                    <option value="es">Spanish</option>
-                                                    <option value="pt">Portuguese</option>
-                                                    <option value="zh">Chinese</option>
-                                                    <option value="ja">Japanese</option>
-                                                    <option value="ko">Korean</option>
-                                                    <option value="ru">Russian</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {{-- Row 2: URL Path --}}
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-800 mb-2">
-                                                URL Path <span class="text-gray-400 font-normal">(optional)</span>
-                                            </label>
-                                            <div class="flex items-center">
-                                                <span
-                                                    class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm h-[42px]">
-                                                    /article/{{ $submission->slug }}/
-                                                </span>
-                                                <input type="text" x-model="galleyUrlPath" placeholder="pdf"
-                                                    class="flex-1 rounded-r-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-base"
-                                                    :class="{ 'border-red-500': errors.url_path }">
-                                            </div>
-                                            <template x-if="errors.url_path">
-                                                <p class="mt-1 text-xs text-red-600" x-text="errors.url_path[0]">
-                                                </p>
-                                            </template>
-                                            <p class="mt-1 text-xs text-gray-500">Custom slug for SEO-friendly URLs.
-                                                Only letters, numbers, dashes, and underscores.</p>
-                                        </div>
-
-                                        {{-- Divider --}}
-                                        <div class="border-t border-gray-200 pt-6">
-                                            <h4 class="text-sm font-semibold text-gray-800 mb-4">File Source</h4>
-                                        </div>
-
-                                        {{-- Remote Toggle --}}
-                                        <div class="flex items-start">
-                                            <div class="flex items-center h-5">
-                                                <input type="checkbox" x-model="isRemote" id="is-remote-checkbox"
-                                                    class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer">
-                                            </div>
-                                            <div class="ml-3">
-                                                <label for="is-remote-checkbox"
-                                                    class="text-sm font-medium text-gray-900 cursor-pointer">
-                                                    This galley will be available at a separate website
-                                                </label>
-                                                <p class="text-xs text-gray-500 mt-0.5">
-                                                    Check this if the file is hosted externally (e.g., publisher's
-                                                    website, cloud storage)
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {{-- Dynamic Content Area --}}
-                                        <div class="min-h-[180px]">
-
-                                            {{-- Remote URL Input (if isRemote) --}}
-                                            <div x-show="isRemote"
-                                                x-transition:enter="transition ease-out duration-200"
-                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
-                                                x-transition:enter-end="opacity-100 transform translate-y-0">
-                                                <label class="block text-sm font-semibold text-gray-800 mb-2">
-                                                    Remote URL <span class="text-red-500">*</span>
-                                                </label>
-                                                <div class="relative">
-                                                    <div
-                                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <i class="fa-solid fa-link text-gray-400"></i>
-                                                    </div>
-                                                    <input type="url" x-model="remoteUrl"
-                                                        placeholder="https://example.com/article.pdf"
-                                                        class="block w-full pl-10 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-base"
-                                                        :class="{ 'border-red-500': errors.url_remote }"
-                                                        :required="isRemote">
-                                                </div>
-                                                <template x-if="errors.url_remote">
-                                                    <p class="mt-1 text-xs text-red-600"
-                                                        x-text="errors.url_remote[0]"></p>
-                                                </template>
-                                                <p class="mt-2 text-xs text-gray-500">
-                                                    <i class="fa-solid fa-info-circle mr-1"></i>
-                                                    Users will be redirected to this URL when they click the download
-                                                    button
-                                                </p>
-                                            </div>
-
-                                            {{-- File Upload (if NOT isRemote) --}}
-                                            <div x-show="!isRemote"
-                                                x-transition:enter="transition ease-out duration-200"
-                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
-                                                x-transition:enter-end="opacity-100 transform translate-y-0">
-                                                <label class="block text-sm font-semibold text-gray-800 mb-2">
-                                                    Upload File <span class="text-red-500"
-                                                        x-show="!editingGalley">*</span>
-                                                    <span class="text-gray-400 font-normal"
-                                                        x-show="editingGalley">(leave empty to keep current)</span>
-                                                </label>
-
-                                                {{-- Drop Zone --}}
-                                                <div class="relative">
-                                                    <label for="galley-file-input"
-                                                        class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200"
-                                                        :class="selectedFile ? 'border-emerald-400 bg-emerald-50' :
-                                                            'border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50'">
-
-                                                        <template x-if="!selectedFile">
-                                                            <div
-                                                                class="flex flex-col items-center justify-center py-6">
-                                                                <div
-                                                                    class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-3">
-                                                                    <i
-                                                                        class="fa-solid fa-cloud-arrow-up text-indigo-500 text-xl"></i>
-                                                                </div>
-                                                                <p class="text-sm text-gray-600 font-medium">
-                                                                    <span class="text-indigo-600">Click to
-                                                                        upload</span> or drag and drop
-                                                                </p>
-                                                                <p class="text-xs text-gray-500 mt-1">PDF, HTML, EPUB,
-                                                                    XML, DOC (Max 50MB)</p>
-                                                            </div>
-                                                        </template>
-
-                                                        <template x-if="selectedFile">
-                                                            <div class="flex items-center justify-center py-6">
-                                                                <div
-                                                                    class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mr-4">
-                                                                    <i
-                                                                        class="fa-solid fa-file-check text-emerald-500 text-xl"></i>
-                                                                </div>
-                                                                <div class="text-left">
-                                                                    <p class="text-sm font-medium text-gray-900"
-                                                                        x-text="selectedFileName"></p>
-                                                                    <p class="text-xs text-gray-500">Click to change
-                                                                        file</p>
-                                                                </div>
-                                                            </div>
-                                                        </template>
-
-                                                        <input id="galley-file-input" type="file"
-                                                            class="hidden"
-                                                            accept=".pdf,.html,.htm,.epub,.xml,.doc,.docx"
-                                                            @change="handleFileSelect($event)">
-                                                    </label>
-                                                </div>
-                                                <template x-if="errors.file">
-                                                    <p class="mt-1 text-xs text-red-600" x-text="errors.file[0]">
-                                                    </p>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Footer --}}
-                                    <div
-                                        class="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
-                                        <p class="text-xs text-gray-500">
-                                            <i class="fa-solid fa-info-circle mr-1"></i>
-                                            Galleys are the final published formats of an article
-                                        </p>
-                                        <div class="flex items-center gap-3">
-                                            <button type="button" @click="galleyModalOpen = false"
-                                                class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                                Cancel
-                                            </button>
-                                            <button type="button" @click="submitGalley()"
-                                                :disabled="isSubmitting || (!isRemote && !selectedFile && !editingGalley)"
-                                                class="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                                <template x-if="isSubmitting">
-                                                    <span class="flex items-center">
-                                                        <i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...
-                                                    </span>
-                                                </template>
-                                                <template x-if="!isSubmitting">
-                                                    <span class="flex items-center">
-                                                        <i class="fa-solid fa-check mr-2"></i>
-                                                        <span
-                                                            x-text="editingGalley ? 'Update Galley' : 'Save Galley'"></span>
-                                                    </span>
-                                                </template>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {{-- ========== ADD/EDIT GALLEY MODAL (Extracted Component) ========== --}}
+                        <x-submissions.galley-modal :journal="$journal" :submission="$submission" :pubStatus="$pubStatus" />
                     </div>
 
                     {{-- ====== LICENSE & DOI ====== --}}
@@ -4271,7 +3981,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     required>
                             </div>
 
-                            @if (!auth()->user()->hasRole('Author'))
+                            @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Notify
                                         Participants</label>

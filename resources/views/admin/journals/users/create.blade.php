@@ -165,7 +165,7 @@
                 <p class="mb-3 text-xs text-red-500">{{ $message }}</p>
             @enderror
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 @php
                     $roleDescriptions = [
                         'Journal Manager' => 'Full administrative access to the journal',
@@ -189,10 +189,10 @@
 
                 @foreach ($roles as $role)
                     <label
-                        class="relative flex items-start p-4 rounded-lg border cursor-pointer transition-all {{ $roleColors[$role->name] ?? 'border-gray-200 bg-gray-50 hover:bg-gray-100' }} {{ in_array($role->name, old('roles', [])) ? 'ring-2 ring-indigo-500' : '' }}">
+                        class="relative flex items-start p-4 rounded-lg border cursor-pointer transition-all {{ $roleColors[$role->name] ?? 'border-gray-200 bg-gray-50 hover:bg-gray-100' }} {{ in_array($role->id, old('roles', [])) ? 'ring-2 ring-indigo-500' : '' }}">
                         <div class="flex items-center h-5">
-                            <input type="checkbox" name="roles[]" value="{{ $role->name }}"
-                                {{ in_array($role->name, old('roles', [])) ? 'checked' : '' }}
+                            <input type="checkbox" name="roles[]" value="{{ $role->id }}"
+                                {{ in_array($role->id, old('roles', [])) ? 'checked' : '' }}
                                 class="h-4 w-4 rounded text-indigo-600 border-gray-300 focus:ring-indigo-500">
                         </div>
                         <div class="ml-3">

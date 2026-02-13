@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -125,6 +126,72 @@ class User extends Authenticatable
     // ACCESSORS
     // =====================================================
 
+    /**
+     * Cek Permission Level (Angka).
+     * @param int|array $levels
+     * @param string $journalId
+     */
+    public function hasJournalPermission($levels, $journalId)
+    {
+        // 1. Bypass Super Admin
+        if (method_exists($this, 'hasRole') && $this->hasRole('Super Admin')) {
+            return true;
+        }
+
+        $levels = is_array($levels) ? $levels : [$levels];
+
+        return DB::table('journal_user_roles')
+            ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+            
+            ->where('journal_user_roles.user_id', $this->id)
+            
+            ->where('journal_user_roles.journal_id', $journalId) 
+            
+            ->whereIn('roles.permission_level', $levels)
+            ->exists();
+    }
+
+    /**
+     * Smart Check (Bisa Terima Nama Role atau Level Permission).
+     * @param string|int|array $roles
+     * @param string $journalId
+     */
+    public function hasJournalRole($roles, $journalId)
+    {
+        // --- 0. BYPASS SUPER ADMIN (Tambahan) ---
+        // Agar Super Admin selalu TRUE walau dicek pakai String ('Editor')
+        if (method_exists($this, 'hasRole') && $this->hasRole('Super Admin')) {
+            return true;
+        }
+
+        // 1. Normalisasi String pipa "|"
+        if (is_string($roles)) {
+            $roles = explode('|', $roles);
+        }
+        
+        if (!is_array($roles)) {
+            $roles = [$roles];
+        }
+
+        // 2. DETEKSI TIPE INPUT
+        $firstItem = reset($roles);
+
+        // Jika inputnya Angka, oper ke fungsi permission level
+        if (is_numeric($firstItem)) {
+            return $this->hasJournalPermission($roles, $journalId);
+        }
+
+        // 3. Jika inputnya String (Nama Role), jalankan query by NAME
+        return DB::table('journal_user_roles')
+            ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+            ->where('journal_user_roles.user_id', $this->id)
+            
+            // PENTING: Sudah benar pakai tabel pivot untuk filter jurnal
+            ->where('journal_user_roles.journal_id', $journalId) 
+            
+            ->whereIn('roles.name', $roles)
+            ->exists();
+    }
     /**
      * Get the user's initials
      */
