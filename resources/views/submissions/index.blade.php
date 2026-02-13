@@ -191,56 +191,64 @@
                                 </div>
                             </div>
 
-                            <!-- Right: Discussion/Reviewer + Status + View -->
-                            <div class="flex items-center gap-3 flex-shrink-0">
+                            <!-- Right: Activity + Actions Stack (OJS 3.3 Style) -->
+                            <div class="flex items-start gap-4 flex-shrink-0">
+                                <!-- Activity (Discussion/Reviewer) -->
+                                <div class="mt-1">
+                                    @if ($isInReview && $reviewerTotal > 0)
+                                        {{-- Show Reviewer Progress: X/Y --}}
+                                        <span
+                                            class="inline-flex items-center gap-1.5 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-md"
+                                            title="Reviewer progress: {{ $reviewerCompleted }} of {{ $reviewerTotal }} completed">
+                                            <i class="fa-solid fa-user-check text-xs"></i>
+                                            <span class="font-medium">{{ $reviewerCompleted }}/{{ $reviewerTotal }}</span>
+                                        </span>
+                                    @elseif ($discussionCount > 0)
+                                        {{-- Show Discussion Count --}}
+                                        <span class="inline-flex items-center gap-1.5 text-sm text-gray-500"
+                                            title="{{ $discussionCount }} discussion{{ $discussionCount > 1 ? 's' : '' }}">
+                                            <i class="fa-regular fa-comment"></i>
+                                            <span>{{ $discussionCount }}</span>
+                                        </span>
+                                    @endif
+                                </div>
 
-                                <!-- Discussion/Reviewer Badge (OJS Style) -->
-                                @if ($isInReview && $reviewerTotal > 0)
-                                    {{-- Show Reviewer Progress: X/Y --}}
+                                <!-- Actions Vertical Stack -->
+                                <div class="flex flex-col items-end gap-2 text-right">
+                                    <!-- Status Badge -->
                                     <span
-                                        class="inline-flex items-center gap-1.5 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-md"
-                                        title="Reviewer progress: {{ $reviewerCompleted }} of {{ $reviewerTotal }} completed">
-                                        <i class="fa-solid fa-user-check text-xs"></i>
-                                        <span class="font-medium">{{ $reviewerCompleted }}/{{ $reviewerTotal }}</span>
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap
+                                        @switch($submission->status)
+                                            @case('draft') bg-gray-100 text-gray-700 @break
+                                            @case('submitted') bg-blue-50 text-blue-700 border border-blue-200 @break
+                                            @case('in_review') bg-amber-50 text-amber-700 border border-amber-200 @break
+                                            @case('revision_required') bg-orange-50 text-orange-700 border border-orange-200 @break
+                                            @case('accepted') bg-emerald-50 text-emerald-700 border border-emerald-200 @break
+                                            @case('rejected') bg-red-50 text-red-700 border border-red-200 @break
+                                            @case('published') bg-green-50 text-green-700 border border-green-200 @break
+                                            @default bg-gray-100 text-gray-700
+                                        @endswitch
+                                    ">
+                                        {{ $submission->status_label }}
                                     </span>
-                                @elseif ($discussionCount > 0)
-                                    {{-- Show Discussion Count --}}
-                                    <span class="inline-flex items-center gap-1.5 text-sm text-gray-500"
-                                        title="{{ $discussionCount }} discussion{{ $discussionCount > 1 ? 's' : '' }}">
-                                        <i class="fa-regular fa-comment"></i>
-                                        <span>{{ $discussionCount }}</span>
-                                    </span>
-                                @endif
 
-                                <!-- Status Badge -->
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap
-                                    @switch($submission->status)
-                                        @case('draft') bg-gray-100 text-gray-700 @break
-                                        @case('submitted') bg-blue-50 text-blue-700 border border-blue-200 @break
-                                        @case('in_review') bg-amber-50 text-amber-700 border border-amber-200 @break
-                                        @case('revision_required') bg-orange-50 text-orange-700 border border-orange-200 @break
-                                        @case('accepted') bg-emerald-50 text-emerald-700 border border-emerald-200 @break
-                                        @case('rejected') bg-red-50 text-red-700 border border-red-200 @break
-                                        @case('published') bg-green-50 text-green-700 border border-green-200 @break
-                                        @default bg-gray-100 text-gray-700
-                                    @endswitch
-                                ">
-                                    {{ $submission->status_label }}
-                                </span>
 
-                                <!-- View Button -->
-                                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
-                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                                    View
-                                </a>
 
-                                <!-- Expand/Collapse Button -->
-                                <button @click="expanded = !expanded"
-                                    class="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
-                                    <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
-                                        :class="{ 'rotate-180': expanded }"></i>
-                                </button>
+                                    <div class="flex items-center gap-2">
+                                        <!-- View Button -->
+                                        <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
+                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                            View
+                                        </a>
+
+                                        <!-- Expand/Collapse Button -->
+                                        <button @click="expanded = !expanded"
+                                            class="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
+                                            <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
+                                                :class="{ 'rotate-180': expanded }"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -293,16 +301,15 @@
                                         {{ $submission->updated_at->format('l, F j, Y') }}.</span>
                                 </p>
 
-                                <!-- Activity Log & Notes Button (for Archives) -->
-                                @if ($filter === 'archives')
-                                    <div class="pt-2">
-                                        <button type="button" 
-                                                onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
-                                                class="text-sm font-bold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1 transition">
-                                            Activity Log & Notes
-                                        </button>
-                                    </div>
-                                @endif
+                                <!-- Activity Log & Notes (Expanded View) -->
+                                <div class="flex justify-end mt-4 border-t border-gray-100 pt-3">
+                                    <button type="button" 
+                                            onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
+                                            class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition">
+                                        <i class="fa-solid fa-clock-rotate-left"></i>
+                                        Activity Log & Notes
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </li>
