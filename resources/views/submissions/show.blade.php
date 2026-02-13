@@ -1938,7 +1938,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             <div x-show="activeStage === 'production'" class="bg-gray-50/50 min-h-screen pt-6"
                 x-data="{
                     scheduleModalOpen: false,
-                    issues: @json($issueOptions),
+                    issues: {{ json_encode($issueOptions) }},
                     selectedIssueId: '{{ $submission->issue_id ?? '' }}',
                     isLoadingIssues: false,
                 
@@ -3026,7 +3026,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             method="POST" class="p-6">
                             @csrf
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
-                                <div x-data="keywordInputShow(@js($submission->keywords->pluck('content')->toArray()))">
+                                <div x-data="keywordInputShow({{ json_encode($submission->keywords->pluck('content')->toArray()) }})">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
                                     <input type="text" x-ref="keywordInput"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
@@ -3241,114 +3241,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                     {{-- ====== GALLEYS (Publication Formats) ====== --}}
                     <div x-show="pubTab === 'galleys'"
-                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
-                        x-data="{
-                            galleyModalOpen: false,
-                            isSubmitting: false,
-                            editingGalley: null,
-                        
-                            // Form fields
-                            galleyLabel: '',
-                            galleyLocale: 'en',
-                            galleyUrlPath: '',
-                            isRemote: false,
-                            remoteUrl: '',
-                            selectedFile: null,
-                            selectedFileName: '',
-                        
-                            // Error handling
-                            errors: {},
-                        
-                            openAddGalley() {
-                                this.resetForm();
-                                this.galleyModalOpen = true;
-                            },
-                        
-                            openEditGalley(galley) {
-                                this.resetForm();
-                                this.editingGalley = galley;
-                                this.galleyLabel = galley.label;
-                                this.galleyLocale = galley.locale || 'en';
-                                this.galleyUrlPath = galley.url_path || '';
-                                this.isRemote = galley.is_remote || false;
-                                this.remoteUrl = galley.url_remote || '';
-                                this.galleyModalOpen = true;
-                            },
-                        
-                            resetForm() {
-                                this.editingGalley = null;
-                                this.galleyLabel = '';
-                                this.galleyLocale = 'en';
-                                this.galleyUrlPath = '';
-                                this.isRemote = false;
-                                this.remoteUrl = '';
-                                this.selectedFile = null;
-                                this.selectedFileName = '';
-                                this.errors = {};
-                                this.isSubmitting = false;
-                            },
-                        
-                            handleFileSelect(event) {
-                                const file = event.target.files[0];
-                                if (file) {
-                                    this.selectedFile = file;
-                                    this.selectedFileName = file.name;
-                                }
-                            },
-                        
-                            async submitGalley() {
-                                if (this.isSubmitting) return;
-                                this.isSubmitting = true;
-                                this.errors = {};
-                        
-                                const formData = new FormData();
-                                formData.append('label', this.galleyLabel);
-                                formData.append('locale', this.galleyLocale);
-                                formData.append('url_path', this.galleyUrlPath);
-                                formData.append('is_remote', this.isRemote ? '1' : '0');
-                        
-                                if (this.isRemote) {
-                                    formData.append('url_remote', this.remoteUrl);
-                                } else if (this.selectedFile) {
-                                    formData.append('file', this.selectedFile);
-                                }
-                        
-                                try {
-                                    const url = this.editingGalley ?
-                                        '{{ route('journal.workflow.galley.update', ['journal' => $journal->slug, 'submission' => $submission->slug, 'galley' => '__GALLEY_ID__']) }}'.replace('__GALLEY_ID__', this.editingGalley.id) :
-                                        '{{ route('journal.workflow.galley.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}';
-                        
-                                    if (this.editingGalley) {
-                                        formData.append('_method', 'PUT');
-                                    }
-                        
-                                    const response = await fetch(url, {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                            'Accept': 'application/json',
-                                        },
-                                        body: formData
-                                    });
-                        
-                                    if (response.ok) {
-                                        window.location.reload();
-                                    } else {
-                                        const data = await response.json();
-                                        if (data.errors) {
-                                            this.errors = data.errors;
-                                        } else {
-                                            alert(data.message || 'An error occurred');
-                                        }
-                                    }
-                                } catch (e) {
-                                    console.error(e);
-                                    alert('An error occurred while saving');
-                                }
-                        
-                                this.isSubmitting = false;
-                            }
-                        }">
+                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                             <div>
                                 <h3 class="text-base font-bold text-gray-900">
@@ -3524,8 +3417,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         @endif
 
 
-                        {{-- ========== ADD/EDIT GALLEY MODAL (Extracted Component) ========== --}}
-                        <x-submissions.galley-modal :journal="$journal" :submission="$submission" :pubStatus="$pubStatus" />
                     </div>
 
                     {{-- ====== LICENSE & DOI ====== --}}
@@ -6045,6 +5936,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 </div>
             </div>
         </div>
+    {{-- ========== ADD/EDIT GALLEY MODAL (Extracted Component) ========== --}}
+    <x-submissions.galley-modal :journal="$journal" :submission="$submission" :pubStatus="$pubStatus" />
     </div>
     <style>
         .ck-editor__editable {
@@ -6237,6 +6130,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 revisionIsSubmitting: false,
                 revisionEditorInstance: null,
                 revisionUploadedFiles: [],
+                
+                // Galley Modal State
+                galleyModalOpen: false,
+                isSubmitting: false,
+                editingGalley: null,
+                galleyLabel: '',
+                galleyLocale: 'en',
+                galleyUrlPath: '',
+                isRemote: false,
+                remoteUrl: '',
+                selectedFile: null,
+                selectedFileName: '',
+                errors: {},
 
                 init() {
                     this.$watch('discussionModalOpen', value => {
@@ -6728,6 +6634,97 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         this.revisionEditorInstance.destroy();
                         this.revisionEditorInstance = null;
                     }
+                },
+
+                // Galley Methods
+                openAddGalley() {
+                    this.resetGalleyForm();
+                    this.galleyModalOpen = true;
+                },
+
+                openEditGalley(galley) {
+                    this.resetGalleyForm();
+                    this.editingGalley = galley;
+                    this.galleyLabel = galley.label;
+                    this.galleyLocale = galley.locale || 'en';
+                    this.galleyUrlPath = galley.url_path || '';
+                    this.isRemote = galley.is_remote || false;
+                    this.remoteUrl = galley.url_remote || '';
+                    this.galleyModalOpen = true;
+                },
+
+                resetGalleyForm() {
+                    this.editingGalley = null;
+                    this.galleyLabel = '';
+                    this.galleyLocale = 'en';
+                    this.galleyUrlPath = '';
+                    this.isRemote = false;
+                    this.remoteUrl = '';
+                    this.selectedFile = null;
+                    this.selectedFileName = '';
+                    this.errors = {};
+                    this.isSubmitting = false;
+                },
+
+                handleGalleyFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.selectedFile = file;
+                        this.selectedFileName = file.name;
+                    }
+                },
+
+                async submitGalley() {
+                    if (this.isSubmitting) return;
+                    this.isSubmitting = true;
+                    this.errors = {};
+
+                    const formData = new FormData();
+                    formData.append('label', this.galleyLabel);
+                    formData.append('locale', this.galleyLocale);
+                    formData.append('url_path', this.galleyUrlPath);
+                    formData.append('is_remote', this.isRemote ? '1' : '0');
+
+                    if (this.isRemote) {
+                        formData.append('url_remote', this.remoteUrl);
+                    } else if (this.selectedFile) {
+                        formData.append('file', this.selectedFile);
+                    }
+
+                    try {
+                        const url = this.editingGalley ?
+                            '{{ route('journal.workflow.galley.update', ['journal' => $journal->slug, 'submission' => $submission->slug, 'galley' => '__GALLEY_ID__']) }}'.replace('__GALLEY_ID__', this.editingGalley.id) :
+                            '{{ route('journal.workflow.galley.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}';
+
+                        if (this.editingGalley) {
+                            formData.append('_method', 'PUT');
+                        }
+
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            const data = await response.json();
+                            if (data.errors) {
+                                this.errors = data.errors;
+                            } else {
+                                alert(data.message || 'An error occurred');
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('An error occurred while saving');
+                    }
+
+                    this.isSubmitting = false;
                 }
             }));
         });

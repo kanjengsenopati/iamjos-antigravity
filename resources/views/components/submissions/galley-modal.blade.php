@@ -42,12 +42,15 @@
             class="inline-block w-full max-w-3xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-2xl sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
 
             {{-- Header (Explicit gradient styling) --}}
-            <div class="relative px-6 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-indigo-500/30">
+            <div class="relative px-6 py-5 bg-indigo-600 border-b border-indigo-500/30 rounded-t-2xl">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
+                        {{-- Icon Container --}}
                         <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
                             <i class="text-xl text-white fa-solid fa-file-circle-plus"></i>
                         </div>
+                        
+                        {{-- Title & Subtitle --}}
                         <div>
                             <h3 id="galley-modal-title" class="text-xl font-bold text-white tracking-tight"
                                 x-text="editingGalley ? 'Edit Galley' : 'Add Publication Galley'">
@@ -58,6 +61,8 @@
                             </p>
                         </div>
                     </div>
+
+                    {{-- Close Button --}}
                     <button @click="galleyModalOpen = false"
                         class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50">
                         <i class="text-xl fa-solid fa-xmark"></i>
@@ -65,7 +70,7 @@
                     </button>
                 </div>
 
-                {{-- Decorative pattern overlay --}}
+                {{-- Decorative pattern overlay (Opacity dikurangi sedikit supaya teks tetap terbaca) --}}
                 <div class="absolute inset-0 opacity-10 pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz4KPC9zdmc+')]"></div>
             </div>
 
@@ -243,7 +248,7 @@
                                 <input id="galley-file-input" type="file"
                                     class="hidden"
                                     accept=".pdf,.html,.htm,.epub,.xml,.doc,.docx"
-                                    @change="handleFileSelect($event)">
+                                    @change="handleGalleyFileSelect($event)">
                             </label>
                         </div>
                         <template x-if="errors.file">
