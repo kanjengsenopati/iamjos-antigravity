@@ -172,7 +172,7 @@
                 <p class="mb-3 text-xs text-red-500">{{ $message }}</p>
             @enderror
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 @php
                     $roleDescriptions = [
                         'Journal Manager' => 'Full administrative access to the journal',
@@ -197,10 +197,10 @@
 
                 @foreach ($roles as $role)
                     <label
-                        class="relative flex items-start p-4 rounded-lg border cursor-pointer transition-all {{ $roleColors[$role->name] ?? 'border-gray-200 bg-gray-50 hover:bg-gray-100' }} {{ in_array($role->name, $selectedRoles) ? 'ring-2 ring-indigo-500' : '' }}">
+                        class="relative flex items-start p-4 rounded-lg border cursor-pointer transition-all {{ $roleColors[$role->name] ?? 'border-gray-200 bg-gray-50 hover:bg-gray-100' }} {{ in_array($role->id, $selectedRoles) ? 'ring-2 ring-indigo-500' : '' }}">
                         <div class="flex items-center h-5">
-                            <input type="checkbox" name="roles[]" value="{{ $role->name }}"
-                                {{ in_array($role->name, $selectedRoles) ? 'checked' : '' }}
+                            <input type="checkbox" name="roles[]" value="{{ $role->id }}"
+                                {{ in_array($role->id, $selectedRoles) ? 'checked' : '' }}
                                 class="h-4 w-4 rounded text-indigo-600 border-gray-300 focus:ring-indigo-500">
                         </div>
                         <div class="ml-3">
@@ -261,37 +261,29 @@
                     @enderror
                 </div>
 
-                {{-- Password Change --}}
-                <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 bg-yellow-50" x-data="{ changePassword: {{ $errors->has('password') ? 'true' : 'false' }} }">
-                    <div class="flex items-start">
-                        <div class="flex items-center h-5">
-                            <input id="change_password" name="change_password" type="checkbox"
-                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                                x-model="changePassword">
-                        </div>
-                        <div class="ml-3 text-sm">
-                            <label for="change_password" class="font-medium text-gray-700">Change Password</label>
-                            <p class="text-gray-500">Check this box if you want to set a new password for this user.</p>
-                        </div>
+                {{-- Password Fields --}}
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="md:col-span-2">
+                        <h3 class="text-sm font-medium text-yellow-800 flex items-center">
+                            <i class="fa-solid fa-key mr-2"></i> Update Password
+                        </h3>
+                        <p class="text-xs text-yellow-600 mt-1">Leave blank to keep the current password.</p>
                     </div>
-
-                    <div x-show="changePassword" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"
-                        style="display: none;">
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700">New Password</label>
-                            <input type="password" name="password" id="password"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                        </div>
-                        <div>
-                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Repeat New
-                                Password</label>
-                            <input type="password" name="password_confirmation" id="password_confirmation"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                        </div>
-                        @error('password')
-                            <p class="text-red-500 text-xs mt-1 md:col-span-2">{{ $message }}</p>
-                        @enderror
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">New Password</label>
+                        <input type="password" name="password" id="password"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                     </div>
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Repeat New
+                            Password</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    </div>
+                    @error('password')
+                        <p class="text-red-500 text-xs mt-1 md:col-span-2">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
         </div>

@@ -381,7 +381,11 @@ foreach ($rawKeywords as $k) {
 
                 {{-- Geographic Distribution (Admin Only) --}}
                 @if (auth()->check() &&
-                        auth()->user()->hasAnyRole(['admin', 'journal manager', 'editor']) &&
+                        auth()->user()->hasJournalPermission([
+                            \App\Models\Role::LEVEL_ADMIN,
+                            \App\Models\Role::LEVEL_MANAGER,
+                            \App\Models\Role::LEVEL_EDITOR
+                        ], $journal->id) &&
                         !empty($countryStats))
                     <div class="mt-8 pt-6 border-t border-slate-200">
                         <h4 class="text-lg font-bold text-slate-700 mb-4">

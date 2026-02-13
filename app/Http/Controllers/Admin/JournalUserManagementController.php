@@ -138,7 +138,7 @@ class JournalUserManagementController extends Controller
         $roles = Role::where('journal_id', $journal->id)->get();
 
         // Get user's current roles in THIS journal (not global Spatie roles)
-        $userRoleNames = JournalUserRole::getUserRolesInJournal($user, $journal)->pluck('name')->toArray();
+        $userRoleNames = JournalUserRole::getUserRolesInJournal($user, $journal)->pluck('id')->toArray();
 
         return view('admin.journals.users.edit', compact('journal', 'user', 'routePrefix', 'roles', 'userRoleNames'));
     }
@@ -480,7 +480,7 @@ class JournalUserManagementController extends Controller
             'bio' => 'nullable|string',
             'password' => 'required|min:8|confirmed',
             'roles' => 'required|array|min:1',
-            'roles.*' => 'exists:roles,name',
+            'roles.*' => 'exists:roles,id', 
         ]);
 
         $userData = $request->only([
@@ -530,7 +530,7 @@ class JournalUserManagementController extends Controller
             'orcid_id' => 'nullable|string|max:255',
             'bio' => 'nullable|string',
             'roles' => 'required|array|min:1',
-            'roles.*' => 'exists:roles,name',
+            'roles.*' => 'exists:roles,id',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 

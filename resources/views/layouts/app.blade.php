@@ -420,7 +420,7 @@
                     </div>
 
                     <!-- Submissions (Single Menu - OJS 3.3 Style, tabs are in content page) -->
-                    @role('Author|Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                    @journalRole([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR, \App\Models\Role::LEVEL_AUTHOR], $journal->id)
                         <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}"
                             class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
                             {{ request()->routeIs('journal.submissions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
@@ -436,10 +436,10 @@
                                 {{ request()->routeIs('journal.submissions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Submissions</span>
                         </a>
-                    @endrole
+                    @endjournalRole
 
                     <!-- Reviewer: My Reviews -->
-                    @role('Reviewer')
+                    @journalPermission([\App\Models\Role::LEVEL_REVIEWER], $journal->id)
                         <a href="{{ route('journal.reviewer.index', ['journal' => $journalSlug]) }}"
                             class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
                    {{ request()->routeIs('journal.reviewer.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
@@ -455,10 +455,10 @@
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">My
                                 Reviews</span>
                         </a>
-                    @endrole
+                    @endjournalPermission
 
                     <!-- Issues -->
-                    @role('Journal Manager|Editor|Admin|Super Admin')
+                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                         <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}"
                             class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
                         {{ request()->routeIs('journal.issues.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
@@ -473,10 +473,10 @@
                                 class="fa-solid fa-layer-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.issues.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Issues</span>
                         </a>
-                    @endrole
+                    @endjournalPermission
 
                     <!-- Announcements -->
-                    @role('Journal Manager|Editor|Admin|Super Admin')
+                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                         <a href="{{ route('journal.announcements.index', ['journal' => $journalSlug]) }}"
                             class="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.announcements.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
                             :title="sidebarCollapsed ? 'Announcements' : ''">
@@ -484,11 +484,11 @@
                                 class="fa-solid fa-bullhorn w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.announcements.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Announcements</span>
                         </a>
-                    @endrole
+                    @endjournalPermission
                 </div>
 
                 <!-- Group: Management -->
-                @role('Journal Manager|Editor|Admin|Super Admin')
+                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
                             <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Settings</span>
@@ -615,10 +615,10 @@
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Tools</span>
                         </a>
                     </div>
-                @endrole
+                @endjournalPermission
 
                 <!-- Group: Administration (Super Admin Only) -->
-                @role('Super Admin')
+                @journalPermission([\App\Models\Role::LEVEL_MANAGER], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
                             <span
@@ -641,7 +641,7 @@
                                 Administration</span>
                         </a>
                     </div>
-                @endrole
+                @endjournalPermission
             @endif
         </nav>
 
@@ -1009,7 +1009,7 @@
                                     </svg>
                                     My Profile
                                 </a>
-                                @role('Super Admin')
+                                @journalPermission([\App\Models\Role::LEVEL_MANAGER], $journal->id)
                                     <a href="{{ route('admin.site.index') }}"
                                         class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor"
@@ -1021,7 +1021,7 @@
                                         </svg>
                                         Administration
                                     </a>
-                                @endrole
+                                @endjournalPermission
                             </div>
 
                             <!-- Logout / Stop Impersonating -->
