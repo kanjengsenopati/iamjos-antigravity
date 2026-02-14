@@ -133,8 +133,8 @@ class User extends Authenticatable
      */
     public function hasJournalPermission($levels, $journalId)
     {
-        // 1. Bypass Super Admin
-        if (method_exists($this, 'hasRole') && $this->hasRole('Super Admin')) {
+        // --- GATEKEEPER: Super Admin Bypass ---
+        if ($this->hasRole(Role::ROLE_SUPERADMIN)) {
             return true;
         }
 
@@ -142,11 +142,8 @@ class User extends Authenticatable
 
         return DB::table('journal_user_roles')
             ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
-            
             ->where('journal_user_roles.user_id', $this->id)
-            
-            ->where('journal_user_roles.journal_id', $journalId) 
-            
+            ->where('journal_user_roles.journal_id', $journalId)
             ->whereIn('roles.permission_level', $levels)
             ->exists();
     }
@@ -158,9 +155,8 @@ class User extends Authenticatable
      */
     public function hasJournalRole($roles, $journalId)
     {
-        // --- 0. BYPASS SUPER ADMIN (Tambahan) ---
-        // Agar Super Admin selalu TRUE walau dicek pakai String ('Editor')
-        if (method_exists($this, 'hasRole') && $this->hasRole('Super Admin')) {
+        // --- GATEKEEPER: Super Admin Bypass ---
+        if ($this->hasRole(Role::ROLE_SUPERADMIN)) {
             return true;
         }
 
@@ -187,7 +183,7 @@ class User extends Authenticatable
             ->where('journal_user_roles.user_id', $this->id)
             
             // PENTING: Sudah benar pakai tabel pivot untuk filter jurnal
-            ->where('journal_user_roles.journal_id', $journalId) 
+            ->where('journal_user_roles.journal_id', $journalId)
             
             ->whereIn('roles.name', $roles)
             ->exists();

@@ -37,17 +37,6 @@ class AppServiceProvider extends ServiceProvider
 
         \Carbon\Carbon::setLocale('id');
 
-        // Register Policies
-        Gate::policy(Submission::class, SubmissionPolicy::class);
-        Gate::policy(ReviewAssignment::class, ReviewAssignmentPolicy::class);
-        Gate::policy(Issue::class, IssuePolicy::class);
-
-        // Super Admin bypass all policies
-        Gate::before(function ($user, $ability) {
-            if ($user->hasRole('Super Admin')) {
-                return true;
-            }
-        });
         /**
          * Directive @journalRole
          * Cara pakai: @journalRole('Editor|Manager', $journal->id) ... @endJournalRole

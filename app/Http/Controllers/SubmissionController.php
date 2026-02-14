@@ -114,6 +114,36 @@ class SubmissionController extends Controller
                         $q->where('user_id', $user->id)->where('is_active', true);
                     })->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED]);
             }
+
+            // === ADVANCED FILTERS (OJS 3.3 Style) ===
+            
+            // 1. Filter by Section
+            if ($request->has('sections')) {
+                $query->whereIn('section_id', $request->get('sections'));
+            }
+
+            // 2. Filter by Stage
+            if ($request->has('stages')) {
+                $query->whereIn('stage', $request->get('stages'));
+            }
+
+            // 3. Filter by Issue (Archives tab)
+            if ($filter === 'archives' && $request->has('issue_ids')) {
+                $query->whereIn('issue_id', $request->get('issue_ids'));
+            }
+
+            // 4. Search
+            if ($request->filled('search')) {
+                $search = $request->get('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('submission_code', 'like', "%{$search}%")
+                      ->orWhereHas('authors', function($aq) use ($search) {
+                          $aq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                      });
+                });
+            }
         }
 
         $submissions = $query->latest('submitted_at')->paginate(10);
@@ -121,7 +151,21 @@ class SubmissionController extends Controller
         // Status counts for sidebar badges
         $statusCounts = $this->getStatusCounts($journal, $user, $isEditor);
 
-        return view('submissions.index', compact('submissions', 'statusCounts', 'filter', 'journal', 'isEditor'));
+        // Data for Filters
+        $sections = Section::where('journal_id', $journal->id)->get();
+        $issues = $filter === 'archives' 
+            ? Issue::where('journal_id', $journal->id)->orderByDesc('year')->orderByDesc('volume')->get() 
+            : collect();
+
+        return view('submissions.index', compact(
+            'submissions', 
+            'statusCounts', 
+            'filter', 
+            'journal', 
+            'isEditor',
+            'sections',
+            'issues'
+        ));
     }
 
     /**

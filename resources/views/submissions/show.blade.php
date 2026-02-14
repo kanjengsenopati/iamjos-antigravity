@@ -776,41 +776,45 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         $displayRoundStatus = $selectedRound?->status ?? 'pending';
                                         $displayRoundNumber = $selectedRoundNumber;
 
-                                        // Get reviewers for selected round (if round-specific data needed in future)
-                                        $reviewersCount = $submission->reviewAssignments->count();
-                                        $completedReviews = $submission->reviewAssignments
+                                        // Get reviewers for selected round
+                                        $roundReviewers = $submission->reviewAssignments
+                                            ->where('round', $selectedRoundNumber);
+                                        $reviewersCount = $roundReviewers->count();
+                                        $completedReviews = $roundReviewers
                                             ->where('status', 'completed')
                                             ->count();
 
-                                        // Determine the status message based on selected round state
+                                        // Determine the status message based on selected round state (Priority Chain)
                                         if ($displayRoundStatus === 'completed') {
+                                            // Priority 5: Decision State (Completed)
                                             $statusConfig = [
                                                 'class' => 'border-green-400 bg-green-50',
                                                 'icon' => 'fa-check-circle text-green-500',
                                                 'title' => 'Round Complete',
                                                 'message' => 'This review round has been completed.',
                                             ];
+                                        } elseif ($reviewersCount === 0) {
+                                            // Priority 1: Awaiting Reviewers
+                                            $statusConfig = [
+                                                'class' => 'border-amber-400 bg-amber-50',
+                                                'icon' => 'fa-user-plus text-amber-500',
+                                                'title' => 'Awaiting Reviewers',
+                                                'message' => 'No reviewers have been assigned yet. Add reviewers to begin the review process.',
+                                            ];
                                         } elseif (
                                             $hasAuthorRevisions &&
                                             $submission->status === 'revision_required' &&
                                             $displayRoundNumber == $latestRoundNumber
                                         ) {
+                                            // Priority 2: Revisions Submitted
                                             $statusConfig = [
                                                 'class' => 'border-teal-400 bg-teal-50',
                                                 'icon' => 'fa-file-circle-check text-teal-500',
                                                 'title' => 'Revisions Submitted',
-                                                'message' =>
-                                                    'The author has submitted revised files. You can create a new review round to send these revisions to reviewers.',
+                                                'message' => 'The author has submitted revised files. You can create a new review round to send these revisions to reviewers.',
                                             ];
-                                        } elseif ($displayRoundStatus === 'pending' && $reviewersCount === 0) {
-                                            $statusConfig = [
-                                                'class' => 'border-amber-400 bg-amber-50',
-                                                'icon' => 'fa-user-plus text-amber-500',
-                                                'title' => 'Awaiting Reviewers',
-                                                'message' =>
-                                                    'No reviewers have been assigned yet. Add reviewers to begin the review process.',
-                                            ];
-                                        } elseif ($completedReviews < $reviewersCount && $reviewersCount > 0) {
+                                        } elseif ($completedReviews < $reviewersCount) {
+                                            // Priority 3: Under Review
                                             $statusConfig = [
                                                 'class' => 'border-blue-400 bg-blue-50',
                                                 'icon' => 'fa-clock text-blue-500',
@@ -821,6 +825,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             $displayRoundStatus === 'revisions_requested' ||
                                             $submission->status === 'revision_required'
                                         ) {
+                                            // Priority 5: Decision State (Revisions Requested)
                                             $statusConfig = [
                                                 'class' => 'border-orange-400 bg-orange-50',
                                                 'icon' => 'fa-pen text-orange-500',
@@ -828,12 +833,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 'message' => 'Waiting for author to submit revised manuscript.',
                                             ];
                                         } else {
+                                            // Priority 4: Reviews Complete (reviewersCount > 0 AND completedReviews === reviewersCount)
                                             $statusConfig = [
                                                 'class' => 'border-green-400 bg-green-50',
                                                 'icon' => 'fa-check-circle text-green-500',
                                                 'title' => 'Reviews Complete',
-                                                'message' =>
-                                                    'All reviewers have completed their review. A decision can now be made.',
+                                                'message' => 'All reviewers have completed their review. A decision can now be made.',
                                             ];
                                         }
                                     @endphp
@@ -895,7 +900,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
-                                            @forelse($submission->reviewAssignments as $assignment)
+                                            @forelse($submission->reviewAssignments->where('round', $selectedRoundNumber) as $assignment)
                                                 <tr>
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="flex items-center">

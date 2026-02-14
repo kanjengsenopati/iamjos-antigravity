@@ -30,7 +30,7 @@ class Role extends SpatieRole
     /**
      * Permission Levels used for hierarchical access control
      */
-    const LEVEL_SUPER_ADMIN = 1;
+    const LEVEL_SUPER_ADMIN = 0;
     const LEVEL_ADMIN = 1;
     const LEVEL_MANAGER = 1;
     const LEVEL_EDITOR = 2;
