@@ -875,127 +875,116 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         </a>
                                     @endif
                                 </div>
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th
-                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                    Reviewer</th>
-                                                <th
-                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                    Assigned</th>
-                                                <th
-                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                    Due Date</th>
-                                                <th
-                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                    Status</th>
-                                                <th
-                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                    Recommendation</th>
-                                                <th
-                                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                                    Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            @forelse($submission->reviewAssignments->where('round', $selectedRoundNumber) as $assignment)
-                                                <tr>
-                                                    <td class="px-6 py-4 whitespace-nowrap">
-                                                        <div class="flex items-center">
-                                                            {{-- check apakah foto profil reviewer sudah ada kalau belum ada baru tampilkan inisial --}}
-                                                            <div
-                                                                class="w-10 h-10 rounded-full
-                                                                bg-gradient-to-br from-slate-100 to-slate-300
-                                                                text-slate-700
-                                                                flex items-center justify-center
-                                                                font-semibold text-sm
-                                                                border border-slate-300">
-                                                                {{ strtoupper(mb_substr($assignment->reviewer->name ?? 'R', 0, 1)) }}
+                                <div class="divide-y divide-gray-200">
+                                    @forelse($submission->reviewAssignments->where('round', $selectedRoundNumber) as $assignment)
+                                        <div x-data="{ expanded: false }" class="group transition-all duration-200">
+                                            {{-- Summary Row --}}
+                                            <div @click="expanded = !expanded" 
+                                                 class="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
+                                                <div class="flex items-center flex-1 min-w-0">
+                                                    <i class="fa-solid fa-chevron-right text-xs text-gray-400 mr-4 transition-transform duration-200"
+                                                       :class="expanded ? 'rotate-90' : ''"></i>
+                                                    
+                                                    <div class="flex items-center">
+                                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm border border-indigo-200 shadow-sm">
+                                                            {{ strtoupper(mb_substr($assignment->reviewer->name ?? 'R', 0, 1)) }}
+                                                        </div>
+                                                        <div class="ml-4 truncate">
+                                                            <div class="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                                                {{ $assignment->reviewer->name ?? 'Unknown' }}
                                                             </div>
-                                                            <div class="ml-4">
-                                                                <div class="text-sm font-medium text-gray-900">
-                                                                    {{ $assignment->reviewer->name ?? 'Unknown' }}
-                                                                </div>
-                                                                <div class="text-xs text-gray-500">
-                                                                    {{ $assignment->reviewer->email ?? '' }}
-                                                                </div>
+                                                            <div class="flex items-center gap-2 mt-0.5">
+                                                                @php
+                                                                    $statusColors = [
+                                                                        'pending' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                                                        'accepted' => 'bg-blue-100 text-blue-800 border-blue-200',
+                                                                        'completed' => 'bg-green-100 text-green-800 border-green-200',
+                                                                        'declined' => 'bg-red-100 text-red-800 border-red-200',
+                                                                        'cancelled' => 'bg-gray-100 text-gray-600 border-gray-200',
+                                                                    ];
+                                                                @endphp
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border {{ $statusColors[$assignment->status] ?? 'bg-gray-100 text-gray-800 border-gray-200' }}">
+                                                                    {{ $assignment->status_label }}
+                                                                </span>
+                                                                @if($assignment->due_date)
+                                                                    <span class="text-[11px] {{ $assignment->isOverdue() ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
+                                                                        {{ $assignment->isOverdue() ? 'Overdue: ' : 'Due: ' }}{{ $assignment->due_date->format('M d') }}
+                                                                    </span>
+                                                                @endif
                                                             </div>
                                                         </div>
-                                                    </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {{ $assignment->assigned_at?->format('M d, Y') ?? '-' }}
-                                                    </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap">
-                                                        @if ($assignment->due_date)
-                                                            <span
-                                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $assignment->isOverdue() ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' }}">
-                                                                {{ $assignment->due_date->format('M d, Y') }}
-                                                                @if ($assignment->isOverdue())
-                                                                    <i class="fa-solid fa-exclamation-circle ml-1"></i>
-                                                                @endif
-                                                            </span>
-                                                        @else
-                                                            <span class="text-gray-400">-</span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap">
-                                                        @php
-                                                            $statusColors = [
-                                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                                'accepted' => 'bg-blue-100 text-blue-800',
-                                                                'completed' => 'bg-green-100 text-green-800',
-                                                                'declined' => 'bg-red-100 text-red-800',
-                                                                'cancelled' => 'bg-gray-100 text-gray-600',
-                                                            ];
-                                                        @endphp
-                                                        <span
-                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$assignment->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                                            {{ $assignment->status_label }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                        @if ($assignment->recommendation)
-                                                            <span
-                                                                class="font-medium text-{{ $assignment->recommendation_color }}-600">{{ $assignment->recommendation_label }}</span>
-                                                        @else
-                                                            <span class="text-gray-400 italic">Awaiting</span>
-                                                        @endif
-                                                    </td>
-                                                    <td
-                                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        @if (!in_array($assignment->status, ['completed', 'declined', 'cancelled']))
-                                                            <form
-                                                                action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
-                                                                method="POST" class="inline"
-                                                                onsubmit="return confirm('Remove this reviewer?')">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit"
-                                                                    class="text-red-600 hover:text-red-900 text-xs">Unassign</button>
-                                                            </form>
-                                                        @endif
+                                                    </div>
+                                                </div>
 
+                                                <div class="flex items-center gap-4">
+                                                    @if ($assignment->recommendation)
+                                                        <div class="hidden sm:block text-right">
+                                                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Recommendation</span>
+                                                            <span class="text-xs font-bold text-{{ $assignment->recommendation_color }}-600">
+                                                                {{ $assignment->recommendation_label }}
+                                                            </span>
+                                                        </div>
+                                                    @else
+                                                        <div class="hidden sm:block text-right">
+                                                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Method</span>
+                                                            <span class="text-xs font-medium text-gray-600">
+                                                                {{ ucfirst($assignment->review_method) }}
+                                                            </span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            {{-- Expanded Actions Area --}}
+                                            <div x-show="expanded" x-collapse x-cloak>
+                                                <div class="px-6 py-5 bg-gray-50/80 border-t border-gray-100">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                        {{-- Primary Action: Login As --}}
+                                                        <form action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $assignment->reviewer_id]) }}" method="POST">
+                                                            @csrf
+                                                            <input type="hidden" name="journal_id" value="{{ $journal->id }}">
+                                                            <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                                                                <i class="fa-solid fa-user-secret mr-2"></i> Login As Reviewer
+                                                            </button>
+                                                        </form>
+
+                                                        {{-- Review Details --}}
                                                         @if ($assignment->status === 'completed' || $assignment->recommendation)
-                                                            <button type="button"
-                                                                @click='openReviewDetailsModal(@json($assignment))'
-                                                                class="ml-2 text-indigo-600 hover:text-indigo-900 text-xs">
-                                                                <i class="fa-solid fa-eye mr-1"></i> View
+                                                            <button type="button" @click='openReviewDetailsModal({{ json_encode($assignment) }})'
+                                                                class="flex items-center justify-center px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                                                                <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> Review Details
                                                             </button>
                                                         @endif
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="6"
-                                                        class="px-6 py-8 text-center text-sm text-gray-500 italic">
-                                                        No reviewers assigned yet.
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
+
+                                                        {{-- Edit Assignment --}}
+                                                        <button type="button" @click='openEditReviewModal({{ json_encode($assignment) }})'
+                                                            class="flex items-center justify-center px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                                                            <i class="fa-solid fa-calendar-check text-indigo-500 mr-2"></i> Edit Assignment
+                                                        </button>
+
+                                                        {{-- Unassign --}}
+                                                        @if (!in_array($assignment->status, ['completed', 'declined', 'cancelled']))
+                                                            <form action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
+                                                                method="POST" onsubmit="return confirm('Remove this reviewer?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-white border border-red-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors shadow-sm">
+                                                                    <i class="fa-solid fa-user-minus mr-2"></i> Unassign
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="px-6 py-12 text-center">
+                                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-50 mb-3">
+                                                <i class="fa-solid fa-user-slash text-gray-300"></i>
+                                            </div>
+                                            <p class="text-sm text-gray-500 italic">No reviewers assigned to this round yet.</p>
+                                        </div>
+                                    @endforelse
                                 </div>
                             </div>
 
@@ -3348,14 +3337,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     @endif
                                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                                         <button type="button"
-                                                            @click="openEditGalley({{ json_encode([
+                                                            @click='openEditGalley({{ json_encode([
                                                                 'id' => $galley->id,
                                                                 'label' => $galley->label,
                                                                 'locale' => $galley->locale,
                                                                 'url_path' => $galley->url_path,
                                                                 'url_remote' => $galley->url_remote,
                                                                 'is_remote' => $galley->is_remote,
-                                                            ]) }})"
+                                                            ]) }})'
                                                             @if ($pubStatus == 3) disabled @endif
                                                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Edit">
@@ -5901,86 +5890,88 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                                     Review Details
                                 </h3>
-                                <div class="mt-4" x-if="selectedReview">
-                                    <div class="mb-4">
-                                        <h4 class="text-sm font-semibold text-gray-700">Recommendation</h4>
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                                            x-text="selectedReview?.recommendation_label || selectedReview?.recommendation"></span>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <h4 class="text-sm font-semibold text-gray-700 mb-1">Comments for Author</h4>
-                                        <div class="bg-gray-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none"
-                                            x-html="selectedReview?.comments_for_author || '<em>No comments provided.</em>'">
-                                        </div>
-                                    </div>
-
-                                    @if (!$isAuthorView)
+                                <template x-if="selectedReview">
+                                    <div class="mt-4">
                                         <div class="mb-4">
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Comments for Editor
-                                                (Internal)</h4>
-                                            <div class="bg-yellow-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none border border-yellow-200"
-                                                x-html="selectedReview?.comments_for_editor || '<em>No confidential comments provided.</em>'">
+                                            <h4 class="text-sm font-semibold text-gray-700">Recommendation</h4>
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                                                x-text="selectedReview?.recommendation_label || selectedReview?.recommendation"></span>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Comments for Author</h4>
+                                            <div class="bg-gray-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none"
+                                                x-html="selectedReview?.comments_for_author || '<em>No comments provided.</em>'">
                                             </div>
                                         </div>
 
-                                        {{-- Reviewer Rating Section --}}
-                                        <div class="mt-6 pt-6 border-t border-gray-100" x-data="{ 
-                                            hoverRating: 0,
-                                            isSaving: false,
-                                            showSaved: false,
-                                            async saveRating(val) {
-                                                this.isSaving = true;
-                                                try {
-                                                    const response = await fetch(`{{ route('journal.workflow.review-assignment.rate', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', selectedReview.id), {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'Content-Type': 'application/json',
-                                                            'Accept': 'application/json',
-                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                                        },
-                                                        body: JSON.stringify({ quality_rating: val })
-                                                    });
-                                                    if (response.ok) {
-                                                        this.showSaved = true;
-                                                        selectedReview.quality_rating = val;
-                                                        setTimeout(() => this.showSaved = false, 2000);
+                                        @if (!$isAuthorView)
+                                            <div class="mb-4">
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-1">Comments for Editor
+                                                    (Internal)</h4>
+                                                <div class="bg-yellow-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none border border-yellow-200"
+                                                    x-html="selectedReview?.comments_for_editor || '<em>No confidential comments provided.</em>'">
+                                                </div>
+                                            </div>
+
+                                            {{-- Reviewer Rating Section --}}
+                                            <div class="mt-6 pt-6 border-t border-gray-100" x-data="{ 
+                                                hoverRating: 0,
+                                                isSaving: false,
+                                                showSaved: false,
+                                                async saveRating(val) {
+                                                    this.isSaving = true;
+                                                    try {
+                                                        const response = await fetch(`{{ route('journal.workflow.review-assignment.rate', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', selectedReview.id), {
+                                                            method: 'POST',
+                                                            headers: {
+                                                                'Content-Type': 'application/json',
+                                                                'Accept': 'application/json',
+                                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                            },
+                                                            body: JSON.stringify({ quality_rating: val })
+                                                        });
+                                                        if (response.ok) {
+                                                            this.showSaved = true;
+                                                            selectedReview.quality_rating = val;
+                                                            setTimeout(() => this.showSaved = false, 2000);
+                                                        }
+                                                    } catch (e) {
+                                                        console.error(e);
                                                     }
-                                                } catch (e) {
-                                                    console.error(e);
+                                                    this.isSaving = false;
                                                 }
-                                                this.isSaving = false;
-                                            }
-                                        }">
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Reviewer Quality Rating</h4>
-                                            <div class="flex items-center gap-1">
-                                                <template x-for="i in 5">
-                                                    <button @click="saveRating(i)" 
-                                                            @mouseenter="hoverRating = i" 
-                                                            @mouseleave="hoverRating = 0"
-                                                            type="button"
-                                                            class="text-2xl transition-all duration-150 focus:outline-none hover:scale-110"
-                                                            :class="(hoverRating || selectedReview?.quality_rating || 0) >= i ? 'text-yellow-400' : 'text-gray-300'">
-                                                        <i class="fa-solid fa-star"></i>
-                                                    </button>
-                                                </template>
-                                                <span x-show="isSaving" class="ml-2 text-xs text-gray-400">
-                                                    <i class="fa-solid fa-spinner fa-spin"></i>
-                                                </span>
-                                                <span x-show="showSaved" x-cloak x-transition class="ml-2 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-100">
-                                                    <i class="fa-solid fa-check"></i> Saved!
-                                                </span>
+                                            }">
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Reviewer Quality Rating</h4>
+                                                <div class="flex items-center gap-1">
+                                                    <template x-for="i in 5">
+                                                        <button @click="saveRating(i)" 
+                                                                @mouseenter="hoverRating = i" 
+                                                                @mouseleave="hoverRating = 0"
+                                                                type="button"
+                                                                class="text-2xl transition-all duration-150 focus:outline-none hover:scale-110"
+                                                                :class="(hoverRating || selectedReview?.quality_rating || 0) >= i ? 'text-yellow-400' : 'text-gray-300'">
+                                                            <i class="fa-solid fa-star"></i>
+                                                        </button>
+                                                    </template>
+                                                    <span x-show="isSaving" class="ml-2 text-xs text-gray-400">
+                                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                                    </span>
+                                                    <span x-show="showSaved" x-cloak x-transition class="ml-2 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-100">
+                                                        <i class="fa-solid fa-check"></i> Saved!
+                                                    </span>
+                                                </div>
+                                                <p class="mt-1 text-xs text-gray-400">Rate the quality of this review for internal editorial records.</p>
                                             </div>
-                                            <p class="mt-1 text-xs text-gray-400">Rate the quality of this review for internal editorial records.</p>
-                                        </div>
-                                    @endif
+                                        @endif
 
-                                    <div class="mt-2 text-xs text-gray-400">
-                                        Completed at: <span
-                                            x-text="new Date(selectedReview?.completed_at).toLocaleDateString()"></span>
+                                        <div class="mt-2 text-xs text-gray-400">
+                                            Completed at: <span
+                                                x-text="new Date(selectedReview?.completed_at).toLocaleDateString()"></span>
+                                        </div>
                                     </div>
-                                </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -5989,6 +5980,53 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Close
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Edit Review Assignment Modal --}}
+        <div x-show="editReviewModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="edit-review-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="editReviewModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="editReviewModalOpen = false" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div x-show="editReviewModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-6 py-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-gray-900" id="edit-review-modal-title">
+                                <i class="fa-solid fa-edit text-indigo-500 mr-2"></i>Edit Review Assignment
+                            </h3>
+                            <button @click="editReviewModalOpen = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                        <form @submit.prevent="submitEditReview()" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Review Method</label>
+                                <select x-model="editReviewMethod" class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                    <option value="blind">Blind</option>
+                                    <option value="double_blind">Double Blind</option>
+                                    <option value="open">Open</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Response Due Date</label>
+                                    <input type="date" x-model="editResponseDueDate" class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Due Date</label>
+                                    <input type="date" x-model="editReviewDueDate" class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                </div>
+                            </div>
+                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                                <button type="button" @click="editReviewModalOpen = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                                <button type="submit" :disabled="editIsSubmitting" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center transition-colors">
+                                    <i x-show="editIsSubmitting" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -6209,6 +6247,51 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 selectedFile: null,
                 selectedFileName: '',
                 errors: {},
+                
+                // Edit Review Assignment State
+                editReviewModalOpen: false,
+                editReviewAssignment: null,
+                editReviewMethod: 'double_blind',
+                editResponseDueDate: '',
+                editReviewDueDate: '',
+                editIsSubmitting: false,
+
+                openEditReviewModal(assignment) {
+                    this.editReviewAssignment = assignment;
+                    this.editReviewMethod = assignment.review_method;
+                    this.editResponseDueDate = assignment.response_due_date ? new Date(assignment.response_due_date).toISOString().split('T')[0] : '';
+                    this.editReviewDueDate = assignment.due_date ? new Date(assignment.due_date).toISOString().split('T')[0] : '';
+                    this.editReviewModalOpen = true;
+                },
+
+                async submitEditReview() {
+                    this.editIsSubmitting = true;
+                    try {
+                        const response = await fetch(`{{ route('journal.workflow.review-assignment.update', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', this.editReviewAssignment.id), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': config.csrfToken
+                            },
+                            body: JSON.stringify({
+                                due_date: this.editReviewDueDate,
+                                response_due_date: this.editResponseDueDate,
+                                review_method: this.editReviewMethod
+                            })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Failed to update review assignment.');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('An error occurred while updating the review assignment.');
+                    }
+                    this.editIsSubmitting = false;
+                },
 
                 init() {
                     this.$watch('discussionModalOpen', value => {

@@ -338,6 +338,7 @@ Route::prefix('{journal:slug}')->group(function () {
             Route::post('/{submission}/assign-reviewer', [ReviewWorkflowController::class, 'assignReviewer'])->name('assign-reviewer');
             Route::delete('/{submission}/unassign-reviewer/{assignment}', [ReviewWorkflowController::class, 'unassignReviewer'])->name('unassign-reviewer');
             Route::post('/review-assignment/{reviewAssignment}/rate', [ReviewWorkflowController::class, 'rateReviewer'])->name('review-assignment.rate');
+            Route::post('/review-assignment/{reviewAssignment}/update', [ReviewWorkflowController::class, 'updateReviewAssignment'])->name('review-assignment.update');
             Route::post('/{submission}/record-decision', [ReviewWorkflowController::class, 'recordDecision'])->name('record-decision');
             Route::post('/{submission}/promote-to-copyediting', [ReviewWorkflowController::class, 'promoteToCopyediting'])->name('promote-copyediting');
             Route::post('/{submission}/send-to-production', [ReviewWorkflowController::class, 'sendToProduction'])->name('send-production');

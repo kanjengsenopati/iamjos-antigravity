@@ -974,6 +974,50 @@ public function searchReviewers(Request $request, string $journalSlug)
     }
 
     /**
+     * Update a review assignment's details (due dates and method).
+     */
+    public function updateReviewAssignment(Request $request, string $journalSlug, ReviewAssignment $reviewAssignment)
+    {
+        $journal = $this->getJournal();
+        
+        if ($reviewAssignment->submission->journal_id !== $journal->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+            abort(403, 'Insufficient permissions.');
+        }
+
+        $validated = $request->validate([
+            'due_date' => 'required|date|after_or_equal:today',
+            'response_due_date' => 'required|date|after_or_equal:today|before_or_equal:due_date',
+            'review_method' => 'required|in:blind,double_blind,open',
+        ]);
+
+        $reviewAssignment->update($validated);
+
+        // Log the expansion/update
+        SubmissionLog::log(
+            $reviewAssignment->submission,
+            'review_assignment_updated',
+            'Review Assignment Updated',
+            auth()->user()->name . " updated review assignment for {$reviewAssignment->reviewer->name}.",
+            [
+                'reviewer_id' => $reviewAssignment->reviewer_id,
+                'assignment_id' => $reviewAssignment->id,
+                'due_date' => $validated['due_date'],
+                'review_method' => $validated['review_method']
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Review assignment updated successfully.',
+            'assignment' => $reviewAssignment
+        ]);
+    }
+
+    /**
      * Rate the quality of a reviewer's work.
      */
     public function rateReviewer(Request $request, string $journalSlug, ReviewAssignment $reviewAssignment)
