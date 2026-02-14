@@ -253,10 +253,10 @@
                             <label for="password" class="block text-sm font-medium text-gray-700">
                                 Password
                             </label>
-                            <a href="{{ route('forgot-password') }}"
+                            {{-- <a href="{{ route('forgot-password') }}"
                                 class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
                                 Forgot password?
-                            </a>
+                            </a> --}}
                         </div>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
