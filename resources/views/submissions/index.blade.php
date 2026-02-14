@@ -126,24 +126,163 @@
         </div>
 
         <!-- Tab Content Header: Current View Label + Search + Filters -->
-        <div
-            class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            x-data="{ 
+                showFilters: false,
+                search: '{{ request('search') }}',
+                submitFilter() {
+                    this.$refs.filterForm.submit();
+                },
+                clearFilters() {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('sections[]');
+                    url.searchParams.delete('stages[]');
+                    url.searchParams.delete('issue_ids[]');
+                    url.searchParams.delete('search');
+                    // Manual clean for PHP array naming convention in URL
+                    const cleanUrl = url.toString().replace(/sections%5B%5D=[^&]*&?/g, '').replace(/stages%5B%5D=[^&]*&?/g, '').replace(/issue_ids%5B%5D=[^&]*&?/g, '');
+                    window.location.href = cleanUrl;
+                }
+            }">
             <h2 class="text-base font-semibold text-gray-900">{{ $currentTabLabel }}</h2>
 
             <div class="flex items-center gap-3">
-                <!-- Search -->
-                <div class="relative">
-                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" placeholder="Search"
-                        class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-48">
-                </div>
+                <!-- Filter Form Wrapper -->
+                <form x-ref="filterForm" action="{{ url()->current() }}" method="GET" class="flex items-center gap-3">
+                    <input type="hidden" name="filter" value="{{ $filter }}">
+                    
+                    @if(request()->has('sections'))
+                        @foreach(request('sections') as $sid)
+                            <input type="hidden" name="sections[]" value="{{ $sid }}">
+                        @endforeach
+                    @endif
+                    
+                    @if(request()->has('stages'))
+                        @foreach(request('stages') as $stage)
+                            <input type="hidden" name="stages[]" value="{{ $stage }}">
+                        @endforeach
+                    @endif
 
-                <!-- Filters Button -->
-                <button
-                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <i class="fa-solid fa-filter mr-2 text-gray-400"></i>
-                    Filters
-                </button>
+                    @if(request()->has('issue_ids'))
+                        @foreach(request('issue_ids') as $iid)
+                            <input type="hidden" name="issue_ids[]" value="{{ $iid }}">
+                        @endforeach
+                    @endif
+
+                    <!-- Search -->
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" name="search" x-model="search" @keydown.enter.prevent="submitFilter()" 
+                            placeholder="Search"
+                            class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-48">
+                    </div>
+                </form>
+
+                <!-- Filters Button Toggle -->
+                <div class="relative">
+                    <button @click="showFilters = !showFilters"
+                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors {{ request()->hasAny(['sections', 'stages', 'issue_ids']) ? 'ring-2 ring-indigo-500 border-transparent' : '' }}">
+                        <i class="fa-solid fa-filter mr-2 {{ request()->hasAny(['sections', 'stages', 'issue_ids']) ? 'text-indigo-600' : 'text-gray-400' }}"></i>
+                        Filters
+                        @php
+                            $activeFiltersCount = count(request('sections', [])) + count(request('stages', [])) + count(request('issue_ids', []));
+                        @endphp
+                        @if($activeFiltersCount > 0)
+                            <span class="ml-2 bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                                {{ $activeFiltersCount }}
+                            </span>
+                        @endif
+                    </button>
+
+                    <!-- Filter Dropdown (OJS 3.3 Style) -->
+                    <div x-show="showFilters" 
+                        @click.away="showFilters = false"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-95"
+                        class="fixed lg:absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-[60] overflow-hidden" 
+                        x-cloak>
+                        
+                        <form action="{{ url()->current() }}" method="GET" class="flex flex-col max-h-[80vh]">
+                            <input type="hidden" name="filter" value="{{ $filter }}">
+                            @if(request('search'))
+                                <input type="hidden" name="search" value="{{ request('search') }}">
+                            @endif
+
+                            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                <h3 class="text-sm font-bold text-gray-900">Filters</h3>
+                                <button type="button" @click="clearFilters()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                    Clear All
+                                </button>
+                            </div>
+
+                            <div class="overflow-y-auto p-4 space-y-6 custom-scrollbar">
+                                {{-- Stages Section --}}
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Workflow Stages</h4>
+                                    <div class="space-y-2">
+                                        @foreach([
+                                            \App\Models\Submission::STAGE_SUBMISSION => 'Submission',
+                                            \App\Models\Submission::STAGE_REVIEW => 'Review',
+                                            \App\Models\Submission::STAGE_COPYEDITING => 'Copyediting',
+                                            \App\Models\Submission::STAGE_PRODUCTION => 'Production'
+                                        ] as $val => $label)
+                                            <label class="flex items-center gap-3 cursor-pointer group">
+                                                <input type="checkbox" name="stages[]" value="{{ $val }}" 
+                                                    {{ in_array($val, request('stages', [])) ? 'checked' : '' }}
+                                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-sm text-gray-600 group-hover:text-gray-900">{{ $label }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                {{-- Sections Section --}}
+                                @if($sections->count() > 0)
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Journal Sections</h4>
+                                    <div class="space-y-2">
+                                        @foreach($sections as $section)
+                                            <label class="flex items-center gap-3 cursor-pointer group">
+                                                <input type="checkbox" name="sections[]" value="{{ $section->id }}"
+                                                    {{ in_array($section->id, request('sections', [])) ? 'checked' : '' }}
+                                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-sm text-gray-600 group-hover:text-gray-900 truncate">{{ $section->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+
+                                {{-- Issues Section (Archives Only) --}}
+                                @if($filter === 'archives' && $issues->count() > 0)
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Issues</h4>
+                                    <div class="space-y-2">
+                                        @foreach($issues as $issue)
+                                            <label class="flex items-center gap-3 cursor-pointer group">
+                                                <input type="checkbox" name="issue_ids[]" value="{{ $issue->id }}"
+                                                    {{ in_array($issue->id, request('issue_ids', [])) ? 'checked' : '' }}
+                                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-sm text-gray-600 group-hover:text-gray-900 truncate">{{ $issue->identifier }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+
+                            <div class="p-4 border-t border-gray-100 bg-gray-50/50">
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">
+                                    Apply Filters
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
