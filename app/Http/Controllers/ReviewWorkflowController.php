@@ -168,6 +168,10 @@ class ReviewWorkflowController extends Controller
         if ($submission->journal_id !== $journal->id) abort(404);
         if ($assignment->submission_id !== $submission->id) abort(404);
 
+        if (in_array($assignment->status, [ReviewAssignment::STATUS_COMPLETED, ReviewAssignment::STATUS_DECLINED, ReviewAssignment::STATUS_CANCELLED])) {
+            return back()->with('error', 'Cannot unassign a reviewer who has already completed or declined the review.');
+        }
+
         $assignment->update(['status' => ReviewAssignment::STATUS_CANCELLED]);
         $assignment->delete();
 
@@ -966,6 +970,50 @@ public function searchReviewers(Request $request, string $journalSlug)
             'success' => true,
             'message' => count($copiedFiles) . ' file(s) copied to Draft Files.',
             'files' => $copiedFiles,
+        ]);
+    }
+
+    /**
+     * Rate the quality of a reviewer's work.
+     */
+    public function rateReviewer(Request $request, string $journalSlug, ReviewAssignment $reviewAssignment)
+    {
+        $journal = $this->getJournal();
+        
+        // Basic ownership check
+        if ($reviewAssignment->submission->journal_id !== $journal->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Authorization: Only Editors, Section Editors, or Managers can rate
+        if (!auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+            abort(403, 'Insufficient permissions.');
+        }
+
+        $request->validate([
+            'quality_rating' => 'required|integer|min:1|max:5',
+        ]);
+
+        $reviewAssignment->update([
+            'quality_rating' => $request->quality_rating
+        ]);
+
+        // Log the rating
+        SubmissionLog::log(
+            $reviewAssignment->submission,
+            'reviewer_rated',
+            'Reviewer Rated',
+            auth()->user()->name . " rated review quality for {$reviewAssignment->reviewer->name} as {$request->quality_rating} stars.",
+            [
+                'reviewer_id' => $reviewAssignment->reviewer_id,
+                'rating' => $request->quality_rating,
+                'assignment_id' => $reviewAssignment->id
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'rating' => $request->quality_rating
         ]);
     }
 }
