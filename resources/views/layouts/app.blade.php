@@ -319,7 +319,13 @@
         <!-- 1. Journal Context Switcher -->
         <div class="relative border-b border-gray-100" x-data="{ openJournalSwitcher: false }">
             @php
-                $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
+                $user = auth()->user();
+                if ($user->hasRole(\App\Models\Role::ROLE_SUPERADMIN)) {
+                    $userJournals = \App\Models\Journal::all();
+                } else {
+                    $userJournals = \App\Models\JournalUserRole::getUserJournals($user);
+                }
+
                 if ($userJournals->isEmpty() && $journal) {
                     $userJournals = collect([$journal]);
                 }
@@ -618,7 +624,7 @@
                 @endjournalPermission
 
                 <!-- Group: Administration (Super Admin Only) -->
-                @journalPermission([\App\Models\Role::LEVEL_MANAGER], $journal->id)
+                @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
                             <span
