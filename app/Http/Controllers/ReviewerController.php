@@ -1,6 +1,7 @@
 <?php
-
 namespace App\Http\Controllers;
+
+use App\Models\Section;
 
 use App\Models\Journal;
 use App\Models\ReviewAssignment;
@@ -31,24 +32,62 @@ class ReviewerController extends Controller
     /**
      * Display list of submissions assigned to current reviewer for current journal.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->user();
         $journal = $this->getJournal();
 
         // Filter assignments based on simple tab status
-        $status = request('status', 'myqueue');
+        $status = $request->get('status', 'myqueue');
+        $search = $request->get('search');
+        $sections = $request->get('sections', []);
+        $statuses = $request->get('statuses', []);
 
         $assignments = ReviewAssignment::where('reviewer_id', $user->id)
             ->whereHas('submission', function ($query) use ($journal) {
                 $query->where('journal_id', $journal->id);
             });
 
-        // Apply filters
+        // Apply Tab Filter (My Queue vs Archives)
         if ($status === 'myqueue') {
             $assignments->whereIn('status', [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED]);
         } elseif ($status === 'archives') {
-            $assignments->where('status', ReviewAssignment::STATUS_COMPLETED);
+            $assignments->whereIn('status', [ReviewAssignment::STATUS_COMPLETED, ReviewAssignment::STATUS_DECLINED, ReviewAssignment::STATUS_CANCELLED]);
+        }
+
+        // Apply Search
+        if ($search) {
+            $assignments->whereHas('submission', function ($q) use ($search) {
+                $q->where('title', 'ilike', "%{$search}%")
+                  ->orWhere('submission_code', 'ilike', "%{$search}%");
+            });
+        }
+
+        // Apply Section Filters
+        if (!empty($sections)) {
+            $assignments->whereHas('submission', function ($q) use ($sections) {
+                $q->whereIn('section_id', $sections);
+            });
+        }
+
+        // Apply Status Filters (Review Assignment Specific)
+        if (!empty($statuses)) {
+            $assignments->where(function ($q) use ($statuses) {
+                foreach ($statuses as $stat) {
+                    if ($stat === 'overdue') {
+                        $q->orWhere(function ($oq) {
+                            $oq->where('due_date', '<', now())
+                               ->whereNotIn('status', [
+                                   ReviewAssignment::STATUS_COMPLETED,
+                                   ReviewAssignment::STATUS_DECLINED,
+                                   ReviewAssignment::STATUS_CANCELLED
+                               ]);
+                        });
+                    } else {
+                        $q->orWhere('status', $stat);
+                    }
+                }
+            });
         }
 
         $assignments = $assignments->with(['submission' => function ($query) {
@@ -58,17 +97,20 @@ class ReviewerController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Count by status for this journal (for tabs)
+        // Count for tabs (keep it simple, ignoring advanced filters for the tab counts)
         $statusCounts = [
             'myqueue' => ReviewAssignment::where('reviewer_id', $user->id)
                 ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
-                ->whereIn('status', ['pending', 'accepted'])->count(),
+                ->whereIn('status', [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED])->count(),
             'archives' => ReviewAssignment::where('reviewer_id', $user->id)
                 ->whereHas('submission', fn($q) => $q->where('journal_id', $journal->id))
-                ->where('status', 'completed')->count(),
+                ->whereIn('status', [ReviewAssignment::STATUS_COMPLETED, ReviewAssignment::STATUS_DECLINED, ReviewAssignment::STATUS_CANCELLED])->count(),
         ];
 
-        return view('reviewer.index', compact('assignments', 'statusCounts', 'journal'));
+        // Fetch dynamic categories for filter checkboxes
+        $journalSections = Section::where('journal_id', $journal->id)->get();
+
+        return view('reviewer.index', compact('assignments', 'statusCounts', 'journal', 'journalSections', 'status'));
     }
 
     /**

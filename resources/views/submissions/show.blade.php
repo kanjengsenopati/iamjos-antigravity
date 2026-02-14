@@ -965,15 +965,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     </td>
                                                     <td
                                                         class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <form
-                                                            action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
-                                                            method="POST" class="inline"
-                                                            onsubmit="return confirm('Remove this reviewer?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                class="text-red-600 hover:text-red-900 text-xs">Unassign</button>
-                                                        </form>
+                                                        @if (!in_array($assignment->status, ['completed', 'declined', 'cancelled']))
+                                                            <form
+                                                                action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
+                                                                method="POST" class="inline"
+                                                                onsubmit="return confirm('Remove this reviewer?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="text-red-600 hover:text-red-900 text-xs">Unassign</button>
+                                                            </form>
+                                                        @endif
 
                                                         @if ($assignment->status === 'completed' || $assignment->recommendation)
                                                             <button type="button"
@@ -5921,6 +5923,56 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div class="bg-yellow-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none border border-yellow-200"
                                                 x-html="selectedReview?.comments_for_editor || '<em>No confidential comments provided.</em>'">
                                             </div>
+                                        </div>
+
+                                        {{-- Reviewer Rating Section --}}
+                                        <div class="mt-6 pt-6 border-t border-gray-100" x-data="{ 
+                                            hoverRating: 0,
+                                            isSaving: false,
+                                            showSaved: false,
+                                            async saveRating(val) {
+                                                this.isSaving = true;
+                                                try {
+                                                    const response = await fetch(`{{ route('journal.workflow.review-assignment.rate', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', selectedReview.id), {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/json',
+                                                            'Accept': 'application/json',
+                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                        },
+                                                        body: JSON.stringify({ quality_rating: val })
+                                                    });
+                                                    if (response.ok) {
+                                                        this.showSaved = true;
+                                                        selectedReview.quality_rating = val;
+                                                        setTimeout(() => this.showSaved = false, 2000);
+                                                    }
+                                                } catch (e) {
+                                                    console.error(e);
+                                                }
+                                                this.isSaving = false;
+                                            }
+                                        }">
+                                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Reviewer Quality Rating</h4>
+                                            <div class="flex items-center gap-1">
+                                                <template x-for="i in 5">
+                                                    <button @click="saveRating(i)" 
+                                                            @mouseenter="hoverRating = i" 
+                                                            @mouseleave="hoverRating = 0"
+                                                            type="button"
+                                                            class="text-2xl transition-all duration-150 focus:outline-none hover:scale-110"
+                                                            :class="(hoverRating || selectedReview?.quality_rating || 0) >= i ? 'text-yellow-400' : 'text-gray-300'">
+                                                        <i class="fa-solid fa-star"></i>
+                                                    </button>
+                                                </template>
+                                                <span x-show="isSaving" class="ml-2 text-xs text-gray-400">
+                                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                                </span>
+                                                <span x-show="showSaved" x-cloak x-transition class="ml-2 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-100">
+                                                    <i class="fa-solid fa-check"></i> Saved!
+                                                </span>
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-400">Rate the quality of this review for internal editorial records.</p>
                                         </div>
                                     @endif
 
