@@ -18,12 +18,12 @@ class CrossrefExportController extends Controller
         
         // 1. Filter Logic (OJS Style)
         $status = $request->input('status', 'not_deposited'); // Default OJS usually shows 'not_deposited'
-        $tab = $request->input('tab', 'articles');
+        $tab = $request->input('tab', 'settings');
 
         // 2. Base Query
         $query = Submission::where('journal_id', $journal->id)
             ->where('status', Submission::STATUS_PUBLISHED) // Only Published Articles
-            ->with(['authors', 'issue']);
+            ->with(['authors', 'issue', 'currentPublication']);
 
         // 3. Apply Status Filter (Simulated Logic)
         if ($status == 'not_deposited') {
@@ -39,6 +39,35 @@ class CrossrefExportController extends Controller
         return view('journal.tools.crossref_index', compact('journal', 'submissions', 'status', 'tab'));
     }
 
+    // 2. Save Settings Logic
+    public function saveSettings(Request $request, $journalPath)
+    {
+        $journal = Journal::where('path', $journalPath)->firstOrFail();
+
+        $validated = $request->validate([
+            'depositor_name' => 'required|string|max:255',
+            'depositor_email' => 'required|email|max:255',
+            'username' => 'nullable|string|max:255',
+            'password' => 'nullable|string|max:255',
+            'automatic_deposit' => 'sometimes|boolean',
+            'test_mode' => 'sometimes|boolean',
+        ]);
+
+        $journal->setSetting('crossref_depositor_name', $validated['depositor_name']);
+        $journal->setSetting('crossref_depositor_email', $validated['depositor_email']);
+        $journal->setSetting('crossref_username', $validated['username']);
+        
+        if (!empty($validated['password'])) {
+             $journal->setSetting('crossref_password', $validated['password']);
+        }
+
+        $journal->setSetting('crossref_automatic_deposit', $request->boolean('automatic_deposit'));
+        $journal->setSetting('crossref_test_mode', $request->boolean('test_mode'));
+        $journal->save();
+
+        return redirect()->back()->with('success', 'Crossref settings saved successfully.');
+    }
+
     // 2. XML Export Logic
     public function export(Request $request, $journalPath)
     {
@@ -52,7 +81,7 @@ class CrossrefExportController extends Controller
 
         $submissions = \App\Models\Submission::whereIn('id', $ids)
             ->where('journal_id', $journal->id)
-            ->with(['authors', 'issue'])
+            ->with(['authors', 'issue', 'currentPublication'])
             ->get();
 
         $batchId = '_' . time();

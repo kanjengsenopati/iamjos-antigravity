@@ -7,7 +7,7 @@
         <timestamp>{{ time() }}</timestamp>
         <depositor>
             <depositor_name>{{ $journal->name }} Editorial</depositor_name>
-            <email_address>{{ $journal->email }}</email_address>
+            <email_address>{{ auth()->user()->email ?? $journal->email }}</email_address>
         </depositor>
         <registrant>{{ $journal->publisher ?? $journal->name }}</registrant>
     </head>
@@ -17,8 +17,11 @@
             <journal_metadata>
                 <full_title>{{ $journal->name }}</full_title>
                 <abbrev_title>{{ $journal->abbreviation ?? $journal->name }}</abbrev_title>
-                @if ($journal->issn)
-                    <issn media_type="electronic">{{ $journal->issn }}</issn>
+                @if ($journal->issn_online)
+                    <issn media_type="electronic">{{ $journal->issn_online }}</issn>
+                @endif
+                @if ($journal->issn_print)
+                    <issn media_type="print">{{ $journal->issn_print }}</issn>
                 @endif
             </journal_metadata>
 
@@ -31,27 +34,52 @@
                         <day>{{ $firstItem->issue->day ?? date('d') }}</day>
                         <year>{{ $firstItem->issue->year ?? date('Y') }}</year>
                     </publication_date>
+                    @if ($firstItem->issue->volume)
                     <journal_volume>
-                        <volume>{{ $firstItem->issue->volume ?? 1 }}</volume>
+                        <volume>{{ $firstItem->issue->volume }}</volume>
                     </journal_volume>
-                    <issue>{{ $firstItem->issue->number ?? 1 }}</issue>
+                    @endif
+                    @if ($firstItem->issue->number)
+                    <issue>{{ $firstItem->issue->number }}</issue>
+                    @endif
                 </journal_issue>
             @endif
 
             {{-- ARTICLES LOOP --}}
             @foreach ($submissions as $article)
+                @php
+                    $pub = $article->currentPublication;
+                @endphp
+                @if ($pub)
                 <journal_article publication_type="full_text" metadata_distribution_opts="any">
 
                     <titles>
-                        <title>{{ $article->title }}</title>
+                        <title>{{ $pub->title }}</title>
                     </titles>
 
                     <contributors>
-                        @foreach ($article->authors as $index => $author)
+                        @foreach ($pub->authors as $index => $author)
+                            @php
+                                // Name Parsing Logic
+                                $fullName = trim($author->first_name . ' ' . $author->last_name);
+                                $parts = explode(' ', $fullName);
+                                $surname = '';
+                                $givenName = '';
+
+                                if (count($parts) === 1) {
+                                    $surname = $parts[0];
+                                    $givenName = ''; // Mononym
+                                } else {
+                                    $surname = array_pop($parts); // Last part is surname
+                                    $givenName = implode(' ', $parts); // Remaining parts are given name
+                                }
+                            @endphp
                             <person_name contributor_role="author"
                                 sequence="{{ $index === 0 ? 'first' : 'additional' }}">
-                                <given_name>{{ $author->first_name }}</given_name>
-                                <surname>{{ $author->last_name ?? $author->first_name }}</surname>
+                                @if(!empty($givenName))
+                                <given_name>{{ $givenName }}</given_name>
+                                @endif
+                                <surname>{{ $surname }}</surname>
                                 @if ($author->orcid)
                                     <ORCID authenticated="true">{{ $author->orcid }}</ORCID>
                                 @endif
@@ -60,23 +88,33 @@
                     </contributors>
 
                     {{-- JATS Namespace for Abstract --}}
+                    @if($pub->abstract)
                     <jats:abstract>
-                        <jats:p>{{ strip_tags($article->abstract) }}</jats:p>
+                        <jats:p>{{ strip_tags($pub->abstract) }}</jats:p>
+
+                        @if($article->keywords->isNotEmpty())
+                        <jats:kwd-group kwd-group-type="author">
+                            @foreach($article->keywords as $keyword)
+                            <jats:kwd>{{ $keyword->content }}</jats:kwd>
+                            @endforeach
+                        </jats:kwd-group>
+                        @endif
                     </jats:abstract>
+                    @endif
 
                     <publication_date media_type="online">
-                        @if ($article->published_at)
-                            <month>{{ $article->published_at->format('m') }}</month>
-                            <day>{{ $article->published_at->format('d') }}</day>
-                            <year>{{ $article->published_at->format('Y') }}</year>
+                        @if ($pub->date_published)
+                            <month>{{ $pub->date_published->format('m') }}</month>
+                            <day>{{ $pub->date_published->format('d') }}</day>
+                            <year>{{ $pub->date_published->format('Y') }}</year>
                         @endif
                     </publication_date>
 
                     {{-- Pages (Optional) --}}
-                    @if ($article->pages)
+                    @if ($pub->pages)
                         <pages>
-                            <first_page>{{ explode('-', $article->pages)[0] ?? '' }}</first_page>
-                            <last_page>{{ explode('-', $article->pages)[1] ?? '' }}</last_page>
+                            <first_page>{{ explode('-', $pub->pages)[0] ?? '' }}</first_page>
+                            <last_page>{{ explode('-', $pub->pages)[1] ?? '' }}</last_page>
                         </pages>
                     @endif
 
@@ -88,19 +126,25 @@
                     <doi_data>
                         {{-- DOI Logic: Use existing DOI or Generate generic fallback --}}
                         <doi>
-                            {{ $article->doi ?? '10.xxxx/' . $journal->path . '.' . ($article->slug ?? $article->id) }}
+                            @if($pub->doi)
+                                {{ $pub->doi }}
+                            @elseif($journal->doi_prefix)
+                                {{ $journal->doi_prefix }}/{{ $journal->abbreviation ?? 'JOURNAL' }}.{{ $pub->url_path ?? $article->slug ?? $article->id }}
+                            @else
+                                10.xxxx/{{ $journal->path }}.{{ $pub->url_path ?? $article->slug ?? $article->id }}
+                            @endif
                         </doi>
                         <resource>
-                            {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}
+                            {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->url_path ?? $article->slug ?? $article->id]) }}
                         </resource>
                     </doi_data>
 
                     {{-- REFERENCES / CITATION LIST --}}
-                    @if (!empty($article->references))
+                    @if (!empty($pub->references))
                         <citation_list>
                             @php
                                 // Clean and split references
-                                $refs = preg_split('/\r\n|\r|\n/', $article->references);
+                                $refs = preg_split('/\r\n|\r|\n/', $pub->references);
                                 $refs = array_filter($refs, fn($value) => !is_null($value) && trim($value) !== '');
                                 $counter = 1;
                             @endphp
@@ -128,6 +172,7 @@
                     @endif
 
                 </journal_article>
+                @endif
             @endforeach
 
         </journal>
