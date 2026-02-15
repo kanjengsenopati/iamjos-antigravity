@@ -118,7 +118,7 @@
                         @php
                             $isUserJournal = isset($userJournals) && $userJournals->contains('id', $journal->id);
                         @endphp
-                        <a href="{{ $isUserJournal ? route('journal.dashboard', ['journal' => $journal->slug]) : route('register', ['journal' => $journal->slug]) }}"
+                        <a href="{{ $isUserJournal ? route('journal.select.go', ['journal' => $journal->slug]) : route('register', ['journal' => $journal->slug]) }}"
                             class="group relative bg-white/5 backdrop-blur-sm rounded-2xl border {{ $isUserJournal ? 'border-primary-500/30' : 'border-white/10' }} p-6 hover:bg-white/10 hover:border-primary-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/10">
 
                             @if(!$isUserJournal && isset($showJoinOption) && $showJoinOption)
