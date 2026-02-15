@@ -33,6 +33,7 @@ use App\Http\Controllers\Journal\JournalHomepageController;
 use App\Http\Controllers\Journal\WebsiteSettingsController;
 use App\Http\Controllers\Journal\ProductionWorkflowController;
 use App\Http\Controllers\Admin\JournalUserManagementController;
+use App\Http\Controllers\Admin\Tools\CrossrefExportController;
 // Google OAuth Routes
 // =====================================================
 // PORTAL HOME (List of all journals)
@@ -111,6 +112,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
     Route::post('/clear-cache', [SiteAdminController::class, 'clearDataCache'])->name('site.clear-cache');
     Route::post('/clear-templates', [SiteAdminController::class, 'clearTemplateCache'])->name('site.clear-templates');
     Route::post('/clear-logs', [SiteAdminController::class, 'clearScheduledTaskLogs'])->name('site.clear-logs');
+    // Tools > Crossref
+    Route::get('/tools/crossref', [CrossrefExportController::class, 'index'])->name('journal.settings.tools.crossref.index');
+    Route::post('/tools/crossref/download', [CrossrefExportController::class, 'export'])->name('journal.settings.tools.crossref.download');
+    Route::post('/tools/crossref/save', [CrossrefExportController::class, 'saveSettings'])->name('journal.settings.tools.crossref.save');
     // Journal Management (create new journals, etc.)
     Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
     Route::get('/journals/create', [JournalController::class, 'create'])->name('journals.create');
@@ -606,6 +611,7 @@ Route::prefix('{journal:slug}')->group(function () {
             Route::prefix('tools/importexport/crossref')->name('tools.crossref.')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'index'])->name('index');
                 Route::post('/download', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'export'])->name('download');
+                Route::post('/save', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'saveSettings'])->name('save');
             });
         });
         // --------- Journal Admin Routes ---------
