@@ -68,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
     // Redirect /dashboard to journal selection or first journal
     Route::get('/dashboard', [JournalSelectController::class, 'redirectToDashboard'])->name('dashboard');
     Route::get('/select-journal', [JournalSelectController::class, 'index'])->name('journal.select');
+    Route::get('/select-journal/{journal:slug}', [JournalSelectController::class, 'select'])->name('journal.select.go');
     // Fallback for legacy Profile route (Redirects to first journal)
     Route::get('/profile', function () {
         $journal = \App\Models\Journal::first();
