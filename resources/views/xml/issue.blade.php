@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?php echo '<?xml version="1.0" encoding="UTF-8" ?>' . PHP_EOL; ?>
 <issues xmlns="http://pkp.sfu.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://pkp.sfu.ca native.xsd">
     @php

@@ -61,9 +61,16 @@
                     $filesize = 0;
                     $fileExists = false;
 
-                    // Construct Full System Path (Do NOT trust relative paths)
-                    // Assuming 'public' disk root is storage_path('app/public')
-                    $fullPath = storage_path('app/public/' . $file->file_path);
+                    // Standardize Path: Replace backslashes (Windows) with forward slashes (Linux/Unix)
+                    $relativePath = str_replace('\\', '/', $file->file_path);
+
+                    // Construct Full System Path
+                    $fullPath = storage_path('app/public/' . $relativePath);
+
+                    // Fallback: If not found in storage_path, check public_path (sometimes symlinked differently)
+                    if (!file_exists($fullPath)) {
+                        $fullPath = public_path('storage/' . $relativePath);
+                    }
 
                     // Log for Debugging
                     \Illuminate\Support\Facades\Log::info(
@@ -129,8 +136,8 @@
                     <subtitle locale="en_US">{{ $sub->subtitle }}</subtitle>
                 @endif
 
-                {{-- HTML Escaped Abstract --}}
-                <abstract locale="en_US">{{ htmlspecialchars($sub->abstract ?? '') }}</abstract>
+                {{-- CDATA Wrapped Abstract --}}
+                <abstract locale="en_US"><![CDATA[{!! $sub->abstract ?? '' !!}]]></abstract>
 
                 {{-- Keywords Loop --}}
                 @if ($sub->keywords)
@@ -151,6 +158,7 @@
                         <author include_in_browse="true" user_group_ref="Author" seq="{{ $seq++ }}"
                             id="{{ $authorIntId }}">
                             <givenname locale="en_US">{{ $author->first_name ?? $author->given_name }}</givenname>
+                            <familyname locale="en_US">{{ $author->last_name ?? $author->family_name }}</familyname>
 
                             {{-- Affiliation before Email --}}
                             @if ($author->affiliation)
@@ -162,6 +170,19 @@
                         </author>
                     @endforeach
                 </authors>
+
+                {{-- 3. ARTICLE GALLEYS (Crucial for PDF Button in OJS) --}}
+                @foreach ($sub->files as $file)
+                    @php
+                        $fileIntId = $mapFileId[$file->id];
+                    @endphp
+                    <article_galley xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" locale="en_US" xsi:schemaLocation="http://pkp.sfu.ca native.xsd">
+                        <id type="internal" advice="ignore">{{ $fileIntId }}</id>
+                        <name locale="en_US">PDF</name>
+                        <seq>0</seq>
+                        <submission_file_ref id="{{ $fileIntId + 5000 }}" />
+                    </article_galley>
+                @endforeach
 
                 {{-- Citations / References (Moved AFTER Authors as per Gold Standard) --}}
                 @php
@@ -180,7 +201,7 @@
                         @endphp
                         @foreach ($refs as $citation)
                             @if (trim($citation))
-                                <citation>{{ trim(htmlspecialchars($citation)) }}</citation>
+                                <citation><![CDATA[{{ trim($citation) }}]]></citation>
                             @endif
                         @endforeach
                     </citations>

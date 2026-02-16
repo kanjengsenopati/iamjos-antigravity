@@ -18,9 +18,16 @@
             $filesize = 0;
             $fileExists = false;
 
-            // Construct Full System Path (Do NOT trust relative paths)
-            // Assuming 'public' disk root is storage_path('app/public')
-            $fullPath = storage_path('app/public/' . $file->file_path);
+            // Standardize Path: Replace backslashes (Windows) with forward slashes (Linux/Unix)
+            $relativePath = str_replace('\\', '/', $file->file_path);
+
+            // Construct Full System Path
+            $fullPath = storage_path('app/public/' . $relativePath);
+
+            // Fallback: If not found in storage_path, check public_path (sometimes symlinked differently)
+            if (!file_exists($fullPath)) {
+                $fullPath = public_path('storage/' . $relativePath);
+            }
 
             if (file_exists($fullPath)) {
                 $fileData = file_get_contents($fullPath);
@@ -73,8 +80,8 @@
             <subtitle locale="en_US">{{ $submission->subtitle }}</subtitle>
         @endif
 
-        {{-- HTML Escaped Abstract --}}
-        <abstract locale="en_US">{{ htmlspecialchars($submission->abstract ?? '') }}</abstract>
+        {{-- CDATA Wrapped Abstract --}}
+        <abstract locale="en_US"><![CDATA[{!! $submission->abstract ?? '' !!}]]></abstract>
 
         {{-- Keywords Loop --}}
         @if ($submission->keywords)
@@ -107,6 +114,19 @@
             @endforeach
         </authors>
 
+        {{-- 3. ARTICLE GALLEYS (Added for OJS 3.3 Compatibility) --}}
+        @foreach ($submission->files as $file)
+            @php
+                $fileIntId = $mapFileId[$file->id] ?? 0;
+            @endphp
+            <article_galley xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" locale="en_US" xsi:schemaLocation="http://pkp.sfu.ca native.xsd">
+                <id type="internal" advice="ignore">{{ $fileIntId }}</id>
+                <name locale="en_US">PDF</name>
+                <seq>0</seq>
+                <submission_file_ref id="{{ $fileIntId + 5000 }}" />
+            </article_galley>
+        @endforeach
+
         {{-- Citations / References (Moved AFTER Authors as per Gold Standard) --}}
         @php
             // Priority: Publication > Submission
@@ -124,7 +144,7 @@
                 @endphp
                 @foreach ($refs as $citation)
                     @if (trim($citation))
-                        <citation>{{ trim(htmlspecialchars($citation)) }}</citation>
+                        <citation><![CDATA[{{ trim($citation) }}]]></citation>
                     @endif
                 @endforeach
             </citations>
