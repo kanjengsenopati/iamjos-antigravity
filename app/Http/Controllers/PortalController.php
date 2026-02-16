@@ -78,6 +78,8 @@ class PortalController extends Controller
                         return Journal::where('enabled', true)
                             ->where('visible', true)
                             ->whereIn('id', $featuredIds)
+                            ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
+                            ->withCount(['issues' => fn($q) => $q->where('is_published', true)])
                             ->orderBy('name')
                             ->get();
                     } else {
@@ -85,6 +87,8 @@ class PortalController extends Controller
                         return Journal::where('enabled', true)
                             ->where('visible', true)
                             ->orderByDesc('created_at')
+                            ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
+                            ->withCount(['issues' => fn($q) => $q->where('is_published', true)])
                             ->take(8)
                             ->get();
                     }

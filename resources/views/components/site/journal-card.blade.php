@@ -72,11 +72,11 @@
         <div class="flex items-center gap-4 mt-auto pt-4 border-t border-slate-100">
             <div class="flex items-center gap-1.5 text-xs text-slate-500">
                 <i class="fa-solid fa-newspaper text-slate-400"></i>
-                <span>{{ $journal->issues_count ?? 0 }} Terbitan</span>
+                <span>{{ $journal->issues_count ?? 0 }} Issue</span>
             </div>
             <div class="flex items-center gap-1.5 text-xs text-slate-500">
                 <i class="fa-solid fa-file-lines text-slate-400"></i>
-                <span>{{ $journal->submissions_count ?? 0 }} Artikel</span>
+                <span>{{ $journal->submissions_count ?? 0 }} Article</span>
             </div>
         </div>
     </div>
