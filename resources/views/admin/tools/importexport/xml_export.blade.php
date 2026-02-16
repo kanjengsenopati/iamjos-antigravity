@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?php echo '<?xml version="1.0" encoding="UTF-8" ?>' . PHP_EOL; ?>
 <articles xmlns="http://pkp.sfu.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://pkp.sfu.ca native.xsd">
     @php
@@ -135,8 +135,8 @@
                 {{-- Keywords Loop --}}
                 @if ($sub->keywords)
                     <keywords locale="en_US">
-                        @foreach (explode(',', $sub->keywords) as $keyword)
-                            <keyword>{{ trim($keyword) }}</keyword>
+                        @foreach ($sub->keywords as $keyword)
+                            <keyword>{{ $keyword->content }}</keyword>
                         @endforeach
                     </keywords>
                 @endif
