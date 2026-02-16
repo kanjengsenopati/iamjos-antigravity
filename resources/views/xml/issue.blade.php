@@ -57,26 +57,27 @@
                     <abbrev locale="en_US">ART</abbrev>
                     <title locale="en_US">Articles</title>
 
-                    <articles>
-                        @foreach ($issue->submissions as $submission)
-                            @php
-                                $articleIntId = $mapArticleId[$submission->id];
-                                $dateSubmitted = $submission->submitted_at
-                                    ? $submission->submitted_at->format('Y-m-d')
-                                    : now()->format('Y-m-d');
-                            @endphp
-                            @include('xml.article', [
-                                'submission' => $submission,
-                                'mapArticleId' => $mapArticleId,
-                                'mapFileId' => $mapFileId,
-                                'mapAuthorId' => $mapAuthorId,
-                                'articleIntId' => $articleIntId,
-                                'dateSubmitted' => $dateSubmitted,
-                            ])
-                        @endforeach
-                    </articles>
                 </section>
             </sections>
+
+            <articles>
+                @foreach ($issue->submissions as $submission)
+                    @php
+                        $articleIntId = $mapArticleId[$submission->id];
+                        $dateSubmitted = $submission->submitted_at
+                            ? $submission->submitted_at->format('Y-m-d')
+                            : now()->format('Y-m-d');
+                    @endphp
+                    @include('xml.article', [
+                        'submission' => $submission,
+                        'mapArticleId' => $mapArticleId,
+                        'mapFileId' => $mapFileId,
+                        'mapAuthorId' => $mapAuthorId,
+                        'articleIntId' => $articleIntId,
+                        'dateSubmitted' => $dateSubmitted,
+                    ])
+                @endforeach
+            </articles>
         </issue>
     @endforeach
 </issues>

@@ -86,8 +86,8 @@
         {{-- Keywords Loop --}}
         @if ($submission->keywords)
             <keywords locale="en_US">
-                @foreach (explode(',', $submission->keywords) as $keyword)
-                    <keyword>{{ trim($keyword) }}</keyword>
+                @foreach ($submission->keywords as $keyword)
+                    <keyword>{{ $keyword->content }}</keyword>
                 @endforeach
             </keywords>
         @endif
