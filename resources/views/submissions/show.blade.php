@@ -5366,11 +5366,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto">
                             Close
                         </button>
-                        <a href="{{ route('journal.correspondence.download', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                            target="_blank"
-                            class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto">
-                            <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i> Download Proof
-                        </a>
+                        @if ($submission->status == \App\Models\Submission::STATUS_PUBLISHED)
+                            <a href="{{ route('journal.correspondence.download', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                                target="_blank"
+                                class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto">
+                                <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i> Download Correspondence Proof
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

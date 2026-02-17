@@ -49,6 +49,11 @@
                 $messageCount = $discussion->messages->count();
                 $replyCount = $messageCount - 1;
                 $discussionParticipants = $discussion->participants ?? collect();
+                $unreadCount = $discussion->unreadMessagesCountForUser($currentUser->id);
+                
+                // Get last read timestamp for highlighting
+                $userParticipantRecord = $discussion->participantRecords->where('user_id', $currentUser->id)->first();
+                $lastReadAt = $userParticipantRecord ? $userParticipantRecord->last_read_at : null;
             @endphp
 
             <details class="group" x-data="discussionThread({
@@ -59,12 +64,13 @@
                 reopenUrl: '{{ route('journal.discussion.reopen', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id]) }}',
                 uploadFileUrl: '{{ route('journal.discussion.upload-file', $journal->slug) }}',
                 uploadImageUrl: '{{ route('journal.discussion.upload-image', ['journal' => $journal->slug]) }}',
+                markAsReadUrl: '{{ route('journal.discussion.read', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id]) }}',
                 csrfToken: '{{ csrf_token() }}',
-            })">
+            })" @toggle="if($el.open) markAsRead()">
 
                 {{-- Summary Row --}}
                 <summary
-                    class="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                    class="flex items-center justify-between px-6 py-4 cursor-pointer transition-colors {{ $unreadCount > 0 ? 'bg-indigo-50 font-semibold border-l-4 border-indigo-600' : 'bg-white font-normal hover:bg-gray-50' }}">
                     <div class="flex items-center gap-4">
                         <i
                             class="fa-regular fa-comments text-gray-400 group-open:text-indigo-500 transition-colors"></i>
@@ -78,6 +84,11 @@
                                         class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                                         <i class="fa-solid fa-lock text-[10px] mr-1"></i>
                                         Closed
+                                    </span>
+                                @endif
+                                @if ($unreadCount > 0)
+                                    <span class="unread-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 ml-2">
+                                        {{ $unreadCount }} New
                                     </span>
                                 @endif
                             </div>
@@ -172,6 +183,9 @@
                                 $isOwner = $message->user_id === $currentUser->id;
                                 $canEdit = $isEditor || $isOwner;
                                 $messageRole = $message->user_id === $submission->user_id ? 'Author' : 'Editor';
+                                
+                                // Highlight if not owner and (never read OR newer than last read)
+                                $isNew = !$isOwner && (is_null($lastReadAt) || $message->created_at->gt($lastReadAt));
                             @endphp
                             <div class="flex gap-3" x-data="{ editing: false, editBody: '' }">
                                 <div class="flex-shrink-0">
@@ -180,7 +194,7 @@
                                         {{ strtoupper(substr($message->user->name, 0, 1)) }}
                                     </div>
                                 </div>
-                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex-1">
+                                <div class="{{ $isNew ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-gray-200' }} p-4 rounded-lg shadow-sm border flex-1">
                                     {{-- Message Header --}}
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex items-center gap-2">
@@ -677,6 +691,32 @@
                     alert('Upload failed');
                 }
                 event.target.value = '';
+            },
+
+            markAsRead() {
+                // Optimistic UI update can happen here if needed, 
+                // but usually we rely on the expansion to trigger the call.
+                // We don't necessarily need to reload the page or change UI state immediately 
+                // unless we want to remove the 'Unread' badge live.
+                
+                fetch(this.markAsReadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        // Optional: trigger an event or update local state to remove badge
+                        const summaryEl = this.$el.querySelector('summary');
+                        if(summaryEl) {
+                           summaryEl.classList.remove('bg-indigo-50', 'font-semibold', 'border-l-4', 'border-indigo-600');
+                           summaryEl.classList.add('bg-white', 'font-normal');
+                           const badge = summaryEl.querySelector('.unread-badge');
+                           if(badge) badge.remove();
+                        }
+                    }
+                });
             }
         }));
     });

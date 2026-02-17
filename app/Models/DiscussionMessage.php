@@ -18,6 +18,16 @@ class DiscussionMessage extends Model
     ];
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (DiscussionMessage $message) {
+            $message->discussion()->touch();
+        });
+    }
+
+    /**
      * Get the discussion this message belongs to.
      */
     public function discussion(): BelongsTo

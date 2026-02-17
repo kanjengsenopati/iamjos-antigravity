@@ -328,6 +328,7 @@ Route::prefix('{journal:slug}')->group(function () {
         Route::post('/{submission}/discussion/{discussion}/close', [SubmissionDiscussionController::class, 'close'])->name('journal.discussion.close');
         Route::post('/{submission}/discussion/{discussion}/reopen', [SubmissionDiscussionController::class, 'reopen'])->name('journal.discussion.reopen');
         Route::put('/{submission}/discussion/{discussion}/message/{message}', [SubmissionDiscussionController::class, 'updateMessage'])->name('journal.discussion.message.update');
+        Route::post('/{submission}/discussion/{discussion}/read', [SubmissionDiscussionController::class, 'markAsRead'])->name('journal.discussion.read');
         // --------- Submission Workflow (OJS 3.3 Style) ---------
         Route::prefix('workflow')->name('journal.workflow.')
         // ->middleware('role:Editor|Section Editor|Admin|Super Admin')
