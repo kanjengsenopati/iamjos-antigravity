@@ -384,7 +384,6 @@ class SubmissionDiscussionController extends Controller
 
         $disk = 'public'; // samakan dengan upload
 
-        dd($file->file_path, $file->original_name, Storage::disk($disk)->exists($file->file_path));
         if (!Storage::disk($disk)->exists($file->file_path)) {
             abort(404, 'File not found.');
         }
