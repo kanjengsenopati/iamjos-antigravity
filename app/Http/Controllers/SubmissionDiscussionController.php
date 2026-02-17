@@ -162,14 +162,11 @@ class SubmissionDiscussionController extends Controller
             abort(403, 'You are not a participant in this discussion.');
         }
 
-       $request->validate([
+        $request->validate([
             'body' => 'required|string',
             'attached_files' => 'nullable|array',
-            'attached_files.*' => [
-                'file',
-                'mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx',
-                'max:5120', // 5MB
-            ],
+            'attached_files.*.id' => 'required|exists:discussion_files,id',
+            'attached_files.*.name' => 'nullable|string|max:255',
         ]);
 
         $message = null;
@@ -349,7 +346,7 @@ class SubmissionDiscussionController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('discussion-files');
+        $path = $file->store('discussion-files', ['disk' => 'public']);
 
         $discussionFile = DiscussionFile::create([
             'id' => (string) Str::uuid(),
@@ -387,6 +384,7 @@ class SubmissionDiscussionController extends Controller
 
         $disk = 'public'; // samakan dengan upload
 
+        dd($file->file_path, $file->original_name, Storage::disk($disk)->exists($file->file_path));
         if (!Storage::disk($disk)->exists($file->file_path)) {
             abort(404, 'File not found.');
         }
