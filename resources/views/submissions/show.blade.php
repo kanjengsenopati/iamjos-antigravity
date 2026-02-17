@@ -5361,11 +5361,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     </div>
 
                     {{-- Modal Footer --}}
-                    <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-gray-200">
+                    <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-gray-200 gap-2">
                         <button @click="showActivityLog = false" type="button"
                             class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto">
                             Close
                         </button>
+                        <a href="{{ route('journal.correspondence.download', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                            target="_blank"
+                            class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto">
+                            <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i> Download Proof
+                        </a>
                     </div>
                 </div>
             </div>

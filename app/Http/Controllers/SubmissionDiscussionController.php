@@ -29,8 +29,11 @@ class SubmissionDiscussionController extends Controller
     {
         $user = auth()->user();
 
-        // Editors can always participate
-        if ($user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin', 'Reviewer'])) {
+        $journal = $submission->journal ?? null;
+        if (!$journal) return false;
+
+        // 1. Gunakan hasJournalPermission untuk level Manager (1), Editor (3), Section Editor (4), dan Reviewer (16)
+        if ($user->hasJournalPermission([1,2], $journal->id)) {
             return true;
         }
 
@@ -152,18 +155,21 @@ class SubmissionDiscussionController extends Controller
         }
 
         $currentUserId = auth()->id();
-        $isEditor = auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+        $isEditor =  auth()->user()->hasJournalPermission([1,2], $journal->id);
 
         // Check if user can reply (is participant or editor)
         if (!$isEditor && !$discussion->hasParticipant($currentUserId)) {
             abort(403, 'You are not a participant in this discussion.');
         }
 
-        $request->validate([
+       $request->validate([
             'body' => 'required|string',
             'attached_files' => 'nullable|array',
-            'attached_files.*.id' => 'required|exists:discussion_files,id',
-            'attached_files.*.name' => 'nullable|string|max:255',
+            'attached_files.*' => [
+                'file',
+                'mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx',
+                'max:5120', // 5MB
+            ],
         ]);
 
         $message = null;
@@ -219,7 +225,7 @@ class SubmissionDiscussionController extends Controller
         if ($message->discussion_id !== $discussion->id) abort(404);
 
         $currentUserId = auth()->id();
-        $isEditor = auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+        $isEditor = auth()->user()->hasJournalPermission([1,2], $journal->id);
         $isOwner = $message->user_id === $currentUserId;
 
         // Permission check
@@ -248,7 +254,7 @@ class SubmissionDiscussionController extends Controller
         if ($submission->journal_id !== $journal->id) abort(404);
         if ($discussion->submission_id !== $submission->id) abort(404);
 
-        if (!auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+        if (!auth()->user()->hasJournalPermission([1,2], $journal->id)) {
             abort(403, 'You do not have permission to close discussions.');
         }
 
@@ -267,7 +273,7 @@ class SubmissionDiscussionController extends Controller
         if ($submission->journal_id !== $journal->id) abort(404);
         if ($discussion->submission_id !== $submission->id) abort(404);
 
-        if (!auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+        if (!auth()->user()->hasJournalPermission([1,2], $journal->id)) {
             abort(403, 'You do not have permission to reopen discussions.');
         }
 
@@ -315,6 +321,10 @@ class SubmissionDiscussionController extends Controller
      */
     public function uploadCkeditorImage(Request $request)
     {
+        $request->validate([
+            'upload' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
+        ]);
+
         if ($request->hasFile('upload')) {
             $file = $request->file('upload');
             $filename = time() . '_' . $file->getClientOriginalName();
@@ -335,7 +345,7 @@ class SubmissionDiscussionController extends Controller
     public function uploadDiscussionFile(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:10240', // 10MB
+            'file' => 'required|file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240', // 10MB
         ]);
 
         $file = $request->file('file');
@@ -364,21 +374,25 @@ class SubmissionDiscussionController extends Controller
     public function download(string $journalSlug, DiscussionFile $file)
     {
         $user = auth()->user();
-        $isEditor = $user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+        $journal = $this->getJournal();
+        $isEditor = $user->hasJournalPermission([1,2], $journal->id);
 
-        // Access control: Owner or Editor can download
-        if ($file->user_id !== $user->id && !$isEditor) {
-            // Also check if user is participant in the discussion
-            if ($file->discussionMessage && $file->discussionMessage->discussion) {
-                $discussion = $file->discussionMessage->discussion;
-                if (!$discussion->hasParticipant($user->id)) {
-                    abort(403);
-                }
-            } else {
-                abort(403);
-            }
+        if (
+            $file->user_id !== $user->id &&
+            !$isEditor &&
+            !$file->message?->discussion?->hasParticipant($user->id)
+        ) {
+            abort(403);
         }
 
-        return Storage::download($file->file_path, $file->original_name);
+        $disk = 'public'; // samakan dengan upload
+
+        if (!Storage::disk($disk)->exists($file->file_path)) {
+            abort(404, 'File not found.');
+        }
+
+        return Storage::disk($disk)
+            ->download($file->file_path, $file->original_name);
     }
+
 }

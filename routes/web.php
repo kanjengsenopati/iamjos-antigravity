@@ -313,6 +313,7 @@ Route::prefix('{journal:slug}')->group(function () {
             'update' => 'journal.submissions.update',
             'destroy' => 'journal.submissions.destroy',
         ]);
+        Route::get('/submissions/{submission}/correspondence-pdf', [\App\Http\Controllers\Admin\CorrespondenceController::class, 'download'])->name('journal.correspondence.download');
         // --------- Submission Files ---------
         Route::post('/submissions/{submission}/files', [SubmissionFileController::class, 'store'])->name('journal.submissions.files.store');
         Route::delete('/files/{file}', [SubmissionFileController::class, 'destroy'])->name('journal.files.destroy');
