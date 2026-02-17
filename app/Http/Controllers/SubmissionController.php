@@ -53,8 +53,8 @@ class SubmissionController extends Controller
         $journal = $this->getJournal();
         $filter = $request->get('filter', 'queue');
 
-        // Determine if user has editor+ privileges
-        $isEditor = $user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+        // Determine if user has editor+ privileges (Journal Manager or Editor)
+        $isEditor = $user->hasJournalPermission([1, 2], $journal->id);
 
         // Base query - restrict by journal, eager load relationships
         // Include discussions & reviewAssignments for OJS-style list (discussion count, reviewer X/Y)
@@ -330,7 +330,7 @@ class SubmissionController extends Controller
                 // 2. Upload File
                 if ($request->hasFile('manuscript')) {
                     $file = $request->file('manuscript');
-                    $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", 'local');
+                    $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", ['disk' => 'public']);
 
                     $submission->update(['submission_file_path' => $path]);
 
@@ -442,7 +442,7 @@ class SubmissionController extends Controller
 
         // Determine if user is the author (owns the submission) and NOT an editor
         $isAuthorView = $submission->user_id === $user->id &&
-            !$user->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin']);
+            !$user->hasJournalPermission([1, 2], $journal->id);
 
         // Base eager loading (common for all roles)
         $submission->load([
