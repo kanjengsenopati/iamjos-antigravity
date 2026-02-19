@@ -270,20 +270,6 @@ class JournalUserManagementController extends Controller
     {
         $journal = current_journal();
 
-        // Map permission_level string/int to standard integer levels if needed
-        $permissionLevel = $request->input('permission_level');
-        if (!is_numeric($permissionLevel)) {
-            $permissionLevel = match (strtolower($permissionLevel)) {
-                'admin', 'manager', 'journal manager' => 1,
-                'editor', 'section editor' => 2,
-                'author' => 3,
-                'reviewer' => 4,
-                'reader' => 5,
-                default => 3
-            };
-            $request->merge(['permission_level' => $permissionLevel]);
-        }
-
         $request->validate([
             'name' => [
                 'required',
@@ -292,9 +278,8 @@ class JournalUserManagementController extends Controller
                     return $query->where('journal_id', $journal->id);
                 }),
             ],
-            'permission_level' => 'required',
+            'permission_level' => 'required|integer|min:1|max:6',
         ]);
-
 
         DB::beginTransaction();
 
@@ -348,20 +333,6 @@ class JournalUserManagementController extends Controller
     {
         $role = Role::findOrFail($role);
 
-        // Map permission_level string/int to standard integer levels if needed
-        $permissionLevel = $request->input('permission_level');
-        if (!is_numeric($permissionLevel)) {
-            $permissionLevel = match (strtolower($permissionLevel)) {
-                'admin', 'manager', 'journal manager' => 1,
-                'editor', 'section editor' => 2,
-                'author' => 3,
-                'reviewer' => 4,
-                'reader' => 5,
-                default => 3
-            };
-            $request->merge(['permission_level' => $permissionLevel]);
-        }
-
         $request->validate([
             'name' => [
                 'required',
@@ -370,7 +341,7 @@ class JournalUserManagementController extends Controller
                     return $query->where('journal_id', $role->journal_id);
                 })->ignore($role->id),
             ],
-            'permission_level' => 'required',
+            'permission_level' => 'required|integer|min:1|max:6',
             'stages' => 'nullable|array',
             'allow_registration' => 'nullable',
             'show_contributor' => 'nullable',
