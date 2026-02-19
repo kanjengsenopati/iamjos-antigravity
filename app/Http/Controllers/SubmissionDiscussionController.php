@@ -32,8 +32,8 @@ class SubmissionDiscussionController extends Controller
         $journal = $submission->journal ?? null;
         if (!$journal) return false;
 
-        // 1. Gunakan hasJournalPermission untuk level Manager (1), Editor (3), Section Editor (4), dan Reviewer (16)
-        if ($user->hasJournalPermission([1,2], $journal->id)) {
+        // 1. Check permission level for internal staff (Managers, Editors, Section Editors, Assistants)
+        if ($user->hasJournalPermission([1, 2, 3, 4, 5], $journal->id)) {
             return true;
         }
 
@@ -251,7 +251,8 @@ class SubmissionDiscussionController extends Controller
         if ($submission->journal_id !== $journal->id) abort(404);
         if ($discussion->submission_id !== $submission->id) abort(404);
 
-        if (!auth()->user()->hasJournalPermission([1,2], $journal->id)) {
+        // Only Editors/Managers can close discussions
+        if (!auth()->user()->hasJournalPermission([1, 2, 3], $journal->id)) {
             abort(403, 'You do not have permission to close discussions.');
         }
 
@@ -270,7 +271,8 @@ class SubmissionDiscussionController extends Controller
         if ($submission->journal_id !== $journal->id) abort(404);
         if ($discussion->submission_id !== $submission->id) abort(404);
 
-        if (!auth()->user()->hasJournalPermission([1,2], $journal->id)) {
+        // Only Editors/Managers can reopen discussions
+        if (!auth()->user()->hasJournalPermission([1, 2, 3], $journal->id)) {
             abort(403, 'You do not have permission to reopen discussions.');
         }
 
@@ -372,13 +374,29 @@ class SubmissionDiscussionController extends Controller
     {
         $user = auth()->user();
         $journal = $this->getJournal();
-        $isEditor = $user->hasJournalPermission([1,2], $journal->id);
+        $canDownload = false;
 
-        if (
-            $file->user_id !== $user->id &&
-            !$isEditor &&
-            !$file->message?->discussion?->hasParticipant($user->id)
-        ) {
+        // 1. Owner always has access
+        if ($file->user_id === $user->id) {
+            $canDownload = true;
+        }
+        // 2. Journal Staff (Editors, Managers, etc.)
+        elseif ($user->hasJournalPermission([1, 2, 3, 4, 16], $journal->id)) {
+            $canDownload = true;
+        }
+        // 3. Discussion Participants
+        elseif ($file->discussionMessage && $file->discussionMessage->discussion) {
+            $discussion = $file->discussionMessage->discussion;
+
+            // Ensure discussion belongs to this journal
+            if ($discussion->submission->journal_id === $journal->id) {
+                if ($discussion->hasParticipant($user->id)) {
+                    $canDownload = true;
+                }
+            }
+        }
+
+        if (!$canDownload) {
             abort(403);
         }
 
@@ -390,6 +408,23 @@ class SubmissionDiscussionController extends Controller
 
         return Storage::disk($disk)
             ->download($file->file_path, $file->original_name);
+    }
+
+    /**
+     * Mark a discussion as read.
+     */
+    public function markAsRead(Request $request, string $journalSlug, $submission, Discussion $discussion)
+    {
+        $currentUserId = auth()->id();
+        
+        // Ensure user is a participant
+        $participant = $discussion->participantRecords()->where('user_id', $currentUserId)->first();
+        
+        if ($participant) {
+            $participant->update(['last_read_at' => now()]);
+        }
+        
+        return response()->json(['success' => true]);
     }
 
 }

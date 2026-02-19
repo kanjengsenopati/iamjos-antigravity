@@ -55,6 +55,11 @@ class GoogleScholarValidator
         // Weight: 10
         // Use 'citations' first (if parsed), fallback to 'references' text
         $references = $data->citations ?? $data->references;
+
+        if (empty($references)) {
+            $references = $submission->citations ?? $submission->references;
+        }
+
         $referencesCheck = $this->checkReferences($references);
         $checks[] = $referencesCheck;
         $score += $referencesCheck['score'];

@@ -8,150 +8,107 @@ use App\Models\Submission;
 use App\Models\SubmissionLog;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CorrespondenceController extends Controller
 {
     /**
-     * Download the correspondence proof PDF.
+     * Download the Correspondence Proof PDF.
      */
     public function download(Journal $journal, Submission $submission)
     {
-        // Set locale to Indonesian for dates
-        \Carbon\Carbon::setLocale('id');
-
-        // Load relationships
-        $submission->load(['authors', 'logs.user', 'publication', 'issue']);
-
-        // 1. Prepare Authors and Affiliations with Superscripts
-        $authorsData = [];
-        $affiliationsMap = [];
-        $affiliationCounter = 1;
-
-        foreach ($submission->authors as $author) {
-            $affilliation = $author->affiliation ?? null;
-            $indices = [];
-
-            if ($affilliation) {
-                // Check if affiliation already indexed
-                if (!isset($affiliationsMap[$affilliation])) {
-                    $affiliationsMap[$affilliation] = $affiliationCounter++;
-                }
-                $indices[] = $affiliationsMap[$affilliation];
-            }
-
-            $authorsData[] = [
-                'name' => $author->name,
-                'indices' => $indices,
-                'is_corresponding' => $author->is_primary_contact, // Optional: mark corresponding if needed
-            ];
+        // 1. Security Check
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
         }
 
-        // 2. Filter and map logs (Oldest to Newest)
-        $logs = $submission->logs
-            ->sortBy('created_at') // Sort Oldest to Newest
-            ->map(function ($log) {
-                $description = $this->mapLogToDescription($log);
-                
-                if (!$description) {
-                    return null;
-                }
+        $user = auth()->user();
+        
+        // Permissions: Author or Internal Staff
+        $isAuthor = $submission->user_id === $user->id;
+        // Check for Editor/Manager/SectionEditor/Assistant/GuestEditor permissions
+        $isStaff = $user->hasJournalPermission([1, 2, 3, 4, 16], $journal->id);
 
+        if (!$isAuthor && !$isStaff) {
+            abort(403);
+        }
+
+        // 2. Load Data with Relationships
+        $submission->load([
+            'authors',
+            'journal',
+            'issue',
+            'section',
+            'currentPublication',
+            'logs.user' // Eager load user for logs if needed
+        ]);
+
+        // 3. Map Activity Logs
+        // Create a chronological list of significant events
+        $logs = $submission->logs
+            ->sortBy('created_at')
+            ->map(function ($log) {
                 return [
-                    'event_type' => $log->event_type,
-                    'description' => $description,
-                    'date' => $log->created_at->isoFormat('D MMMM Y'), // Indonesian Format
-                    'original_date' => $log->created_at, // Keep for debugging if needed
+                    'date' => $log->created_at->translatedFormat('d F Y'),
+                    'time' => $log->created_at->format('H:i'),
+                    'description' => $this->mapLogEvent($log),
+                    'status' => $this->mapLogStatus($log),
+                    'user' => $log->user ? $log->user->name : 'System',
                 ];
             })
-            ->filter()
-            ->values();
+            ->values(); // Reset keys for array
 
-        // 3. Prepare data for view
+        // 4. Generate PDF
         $data = [
             'journal' => $journal,
             'submission' => $submission,
-            'authorsData' => $authorsData,
-            'affiliationsList' => array_flip($affiliationsMap), // [1 => 'Univ A', 2 => 'Univ B']
+            'publication' => $submission->currentPublication,
             'logs' => $logs,
-            'doi' => $submission->publication?->doi ? 'https://doi.org/' . $submission->publication->doi : null,
-            'issue_vol' => $submission->issue ? $submission->issue->volume : null,
-            'issue_no' => $submission->issue ? $submission->issue->number : null,
-            'issue_year' => $submission->issue?->year ?? now()->year,
-            'published_at' => $submission->published_at ? $submission->published_at->isoFormat('D MMMM Y') : '-',
-            'submitted_at' => $submission->submitted_at ? $submission->submitted_at->isoFormat('D MMMM Y') : '-',
-            'live_url' => route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->slug]),
+            'branding' => [
+                'logo_path' => $journal->logo_path ? public_path('storage/' . $journal->logo_path) : null,
+            ]
         ];
 
-        // Generate PDF
         $pdf = Pdf::loadView('pdfs.correspondence', $data);
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->download('Correspondence_Proof_' . $submission->slug . '.pdf');
+        return $pdf->stream('Correspondence_' . $submission->submission_code . '.pdf');
     }
 
     /**
-     * Map submission log event type to formal Indonesian description.
+     * Map log events to formal Indonesian description with English translation.
      */
-    private function mapLogToDescription($log): ?string
+    private function mapLogEvent(SubmissionLog $log): string
     {
-        $eventType = $log->event_type;
-        $title = $log->title ?? '';
+        $type = $log->event_type;
+        $title = $log->title;
+        // $desc = $log->description;
 
-        return match ($eventType) {
-            'submission_created' => 'Bukti konfirmasi submit artikel dan artikel yang disubmit',
-            'editor_assigned' => 'Preliminary inspection',
-            'reviewer_assigned' => 'Bukti konfirmasi kirim naskah ke reviewer',
-            
-            // Handle decisions based on metadata or title
-            'decision_made' => $this->mapDecisionLog($log),
-            
-            // Handle stage changes (e.g. to Production)
-            'stage_changed' => $this->mapStageChange($log),
-            
-            // Other events
-            'revision_submitted' => 'Bukti konfirmasi submit revisi, respon kepada reviewer, dan artikel yang diresubmit',
-            'payment_confirmed' => 'Konfirmasi Pembayaran APC diterima',
-            'production_version_created' => 'Masuk Galley Persiapan Produksi dan persetujuan Naskah Akhir sebelum publikasi',
-            'submission_published', 'published' => 'Publikasi',
-            
-            default => null,
+        return match ($type) {
+            SubmissionLog::EVENT_SUBMITTED => 'Naskah diserahkan (Article Submitted)',
+            SubmissionLog::EVENT_EDITOR_ASSIGNED => 'Editor ditugaskan (Editor Assigned)',
+            SubmissionLog::EVENT_EDITOR_UNASSIGNED => 'Penugasan Editor dibatalkan (Editor Unassigned)',
+            SubmissionLog::EVENT_REVIEWER_ASSIGNED => 'Reviewer ditugaskan (Reviewer Assigned)',
+            SubmissionLog::EVENT_REVIEW_SUBMITTED => 'Hasil review diterima (Review Result Received)',
+            SubmissionLog::EVENT_DECISION_MADE => 'Keputusan Editor (Editor Decision): ' . strip_tags($title),
+            SubmissionLog::EVENT_STAGE_CHANGED => 'Tahap proses naskah berubah (Stage Changed)',
+            SubmissionLog::EVENT_DISCUSSION_CREATED => 'Diskusi editorial baru (New Editorial Discussion)',
+            SubmissionLog::EVENT_FILE_UPLOADED => 'File revisi/pendukung diunggah (File Uploaded)',
+            SubmissionLog::EVENT_PUBLISHED => 'Artikel diterbitkan (Article Published)',
+            default => $title ?? 'Aktivitas Sistem (System Activity)',
         };
     }
 
     /**
-     * Map decision logs based on metadata/title.
+     * Map log status for display.
      */
-    private function mapDecisionLog($log): ?string
+    private function mapLogStatus(SubmissionLog $log): string
     {
-        $payload = $log->payload ?? [];
-        $decision = $payload['decision'] ?? null;
-        $title = strtolower($log->title ?? '');
-
-        if ($decision === 'request_revisions' || str_contains($title, 'revision')) {
-            return 'Permintaan Minor/Mayor Revisi';
-        }
-        
-        if ($decision === 'accept' || str_contains($title, 'accept')) {
-            return 'Bukti konfirmasi artikel accepted';
-        }
-
-        return null;
-    }
-
-    /**
-     * Map stage change logs.
-     */
-    private function mapStageChange($log): ?string
-    {
-        $payload = $log->payload ?? [];
-        $toStage = $payload['to_stage'] ?? null;
-        $title = strtolower($log->title ?? '');
-
-        // Stage 4 is Production
-        if ($toStage == 4 || str_contains($title, 'production')) {
-            return 'Masuk Galley Persiapan Produksi dan persetujuan Naskah Akhir sebelum publikasi';
-        }
-
-        return null;
+        return match ($log->event_type) {
+            SubmissionLog::EVENT_SUBMITTED => 'Submitted',
+            SubmissionLog::EVENT_DECISION_MADE => 'Decision',
+            SubmissionLog::EVENT_PUBLISHED => 'Published',
+            default => 'Process',
+        };
     }
 }

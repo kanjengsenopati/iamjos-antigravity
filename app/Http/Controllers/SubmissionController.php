@@ -455,6 +455,7 @@ class SubmissionController extends Controller
             'discussions.messages.user',
             'discussions.messages.files',
             'discussions.participants',
+            'discussions.participantRecords',
             'editorialAssignments.user',
         ]);
 

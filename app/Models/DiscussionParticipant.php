@@ -14,6 +14,11 @@ class DiscussionParticipant extends Model
     protected $fillable = [
         'discussion_id',
         'user_id',
+        'last_read_at',
+    ];
+
+    protected $casts = [
+        'last_read_at' => 'datetime',
     ];
 
     /**

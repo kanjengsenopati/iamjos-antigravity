@@ -1,182 +1,186 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Correspondence Proof - {{ $submission->slug }}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Correspondence Proof</title>
     <style>
         @page {
             margin: 2.5cm 2.5cm;
         }
-
         body {
-            font-family: 'Times New Roman', Times, serif;
+            font-family: "Times New Roman", serif;
             font-size: 11pt;
             line-height: 1.3;
             color: #000;
         }
-
         .header {
             text-align: center;
-            font-weight: bold;
-            font-size: 14pt;
-            margin-bottom: 30px;
-            text-transform: uppercase;
-        }
-
-        .metadata {
             margin-bottom: 20px;
+            border-bottom: 2px double #000;
+            padding-bottom: 10px;
         }
-
-        .metadata-row {
-            margin-bottom: 6px;
+        .journal-name {
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
         }
-
-        .label {
-            width: 130px;
-            float: left;
+        .journal-meta {
+            font-size: 10pt;
+        }
+        h1.doc-title {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 20px 0;
+            text-decoration: underline;
+        }
+        .meta-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+        .meta-table td {
+            vertical-align: top;
+            padding: 4px 0;
+        }
+        .meta-label {
+            width: 150px;
             font-weight: bold;
         }
-
-        .value {
-            margin-left: 140px;
+        .authors-list sup {
+            font-size: 0.7em;
         }
-
-        .authors-list {
-            font-style: italic;
-        }
-
-        .affiliations {
-            margin-top: 5px;
-            font-size: 10pt;
-            color: #444;
-        }
-
-        .publication-info {
-            border-top: 1px solid #000;
-            border-bottom: 1px solid #000;
-            padding: 10px 0;
-            margin: 20px 0;
-            font-size: 10pt;
-        }
-
-        .publication-info p {
-            margin: 2px 0;
-        }
-
-        table {
+        .log-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
             font-size: 10pt;
         }
-
-        th {
-            border-top: 1px solid #000;
-            border-bottom: 1px solid #000;
+        .log-table th, .log-table td {
+            border: 1px solid #000;
+            padding: 6px;
             text-align: left;
-            padding: 8px 5px;
-            font-weight: bold;
-        }
-
-        td {
-            padding: 8px 5px;
             vertical-align: top;
-            border-bottom: 1px solid #ddd;
         }
-        
-        tr:last-child td {
-            border-bottom: 1px solid #000;
-        }
-
-        .col-no { width: 5%; text-align: center; }
-        .col-subject { width: 70%; }
-        .col-date { width: 25%; text-align: right; }
-
-        .footer {
-            margin-top: 30px;
-            font-size: 9pt;
+        .log-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
             text-align: center;
-            color: #666;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
         }
-        
-        a { color: #000; text-decoration: none; }
+        .footer {
+            margin-top: 50px;
+            font-size: 9pt;
+            text-align: center; 
+            font-style: italic;
+        }
+        .page-number:before {
+            content: counter(page);
+        }
     </style>
 </head>
-
 <body>
 
     <div class="header">
-        BUKTI KORESPONDENSI ARTIKEL JURNAL INTERNASIONAL BEREPUTASI
+        @if(isset($branding['logo_path']) && file_exists($branding['logo_path']))
+            <img src="{{ $branding['logo_path'] }}" style="max-height: 60px; margin-bottom: 10px;">
+        @endif
+        <div class="journal-name">{{ $journal->name }}</div>
+        <div class="journal-meta">
+            e-ISSN: {{ $journal->issn ?? '-' }} | p-ISSN: {{ $journal->pissn ?? '-' }}<br>
+            {{ $journal->publisher ?? '' }}
+        </div>
     </div>
 
-    <div class="metadata">
-        <div class="metadata-row">
-            <div class="label">Judul Artikel</div>
-            <div class="value">: {{ $submission->title }}</div>
-        </div>
-        <div class="metadata-row">
-            <div class="label">Jurnal</div>
-            <div class="value">: {{ $journal->name }}</div>
-        </div>
-        <div class="metadata-row">
-            <div class="label">Penulis</div>
-            <div class="value authors-list">
-                : 
-                @foreach($authorsData as $index => $author)
-                    {{ $author['name'] }}@foreach($author['indices'] as $idx)<sup>{{ $idx }}</sup>@endforeach{{ $loop->last ? '' : ', ' }}
+    <h1 class="doc-title">BUKTI KORESPONDENSI ARTIKEL JURNAL INTERNASIONAL BEREPUTASI</h1>
+
+    <table class="meta-table">
+        <tr>
+            <th class="meta-label">Judul Artikel</td>
+            <td>: {{ $submission->title }}</td>
+        </tr>
+        <tr>
+            <th class="meta-label">Jurnal</td>
+            <td>: {{ $journal->name }}</td>
+        </tr>
+        <tr>
+            <th class="meta-label">Penulis</td>
+            <td class="authors-list">
+                @php
+                    $authors = $submission->authors;
+                    // Group affiliations to assign numbers
+                    $affiliations = [];
+                    $authorStrings = [];
+                    foreach ($authors as $author) {
+                        $affil = $author->affiliation ?? 'Unknown Affiliation';
+                        if (!in_array($affil, $affiliations)) {
+                            $affiliations[] = $affil;
+                        }
+                        $index = array_search($affil, $affiliations) + 1;
+                        $authorStrings[] = $author->given_name . ' ' . $author->family_name . '<sup>' . $index . '</sup>';
+                    }
+                @endphp
+                : {!! implode(', ', $authorStrings) !!}
+            </td>
+        </tr>
+        <tr>
+            <th class="meta-label">Afiliasi</td>
+            <td>
+                @foreach($affiliations as $key => $affil)
+                    <div><sup>{{ $key + 1 }}</sup> {{ $affil }}</div>
                 @endforeach
-            </div>
-            <div class="value affiliations">
-                @foreach($affiliationsList as $id => $affiliation)
-                    <div><sup>{{ $id }}</sup> {{ $affiliation }}</div>
-                @endforeach
-            </div>
-        </div>
-        <div class="metadata-row">
-            <div class="label">Link Publikasi</div>
-            <div class="value">: <a href="{{ $live_url }}" target="_blank">{{ $live_url }}</a></div>
-        </div>
+            </td>
+        </tr>
+        <tr>
+            <th class="meta-label">DOI</td>
+            <td>: {{ $publication->doi ?? '-' }}</td>
+        </tr>
+         @if($submission->issue)
+        <tr>
+            <th class="meta-label">Terbitan</td>
+            <td>: Vol {{ $submission->issue->volume ?? '-' }}, No {{ $submission->issue->number ?? '-' }} ({{ $submission->issue->year ?? '-' }})</td>
+        </tr>
+        @endif
+        <tr>
+            <th class="meta-label">Tanggal Terbit</td>
+            <td>: {{ optional($submission->published_at)->translatedFormat('d F Y') ?? '-' }}</td>
+        </tr>
+    </table>
+
+    <div style="margin-bottom: 20px;">
+        <strong>Kronologi Korespondensi (Chronology of Coresspondence):</strong>
     </div>
 
-    <div class="publication-info">
-        <p>
-            <strong>{{ $journal->name }}</strong> | Vol {{ $issue_vol ?? '-' }} | {{ $issue_no ? 'No '.$issue_no : '' }}
-        </p>
-        <p>
-            DOI: <a href="{{ $doi ?? '#' }}">{{ $doi ?? 'Pending' }}</a> | 
-            &copy; {{ $issue_year }} 
-            @foreach($authorsData as $author){{ $author['name'] }}{{ $loop->last ? '' : ', ' }}@endforeach
-        </p>
-        <p>This work is licensed under CC Attribution 4.0</p>
-        <p>Submitted: {{ $submitted_at }} | Published: {{ $published_at }}</p>
-    </div>
-
-    <table>
+    <table class="log-table">
         <thead>
             <tr>
-                <th class="col-no">No.</th>
-                <th class="col-subject">Perihal</th>
-                <th class="col-date">Tanggal</th>
+                <th style="width: 25%;">Tanggal (Date)</th>
+                <th style="width: 55%;">Aktivitas (Activity)</th>
+                <th style="width: 20%;">Status</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($logs as $log)
-                <tr>
-                    <td class="col-no">{{ $loop->iteration }}</td>
-                    <td class="col-subject">{{ $log['description'] }}</td>
-                    <td class="col-date">{{ $log['date'] }}</td>
-                </tr>
+            @foreach($logs as $log)
+            <tr>
+                <td>{{ $log['date'] }}</td>
+                <td>
+                    {{ $log['description'] }}
+                </td>
+                <td style="text-align: center;">{{ $log['status'] }}</td>
+            </tr>
             @endforeach
+            @if(count($logs) === 0)
+            <tr>
+                <td colspan="3" style="text-align: center;">Tidak ada aktivitas tercatat.</td>
+            </tr>
+            @endif
         </tbody>
     </table>
 
     <div class="footer">
-        Generated on {{ now()->isoFormat('D MMMM Y H:mm') }} by {{ $journal->name }} System
+        Dokumen ini dihasilkan secara otomatis oleh sistem jurnal {{ $journal->name }}.<br>
+        (This document is automatically generated by {{ $journal->name }} journal system.)
     </div>
 
 </body>
-
 </html>

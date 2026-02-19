@@ -94,9 +94,9 @@
 
             <!-- Content -->
             <div class="mb-2">
-                {{-- <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-50/80 rounded-2xl text-indigo-500 mb-5 shadow-inner shadow-indigo-100/50 ring-1 ring-indigo-50">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-50/80 rounded-2xl text-indigo-500 mb-5 shadow-inner shadow-indigo-100/50 ring-1 ring-indigo-50">
                     @yield('icon')
-                </div> --}}
+                </div>
                 <h1 class="text-3xl font-bold text-slate-900 tracking-tight leading-tight">@yield('title')</h1>
                 <p class="mt-3 text-slate-500 text-[13px] leading-relaxed px-1">@yield('message')</p>
             </div>

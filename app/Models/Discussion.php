@@ -129,4 +129,25 @@ class Discussion extends Model
     {
         $this->participants()->sync($userIds);
     }
+
+    /**
+     * Check if the discussion is unread for the given user.
+     */
+    /**
+     * Get the number of unread messages for the given user.
+     */
+    public function unreadMessagesCountForUser(string $userId): int
+    {
+        $participant = $this->participantRecords->where('user_id', $userId)->first();
+
+        if (!$participant) {
+            return 0;
+        }
+
+        if (is_null($participant->last_read_at)) {
+            return $this->messages->count();
+        }
+
+        return $this->messages->where('created_at', '>', $participant->last_read_at)->count();
+    }
 }
