@@ -74,15 +74,18 @@
             <tbody class="divide-y divide-gray-200 bg-white">
                 @foreach($roles as $role)
                 @php
-                $levelText = match($role->permission_level ?? 3) {
-                1 => 'Journal Manager',
-                2 => 'Section Editor',
-                3 => 'Assistant',
-                0 => 'Site Admin',
-                default => 'Assistant'
-                };
-                $isManager = $role->permission_level <= 1;
-                    @endphp
+                $levelMap = [
+                    1 => ['label' => 'Journal Manager', 'color' => 'bg-red-100 text-red-800'],
+                    2 => ['label' => 'Section Editor', 'color' => 'bg-blue-100 text-blue-800'],
+                    3 => ['label' => 'Assistant', 'color' => 'bg-teal-100 text-teal-800'],
+                    4 => ['label' => 'Reviewer', 'color' => 'bg-amber-100 text-amber-800'],
+                    5 => ['label' => 'Author', 'color' => 'bg-green-100 text-green-800'],
+                    6 => ['label' => 'Reader', 'color' => 'bg-gray-100 text-gray-600'],
+                    0 => ['label' => 'Site Admin', 'color' => 'bg-purple-100 text-purple-800'], // Fallback/System
+                ];
+                $level = $role->permission_level ?? 6;
+                $config = $levelMap[$level] ?? $levelMap[6];
+                @endphp
                     <tr class="hover:bg-slate-50 transition duration-150 group">
                     {{-- Role Name --}}
                     <td class="px-6 py-4 font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
@@ -91,8 +94,8 @@
 
                     {{-- Level Badge --}}
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium {{ $isManager ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-slate-600' }}">
-                            {{ $levelText }}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium {{ $config['color'] }}">
+                            {{ $config['label'] }}
                         </span>
                     </td>
 

@@ -12,26 +12,20 @@
 // Infer mock values from Role Name since we don't have DB columns yet
 $roleName = $role->name;
 
-$currentLevel = match (true) {
-str_contains($roleName, 'Manager') || str_contains($roleName, 'Admin') => 'manager',
-str_contains($roleName, 'Section') || str_contains($roleName, 'Editor') => 'editor',
-str_contains($roleName, 'Assistant') => 'assistant',
-str_contains($roleName, 'Reviewer') => 'reviewer',
-str_contains($roleName, 'Author') => 'author',
-default => 'reader',
-};
+$currentLevel = $role->permission_level ?? 6; // Default to Reader (6) if null
 
 $currentColor = match (true) {
-str_contains($roleName, 'Manager') || str_contains($roleName, 'Admin') => 'red',
-str_contains($roleName, 'Editor') => 'blue',
-str_contains($roleName, 'Reviewer') => 'amber',
-str_contains($roleName, 'Author') => 'green',
-default => 'gray',
+    str_contains($roleName, 'Manager') || str_contains($roleName, 'Admin') => 'red',
+    str_contains($roleName, 'Editor') => 'blue',
+    str_contains($roleName, 'Reviewer') => 'amber',
+    str_contains($roleName, 'Author') => 'green',
+    default => 'gray',
 };
 @endphp
 
+
 <form action="{{ route($routePrefix . '.roles.update', ['journal' => $journal->slug, 'role' => $role->id]) }}"
-    method="POST" class="pb-24 space-y-8" x-data="{ selectedLevel: '{{ $currentLevel }}' }">
+    method="POST" class="pb-24 space-y-8" x-data="{ selectedLevel: {{ $currentLevel }} }">
     @csrf
     @method('PUT')
 
@@ -103,37 +97,37 @@ default => 'gray',
             @php
             $levels = [
             [
-            'val' => 'manager',
+            'val' => 1,
             'label' => 'Journal Manager',
             'desc' => 'Full access to all settings, users, and submissions within this journal.',
             'icon' => 'fa-screwdriver-wrench',
             ],
             [
-            'val' => 'editor',
+            'val' => 2,
             'label' => 'Section Editor',
             'desc' => 'Can edit assigned submissions and make editorial decisions.',
             'icon' => 'fa-pen-to-square',
             ],
             [
-            'val' => 'assistant',
+            'val' => 3,
             'label' => 'Assistant',
             'desc' => 'Restricted access. Can only work on specific workflow stages of assigned items.',
             'icon' => 'fa-hand-holding-hand',
             ],
             [
-            'val' => 'reviewer',
+            'val' => 4,
             'label' => 'Reviewer',
             'desc' => 'Can only access and perform reviews on assigned submissions.',
             'icon' => 'fa-magnifying-glass',
             ],
             [
-            'val' => 'author',
+            'val' => 5,
             'label' => 'Author',
             'desc' => 'Can submit articles and track their own progress only.',
             'icon' => 'fa-user-pen',
             ],
             [
-            'val' => 'reader',
+            'val' => 6,
             'label' => 'Reader',
             'desc' => 'Read-only access to published content.',
             'icon' => 'fa-book-open',
@@ -144,7 +138,7 @@ default => 'gray',
             @foreach ($levels as $level)
             <div class="relative flex flex-col h-full">
                 <label class="relative flex flex-col p-4 bg-white border rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group h-full"
-                    :class="selectedLevel == '{{ $level['val'] }}' ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/20' : 'border-gray-200'">
+                    :class="selectedLevel == {{ $level['val'] }} ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/20' : 'border-gray-200'">
 
                     {{-- Important: x-model binds to the parent scope property 'selectedLevel' --}}
                     <input type="radio" name="permission_level" value="{{ $level['val'] }}"
@@ -152,18 +146,18 @@ default => 'gray',
 
                     <div class="flex items-center gap-3 mb-2">
                         <div class="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
-                            :class="selectedLevel == '{{ $level['val'] }}' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'">
+                            :class="selectedLevel == {{ $level['val'] }} ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'">
                             <i class="fa-solid {{ $level['icon'] }} text-lg"></i>
                         </div>
                         <span class="font-semibold text-gray-900"
-                            :class="selectedLevel == '{{ $level['val'] }}' ? 'text-indigo-700' : ''">
+                            :class="selectedLevel == {{ $level['val'] }} ? 'text-indigo-700' : ''">
                             {{ $level['label'] }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-500 leading-relaxed">{{ $level['desc'] }}</p>
 
                     <!-- Checkmark Badge -->
-                    <div class="absolute top-3 right-3" x-show="selectedLevel == '{{ $level['val'] }}'" x-transition>
+                    <div class="absolute top-3 right-3" x-show="selectedLevel == {{ $level['val'] }}" x-transition>
                         <i class="fa-solid fa-circle-check text-indigo-600 text-lg"></i>
                     </div>
                 </label>

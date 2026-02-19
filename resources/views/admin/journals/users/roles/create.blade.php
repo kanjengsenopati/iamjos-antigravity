@@ -70,7 +70,7 @@
     </div>
 
     <!-- Section 2: Permission Level -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" x-data="{ selectedLevel: 'author' }">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" x-data="{ selectedLevel: 5 }">
         <div class="p-6 border-b border-gray-100">
             <h2 class="text-lg font-semibold text-gray-900">2. Permission Level</h2>
             <p class="text-sm text-gray-500">Determines the core capabilities and access scope of this role.</p>
@@ -79,37 +79,37 @@
             @php
             $levels = [
             [
-            'val' => 'manager',
+            'val' => 1,
             'label' => 'Journal Manager',
             'desc' => 'Full access to all settings, users, and submissions within this journal.',
             'icon' => 'fa-screwdriver-wrench',
             ],
             [
-            'val' => 'editor',
+            'val' => 2,
             'label' => 'Section Editor',
             'desc' => 'Can edit assigned submissions and make editorial decisions.',
             'icon' => 'fa-pen-to-square',
             ],
             [
-            'val' => 'assistant',
+            'val' => 3,
             'label' => 'Assistant',
             'desc' => 'Restricted access. Can only work on specific workflow stages of assigned items.',
             'icon' => 'fa-hand-holding-hand',
             ],
             [
-            'val' => 'reviewer',
+            'val' => 4,
             'label' => 'Reviewer',
             'desc' => 'Can only access and perform reviews on assigned submissions.',
             'icon' => 'fa-magnifying-glass',
             ],
             [
-            'val' => 'author',
+            'val' => 5,
             'label' => 'Author',
             'desc' => 'Can submit articles and track their own progress only.',
             'icon' => 'fa-user-pen',
             ],
             [
-            'val' => 'reader',
+            'val' => 6,
             'label' => 'Reader',
             'desc' => 'Read-only access to published content.',
             'icon' => 'fa-book-open',
@@ -120,25 +120,25 @@
             @foreach ($levels as $level)
             <div class="relative flex flex-col h-full">
                 <label class="relative flex flex-col p-4 bg-white border rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group h-full"
-                    :class="selectedLevel == '{{ $level['val'] }}' ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/20' : 'border-gray-200'">
+                    :class="selectedLevel == {{ $level['val'] }} ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/20' : 'border-gray-200'">
 
                     <input type="radio" name="permission_level" value="{{ $level['val'] }}"
                         x-model="selectedLevel" class="sr-only">
 
                     <div class="flex items-center gap-3 mb-2">
                         <div class="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
-                            :class="selectedLevel == '{{ $level['val'] }}' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'">
+                            :class="selectedLevel == {{ $level['val'] }} ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'">
                             <i class="fa-solid {{ $level['icon'] }} text-lg"></i>
                         </div>
                         <span class="font-semibold text-gray-900"
-                            :class="selectedLevel == '{{ $level['val'] }}' ? 'text-indigo-700' : ''">
+                            :class="selectedLevel == {{ $level['val'] }} ? 'text-indigo-700' : ''">
                             {{ $level['label'] }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-500 leading-relaxed">{{ $level['desc'] }}</p>
 
                     <!-- Checkmark Badge -->
-                    <div class="absolute top-3 right-3" x-show="selectedLevel == '{{ $level['val'] }}'" x-transition>
+                    <div class="absolute top-3 right-3" x-show="selectedLevel == {{ $level['val'] }}" x-transition>
                         <i class="fa-solid fa-circle-check text-indigo-600 text-lg"></i>
                     </div>
                 </label>
