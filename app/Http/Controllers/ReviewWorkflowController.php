@@ -351,45 +351,48 @@ class ReviewWorkflowController extends Controller
         $validated = $request->validate([
             'send_email' => 'sometimes|boolean',
             'email_body' => 'nullable|required_if:send_email,true|string',
-            'selected_files' => 'nullable|array',
-            'selected_files.*' => 'exists:submission_files,id',
         ]);
 
         DB::transaction(function () use ($validated, $submission) {
-            // 1. Update submission stage to Production and status
+            // 1. Update submission stage to Production
             $submission->update([
                 'stage_id' => 4, // Production
-                'status' => Submission::STATUS_IN_PRODUCTION ?? 'in_production',
+                'status'   => Submission::STATUS_IN_PRODUCTION ?? 'in_production',
             ]);
 
-            // 2. Promote selected files to Production stage (PRODUCTION_READY)
-            if (!empty($validated['selected_files'])) {
-                $filesToPromote = SubmissionFile::whereIn('id', $validated['selected_files'])->get();
-                foreach ($filesToPromote as $file) {
-                    // Create a new file record with PRODUCTION stage
-                    $newFile = $file->replicate();
-                    $newFile->stage = SubmissionFile::STAGE_PRODUCTION_READY ?? 'production';
-                    $newFile->metadata = array_merge($file->metadata ?? [], [
-                        'promoted_from' => $file->stage,
-                        'promoted_from_copyediting' => true,
-                        'promoted_at' => now()->toIso8601String(),
-                        'promoted_by' => auth()->id(),
-                        'original_file_id' => $file->id,
-                    ]);
-                    $newFile->save();
-                }
+            // 2. Auto-promote ALL Draft and Copyedited files to Production stage
+            $filesToPromote = SubmissionFile::where('submission_id', $submission->id)
+                ->whereIn('stage', [
+                    SubmissionFile::STAGE_COPYEDIT_DRAFT,
+                    SubmissionFile::STAGE_COPYEDITED,
+                ])
+                ->get();
+
+            $promotedIds = [];
+            foreach ($filesToPromote as $file) {
+                $newFile = $file->replicate();
+                $newFile->stage    = SubmissionFile::STAGE_PRODUCTION;
+                $newFile->metadata = array_merge($file->metadata ?? [], [
+                    'promoted_from'          => $file->stage,
+                    'promoted_from_copyediting' => true,
+                    'promoted_at'            => now()->toIso8601String(),
+                    'promoted_by'            => auth()->id(),
+                    'original_file_id'       => $file->id,
+                ]);
+                $newFile->save();
+                $promotedIds[] = $file->id;
             }
 
             // 3. Store decision in submission metadata
-            $metadata = $submission->metadata ?? [];
+            $metadata              = $submission->metadata ?? [];
             $metadata['decisions'] = $metadata['decisions'] ?? [];
             $metadata['decisions'][] = [
-                'type' => 'send_to_production',
-                'email_sent' => $validated['send_email'] ?? false,
-                'email_body' => $validated['email_body'] ?? null,
-                'files_promoted' => $validated['selected_files'] ?? [],
-                'made_by' => auth()->id(),
-                'made_at' => now()->toIsoString(),
+                'type'           => 'send_to_production',
+                'email_sent'     => $validated['send_email'] ?? false,
+                'email_body'     => $validated['email_body'] ?? null,
+                'files_promoted' => $promotedIds,
+                'made_by'        => auth()->id(),
+                'made_at'        => now()->toIsoString(),
             ];
             $submission->update(['metadata' => $metadata]);
 
@@ -400,9 +403,9 @@ class ReviewWorkflowController extends Controller
                 'Sent to Production',
                 auth()->user()->name . ' sent this submission to the Production stage.',
                 [
-                    'from_stage' => 3,
-                    'to_stage' => 4,
-                    'files_promoted' => count($validated['selected_files'] ?? []),
+                    'from_stage'     => 3,
+                    'to_stage'       => 4,
+                    'files_promoted' => count($promotedIds),
                 ]
             );
         });
@@ -418,6 +421,7 @@ class ReviewWorkflowController extends Controller
 
         return back()->with('success', 'Submission moved to Production stage.');
     }
+
 
     /**
  * Search reviewers/editors for assignment modals.

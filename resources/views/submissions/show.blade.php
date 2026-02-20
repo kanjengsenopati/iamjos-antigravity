@@ -5411,7 +5411,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
 
                     {{-- Modal Header --}}
-                    <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-5">
+                    <div class="bg-white px-6 py-5">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div
@@ -5419,7 +5419,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <i class="fa-solid fa-cogs text-white text-lg"></i>
                                 </div>
                                 <div class="ml-3">
-                                    <h3 class="text-xl font-bold text-white" id="send-production-modal-title">
+                                    <h3 class="text-xl font-bold text-green-500" id="send-production-modal-title">
                                         Send to Production
                                     </h3>
                                     <p class="text-sm text-teal-100 mt-0.5">Record your editorial decision</p>
@@ -5484,53 +5484,46 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </p>
                             </div>
 
-                            {{-- Section C: File Selection (Multi-Source) --}}
+                            {{-- Section C: Files to be Auto-Forwarded --}}
                             <div class="mb-4">
                                 <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
                                     <i class="fa-solid fa-files text-teal-500 mr-2"></i>
-                                    Select Files to Forward
+                                    Files to be Forwarded Automatically
                                 </h4>
                                 <p class="text-xs text-gray-600 mb-3">
-                                    Select the files you would like to forward to the Production stage.
+                                    The following draft files will be automatically forwarded to the Production stage:
                                 </p>
 
                                 @php
                                     $copyeditedFiles = $submission->files->where('stage', 'copyedited');
-                                    $draftFiles = $submission->files->where('stage', 'copyedit_draft');
-                                    $hasAnyFiles = $copyeditedFiles->count() > 0 || $draftFiles->count() > 0;
+                                    $draftFiles      = $submission->files->where('stage', 'copyedit_draft');
+                                    $hasAnyFiles     = $copyeditedFiles->count() > 0 || $draftFiles->count() > 0;
                                 @endphp
 
-                                <div
-                                    class="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-200">
+                                <div class="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-200">
                                     {{-- Copyedited Files Section --}}
                                     @if ($copyeditedFiles->count() > 0)
                                         <div class="bg-teal-50">
                                             <div class="px-4 py-2 border-b border-teal-100">
-                                                <span
-                                                    class="text-xs font-bold uppercase tracking-wider text-teal-700">
+                                                <span class="text-xs font-bold uppercase tracking-wider text-teal-700">
                                                     <i class="fa-solid fa-check-circle mr-1"></i>
                                                     Copyedited ({{ $copyeditedFiles->count() }})
                                                 </span>
                                             </div>
                                             @foreach ($copyeditedFiles as $file)
-                                                <label
-                                                    class="flex items-center px-4 py-3 hover:bg-teal-100/50 cursor-pointer border-b border-teal-100 last:border-b-0 bg-white">
-                                                    <input type="checkbox" name="selected_files[]"
-                                                        value="{{ $file->id }}" checked
-                                                        class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
-                                                    <div class="ml-3 flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 truncate">
-                                                            {{ $file->file_name }}</p>
+                                                <div class="flex items-center px-4 py-3 border-b border-teal-100 last:border-b-0 bg-white">
+                                                    <i class="fa-regular fa-file-lines text-teal-500 flex-shrink-0 mr-3"></i>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
                                                             {{ $file->created_at->format('M d, Y') }} •
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
                                                         </p>
                                                     </div>
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800 flex-shrink-0">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800 flex-shrink-0 ml-2">
                                                         Copyedited
                                                     </span>
-                                                </label>
+                                                </div>
                                             @endforeach
                                         </div>
                                     @endif
@@ -5539,31 +5532,25 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     @if ($draftFiles->count() > 0)
                                         <div class="bg-blue-50">
                                             <div class="px-4 py-2 border-b border-blue-100">
-                                                <span
-                                                    class="text-xs font-bold uppercase tracking-wider text-blue-700">
+                                                <span class="text-xs font-bold uppercase tracking-wider text-blue-700">
                                                     <i class="fa-solid fa-file-import mr-1"></i>
                                                     Draft Files ({{ $draftFiles->count() }})
                                                 </span>
                                             </div>
                                             @foreach ($draftFiles as $file)
-                                                <label
-                                                    class="flex items-center px-4 py-3 hover:bg-blue-100/50 cursor-pointer border-b border-blue-100 last:border-b-0 bg-white">
-                                                    <input type="checkbox" name="selected_files[]"
-                                                        value="{{ $file->id }}"
-                                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                                    <div class="ml-3 flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 truncate">
-                                                            {{ $file->file_name }}</p>
+                                                <div class="flex items-center px-4 py-3 border-b border-blue-100 last:border-b-0 bg-white">
+                                                    <i class="fa-regular fa-file text-blue-500 flex-shrink-0 mr-3"></i>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
                                                             {{ $file->created_at->format('M d, Y') }} •
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
                                                         </p>
                                                     </div>
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0 ml-2">
                                                         Draft
                                                     </span>
-                                                </label>
+                                                </div>
                                             @endforeach
                                         </div>
                                     @endif
@@ -5571,30 +5558,26 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     {{-- Empty State --}}
                                     @if (!$hasAnyFiles)
                                         <div class="px-6 py-10 text-center bg-gray-50">
-                                            <div
-                                                class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 mb-3">
-                                                <i class="fa-solid fa-folder-open text-gray-400 text-xl"></i>
+                                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 mb-3">
+                                                <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xl"></i>
                                             </div>
-                                            <p class="text-sm font-medium text-gray-900">No files available</p>
-                                            <p class="text-xs text-gray-500 mt-1">Upload files to the Copyediting
-                                                stage first.</p>
+                                            <p class="text-sm font-medium text-gray-900">No draft files found</p>
+                                            <p class="text-xs text-gray-500 mt-1">No draft or copyedited files exist in Copyediting. You may proceed, but no files will be forwarded to Production.</p>
                                         </div>
                                     @endif
                                 </div>
                             </div>
 
-                            {{-- Warning Note --}}
+                            {{-- Info Notice --}}
                             @if ($hasAnyFiles)
-                                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
                                     <div class="flex">
-                                        <i
-                                            class="fa-solid fa-exclamation-triangle text-amber-500 mt-0.5 mr-3 flex-shrink-0"></i>
+                                        <i class="fa-solid fa-circle-info text-teal-500 mt-0.5 mr-3 flex-shrink-0"></i>
                                         <div>
-                                            <p class="text-sm font-medium text-amber-800">Important</p>
-                                            <p class="text-xs text-amber-700 mt-1">
-                                                Selected files will be copied to the Production stage. The submission
-                                                status will change to "In Production" and you can begin preparing
-                                                publication galleys.
+                                            <p class="text-sm font-medium text-teal-800">Automatic File Forwarding</p>
+                                            <p class="text-xs text-teal-700 mt-1">
+                                                All {{ $copyeditedFiles->count() + $draftFiles->count() }} file(s) listed above will be automatically copied to the Production stage.
+                                                The submission status will change to "In Production".
                                             </p>
                                         </div>
                                     </div>
