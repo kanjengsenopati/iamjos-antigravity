@@ -670,7 +670,7 @@ class JournalUserManagementController extends Controller
         $routePrefix = $this->getRoutePrefix();
 
         // Get all roles for the checkbox grid
-        $roles = Role::all();
+        $roles = Role::where('journal_id', $journal->id)->orderBy('permission_level', 'asc')->get();
 
         return view('admin.journals.users.notify', compact('journal', 'routePrefix', 'roles'));
     }

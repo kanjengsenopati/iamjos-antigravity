@@ -34,7 +34,7 @@ class SendBroadcastNotificationJob implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        public User $recipient,
+        public User $user,
         public string $subject,
         public string $body,
         public string $journalName
@@ -48,29 +48,40 @@ class SendBroadcastNotificationJob implements ShouldQueue
         try {
             // Basic SMTP configuration check
             if (!config('mail.mailers.smtp.host') || !config('mail.mailers.smtp.username')) {
-                Log::warning("SendBroadcastNotificationJob: SMTP not configured. Skipping email for user {$this->recipient->id}.");
+                Log::warning("SendBroadcastNotificationJob: SMTP not configured. Skipping email for user {$this->user->id}.");
                 return;
             }
 
             // Validate recipient email
-            if (empty($this->recipient->email)) {
-                Log::warning("SendBroadcastNotificationJob: No email found for user {$this->recipient->id}.");
+            if (empty($this->user->email)) {
+                Log::warning("SendBroadcastNotificationJob: No email found for user {$this->user->id}.");
                 return;
             }
 
-            // Send the email
-            Mail::to($this->recipient->email)->send(
+            // Dynamic Placeholder Replacement
+            $placeholders = [
+                '{$name}' => $this->user->name,
+                '{$email}' => $this->user->email,
+                '{$journal_name}' => $this->journalName,
+                '{$site_url}' => config('app.url'),
+            ];
+
+            $finalSubject = str_replace(array_keys($placeholders), array_values($placeholders), $this->subject);
+            $finalBody = str_replace(array_keys($placeholders), array_values($placeholders), $this->body);
+
+            // Send the email synchronously (sendNow prevents the Queueable Mailable from re-queuing inside this job)
+            Mail::to($this->user->email)->sendNow(
                 new GeneralNotificationMail(
-                    $this->subject,
-                    $this->body,
-                    $this->recipient->name,
+                    $finalSubject,
+                    $finalBody,
+                    $this->user->name,
                     $this->journalName
                 )
             );
 
-            Log::info("Broadcast notification sent successfully to {$this->recipient->email}");
+            Log::info("Broadcast notification sent successfully to {$this->user->email}");
         } catch (\Exception $e) {
-            Log::error("Failed to send broadcast notification to user {$this->recipient->id}: " . $e->getMessage());
+            Log::error("Failed to send broadcast notification to user {$this->user->id}: " . $e->getMessage());
             
             // Re-throw to trigger retry mechanism
             throw $e;
@@ -82,6 +93,6 @@ class SendBroadcastNotificationJob implements ShouldQueue
      */
     public function failed(\Throwable $exception): void
     {
-        Log::error("SendBroadcastNotificationJob permanently failed for user {$this->recipient->id}: " . $exception->getMessage());
+        Log::error("SendBroadcastNotificationJob permanently failed for user {$this->user->id}: " . $exception->getMessage());
     }
 }
