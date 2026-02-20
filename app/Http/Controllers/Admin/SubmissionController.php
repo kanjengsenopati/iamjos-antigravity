@@ -10,7 +10,7 @@ class SubmissionController extends Controller
 {
     public function logHistory($id)
     {
-        $submission = Submission::with(['activityLogs.user'])->findOrFail($id);
+        $submission = Submission::with(['activityLogs.user', 'activityLogs.files'])->findOrFail($id);
 
         // Return just the partial HTML, not the full page layout
         return view('admin.submissions.partials.log-modal-content', compact('submission'));

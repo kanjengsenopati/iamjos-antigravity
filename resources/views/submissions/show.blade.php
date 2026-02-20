@@ -5351,6 +5351,23 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 </div>
                                                             @endif
                                                         </div>
+
+                                                        @if ($log->files && $log->files->count() > 0)
+                                                            <div class="mt-3 flex flex-col gap-2">
+                                                                @foreach ($log->files as $file)
+                                                                    @php
+                                                                        $fileUrl = isset($file->metadata['copied_from_discussion'])
+                                                                            ? route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->metadata['copied_from_discussion']])
+                                                                            : route('files.download', $file);
+                                                                    @endphp
+                                                                    <a href="{{ $fileUrl }}" class="inline-flex items-center px-3 py-1.5 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:text-indigo-600 transition-colors max-w-[20rem]">
+                                                                        <i class="fa-solid fa-paperclip text-gray-400 mr-2 flex-shrink-0"></i>
+                                                                        <span class="truncate">{{ $file->file_name }}</span>
+                                                                        <span class="ml-2 text-xs text-gray-400 flex-shrink-0">({{ $file->file_size_formatted }})</span>
+                                                                    </a>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </div>

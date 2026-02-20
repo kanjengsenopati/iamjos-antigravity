@@ -50,6 +50,22 @@ class SubmissionFileController extends Controller
             'stage' => $fileStage,
         ]);
 
+        // Audit log — attach file_id so History tab can show download link
+        \App\Models\SubmissionLog::log(
+            submission:  $submission,
+            eventType:   \App\Models\SubmissionLog::EVENT_FILE_UPLOADED,
+            title:       'File Uploaded: ' . $file->getClientOriginalName(),
+            description: $user->name . ' uploaded a ' . $validated['file_type'] . ' file (v' . $version . ') to the ' . $fileStage . ' stage.',
+            metadata:    [
+                'file_type' => $validated['file_type'],
+                'file_size' => $file->getSize(),
+                'version'   => $version,
+            ],
+            user:        $user,
+            fileId:      $submissionFile->id,
+            stage:       $fileStage,
+        );
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,

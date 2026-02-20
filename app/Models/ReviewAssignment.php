@@ -82,7 +82,7 @@ class ReviewAssignment extends Model
         static::creating(function (ReviewAssignment $assignment) {
             if (empty($assignment->slug)) {
                 do {
-                    $slug = 'REV-' . now()->year . '-' . Str::upper(Str::random(5));
+                    $slug = 'rev-' . now()->year . '-' . Str::lower(Str::random(5));
                 } while (static::withTrashed()->where('slug', $slug)->exists());
 
                 $assignment->slug = $slug;

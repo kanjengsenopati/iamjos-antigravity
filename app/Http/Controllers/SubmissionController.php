@@ -648,10 +648,17 @@ class SubmissionController extends Controller
             'section_id' => 'required|uuid',
         ]);
 
+        // Capture before state for audit diff
+        $before = [
+            'title'      => $submission->title,
+            'abstract'   => $submission->abstract,
+            'section_id' => $submission->section_id,
+        ];
+
         // Update basic fields (excluding keywords)
         $submission->update([
-            'title' => $validated['title'],
-            'abstract' => $validated['abstract'],
+            'title'      => $validated['title'],
+            'abstract'   => $validated['abstract'],
             'references' => $validated['references'] ?? null,
             'section_id' => $validated['section_id'],
         ]);
@@ -668,6 +675,20 @@ class SubmissionController extends Controller
                 $keywordIds[] = $keyword->id;
             }
             $submission->keywords()->sync($keywordIds);
+        }
+
+        // Log metadata diff if any tracked field changed
+        $after = [
+            'title'      => $submission->title,
+            'abstract'   => $submission->abstract,
+            'section_id' => $submission->section_id,
+        ];
+        if ($before !== $after) {
+            try {
+                SubmissionLog::logMetadataDiff($submission, $before, $after);
+            } catch (\Throwable $e) {
+                Log::warning('SubmissionLog: failed to log metadata diff', ['error' => $e->getMessage()]);
+            }
         }
 
         return redirect()->route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission])
