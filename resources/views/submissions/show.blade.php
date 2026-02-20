@@ -4203,33 +4203,39 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     </div>
                                 </template>
                                 <template x-if="!isLoadingFiles && availableFiles.length > 0">
-                                    <ul class="divide-y divide-gray-100">
-                                        <template x-for="file in availableFiles" :key="file.id">
-                                            <li class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                                                @click="toggleFileSelection(file)">
-                                                <label class="flex items-center cursor-pointer">
-                                                    <input type="checkbox" :checked="isFileSelected(file)"
-                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][id]'"
-                                                        :value="file.id"
-                                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                                                    <input type="hidden" x-show="isFileSelected(file)"
-                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][type]'"
-                                                        :value="file.type">
-                                                    <div class="ml-3 flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 truncate"
-                                                            x-text="file.name"></p>
-                                                        <p class="text-xs text-gray-500">
-                                                            <span x-text="file.source"></span> •
-                                                            <span
-                                                                x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
-                                                            •
-                                                            <span x-text="file.created_at"></span>
-                                                        </p>
-                                                    </div>
-                                                </label>
-                                            </li>
+                                    <div>
+                                        {{-- Hidden inputs: only render for selected files --}}
+                                        <template x-for="(file, idx) in selectedFilesForPromotion" :key="file.id">
+                                            <div>
+                                                <input type="hidden" :name="'selected_files[' + idx + '][id]'" :value="file.id">
+                                                <input type="hidden" :name="'selected_files[' + idx + '][type]'" :value="file.type">
+                                            </div>
                                         </template>
-                                    </ul>
+                                        <ul class="divide-y divide-gray-100">
+                                            <template x-for="file in availableFiles" :key="file.id">
+                                                <li class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                                                    @click="toggleFileSelection(file)">
+                                                    <label class="flex items-center cursor-pointer">
+                                                        {{-- Checkbox is visual-only, no name binding --}}
+                                                        <input type="checkbox" :checked="isFileSelected(file)"
+                                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                                            @click.prevent="toggleFileSelection(file)">
+                                                        <div class="ml-3 flex-1 min-w-0">
+                                                            <p class="text-sm font-medium text-gray-900 truncate"
+                                                                x-text="file.name"></p>
+                                                            <p class="text-xs text-gray-500">
+                                                                <span x-text="file.source"></span> •
+                                                                <span
+                                                                    x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
+                                                                •
+                                                                <span x-text="file.created_at"></span>
+                                                            </p>
+                                                        </div>
+                                                    </label>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
                                 </template>
                             </div>
                             <div class="bg-gray-50 px-4 py-2 border-t border-gray-200">
@@ -4323,29 +4329,35 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     </div>
                                 </template>
                                 <template x-if="!isLoadingFiles && availableFiles.length > 0">
-                                    <ul class="divide-y divide-gray-100">
-                                        <template x-for="file in availableFiles" :key="file.id">
-                                            <li class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                                                @click="toggleFileSelection(file)">
-                                                <label class="flex items-center cursor-pointer">
-                                                    <input type="checkbox" :checked="isFileSelected(file)"
-                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][id]'"
-                                                        :value="file.id"
-                                                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
-                                                    <input type="hidden" x-show="isFileSelected(file)"
-                                                        :name="'selected_files[' + availableFiles.indexOf(file) + '][type]'"
-                                                        :value="file.type">
-                                                    <div class="ml-3 flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 truncate"
-                                                            x-text="file.name"></p>
-                                                        <p class="text-xs text-gray-500"
-                                                            x-text="file.source + ' • ' + (file.size / 1024).toFixed(0) + ' KB'">
-                                                        </p>
-                                                    </div>
-                                                </label>
-                                            </li>
+                                    <div>
+                                        {{-- Hidden inputs: only render for selected files --}}
+                                        <template x-for="(file, idx) in selectedFilesForPromotion" :key="file.id">
+                                            <div>
+                                                <input type="hidden" :name="'selected_files[' + idx + '][id]'" :value="file.id">
+                                                <input type="hidden" :name="'selected_files[' + idx + '][type]'" :value="file.type">
+                                            </div>
                                         </template>
-                                    </ul>
+                                        <ul class="divide-y divide-gray-100">
+                                            <template x-for="file in availableFiles" :key="file.id">
+                                                <li class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                                                    @click="toggleFileSelection(file)">
+                                                    <label class="flex items-center cursor-pointer">
+                                                        {{-- Checkbox is visual-only, no name binding --}}
+                                                        <input type="checkbox" :checked="isFileSelected(file)"
+                                                            class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                                                            @click.prevent="toggleFileSelection(file)">
+                                                        <div class="ml-3 flex-1 min-w-0">
+                                                            <p class="text-sm font-medium text-gray-900 truncate"
+                                                                x-text="file.name"></p>
+                                                            <p class="text-xs text-gray-500"
+                                                                x-text="file.source + ' • ' + (file.size / 1024).toFixed(0) + ' KB'">
+                                                            </p>
+                                                        </div>
+                                                    </label>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
                                 </template>
                             </div>
                         </div>

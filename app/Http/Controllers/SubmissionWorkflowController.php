@@ -467,7 +467,6 @@ class SubmissionWorkflowController extends Controller
         if ($submission->journal_id !== $journal->id) {
             abort(404);
         }
-
         $validated = $request->validate([
             'selected_files' => 'nullable|array',
             'selected_files.*.id' => 'required|uuid',

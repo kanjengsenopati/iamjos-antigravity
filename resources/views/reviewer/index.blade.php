@@ -274,7 +274,7 @@ $journal = current_journal();
                         <div class="flex flex-col items-end gap-2">
                             @if ($assignment->status === 'pending')
                             <div class="flex items-center gap-2">
-                                <form action="{{ route('journal.reviewer.accept', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}" method="POST"
+                                <form action="{{ route('journal.reviewer.accept', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST"
                                     class="inline">
                                     @csrf
                                     <button type="submit"
@@ -282,7 +282,7 @@ $journal = current_journal();
                                         Accept
                                     </button>
                                 </form>
-                                <form action="{{ route('journal.reviewer.decline', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}" method="POST"
+                                <form action="{{ route('journal.reviewer.decline', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST"
                                     class="inline">
                                     @csrf
                                     <button type="submit"

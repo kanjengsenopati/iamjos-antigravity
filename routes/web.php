@@ -427,9 +427,9 @@ Route::prefix('{journal:slug}')->group(function () {
         Route::prefix('reviewer')->name('journal.reviewer.')->middleware('role:Reviewer|Editor|Admin|Super Admin')->group(function () {
             Route::get('/', [ReviewerController::class, 'index'])->name('index');
             Route::get('/{identifier}', [ReviewerController::class, 'show'])->name('show');
-            Route::post('/{identifier}/accept', [ReviewerController::class, 'accept'])->name('accept');
-            Route::post('/{identifier}/decline', [ReviewerController::class, 'decline'])->name('decline');
-            Route::post('/{identifier}/submit', [ReviewerController::class, 'submit'])->name('submit');
+            Route::post('/{assignment}/accept', [ReviewerController::class, 'accept'])->name('accept');
+            Route::post('/{assignment}/decline', [ReviewerController::class, 'decline'])->name('decline');
+            Route::post('/{assignment}/submit', [ReviewerController::class, 'submit'])->name('submit');
         });
         // --------- Editor Decision Workflow ---------
         Route::prefix('editor')->name('journal.editor.')->middleware('role:Editor|Admin|Super Admin')->group(function () {

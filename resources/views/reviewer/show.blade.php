@@ -156,7 +156,7 @@
                         <h3 class="text-lg font-semibold text-gray-900 mb-6">Submit Your Review</h3>
 
                         <form
-                            action="{{ route('journal.reviewer.submit', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}"
+                            action="{{ route('journal.reviewer.submit', ['journal' => $journal->slug, 'assignment' => $assignment]) }}"
                             method="POST" x-data="{ recommendation: '{{ old('recommendation') }}' }">
                             @csrf
 
