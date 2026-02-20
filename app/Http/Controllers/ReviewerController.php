@@ -116,9 +116,10 @@ class ReviewerController extends Controller
     /**
      * Accept review invitation.
      */
-    public function accept(string $journalSlug, ReviewAssignment $assignment): RedirectResponse
+    public function accept(string $journalSlug, string $identifier): RedirectResponse
     {
         $journal = $this->getJournal();
+        $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
         if ($assignment->status !== ReviewAssignment::STATUS_PENDING) {
@@ -152,9 +153,10 @@ class ReviewerController extends Controller
     /**
      * Decline review invitation.
      */
-    public function decline(Request $request, string $journalSlug, ReviewAssignment $assignment): RedirectResponse
+    public function decline(Request $request, string $journalSlug, string $identifier): RedirectResponse
     {
         $journal = $this->getJournal();
+        $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
         if ($assignment->status !== ReviewAssignment::STATUS_PENDING) {
@@ -192,9 +194,10 @@ class ReviewerController extends Controller
     /**
      * Show review form for a specific submission.
      */
-    public function show(string $journalSlug, ReviewAssignment $assignment): View
+    public function show(string $journalSlug, string $identifier): View
     {
         $journal = $this->getJournal();
+        $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
         // Load submission with blind review (hide author info)
@@ -228,9 +231,10 @@ class ReviewerController extends Controller
     /**
      * Submit the review.
      */
-    public function submit(Request $request, string $journalSlug, ReviewAssignment $assignment): RedirectResponse
+    public function submit(Request $request, string $journalSlug, string $identifier): RedirectResponse
     {
         $journal = $this->getJournal();
+        $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
         if (!in_array($assignment->status, [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED])) {

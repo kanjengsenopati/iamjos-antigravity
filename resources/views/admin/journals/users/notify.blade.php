@@ -158,6 +158,17 @@
                 Message Body <span class="text-red-500">*</span>
             </label>
             <p class="text-xs text-gray-500 mb-3">You can use basic HTML formatting in the message body.</p>
+            
+            <!-- Dynamic Placeholders Guide -->
+            <div class="mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800">
+                <span class="font-semibold block mb-1">Available Placeholders:</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <code>{$name}</code> <span class="text-indigo-600">- Recipient Name</span>
+                    <code>{$email}</code> <span class="text-indigo-600">- Recipient Email</span>
+                    <code>{$journal_name}</code> <span class="text-indigo-600">- Journal Name</span>
+                    <code>{$site_url}</code> <span class="text-indigo-600">- Site URL</span>
+                </div>
+            </div>
 
             <div class="mb-2">
                 <input type="hidden" name="body" id="body-input" value="{{ old('body') }}">

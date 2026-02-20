@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class ReviewAssignment extends Model
 {
@@ -49,6 +50,7 @@ class ReviewAssignment extends Model
         'round',
         'review_method',
         'metadata',
+        'slug',
     ];
 
     /**
@@ -64,6 +66,48 @@ class ReviewAssignment extends Model
         'round' => 'integer',
         'metadata' => 'array',
     ];
+
+    // =====================================================
+    // BOOT
+    // =====================================================
+
+    /**
+     * Auto-generate a unique reviewer ID when a ReviewAssignment is created.
+     * Format: REV-YYYY-XXXXX (e.g. REV-2026-ABC12)
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (ReviewAssignment $assignment) {
+            if (empty($assignment->slug)) {
+                do {
+                    $slug = 'REV-' . now()->year . '-' . Str::upper(Str::random(5));
+                } while (static::withTrashed()->where('slug', $slug)->exists());
+
+                $assignment->slug = $slug;
+            }
+        });
+    }
+
+    // =====================================================
+    // STATIC HELPERS
+    // =====================================================
+
+    /**
+     * Smart lookup: resolves by UUID (id) or slug.
+     * Supports backward compatibility with old UUID-based links.
+     */
+    public static function findByIdentifier(string $identifier): self
+    {
+        // Check if the identifier looks like a UUID
+        $isUuid = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $identifier);
+
+        return static::when($isUuid,
+            fn ($q) => $q->where('id', $identifier),
+            fn ($q) => $q->where('slug', $identifier)
+        )->firstOrFail();
+    }
 
     // =====================================================
     // RELATIONSHIPS

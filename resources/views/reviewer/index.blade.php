@@ -274,7 +274,7 @@ $journal = current_journal();
                         <div class="flex flex-col items-end gap-2">
                             @if ($assignment->status === 'pending')
                             <div class="flex items-center gap-2">
-                                <form action="{{ route('journal.reviewer.accept', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST"
+                                <form action="{{ route('journal.reviewer.accept', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}" method="POST"
                                     class="inline">
                                     @csrf
                                     <button type="submit"
@@ -282,7 +282,7 @@ $journal = current_journal();
                                         Accept
                                     </button>
                                 </form>
-                                <form action="{{ route('journal.reviewer.decline', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST"
+                                <form action="{{ route('journal.reviewer.decline', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}" method="POST"
                                     class="inline">
                                     @csrf
                                     <button type="submit"
@@ -292,7 +292,7 @@ $journal = current_journal();
                                 </form>
                             </div>
                             @elseif($assignment->status === 'accepted')
-                            <a href="{{ route('journal.reviewer.show', ['journal' => $journal->slug, 'assignment' => $assignment]) }}"
+                            <a href="{{ route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}"
                                 class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -302,7 +302,7 @@ $journal = current_journal();
                                 Submit Review
                             </a>
                             @elseif($assignment->status === 'completed')
-                            <a href="{{ route('journal.reviewer.show', ['journal' => $journal->slug, 'assignment' => $assignment]) }}"
+                            <a href="{{ route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}"
                                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                                 View Review
                             </a>
