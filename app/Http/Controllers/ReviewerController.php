@@ -116,10 +116,9 @@ class ReviewerController extends Controller
     /**
      * Accept review invitation.
      */
-    public function accept(string $journalSlug, string $identifier): RedirectResponse
+    public function accept(string $journalSlug, ReviewAssignment $assignment): RedirectResponse
     {
         $journal = $this->getJournal();
-        $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
         if ($assignment->status !== ReviewAssignment::STATUS_PENDING) {
@@ -146,17 +145,16 @@ class ReviewerController extends Controller
             Log::error('Failed to send WhatsApp notification for reviewer acceptance: ' . $e->getMessage());
         }
 
-        return redirect()->route('journal.reviewer.show', ['journal' => $journal->slug, 'assignment' => $assignment])
+        return redirect()->route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->slug])
             ->with('success', 'Review invitation accepted. You can now submit your review.');
     }
 
     /**
      * Decline review invitation.
      */
-    public function decline(Request $request, string $journalSlug, string $identifier): RedirectResponse
+    public function decline(Request $request, string $journalSlug, ReviewAssignment $assignment): RedirectResponse
     {
         $journal = $this->getJournal();
-        $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
         if ($assignment->status !== ReviewAssignment::STATUS_PENDING) {
@@ -231,10 +229,9 @@ class ReviewerController extends Controller
     /**
      * Submit the review.
      */
-    public function submit(Request $request, string $journalSlug, string $identifier): RedirectResponse
+    public function submit(Request $request, string $journalSlug, ReviewAssignment $assignment): RedirectResponse
     {
         $journal = $this->getJournal();
-        $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
         if (!in_array($assignment->status, [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED])) {
