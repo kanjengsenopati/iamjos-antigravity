@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Mail\GeneralNotificationMail;
 use App\Models\Journal;
 use App\Models\JournalUserRole;
+use App\Models\Role;
+use App\Models\User;
 use App\Services\WaGateway;
 use Exception;
 use Illuminate\Auth\Events\Registered;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -150,6 +153,19 @@ class JournalRegisterController extends Controller
             // Fire Registered Event
             event(new Registered($user));
 
+            // Send Email Welcome Notification (queued to background)
+            try {
+                $emailBody = "Congratulations! Your account has been successfully created and you are now registered as an Author at {$journal->name}.\n\nYou can now log in and start submitting your manuscripts.\n\nThank you for joining us!";
+                Mail::to($user->email)->queue(new GeneralNotificationMail(
+                    emailSubject: 'Welcome to ' . $journal->name . ' – Registration Successful',
+                    emailBody: $emailBody,
+                    recipientName: $user->name,
+                    journalName: $journal->name,
+                ));
+            } catch (Exception $e) {
+                Log::error('Failed to queue welcome email: ' . $e->getMessage());
+            }
+
             // Send WhatsApp Welcome
             try {
                 WaGateway::sendTemplate($user, 'welcome', [
@@ -174,15 +190,62 @@ class JournalRegisterController extends Controller
 
     /**
      * Assign journal roles to a user.
+     *
+     * Looks up the journal-specific Author role (name='Author', permission_level=5, journal_id=journal->id).
+     * If it does not exist yet, creates it so a role_id is always available.
+     * Then assigns the user to that role via JournalUserRole.
      */
     private function assignJournalRoles(User $user, Journal $journal, bool $reviewerInterest): void
     {
-        // Assign default roles: Reader & Author
-        JournalUserRole::assignRoles($user, $journal->id, ['Reader', 'Author']);
+        // 1. Find the journal-specific Author role (permission_level 5)
+        $authorRole = Role::where('name', 'Author')
+            ->where('permission_level', Role::LEVEL_AUTHOR) // 5
+            ->where('journal_id', $journal->id)
+            ->first();
 
-        // Handle Reviewer Request
+        // 2. If not found, create it for this journal
+        if (!$authorRole) {
+            $authorRole = Role::create([
+                'name'             => 'Author',
+                'guard_name'       => 'web',
+                'permission_level' => Role::LEVEL_AUTHOR,
+                'journal_id'       => $journal->id,
+                'allow_submission' => true,
+                'allow_registration' => true,
+            ]);
+        }
+
+        // 3. Assign the user to the Author role for this journal
+        JournalUserRole::firstOrCreate([
+            'journal_id' => $journal->id,
+            'user_id'    => $user->id,
+            'role_id'    => $authorRole->id,
+        ]);
+
+        // 4. Handle Reviewer Request
         if ($reviewerInterest) {
-            JournalUserRole::assignRole($user, $journal->id, 'Reviewer');
+            // Find or create journal-specific Reviewer role (permission_level 4)
+            $reviewerRole = Role::where('name', 'Reviewer')
+                ->where('permission_level', Role::LEVEL_REVIEWER) // 4
+                ->where('journal_id', $journal->id)
+                ->first();
+
+            if (!$reviewerRole) {
+                $reviewerRole = Role::create([
+                    'name'             => 'Reviewer',
+                    'guard_name'       => 'web',
+                    'permission_level' => Role::LEVEL_REVIEWER,
+                    'journal_id'       => $journal->id,
+                    'permit_review'    => true,
+                ]);
+            }
+
+            JournalUserRole::firstOrCreate([
+                'journal_id' => $journal->id,
+                'user_id'    => $user->id,
+                'role_id'    => $reviewerRole->id,
+            ]);
+
             // Also assign global Reviewer role if not already assigned
             if (!$user->hasRole('Reviewer')) {
                 $user->assignRole('Reviewer');
