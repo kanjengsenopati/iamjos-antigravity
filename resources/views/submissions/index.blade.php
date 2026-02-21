@@ -61,41 +61,41 @@
                     {{-- Editor+ Tab Navigation --}}
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=queue"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
-                       {{ $filter === 'queue' ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
+                       {{ $filter === 'queue' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         My Queue
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                            {{ $filter === 'queue' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
+                            {{ $filter === 'queue' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
                             {{ $statusCounts['queue'] ?? 0 }}
                         </span>
                     </a>
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=unassigned"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
-                       {{ $filter === 'unassigned' ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
+                       {{ $filter === 'unassigned' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         Unassigned
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                            {{ $filter === 'unassigned' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
+                            {{ $filter === 'unassigned' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
                             {{ $statusCounts['unassigned'] ?? 0 }}
                         </span>
                     </a>
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=active"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
-                       {{ $filter === 'active' ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
+                       {{ $filter === 'active' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         All Active
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                            {{ $filter === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
+                            {{ $filter === 'active' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
                             {{ $statusCounts['active'] ?? 0 }}
                         </span>
                     </a>
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=archives"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
-                       {{ $filter === 'archives' ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
+                       {{ $filter === 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         Archives
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                            {{ $filter === 'archives' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
+                            {{ $filter === 'archives' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
                             {{ $statusCounts['archives'] ?? 0 }}
                         </span>
                     </a>
@@ -103,21 +103,21 @@
                     {{-- Author Tab Navigation --}}
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=active"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
-                       {{ $filter !== 'archives' ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
+                       {{ $filter !== 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         My Queue
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                            {{ $filter !== 'archives' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
+                            {{ $filter !== 'archives' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
                             {{ $statusCounts['active'] ?? 0 }}
                         </span>
                     </a>
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=archives"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
-                       {{ $filter === 'archives' ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
+                       {{ $filter === 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         Archives
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                            {{ $filter === 'archives' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
+                            {{ $filter === 'archives' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
                             {{ $statusCounts['archives'] ?? 0 }}
                         </span>
                     </a>
@@ -352,8 +352,17 @@
                                     @endif
                                 </div>
 
-                                <!-- Actions Vertical Stack -->
-                                <div class="flex flex-col items-end gap-2 text-right">
+                                <!-- Actions Horizontal Stack (OJS 3.3 Style) -->
+                                <div class="flex flex-wrap items-center justify-end gap-3 text-right">
+                                    
+                                    <!-- Galley Count -->
+                                    @if($submission->status === 'published' && $submission->galleys_count > 0)
+                                        <div class="flex items-center gap-1.5 text-sm font-medium text-gray-600" title="{{ $submission->galleys_count }} Galley(s)">
+                                            <i class="fa-regular fa-file-lines text-gray-400"></i>
+                                            <span>{{ $submission->galleys_count }}</span>
+                                        </div>
+                                    @endif
+
                                     <!-- Status Badge -->
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap
@@ -363,27 +372,26 @@
                                             @case('in_review') bg-amber-50 text-amber-700 border border-amber-200 @break
                                             @case('revision_required') bg-orange-50 text-orange-700 border border-orange-200 @break
                                             @case('accepted') bg-emerald-50 text-emerald-700 border border-emerald-200 @break
-                                            @case('rejected') bg-red-50 text-red-700 border border-red-200 @break
-                                            @case('published') bg-green-50 text-green-700 border border-green-200 @break
+                                            @case('rejected') bg-rose-600 text-white @break
+                                            @case('published') bg-emerald-600 text-white @break
                                             @default bg-gray-100 text-gray-700
                                         @endswitch
                                     ">
                                         {{ $submission->status_label }}
                                     </span>
 
-
-
-                                    <div class="flex items-center gap-2">
+                                    <!-- Action Button Group -->
+                                    <div class="inline-flex shadow-sm rounded-md">
                                         <!-- View Button -->
                                         <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
-                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 focus:z-10 focus:ring-1 focus:ring-indigo-500 focus:text-indigo-600 transition-colors">
                                             View
                                         </a>
 
-                                        <!-- Expand/Collapse Button -->
-                                        <button @click="expanded = !expanded"
-                                            class="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
-                                            <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
+                                        <!-- Expand/Collapse Button (Dropdown Arrow Style) -->
+                                        <button @click="expanded = !expanded" type="button"
+                                            class="inline-flex items-center px-2 py-1.5 text-xs font-medium text-gray-400 bg-white border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-50 hover:text-gray-600 focus:z-10 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                                            <i class="fa-solid fa-chevron-down transition-transform duration-200"
                                                 :class="{ 'rotate-180': expanded }"></i>
                                         </button>
                                     </div>

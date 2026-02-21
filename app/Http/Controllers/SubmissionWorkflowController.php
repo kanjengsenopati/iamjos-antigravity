@@ -11,6 +11,7 @@ use App\Models\ReviewRound;
 use App\Models\Submission;
 use App\Models\SubmissionDeclineLog;
 use App\Models\SubmissionFile;
+use App\Models\SubmissionLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -184,12 +185,13 @@ class SubmissionWorkflowController extends Controller
             $user->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
 
             // Log the event
-            \App\Models\SubmissionLog::log(
-                $submission,
-                \App\Models\SubmissionLog::EVENT_EDITOR_ASSIGNED,
-                'Editor Assigned',
-                auth()->user()->name . " assigned {$user->name} as " . ucfirst(str_replace('_', ' ', $role)) . ".",
-                ['editor_id' => $user->id, 'role' => $role]
+            SubmissionLog::log(
+                submission:  $submission,
+                eventType:   SubmissionLog::EVENT_EDITOR_ASSIGNED,
+                title:       'Editor Assigned',
+                description: auth()->user()->name . " assigned {$user->name} as " . ucfirst(str_replace('_', ' ', $role)) . ".",
+                metadata:    ['editor_id' => $user->id, 'role' => $role],
+                stage:       $submission->stage,
             );
         }
 
@@ -272,6 +274,17 @@ class SubmissionWorkflowController extends Controller
             }
 
             DB::commit();
+
+            // Audit log the stage change
+            $stageNames = [1 => 'Submission', 2 => 'Review', 3 => 'Copyediting', 4 => 'Production'];
+            SubmissionLog::log(
+                submission:  $submission,
+                eventType:   SubmissionLog::EVENT_STAGE_CHANGED,
+                title:       'Stage Changed to ' . ($stageNames[$newStageId] ?? $newStageId),
+                description: auth()->user()->name . ' changed the workflow stage' . ($action ? " (action: $action)" : '') . '.',
+                metadata:    ['from_stage' => $oldStageId, 'to_stage' => $newStageId, 'action' => $action],
+                stage:       SubmissionLog::stageFromId($newStageId),
+            );
 
             return back()->with('success', $this->getStageChangeMessage($oldStageId, $newStageId, $action));
         } catch (\Exception $e) {
@@ -362,7 +375,7 @@ class SubmissionWorkflowController extends Controller
         $file = $request->file('file');
         $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}/files");
 
-        SubmissionFile::create([
+        $submissionFile = SubmissionFile::create([
             'id' => (string) \Illuminate\Support\Str::uuid(),
             'submission_id' => $submission->id,
             'uploaded_by' => auth()->id(),
@@ -374,6 +387,17 @@ class SubmissionWorkflowController extends Controller
             'stage' => $request->stage,
             'version' => 1,
         ]);
+
+        // Audit log with file reference
+        SubmissionLog::log(
+            submission:  $submission,
+            eventType:   SubmissionLog::EVENT_FILE_UPLOADED,
+            title:       'File Uploaded: ' . $file->getClientOriginalName(),
+            description: auth()->user()->name . ' uploaded a file to the ' . $request->stage . ' stage.',
+            metadata:    ['file_name' => $file->getClientOriginalName(), 'file_size' => $file->getSize()],
+            fileIds:     [$submissionFile->id],
+            stage:       $request->stage,
+        );
 
         return back()->with('success', 'File uploaded successfully.');
     }
@@ -494,13 +518,14 @@ class SubmissionWorkflowController extends Controller
             }
 
             // Copy selected files to review stage
+            $submissionFileIds = [];
             if (!empty($validated['selected_files'])) {
                 foreach ($validated['selected_files'] as $fileData) {
                     if ($fileData['type'] === 'submission_file') {
                         // Copy submission file
                         $originalFile = SubmissionFile::find($fileData['id']);
                         if ($originalFile) {
-                            SubmissionFile::create([
+                            $submissionFile = SubmissionFile::create([
                                 'id' => (string) Str::uuid(),
                                 'submission_id' => $submission->id,
                                 'uploaded_by' => auth()->id(),
@@ -516,12 +541,13 @@ class SubmissionWorkflowController extends Controller
                                     'copied_at' => now()->toISOString(),
                                 ],
                             ]);
+                            $submissionFileIds[] = $submissionFile->id;
                         }
                     } elseif ($fileData['type'] === 'discussion_file') {
                         // Copy discussion file to submission files
                         $discussionFile = DiscussionFile::find($fileData['id']);
                         if ($discussionFile) {
-                            SubmissionFile::create([
+                            $submissionFile = SubmissionFile::create([
                                 'id' => (string) Str::uuid(),
                                 'submission_id' => $submission->id,
                                 'uploaded_by' => auth()->id(),
@@ -537,12 +563,24 @@ class SubmissionWorkflowController extends Controller
                                     'copied_at' => now()->toISOString(),
                                 ],
                             ]);
+                            $submissionFileIds[] = $submissionFile->id;
                         }
                     }
                 }
             }
 
             DB::commit();
+
+            // Audit log the stage transition
+            SubmissionLog::log(
+                submission:  $submission,
+                eventType:   SubmissionLog::EVENT_STAGE_CHANGED,
+                title:       'Sent to Review Stage',
+                description: auth()->user()->name . ' promoted the submission to the Review stage with ' . count($validated['selected_files'] ?? []) . ' file(s).',
+                metadata:    ['file_count' => count($validated['selected_files'] ?? [])],
+                fileIds:     $submissionFileIds,
+                stage:       Submission::STAGE_REVIEW,
+            );
 
             return back()->with('success', 'Submission sent to Review stage. ' . count($validated['selected_files'] ?? []) . ' file(s) promoted.');
         } catch (\Exception $e) {
@@ -581,12 +619,13 @@ class SubmissionWorkflowController extends Controller
             ]);
 
             // Copy selected files to copyediting stage
+            $submissionFileIds = [];
             if (!empty($validated['selected_files'])) {
                 foreach ($validated['selected_files'] as $fileData) {
                     if ($fileData['type'] === 'submission_file') {
                         $originalFile = SubmissionFile::find($fileData['id']);
                         if ($originalFile) {
-                            SubmissionFile::create([
+                            $submissionFile = SubmissionFile::create([
                                 'id' => (string) Str::uuid(),
                                 'submission_id' => $submission->id,
                                 'uploaded_by' => auth()->id(),
@@ -603,11 +642,12 @@ class SubmissionWorkflowController extends Controller
                                     'copied_at' => now()->toISOString(),
                                 ],
                             ]);
+                            $submissionFileIds[] = $submissionFile->id;
                         }
                     } elseif ($fileData['type'] === 'discussion_file') {
                         $discussionFile = DiscussionFile::find($fileData['id']);
                         if ($discussionFile) {
-                            SubmissionFile::create([
+                            $submissionFile = SubmissionFile::create([
                                 'id' => (string) Str::uuid(),
                                 'submission_id' => $submission->id,
                                 'uploaded_by' => auth()->id(),
@@ -624,6 +664,7 @@ class SubmissionWorkflowController extends Controller
                                     'copied_at' => now()->toISOString(),
                                 ],
                             ]);
+                            $submissionFileIds[] = $submissionFile->id;
                         }
                     }
                 }
@@ -641,6 +682,16 @@ class SubmissionWorkflowController extends Controller
             }
 
             DB::commit();
+
+            // Audit log the skip-review stage transition
+            SubmissionLog::log(
+                submission:  $submission,
+                eventType:   SubmissionLog::EVENT_STAGE_CHANGED,
+                title:       'Skip Review – Sent to Copyediting',
+                description: auth()->user()->name . ' accepted the submission and skipped review, moving it directly to Copyediting.',
+                fileIds:     $submissionFileIds,
+                stage:       Submission::STAGE_COPYEDITING,
+            );
 
             return back()->with('success', 'Submission accepted and moved directly to Copyediting.');
         } catch (\Exception $e) {

@@ -115,6 +115,8 @@ class SubmissionDiscussionController extends Controller
                 'body' => $request->body,
             ]);
 
+            $submissionFileIds = [];
+
             // 4. Link Attached Files
             if ($request->filled('attached_files')) {
                 foreach ($request->attached_files as $fileData) {
@@ -123,11 +125,46 @@ class SubmissionDiscussionController extends Controller
                             'discussion_message_id' => $firstMessage->id,
                             'original_name' => $fileData['name'] ?? DB::raw('original_name'),
                         ]);
+
+                    // Auto-copy to SubmissionFiles for audit trail
+                    $discussionFile = DiscussionFile::find($fileData['id']);
+                    if ($discussionFile) {
+                        $submissionFile = \App\Models\SubmissionFile::create([
+                            'id' => (string) Str::uuid(),
+                            'submission_id' => $submission->id,
+                            'uploaded_by' => $currentUserId,
+                            'file_path' => $discussionFile->file_path,
+                            'file_name' => $fileData['name'] ?? $discussionFile->original_name,
+                            'file_type' => 'document',
+                            'mime_type' => 'application/octet-stream',
+                            'file_size' => $discussionFile->file_size,
+                            'stage' => 'discussion',
+                            'version' => 1,
+                            'metadata' => [
+                                'discussion_id' => $discussion->id,
+                                'discussion_message_id' => $firstMessage->id,
+                                'copied_from_discussion' => $discussionFile->id,
+                            ],
+                        ]);
+                        $submissionFileIds[] = $submissionFile->id;
+                    }
                 }
             }
+
+            // 5. Log activity and attach files
+            \App\Models\SubmissionLog::log(
+                submission:  $submission,
+                eventType:   \App\Models\SubmissionLog::EVENT_DISCUSSION_CREATED,
+                title:       'Discussion Created',
+                description: auth()->user()->name . ' started a new discussion: "' . $discussion->subject . '"',
+                metadata:    ['discussion_id' => $discussion->id],
+                user:        auth()->user(),
+                fileIds:     $submissionFileIds,
+                stage:       $submission->stage,
+            );
         });
 
-        // 5. Send Notifications to all participants EXCEPT the creator
+        // 6. Send Notifications to all participants EXCEPT the creator
         if ($discussion && $firstMessage) {
             $this->notifyParticipants($discussion, $firstMessage, $currentUserId);
         }
@@ -179,6 +216,8 @@ class SubmissionDiscussionController extends Controller
                 'body' => $request->body,
             ]);
 
+            $submissionFileIds = [];
+
             // 2. Link Attached Files
             if ($request->filled('attached_files')) {
                 foreach ($request->attached_files as $fileData) {
@@ -187,6 +226,29 @@ class SubmissionDiscussionController extends Controller
                             'discussion_message_id' => $message->id,
                             'original_name' => $fileData['name'] ?? DB::raw('original_name'),
                         ]);
+
+                    // Auto-copy to SubmissionFiles for audit trail
+                    $discussionFile = DiscussionFile::find($fileData['id']);
+                    if ($discussionFile) {
+                        $submissionFile = \App\Models\SubmissionFile::create([
+                            'id' => (string) Str::uuid(),
+                            'submission_id' => $discussion->submission_id,
+                            'uploaded_by' => $currentUserId,
+                            'file_path' => $discussionFile->file_path,
+                            'file_name' => $fileData['name'] ?? $discussionFile->original_name,
+                            'file_type' => 'document',
+                            'mime_type' => 'application/octet-stream',
+                            'file_size' => $discussionFile->file_size,
+                            'stage' => 'discussion',
+                            'version' => 1,
+                            'metadata' => [
+                                'discussion_id' => $discussion->id,
+                                'discussion_message_id' => $message->id,
+                                'copied_from_discussion' => $discussionFile->id,
+                            ],
+                        ]);
+                        $submissionFileIds[] = $submissionFile->id;
+                    }
                 }
             }
 
@@ -197,6 +259,18 @@ class SubmissionDiscussionController extends Controller
             if (!$discussion->hasParticipant($currentUserId)) {
                 $discussion->addParticipants([$currentUserId]);
             }
+
+            // 5. Log activity and attach files
+            \App\Models\SubmissionLog::log(
+                submission:  $discussion->submission,
+                eventType:   \App\Models\SubmissionLog::EVENT_DISCUSSION_MESSAGE,
+                title:       'Discussion Message Added',
+                description: auth()->user()->name . ' replied to discussion: "' . $discussion->subject . '"',
+                metadata:    ['discussion_id' => $discussion->id, 'message_id' => $message->id],
+                user:        auth()->user(),
+                fileIds:     $submissionFileIds,
+                stage:       $discussion->submission->stage,
+            );
         });
 
         // 5. Notify all participants except sender

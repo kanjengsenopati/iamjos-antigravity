@@ -202,14 +202,14 @@ class ReviewWorkflowController extends Controller
             switch ($request->decision) {
                 case 'request_revisions':
                     if ($reviewRound) {
-                        $reviewRound->update(['status' => ReviewRound::STATUS_REVISIONS_REQUESTED]);
+                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_REVISIONS_REQUESTED]);
                     }
                     $submission->update(['status' => Submission::STATUS_REVISION_REQUIRED]);
                     break;
 
                 case 'resubmit_for_review':
                     if ($reviewRound) {
-                        $reviewRound->update(['status' => ReviewRound::STATUS_RESUBMIT_FOR_REVIEW]);
+                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_RESUBMIT_FOR_REVIEW]);
                     }
                     // Create new review round
                     ReviewRound::create([
@@ -221,7 +221,7 @@ class ReviewWorkflowController extends Controller
 
                 case 'accept':
                     if ($reviewRound) {
-                        $reviewRound->update(['status' => ReviewRound::STATUS_APPROVED]);
+                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_APPROVED]);
                     }
                     // Move to Copyediting stage (stage_id = 3)
                     // Status: queued_for_copyediting
@@ -231,6 +231,7 @@ class ReviewWorkflowController extends Controller
                         'accepted_at' => now(),
                     ]);
 
+                    $submissionFileIds = [];
                     // Promote selected files to Copyediting stage as DRAFT files
                     if ($request->has('selected_files')) {
                         $filesToPromote = SubmissionFile::whereIn('id', $request->selected_files)->get();
@@ -243,8 +244,23 @@ class ReviewWorkflowController extends Controller
                                 'promoted_at' => now()->toIso8601String(),
                             ]);
                             $newFile->save();
+                            $submissionFileIds[] = $newFile->id;
                         }
                     }
+
+                    // Log the acceptance and promotion
+                    SubmissionLog::log(
+                        submission:  $submission,
+                        eventType:   SubmissionLog::EVENT_STAGE_CHANGED,
+                        title:       'Submission Accepted',
+                        description: auth()->user()->name . ' accepted the submission and promoted ' . count($submissionFileIds) . ' file(s) to the Copyediting stage.',
+                        metadata:    [
+                            'decision' => 'accept',
+                            'files_promoted' => count($submissionFileIds),
+                        ],
+                        fileIds:     $submissionFileIds,
+                        stage:       Submission::STAGE_COPYEDITING
+                    );
 
                     // Email Handling
                     if ($request->boolean('send_email', true)) {
@@ -258,7 +274,7 @@ class ReviewWorkflowController extends Controller
 
                 case 'decline':
                     if ($reviewRound) {
-                        $reviewRound->update(['status' => ReviewRound::STATUS_DECLINED]);
+                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_DECLINED]);
                     }
                     $submission->update(['status' => Submission::STATUS_REJECTED]);
                     break;
@@ -398,15 +414,16 @@ class ReviewWorkflowController extends Controller
 
             // 4. Log the event
             SubmissionLog::log(
-                $submission,
-                SubmissionLog::EVENT_STAGE_CHANGED,
-                'Sent to Production',
-                auth()->user()->name . ' sent this submission to the Production stage.',
-                [
+                submission: $submission,
+                eventType: SubmissionLog::EVENT_STAGE_CHANGED,
+                title: 'Sent to Production',
+                description: auth()->user()->name . ' sent this submission to the Production stage.',
+                metadata: [
                     'from_stage'     => 3,
                     'to_stage'       => 4,
                     'files_promoted' => count($promotedIds),
-                ]
+                ],
+                fileIds: $promotedIds
             );
         });
 
@@ -542,12 +559,13 @@ public function searchReviewers(Request $request, string $journalSlug)
             }
 
             // 4. Promote selected files to "revision" stage (author-visible)
+            $submissionFileIds = [];
             if (!empty($validated['selected_files'])) {
                 foreach ($validated['selected_files'] as $fileId) {
                     $originalFile = SubmissionFile::find($fileId);
                     if ($originalFile && $originalFile->submission_id === $submission->id) {
                         // Create a copy with 'revision' stage for author visibility
-                        SubmissionFile::create([
+                        $submissionFile = SubmissionFile::create([
                             'submission_id' => $submission->id,
                             'uploaded_by' => auth()->id(),
                             'file_path' => $originalFile->file_path,
@@ -564,6 +582,7 @@ public function searchReviewers(Request $request, string $journalSlug)
                                 'decision_type' => 'revision_request',
                             ],
                         ]);
+                        $submissionFileIds[] = $submissionFile->id;
                     }
                 }
             }
@@ -585,15 +604,16 @@ public function searchReviewers(Request $request, string $journalSlug)
 
             // 6. Log the decision
             SubmissionLog::log(
-                $submission,
-                SubmissionLog::EVENT_DECISION_MADE,
-                'Revisions Requested',
-                'Editor requested revisions from the author.' . ($validated['new_review_round'] ? ' A new review round will be required.' : ''),
-                [
+                submission:  $submission,
+                eventType:   SubmissionLog::EVENT_DECISION_MADE,
+                title:       'Revisions Requested',
+                description: 'Editor requested revisions from the author.' . ($validated['new_review_round'] ? ' A new review round will be required.' : ''),
+                metadata:    [
                     'decision' => 'revision_request',
                     'new_round' => $validated['new_review_round'],
                     'files_shared' => count($validated['selected_files'] ?? []),
-                ]
+                ],
+                fileIds:     $submissionFileIds
             );
         });
 
@@ -781,12 +801,13 @@ public function searchReviewers(Request $request, string $journalSlug)
             }
 
             // 3. Promote selected revision files to review files for new round
+            $submissionFileIds = [];
             if (!empty($validated['selected_files'])) {
                 foreach ($validated['selected_files'] as $fileId) {
                     $originalFile = SubmissionFile::find($fileId);
                     if ($originalFile && $originalFile->submission_id === $submission->id) {
                         // Create a copy as a review file for the new round
-                        SubmissionFile::create([
+                        $submissionFile = SubmissionFile::create([
                             'submission_id' => $submission->id,
                             'uploaded_by' => auth()->id(),
                             'file_path' => $originalFile->file_path,
@@ -804,6 +825,7 @@ public function searchReviewers(Request $request, string $journalSlug)
                                 'review_round' => $newRoundNumber,
                             ],
                         ]);
+                        $submissionFileIds[] = $submissionFile->id;
                     }
                 }
             }
@@ -815,15 +837,16 @@ public function searchReviewers(Request $request, string $journalSlug)
 
             // 5. Log the event
             SubmissionLog::log(
-                $submission,
-                'review_new_round',
-                'New Review Round Created',
-                "Round {$newRound->round} has been created. The submission is now queued for review.",
-                [
+                submission:  $submission,
+                eventType:   'review_new_round',
+                title:       'New Review Round Created',
+                description: "Round {$newRound->round} has been created. The submission is now queued for review.",
+                metadata:    [
                     'round' => $newRound->round,
                     'files_promoted' => count($validated['selected_files'] ?? []),
                     'created_by' => auth()->id(),
-                ]
+                ],
+                fileIds:     $submissionFileIds
             );
         });
 
