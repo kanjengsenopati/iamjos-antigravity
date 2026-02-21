@@ -18,10 +18,18 @@
                 class="pb-3 text-sm font-bold border-b-2 transition">
             <i class="fa-solid fa-clock-rotate-left mr-1.5 text-xs"></i> Activity History
         </button>
+        @if(auth()->user()->hasJournalPermission([1, 2], $submission->journal->id))
+        <button @click="currentTab = 'notes'"
+                :class="currentTab === 'notes' ? 'border-primary-600 text-primary-700' : 'border-transparent text-slate-500 hover:text-slate-700'"
+                class="pb-3 text-sm font-bold border-b-2 transition">
+            <i class="fa-solid fa-note-sticky mr-1.5 text-xs"></i> Internal Notes
+        </button>
+        @endif
     </div>
 
     {{-- Content --}}
     <div class="p-6 bg-white max-h-[65vh] overflow-y-auto">
+        <!-- History Tab Content (Existing) -->
         <div x-show="currentTab === 'history'">
 
             @php
@@ -197,5 +205,56 @@
             @endif
 
         </div>
+
+        @if(auth()->user()->hasJournalPermission([1, 2], $submission->journal->id))
+        <!-- Notes Tab Content -->
+        <div x-show="currentTab === 'notes'" style="display: none;">
+            <div class="space-y-4 mb-6">
+                @forelse($submission->notes as $note)
+                    <div class="border border-slate-200 rounded-lg p-4 relative group hover:border-slate-300 transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-800">{{ $note->user->name ?? 'Unknown User' }}</h4>
+                                <p class="text-[11px] text-slate-500">{{ $note->created_at->format('M d, Y H:i') }}</p>
+                            </div>
+                            @if(auth()->id() === $note->user_id || auth()->user()->hasJournalPermission([1], $submission->journal->id))
+                                <form action="{{ route('submission.notes.destroy', ['journal' => $submission->journal->slug, 'submission' => $submission, 'note' => $note]) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this note?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-slate-400 hover:text-red-600 transition p-1 opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Note">
+                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                        <div class="text-sm text-slate-700 whitespace-pre-wrap">{{ $note->note }}</div>
+                    </div>
+                @empty
+                    <div class="text-center py-10 text-slate-400 bg-slate-50 border border-dashed border-slate-200 rounded-lg">
+                        <i class="fa-regular fa-note-sticky text-3xl mb-3 opacity-40"></i>
+                        <p class="text-sm">There are no internal notes for this submission yet.</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Add Note Form -->
+            <div class="mt-6 pt-6 border-t border-slate-200">
+                <form action="{{ route('submission.notes.store', ['journal' => $submission->journal->slug, 'submission' => $submission]) }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="note" class="block text-sm font-semibold text-slate-700 mb-2">Add Note</label>
+                        <textarea name="note" id="note" rows="3" required
+                                  class="w-full px-3 py-2 text-sm text-slate-700 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                  placeholder="Type your internal editorial note here..."></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
+                            <i class="fa-solid fa-plus mr-1.5"></i> Add Note
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
     </div>
 </div>

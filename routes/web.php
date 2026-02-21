@@ -94,6 +94,10 @@ Route::middleware(['auth'])->group(function () {
     // --------- Submission Log History (AJAX) ---------
     Route::get('/submissions/{submission}/log-history', [\App\Http\Controllers\Admin\SubmissionController::class, 'logHistory'])
         ->name('submission.log.history');
+    Route::post('/{journal:slug}/submissions/{submission}/notes', [\App\Http\Controllers\Admin\SubmissionController::class, 'storeNote'])
+        ->name('submission.notes.store');
+    Route::delete('/{journal:slug}/submissions/{submission}/notes/{note}', [\App\Http\Controllers\Admin\SubmissionController::class, 'destroyNote'])
+        ->name('submission.notes.destroy');
     // Assign Reviewer (Prompt Requirement - Global)
     // Route::post('/submissions/{submission}/assign-reviewer', [\App\Http\Controllers\ReviewerController::class, 'assign'])->name('submission.assign-reviewer');
 });
