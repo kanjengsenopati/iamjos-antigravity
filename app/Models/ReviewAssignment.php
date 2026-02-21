@@ -73,7 +73,7 @@ class ReviewAssignment extends Model
 
     /**
      * Auto-generate a unique reviewer ID when a ReviewAssignment is created.
-     * Format: REV-YYYY-XXXXX (e.g. REV-2026-ABC12)
+     * Format: rev-YYYY-xxxxx (e.g. rev-2026-abc12)
      */
     protected static function boot(): void
     {
