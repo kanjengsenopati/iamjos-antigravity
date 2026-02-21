@@ -67,7 +67,8 @@ class SubmissionController extends Controller
                 'authors',
                 'discussions',        // For discussion count badge
                 'reviewAssignments',  // For reviewer progress (X/Y)
-            ]);
+            ])
+            ->withCount('galleys');
 
         if (!$isEditor) {
             // === AUTHOR VIEW ===
