@@ -297,7 +297,7 @@
                         $discussionCount = $submission->discussions->count();
 
                         // Calculate reviewer progress (for review stage)
-                        $reviewerCompleted = $submission->reviewAssignments->whereNotNull('date_completed')->count();
+                        $reviewerCompleted = $submission->reviewAssignments->where('status', 'completed')->count();
                         $reviewerTotal = $submission->reviewAssignments->count();
 
                         // Determine if submission is in review stage
