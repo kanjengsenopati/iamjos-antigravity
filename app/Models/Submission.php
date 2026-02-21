@@ -245,6 +245,14 @@ class Submission extends Model
     }
 
     /**
+     * Get all notes for this submission
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(SubmissionNote::class, 'submission_id')->latest();
+    }
+
+    /**
      * Get all authors for this submission
      */
     public function authors(): HasMany
