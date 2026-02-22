@@ -485,6 +485,7 @@ Route::prefix('{journal:slug}')->group(function () {
                 Route::post('/email-templates/{emailTemplate}/toggle', [WorkflowSettingsController::class, 'toggleEmailTemplate'])->name('email-templates.toggle');
                 Route::post('/email-templates/{emailTemplate}/reset', [WorkflowSettingsController::class, 'resetEmailTemplate'])->name('email-templates.reset');
                 Route::put('/notification-templates/{eventKey}', [WorkflowSettingsController::class, 'updateNotificationTemplate'])->name('notification-templates.update');
+                Route::post('/whatsapp-toggle', [WorkflowSettingsController::class, 'toggleWhatsappNotifications'])->name('whatsapp.toggle');
             });
             // Distribution Settings
             Route::controller(\App\Http\Controllers\Admin\DistributionSettingsController::class)->prefix('distribution')->name('distribution.')->group(function () {

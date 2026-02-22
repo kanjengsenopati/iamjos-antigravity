@@ -576,5 +576,39 @@ class WorkflowSettingsController extends Controller
 
         return back()->with('success', 'Notification template updated successfully.');
     }
+
+    /**
+     * Toggle WhatsApp notifications for the journal.
+     */
+    public function toggleWhatsappNotifications(Request $request, string $journal)
+    {
+        $currentJournal = current_journal();
+
+        if (!$currentJournal) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Journal not found'], 404);
+            }
+            abort(404, 'Journal not found.');
+        }
+
+        $validated = $request->validate([
+            'enabled' => 'required|boolean',
+        ]);
+
+        $currentJournal->update([
+            'wa_notifications_enabled' => $validated['enabled'],
+        ]);
+
+        if ($request->wantsJson()) {
+             return response()->json([
+                 'success' => true, 
+                 'message' => 'WhatsApp notifications ' . ($currentJournal->wa_notifications_enabled ? 'enabled' : 'disabled') . ' successfully.',
+                 'enabled' => $currentJournal->wa_notifications_enabled
+             ]);
+        }
+
+        $status = $currentJournal->wa_notifications_enabled ? 'enabled' : 'disabled';
+        return back()->with('success', "WhatsApp notifications {$status} successfully.");
+    }
 }
 
