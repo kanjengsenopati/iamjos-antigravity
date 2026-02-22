@@ -161,73 +161,70 @@ class AuthController extends Controller
      */
     protected function handlePostLoginRedirect(User $user, ?Journal $journal)
     {
-        // Super Admin always goes to site admin dashboard
+        // 1. Super Admin always goes to site admin dashboard
         if ($user->hasRole('Super Admin')) {
             session()->forget(['intended_journal', 'login_journal_slug']);
             return redirect()->route('admin.site.index');
         }
 
-        // For reviewers, redirect to their review assignments (OJS 3.3 style)
-        if ($user->hasRole('Reviewer')) {
-            // Priority 1: Journal context from current route
-            if ($journal) {
-                session()->forget(['intended_journal', 'login_journal_slug']);
-                return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug]);
-            }
-
-            // Priority 2: Intended journal from query parameter or session
-            $intendedJournal = session('intended_journal');
-            if ($intendedJournal) {
-                session()->forget('intended_journal');
-                return redirect()->route('journal.reviewer.index', ['journal' => $intendedJournal]);
-            }
-
-            // Priority 3: Journal stored in session from context middleware
-            $loginJournalSlug = session('login_journal_slug');
-            if ($loginJournalSlug) {
-                session()->forget('login_journal_slug');
-                return redirect()->route('journal.reviewer.index', ['journal' => $loginJournalSlug]);
-            }
-
-            // Priority 4: If user has only one journal, go directly to its reviewer page
-            $userJournals = $user->registeredJournals();
-            if ($userJournals->count() === 1) {
-                return redirect()->route('journal.reviewer.index', ['journal' => $userJournals->first()->slug]);
-            }
-
-            // Default: Go to journal selection page
-            return redirect()->route('journal.select');
-        }
-
-        // For all other users, redirect directly to submissions (OJS 3.3 style - no dashboard)
-        // Priority 1: Journal context from current route
-        if ($journal) {
-            session()->forget(['intended_journal', 'login_journal_slug']);
-            return redirect()->route('journal.submissions.index', ['journal' => $journal->slug]);
-        }
-
-        // Priority 2: Intended journal from query parameter or session
-        $intendedJournal = session('intended_journal');
-        if ($intendedJournal) {
-            session()->forget('intended_journal');
-            return redirect()->route('journal.submissions.index', ['journal' => $intendedJournal]);
-        }
-
-        // Priority 3: Journal stored in session from context middleware
-        $loginJournalSlug = session('login_journal_slug');
-        if ($loginJournalSlug) {
-            session()->forget('login_journal_slug');
-            return redirect()->route('journal.submissions.index', ['journal' => $loginJournalSlug]);
-        }
-
-        // Priority 4: If user has only one journal, go directly to its submissions
         $userJournals = $user->registeredJournals();
-        if ($userJournals->count() === 1) {
-            return redirect()->route('journal.submissions.index', ['journal' => $userJournals->first()->slug]);
+        
+        // Helper to determine the target route and handle redirection message
+        $redirectWithInfo = function ($targetJournal, $originalJournal = null, $intendedSlug = null) use ($user) {
+            session()->forget(['intended_journal', 'login_journal_slug']);
+            
+            $route = $user->hasRoleInJournal('Reviewer', $targetJournal->id) 
+                        && $user->rolesInJournal($targetJournal->id)->count() === 1 
+                        ? 'journal.reviewer.index' 
+                        : 'journal.submissions.index';
+            
+            $redirect = redirect()->route($route, ['journal' => $targetJournal->slug]);
+            
+            if ($originalJournal && $targetJournal->id !== $originalJournal->id) {
+                $redirect->with('info', "You have been redirected to {$targetJournal->name} because you do not have access to {$originalJournal->name}.");
+            } elseif ($intendedSlug && $targetJournal->slug !== $intendedSlug) {
+                $redirect->with('info', "You have been redirected to {$targetJournal->name} because you do not have access to the requested journal.");
+            }
+            
+            return $redirect;
+        };
+
+        // 2. Check intended journal from query parameter or session
+        $intendedJournalSlug = session('intended_journal') ?? session('login_journal_slug');
+        $intendedJournal = $intendedJournalSlug ? Journal::where('slug', $intendedJournalSlug)->first() : null;
+        
+        // Determine the requested journal context (either current route journal or intended journal)
+        $requestedJournal = $journal ?? $intendedJournal;
+
+        if ($requestedJournal) {
+            // Skenario A & B: Check if user has context in requested journal
+            $hasRoleInRequested = $userJournals->contains('id', $requestedJournal->id);
+
+            if ($hasRoleInRequested) {
+                // Skenario A (Punya Akses)
+                return $redirectWithInfo($requestedJournal);
+            } else {
+                // Skenario B (Tidak Punya Akses di Requested Journal)
+                if ($userJournals->count() === 1) {
+                    // Redirect to their ONLY journal
+                    return $redirectWithInfo($userJournals->first(), $requestedJournal);
+                }
+            }
         }
 
-        // Default: Go to journal selection page
-        return redirect()->route('journal.select');
+        // Priority 4: No specific context, or user has multiple journals but no access to the requested one
+        if ($userJournals->count() === 1) {
+            return $redirectWithInfo($userJournals->first(), null, $intendedJournalSlug);
+        }
+
+        // Skenario C: Global/Multi-Akses - Go to journal selection page
+        session()->forget(['intended_journal', 'login_journal_slug']);
+        
+        $response = redirect()->route('journal.select');
+        if ($requestedJournal) {
+            $response->with('info', "Please select a journal to access. You do not have permissions in {$requestedJournal->name}.");
+        }
+        return $response;
     }
 
     /**

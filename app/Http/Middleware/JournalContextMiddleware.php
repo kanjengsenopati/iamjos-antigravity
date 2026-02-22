@@ -36,6 +36,28 @@ class JournalContextMiddleware
              abort(404, 'Journal not found.');
         }
 
+        // Global Cross-Journal Authorization for Authenticated Users
+        $user = $request->user();
+        if ($user && !$user->hasRole('Super Admin')) {
+            $userJournals = $user->registeredJournals();
+            if (!$userJournals->contains('id', $journal->id)) {
+                // User does not have access to this journal context
+                if ($userJournals->count() === 1) {
+                    $targetJournal = $userJournals->first();
+                    $route = $user->hasRoleInJournal('Reviewer', $targetJournal->id) 
+                                && $user->rolesInJournal($targetJournal->id)->count() === 1 
+                                ? 'journal.reviewer.index' 
+                                : 'journal.submissions.index';
+                    
+                    return redirect()->route($route, ['journal' => $targetJournal->slug])
+                                     ->with('info', "Access denied for {$journal->name}. You have been redirected to {$targetJournal->name}.");
+                }
+                
+                return redirect()->route('journal.select')
+                                 ->with('info', "Access denied. You do not have permissions in {$journal->name}. Please select a journal.");
+            }
+        }
+
         // Bind the journal to the service container for global access
         app()->instance('currentJournal', $journal);
 
