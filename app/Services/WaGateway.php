@@ -42,6 +42,13 @@ class WaGateway
             return false; // Fail silently, do not dispatch
         }
 
+        // 2.5. Journal Toggle Check
+        $journal = current_journal();
+        if ($journal && !$journal->wa_notifications_enabled) {
+            Log::info("WhatsApp notification skipped: Disabled for journal {$journal->name}");
+            return false;
+        }
+
         // 3. Check if WhatsApp credentials are configured
         $settings = SiteSetting::first();
 

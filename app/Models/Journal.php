@@ -29,6 +29,7 @@ class Journal extends Model
         'issn_print',
         'issn_online',
         'enabled',
+        'wa_notifications_enabled',
         'visible',
         'logo_path',
         'thumbnail_path',
@@ -76,6 +77,7 @@ class Journal extends Model
     {
         return [
             'enabled' => 'boolean',
+            'wa_notifications_enabled' => 'boolean',
             'visible' => 'boolean',
             'settings' => 'array', // JSONB to array
             'enable_oai' => 'boolean',
