@@ -15,10 +15,16 @@ class JournalSelectController extends Controller
 
         // Get journals the user is registered with
         $journals = JournalUserRole::getUserJournals($user);
+        
+        // Eager load submissions count to avoid N+1 query on selection page
+        if ($journals->isNotEmpty()) {
+            $journals->loadCount('submissions');
+        }
 
         // If user has no journals, show all enabled journals with option to join
         if ($journals->isEmpty()) {
             $journals = Journal::where('enabled', true)
+                ->withCount('submissions')
                 ->orderBy('name')
                 ->get();
                 
