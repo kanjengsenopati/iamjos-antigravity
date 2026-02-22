@@ -18,6 +18,8 @@ class SubmissionLog extends Model
         'description',
         'metadata',
         'stage',
+        'email_subject',
+        'email_body',
     ];
 
     protected $casts = [
@@ -144,6 +146,8 @@ class SubmissionLog extends Model
      * @param User|null   $user       Defaults to the authenticated user
      * @param array       $fileIds    Array of submission_files.id to attach
      * @param string|null $stage      Workflow stage string (submission|review|copyediting|production)
+     * @param string|null $emailSubject
+     * @param string|null $emailBody
      */
     public static function log(
         Submission $submission,
@@ -153,7 +157,9 @@ class SubmissionLog extends Model
         ?array $metadata = null,
         ?User $user = null,
         array $fileIds = [],
-        ?string $stage = null
+        ?string $stage = null,
+        ?string $emailSubject = null,
+        ?string $emailBody = null
     ): self {
         $log = self::create([
             'submission_id' => $submission->id,
@@ -163,6 +169,8 @@ class SubmissionLog extends Model
             'description'   => $description,
             'metadata'      => $metadata,
             'stage'         => $stage ?? $submission->stage,
+            'email_subject' => $emailSubject,
+            'email_body'    => $emailBody,
         ]);
 
         if (!empty($fileIds)) {

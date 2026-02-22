@@ -134,7 +134,7 @@
                                                     'bg-green-100 text-green-600'   : row.color === 'green',
                                                     'bg-gray-100 text-gray-500'     : row.color === 'gray' || !row.color,
                                                   }">
-                                                <i class="fa-solid" :class="'fa-' + row.icon"></i>
+                                                <i class="fa-solid" :class="row.icon"></i>
                                             </span>
                                             <div class="min-w-0">
                                                 <div class="flex flex-wrap items-center gap-1.5">
