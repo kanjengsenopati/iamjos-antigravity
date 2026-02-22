@@ -259,7 +259,9 @@ class ReviewWorkflowController extends Controller
                             'files_promoted' => count($submissionFileIds),
                         ],
                         fileIds:     $submissionFileIds,
-                        stage:       Submission::STAGE_COPYEDITING
+                        stage:       Submission::STAGE_COPYEDITING,
+                        emailSubject: $request->boolean('send_email', true) ? 'Submission Accepted' : null,
+                        emailBody:   $request->boolean('send_email', true) ? $request->email_body : null
                     );
 
                     // Email Handling
@@ -423,7 +425,10 @@ class ReviewWorkflowController extends Controller
                     'to_stage'       => 4,
                     'files_promoted' => count($promotedIds),
                 ],
-                fileIds: $promotedIds
+                fileIds: $promotedIds,
+                stage: null,
+                emailSubject: ($validated['send_email'] ?? false) ? 'Sent to Production' : null,
+                emailBody: ($validated['send_email'] ?? false) ? ($validated['email_body'] ?? null) : null
             );
         });
 
@@ -613,7 +618,10 @@ public function searchReviewers(Request $request, string $journalSlug)
                     'new_round' => $validated['new_review_round'],
                     'files_shared' => count($validated['selected_files'] ?? []),
                 ],
-                fileIds:     $submissionFileIds
+                fileIds:     $submissionFileIds,
+                stage:       null,
+                emailSubject: ($validated['send_email'] ?? false) ? 'Revisions Requested' : null,
+                emailBody:   ($validated['send_email'] ?? false) ? ($validated['email_body'] ?? null) : null
             );
         });
 

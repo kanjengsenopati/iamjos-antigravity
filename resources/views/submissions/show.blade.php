@@ -5295,7 +5295,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             ];
                                             $colors = $colorMap[$log->color] ?? $colorMap['gray'];
                                         @endphp
-                                        <li>
+                                        <li x-data="{ showEmail: false }">
                                             <div class="relative pb-8">
                                                 @if (!$isLast)
                                                     <span
@@ -5351,6 +5351,25 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 </div>
                                                             @endif
                                                         </div>
+
+                                                        {{-- Email Preview Toggle --}}
+                                                        @if ($log->email_body)
+                                                            <div class="mt-3">
+                                                                <button @click="showEmail = !showEmail" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                                                    <i class="fa-solid fa-envelope mr-1.5 text-gray-500"></i>
+                                                                    <span x-text="showEmail ? 'Hide Email' : 'View Email'"></span>
+                                                                </button>
+                                                                <div x-show="showEmail" x-collapse class="mt-3 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden text-sm">
+                                                                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex flex-col gap-1">
+                                                                        <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Subject</div>
+                                                                        <div class="font-medium text-gray-900">{{ $log->email_subject ?? 'No Subject' }}</div>
+                                                                    </div>
+                                                                    <div class="p-4 prose prose-sm max-w-none text-gray-700">
+                                                                        {!! $log->email_body !!}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
 
                                                         @if ($log->files && $log->files->count() > 0)
                                                             <div class="mt-3 flex flex-col gap-2">

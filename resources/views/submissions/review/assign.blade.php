@@ -21,7 +21,7 @@
                         <i class="fa-solid fa-chevron-right flex-shrink-0 h-5 w-5 text-gray-300" aria-hidden="true"></i>
                         <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                             class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Submission
-                            #{{ $submission->id }}</a>
+                            #{{ $submission->submission_code ?? $submission->id }}</a>
                     </div>
                 </li>
                 <li>
