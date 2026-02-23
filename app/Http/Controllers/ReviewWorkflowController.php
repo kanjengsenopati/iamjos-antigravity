@@ -903,6 +903,11 @@ public function searchReviewers(Request $request, string $journalSlug)
         // 1. Reviewer Files (stage = review)
         $reviewerFiles = SubmissionFile::where('submission_id', $submission->id)
             ->where('stage', 'review')
+            ->where('file_type', '!=', SubmissionFile::TYPE_MANUSCRIPT)
+            ->where(function ($query) {
+                $query->whereNull('metadata->promoted_from')
+                      ->orWhere('metadata->promoted_from', '!=', 'submission');
+            })
             ->with('uploader:id,name')
             ->get()
             ->map(function ($file) {
@@ -919,6 +924,7 @@ public function searchReviewers(Request $request, string $journalSlug)
         // 2. Author Revisions (stage = revision)
         $revisionFiles = SubmissionFile::where('submission_id', $submission->id)
             ->where('stage', 'revision')
+            ->where('file_type', SubmissionFile::TYPE_REVISION)
             ->with('uploader:id,name')
             ->get()
             ->map(function ($file) {
