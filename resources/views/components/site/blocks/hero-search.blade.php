@@ -12,6 +12,12 @@
     $subheadline =
         $config['subheadline'] ??
         'A secure, open-access platform for managing academic journal submissions, peer reviews, and publications.';
+
+    // Fetch top 3 popular keywords from database
+    $popularKeywords = \App\Models\Keyword::withCount('submissions')
+        ->orderBy('submissions_count', 'desc')
+        ->limit(3)
+        ->get();
 @endphp
 
 <section class="w-full bg-white pt-10 pb-16 relative overflow-hidden">
@@ -103,15 +109,17 @@
         </form>
 
         {{-- 5. QUICK TAGS --}}
-        <div class="mt-6 flex flex-wrap justify-center items-center gap-2 text-xs md:text-sm text-slate-500">
-            <span class="font-medium text-slate-400">Popular:</span>
-            <a href="{{ route('portal.journals', ['search' => 'Engineering']) }}"
-                class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">Engineering</a>
-            <a href="{{ route('portal.journals', ['search' => 'Health']) }}"
-                class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">Health</a>
-            <a href="{{ route('portal.journals', ['search' => 'Economy']) }}"
-                class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">Economics</a>
-        </div>
+        @if($popularKeywords->isNotEmpty())
+            <div class="mt-6 flex flex-wrap justify-center items-center gap-2 text-xs md:text-sm text-slate-500">
+                <span class="font-medium text-slate-400">Popular:</span>
+                @foreach($popularKeywords as $keyword)
+                    <a href="{{ route('portal.journals', ['search' => $keyword->content]) }}"
+                        class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">
+                        {{ $keyword->content }}
+                    </a>
+                @endforeach
+            </div>
+        @endif
 
     </div>
 </section>

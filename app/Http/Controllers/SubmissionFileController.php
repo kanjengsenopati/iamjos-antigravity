@@ -96,20 +96,30 @@ class SubmissionFileController extends Controller
         } elseif ($user->hasAnyRole(['Editor', 'Admin', 'Super Admin'])) {
             $canDownload = true;
         } elseif ($user->hasRole('Reviewer')) {
-            $canDownload = $submission->reviewAssignments()
-                ->where('reviewer_id', $user->id)
-                ->exists();
+            // First check if it's their own uploaded review attachment
+            if ($file->file_type === 'review_attachment' && $file->uploaded_by === $user->id) {
+                $canDownload = true;
+            } else {
+                // Otherwise check if they are an assigned reviewer for this submission
+                $canDownload = $submission->reviewAssignments()
+                    ->where('reviewer_id', $user->id)
+                    ->exists();
+            }
         }
 
         if (!$canDownload) {
             abort(403, 'You do not have permission to download this file.');
         }
 
-        if (!Storage::disk('local')->exists($file->file_path)) {
-            abort(404, 'File not found.');
+        $disk = 'local';
+        if (!Storage::disk($disk)->exists($file->file_path)) {
+            $disk = 'public';
+            if (!Storage::disk($disk)->exists($file->file_path)) {
+                abort(404, 'File not found.');
+            }
         }
 
-        return Storage::disk('local')->download($file->file_path, $file->file_name);
+        return Storage::disk($disk)->download($file->file_path, $file->file_name);
     }
 
     /**
@@ -138,8 +148,12 @@ class SubmissionFileController extends Controller
             abort(403, 'You do not have permission to view this file.');
         }
 
-        if (!Storage::disk('local')->exists($file->file_path)) {
-            abort(404, 'File not found.');
+        $disk = 'local';
+        if (!Storage::disk($disk)->exists($file->file_path)) {
+            $disk = 'public';
+            if (!Storage::disk($disk)->exists($file->file_path)) {
+                abort(404, 'File not found.');
+            }
         }
 
         // Check if file is viewable (PDF, DOC, DOCX, etc.)
@@ -184,15 +198,19 @@ class SubmissionFileController extends Controller
             abort(403, 'Invalid or expired link.');
         }
 
-        if (!Storage::disk('local')->exists($file->file_path)) {
-            abort(404, 'File not found.');
+        $disk = 'local';
+        if (!Storage::disk($disk)->exists($file->file_path)) {
+            $disk = 'public';
+            if (!Storage::disk($disk)->exists($file->file_path)) {
+                abort(404, 'File not found.');
+            }
         }
 
         // Return the file with proper headers for inline viewing
-        $mimeType = $file->mime_type ?? Storage::disk('local')->mimeType($file->file_path);
+        $mimeType = $file->mime_type ?? Storage::disk($disk)->mimeType($file->file_path);
 
         return response()->file(
-            Storage::disk('local')->path($file->file_path),
+            Storage::disk($disk)->path($file->file_path),
             [
                 'Content-Type' => $mimeType,
                 'Content-Disposition' => 'inline; filename="' . $file->file_name . '"',

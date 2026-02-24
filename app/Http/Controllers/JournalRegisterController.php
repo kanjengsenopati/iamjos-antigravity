@@ -143,7 +143,7 @@ class JournalRegisterController extends Controller
             ]);
 
             // Assign Global System Roles
-            $user->assignRole(['Reader', 'Author']);
+            // $user->assignRole(['Reader', 'Author']);
 
             // Assign Journal Specific Roles
             $this->assignJournalRoles($user, $journal, $request->boolean('reviewer_interest'));
@@ -205,7 +205,7 @@ class JournalRegisterController extends Controller
 
         // 2. If not found, create it for this journal
         if (!$authorRole) {
-            $authorRole = Role::create([
+            $authorRole = Role::query()->create([
                 'name'             => 'Author',
                 'guard_name'       => 'web',
                 'permission_level' => Role::LEVEL_AUTHOR,
@@ -231,7 +231,7 @@ class JournalRegisterController extends Controller
                 ->first();
 
             if (!$reviewerRole) {
-                $reviewerRole = Role::create([
+                $reviewerRole = Role::query()->create([
                     'name'             => 'Reviewer',
                     'guard_name'       => 'web',
                     'permission_level' => Role::LEVEL_REVIEWER,

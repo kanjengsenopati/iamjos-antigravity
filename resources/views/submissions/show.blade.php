@@ -4468,9 +4468,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                             <!-- Files Selection -->
                             <div class="space-y-3">
-                                <h4 class="text-sm font-medium text-gray-900">Select files to move to Copyediting
+                                <h4 class="text-sm font-medium text-gray-900">Select Revised Files to move to Copyediting
                                 </h4>
-                                <p class="text-xs text-gray-500">Choose files from reviews and revisions to
+                                <p class="text-xs text-gray-500">Choose files from author revisions and reviewer attachments to
                                     promote to the next stage.</p>
 
                                 <div class="border rounded-md overflow-hidden bg-white">
@@ -4498,8 +4498,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             </li>
                                         </template>
                                         <li x-show="acceptFiles.length === 0"
-                                            class="px-4 py-3 text-sm text-gray-500 italic text-center">
-                                            No files available for promotion.
+                                            class="px-4 py-4 text-sm text-yellow-700 bg-yellow-50 rounded-b-md border-t border-yellow-200 italic text-center">
+                                            No revised files found. Please ensure the author has uploaded a revision before promoting.
                                         </li>
                                     </ul>
                                 </div>

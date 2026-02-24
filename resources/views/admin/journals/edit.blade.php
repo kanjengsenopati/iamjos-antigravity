@@ -50,7 +50,7 @@
 
 <!-- Form -->
 <form action="{{ route('admin.journals.update', $journal) }}" method="POST" enctype="multipart/form-data"
-    class="max-w-3xl">
+    class="w-full max-w-5xl">
     @csrf
     @method('PUT')
 
@@ -150,19 +150,6 @@
                         class="tinymce-editor w-full">{{ old('about', $journal->about ?? '') }}</textarea>
                     <p class="mt-2 text-xs text-gray-500">Detailed information about the journal's scope, aims, and policies.</p>
                     @error('about')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Editorial Team Description -->
-                <div>
-                    <label for="editorial_team_description" class="block text-sm font-medium text-gray-700 mb-2">
-                        Editorial Team Description
-                    </label>
-                    <textarea id="editorial_team_description" name="editorial_team_description" rows="6"
-                        class="tinymce-editor w-full">{{ old('editorial_team_description', $journal->editorial_team_description ?? '') }}</textarea>
-                    <p class="mt-2 text-xs text-gray-500">Information about your editorial board and team structure.</p>
-                    @error('editorial_team_description')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -321,7 +308,7 @@
 </form>
 
 <!-- Quick Actions -->
-<div class="mt-8 max-w-3xl">
+<div class="mt-8 w-full max-w-5xl">
     <h2 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <a href="{{ route('journal.admin.users.index', ['journal' => $journal->slug]) }}"
@@ -364,63 +351,61 @@
         </a>
     </div>
 </div>
+     @push('scripts')
+        <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+        <script>
+            tinymce.init({
+                selector: '#summary,#about',
+                height: 350,
+                menubar: false,
+                plugins: 'lists link image table code autoresize',
+                toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+                branding: false,
+                license_key: 'gpl',
+                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.withCredentials = false;
+                    xhr.open('POST', '{{ route('journal.profile.upload.image', $journal->slug) }}');
+                    xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                    xhr.upload.onprogress = (e) => {
+                        progress(e.loaded / e.total * 100);
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status === 403) {
+                            reject({
+                                message: 'HTTP Error: ' + xhr.status,
+                                remove: true
+                            });
+                            return;
+                        }
+
+                        if (xhr.status < 200 || xhr.status >= 300) {
+                            reject('HTTP Error: ' + xhr.status);
+                            return;
+                        }
+
+                        const json = JSON.parse(xhr.responseText);
+
+                        if (!json || typeof json.location != 'string') {
+                            reject('Invalid JSON: ' + xhr.responseText);
+                            return;
+                        }
+
+                        resolve(json.location);
+                    };
+
+                    xhr.onerror = () => {
+                        reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                    };
+
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                    xhr.send(formData);
+                })
+            });
+        </script>
+    @endpush
 @endsection
-
-@push('scripts')
-<script>
-    // Initialize TinyMCE for all rich text editors (OJS 3.3 Compatible)
-    tinymce.init({
-        selector: '.tinymce-editor',
-        height: 500,
-        menubar: false,
-        plugins: 'lists link image table code autoresize',
-        toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
-        branding: false,
-        license_key: 'gpl',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.6; }',
-        images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.withCredentials = false;
-            xhr.open('POST', '{{ route("profile.upload.image") }}');
-            xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
-
-            xhr.upload.onprogress = (e) => {
-                progress(e.loaded / e.total * 100);
-            };
-
-            xhr.onload = () => {
-                if (xhr.status === 403) {
-                    reject({
-                        message: 'HTTP Error: ' + xhr.status,
-                        remove: true
-                    });
-                    return;
-                }
-
-                if (xhr.status < 200 || xhr.status >= 300) {
-                    reject('HTTP Error: ' + xhr.status);
-                    return;
-                }
-
-                const json = JSON.parse(xhr.responseText);
-
-                if (!json || typeof json.location != 'string') {
-                    reject('Invalid JSON: ' + xhr.responseText);
-                    return;
-                }
-
-                resolve(json.location);
-            };
-
-            xhr.onerror = () => {
-                reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
-            };
-
-            const formData = new FormData();
-            formData.append('file', blobInfo.blob(), blobInfo.filename());
-
-            xhr.send(formData);
-        })
-    });
-</script>
-@endpush

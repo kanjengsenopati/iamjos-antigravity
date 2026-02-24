@@ -104,7 +104,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                                 <i class="fa-solid fa-tachometer-alt mr-2"></i>
                                 Dashboard
                             </a>
-                            <a href="{{ route('journal.profile.edit', request()->route('journal') ?? \App\Models\Journal::first()) }}"
+                            <a href="{{ ($j = request()->route('journal') ?? \App\Models\Journal::first()) ? route('journal.profile.edit', $j) : '#' }}"
                                 class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
                                 <i class="fa-solid fa-user-edit mr-2"></i>
                                 Edit Profile
@@ -196,7 +196,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                         <i class="fa-solid fa-tachometer-alt mr-2"></i>
                         Dashboard
                     </a>
-                    <a href="{{ route('journal.profile.edit', request()->route('journal') ?? \App\Models\Journal::first()) }}"
+                    <a href="{{ ($j = request()->route('journal') ?? \App\Models\Journal::first()) ? route('journal.profile.edit', $j) : '#' }}"
                         class="block py-2 text-slate-700 hover:text-blue-600">
                         <i class="fa-solid fa-user-edit mr-2"></i>
                         Edit Profile

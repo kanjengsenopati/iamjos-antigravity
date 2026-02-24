@@ -141,7 +141,7 @@ class JournalController extends Controller
             'description' => 'nullable|string',
             'summary' => 'nullable|string',
             'about' => 'nullable|string',
-            'editorial_team_description' => 'nullable|string',
+            // 'editorial_team_description' => 'nullable|string',
             'publisher' => 'nullable|string|max:255',
             'issn_print' => 'nullable|string|max:20',
             'issn_online' => 'nullable|string|max:20',
@@ -160,12 +160,14 @@ class JournalController extends Controller
             'summary' => $validated['summary'] ?? null,
             'show_summary' => $validated['show_summary'] ?? false,
             'about' => $validated['about'] ?? null,
-            'editorial_team_description' => $validated['editorial_team_description'] ?? null,
+            // 'editorial_team_description' => $validated['editorial_team_description'] ?? null,
             'publisher' => $validated['publisher'],
             'issn_print' => $validated['issn_print'],
             'issn_online' => $validated['issn_online'],
             'enabled' => $validated['enabled'] ?? true,
             'visible' => $validated['visible'] ?? true,
+            'path' => Str::lower($validated['abbreviation']) ?? $journal->path,
+            'slug' => Str::slug($validated['abbreviation']) ?? $journal->slug,
         ]);
 
         // Upload logo
