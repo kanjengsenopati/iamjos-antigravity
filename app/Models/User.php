@@ -219,33 +219,24 @@ class User extends Authenticatable
      */
     public function getPrimaryRoleLabelAttribute(): string
     {
-        // Get all user roles (case-insensitive comparison)
-        $userRoles = $this->roles->pluck('name')->map(fn($name) => strtolower($name))->toArray();
-
-        // Define priority (check from most important to least)
-        // Order matters! First match wins.
-        $priorityList = [
-            'super admin' => 'Super Admin',
-            'admin' => 'Admin',
-            'journal manager' => 'Journal Manager',
-            'editor' => 'Editor',
-            'section editor' => 'Section Editor',
-            'guest editor' => 'Guest Editor',
-            'copyeditor' => 'Copyeditor',
-            'layout editor' => 'Layout Editor',
-            'proofreader' => 'Proofreader',
-            'reviewer' => 'Reviewer',
-            'author' => 'Author',
-            'reader' => 'Reader', // Lowest priority - only if nothing else
-        ];
-
-        foreach ($priorityList as $key => $label) {
-            if (in_array($key, $userRoles, true)) {
-                return $label;
-            }
+        // 1. Handle Super Admin (Global priority)
+        if ($this->hasRole(Role::ROLE_SUPERADMIN)) {
+            return Role::ROLE_SUPERADMIN;
         }
 
-        // Fallback: return first role if exists, otherwise 'Guest'
+        // 2. Find the highest priority role from journalRoles (smallest permission_level wins)
+        $primaryJournalRole = DB::table('journal_user_roles')
+            ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+            ->where('journal_user_roles.user_id', $this->id)
+            ->orderBy('roles.permission_level', 'asc')
+            ->select('roles.name')
+            ->first();
+
+        if ($primaryJournalRole) {
+            return $primaryJournalRole->name;
+        }
+
+        // Fallback: return first Spatie role if exists, otherwise 'Author'
         return $this->roles->first()?->name ?? 'Author';
     }
 
