@@ -149,7 +149,12 @@ class NavigationServiceProvider extends ServiceProvider
             }
         }
 
-        // TODO: Handle page type
+        if ($item->type === 'page' && $item->path) {
+            if ($journal) {
+                return route('journal.custom-page', ['journal' => $journal->slug, 'path' => $item->path]);
+            }
+        }
+
         return '#';
     }
 }
