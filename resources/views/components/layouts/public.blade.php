@@ -224,23 +224,27 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                     <h1 class="text-2xl md:text-4xl font-serif font-bold drop-shadow-lg">
                         {{ $journal->name ?? 'Academic Journal' }}
                     </h1>
-                    @if($journal->description)
-                    <p class="text-sm md:text-base text-white/80 mt-2 max-w-2xl drop-shadow">
-                        {{ Str::limit($journal->description, 150) }}
-                    </p>
-                    @endif
-                    {{-- ISSN Badges --}}
+                    {{-- Dynamic ISSN Information Block --}}
                     @if($journal->issn_online || $journal->issn_print)
-                    <div class="flex flex-wrap gap-3 mt-4">
+                    <div class="flex items-center gap-2 mt-2 text-sm text-white/90 drop-shadow">
                         @if($journal->issn_online)
-                        <span class="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white">
-                            e-ISSN: {{ $journal->issn_online }}
-                        </span>
+                            @if($journal->url_issn_online)
+                                <a href="{{ $journal->url_issn_online }}" target="_blank" class="hover:text-blue-400 hover:underline transition-colors duration-200">E-ISSN: {{ $journal->issn_online }}</a>
+                            @else
+                                <span>E-ISSN: {{ $journal->issn_online }}</span>
+                            @endif
                         @endif
+
+                        @if($journal->issn_online && $journal->issn_print)
+                            <span class="mx-1 opacity-70">|</span>
+                        @endif
+
                         @if($journal->issn_print)
-                        <span class="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white">
-                            p-ISSN: {{ $journal->issn_print }}
-                        </span>
+                            @if($journal->url_issn_print)
+                                <a href="{{ $journal->url_issn_print }}" target="_blank" class="hover:text-blue-400 hover:underline transition-colors duration-200">P-ISSN: {{ $journal->issn_print }}</a>
+                            @else
+                                <span>P-ISSN: {{ $journal->issn_print }}</span>
+                            @endif
                         @endif
                     </div>
                     @endif
@@ -270,10 +274,29 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                     <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-900">
                         {{ $journal->name ?? 'Academic Journal' }}
                     </h1>
-                    @if($journal->description)
-                    <p class="text-sm text-slate-600 mt-1 max-w-2xl">
-                        {{ Str::limit($journal->description, 150) }}
-                    </p>
+                    {{-- Dynamic ISSN Information Block --}}
+                    @if($journal->issn_online || $journal->issn_print)
+                    <div class="flex items-center gap-2 mt-1 text-sm text-slate-600">
+                        @if($journal->issn_online)
+                            @if($journal->url_issn_online)
+                                <a href="{{ $journal->url_issn_online }}" target="_blank" class="hover:text-indigo-600 hover:underline transition-colors duration-200">E-ISSN: {{ $journal->issn_online }}</a>
+                            @else
+                                <span>E-ISSN: {{ $journal->issn_online }}</span>
+                            @endif
+                        @endif
+
+                        @if($journal->issn_online && $journal->issn_print)
+                            <span class="mx-1 text-slate-400">|</span>
+                        @endif
+
+                        @if($journal->issn_print)
+                            @if($journal->url_issn_print)
+                                <a href="{{ $journal->url_issn_print }}" target="_blank" class="hover:text-indigo-600 hover:underline transition-colors duration-200">P-ISSN: {{ $journal->issn_print }}</a>
+                            @else
+                                <span>P-ISSN: {{ $journal->issn_print }}</span>
+                            @endif
+                        @endif
+                    </div>
                     @endif
                 </div>
             </div>
