@@ -57,7 +57,7 @@
     @stack('styles')
 </head>
 
-<body class="antialiased font-sans bg-gray-50 text-gray-900" x-data="{ mobileMenuOpen: false }">
+<body class="antialiased font-sans bg-gray-50 text-gray-900">
     {{-- ============================================ --}}
     {{-- DYNAMIC NAVIGATION BAR --}}
     {{-- ============================================ --}}
