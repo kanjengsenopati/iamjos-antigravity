@@ -19,7 +19,7 @@
     </div>
 
     <!-- Form -->
-    <form action="{{ route('admin.journals.store') }}" method="POST" enctype="multipart/form-data" class="max-w-3xl">
+    <form action="{{ route('admin.journals.store') }}" method="POST" enctype="multipart/form-data" class="w-full max-w-5xl">
         @csrf
 
         <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
@@ -179,4 +179,5 @@
             </div>
         </div>
     </form>
+   
 @endsection

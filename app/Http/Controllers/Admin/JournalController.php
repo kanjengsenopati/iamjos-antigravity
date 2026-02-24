@@ -166,6 +166,8 @@ class JournalController extends Controller
             'issn_online' => $validated['issn_online'],
             'enabled' => $validated['enabled'] ?? true,
             'visible' => $validated['visible'] ?? true,
+            'path' => Str::lower($validated['abbreviation']) ?? $journal->path,
+            'slug' => Str::slug($validated['abbreviation']) ?? $journal->slug,
         ]);
 
         // Upload logo
