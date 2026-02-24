@@ -44,6 +44,8 @@ class JournalController extends Controller
             'publisher' => 'nullable|string|max:255',
             'issn_print' => 'nullable|string|max:20',
             'issn_online' => 'nullable|string|max:20',
+            'url_issn_print' => 'nullable|string|max:255',
+            'url_issn_online' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048',
         ]);
 
@@ -65,7 +67,9 @@ class JournalController extends Controller
             'description' => $validated['description'],
             'publisher' => $validated['publisher'],
             'issn_print' => $validated['issn_print'],
+            'url_issn_print' => $validated['url_issn_print'] ?? null,
             'issn_online' => $validated['issn_online'],
+            'url_issn_online' => $validated['url_issn_online'] ?? null,
             'enabled' => true,
             'visible' => true,
         ]);
@@ -84,7 +88,7 @@ class JournalController extends Controller
      * Show the form for editing the journal.
      * This can be called from global admin or journal-scoped admin.
      */
-    public function edit(string $journalSlugOrId = null): View
+    public function edit(?string $journalSlugOrId = null): View
     {
         // Check if we're in journal context (called from journal-scoped route)
         $journal = current_journal();
@@ -122,7 +126,7 @@ class JournalController extends Controller
     /**
      * Update the journal settings.
      */
-    public function update(Request $request, string $journalSlugOrId = null): RedirectResponse
+    public function update(Request $request, ?string $journalSlugOrId = null): RedirectResponse
     {
         // Get journal from context or parameter
         $journal = current_journal();
@@ -145,7 +149,8 @@ class JournalController extends Controller
             'publisher' => 'nullable|string|max:255',
             'issn_print' => 'nullable|string|max:20',
             'issn_online' => 'nullable|string|max:20',
-            'summary' => 'nullable|string',
+            'url_issn_print' => 'nullable|string|max:255',
+            'url_issn_online' => 'nullable|string|max:255',
             'show_summary' => 'boolean',
             'enabled' => 'boolean',
             'visible' => 'boolean',
@@ -163,7 +168,9 @@ class JournalController extends Controller
             // 'editorial_team_description' => $validated['editorial_team_description'] ?? null,
             'publisher' => $validated['publisher'],
             'issn_print' => $validated['issn_print'],
+            'url_issn_print' => $validated['url_issn_print'] ?? null,
             'issn_online' => $validated['issn_online'],
+            'url_issn_online' => $validated['url_issn_online'] ?? null,
             'enabled' => $validated['enabled'] ?? true,
             'visible' => $validated['visible'] ?? true,
             'path' => Str::lower($validated['abbreviation']) ?? $journal->path,
@@ -219,6 +226,8 @@ class JournalController extends Controller
                 'publisher' => 'nullable|string|max:255',
                 'issn_print' => 'nullable|string|max:20',
                 'issn_online' => 'nullable|string|max:20',
+                'url_issn_print' => 'nullable|string|max:255',
+                'url_issn_online' => 'nullable|string|max:255',
                 'summary' => 'nullable|string',
                 'show_summary' => 'boolean',
                 'editorial_team' => 'nullable|string',
@@ -231,7 +240,9 @@ class JournalController extends Controller
                 'abbreviation' => $validated['abbreviation'],
                 'publisher' => $validated['publisher'],
                 'issn_print' => $validated['issn_print'],
+                'url_issn_print' => $validated['url_issn_print'] ?? null,
                 'issn_online' => $validated['issn_online'],
+                'url_issn_online' => $validated['url_issn_online'] ?? null,
                 'summary' => $validated['summary'] ?? null,
                 'show_summary' => $request->boolean('show_summary'),
             ]);

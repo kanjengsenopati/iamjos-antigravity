@@ -126,6 +126,15 @@
                                             placeholder="XXXX-XXXX" class="w-full font-mono">
                                     </div>
 
+                                    <!-- URL ISSN Print -->
+                                    <div>
+                                        <label for="url_issn_print" class="block text-sm font-medium text-gray-700 mb-1">URL ISSN
+                                            (Print)</label>
+                                        <input type="url" name="url_issn_print" id="url_issn_print"
+                                            value="{{ old('url_issn_print', $journal->url_issn_print ?? '') }}"
+                                            placeholder="https://..." class="w-full">
+                                    </div>
+
                                     <!-- ISSN Online -->
                                     <div>
                                         <label for="issn_online" class="block text-sm font-medium text-gray-700 mb-1">ISSN
@@ -133,6 +142,15 @@
                                         <input type="text" name="issn_online" id="issn_online"
                                             value="{{ old('issn_online', $journal->issn_online ?? '') }}"
                                             placeholder="XXXX-XXXX" class="w-full font-mono">
+                                    </div>
+
+                                    <!-- URL ISSN Online -->
+                                    <div>
+                                        <label for="url_issn_online" class="block text-sm font-medium text-gray-700 mb-1">URL ISSN
+                                            (Online)</label>
+                                        <input type="url" name="url_issn_online" id="url_issn_online"
+                                            value="{{ old('url_issn_online', $journal->url_issn_online ?? '') }}"
+                                            placeholder="https://..." class="w-full">
                                     </div>
                                 </div>
                             </div>
