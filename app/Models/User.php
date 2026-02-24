@@ -246,7 +246,7 @@ class User extends Authenticatable
         }
 
         // Fallback: return first role if exists, otherwise 'Guest'
-        return $this->roles->first()?->name ?? 'Guest';
+        return $this->roles->first()?->name ?? 'Author';
     }
 
     /**
