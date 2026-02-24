@@ -97,6 +97,12 @@
                             class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
                             Advanced
                         </button>
+                        <button type="button" @click="appearanceTab = 'menu_nav'"
+                            :class="appearanceTab === 'menu_nav' ? 'border-indigo-500 text-indigo-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
+                            Menu Nav
+                        </button>
                     </nav>
                 </div>
 
@@ -315,102 +321,6 @@
                             </div>
                         </div>
                     </div>
-
-                    {{-- NAVIGATION & SIDEBAR SETTINGS --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Navigation & Layout</h3>
-                        <p class="text-sm text-gray-500 mb-6">
-                            Configure your journal's navigation menus and sidebar content.
-                        </p>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {{-- Navigation Manager Card --}}
-                            <div class="border border-slate-200 rounded-lg overflow-hidden">
-                                <div
-                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fa-solid fa-bars text-slate-600"></i>
-                                        <span class="font-medium text-slate-800">Navigation</span>
-                                    </div>
-                                    <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
-                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
-                                        Manage
-                                    </a>
-                                </div>
-                                <div class="p-4">
-                                    <p class="text-sm text-slate-600 mb-3">Configure primary navigation menus and
-                                        links.</p>
-                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
-                                        <li>• Create custom menu items</li>
-                                        <li>• Assign to header/user navigation</li>
-                                        <li>• Reorder menu items</li>
-                                    </ul>
-                                    <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
-                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
-                                        <i class="fa-solid fa-bars mr-1.5"></i>
-                                        Navigation Manager
-                                    </a>
-                                </div>
-                            </div>
-
-                            {{-- Sidebar Manager Card --}}
-                            <div class="border border-slate-200 rounded-lg overflow-hidden">
-                                <div
-                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fa-solid fa-columns text-slate-600"></i>
-                                        <span class="font-medium text-slate-800">Sidebar</span>
-                                    </div>
-                                    <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
-                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
-                                        Manage
-                                    </a>
-                                </div>
-                                <div class="p-4">
-                                    <p class="text-sm text-slate-600 mb-3">Configure sidebar content and layout.</p>
-                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
-                                        <li>• Add custom content blocks</li>
-                                        <li>• Configure widgets and modules</li>
-                                        <li>• Reorder sidebar elements</li>
-                                    </ul>
-                                    <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
-                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
-                                        <i class="fa-solid fa-columns mr-1.5"></i>
-                                        Sidebar Manager
-                                    </a>
-                                </div>
-                            </div>
-
-                            {{-- DOI Settings Card --}}
-                            <div class="border border-slate-200 rounded-lg overflow-hidden">
-                                <div
-                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fa-solid fa-fingerprint text-slate-600"></i>
-                                        <span class="font-medium text-slate-800">DOI</span>
-                                    </div>
-                                    <a href="{{ route('journal.settings.doi.edit', $journalSlug) }}"
-                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
-                                        Manage
-                                    </a>
-                                </div>
-                                <div class="p-4">
-                                    <p class="text-sm text-slate-600 mb-3">Configure Digital Object Identifiers (DOI).
-                                    </p>
-                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
-                                        <li>• Set DOI prefix</li>
-                                        <li>• Configure suffix patterns</li>
-                                        <li>• Assign DOIs to content</li>
-                                    </ul>
-                                    <a href="{{ route('journal.settings.doi.edit', $journalSlug) }}"
-                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
-                                        <i class="fa-solid fa-fingerprint mr-1.5"></i>
-                                        DOI Settings
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {{-- Sub-tab: ADVANCED (Old Appearance Content) --}}
@@ -504,6 +414,105 @@
                                     id="gradient_preview"
                                     style="background: linear-gradient(135deg, {{ $settings['primary_color'] ?? '#4F46E5' }}, {{ $settings['secondary_color'] ?? '#7C3AED' }});">
                                     Gradient Preview
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Sub-tab: MENU NAV --}}
+                <div x-show="appearanceTab === 'menu_nav'" x-cloak class="grid grid-cols-1 gap-6">
+                    {{-- NAVIGATION & SIDEBAR SETTINGS --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Navigation & Layout</h3>
+                        <p class="text-sm text-gray-500 mb-6">
+                            Configure your journal's navigation menus and sidebar content.
+                        </p>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {{-- Navigation Manager Card --}}
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <div
+                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-bars text-slate-600"></i>
+                                        <span class="font-medium text-slate-800">Navigation</span>
+                                    </div>
+                                    <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
+                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        Manage
+                                    </a>
+                                </div>
+                                <div class="p-4">
+                                    <p class="text-sm text-slate-600 mb-3">Configure primary navigation menus and
+                                        links.</p>
+                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
+                                        <li>• Create custom menu items</li>
+                                        <li>• Assign to header/user navigation</li>
+                                        <li>• Reorder menu items</li>
+                                    </ul>
+                                    <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}"
+                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-bars mr-1.5"></i>
+                                        Navigation Manager
+                                    </a>
+                                </div>
+                            </div>
+
+                            {{-- Sidebar Manager Card --}}
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <div
+                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-columns text-slate-600"></i>
+                                        <span class="font-medium text-slate-800">Sidebar</span>
+                                    </div>
+                                    <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
+                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        Manage
+                                    </a>
+                                </div>
+                                <div class="p-4">
+                                    <p class="text-sm text-slate-600 mb-3">Configure sidebar content and layout.</p>
+                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
+                                        <li>• Add custom content blocks</li>
+                                        <li>• Configure widgets and modules</li>
+                                        <li>• Reorder sidebar elements</li>
+                                    </ul>
+                                    <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}"
+                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-columns mr-1.5"></i>
+                                        Sidebar Manager
+                                    </a>
+                                </div>
+                            </div>
+
+                            {{-- DOI Settings Card --}}
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <div
+                                    class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-fingerprint text-slate-600"></i>
+                                        <span class="font-medium text-slate-800">DOI</span>
+                                    </div>
+                                    <a href="{{ route('journal.settings.doi.edit', $journalSlug) }}"
+                                        class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        Manage
+                                    </a>
+                                </div>
+                                <div class="p-4">
+                                    <p class="text-sm text-slate-600 mb-3">Configure Digital Object Identifiers (DOI).
+                                    </p>
+                                    <ul class="text-xs text-slate-500 space-y-1 mb-3">
+                                        <li>• Set DOI prefix</li>
+                                        <li>• Configure suffix patterns</li>
+                                        <li>• Assign DOIs to content</li>
+                                    </ul>
+                                    <a href="{{ route('journal.settings.doi.edit', $journalSlug) }}"
+                                        class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-xs font-medium rounded text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-fingerprint mr-1.5"></i>
+                                        DOI Settings
+                                    </a>
                                 </div>
                             </div>
                         </div>
