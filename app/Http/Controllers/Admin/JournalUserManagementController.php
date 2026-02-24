@@ -284,7 +284,7 @@ class JournalUserManagementController extends Controller
         DB::beginTransaction();
 
         try {
-            $role = Role::create([
+            $role = Role::query()->create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'guard_name' => 'web',
@@ -353,7 +353,7 @@ class JournalUserManagementController extends Controller
         DB::beginTransaction();
 
         try {
-            $role->update([
+            $role->query()->where('id', $role->id)->update([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'permission_level' => $request->permission_level,
