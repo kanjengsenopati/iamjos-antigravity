@@ -39,12 +39,6 @@ class SidebarBlock extends Model
             'icon' => 'fa-solid fa-sign-in-alt',
             'description' => 'User login form for the sidebar.',
         ],
-        'language' => [
-            'name' => 'Language Selector',
-            'component' => 'public.blocks.language-block',
-            'icon' => 'fa-solid fa-globe',
-            'description' => 'Language switcher dropdown.',
-        ],
         'submit' => [
             'name' => 'Submit Article',
             'component' => 'public.blocks.make-submission-block',

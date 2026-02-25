@@ -53,9 +53,9 @@
                         isSearching: false,
                         reviewerResults: [],
                         selectedReviewer: null,
-                        reviewMethod: 'double_blind',
-                        responseDueDate: '',
-                        reviewDueDate: '',
+                        reviewMethod: '{{ $defaultReviewMode }}',
+                        responseDueDate: '{{ $defaultResponseDate }}',
+                        reviewDueDate: '{{ $defaultReviewDate }}',
                         submitting: false,
                     
                         async init() {
@@ -322,6 +322,21 @@
                                         <span class="mt-1 text-xs text-gray-500">Identity is visible</span>
                                     </div>
                                 </label>
+                            </div>
+                            
+                            {{-- Double Blind Warning --}}
+                            <div x-show="reviewMethod === 'double_blind'" x-transition 
+                                class="mt-3 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-yellow-700">
+                                            <strong>Peringatan:</strong> Dalam mode Double-blind, pastikan file naskah telah disensor dari identitas penulis sebelum dikirim ke reviewer.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
