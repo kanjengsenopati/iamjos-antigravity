@@ -208,7 +208,7 @@
                                 This issue contains {{ $latestIssue->submissions()->published()->count() }} articles
                                 covering various topics in our field.
                             </p>
-                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $latestIssue]) }}"
+                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $latestIssue->url_path]) }}"
                                 class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
                                 View Issue
                                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

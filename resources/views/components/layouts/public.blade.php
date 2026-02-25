@@ -370,7 +370,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 
             {{-- 2. BRANDING --}}
             <div class="flex justify-center items-center border-t border-slate-800 pt-8">
-                <a href="https://iamjos.id" target="_blank" class="group flex flex-col items-center opacity-70 hover:opacity-100 transition">
+                <a href="{{ env('APP_URL') }}" target="_blank" class="group flex flex-col items-center opacity-70 hover:opacity-100 transition">
                     <span class="text-xs font-medium text-slate-500 uppercase tracking-wider group-hover:text-slate-400">Platform & workflow by</span>
                     <span class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">IAMJOS</span>
                 </a>

@@ -36,7 +36,26 @@
 
             <!-- Form Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <form action="{{ route('journal.issues.update', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('journal.issues.update', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST" enctype="multipart/form-data"
+                    x-data="{
+                        volume: '{{ old('volume', $issue->volume) }}',
+                        number: '{{ old('number', $issue->number) }}',
+                        year: '{{ old('year', $issue->year) }}',
+                        title: '{{ old('title', $issue->title) }}',
+                        showTitle: {{ old('show_title', $issue->show_title ?? false) ? 'true' : 'false' }},
+                        urlPath: '{{ old('url_path', $issue->url_path) }}',
+                        manualUrlPath: {{ old('url_path', $issue->url_path) ? 'true' : 'false' }},
+                        generateSlug() {
+                            if (this.manualUrlPath) return;
+                            let slug = '';
+                            if (this.showTitle && this.title) {
+                                slug = this.title;
+                            } else {
+                                slug = 'v' + (this.volume || '1') + '-n' + (this.number || '1') + '-' + (this.year || new Date().getFullYear());
+                            }
+                            this.urlPath = slug.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+                        }
+                    }">
                     @csrf
                     @method('PUT')
 
@@ -59,7 +78,8 @@
                                         Volume <span class="text-red-500">*</span>
                                     </label>
                                     <input type="number" id="volume" name="volume"
-                                        value="{{ old('volume', $issue->volume) }}" min="1" required
+                                        x-model="volume" @input="generateSlug"
+                                        min="1" required
                                         class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-primary-500 transition-colors @error('volume') border-red-500 @enderror">
                                     @error('volume')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -72,7 +92,8 @@
                                         Number <span class="text-red-500">*</span>
                                     </label>
                                     <input type="number" id="number" name="number"
-                                        value="{{ old('number', $issue->number) }}" min="1" required
+                                        x-model="number" @input="generateSlug"
+                                        min="1" required
                                         class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-primary-500 transition-colors @error('number') border-red-500 @enderror">
                                     @error('number')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -85,7 +106,8 @@
                                         Year <span class="text-red-500">*</span>
                                     </label>
                                     <input type="number" id="year" name="year"
-                                        value="{{ old('year', $issue->year) }}" min="2000" max="2100" required
+                                        x-model="year" @input="generateSlug"
+                                        min="2000" max="2100" required
                                         class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-primary-500 transition-colors @error('year') border-red-500 @enderror">
                                     @error('year')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -115,7 +137,7 @@
                                 </label>
                                 <label class="inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="show_title" value="1"
-                                        {{ old('show_title', $issue->show_title ?? false) ? 'checked' : '' }}
+                                        x-model="showTitle" @change="generateSlug"
                                         class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
                                     <span class="ml-2 text-sm font-medium text-gray-700">Show Title</span>
                                 </label>
@@ -138,7 +160,7 @@
                                     Title <span class="text-gray-400">(Optional - for special/themed issues)</span>
                                 </label>
                                 <input type="text" id="title" name="title"
-                                    value="{{ old('title', $issue->title) }}"
+                                    x-model="title" @input="generateSlug"
                                     placeholder="e.g., Special Issue on AI in Education"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-primary-500 transition-colors @error('title') border-red-500 @enderror">
                                 @error('title')
@@ -245,7 +267,8 @@
                                 <label for="url_path" class="block text-sm font-medium text-gray-700 mb-1">
                                     URL Path <span class="text-gray-400">(Optional)</span>
                                 </label>
-                                <input type="text" id="url_path" name="url_path" value="{{ old('url_path', $issue->url_path) }}"
+                                <input type="text" id="url_path" name="url_path" 
+                                    x-model="urlPath" @input="manualUrlPath = true"
                                     placeholder="e.g., vol1-no2-2026"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-primary-500 transition-colors @error('url_path') border-red-500 @enderror">
                                 <p class="mt-2 text-sm text-gray-500">
