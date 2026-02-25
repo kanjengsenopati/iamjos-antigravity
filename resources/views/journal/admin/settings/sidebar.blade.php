@@ -261,13 +261,16 @@
                         </div>
 
                         <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-                            <button type="button" @click="showAddCustomModal = false"
-                                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
+                            <button type="button" @click="showAddCustomModal = false" :disabled="isSaving"
+                                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50">
                                 Cancel
                             </button>
-                            <button type="submit"
-                                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg">
-                                Add Block
+                            <button type="submit" :disabled="isSaving"
+                                class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span x-show="isSaving" class="mr-2">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                </span>
+                                <span x-text="isSaving ? 'Saving...' : 'Add Block'"></span>
                             </button>
                         </div>
                     </form>
@@ -364,13 +367,16 @@
                         </div>
 
                         <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-                            <button type="button" @click="showEditModal = false"
-                                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
+                            <button type="button" @click="showEditModal = false" :disabled="isSaving"
+                                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50">
                                 Cancel
                             </button>
-                            <button type="submit"
-                                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg">
-                                Save Changes
+                            <button type="submit" :disabled="isSaving"
+                                class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span x-show="isSaving" class="mr-2">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                </span>
+                                <span x-text="isSaving ? 'Saving...' : 'Save Changes'"></span>
                             </button>
                         </div>
                     </form>
@@ -388,6 +394,7 @@
             return {
                 showAddCustomModal: false,
                 showEditModal: false,
+                isSaving: false,
                 newBlock: {
                     title: '',
                     icon: '',
@@ -541,6 +548,9 @@
                 },
 
                 async addCustomBlock() {
+                    if (this.isSaving) return;
+                    this.isSaving = true;
+
                     // Get content from TinyMCE
                     // Teaser/Sidebar Html
                     const sidebarHtml = tinymce.get('new-block-teaser') ? tinymce.get('new-block-teaser').getContent() :
@@ -571,9 +581,12 @@
                             location.reload();
                         } else {
                             alert(data.message || 'Failed to add block');
+                            this.isSaving = false;
                         }
                     } catch (error) {
                         console.error('Add failed:', error);
+                        alert('Network error occurred.');
+                        this.isSaving = false;
                     }
                 },
 
@@ -597,6 +610,9 @@
                 },
 
                 async updateBlock() {
+                    if (this.isSaving) return;
+                    this.isSaving = true;
+
                     // Get content from TinyMCE
                     const sidebarHtml = tinymce.get('edit-block-teaser') ? tinymce.get('edit-block-teaser')
                         .getContent() : '';
@@ -625,9 +641,12 @@
                             location.reload();
                         } else {
                             alert(data.message || 'Failed to update block');
+                            this.isSaving = false;
                         }
                     } catch (error) {
                         console.error('Update failed:', error);
+                        alert('Network error occurred.');
+                        this.isSaving = false;
                     }
                 },
 
