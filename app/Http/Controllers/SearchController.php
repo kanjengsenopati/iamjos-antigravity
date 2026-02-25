@@ -64,7 +64,9 @@ class SearchController extends Controller
             } elseif ($type === 'title') {
                 $searchQuery->where('title', 'ilike', "%{$query}%");
             } elseif ($type === 'keywords') {
-                $searchQuery->where('keywords', 'ilike', "%{$query}%");
+                $searchQuery->whereHas('keywords', function ($q) use ($query) {
+                    $q->where('content', 'ilike', "%{$query}%");
+                });
             } elseif ($type === 'abstract') {
                 $searchQuery->where('abstract', 'ilike', "%{$query}%");
             } else {
@@ -78,7 +80,9 @@ class SearchController extends Controller
                 $searchQuery->where(function ($q) use ($query, $authorSubmissionIds) {
                     $q->where('title', 'ilike', "%{$query}%")
                         ->orWhere('abstract', 'ilike', "%{$query}%")
-                        ->orWhere('keywords', 'ilike', "%{$query}%")
+                        ->orWhereHas('keywords', function ($subQ) use ($query) {
+                            $subQ->where('content', 'ilike', "%{$query}%");
+                        })
                         ->orWhereIn('id', $authorSubmissionIds);
                 });
             }
@@ -125,7 +129,9 @@ class SearchController extends Controller
             ->published()
             ->where(function ($q) use ($query) {
                 $q->where('title', 'ilike', "%{$query}%")
-                    ->orWhere('keywords', 'ilike', "%{$query}%");
+                    ->orWhereHas('keywords', function ($subQ) use ($query) {
+                        $subQ->where('content', 'ilike', "%{$query}%");
+                    });
             })
             ->with('authors:id,submission_id,name')
             ->select('id', 'title', 'published_at', 'journal_id')

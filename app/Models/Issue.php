@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class Issue extends Model
 {
@@ -49,6 +51,89 @@ class Issue extends Model
         'published_at' => 'datetime',
         'metadata' => 'array', // JSONB to array
     ];
+
+    // =====================================================
+    // ROUTE MODEL BINDING & REDIRECTION
+    // =====================================================
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'url_path';
+    }
+
+    /**
+     * Retrieve the model for a bound value.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        // If the value is a valid UUID, handle backward compatibility (301 Redirect)
+        if (Str::isUuid($value)) {
+            $issue = $this->where('id', $value)->first();
+            
+            if ($issue && $issue->url_path) {
+                // Generate the correct URL by replacing the UUID with the new url_path
+                $currentUrl = request()->url();
+                $newUrl = str_replace($value, $issue->url_path, $currentUrl);
+                
+                // Preserve query strings if any
+                if (request()->getQueryString()) {
+                    $newUrl .= '?' . request()->getQueryString();
+                }
+
+                throw new HttpResponseException(redirect($newUrl, 301));
+            }
+            
+            if ($issue) {
+               return $issue;
+            }
+        }
+
+        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
+    }
+
+    // =====================================================
+    // MODEL EVENTS (Auto-generate url_path)
+    // =====================================================
+
+    protected static function booted(): void
+    {
+        static::creating(function (Issue $issue) {
+            if (empty($issue->url_path)) {
+                $issue->url_path = static::generateUniqueUrlPath($issue);
+            }
+        });
+
+        static::updating(function (Issue $issue) {
+            if (empty($issue->url_path)) {
+                $issue->url_path = static::generateUniqueUrlPath($issue);
+            }
+        });
+    }
+
+    public static function generateUniqueUrlPath(Issue $issue): string
+    {
+        if ($issue->show_title && !empty($issue->title)) {
+            $baseSlug = Str::slug($issue->title);
+        } else {
+            $baseSlug = "v{$issue->volume}-n{$issue->number}-{$issue->year}";
+        }
+
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (static::where('journal_id', $issue->journal_id)
+            ->where('url_path', $slug)
+            ->where('id', '!=', $issue->id)
+            ->exists()) {
+            $counter++;
+            $slug = $baseSlug . '-' . $counter;
+        }
+
+        return $slug;
+    }
 
     // =====================================================
     // RELATIONSHIPS

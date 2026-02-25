@@ -236,7 +236,7 @@ foreach ($rawKeywords as $k) {
             @if ($issue)
                 <li class="text-slate-400">/</li>
                 <li>
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->id]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->url_path]) }}"
                         class="hover:text-primary-600 hover:underline">
                         Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
                     </a>
@@ -487,7 +487,7 @@ foreach ($rawKeywords as $k) {
                                             ->implode(', ')
                                         : '';
                                     $issueLink = $related->issue
-                                        ? route('journal.public.issue', [$journal->slug, $related->issue->id])
+                                        ? route('journal.public.issue', [$journal->slug, $related->issue->url_path])
                                         : '#';
                                     $issueText = $journal->name;
                                     if ($related->issue) {
@@ -538,7 +538,7 @@ foreach ($rawKeywords as $k) {
             {{-- ISSUE COVER (Clickable - Links to Issue Page) --}}
             @if ($issue)
                 @if ($issue->cover_path)
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->id]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->url_path]) }}"
                         class="block hover:opacity-90 transition group">
                         <img src="{{ Storage::url($issue->cover_path) }}" alt="{{ $issue->title }}"
                             class="w-full rounded shadow-md border border-slate-200">
@@ -579,7 +579,7 @@ foreach ($rawKeywords as $k) {
             @if ($issue)
                 <div class="bg-slate-50 p-5 rounded border border-slate-200">
                     <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">Issue</h4>
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->id]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->url_path]) }}"
                         class="block hover:text-primary-600 transition">
                         <p class="font-semibold text-slate-800">
                             Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})

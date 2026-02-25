@@ -149,6 +149,103 @@ class User extends Authenticatable
     }
 
     /**
+     * Determine if the user can access a specific workflow stage in a journal.
+     * 
+     * @param string $stage ('submission', 'review', 'copyediting', 'production')
+     * @param string|int $journalId
+     * @param string|int|null $submissionId Optional to check specific assignment
+     */
+    public function canAccessStage(string $stage, $journalId, $submissionId = null): bool
+    {
+        // Manager & Editor bypass (level <= 2)
+        if ($this->hasJournalPermission([Role::LEVEL_MANAGER, Role::LEVEL_EDITOR], $journalId)) {
+            return true;
+        }
+
+        // Map stage names to the corresponding permit column in roles table
+        $permitColumn = match ($stage) {
+            'submission' => 'permit_submission',
+            'review' => 'permit_review',
+            'copyediting' => 'permit_copyediting',
+            'production' => 'permit_production',
+            default => null,
+        };
+
+        if (!$permitColumn) {
+            throw new \InvalidArgumentException("Invalid stage: {$stage}");
+        }
+
+        // Check if user has a role with the specific permit in this journal
+        $hasPermit = DB::table('journal_user_roles')
+            ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+            ->where('journal_user_roles.user_id', $this->id)
+            ->where('journal_user_roles.journal_id', $journalId)
+            ->where('roles.' . $permitColumn, true)
+            ->exists();
+
+        if ($hasPermit) {
+            // If they have the permit, they need to be assigned to the submission
+            // OR be the author (if it's their submission, they usually have limited access handled elsewhere,
+            // but this checks generic stage access).
+            if ($submissionId) {
+                // Check if they are assigned as an editor/assistant
+                $isAssigned = DB::table('editorial_assignments')
+                    ->where('submission_id', $submissionId)
+                    ->where('user_id', $this->id)
+                    ->where('is_active', true)
+                    ->exists();
+
+                if ($isAssigned) {
+                    return true;
+                }
+
+                // Check Author access
+                if ($this->hasJournalRole(Role::ROLE_AUTHOR, $journalId)) {
+                    $isAuthor = DB::table('submissions')
+                        ->where('id', $submissionId)
+                        ->where('user_id', $this->id)
+                        ->exists();
+                        
+                    if ($isAuthor) {
+                       // Authors can access stages that the submission is currently at or has passed
+                       $submission = DB::table('submissions')->where('id', $submissionId)->first();
+                       if ($submission) {
+                           $stageMap = [
+                               'submission' => 1,
+                               'review' => 2,
+                               'copyediting' => 3,
+                               'production' => 4,
+                           ];
+                           
+                           $requestedStageId = $stageMap[$stage] ?? 0;
+                           if ($submission->stage_id >= $requestedStageId && $hasPermit) {
+                               return true;
+                           }
+                       }
+                    }
+                }
+                
+                // Check Reviewer access (only for Review stage)
+                if ($stage === 'review' && $this->hasJournalRole('Reviewer', $journalId)) {
+                     $isReviewer = DB::table('review_assignments')
+                        ->where('submission_id', $submissionId)
+                        ->where('reviewer_id', $this->id)
+                        ->exists();
+                     if ($isReviewer) {
+                         return true;
+                     }
+                }
+
+                return false; // Has permit but not assigned to this submission
+            } else {
+                return true; // No submission ID provided, just checking generic capability
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Smart Check (Bisa Terima Nama Role atau Level Permission).
      * @param string|int|array $roles
      * @param string $journalId

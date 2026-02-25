@@ -9,6 +9,8 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use App\Models\Role;
 
 class JournalController extends Controller
 {
@@ -59,29 +61,41 @@ class JournalController extends Controller
             $slug = $originalSlug . '-' . $count++;
         }
 
-        $journal = Journal::create([
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'path' => $slug,
-            'abbreviation' => $validated['abbreviation'],
-            'description' => $validated['description'],
-            'publisher' => $validated['publisher'],
-            'issn_print' => $validated['issn_print'],
-            'url_issn_print' => $validated['url_issn_print'] ?? null,
-            'issn_online' => $validated['issn_online'],
-            'url_issn_online' => $validated['url_issn_online'] ?? null,
-            'enabled' => true,
-            'visible' => true,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        // Upload logo
-        if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store("journals/{$journal->id}", 'public');
-            $journal->update(['logo_path' => $path]);
+            $journal = Journal::create([
+                'name' => $validated['name'],
+                'slug' => $slug,
+                'path' => $slug,
+                'abbreviation' => $validated['abbreviation'],
+                'description' => $validated['description'],
+                'publisher' => $validated['publisher'],
+                'issn_print' => $validated['issn_print'],
+                'url_issn_print' => $validated['url_issn_print'] ?? null,
+                'issn_online' => $validated['issn_online'],
+                'url_issn_online' => $validated['url_issn_online'] ?? null,
+                'enabled' => true,
+                'visible' => true,
+            ]);
+
+            // Upload logo
+            if ($request->hasFile('logo')) {
+                $path = $request->file('logo')->store("journals/{$journal->id}", 'public');
+                $journal->update(['logo_path' => $path]);
+            }
+
+            // Seed default roles for the newly created journal
+            Role::seedDefaultRolesForJournal($journal);
+
+            DB::commit();
+
+            return redirect()->route('admin.journals.index')
+                ->with('success', 'Journal created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Failed to create journal: ' . $e->getMessage());
         }
-
-        return redirect()->route('admin.journals.index')
-            ->with('success', 'Journal created successfully.');
     }
 
     /**

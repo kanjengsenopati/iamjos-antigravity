@@ -109,7 +109,7 @@
 
                 <!-- Tagline -->
                 <p class="text-lg {{ $journal ? 'text-gray-200' : 'text-indigo-200' }} leading-relaxed max-w-md mb-12">
-                    {{ $branding['tagline'] ?? $branding['description'] }}
+                    {{ Str::limit($branding['tagline'] ?? $branding['description'], 160) }}
                 </p>
 
                 <!-- Features (show different content based on context) -->

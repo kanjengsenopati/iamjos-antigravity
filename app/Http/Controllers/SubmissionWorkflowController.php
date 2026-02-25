@@ -372,6 +372,10 @@ class SubmissionWorkflowController extends Controller
             'stage' => 'required|string|in:submission,review,copyedit_draft,copyedited,production',
         ]);
 
+        // Map copyedit_draft and copyedited back to copyediting for policy check
+        $policyStage = in_array($request->stage, ['copyedit_draft', 'copyedited']) ? 'copyediting' : $request->stage;
+        $this->authorize('accessStage', [$submission, $policyStage]);
+
         $file = $request->file('file');
         $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}/files");
 
@@ -417,6 +421,11 @@ class SubmissionWorkflowController extends Controller
             'message' => 'required|string',
             'stage_id' => 'required|integer',
         ]);
+
+        // Map stage_id to string for policy check
+        $stageNames = [1 => 'submission', 2 => 'review', 3 => 'copyediting', 4 => 'production'];
+        $stageName = $stageNames[$request->stage_id] ?? 'submission';
+        $this->authorize('accessStage', [$submission, $stageName]);
 
         $discussion = Discussion::create([
             'submission_id' => $submission->id,

@@ -314,7 +314,7 @@
                                                 class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium text-center hover:bg-gray-200 transition-colors">
                                                 Manage
                                             </a>
-                                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->url_path]) }}"
                                                 target="_blank"
                                                 class="flex-1 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium text-center hover:bg-emerald-100 transition-colors">
                                                 <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none"
