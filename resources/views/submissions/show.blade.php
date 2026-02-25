@@ -198,14 +198,16 @@
             {{-- Stage Navigation (Blue Bar) --}}
             <div class="bg-gray-100 p-1 rounded-t-lg border-b border-gray-200 flex space-x-1">
                 @foreach (['submission' => 1, 'review' => 2, 'copyediting' => 3, 'production' => 4] as $stageName => $stageId)
-                    <button
-                        @click="activeStage = '{{ $stageName }}'; uploadStage = '{{ $stageName }}'; discussionStageId = {{ $stageId }}"
-                        :class="activeStage === '{{ $stageName }}' ?
-                            'bg-white text-indigo-600 border-t-4 border-indigo-600 shadow-sm' :
-                            'text-gray-600 hover:bg-white/50'"
-                        class="px-6 py-3 text-sm font-medium rounded-t-sm transition-all focus:outline-none flex-1 lg:flex-none">
-                        {{ ucfirst($stageName) }}
-                    </button>
+                    @can('accessStage', [$submission, $stageName])
+                        <button
+                            @click="activeStage = '{{ $stageName }}'; uploadStage = '{{ $stageName }}'; discussionStageId = {{ $stageId }}"
+                            :class="activeStage === '{{ $stageName }}' ?
+                                'bg-white text-indigo-600 border-t-4 border-indigo-600 shadow-sm' :
+                                'text-gray-600 hover:bg-white/50'"
+                            class="px-6 py-3 text-sm font-medium rounded-t-sm transition-all focus:outline-none flex-1 lg:flex-none">
+                            {{ ucfirst($stageName) }}
+                        </button>
+                    @endcan
                 @endforeach
             </div>
 

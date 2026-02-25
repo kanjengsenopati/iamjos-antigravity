@@ -108,4 +108,12 @@ class SubmissionPolicy
         return $user->hasAnyRole(['Editor', 'Admin', 'Super Admin'])
             && $submission->status === Submission::STATUS_ACCEPTED;
     }
+
+    /**
+     * Determine if the user can access a specific workflow stage.
+     */
+    public function accessStage(User $user, Submission $submission, string $stage): bool
+    {
+        return $user->canAccessStage($stage, $submission->journal_id, $submission->id);
+    }
 }
