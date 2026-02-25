@@ -32,7 +32,18 @@ class ReviewWorkflowController extends Controller
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
-        return view('submissions.review.assign', compact('journal', 'submission'));
+        // Fetch settings or default to OJS standard 3 and 4 weeks
+        $responseWeeks = (int) $journal->getWebsiteSetting('review_response_time', 3);
+        $completionWeeks = (int) $journal->getWebsiteSetting('review_completion_time', 4);
+        
+        // Fetch default review mode (fallback to double_blind)
+        $defaultReviewMode = $journal->getWebsiteSetting('review_mode', 'double_blind');
+
+        // Calculate default dates
+        $defaultResponseDate = now()->addWeeks($responseWeeks)->format('Y-m-d');
+        $defaultReviewDate = now()->addWeeks($completionWeeks)->format('Y-m-d');
+
+        return view('submissions.review.assign', compact('journal', 'submission', 'defaultResponseDate', 'defaultReviewDate', 'defaultReviewMode'));
     }
 
     /**
@@ -92,8 +103,9 @@ class ReviewWorkflowController extends Controller
                     'review_round_id' => $reviewRound->id,
                     'reviewer_id' => $request->reviewer_id,
                     'review_method' => $request->review_method,
-                    'response_due_date' => $request->response_due_date,
-                    'due_date' => $request->review_due_date,
+                    // Parse and format to Y-m-d H:i:s for precise email reminders later
+                    'response_due_date' => \Carbon\Carbon::parse($request->response_due_date)->endOfDay()->format('Y-m-d H:i:s'),
+                    'due_date' => \Carbon\Carbon::parse($request->review_due_date)->endOfDay()->format('Y-m-d H:i:s'),
                     'assigned_at' => now(),
                     'round' => $reviewRound->round,
                     'status' => ReviewAssignment::STATUS_PENDING,
