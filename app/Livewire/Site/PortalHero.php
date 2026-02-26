@@ -7,6 +7,7 @@ use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
+use App\Models\Role;
 
 class PortalHero extends Component
 {
@@ -24,7 +25,9 @@ class PortalHero extends Component
             return [
                 'journals' => Journal::where('enabled', true)->count(),
                 'articles' => Submission::where('status', Submission::STATUS_PUBLISHED)->count(),
-                'authors' => User::role('Author')->count(),
+                'authors' => User::whereHas('roles', function ($query) {
+                    $query->where('permission_level', Role::LEVEL_AUTHOR);
+                })->count(),
                 'downloads' => 50000, 
             ];
         });
