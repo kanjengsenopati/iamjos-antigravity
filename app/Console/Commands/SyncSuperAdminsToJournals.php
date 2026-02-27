@@ -36,7 +36,7 @@ class SyncSuperAdminsToJournals extends Command
             return self::FAILURE;
         }
 
-        $superAdmins = User::role('Super Admin')->get();
+        $superAdmins = User::whereHas('roles', fn($q) => $q->where('name', 'Super Admin'))->get();
         $journals = Journal::where('enabled', true)->get();
 
         if ($superAdmins->isEmpty()) {

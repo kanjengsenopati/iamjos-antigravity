@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Issue;
 use App\Models\Journal;
+use App\Models\Role;
 use App\Models\SiteContent;
 use App\Models\SiteContentBlock;
 use App\Models\SitePage;
@@ -57,7 +58,9 @@ class PortalController extends Controller
                 return [
                     'total_journals' => Journal::where('enabled', true)->count(),
                     'total_articles' => Submission::where('status', Submission::STATUS_PUBLISHED)->count(),
-                    'total_authors' => User::role('Author')->count(),
+                    'total_authors' => User::whereHas('roles', function ($query) {
+                        $query->where('permission_level', Role::LEVEL_AUTHOR);
+                    })->count(),
                     'total_downloads' => 50000, // Placeholder
                 ];
             });

@@ -14,8 +14,6 @@ class JournalObserver
      */
     public function created(Journal $journal): void
     {
-        // Enroll current super admins as Journal Managers
-        $superAdmins = User::role('Super Admin')->get();
         // Only enroll Super Admins if the journal is enabled
         if ($journal->enabled) {
             JournalUserRole::enrollAllSuperAdminsInJournal($journal);

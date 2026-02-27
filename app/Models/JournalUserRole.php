@@ -253,7 +253,7 @@ class JournalUserRole extends Model
         }
 
         // Get all users with Super Admin Spatie role
-        $superAdmins = User::role('Super Admin')->get();
+        $superAdmins = User::whereHas('roles', fn($q) => $q->where('name', 'Super Admin'))->get();
 
         foreach ($superAdmins as $admin) {
             self::firstOrCreate([
