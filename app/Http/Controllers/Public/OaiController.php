@@ -146,7 +146,7 @@ class OaiController extends Controller
                 }
                 
                 // Eager Load
-                $query->with(['publication', 'authors', 'issue', 'journal', 'galleys']);
+                $query->with(['publication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
 
                 $records = $query->orderBy('updated_at', 'desc')->take(100)->get();
 
@@ -169,7 +169,7 @@ class OaiController extends Controller
                         $q->where('id', $id)->orWhere('slug', $id);
                     })
                     ->where('status', Submission::STATUS_PUBLISHED)
-                    ->with(['publication', 'authors', 'issue', 'journal', 'galleys'])
+                    ->with(['publication', 'authors', 'keywords', 'issue', 'journal', 'galleys'])
                     ->first();
 
                 if (!$recordRaw) {

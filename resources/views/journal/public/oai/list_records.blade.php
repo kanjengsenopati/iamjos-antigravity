@@ -21,11 +21,16 @@
                         <dc:creator>{{ $record->authors->first()->first_name ?? 'Unknown' }}
                             {{ $record->authors->first()->last_name ?? '' }}</dc:creator>
                         {{-- Subject --}}
-                        @foreach (explode(',', $record->keywords ?? '') as $keyword)
-                            @if (trim($keyword))
-                                <dc:subject>{{ trim($keyword) }}</dc:subject>
-                            @endif
-                        @endforeach
+                        @if(isset($record->keywords) && is_iterable($record->keywords))
+                            @foreach ($record->keywords as $keywordModel)
+                                @php
+                                    $keyword = trim($keywordModel->content ?? $keywordModel->keyword ?? $keywordModel->name ?? '');
+                                @endphp
+                                @if ($keyword)
+                                    <dc:subject>{{ htmlspecialchars($keyword, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:subject>
+                                @endif
+                            @endforeach
+                        @endif
                         <dc:description>{{ strip_tags($record->abstract) }}</dc:description>
                         <dc:publisher>{{ $journal->name }}</dc:publisher>
                         @if ($record->publication && $record->publication->date_published)
