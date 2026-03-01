@@ -19,15 +19,17 @@ class OaiController extends Controller
                 ->orWhere('path', $journalPath)
                 ->firstOrFail();
             
-            // 1.5 Landing Page (OJS 3.3 Style) - Show HTML page when verb is empty
-            if (!$request->has('verb') && empty($request->query())) {
-                return view('journal.oai.landing');
+            // 1.5 Validasi Verb (dan Landing Page)
+            if (!$request->has('verb')) {
+                if (empty($request->query())) {
+                    return view('journal.oai.landing');
+                }
+                return $this->oaiError('badVerb', 'Missing OAI verb');
             }
-            
-            // 2. Cek Verb & Ambil Parameter First
+
             $verb = $request->input('verb');
             $validVerbs = ['Identify', 'ListRecords', 'ListSets', 'ListMetadataFormats', 'ListIdentifiers', 'GetRecord'];
-            if (!$verb || !in_array($verb, $validVerbs)) {
+            if (!in_array($verb, $validVerbs)) {
                 return $this->oaiError('badVerb', 'Illegal OAI verb');
             }
             
@@ -139,18 +141,18 @@ class OaiController extends Controller
                 
                 // Filter Tanggal
                 if ($request->has('from')) {
-                    $from = Carbon::parse($request->input('from'))->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at) >= ?", [$from]);
+                    $from = Carbon::parse($request->input('from'), 'UTC')->format('Y-m-d H:i:s');
+                    $query->whereRaw("date_trunc('second', updated_at::timestamp) >= ?", [$from]);
                 }
                 if ($request->has('until')) {
-                    $dateUntil = Carbon::parse($request->input('until'));
+                    $dateUntil = Carbon::parse($request->input('until'), 'UTC');
                     
                     // Cek jika formatnya tanggal saja (YYYY-MM-DD), ambil sampai akhir hari
                     if (strlen($request->input('until')) <= 10) {
                         $dateUntil->endOfDay();
                     }
                     $until = $dateUntil->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at) <= ?", [$until]);
+                    $query->whereRaw("date_trunc('second', updated_at::timestamp) <= ?", [$until]);
                 }
                 
                 // Eager Load
