@@ -24,6 +24,13 @@ class OaiController extends Controller
                 return view('journal.oai.landing');
             }
             
+            // 2. Cek Verb & Ambil Parameter First
+            $verb = $request->input('verb');
+            $validVerbs = ['Identify', 'ListRecords', 'ListSets', 'ListMetadataFormats', 'ListIdentifiers', 'GetRecord'];
+            if (!$verb || !in_array($verb, $validVerbs)) {
+                return $this->oaiError('badVerb', 'Illegal OAI verb');
+            }
+            
             // Check for illegal parameters
             $allowedKeys = ['verb', 'identifier', 'metadataPrefix', 'from', 'until', 'set', 'resumptionToken'];
             foreach ($request->query() as $key => $value) {
@@ -31,15 +38,6 @@ class OaiController extends Controller
                     return $this->oaiError('badArgument', 'Illegal parameter: ' . $key);
                 }
             }
-
-            // 2. Ambil Parameter
-        $verb = $request->input('verb');
-        
-        // 3. Validasi Verb
-        $validVerbs = ['Identify', 'ListRecords', 'ListSets', 'ListMetadataFormats', 'ListIdentifiers', 'GetRecord'];
-        if (!$verb || !in_array($verb, $validVerbs)) {
-            return $this->oaiError('badVerb', 'Illegal OAI verb');
-        }
 
         // 4. Cek Resumption Token (Eksklusivitas)
         if ($request->has('resumptionToken')) {
@@ -141,7 +139,8 @@ class OaiController extends Controller
                 
                 // Filter Tanggal
                 if ($request->has('from')) {
-                    $query->where('updated_at', '>=', Carbon::parse($request->input('from')));
+                    $from = Carbon::parse($request->input('from'))->format('Y-m-d H:i:s');
+                    $query->whereRaw("date_trunc('second', updated_at) >= ?", [$from]);
                 }
                 if ($request->has('until')) {
                     $dateUntil = Carbon::parse($request->input('until'));
@@ -150,7 +149,8 @@ class OaiController extends Controller
                     if (strlen($request->input('until')) <= 10) {
                         $dateUntil->endOfDay();
                     }
-                    $query->where('updated_at', '<=', $dateUntil);
+                    $until = $dateUntil->format('Y-m-d H:i:s');
+                    $query->whereRaw("date_trunc('second', updated_at) <= ?", [$until]);
                 }
                 
                 // Eager Load

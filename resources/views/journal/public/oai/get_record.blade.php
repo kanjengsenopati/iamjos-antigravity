@@ -16,9 +16,8 @@
                 <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
                     xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
-                    <dc:title>{{ $record->title }}</dc:title>
-                    <dc:creator>{{ $record->authors->first()->first_name ?? 'Unknown' }}
-                        {{ $record->authors->first()->last_name ?? '' }}</dc:creator>
+                    <dc:title>{!! htmlspecialchars($record->title, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:title>
+                    <dc:creator>{!! htmlspecialchars(trim(($record->authors->first()->first_name ?? 'Unknown') . ' ' . ($record->authors->first()->last_name ?? '')), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:creator>
                     {{-- Subject --}}
                     @if(isset($record->keywords) && is_iterable($record->keywords))
                         @foreach ($record->keywords as $keywordModel)
@@ -30,8 +29,8 @@
                             @endif
                         @endforeach
                     @endif
-                    <dc:description>{{ strip_tags($record->abstract) }}</dc:description>
-                    <dc:publisher>{{ $journal->name }}</dc:publisher>
+                    <dc:description>{!! htmlspecialchars(strip_tags($record->abstract), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:description>
+                    <dc:publisher>{!! htmlspecialchars($journal->name, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:publisher>
                     <dc:date>
                         {{ $record->publication->date_published ? \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') : '' }}
                     </dc:date>
