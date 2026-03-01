@@ -12,18 +12,27 @@ class OaiController extends Controller
 {
     public function handle(Request $request)
     {
-        // 1. Resolve Journal (From Route Parameter)
-        $journalPath = $request->route('journal');
-        $journal = Journal::where('slug', $journalPath)
-            ->orWhere('path', $journalPath)
-            ->firstOrFail();
-        
-        // 1.5 Landing Page (OJS 3.3 Style) - Show HTML page when verb is empty
-        if (!$request->has('verb')) {
-            return view('journal.oai.landing');
-        }
-        
-        // 2. Ambil Parameter
+        try {
+            // 1. Resolve Journal (From Route Parameter)
+            $journalPath = $request->route('journal');
+            $journal = Journal::where('slug', $journalPath)
+                ->orWhere('path', $journalPath)
+                ->firstOrFail();
+            
+            // 1.5 Landing Page (OJS 3.3 Style) - Show HTML page when verb is empty
+            if (!$request->has('verb') && empty($request->query())) {
+                return view('journal.oai.landing');
+            }
+            
+            // Check for illegal parameters
+            $allowedKeys = ['verb', 'identifier', 'metadataPrefix', 'from', 'until', 'set', 'resumptionToken'];
+            foreach ($request->query() as $key => $value) {
+                if (!in_array($key, $allowedKeys)) {
+                    return $this->oaiError('badArgument', 'Illegal parameter: ' . $key);
+                }
+            }
+
+            // 2. Ambil Parameter
         $verb = $request->input('verb');
         
         // 3. Validasi Verb
@@ -135,16 +144,11 @@ class OaiController extends Controller
                     $query->where('updated_at', '>=', Carbon::parse($request->input('from')));
                 }
                 if ($request->has('until')) {
-                    // PERBAIKAN: Gunakan endOfSecond()
-                    // Ini memaksa waktu menjadi .999999 agar mencakup seluruh milidetik di database
                     $dateUntil = Carbon::parse($request->input('until'));
                     
                     // Cek jika formatnya tanggal saja (YYYY-MM-DD), ambil sampai akhir hari
                     if (strlen($request->input('until')) <= 10) {
                         $dateUntil->endOfDay();
-                    } else {
-                        // Jika format lengkap jam/menit, ambil sampai akhir detik
-                        $dateUntil->endOfSecond(); 
                     }
                     $query->where('updated_at', '<=', $dateUntil);
                 }
@@ -160,7 +164,7 @@ class OaiController extends Controller
 
                 $view = ($verb === 'ListIdentifiers') ? 'journal.public.oai.list_identifiers' : 'journal.public.oai.list_records';
                 return response()->view($view, compact('records', 'journal', 'verb'))
-                    ->header('Content-Type', 'text/xml');
+                    ->header('Content-Type', 'text/xml; charset=UTF-8');
 
             case 'GetRecord':
                 $id = $this->extractId($request->input('identifier'));
@@ -183,7 +187,11 @@ class OaiController extends Controller
                 $record = $recordRaw;
 
                 return response()->view('journal.public.oai.get_record', compact('record', 'journal'))
-                    ->header('Content-Type', 'text/xml');
+                    ->header('Content-Type', 'text/xml; charset=UTF-8');
+        }
+        
+        } catch (\Exception $e) {
+            return $this->oaiError('badArgument', 'Invalid OAI-PMH request: ' . $e->getMessage());
         }
     }
 
@@ -195,28 +203,22 @@ class OaiController extends Controller
         return end($parts);
     }
 
+    public static function getRequestAttributes()
+    {
+        $allowedKeys = ['verb', 'identifier', 'metadataPrefix', 'from', 'until', 'set', 'resumptionToken'];
+        $requestAttributes = '';
+        foreach (request()->only($allowedKeys) as $key => $value) {
+            if ($value !== null && $value !== '') {
+                $requestAttributes .= ' ' . $key . '="' . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '"';
+            }
+        }
+        return $requestAttributes;
+    }
+
    private function oaiError($code, $message)
     {
         $baseUrl = url()->current(); 
-        $requestAttributes = '';
-        
-        // PERBAIKAN: Tambahkan parameter ENT_QUOTES
-        // Ini mengubah tanda kutip " menjadi &quot; agar XML tidak rusak
-        
-        $verb = request('verb');
-        if ($verb) {
-            $requestAttributes .= ' verb="' . htmlspecialchars($verb, ENT_QUOTES) . '"';
-        }
-        
-        $identifier = request('identifier');
-        if ($identifier) {
-            $requestAttributes .= ' identifier="' . htmlspecialchars($identifier, ENT_QUOTES) . '"';
-        }
-
-        $metadataPrefix = request('metadataPrefix');
-        if ($metadataPrefix) {
-             $requestAttributes .= ' metadataPrefix="' . htmlspecialchars($metadataPrefix, ENT_QUOTES) . '"';
-        }
+        $requestAttributes = self::getRequestAttributes();
 
         // XML String Manual
         $xml = '<?xml version="1.0" encoding="UTF-8"?>
@@ -224,10 +226,10 @@ class OaiController extends Controller
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
             <responseDate>' . now()->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') . '</responseDate>
-            <request' . $requestAttributes . '>' . htmlspecialchars($baseUrl) . '</request>
-            <error code="' . $code . '">' . htmlspecialchars($message) . '</error>
+            <request' . $requestAttributes . '>' . htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') . '</request>
+            <error code="' . $code . '">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</error>
         </OAI-PMH>';
 
-        return response($xml, 200)->header('Content-Type', 'text/xml');
+        return response($xml, 200)->header('Content-Type', 'text/xml; charset=UTF-8');
     }
 }
