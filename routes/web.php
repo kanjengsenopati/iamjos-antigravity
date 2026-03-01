@@ -192,6 +192,9 @@ Route::post('translate_post', [TranslateController::class, 'translatePost'])->na
 // =====================================================
 // OAI-PMH (Google Scholar Indexing)
 // =====================================================
+Route::get('oai/stylesheet', function () {
+    return response()->file(public_path('oai.xsl'), ['Content-Type' => 'text/xsl']);
+});
 Route::any('{journal}/oai', [App\Http\Controllers\Public\OaiController::class, 'handle'])->name('journal.oai');
 
 // =====================================================
@@ -434,6 +437,8 @@ Route::prefix('{journal:slug}')->group(function () {
             Route::post('/{assignment}/accept', [ReviewerController::class, 'accept'])->name('accept');
             Route::post('/{assignment}/decline', [ReviewerController::class, 'decline'])->name('decline');
             Route::post('/{assignment}/submit', [ReviewerController::class, 'submit'])->name('submit');
+            Route::post('/{assignment}/upload-attachment', [ReviewerController::class, 'uploadAttachment'])->name('upload-attachment');
+            Route::delete('/{assignment}/attachment/{file}', [ReviewerController::class, 'deleteAttachment'])->name('delete-attachment');
         });
         // --------- Editor Decision Workflow ---------
         Route::prefix('editor')->name('journal.editor.')->middleware('role:Editor|Admin|Super Admin')->group(function () {

@@ -5,7 +5,8 @@
     xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
     xmlns:toolkit="http://oai.dlib.vt.edu/OAI/metadata/toolkit"
-    exclude-result-prefixes="oai oai_dc dc toolkit">
+    xmlns:oai-identifier="http://www.openarchives.org/OAI/2.0/oai-identifier"
+    exclude-result-prefixes="oai oai_dc dc toolkit oai-identifier">
 <xsl:output method="html" version="1.0" encoding="UTF-8" indent="yes"/>
 
 <xsl:template match="/">
@@ -60,6 +61,29 @@
             <tr><td class="label-cell">Earliest Datestamp</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:earliestDatestamp"/></td></tr>
             <tr><td class="label-cell">Admin Email</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:adminEmail"/></td></tr>
         </table>
+        
+        <xsl:if test="oai:OAI-PMH/oai:Identify/oai:description/oai-identifier:*">
+            <h3>OAI-Identifier</h3>
+            <table class="info-table" style="width: auto;">
+                <tr><td class="label-cell">Scheme</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/oai-identifier:oai-identifier/oai-identifier:scheme"/></td></tr>
+                <tr><td class="label-cell">Repository Identifier</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/oai-identifier:oai-identifier/oai-identifier:repositoryIdentifier"/></td></tr>
+                <tr><td class="label-cell">Delimiter</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/oai-identifier:oai-identifier/oai-identifier:delimiter"/></td></tr>
+                <tr><td class="label-cell">Sample Identifier</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/oai-identifier:oai-identifier/oai-identifier:sampleIdentifier"/></td></tr>
+            </table>
+        </xsl:if>
+
+        <xsl:if test="oai:OAI-PMH/oai:Identify/oai:description/toolkit:*">
+            <h3>About the XSLT</h3>
+            <table class="info-table" style="width: auto;">
+                <tr><td class="label-cell">Title</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:title"/></td></tr>
+                <tr><td class="label-cell">Version</td><td class="value-cell"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:version"/></td></tr>
+                <tr><td class="label-cell">URL</td><td class="value-cell"><a href="{oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:URL}"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:URL"/></a></td></tr>
+                <tr><td class="label-cell">Author</td><td class="value-cell">
+                    <xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:author/toolkit:name"/> 
+                    (&lt;<a href="mailto:{oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:author/toolkit:email}"><xsl:value-of select="oai:OAI-PMH/oai:Identify/oai:description/toolkit:toolkit/toolkit:author/toolkit:email"/></a>&gt;)
+                </td></tr>
+            </table>
+        </xsl:if>
     </xsl:if>
 
     <xsl:if test="oai:OAI-PMH/oai:ListSets">

@@ -1,5 +1,5 @@
 {!! '<' . '?xml version="1.0" encoding="UTF-8"?' . '>' !!}
-{!! '<' . '?xml-stylesheet type="text/xsl" href="' . asset('oai.xsl') . '" ?' . '>' !!}
+{!! '<' . '?xml-stylesheet type="text/xsl" href="' . url('oai/stylesheet') . '" ?' . '>' !!}
 <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
     <responseDate>{{ now()->format('Y-m-d\TH:i:s\Z') }}</responseDate>
@@ -24,22 +24,26 @@
                 ($settings['contact']['support']['email'] ?? 'admin@iamjos.id');
         @endphp
         <adminEmail>{{ $adminEmail }}</adminEmail>
-        @php
-            $minDate = \App\Models\Submission::min('updated_at');
-            $earliest = $minDate
-                ? \Carbon\Carbon::parse($minDate)->format('Y-m-d\TH:i:s\Z')
-                : now()->format('Y-m-d\TH:i:s\Z');
-        @endphp
-        <earliestDatestamp>{{ $earliest }}</earliestDatestamp>
+        <earliestDatestamp>{{ $earliestDate ?? now()->format('Y-m-d\TH:i:s\Z') }}</earliestDatestamp>
         <deletedRecord>persistent</deletedRecord>
         <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>
         <description>
+            <oai-identifier xmlns="http://www.openarchives.org/OAI/2.0/oai-identifier"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd">
+                <scheme>oai</scheme>
+                <repositoryIdentifier>{{ request()->getHost() }}</repositoryIdentifier>
+                <delimiter>:</delimiter>
+                <sampleIdentifier>oai:{{ request()->getHost() }}:article/1</sampleIdentifier>
+            </oai-identifier>
+        </description>
+        <description>
             <toolkit xmlns="http://oai.dlib.vt.edu/OAI/metadata/toolkit"
                 xsi:schemaLocation="http://oai.dlib.vt.edu/OAI/metadata/toolkit http://oai.dlib.vt.edu/OAI/metadata/toolkit.xsd">
-                <title>IAMJOS Journal System</title>
+                <title>Indonesian Academic Journal System (IAMJOS)</title>
                 <author>
                     <name>IAMJOS Development Team</name>
-                    <email>dev@iamjos.test</email>
+                    <email>dev@iamjos.id</email>
                 </author>
                 <version>1.0.0</version>
                 <URL>{{ config('app.url') }}</URL>
