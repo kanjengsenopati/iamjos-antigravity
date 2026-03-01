@@ -85,15 +85,19 @@ class OaiController extends Controller
             case 'Identify':
                 $earliestDate = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED)
-                    ->min('updated_at'); 
+                    ->min('created_at'); 
                 
                 $earliestDate = $earliestDate ? Carbon::parse($earliestDate) : now();
 
-                return response()->view('journal.public.oai.identify', [
+                $xmlContent = view('journal.public.oai.identify', [
                     'journal' => $journal,
                     'earliestDate' => $earliestDate->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z'),
                     'baseUrl' => route('journal.oai', $journal->slug)
-                ])->header('Content-Type', 'text/xml');
+                ])->render();
+
+                return \Illuminate\Support\Facades\Response::make($xmlContent, 200, [
+                    'Content-Type' => 'text/xml'
+                ]);
 
             case 'ListMetadataFormats':
                 if ($request->has('identifier')) {
