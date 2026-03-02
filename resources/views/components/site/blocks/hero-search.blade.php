@@ -13,15 +13,17 @@
         $config['subheadline'] ??
         'A secure, open-access platform for managing academic journal submissions, peer reviews, and publications.';
 
-    // Fetch top 3 popular keywords from database
-    $popularKeywords = \App\Models\Keyword::withCount('submissions')
-        ->orderBy('submissions_count', 'desc')
-        ->limit(3)
-        ->get();
+    // Fetch top 3 popular keywords from database with caching
+    $popularKeywords = Cache::remember('portal_popular_keywords_hero', 3600, function () {
+        return \App\Models\Keyword::withCount('submissions')
+            ->orderBy('submissions_count', 'desc')
+            ->limit(3)
+            ->get();
+    });
 @endphp
 
 <section class="w-full bg-white pt-10 pb-16 relative overflow-hidden">
-    {{-- Optional: Very subtle background decoration (mesh/blob) to make it not look "broken" plain white, but keeping it strictly white-dominant as requested --}}
+    {{-- Optional: Very subtle background decoration (mesh/blob) --}}
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div
             class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-100/50 rounded-full blur-[100px] opacity-60">
@@ -84,7 +86,7 @@
         </p>
 
         {{-- 4. SEARCH BAR (Pixel Perfect) --}}
-        <form action="{{ route('portal.journals') }}" method="GET" class="w-full max-w-2xl relative mx-auto mt-2">
+        <form action="{{ route('portal.search') }}" method="GET" class="w-full max-w-2xl relative mx-auto mt-2">
             <div class="relative flex items-center group">
 
                 {{-- Glow Effect --}}
@@ -93,9 +95,9 @@
                 </div>
 
                 {{-- INPUT FIELD --}}
-                <input type="text" name="search"
+                <input type="text" name="q"
                     class="relative w-full h-14 pl-6 pr-32 rounded-2xl border-2 border-transparent bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 text-base shadow-2xl transition-all"
-                    placeholder="Search title, author, or keyword...">
+                    placeholder="Search titles, abstracts, or keywords...">
 
                 {{-- BUTTON (Floating Inside) --}}
                 <div class="absolute right-1.5 top-1.5 bottom-1.5">
@@ -111,9 +113,9 @@
         {{-- 5. QUICK TAGS --}}
         @if($popularKeywords->isNotEmpty())
             <div class="mt-6 flex flex-wrap justify-center items-center gap-2 text-xs md:text-sm text-slate-500">
-                <span class="font-medium text-slate-400">Popular:</span>
+                <span class="font-medium text-slate-400">Popular Queries:</span>
                 @foreach($popularKeywords as $keyword)
-                    <a href="{{ route('portal.journals', ['search' => $keyword->content]) }}"
+                    <a href="{{ route('portal.search', ['q' => $keyword->content]) }}"
                         class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">
                         {{ $keyword->content }}
                     </a>

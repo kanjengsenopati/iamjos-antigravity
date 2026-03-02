@@ -172,61 +172,81 @@ class PortalController extends Controller
     public function search(Request $request): View
     {
         $query = $request->get('q', '');
-        $category = $request->get('category', '');
+        $category = $request->get('category', 'all');
+        $journalId = $request->get('journal_id', '');
         $sort = $request->get('sort', 'relevance');
 
         $journals = collect();
         $articles = collect();
 
-        // Load Popular Keywords (Top 6 most used across active submissions)
-        $popularKeywords = Cache::remember('portal_popular_keywords', 3600, function () {
+        // Load Popular Keywords (Top 10 most used across active submissions) with caching
+        $popularKeywords = Cache::remember('portal_popular_keywords_global', 3600, function () {
             return \App\Models\Keyword::whereHas('submissions')
                 ->withCount('submissions')
                 ->orderByDesc('submissions_count')
-                ->take(6)
+                ->take(10)
                 ->get();
         });
 
-        if (strlen($query) >= 2 || !empty($category)) {
-            // Search journals
-            $journals = Journal::where('enabled', true)
-                ->when($query, function ($q) use ($query) {
-                    $q->where(function ($sub) use ($query) {
-                        $sub->where('name', 'ilike', "%{$query}%")
-                            ->orWhere('abbreviation', 'ilike', "%{$query}%")
-                            ->orWhere('description', 'ilike', "%{$query}%");
-                    });
-                })
-                ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
-                ->take(10)
-                ->get();
+        // Load all active journals for the filter sidebar
+        $filterJournals = Journal::where('enabled', true)
+            ->withCount(['submissions as published_count' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
+            ->get();
 
-            // Search articles
-            $articlesQuery = Submission::where('status', Submission::STATUS_PUBLISHED)
-                ->when($query, function ($q) use ($query) {
-                    $q->where(function ($sub) use ($query) {
-                        $sub->where('title', 'ilike', "%{$query}%")
-                            ->orWhere('abstract', 'ilike', "%{$query}%")
-                            ->orWhereHas('keywords', function($kw) use ($query) {
-                                $kw->where('content', 'ilike', "%{$query}%");
-                            });
-                    });
-                })
-                ->with(['authors', 'journal', 'section', 'issue']);
+        if (strlen($query) >= 2 || !empty($category) || !empty($journalId)) {
+            // 1. Search Journals (only if category is 'all' or 'journals')
+            if ($category === 'all' || $category === 'journals') {
+                $journals = Journal::where('enabled', true)
+                    ->when($query, function ($q) use ($query) {
+                        $q->where(function ($sub) use ($query) {
+                            $sub->where('name', 'ilike', "%{$query}%")
+                                ->orWhere('abbreviation', 'ilike', "%{$query}%")
+                                ->orWhere('description', 'ilike', "%{$query}%");
+                        });
+                    })
+                    ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
+                    ->take(12)
+                    ->get();
+            }
 
-            // Sort
-            match ($sort) {
-                'newest' => $articlesQuery->latest('published_at'),
-                'oldest' => $articlesQuery->oldest('published_at'),
-                default => $articlesQuery->latest('published_at'), // relevance falls back to latest
-            };
+            // 2. Search Articles (only if category is 'all' or 'articles')
+            if ($category === 'all' || $category === 'articles') {
+                $articlesQuery = Submission::where('status', Submission::STATUS_PUBLISHED)
+                    ->when($query, function ($q) use ($query) {
+                        $q->where(function ($sub) use ($query) {
+                            $sub->where('title', 'ilike', "%{$query}%")
+                                ->orWhere('abstract', 'ilike', "%{$query}%")
+                                ->orWhereHas('keywords', function($kw) use ($query) {
+                                    $kw->where('content', 'ilike', "%{$query}%");
+                                })
+                                ->orWhereHas('authors', function($auth) use ($query) {
+                                    $auth->where('given_name', 'ilike', "%{$query}%")
+                                        ->orWhere('family_name', 'ilike', "%{$query}%");
+                                });
+                        });
+                    })
+                    ->when($journalId, function ($q) use ($journalId) {
+                        $q->where('journal_id', $journalId);
+                    })
+                    ->with(['authors', 'journal', 'section', 'issue']);
 
-            $articles = $articlesQuery->paginate(20);
+                // Sort handling
+                match ($sort) {
+                    'newest' => $articlesQuery->latest('published_at'),
+                    'oldest' => $articlesQuery->oldest('published_at'),
+                    default => $articlesQuery->latest('published_at'),
+                };
+
+                $articles = $articlesQuery->paginate(15)->withQueryString();
+            }
         }
 
         $settings = SiteContent::getAll();
 
-        return view('site.search', compact('query', 'journals', 'articles', 'category', 'sort', 'settings', 'popularKeywords'));
+        return view('site.search', compact(
+            'query', 'journals', 'articles', 'category', 'sort', 
+            'journalId', 'settings', 'popularKeywords', 'filterJournals'
+        ));
     }
 
     /**
