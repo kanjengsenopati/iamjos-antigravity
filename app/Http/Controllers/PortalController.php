@@ -178,6 +178,15 @@ class PortalController extends Controller
         $journals = collect();
         $articles = collect();
 
+        // Load Popular Keywords (Top 6 most used across active submissions)
+        $popularKeywords = Cache::remember('portal_popular_keywords', 3600, function () {
+            return \App\Models\Keyword::whereHas('submissions')
+                ->withCount('submissions')
+                ->orderByDesc('submissions_count')
+                ->take(6)
+                ->get();
+        });
+
         if (strlen($query) >= 2 || !empty($category)) {
             // Search journals
             $journals = Journal::where('enabled', true)
@@ -197,7 +206,10 @@ class PortalController extends Controller
                 ->when($query, function ($q) use ($query) {
                     $q->where(function ($sub) use ($query) {
                         $sub->where('title', 'ilike', "%{$query}%")
-                            ->orWhere('abstract', 'ilike', "%{$query}%");
+                            ->orWhere('abstract', 'ilike', "%{$query}%")
+                            ->orWhereHas('keywords', function($kw) use ($query) {
+                                $kw->where('content', 'ilike', "%{$query}%");
+                            });
                     });
                 })
                 ->with(['authors', 'journal', 'section', 'issue']);
@@ -214,7 +226,7 @@ class PortalController extends Controller
 
         $settings = SiteContent::getAll();
 
-        return view('site.search', compact('query', 'journals', 'articles', 'category', 'sort', 'settings'));
+        return view('site.search', compact('query', 'journals', 'articles', 'category', 'sort', 'settings', 'popularKeywords'));
     }
 
     /**
