@@ -1,3 +1,10 @@
+@php
+    $escape = function ($string) {
+        if (empty($string)) return '';
+        $decoded = htmlspecialchars_decode(trim($string), ENT_QUOTES);
+        return htmlspecialchars($decoded, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    };
+@endphp
 <doi_batch xmlns="http://www.crossref.org/schema/4.3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1" xmlns:ai="http://www.crossref.org/AccessIndicators.xsd" version="4.3.6"
     xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 https://www.crossref.org/schemas/crossref4.3.6.xsd">
@@ -6,17 +13,17 @@
         <doi_batch_id>{{ $batchId }}</doi_batch_id>
         <timestamp>{{ time() }}</timestamp>
         <depositor>
-            <depositor_name>{{ $journal->getSetting('crossref_depositor_name') ?: $journal->name }}</depositor_name>
-            <email_address>{{ $journal->getSetting('crossref_depositor_email') ?: ($journal->email ?: 'admin@example.com') }}</email_address>
+            <depositor_name>{!! $escape($journal->getSetting('crossref_depositor_name') ?: $journal->name) !!}</depositor_name>
+            <email_address>{!! $escape($journal->getSetting('crossref_depositor_email') ?: ($journal->email ?: 'admin@example.com')) !!}</email_address>
         </depositor>
-        <registrant>{{ $journal->publisher ?? $journal->name }}</registrant>
+        <registrant>{!! $escape($journal->publisher ?? $journal->name) !!}</registrant>
     </head>
 
     <body>
         <journal>
             <journal_metadata>
-                <full_title>{{ $journal->name }}</full_title>
-                <abbrev_title>{{ $journal->abbreviation ?? $journal->name }}</abbrev_title>
+                <full_title>{!! $escape($journal->name) !!}</full_title>
+                <abbrev_title>{!! $escape($journal->abbreviation ?? $journal->name) !!}</abbrev_title>
                 @if ($journal->issn_online)
                     <issn media_type="electronic">{{ $journal->issn_online }}</issn>
                 @endif
@@ -54,7 +61,7 @@
                 <journal_article publication_type="full_text" metadata_distribution_opts="any">
 
                     <titles>
-                        <title>{{ $pub->title }}</title>
+                        <title>{!! $escape($pub->title) !!}</title>
                     </titles>
 
                     <contributors>
@@ -77,25 +84,23 @@
                             <person_name contributor_role="author"
                                 sequence="{{ $index === 0 ? 'first' : 'additional' }}">
                                 @if(!empty($givenName))
-                                <given_name>{{ $givenName }}</given_name>
+                                <given_name>{!! $escape($givenName) !!}</given_name>
                                 @endif
-                                <surname>{{ $surname }}</surname>
-                                @if ($author->orcid_url)
-                                    <ORCID authenticated="true">{{ $author->orcid_url }}</ORCID>
+                                <surname>{!! $escape($surname) !!}</surname>
+                                @if ($author->orcid)
+                                    @php $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($author->orcid)); @endphp
+                                    <ORCID authenticated="true">https://orcid.org/{{ $cleanOrcid }}</ORCID>
                                 @elseif ($author->user && $author->user->orcid_id)
-                                    @php
-                                        $userOrcid = preg_replace('/^https?:\/\/orcid\.org\//', '', $author->user->orcid_id);
-                                    @endphp
-                                    <ORCID authenticated="true">https://orcid.org/{{ $userOrcid }}</ORCID>
+                                    @php $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($author->user->orcid_id)); @endphp
+                                    <ORCID authenticated="true">https://orcid.org/{{ $cleanOrcid }}</ORCID>
                                 @endif
                             </person_name>
                         @endforeach
                     </contributors>
 
-                    {{-- JATS Namespace for Abstract --}}
                     @if($pub->abstract)
                     <jats:abstract>
-                        <jats:p>{{ strip_tags($pub->abstract) }}</jats:p>
+                        <jats:p>{!! $escape(strip_tags($pub->abstract)) !!}</jats:p>
                     </jats:abstract>
                     @endif
 
@@ -122,18 +127,8 @@
 
                     <doi_data>
                         {{-- DOI Logic: Use existing DOI or Generate generic fallback --}}
-                        <doi>
-                            @if($pub->doi)
-                                {{ $pub->doi }}
-                            @elseif($journal->doi_prefix)
-                                {{ $journal->doi_prefix }}/{{ $journal->path }}.v{{ $article->issue->volume ?? '0' }}i{{ $article->issue->number ?? '0' }}.{{ $article->id }}
-                            @else
-                                10.xxxx/{{ $journal->path }}.v{{ $article->issue->volume ?? '0' }}i{{ $article->issue->number ?? '0' }}.{{ $article->id }}
-                            @endif
-                        </doi>
-                        <resource>
-                            {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->url_path ?? $article->slug ?? $article->id]) }}
-                        </resource>
+                        <doi>{{ $pub->doi ? trim($pub->doi) : ($journal->doi_prefix ? trim($journal->doi_prefix) . '/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id : '10.xxxx/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id) }}</doi>
+                        <resource>{{ trim(route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->url_path ?? $article->slug ?? $article->id])) }}</resource>
                     </doi_data>
 
                     {{-- REFERENCES / CITATION LIST --}}
@@ -162,9 +157,9 @@
                                 @endphp
                                 <citation key="{{ $key }}">
                                     @if ($doi)
-                                        <doi>{{ $doi }}</doi>
+                                        <doi>{{ trim($doi) }}</doi>
                                     @else
-                                        <unstructured_citation>{{ $ref }}</unstructured_citation>
+                                        <unstructured_citation>{!! $escape($ref) !!}</unstructured_citation>
                                     @endif
                                 </citation>
                             @endforeach
