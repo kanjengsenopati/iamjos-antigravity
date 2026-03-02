@@ -43,9 +43,27 @@
 
             @if ($tab == 'settings')
                 <div class="max-w-4xl">
-                    <div class="mb-6">
-                        <a href="#" class="text-blue-600 hover:underline text-sm font-medium">DOI Plugin Settings</a>
+                    <div class="mb-6 flex items-center justify-between">
+                        <a href="{{ route('journal.settings.doi.edit', $journal->path) }}" class="text-blue-600 hover:underline text-sm font-medium">DOI Plugin Settings</a>
                     </div>
+                    
+                    @if(empty($journal->doi_prefix))
+                    <div class="mb-8 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-lg shadow-sm">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-orange-800">DOI Prefix Not Configured</h3>
+                                <div class="mt-2 text-sm text-orange-700">
+                                    <p>You must configure a valid DOI Prefix before you can register DOIs with Crossref. Please visit the <a href="{{ route('journal.settings.doi.edit', $journal->path) }}" class="font-bold underline hover:text-orange-900">DOI Plugin Settings</a> to set it up.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     <form action="{{ route('journal.settings.tools.crossref.save', $journal->path) }}" method="POST">
                         @csrf
@@ -152,6 +170,28 @@
                     Registered</a>
             </div>
 
+            @php
+                $hasDepositorInfo = $journal->getSetting('crossref_depositor_name') && $journal->getSetting('crossref_depositor_email') && $journal->getSetting('crossref_username');
+            @endphp
+
+            @if(!$hasDepositorInfo)
+            <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Incomplete Crossref Settings</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>You must configure your <strong>Depositor Name, Depositor Email, and Crossref Username</strong> in the <a href="?tab=settings" class="font-bold underline hover:text-red-900">Settings tab</a> before you can export or deposit articles.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- CONTENT FORM --}}
             <form action="{{ route('journal.settings.tools.crossref.download', $journal->path) }}" method="POST">
                 @csrf
@@ -174,20 +214,30 @@
                             @forelse($submissions as $sub)
                                 <tr class="hover:bg-gray-50 transition">
                                     <td class="p-4 text-center">
+                                        @php
+                                            $hasDoi = $sub->currentPublication && !empty($sub->currentPublication->doi);
+                                        @endphp
                                         <input type="checkbox" name="submission_ids[]" value="{{ $sub->id }}"
-                                            class="sub-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            class="sub-checkbox rounded border-gray-300 {{ $hasDoi ? 'text-blue-600 focus:ring-blue-500' : 'text-gray-300 cursor-not-allowed bg-gray-100' }}"
+                                            @if(!$hasDoi) disabled title="DOI has not been assigned" @endif>
                                     </td>
                                     <td class="p-4">
                                         <div class="font-medium text-blue-600 mb-1">
-                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $sub->id]) }}"
+                                            <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $sub->slug]) }}"
                                                 target="_blank" class="hover:underline">
                                                 {{ $sub->title }}
                                             </a>
                                         </div>
                                         {{-- DOI Info --}}
-                                        @if($sub->currentPublication && $sub->currentPublication->doi)
-                                            <div class="text-xs text-gray-500 font-mono bg-gray-100 inline-block px-1 rounded">
-                                                DOI: {{ $sub->currentPublication->doi }}
+                                        @if($hasDoi)
+                                            <div class="text-xs text-gray-700 font-mono bg-blue-50 border border-blue-100 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
+                                                <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+                                                {{ $sub->currentPublication->doi }}
+                                            </div>
+                                        @else
+                                            <div class="text-xs text-orange-700 font-medium bg-orange-50 border border-orange-200 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
+                                                <svg class="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                                DOI not assigned
                                             </div>
                                         @endif
                                     </td>
@@ -240,7 +290,8 @@
                         </button>
 
                         <button type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded shadow-sm border border-blue-600 transition text-sm flex items-center gap-2">
+                            @if(!$hasDepositorInfo) disabled @endif
+                            class="{{ !$hasDepositorInfo ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700' }} text-white font-medium py-2 px-4 rounded shadow-sm border {{ !$hasDepositorInfo ? 'border-blue-300' : 'border-blue-600' }} transition text-sm flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2001/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -93,6 +93,9 @@ class CrossrefExportController extends Controller
         // 3. Aggressive Cleaning (Remove BOM & Whitespace)
         $content = preg_replace('/^\xEF\xBB\xBF/', '', $content); // Remove BOM if present
         $content = trim($content);
+        
+        // Minify: Remove any whitespaces existing strictly between XML brackets.
+        $content = preg_replace('/>\s+</', '><', $content);
 
         // 4. Construct Final XML
         $xml = '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $content;
