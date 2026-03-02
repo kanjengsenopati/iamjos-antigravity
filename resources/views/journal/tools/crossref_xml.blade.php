@@ -6,8 +6,8 @@
         <doi_batch_id>{{ $batchId }}</doi_batch_id>
         <timestamp>{{ time() }}</timestamp>
         <depositor>
-            <depositor_name>{{ $journal->name }} Editorial</depositor_name>
-            <email_address>{{ auth()->user()->email ?? $journal->email }}</email_address>
+            <depositor_name>{{ $journal->getSetting('crossref_depositor_name') ?: $journal->name }}</depositor_name>
+            <email_address>{{ $journal->getSetting('crossref_depositor_email') ?: ($journal->email ?: 'admin@example.com') }}</email_address>
         </depositor>
         <registrant>{{ $journal->publisher ?? $journal->name }}</registrant>
     </head>
@@ -80,8 +80,13 @@
                                 <given_name>{{ $givenName }}</given_name>
                                 @endif
                                 <surname>{{ $surname }}</surname>
-                                @if ($author->orcid)
-                                    <ORCID authenticated="true">{{ $author->orcid }}</ORCID>
+                                @if ($author->orcid_url)
+                                    <ORCID authenticated="true">{{ $author->orcid_url }}</ORCID>
+                                @elseif ($author->user && $author->user->orcid_id)
+                                    @php
+                                        $userOrcid = preg_replace('/^https?:\/\/orcid\.org\//', '', $author->user->orcid_id);
+                                    @endphp
+                                    <ORCID authenticated="true">https://orcid.org/{{ $userOrcid }}</ORCID>
                                 @endif
                             </person_name>
                         @endforeach
@@ -91,14 +96,6 @@
                     @if($pub->abstract)
                     <jats:abstract>
                         <jats:p>{{ strip_tags($pub->abstract) }}</jats:p>
-
-                        @if($article->keywords->isNotEmpty())
-                        <jats:kwd-group kwd-group-type="author">
-                            @foreach($article->keywords as $keyword)
-                            <jats:kwd>{{ $keyword->content }}</jats:kwd>
-                            @endforeach
-                        </jats:kwd-group>
-                        @endif
                     </jats:abstract>
                     @endif
 
@@ -129,9 +126,9 @@
                             @if($pub->doi)
                                 {{ $pub->doi }}
                             @elseif($journal->doi_prefix)
-                                {{ $journal->doi_prefix }}/{{ $journal->abbreviation ?? 'JOURNAL' }}.{{ $pub->url_path ?? $article->slug ?? $article->id }}
+                                {{ $journal->doi_prefix }}/{{ $journal->path }}.v{{ $article->issue->volume ?? '0' }}i{{ $article->issue->number ?? '0' }}.{{ $article->id }}
                             @else
-                                10.xxxx/{{ $journal->path }}.{{ $pub->url_path ?? $article->slug ?? $article->id }}
+                                10.xxxx/{{ $journal->path }}.v{{ $article->issue->volume ?? '0' }}i{{ $article->issue->number ?? '0' }}.{{ $article->id }}
                             @endif
                         </doi>
                         <resource>
@@ -140,11 +137,14 @@
                     </doi_data>
 
                     {{-- REFERENCES / CITATION LIST --}}
-                    @if (!empty($pub->references))
+                    @php
+                        $activeReferences = !empty($pub->references) ? $pub->references : $article->references;
+                    @endphp
+                    @if (!empty($activeReferences))
                         <citation_list>
                             @php
                                 // Clean and split references
-                                $refs = preg_split('/\r\n|\r|\n/', $pub->references);
+                                $refs = preg_split('/\r\n|\r|\n/', $activeReferences);
                                 $refs = array_filter($refs, fn($value) => !is_null($value) && trim($value) !== '');
                                 $counter = 1;
                             @endphp
