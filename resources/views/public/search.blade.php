@@ -1,76 +1,116 @@
-<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
-    <!-- Search Hero Section -->
-    <section class="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 py-16 relative overflow-hidden">
-        <!-- Background decoration -->
-        <div class="absolute inset-0">
-            <div class="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-            <div class="absolute bottom-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/4 translate-y-1/4">
-            </div>
-        </div>
+@php
+    $brandColor = $settings['primary_color'] ?? '#4F46E5';
+@endphp
 
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
+    @push('styles')
+    <style>
+        :root {
+            --brand-color: {{ $brandColor }};
+            --brand-color-soft: {{ $brandColor }}15; /* 15% opacity */
+            --brand-color-muted: {{ $brandColor }}40; /* 40% opacity */
+        }
+        .text-brand { color: var(--brand-color); }
+        .bg-brand { background-color: var(--brand-color); }
+        .bg-brand-soft { background-color: var(--brand-color-soft); }
+        .border-brand { border-color: var(--brand-color); }
+        .focus-within\:border-brand:focus-within { border-color: var(--brand-color); }
+        .group-focus-within\:text-brand:focus-within { color: var(--brand-color); }
+    </style>
+    @endpush
+
+    {{-- = = = = = = = = = = = = = = = = = = = = = = = --}}
+    {{-- MINIMALIST HERO SECTION --}}
+    {{-- = = = = = = = = = = = = = = = = = = = = = = = --}}
+    <section class="relative bg-slate-50 border-b border-slate-200/60 py-12 px-4">
+        {{-- Subtle Gradient Accent --}}
+        <div class="absolute bottom-0 left-0 w-full h-px" style="background: linear-gradient(to right, transparent, var(--brand-color-muted), transparent);"></div>
+
+        <div class="max-w-4xl mx-auto" x-data="{
+            q: '{{ $query ?? '' }}',
+            type: '{{ $type ?? 'all' }}',
+            year: '{{ $year ?? '' }}'
+        }">
             <div class="text-center mb-8">
-                <h1 class="text-3xl sm:text-4xl font-bold text-white mb-3">Search Articles</h1>
-                <p class="text-primary-100 max-w-2xl mx-auto">
-                    Find published research articles by title, author, keywords, or abstract
+                <span class="inline-flex items-center gap-2 px-3 py-1 bg-brand-soft rounded-full text-[10px] font-bold text-brand uppercase tracking-widest mb-4">
+                    <i class="fa-solid fa-earth-asia"></i>
+                    Global Discovery
+                </span>
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">Search Articles</h1>
+                <p class="text-slate-500 max-w-lg mx-auto text-base">
+                    Explore high-quality research and scholarly works across our specialized collections.
                 </p>
             </div>
 
-            <!-- Search Form -->
-            <form action="{{ route('journal.public.search', ['journal' => $journal->slug]) }}" method="GET"
-                class="space-y-4">
-                <!-- Main Search Input -->
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" name="q" value="{{ $query ?? '' }}"
-                        placeholder="Enter your search term..."
-                        class="w-full pl-14 pr-32 py-4 text-lg rounded-2xl border-0 shadow-xl focus:ring-4 focus:ring-white/30 placeholder-gray-400 text-gray-900"
-                        autofocus>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-2">
-                        <button type="submit"
-                            class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors">
-                            Search
-                        </button>
+            {{-- Floating Glass Search Bar --}}
+            <form action="{{ route('journal.public.search', ['journal' => $journal->slug]) }}" method="GET" class="space-y-6">
+                <div class="relative group max-w-3xl mx-auto">
+                    {{-- Input Container with Focus Effects --}}
+                    <div class="relative flex items-center bg-white border border-slate-200 rounded-2xl shadow-sm transition-all duration-300 group-focus-within:shadow-xl group-focus-within:border-brand/50 group-focus-within:-translate-y-0.5 overflow-hidden">
+                        <div class="pl-5 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-search text-slate-300 text-lg group-focus-within:text-brand transition-colors"></i>
+                        </div>
+                        <input type="text" 
+                               name="q" 
+                               x-model="q"
+                               placeholder="Search title, keywords, or authors..."
+                               class="w-full pl-4 pr-32 py-4.5 text-base border-0 focus:ring-0 placeholder-slate-400 text-slate-700 font-medium"
+                               autofocus>
+                        <div class="pr-2">
+                            <button type="submit"
+                                    class="px-6 py-2.5 bg-brand hover:brightness-110 text-white text-xs font-bold rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-brand/20">
+                                Search
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Filters -->
+                {{-- Segmented Control Filters --}}
                 <div class="flex flex-wrap items-center justify-center gap-4">
-                    <!-- Search Type -->
-                    <div class="flex items-center space-x-2">
-                        <label class="text-primary-100 text-sm">Search in:</label>
-                        <select name="type"
-                            class="bg-white/10 text-white border-0 rounded-lg text-sm focus:ring-2 focus:ring-white/30 py-2 px-3">
-                            <option value="all" {{ ($type ?? 'all') === 'all' ? 'selected' : '' }}
-                                class="text-gray-900">All Fields</option>
-                            <option value="title" {{ ($type ?? '') === 'title' ? 'selected' : '' }}
-                                class="text-gray-900">Title</option>
-                            <option value="author" {{ ($type ?? '') === 'author' ? 'selected' : '' }}
-                                class="text-gray-900">Author</option>
-                            <option value="keywords" {{ ($type ?? '') === 'keywords' ? 'selected' : '' }}
-                                class="text-gray-900">Keywords</option>
-                            <option value="abstract" {{ ($type ?? '') === 'abstract' ? 'selected' : '' }}
-                                class="text-gray-900">Abstract</option>
-                        </select>
+                    <div class="relative inline-flex bg-slate-100 rounded-xl p-1 shadow-inner border border-slate-200/50" x-data="{
+                        activeTab: '{{ $type ?? 'all' }}'
+                    }">
+                        {{-- Sliding Active Indicator --}}
+                        <div class="absolute inset-y-1 bg-white rounded-lg shadow-sm transition-all duration-300 pointer-events-none"
+                             :style="{
+                                width: '{{ 100 / 4 }}%',
+                                transform: activeTab === 'all' ? 'translateX(0)' : 
+                                           activeTab === 'title' ? 'translateX(100%)' :
+                                           activeTab === 'author' ? 'translateX(200%)' : 'translateX(300%)'
+                             }">
+                        </div>
+
+                        @foreach([
+                            ['val' => 'all', 'label' => 'All'],
+                            ['val' => 'title', 'label' => 'Title'],
+                            ['val' => 'author', 'label' => 'Author'],
+                            ['val' => 'keywords', 'label' => 'Keywords']
+                        ] as $option)
+                            <button type="button" 
+                                    @click="activeTab = '{{ $option['val'] }}'; type = '{{ $option['val'] }}'"
+                                    :style="activeTab === '{{ $option['val'] }}' ? 'color: var(--brand-color)' : ''"
+                                    :class="activeTab === '{{ $option['val'] }}' ? '' : 'text-slate-500 hover:text-slate-700'"
+                                    class="relative px-6 py-1.5 rounded-lg text-xs font-bold uppercase tracking-tight transition-colors z-10 w-[80px] md:w-[100px]">
+                                {{ $option['label'] }}
+                            </button>
+                        @endforeach
+                        <input type="hidden" name="type" x-model="type">
                     </div>
 
-                    <!-- Year Filter -->
+                    {{-- Minimalist Year Selector --}}
                     @if (isset($years) && $years->count() > 0)
-                        <div class="flex items-center space-x-2">
-                            <label class="text-primary-100 text-sm">Year:</label>
-                            <select name="year"
-                                class="bg-white/10 text-white border-0 rounded-lg text-sm focus:ring-2 focus:ring-white/30 py-2 px-3">
-                                <option value="" class="text-gray-900">All Years</option>
+                        <div class="relative">
+                            <select name="year" 
+                                    x-model="year"
+                                    class="appearance-none bg-white border border-slate-200 rounded-xl py-2 pl-4 pr-10 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-brand/10 focus:border-brand/40 transition-all cursor-pointer shadow-sm">
+                                <option value="">Any Year</option>
                                 @foreach ($years as $y)
-                                    <option value="{{ $y }}" {{ ($year ?? '') == $y ? 'selected' : '' }}
-                                        class="text-gray-900">{{ $y }}</option>
+                                    <option value="{{ $y }}">{{ $y }}</option>
                                 @endforeach
                             </select>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -78,269 +118,158 @@
         </div>
     </section>
 
-    <!-- Search Results Section -->
-    <section class="py-12 bg-gray-50">
+    {{-- = = = = = = = = = = = = = = = = = = = = = = = --}}
+    {{-- MINIMALIST RESULTS SECTION --}}
+    {{-- = = = = = = = = = = = = = = = = = = = = = = = --}}
+    <section class="py-12 bg-white min-h-[60vh]">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             @if ($query)
-                <!-- Results Header -->
-                <div class="flex items-center justify-between mb-8">
+                {{-- Airy Status Bar --}}
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 border-b border-slate-100 pb-6">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">
+                        <h2 class="text-xl font-bold text-slate-900">
                             @if ($totalFound > 0)
-                                Found <span class="text-primary-600">{{ $totalFound }}</span>
-                                {{ Str::plural('result', $totalFound) }}
+                                <span class="text-brand">{{ number_format($totalFound) }}</span> Results
                             @else
-                                No results found
+                                No articles matched
                             @endif
                         </h2>
-                        <p class="text-sm text-gray-500 mt-1">
-                            for "{{ $query }}"
-                            @if ($type !== 'all')
-                                in {{ ucfirst($type) }}
-                            @endif
-                            @if ($year)
-                                from {{ $year }}
-                            @endif
+                        <p class="text-slate-400 text-sm mt-1">
+                            Discovery for: <span class="text-slate-600 font-medium italic">"{{ $query }}"</span>
                         </p>
                     </div>
 
                     @if ($totalFound > 0)
                         <a href="{{ route('journal.public.search', ['journal' => $journal->slug]) }}"
-                            class="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                            Clear search
+                           class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-1.5">
+                            <i class="fa-solid fa-xmark"></i>
+                            Clear
                         </a>
                     @endif
                 </div>
 
                 @if ($totalFound > 0 && $results->count() > 0)
-                    <!-- Results List -->
-                    <div class="space-y-6">
+                    {{-- Minimalist Cards --}}
+                    <div class="grid grid-cols-1 gap-4">
                         @foreach ($results as $article)
-                            <article
-                                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-primary-200 transition-all duration-300 group">
-                                <div class="flex gap-6">
-                                    <!-- Article Content -->
-                                    <div class="flex-1 min-w-0">
-                                        <!-- Section & Issue Badge -->
-                                        <div class="flex flex-wrap items-center gap-2 mb-3">
-                                            @if ($article->section)
-                                                <span
-                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
-                                                    {{ $article->section->name }}
-                                                </span>
-                                            @endif
-                                            @if ($article->issue)
-                                                <span
-                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                                    {{ $article->issue->identifier }}
-                                                </span>
-                                            @endif
-                                            @if ($article->published_at)
-                                                <span class="text-xs text-gray-500">
-                                                    Published {{ $article->published_at->format('M d, Y') }}
-                                                </span>
-                                            @endif
-                                        </div>
+                            <article class="group bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                                <div class="flex flex-col gap-4">
+                                    {{-- Status & Category Row --}}
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        @if ($article->section)
+                                            <span class="px-2 py-0.5 bg-brand-soft text-brand rounded text-[9px] font-bold uppercase tracking-wider">
+                                                {{ $article->section->name }}
+                                            </span>
+                                        @endif
+                                        @if ($article->issue)
+                                            <span class="px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[9px] font-bold uppercase tracking-wider">
+                                                {{ $article->issue->identifier }}
+                                            </span>
+                                        @endif
+                                        <span class="w-1 h-1 rounded-full bg-slate-200"></span>
+                                        <time class="text-[10px] text-slate-400 font-medium">
+                                            {{ $article->published_at?->format('F d, Y') ?? 'Unpublished' }}
+                                        </time>
+                                    </div>
 
-                                        <!-- Title -->
-                                        <h3
-                                            class="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition-colors mb-2">
-                                            <a
-                                                href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}">
+                                    {{-- Title & Authors --}}
+                                    <div>
+                                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-brand transition-colors leading-tight mb-2">
+                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}">
                                                 {{ $article->title }}
                                             </a>
                                         </h3>
-
-                                        <!-- Authors -->
                                         @if ($article->authors->count() > 0)
-                                            <p class="text-sm text-gray-600 mb-3">
-                                                <span class="font-medium">By:</span>
+                                            <p class="text-xs font-semibold text-slate-500">
+                                                <i class="fa-solid fa-user-pen mr-1 opacity-40"></i>
                                                 {{ $article->authors->map(fn($a) => $a->first_name . ' ' . $a->last_name)->join(', ') }}
                                             </p>
                                         @endif
+                                    </div>
 
-                                        <!-- Abstract Snippet -->
-                                        @if ($article->abstract)
-                                            <p class="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-2">
-                                                {{ Str::limit(strip_tags($article->abstract), 200) }}
-                                            </p>
-                                        @endif
+                                    {{-- Snippet --}}
+                                    @if ($article->abstract)
+                                        <p class="text-slate-500 text-xs leading-relaxed line-clamp-2 opacity-80">
+                                            {{ Str::limit(strip_tags($article->abstract), 200) }}
+                                        </p>
+                                    @endif
 
-                                        <!-- Keywords -->
-                                        @if ($article->keywords)
-                                            <div class="flex flex-wrap gap-1.5 mb-4">
-                                                @foreach (array_slice(explode(',', $article->keywords), 0, 4) as $keyword)
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
-                                                        {{ trim($keyword) }}
-                                                    </span>
-                                                @endforeach
-                                                @if (count(explode(',', $article->keywords)) > 4)
-                                                    <span
-                                                        class="text-xs text-gray-400">+{{ count(explode(',', $article->keywords)) - 4 }}
-                                                        more</span>
-                                                @endif
-                                            </div>
-                                        @endif
-
-                                        <!-- Actions -->
-                                        <div class="flex items-center gap-4">
-                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
-                                                class="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-                                                View Details
-                                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M9 5l7 7-7 7" />
-                                                </svg>
+                                    {{-- Minimalist Action Bar --}}
+                                    <div class="flex flex-wrap items-center gap-5 pt-4 mt-2 border-t border-slate-50">
+                                        @if ($article->files->where('file_type', 'galley')->count() > 0)
+                                            <a href="{{ route('journal.public.article.reader', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
+                                               class="flex items-center gap-1.5 text-[10px] font-bold text-brand uppercase tracking-widest hover:underline">
+                                                <i class="fa-solid fa-file-pdf opacity-70"></i>
+                                                PDF Full-Text
                                             </a>
-
-                                            @if ($article->files->where('file_type', 'galley')->count() > 0)
-                                                <a href="{{ route('journal.public.article.reader', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
-                                                    class="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                                    </svg>
-                                                    Read PDF
-                                                </a>
-                                            @endif
-
-                                            @php
-                                                $doi = $article->currentPublication->doi ?? $article->doi;
-                                            @endphp
-                                            @if ($doi)
-                                                <a href="https://doi.org/{{ $doi }}" target="_blank"
-                                                    class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
-                                                    <span class="font-medium">DOI:</span>
-                                                    <span class="ml-1">{{ $doi }}</span>
-                                                </a>
-                                            @endif
-                                        </div>
+                                        @endif
+                                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
+                                           class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">
+                                            Abstract Details
+                                        </a>
+                                        @php $doi = $article->currentPublication->doi ?? $article->doi; @endphp
+                                        @if ($doi)
+                                            <span class="text-[10px] font-bold text-slate-200 uppercase tracking-tighter">
+                                                DOI: {{ $doi }}
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                             </article>
                         @endforeach
                     </div>
 
-                    <!-- Pagination -->
+                    {{-- Pagination --}}
                     @if ($results->hasPages())
-                        <div class="mt-10">
+                        <div class="mt-12">
                             {{ $results->links() }}
                         </div>
                     @endif
                 @else
-                    <!-- No Results -->
-                    <div class="text-center py-16">
-                        <div class="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                    {{-- Airy Empty State --}}
+                    <div class="py-20 flex flex-col items-center text-center">
+                        <div class="mb-8 relative">
+                            <div class="absolute inset-0 bg-brand-soft rounded-full scale-150 blur-2xl opacity-50"></div>
+                            <i class="fa-solid fa-cloud-moon text-7xl text-slate-100 relative"></i>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">No articles found</h3>
-                        <p class="text-gray-500 max-w-md mx-auto mb-6">
-                            We couldn't find any articles matching "{{ $query }}". Try using different keywords
-                            or check your spelling.
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">Finding your way?</h3>
+                        <p class="text-slate-400 max-w-sm mx-auto mb-8 text-sm leading-relaxed">
+                            No articles matched <span class="text-brand font-bold">"{{ $query }}"</span>. Take a step back or browse recent additions.
                         </p>
-                        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <div class="flex gap-3">
                             <a href="{{ route('journal.public.search', ['journal' => $journal->slug]) }}"
-                                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-                                New Search
-                            </a>
-                            <a href="{{ route('journal.public.archives', ['journal' => $journal->slug]) }}"
-                                class="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
-                                Browse Archives
+                               class="px-8 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest">
+                                Global Search
                             </a>
                         </div>
                     </div>
                 @endif
             @else
-                <!-- Search Tips / Empty State -->
-                <div class="max-w-2xl mx-auto text-center py-12">
-                    <div
-                        class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center">
-                        <svg class="w-12 h-12 text-primary-600" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Start Your Research</h2>
-                    <p class="text-gray-600 mb-8 leading-relaxed">
-                        Enter keywords, author names, or phrases to find relevant articles in our journal.
-                        You can also filter by search type and publication year.
-                    </p>
-
-                    <!-- Search Tips -->
-                    <div class="bg-white rounded-xl border border-gray-200 p-6 text-left">
-                        <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
-                            Search Tips
-                        </h3>
-                        <ul class="space-y-3 text-sm text-gray-600">
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Use specific terms for more relevant results (e.g., "machine learning" instead of
-                                    just "learning")</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Select "Author" to search specifically by researcher name</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Use the year filter to narrow down results to a specific publication period</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Search is case-insensitive, so "AI" and "ai" will return the same results</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Quick Links -->
-                    <div class="mt-8 flex flex-wrap justify-center gap-4">
+                {{-- Clean Welcome Grid --}}
+                <div class="max-w-4xl mx-auto py-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <a href="{{ route('journal.public.current', ['journal' => $journal->slug]) }}"
-                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                            <svg class="w-4 h-4 mr-2 text-primary-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2" />
-                            </svg>
-                            Current Issue
+                           class="block p-8 bg-white border border-slate-100 rounded-3xl shadow-sm transition-all hover:shadow-md hover:-translate-y-1 group">
+                            <div class="w-12 h-12 rounded-2xl bg-brand-soft flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-bolt text-brand text-xl"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-slate-900 mb-2">Current Issue</h4>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-4">Discover the latest research and scholarly publications in this edition.</p>
+                            <span class="inline-flex items-center gap-2 text-[11px] font-bold text-brand uppercase tracking-widest">
+                                EXPLORE LATEST <i class="fa-solid fa-arrow-right-long"></i>
+                            </span>
                         </a>
+
                         <a href="{{ route('journal.public.archives', ['journal' => $journal->slug]) }}"
-                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                            <svg class="w-4 h-4 mr-2 text-primary-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                            </svg>
-                            Browse Archives
+                           class="block p-8 bg-brand rounded-3xl shadow-xl transition-all hover:-translate-y-1 group text-white">
+                            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-box-archive text-white text-xl"></i>
+                            </div>
+                            <h4 class="text-xl font-bold mb-2">Historical Archives</h4>
+                            <p class="text-white/70 text-sm leading-relaxed mb-4">Access our extensive library of past issues and historical records.</p>
+                            <span class="inline-flex items-center gap-2 text-[11px] font-bold text-white/90 uppercase tracking-widest">
+                                BROWSE LIBRARY <i class="fa-solid fa-arrow-right-long"></i>
+                            </span>
                         </a>
                     </div>
                 </div>
