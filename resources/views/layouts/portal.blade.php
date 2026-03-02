@@ -61,9 +61,6 @@
     {{-- ============================================ --}}
     <x-site.navbar :primaryMenu="$primaryMenu ?? null" :userMenu="$userMenu ?? null" :settings="$settings ?? []" />
 
-    {{-- Spacer for fixed nav --}}
-    <div class="h-16"></div>
-
     {{-- ============================================ --}}
     {{-- MAIN CONTENT --}}
     {{-- ============================================ --}}
