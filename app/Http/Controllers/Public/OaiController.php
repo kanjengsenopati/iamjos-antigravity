@@ -94,7 +94,7 @@ class OaiController extends Controller
             case 'Identify':
                 $earliestDate = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED)
-                    ->min('created_at'); 
+                    ->min('updated_at'); 
                 
                 $earliestDate = $earliestDate ? Carbon::parse($earliestDate) : now();
 
@@ -139,22 +139,20 @@ class OaiController extends Controller
                 $query = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED);
                 
-                // Filter Tanggal (OAI-PMH 2.0 Inklusif)
+                // Filter Tanggal (OAI-PMH 2.0 Inklusif dgn date_trunc)
                 if ($request->has('from')) {
-                    $from = Carbon::parse($request->input('from'))->setTimezone('UTC');
-                    $query->where('updated_at', '>=', $from);
+                    $from = Carbon::parse($request->input('from'))->setTimezone('UTC')->format('Y-m-d H:i:s');
+                    $query->whereRaw("date_trunc('second', updated_at::timestamp) >= ?", [$from]);
                 }
                 if ($request->has('until')) {
-                    $until = Carbon::parse($request->input('until'))->setTimezone('UTC');
+                    $untilCarbon = Carbon::parse($request->input('until'))->setTimezone('UTC');
                     
                     // Jika formatnya tanggal saja (YYYY-MM-DD), ambil sampai akhir hari.
-                    // Jika ada jam (ISO8601), ambil sampai akhir detik untuk inklusivitas mikrodetik PostgreSQL.
                     if (strlen($request->input('until')) <= 10) {
-                        $until->endOfDay();
-                    } else {
-                        $until->endOfSecond();
+                        $untilCarbon->endOfDay();
                     }
-                    $query->where('updated_at', '<=', $until);
+                    $until = $untilCarbon->format('Y-m-d H:i:s');
+                    $query->whereRaw("date_trunc('second', updated_at::timestamp) <= ?", [$until]);
                 }
                 
                 // Eager Load
