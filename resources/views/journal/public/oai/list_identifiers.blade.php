@@ -9,7 +9,7 @@
             <header>
                 <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}
                 </identifier>
-                <datestamp>{{ $record->updated_at->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') }}</datestamp>
+                <datestamp>{{ $record->updated_at->toIso8601ZuluString() }}</datestamp>
                 <setSpec>{{ strtoupper($record->journal->abbreviation ?? 'JRN') }}:ART</setSpec>
             </header>
         @endforeach

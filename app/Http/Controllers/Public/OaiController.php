@@ -139,20 +139,22 @@ class OaiController extends Controller
                 $query = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED);
                 
-                // Filter Tanggal
+                // Filter Tanggal (OAI-PMH 2.0 Inklusif)
                 if ($request->has('from')) {
-                    $from = Carbon::parse($request->input('from'), 'UTC')->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at::timestamp) >= ?", [$from]);
+                    $from = Carbon::parse($request->input('from'))->setTimezone('UTC');
+                    $query->where('updated_at', '>=', $from);
                 }
                 if ($request->has('until')) {
-                    $dateUntil = Carbon::parse($request->input('until'), 'UTC');
+                    $until = Carbon::parse($request->input('until'))->setTimezone('UTC');
                     
-                    // Cek jika formatnya tanggal saja (YYYY-MM-DD), ambil sampai akhir hari
+                    // Jika formatnya tanggal saja (YYYY-MM-DD), ambil sampai akhir hari.
+                    // Jika ada jam (ISO8601), ambil sampai akhir detik untuk inklusivitas mikrodetik PostgreSQL.
                     if (strlen($request->input('until')) <= 10) {
-                        $dateUntil->endOfDay();
+                        $until->endOfDay();
+                    } else {
+                        $until->endOfSecond();
                     }
-                    $until = $dateUntil->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at::timestamp) <= ?", [$until]);
+                    $query->where('updated_at', '<=', $until);
                 }
                 
                 // Eager Load
