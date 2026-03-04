@@ -139,23 +139,17 @@ class OaiController extends Controller
                 $query = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED);
                 
-                // Filter Tanggal (OAI-PMH 2.0 Inklusif dgn date_trunc)
+                // Filter Tanggal (OAI-PMH 2.0 Inklusif dgn Native Eloquent)
                 if ($request->has('from')) {
-                    $from = Carbon::parse($request->input('from'))->setTimezone('UTC')->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at::timestamp) >= ?", [$from]);
+                    $from = Carbon::parse($request->input('from'))->startOfSecond();
+                    $query->where('updated_at', '>=', $from);
                 }
                 if ($request->has('until')) {
-                    $untilCarbon = Carbon::parse($request->input('until'))->setTimezone('UTC');
-                    
-                    // Jika formatnya tanggal saja (YYYY-MM-DD), ambil sampai akhir hari.
-                    if (strlen($request->input('until')) <= 10) {
-                        $untilCarbon->endOfDay();
-                    }
-                    $until = $untilCarbon->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at::timestamp) <= ?", [$until]);
+                    $until = Carbon::parse($request->input('until'))->endOfSecond();
+                    $query->where('updated_at', '<=', $until);
                 }
-                
-                // Eager Load
+
+                // Metadata Eager Load
                 $query->with(['publication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
 
                 $records = $query->orderBy('updated_at', 'desc')->take(100)->get();
