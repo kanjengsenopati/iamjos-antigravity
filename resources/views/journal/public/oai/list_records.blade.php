@@ -8,9 +8,8 @@
         @foreach ($records as $record)
             <record>
                 <header>
-                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}
-                    </identifier>
-                    <datestamp>{{ $record->updated_at->toIso8601ZuluString() }}</datestamp>
+                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}</identifier>
+                    <datestamp>{{ $record->updated_at->utc()->format('Y-m-d\TH:i:s\Z') }}</datestamp>
                     <setSpec>{{ strtoupper($journal->abbreviation ?? 'JRN') }}:ART</setSpec>
                 </header>
                 <metadata>
@@ -30,7 +29,7 @@
                                 @endif
                             @endforeach
                         @endif
-                        <dc:description>{!! htmlspecialchars(strip_tags($record->abstract), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:description>
+                        <dc:description>{!! htmlspecialchars(strip_tags(html_entity_decode($record->abstract)), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:description>
                         <dc:publisher>{!! htmlspecialchars($journal->name, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:publisher>
                         @if ($record->publication && $record->publication->date_published)
                             <dc:date>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}
