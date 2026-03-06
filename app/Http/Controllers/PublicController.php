@@ -733,6 +733,8 @@ class PublicController extends Controller
 
         if (\Str::isUuid($article)) {
             $submissionQuery->where('id', $article);
+        } elseif (is_numeric($article)) {
+            $submissionQuery->where('seq_id', $article);
         } else {
             $submissionQuery->where('slug', $article);
         }
@@ -830,6 +832,8 @@ class PublicController extends Controller
 
         if (Str::isUuid($article)) {
             $submissionQuery->where('id', $article);
+        } elseif (is_numeric($article)) {
+            $submissionQuery->where('seq_id', $article);
         } else {
             $submissionQuery->where('slug', $article);
         }
