@@ -820,6 +820,82 @@ class PublicController extends Controller
     }
 
     /**
+     * Download an article PDF directly via SEO-friendly route.
+     * Pattern: /{journal}/article/download/{seq_id}/{filename}.pdf
+     * CRITICAL for Google Scholar indexing.
+     */
+    public function downloadPdf(string $journalSlug, string $seqId, string $filename)
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        // Resolve article by seq_id
+        $submission = Submission::where('journal_id', $journal->id)
+            ->where('seq_id', $seqId)
+            ->published()
+            ->firstOrFail();
+
+        // Load galleys
+        $submission->load('galleys');
+
+        // Find the PDF galley
+        $pdfGalley = $submission->galleys->firstWhere('label', 'PDF') 
+            ?? $submission->galleys->where('file_type', 'galley')->first();
+
+        if (!$pdfGalley) {
+            abort(404, 'PDF Galley not found');
+        }
+
+        if ($pdfGalley->is_remote && $pdfGalley->url_remote) {
+            return redirect($pdfGalley->url_remote);
+        }
+
+        if (!$pdfGalley->file_id) {
+            abort(404, 'File not found');
+        }
+
+        $file = \App\Models\SubmissionFile::find($pdfGalley->file_id);
+
+        if (!$file) {
+            abort(404, 'File not found');
+        }
+
+        $disk = Storage::disk('local');
+
+        if (!$disk->exists($file->file_path)) {
+            abort(404, 'File not found on disk');
+        }
+
+        // Analytics
+        if (!preg_match('/bot|crawler|spider/i', request()->userAgent() ?? '')) {
+            DB::table('article_metrics')->insert([
+                'submission_id' => $submission->id,
+                'type' => 'download',
+                'ip_address' => request()->ip(),
+                'country_code' => 'ID',
+                'date' => now()->toDateString(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Return file stream with inline disposition for browser preview but with correct filename
+        return response()->stream(
+            function () use ($disk, $file) {
+                $stream = $disk->readStream($file->file_path);
+                fpassthru($stream);
+                fclose($stream);
+            },
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '.pdf"',
+                'Content-Length' => $disk->size($file->file_path),
+                'Cache-Control' => 'public, max-age=86400',
+            ]
+        );
+    }
+
+    /**
      * View a galley inline (for HTML galleys or embedded PDF viewer).
      */
     public function viewGalley(string $journalSlug, $article, $galley)
