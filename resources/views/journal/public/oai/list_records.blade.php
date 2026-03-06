@@ -41,7 +41,7 @@
 
                         {{-- Identifier (Slug URL) --}}
                         <dc:identifier>
-                            {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->slug ?? $record->id]) }}
+                            {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]) }}
                         </dc:identifier>
 
                         {{-- Relation (PDF URL) --}}
@@ -54,7 +54,7 @@
                             </dc:relation>
                         @else
                             <dc:relation>
-                                {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->slug ?? $record->id]) }}
+                                {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]) }}
                             </dc:relation>
                         @endif
 

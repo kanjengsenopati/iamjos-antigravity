@@ -73,7 +73,7 @@
 
                                                     {{-- 1. TITLE --}}
                                                     <h4 class="text-lg font-bold text-blue-700 leading-tight mb-1">
-                                                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
+                                                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
                                                             class="hover:underline">
                                                             {{ $article->title }}
                                                         </a>

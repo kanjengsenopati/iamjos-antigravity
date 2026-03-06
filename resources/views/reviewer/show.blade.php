@@ -97,12 +97,12 @@
                         :participants="$participants" :journal="$journal" />
                 </div>
 
-                <!-- Manuscript Files -->
+                <!-- Review Files -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Manuscript Files</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Review Files</h3>
 
                     @if ($manuscriptFiles->isEmpty())
-                        <p class="text-gray-500">No manuscript files available.</p>
+                        <p class="text-gray-500">No review files available.</p>
                     @else
                         <div class="space-y-3">
                             @foreach ($manuscriptFiles as $file)
@@ -211,6 +211,57 @@
                                 </p>
                             </div>
 
+                            <!-- Reviewer Attachments -->
+                            <div class="mb-6" x-data="reviewerAttachments()">
+                                <h4 class="text-sm font-medium text-gray-900 mb-1">Reviewer Attachments</h4>
+                                <p class="text-xs text-gray-500 mb-4">
+                                    Upload files you would like the editor and/or author to consult, including revised versions of the original review file(s).
+                                </p>
+                                
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors"
+                                    @dragover.prevent="$el.classList.add('border-primary-500', 'bg-primary-50')"
+                                    @dragleave.prevent="$el.classList.remove('border-primary-500', 'bg-primary-50')"
+                                    @drop.prevent="handleDrop($event); $el.classList.remove('border-primary-500', 'bg-primary-50')">
+                                    
+                                    <input type="file" id="attachmentInput" class="hidden" @change="handleFileSelect($event)" accept=".doc,.docx,.pdf,.rtf">
+                                    
+                                    <label for="attachmentInput" class="cursor-pointer">
+                                        <div class="text-gray-500 mb-2">
+                                            <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-primary-500"></i>
+                                            <p class="font-medium text-gray-900">Click to upload or drag and drop</p>
+                                            <p class="text-xs">DOC, DOCX, PDF, RTF (Max 10MB)</p>
+                                        </div>
+                                    </label>
+
+                                    <!-- Upload Progress -->
+                                    <div x-show="isUploading" class="mt-4" style="display: none;">
+                                        <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                                            <div class="h-full bg-primary-600 transition-all duration-300" :style="`width: ${uploadProgress}%`"></div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1" x-text="`Uploading... ${uploadProgress}%`"></p>
+                                    </div>
+                                </div>
+
+                                <!-- Uploaded Files List -->
+                                <div class="mt-4 space-y-2" x-show="files.length > 0" style="display: none;">
+                                    <h5 class="text-sm font-medium text-gray-700">Uploaded Files</h5>
+                                    <template x-for="file in files" :key="file.id">
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div class="flex items-center space-x-3">
+                                                <i class="fa-solid fa-file text-gray-400"></i>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900" x-text="file.name"></p>
+                                                    <p class="text-xs text-gray-500" x-text="file.size"></p>
+                                                </div>
+                                            </div>
+                                            <button type="button" @click="deleteFile(file.id)" class="text-red-500 hover:text-red-700 p-1" title="Delete File">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
                             <!-- Submit Button -->
                             <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
                                 <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
@@ -263,6 +314,28 @@
                                     <div
                                         class="prose prose-sm max-w-none text-gray-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                                         {!! $assignment->comments_for_editor !!}
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if ($reviewerAttachments->isNotEmpty())
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500 mb-2">Reviewer Attachments</h4>
+                                    <div class="space-y-2">
+                                        @foreach($reviewerAttachments as $file)
+                                            <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                                <div class="flex items-center space-x-3">
+                                                    <i class="fa-solid fa-file text-gray-400"></i>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900">{{ $file->file_name }}</p>
+                                                        <p class="text-xs text-gray-500">{{ $file->file_size_formatted }}</p>
+                                                    </div>
+                                                </div>
+                                                <a href="{{ route('files.download', ['file' => $file->id]) }}" class="text-primary-600 hover:text-primary-800 text-sm font-medium flex items-center">
+                                                    <i class="fa-solid fa-download mr-1"></i> Download
+                                                </a>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             @endif
@@ -372,6 +445,155 @@
 
                     xhr.send(formData);
                 })
+            });
+        </script>
+        
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('reviewerAttachments', () => ({
+                    files: @json($reviewerAttachments->map(function($f) {
+                        return [
+                            'id' => $f->id,
+                            'name' => $f->file_name,
+                            'size' => $f->file_size_formatted
+                        ];
+                    })),
+                    isUploading: false,
+                    uploadProgress: 0,
+
+                    handleDrop(e) {
+                        if (e.dataTransfer.files.length > 0) {
+                            this.uploadFile(e.dataTransfer.files[0]);
+                        }
+                    },
+
+                    handleFileSelect(e) {
+                        if (e.target.files.length > 0) {
+                            this.uploadFile(e.target.files[0]);
+                        }
+                    },
+
+                    uploadFile(file) {
+                        // Validate file type
+                        const allowedTypes = ['.doc', '.docx', '.pdf', '.rtf'];
+                        const extension = '.' + file.name.split('.').pop().toLowerCase();
+                        
+                        if (!allowedTypes.includes(extension)) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Invalid File Type',
+                                text: 'Only DOC, DOCX, PDF, and RTF files are allowed.',
+                                confirmButtonColor: '#2563eb'
+                            });
+                            return;
+                        }
+
+                        // Validate file size (10MB)
+                        if (file.size > 10 * 1024 * 1024) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'File Too Large',
+                                text: 'Maximum file size is 10MB.',
+                                confirmButtonColor: '#2563eb'
+                            });
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        
+                        this.isUploading = true;
+                        this.uploadProgress = 0;
+
+                        axios.post('{{ route("journal.reviewer.upload-attachment", ["journal" => $journal->slug, "assignment" => $assignment]) }}', formData, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            },
+                            onUploadProgress: (progressEvent) => {
+                                this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            }
+                        })
+                        .then(response => {
+                            this.files.unshift({
+                                id: response.data.file.id,
+                                name: response.data.file.file_name,
+                                size: (response.data.file.file_size / 1024).toFixed(2) + ' KB'
+                            });
+                            
+                            // Reset input
+                            document.getElementById('attachmentInput').value = '';
+                            
+                            // Success toast
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Attachment uploaded successfully'
+                            });
+                        })
+                        .catch(error => {
+                            const message = error.response?.data?.message || 'An error occurred during upload';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Upload Failed',
+                                text: message,
+                                confirmButtonColor: '#2563eb'
+                            });
+                        })
+                        .finally(() => {
+                            this.isUploading = false;
+                            this.uploadProgress = 0;
+                        });
+                    },
+
+                    deleteFile(id) {
+                        Swal.fire({
+                            title: 'Delete Attachment?',
+                            text: "You won't be able to revert this!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ef4444',
+                            cancelButtonColor: '#6b7280',
+                            confirmButtonText: 'Yes, delete it!'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                axios.delete(`/${this.journalSlug}/reviewer/{{ $assignment->slug }}/attachment/${id}`)
+                                    .then(response => {
+                                        this.files = this.files.filter(f => f.id !== id);
+                                        
+                                        const Toast = Swal.mixin({
+                                            toast: true,
+                                            position: 'top-end',
+                                            showConfirmButton: false,
+                                            timer: 3000,
+                                            timerProgressBar: true
+                                        });
+                                        Toast.fire({
+                                            icon: 'success',
+                                            title: 'Attachment deleted successfully'
+                                        });
+                                    })
+                                    .catch(error => {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: 'Failed to delete attachment.',
+                                            confirmButtonColor: '#2563eb'
+                                        });
+                                    });
+                            }
+                        });
+                    },
+                    
+                    get journalSlug() {
+                        return '{{ $journal->slug }}';
+                    }
+                }));
             });
         </script>
     @endpush

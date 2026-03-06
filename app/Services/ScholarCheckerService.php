@@ -36,7 +36,7 @@ class ScholarCheckerService
             $title = $submission->title;
             // Assuming there is a way to get the public URL of the submission.
             // Using a generic route helper for now, adjust based on actual route.
-            $url = route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->slug ?? $submission->id]);
+            $url = route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id]);
 
             // SCHOLAR CHECK STRATEGY:
             // 1. If 'scholar_url' is monitored, use it as a PUBLIC ARTICLE URL to search.

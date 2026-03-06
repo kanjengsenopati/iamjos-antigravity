@@ -7,6 +7,30 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Site Administration') | IAMJOS Admin</title>
 
+    {{-- SEO & Meta Tags --}}
+    <meta name="description" content="Site Administration for IAMJOS - Indonesian Academic Journal System">
+    <meta name="robots" content="noindex, nofollow">
+
+    {{-- Favicon --}}
+    <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
+
+    {{-- Open Graph --}}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', 'Site Administration') | IAMJOS Admin">
+    <meta property="og:description" content="Site Administration for IAMJOS - Indonesian Academic Journal System">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="IAMJOS Admin">
+    <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', 'Site Administration') | IAMJOS Admin">
+    <meta name="twitter:description" content="Site Administration for IAMJOS - Indonesian Academic Journal System">
+    <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

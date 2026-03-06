@@ -80,8 +80,9 @@ class SubmissionFileController extends Controller
     /**
      * Download a file.
      */
-    public function download(SubmissionFile $file)
+    public function download($id)
     {
+        $file = SubmissionFile::where('id', $id)->first();
         // Check if user can access this file
         $submission = $file->submission;
         $user = auth()->user();
@@ -126,8 +127,9 @@ class SubmissionFileController extends Controller
      * Preview a file using Google Docs Viewer.
      * For local storage, we need to create a temporary signed URL.
      */
-    public function preview(SubmissionFile $file)
+    public function preview($id)
     {
+        $file = SubmissionFile::findOrFail($id);
         // Same access check as download
         $submission = $file->submission;
         $user = auth()->user();

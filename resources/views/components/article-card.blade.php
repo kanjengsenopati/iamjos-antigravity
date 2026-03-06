@@ -36,7 +36,7 @@ $downloadCount = $article->download_count ?? rand(20, 200);
         <div class="flex-1 min-w-0">
             {{-- Article Title --}}
             <h3 class="text-lg font-semibold mb-2 leading-tight">
-                <a href="{{ route('journal.public.article', [$journal->slug, $article->slug]) }}"
+                <a href="{{ route('journal.public.article', [$journal->slug, $article->seq_id]) }}"
                    class="hover:underline transition-colors"
                    style="color: {{ $primaryColor }};">
                     {{ $article->title }}
@@ -108,7 +108,7 @@ $downloadCount = $article->download_count ?? rand(20, 200);
                 @endif
                 
                 {{-- View Article Button --}}
-                <a href="{{ route('journal.public.article', [$journal->slug, $article->slug]) }}"
+                <a href="{{ route('journal.public.article', [$journal->slug, $article->seq_id]) }}"
                    class="inline-flex items-center px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
                     <i class="fa-solid fa-eye mr-1.5"></i>
                     View

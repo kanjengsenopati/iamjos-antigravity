@@ -143,7 +143,7 @@ class SearchController extends Controller
                     'id' => $article->id,
                     'title' => $article->title,
                     'authors' => $article->authors->pluck('name')->join(', '),
-                    'url' => route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]),
+                    'url' => route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]),
                 ];
             });
 

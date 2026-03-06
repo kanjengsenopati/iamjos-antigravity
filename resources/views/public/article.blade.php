@@ -13,7 +13,7 @@
                     class="hover:text-primary-600">Archives</a>
                 @if ($submission->issue)
                     <span class="mx-2">/</span>
-                    <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $submission->issue->url_path]) }}"
+                    <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $submission->issue->seq_id]) }}"
                         class="hover:text-primary-600">{{ $submission->issue->identifier }}</a>
                 @endif
             </nav>

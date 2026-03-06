@@ -14,16 +14,25 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url('/') }}">
 
+    {{-- Favicon --}}
+    <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
+
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ $settings['site_title'] ?? 'IAMJOS' }}">
     <meta property="og:description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals.' }}">
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:site_name" content="IAMJOS">
+    <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
 
     {{-- Twitter Card --}}
-    <meta name="twitter:card" content="summary">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $settings['site_title'] ?? 'IAMJOS' }}">
+    <meta name="twitter:description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals.' }}">
+    <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
 
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

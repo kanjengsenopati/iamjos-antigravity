@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Models\SubmissionLog;
+use App\Models\User;
+use App\Models\Role;
 
 class ReviewerController extends Controller
 {
@@ -132,8 +136,7 @@ class ReviewerController extends Controller
 
         // Notify editors via WhatsApp
         try {
-            $assignment->load(['reviewer', 'submission']);
-            $editors = \App\Models\User::role(['Editor', 'Admin', 'Super Admin'])->get();
+            $editors = User::whereHas('journalRoles', fn($q) => $q->where('journal_id', $journal->id)->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER]))->get();
             foreach ($editors as $editor) {
                 WaGateway::sendTemplate($editor, 'reviewer_accepted', [
                     'name' => $editor->name,
@@ -173,7 +176,7 @@ class ReviewerController extends Controller
         // Notify editors via WhatsApp
         try {
             $assignment->load(['reviewer', 'submission']);
-            $editors = \App\Models\User::role(['Editor', 'Admin', 'Super Admin'])->get();
+            $editors = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('name', ['Editor', 'Admin', 'Super Admin']))->get();
             foreach ($editors as $editor) {
                 WaGateway::sendTemplate($editor, 'reviewer_declined', [
                     'name' => $editor->name,
@@ -223,7 +226,14 @@ class ReviewerController extends Controller
             }
         }
 
-        return view('reviewer.show', compact('assignment', 'submission', 'manuscriptFiles', 'journal', 'participants'));
+        // Get reviewer attachments for this assignment
+        $reviewerAttachments = SubmissionFile::where('submission_id', $submission->id)
+            ->where('stage', 'review')
+            ->where('metadata->review_assignment_id', $assignment->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('reviewer.show', compact('assignment', 'submission', 'manuscriptFiles', 'journal', 'participants', 'reviewerAttachments'));
     }
 
     /**
@@ -284,7 +294,7 @@ class ReviewerController extends Controller
     private function notifyEditorsReviewCompleted(ReviewAssignment $assignment): void
     {
         // Get editors with permission to make decisions
-        $editors = \App\Models\User::role(['Editor', 'Admin', 'Super Admin'])->get();
+        $editors = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('name', ['Editor', 'Admin', 'Super Admin']))->get();
 
         foreach ($editors as $editor) {
             // Send email notification
@@ -346,5 +356,96 @@ class ReviewerController extends Controller
         ]);
 
         return response()->json(['message' => 'Reviewer assigned successfully']);
+    }
+    /**
+     * Upload reviewer attachment.
+     */
+    public function uploadAttachment(Request $request, string $journalSlug, ReviewAssignment $assignment)
+    {
+        $journal = $this->getJournal();
+        $this->authorizeReviewer($assignment, $journal);
+
+        if (!in_array($assignment->status, [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED])) {
+            return response()->json(['message' => 'Review cannot be edited.'], 403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:doc,docx,pdf,rtf|max:10240', // 10MB max
+        ]);
+
+        $file = $request->file('file');
+        $submission = $assignment->submission;
+
+        // Ensure submissions specific directory matching SubmissionFileController
+        $directory = "submissions/{$submission->id}/reviewer-attachments";
+        
+        $originalName = $file->getClientOriginalName();
+        $safeName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $originalName);
+        $fileName = time() . '_' . $safeName;
+        
+        $path = $file->storeAs($directory, $fileName, 'local');
+
+        $submissionFile = SubmissionFile::create([
+            'submission_id' => $submission->id,
+            'uploaded_by' => auth()->id(),
+            'file_name' => $originalName,
+            'file_path' => $path,
+            'file_type' => 'review_attachment',
+            'file_size' => $file->getSize(),
+            'mime_type' => $file->getMimeType(),
+            'stage' => 'review',
+            'metadata' => ['review_assignment_id' => $assignment->id],
+        ]);
+
+        // Audit Trail implementation
+        SubmissionLog::log(
+            submission: $submission,
+            eventType: 'file_uploaded',
+            title: 'Review Attachment Uploaded',
+            description: "Reviewer " . auth()->user()?->name . " uploaded a review attachment: {$originalName}",
+            fileIds: [$submissionFile->id]
+        );
+
+        return response()->json([
+            'message' => 'File uploaded successfully',
+            'file' => $submissionFile
+        ]);
+    }
+
+    /**
+     * Delete reviewer attachment.
+     */
+    public function deleteAttachment(Request $request, string $journalSlug, ReviewAssignment $assignment, SubmissionFile $file)
+    {
+        $journal = $this->getJournal();
+        $this->authorizeReviewer($assignment, $journal);
+
+        if (!in_array($assignment->status, [ReviewAssignment::STATUS_PENDING, ReviewAssignment::STATUS_ACCEPTED])) {
+            return response()->json(['message' => 'Review cannot be edited.'], 403);
+        }
+
+        // Verify this file belongs to this assignment
+        $metadata = $file->metadata ?? [];
+        if (($metadata['review_assignment_id'] ?? null) != $assignment->id) {
+            abort(403, 'Unauthorized access to file.');
+        }
+
+        $originalName = $file->file_name;
+
+        if (Storage::disk('local')->exists($file->file_path)) {
+            Storage::disk('local')->delete($file->file_path);
+        }
+
+        $file->delete();
+
+        // Audit Trail implementation
+        SubmissionLog::log(
+            submission: $assignment->submission,
+            eventType: 'metadata_updated',
+            title: 'Review Attachment Deleted',
+            description: "Reviewer " . auth()->user()?->name . " deleted a review attachment: {$originalName}"
+        );
+
+        return response()->json(['message' => 'File deleted successfully']);
     }
 }

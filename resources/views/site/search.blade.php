@@ -201,7 +201,7 @@
                                                         </div>
 
                                                         <h3 class="text-xl md:text-2xl font-extrabold text-slate-900 leading-tight">
-                                                            <a href="{{ route('journal.public.article', [$article->journal->slug, $article->slug]) }}"
+                                                            <a href="{{ route('journal.public.article', [$article->journal->slug, $article->seq_id]) }}"
                                                                 class="hover:text-indigo-600 transition-colors">
                                                                 {{ $article->title }}
                                                             </a>

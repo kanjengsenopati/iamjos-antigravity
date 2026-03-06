@@ -133,7 +133,7 @@ class MetadataManager
         // Abstract URL (landing page)
         $metadata['highwire']['citation_abstract_html_url'] = route('journal.article.view', [
             'journal' => $journal->slug,
-            'article' => $article->slug ?? $article->id,
+            'article' => $article->seq_id,
         ]);
 
         // PDF URL (CRITICAL - must point to actual download, not view page)
@@ -143,7 +143,7 @@ class MetadataManager
         if ($pdfGalley) {
             $metadata['highwire']['citation_pdf_url'] = route('journal.article.download', [
                 'journal' => $journal->slug,
-                'article' => $article->slug ?? $article->id,
+                'article' => $article->seq_id,
                 'galley' => $pdfGalley->id,
             ]);
         }
@@ -300,7 +300,7 @@ class MetadataManager
                 'og:type' => 'website',
                 'og:title' => $title . ' | ' . $journal->name,
                 'og:description' => $issue->description ?? "Issue {$issue->number} of {$journal->name}",
-                'og:url' => route('journal.public.issue', [$journal->slug, $issue->id]),
+                'og:url' => route('journal.public.issue', [$journal->slug, $issue->seq_id]),
                 'og:site_name' => $journal->name,
             ],
             'schema' => [

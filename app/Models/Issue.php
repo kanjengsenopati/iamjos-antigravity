@@ -34,6 +34,7 @@ class Issue extends Model
         'published_at',
         'cover_path',
         'metadata',
+        'seq_id',
     ];
 
     /**
@@ -61,7 +62,7 @@ class Issue extends Model
      */
     public function getRouteKeyName(): string
     {
-        return 'url_path';
+        return 'seq_id';
     }
 
     /**
@@ -69,14 +70,21 @@ class Issue extends Model
      */
     public function resolveRouteBinding($value, $field = null)
     {
-        // If the value is a valid UUID, handle backward compatibility (301 Redirect)
-        if (Str::isUuid($value)) {
-            $issue = $this->where('id', $value)->first();
+        // If the value is not numeric, handle backward compatibility (301 Redirect)
+        if (!is_numeric($value)) {
+            $issue = $this->where('id', $value)->orWhere('url_path', $value)->first();
             
-            if ($issue && $issue->url_path) {
-                // Generate the correct URL by replacing the UUID with the new url_path
+            if ($issue && $issue->seq_id) {
+                // Generate the correct URL by replacing the slug/uuid with the new seq_id
                 $currentUrl = request()->url();
-                $newUrl = str_replace($value, $issue->url_path, $currentUrl);
+                
+                // Be slightly safer with replacement to avoid mismatching early segments
+                $newUrl = preg_replace('/\/'.preg_quote($value, '/').'(?=\/|$)/', '/' . $issue->seq_id, $currentUrl, 1);
+                
+                // Fallback if regex didn't change anything
+                if ($newUrl === $currentUrl) {
+                     $newUrl = str_replace($value, $issue->seq_id, $currentUrl);
+                }
                 
                 // Preserve query strings if any
                 if (request()->getQueryString()) {

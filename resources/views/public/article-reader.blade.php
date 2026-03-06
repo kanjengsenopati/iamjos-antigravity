@@ -250,7 +250,7 @@
 
             <!-- Sidebar Footer -->
             <div class="border-t border-gray-200 p-4">
-                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'submission' => $submission]) }}"
+                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}"
                     class="flex items-center justify-center w-full px-4 py-2.5 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -396,7 +396,7 @@
                                 Please check back later or contact the journal editors for more information.
                             </p>
                             <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-                                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'submission' => $submission]) }}"
+                                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}"
                                     class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">

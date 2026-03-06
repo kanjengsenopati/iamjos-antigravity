@@ -202,15 +202,40 @@ class PublicController extends Controller
     /**
      * Display a specific issue.
      */
-    public function issue(string $journalSlug, Issue $issue): View
+    public function issue(string $journalSlug, $issueSlug): View
     {
         $journal = $this->resolveJournal($journalSlug);
 
         // Get settings with defaults
         $settings = $this->getSettingsWithDefaults($journal);
 
-        // Ensure issue belongs to this journal
-        if ($issue->journal_id !== $journal->id) {
+        // =============================================
+        // LOGIKA BARU: HANDLER SEQ_ID, UUID, AND URL_PATH
+        // =============================================
+        $issue = null;
+
+        if (Str::isUuid($issueSlug)) {
+            $issue = Issue::where('id', $issueSlug)
+                ->where('journal_id', $journal->id)
+                ->first();
+        } elseif (is_numeric($issueSlug)) {
+            $issue = Issue::where('seq_id', $issueSlug)
+                ->where('journal_id', $journal->id)
+                ->first();
+                
+            if (!$issue) {
+                // Fallback for numeric slugs
+                $issue = Issue::where('url_path', $issueSlug)
+                    ->where('journal_id', $journal->id)
+                    ->first();
+            }
+        } else {
+            $issue = Issue::where('url_path', $issueSlug)
+                ->where('journal_id', $journal->id)
+                ->first();
+        }
+
+        if (!$issue) {
             abort(404);
         }
 
@@ -236,39 +261,38 @@ class PublicController extends Controller
         $journal = $this->resolveJournal($journalSlug);
 
         // =============================================
-        // LOGIKA BARU: HANDLER UUID (OAI-PMH Support)
+        // LOGIKA BARU: HANDLER SEQ_ID, UUID, AND SLUG
         // =============================================
-        // Jika parameter $slug ternyata adalah format UUID (misal dari OAI)
-        if (Str::isUuid($slug)) {
-            // Cari artikel berdasarkan ID (Primary Key)
-            $articleById = Submission::where('id', $slug)
-                ->where('journal_id', $journal->id)
-                ->where('status', Submission::STATUS_PUBLISHED)
-                ->first();
+        $article = null;
 
-            if ($articleById) {
-                // Lakukan 301 Redirect (Permanent) ke URL Slug yang cantik
-                // Ini agar Google meng-index URL Slug, bukan URL UUID
-                return redirect()->route('journal.public.article', [
-                    'journal' => $journal->path,
-                    'article' => $articleById->slug
-                ], 301);
+        if (Str::isUuid($slug)) {
+            // Cari artikel berdasarkan ID (UUID)
+            $article = Submission::published()
+                ->where('id', $slug)
+                ->where('journal_id', $journal->id)
+                ->first();
+        } elseif (is_numeric($slug)) {
+            // Cari artikel berdasarkan seq_id
+            $article = Submission::published()
+                ->where('seq_id', $slug)
+                ->where('journal_id', $journal->id)
+                ->first();
+                
+            // Fallback jika ternyata slug dibuat dari angka (jarang terjadi tapi mungkin)
+            if (!$article) {
+                $article = Submission::published()
+                    ->where('slug', $slug)
+                    ->where('journal_id', $journal->id)
+                    ->first();
             }
-            
-            // Jika UUID valid tapi artikel tidak ketemu/tidak publish
-            abort(404);
+        } else {
+            // Cari artikel berdasarkan Slug
+            $article = Submission::published()
+                ->where('slug', $slug)
+                ->where('journal_id', $journal->id)
+                ->first();
         }
 
-        // =============================================
-        // LOGIKA LAMA: HANDLER SLUG (Normal View)
-        // =============================================
-        
-        // Cari artikel berdasarkan Slug
-        $article = Submission::published()
-            ->where('slug', $slug)
-            ->where('journal_id', $journal->id) // Optimasi: filter journal langsung di query
-            ->first();
-        
         if (!$article) {
             abort(404);
         }

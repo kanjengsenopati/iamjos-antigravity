@@ -228,7 +228,7 @@
                                 @endif
                             </div>
                             <h3 class="font-semibold text-gray-900 line-clamp-2 mb-2">
-                                <a href="{{ route('journal.public.article', ['journal' => $article->journal?->slug ?? 'default', 'submission' => $article]) }}"
+                                <a href="{{ route('journal.public.article', ['journal' => $article->journal?->slug ?? 'default', 'article' => $article->seq_id]) }}"
                                     class="hover:text-primary-600 transition-colors">
                                     {{ $article->title }}
                                 </a>
