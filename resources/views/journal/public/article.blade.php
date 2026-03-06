@@ -27,9 +27,22 @@
     {{-- CRITICAL for academic indexing --}}
     {{-- ============================================ --}}
     @push('meta_tags')
+        @php
+            $pub = $article->currentPublication ?? $article;
+            $pubTitle = $pub->title ?? $article->title;
+            // Get date_published from currentPublication if it exists, otherwise fallback to $publicationDate
+            $pubDate = $pub->date_published ?? ($issue?->published_at ?? $article->published_at);
+            $pubPages = $pub->pages ?? $article->pages;
+            $pubDoi = $pub->doi ?? $article->doi;
+            $pubKeywords = $pub->keywords ?? $article->keywords;
+            $pubAbstract = $pub->abstract ?? $article->abstract;
+            $pubAuthors = $pub->authors ?? $article->authors;
+        @endphp
+
         {{-- Highwire Press / Google Scholar Tags --}}
         {{-- =================================== --}}
-        <meta name="citation_title" content="{{ $article->title }}">
+        <meta name="gs_meta_revision" content="1.1">
+        <meta name="citation_title" content="{{ $pubTitle }}">
         <meta name="citation_journal_title" content="{{ $journal->name }}">
         @if ($journal->abbreviation)
             <meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}">
@@ -39,14 +52,14 @@
         @endif
 
         {{-- Publication Date (CRITICAL - Format: YYYY/MM/DD) --}}
-        @if ($publicationDate)
-            <meta name="citation_publication_date" content="{{ $publicationDate->format('Y/m/d') }}">
-            <meta name="citation_date" content="{{ $publicationDate->format('Y/m/d') }}">
+        @if ($pubDate)
+            <meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
+            <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
             @if ($issue && $issue->year)
                 {{-- Ensure citation_year is present for timeline filtering --}}
                 <meta name="citation_year" content="{{ $issue->year }}">
             @else
-                <meta name="citation_year" content="{{ $publicationDate->format('Y') }}">
+                <meta name="citation_year" content="{{ $pubDate->format('Y') }}">
             @endif
         @endif
 
@@ -61,10 +74,10 @@
         @endif
 
         {{-- Page Numbers --}}
-        @if ($article->pages)
+        @if ($pubPages)
             @php
-                $pages = explode('-', $article->pages);
-                $firstPage = $pages[0] ?? $article->pages;
+                $pages = explode('-', $pubPages);
+                $firstPage = $pages[0] ?? $pubPages;
                 $lastPage = $pages[1] ?? null;
             @endphp
             <meta name="citation_firstpage" content="{{ trim($firstPage) }}">
@@ -74,8 +87,8 @@
         @endif
 
         {{-- DOI (Critical for citation tracking) --}}
-        @if ($article->doi)
-            <meta name="citation_doi" content="{{ $article->doi }}">
+        @if ($pubDoi)
+            <meta name="citation_doi" content="{{ $pubDoi }}">
         @endif
 
         {{-- ISSN --}}
@@ -86,8 +99,8 @@
         @endif
 
         {{-- Authors (One tag per author - CRITICAL: First Last) --}}
-        @if ($article->authors && $article->authors->isNotEmpty())
-            @foreach ($article->authors as $author)
+        @if ($pubAuthors && $pubAuthors->isNotEmpty())
+            @foreach ($pubAuthors as $author)
                 <meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
                 @if ($author->affiliation)
                     <meta name="citation_author_institution" content="{{ $author->affiliation }}">
@@ -96,9 +109,9 @@
         @endif
 
         {{-- Keywords (Fixing the JSON bug: Output one tag per keyword) --}}
-        @if ($article->keywords && count($article->keywords) > 0)
+        @if ($pubKeywords && count(is_array($pubKeywords) ? $pubKeywords : (is_string($pubKeywords) ? explode(',', $pubKeywords) : [$pubKeywords])) > 0)
             @php
-                $rawKeywords = $article->keywords;
+                $rawKeywords = $pubKeywords;
                 $processedKeywords = [];
 
                 // 1. Handle JSON String (Tagify output)
@@ -154,8 +167,8 @@ foreach ($rawKeywords as $k) {
         @endif
 
         {{-- Abstract (Stripped and Decoded) --}}
-        @if ($article->abstract)
-            <meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($article->abstract))) }}">
+        @if ($pubAbstract)
+            <meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
         @endif
 
         {{-- References (One tag per line) --}}
@@ -168,16 +181,26 @@ foreach ($rawKeywords as $k) {
         @endforeach
 
         {{-- Dublin Core Metadata --}}
-        @if ($article->authors && $article->authors->isNotEmpty())
-            @foreach ($article->authors as $author)
+        @if ($pubAuthors && $pubAuthors->isNotEmpty())
+            @foreach ($pubAuthors as $author)
                 <meta name="DC.Creator.PersonalName" content="{{ $author->first_name }} {{ $author->last_name }}">
             @endforeach
         @endif
-        @if ($publicationDate)
-            <meta name="DC.Date.issued" scheme="ISO8601" content="{{ $publicationDate->format('Y-m-d') }}">
+        @if ($pubDate)
+            <meta name="DC.Date.issued" content="{{ $pubDate->format('Y-m-d') }}">
         @endif
-        @if ($article->abstract)
-            <meta name="DC.Description" xml:lang="en" content="{{ trim(strip_tags(html_entity_decode($article->abstract))) }}">
+        @if ($pubAbstract)
+            <meta name="DC.Description" xml:lang="en" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
+        @endif
+        @if ($pubDoi)
+            <meta name="DC.Identifier.DOI" content="{{ $pubDoi }}">
+        @endif
+        <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
+        <meta name="DC.Language" content="{{ $article->locale ?? 'en' }}">
+        @if ($journal->issn_online)
+            <meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
+        @elseif($journal->issn_print)
+            <meta name="DC.Source.ISSN" content="{{ $journal->issn_print }}">
         @endif
 
         {{-- Language --}}
