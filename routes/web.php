@@ -270,6 +270,8 @@ Route::prefix('{journal:slug}')->group(function () {
     // Article Galley Download (CRITICAL for Google Scholar - must stream the actual file)
     Route::get('/article/{article}/galley/{galley}/download', [PublicController::class, 'downloadGalley'])->name('journal.article.download');
     Route::get('/article/{article}/galley/{galley}', [PublicController::class, 'viewGalley'])->name('journal.article.galley');
+    // SEO-Friendly PDF Galley Download (e.g. /{journal}/article/download/51/title-of-article.pdf)
+    Route::get('/article/download/{seq_id}/{filename}.pdf', [PublicController::class, 'downloadPdf'])->name('journal.article.download.pdf');
     // Citation Export Routes
     Route::get('/article/{article}/citation/ris', [PublicController::class, 'exportCitationRIS'])->name('citation.ris');
     Route::get('/article/{article}/citation/bibtex', [PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');

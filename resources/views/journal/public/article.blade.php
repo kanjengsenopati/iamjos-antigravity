@@ -143,9 +143,14 @@ foreach ($rawKeywords as $k) {
         <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
 
         {{-- PDF URL (CRITICAL - Must point to actual download file) --}}
+        {{-- PDF URL (CRITICAL - Must point to actual download file w/ SEO friendly URL) --}}
         @if ($pdfGalley)
             <meta name="citation_pdf_url"
-                content="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $pdfGalley->id]) }}">
+                content="{{ route('journal.article.download.pdf', [
+                    'journal' => $journal->slug, 
+                    'seq_id' => $article->seq_id, 
+                    'filename' => Str::slug($article->title)
+                ]) }}">
         @endif
 
         {{-- Language --}}
