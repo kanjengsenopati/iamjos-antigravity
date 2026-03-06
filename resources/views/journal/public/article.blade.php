@@ -16,7 +16,7 @@
     {{-- CANONICAL URL --}}
     @push('meta_tags')
         <link rel="canonical"
-            href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}" />
+            href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}" />
     @endpush
 
     {{-- ============================================ --}}
@@ -145,7 +145,7 @@ foreach ($rawKeywords as $k) {
         {{-- PDF URL (CRITICAL - Must point to actual download file) --}}
         @if ($pdfGalley)
             <meta name="citation_pdf_url"
-                content="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id, 'galley' => $pdfGalley->id]) }}">
+                content="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $pdfGalley->id]) }}">
         @endif
 
         {{-- Language --}}
@@ -236,7 +236,7 @@ foreach ($rawKeywords as $k) {
             @if ($issue)
                 <li class="text-slate-400">/</li>
                 <li>
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->url_path]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id]) }}"
                         class="hover:text-primary-600 hover:underline">
                         Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
                     </a>
@@ -487,7 +487,7 @@ foreach ($rawKeywords as $k) {
                                             ->implode(', ')
                                         : '';
                                     $issueLink = $related->issue
-                                        ? route('journal.public.issue', [$journal->slug, $related->issue->url_path])
+                                        ? route('journal.public.issue', [$journal->slug, $related->issue->seq_id])
                                         : '#';
                                     $issueText = $journal->name;
                                     if ($related->issue) {
@@ -507,7 +507,7 @@ foreach ($rawKeywords as $k) {
                                     }
                                 @endphp
                                 {{ $authors }},
-                                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $related->slug ?? $related->id]) }}"
+                                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $related->seq_id]) }}"
                                     class="hover:text-primary-600 hover:underline font-medium">
                                     {{ $related->title }}
                                 </a>,
@@ -538,7 +538,7 @@ foreach ($rawKeywords as $k) {
             {{-- ISSUE COVER (Clickable - Links to Issue Page) --}}
             @if ($issue)
                 @if ($issue->cover_path)
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->url_path]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id]) }}"
                         class="block hover:opacity-90 transition group">
                         <img src="{{ Storage::url($issue->cover_path) }}" alt="{{ $issue->title }}"
                             class="w-full rounded shadow-md border border-slate-200">
@@ -556,7 +556,7 @@ foreach ($rawKeywords as $k) {
                 @if ($article->galleys && $article->galleys->isNotEmpty())
                     <div class="space-y-2">
                         @foreach ($article->galleys as $galley)
-                            <a href="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id, 'galley' => $galley->id]) }}"
+                            <a href="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->id]) }}"
                                 class="flex items-center justify-center w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded transition shadow-sm gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -579,7 +579,7 @@ foreach ($rawKeywords as $k) {
             @if ($issue)
                 <div class="bg-slate-50 p-5 rounded border border-slate-200">
                     <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">Issue</h4>
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->url_path]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id]) }}"
                         class="block hover:text-primary-600 transition">
                         <p class="font-semibold text-slate-800">
                             Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
@@ -745,11 +745,11 @@ foreach ($rawKeywords as $k) {
                 {{-- DOWNLOAD --}}
                 <div class="mt-5 border-t pt-3 text-xs text-slate-600">
                     <p class="font-semibold mb-2">Download Citation</p>
-                    <a href="{{ route('citation.ris', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
+                    <a href="{{ route('citation.ris', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
                         class="block hover:underline">
                         ⬇ EndNote / Zotero / Mendeley (RIS)
                     </a>
-                    <a href="{{ route('citation.bibtex', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
+                    <a href="{{ route('citation.bibtex', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
                         class="block hover:underline">
                         ⬇ BibTeX
                     </a>

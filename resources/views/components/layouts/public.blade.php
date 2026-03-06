@@ -22,6 +22,9 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     {{-- Favicon --}}
     @if($journal->favicon_path ?? false)
     <link rel="icon" href="{{ Storage::url($journal->favicon_path) }}">
+    @else
+    <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
     @endif
 
     {{-- Basic SEO Meta Tags --}}
@@ -41,12 +44,21 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
     @if($journal->logo_path ?? false)
     <meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
+    @else
+    <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
     @endif
 
     {{-- Twitter Card Tags --}}
-    <meta name="twitter:card" content="summary">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $title ?? $journal->name }}">
     <meta name="twitter:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
+    @if($journal->logo_path ?? false)
+    <meta name="twitter:image" content="{{ Storage::url($journal->logo_path) }}">
+    @else
+    <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
+    @endif
 
     {{-- ============================================ --}}
     {{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS --}}

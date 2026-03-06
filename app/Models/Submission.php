@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use App\Models\ArticleMetric;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class Submission extends Model
 {
@@ -61,6 +62,7 @@ class Submission extends Model
         'published_at',
         'metadata',
         'references',
+        'seq_id',
     ];
 
     /**
@@ -79,11 +81,45 @@ class Submission extends Model
 
     /**
      * Get the route key name for Laravel's route model binding.
-     * This makes URLs use /submissions/{slug} instead of /submissions/{id}
+     * This makes URLs use /submissions/{seq_id} instead of /submissions/{slug}
      */
     public function getRouteKeyName(): string
     {
-        return 'slug';
+        return 'seq_id';
+    }
+
+    /**
+     * Retrieve the model for a bound value.
+     * Handles backward compatibility for slugs and UUIDs via 301 Redirect.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if (!is_numeric($value)) {
+            $submission = $this->where('id', $value)->orWhere('slug', $value)->first();
+            
+            if ($submission && $submission->seq_id) {
+                $currentUrl = request()->url();
+                
+                // Replace the slug/uuid with the new seq_id
+                $newUrl = preg_replace('/\/'.preg_quote($value, '/').'(?=\/|$)/', '/' . $submission->seq_id, $currentUrl, 1);
+                
+                if ($newUrl === $currentUrl) {
+                     $newUrl = str_replace($value, $submission->seq_id, $currentUrl);
+                }
+                
+                if (request()->getQueryString()) {
+                    $newUrl .= '?' . request()->getQueryString();
+                }
+
+                throw new HttpResponseException(redirect($newUrl, 301));
+            }
+            
+            if ($submission) {
+               return $submission;
+            }
+        }
+
+        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
     }
 
     // =====================================================

@@ -29,7 +29,7 @@
 
                         {{-- COVER (STRICT SIZE) --}}
                         <div class="w-[180px] max-w-full">
-                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->url_path]) }}"
+                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id]) }}"
                                class="block">
                                 @if($issue->cover_path)
                                     <img
@@ -50,7 +50,7 @@
 
                             {{-- TITLE --}}
                             <h2 class="text-2xl font-bold text-slate-900 leading-snug mb-2">
-                                <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->url_path]) }}"
+                                <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id]) }}"
                                    class="hover:text-primary-700 hover:underline">
                                     {{ $issue->title ?: "Vol. {$issue->volume} No. {$issue->number} ({$issue->year})" }}
                                 </a>

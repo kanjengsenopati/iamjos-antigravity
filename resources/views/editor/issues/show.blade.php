@@ -126,7 +126,7 @@
                                     Unpublish
                                 </button>
                             </form>
-                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->url_path]) }}"
+                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id]) }}"
                                 target="_blank"
                                 class="inline-flex items-center px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 font-medium hover:bg-emerald-100 transition-colors">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

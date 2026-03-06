@@ -200,7 +200,7 @@
                                     @click="$dispatch('open-scholar-modal', { 
                                             title: '{{ addslashes($submission->title) }}', 
                                             id: '{{ $submission->id }}', 
-                                            url: '{{ $stat->scholar_url ?? route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->slug ?? $submission->id]) }}',
+                                            url: '{{ $stat->scholar_url ?? route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}',
                                             isMonitored: false
                                         })"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm">
@@ -213,7 +213,7 @@
                                         @click="$dispatch('open-scholar-modal', { 
                                             title: '{{ addslashes($submission->title) }}', 
                                             id: '{{ $submission->id }}', 
-                                            url: '{{ $stat->scholar_url ?? route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->slug ?? $submission->id]) }}',
+                                            url: '{{ $stat->scholar_url ?? route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}',
                                             isMonitored: true
                                         })"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm">

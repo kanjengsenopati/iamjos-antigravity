@@ -125,7 +125,7 @@ class GenerateSitemap extends Command
 
             foreach ($issues as $issue) {
                 $urls[] = [
-                    'loc' => route('journal.public.issue', [$journal->slug, $issue->id]),
+                    'loc' => route('journal.public.issue', [$journal->slug, $issue->seq_id]),
                     'lastmod' => $issue->updated_at?->toW3cString() ?? $issue->published_at?->toW3cString() ?? $now,
                     'changefreq' => 'monthly',
                     'priority' => '0.7',
@@ -145,7 +145,7 @@ class GenerateSitemap extends Command
                 $urls[] = [
                     'loc' => route('journal.article.view', [
                         'journal' => $journal->slug, 
-                        'article' => $article->slug ?? $article->id
+                        'article' => $article->seq_id
                     ]),
                     'lastmod' => $article->updated_at?->toW3cString() ?? $article->published_at?->toW3cString() ?? $now,
                     'changefreq' => 'monthly',

@@ -254,15 +254,19 @@ Route::prefix('{journal:slug}')->group(function () {
     Route::get('/editorial-team', [PublicController::class, 'editorialTeam'])->name('journal.public.editorial-team');
     Route::get('/search', [SearchController::class, 'index'])->name('journal.public.search');
     Route::get('/search/quick', [SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
-    Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
+    Route::get('/issue/view/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
+    // Legacy Issue Fallback
+    Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue.legacy');
     // Custom Pages (from Navigation Menu Items)
     Route::get('/page/{path}', [PublicController::class, 'customPage'])->name('journal.custom-page');
     // --------- Article Routes (Google Scholar Indexing) ---------
-    // These routes support both ID and slug for SEO flexibility
-    Route::get('/article/{article}', [PublicController::class, 'article'])->name('journal.public.article');
+    // These routes support both ID, slug, and seq_id for SEO flexibility
+    Route::get('/article/view/{article}', [PublicController::class, 'article'])->name('journal.public.article');
     Route::get('/article/{article}/view', [PublicController::class, 'articleReader'])->name('journal.public.article.reader');
     // Article View (alias route for SEO with clean URL structure)
-    // Route::get('/article/{article}/view', [PublicController::class, 'article'])->name('journal.article.view');
+    Route::get('/article/{article}/view-legacy', [PublicController::class, 'article'])->name('journal.article.view');
+    // Legacy Article Fallback
+    Route::get('/article/{article}', [PublicController::class, 'article'])->name('journal.public.article.legacy');
     // Article Galley Download (CRITICAL for Google Scholar - must stream the actual file)
     Route::get('/article/{article}/galley/{galley}/download', [PublicController::class, 'downloadGalley'])->name('journal.article.download');
     Route::get('/article/{article}/galley/{galley}', [PublicController::class, 'viewGalley'])->name('journal.article.galley');

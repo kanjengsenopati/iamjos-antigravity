@@ -128,7 +128,7 @@
                     <doi_data>
                         {{-- DOI Logic: Use existing DOI or Generate generic fallback --}}
                         <doi>{{ $pub->doi ? trim($pub->doi) : ($journal->doi_prefix ? trim($journal->doi_prefix) . '/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id : '10.xxxx/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id) }}</doi>
-                        <resource>{{ trim(route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->url_path ?? $article->slug ?? $article->id])) }}</resource>
+                        <resource>{{ trim(route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->seq_id ?? $article->seq_id])) }}</resource>
                     </doi_data>
 
                     {{-- REFERENCES / CITATION LIST --}}

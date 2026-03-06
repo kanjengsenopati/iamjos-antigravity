@@ -175,7 +175,7 @@
                                     {{-- Title & Authors --}}
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-900 group-hover:text-brand transition-colors leading-tight mb-2">
-                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}">
+                                            <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}">
                                                 {{ $article->title }}
                                             </a>
                                         </h3>
@@ -203,7 +203,7 @@
                                                 PDF Full-Text
                                             </a>
                                         @endif
-                                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
+                                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">
                                             Abstract Details
                                         </a>

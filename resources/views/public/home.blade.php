@@ -146,7 +146,7 @@
                                 <h3
                                     class="text-lg font-semibold text-gray-900 mb-3 line-clamp-2 hover:text-primary-600">
                                     <a
-                                        href="{{ route('journal.public.article', ['journal' => $journal->slug, 'submission' => $article]) }}">{{ $article->title }}</a>
+                                        href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}">{{ $article->title }}</a>
                                 </h3>
                                 <p class="text-sm text-gray-500 mb-4">
                                     {{ $article->authors->pluck('name')->join(', ') ?: 'Unknown Author' }}
@@ -160,7 +160,7 @@
                                 <span class="text-xs text-gray-500">
                                     {{ $article->published_at?->format('M j, Y') }}
                                 </span>
-                                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'submission' => $article]) }}"
+                                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
                                     class="text-xs font-medium text-primary-600 hover:text-primary-700">
                                     Read More →
                                 </a>
@@ -208,7 +208,7 @@
                                 This issue contains {{ $latestIssue->submissions()->published()->count() }} articles
                                 covering various topics in our field.
                             </p>
-                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $latestIssue->url_path]) }}"
+                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $latestIssue->seq_id]) }}"
                                 class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
                                 View Issue
                                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

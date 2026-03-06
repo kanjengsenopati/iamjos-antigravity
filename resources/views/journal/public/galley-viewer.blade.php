@@ -87,7 +87,7 @@
                 </svg>
                 Download PDF
             </a>
-            <a href="{{ route('journal.public.article', ['journal' => $journal->path, 'article' => $article->slug]) }}">
+            <a href="{{ route('journal.public.article', ['journal' => $journal->path, 'article' => $article->seq_id]) }}">
                 &larr; Back to Article
             </a>
         </div>

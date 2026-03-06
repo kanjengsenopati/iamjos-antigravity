@@ -64,7 +64,7 @@
                             <h3
                                 class="font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
                                 <a
-                                    href="{{ route('journal.public.article', [$article->journal->slug ?? 'journal', $article->slug ?? $article->id]) }}">
+                                    href="{{ route('journal.public.article', [$article->journal->slug ?? 'journal', $article->seq_id]) }}">
                                     {{ $article->title }}
                                 </a>
                             </h3>
@@ -112,7 +112,7 @@
                             </div>
 
                             {{-- Read More --}}
-                            <a href="{{ route('journal.public.article', [$article->journal->slug ?? 'journal', $article->slug ?? $article->id]) }}"
+                            <a href="{{ route('journal.public.article', [$article->journal->slug ?? 'journal', $article->seq_id]) }}"
                                 class="text-xs font-medium text-blue-600 hover:text-blue-700">
                                 Read More →
                             </a>
