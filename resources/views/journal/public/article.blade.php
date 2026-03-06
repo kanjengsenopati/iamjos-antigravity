@@ -196,12 +196,15 @@ foreach ($rawKeywords as $k) {
             <meta name="DC.Identifier.DOI" content="{{ $pubDoi }}">
         @endif
         <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
-        <meta name="DC.Language" content="{{ $article->locale ?? 'en' }}">
+        <meta name="DC.Language" scheme="ISO639-1" content="{{ $article->locale ?? 'en' }}">
         @if ($journal->issn_online)
             <meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
         @elseif($journal->issn_print)
             <meta name="DC.Source.ISSN" content="{{ $journal->issn_print }}">
         @endif
+        <meta name="DC.Source" content="{{ $journal->name }}">
+        <meta name="DC.Type" content="Text.Serial.Journal">
+        <meta name="DC.Type.articleType" content="Articles">
 
         {{-- Language --}}
         <meta name="citation_language" content="{{ $article->locale ?? 'en' }}">
