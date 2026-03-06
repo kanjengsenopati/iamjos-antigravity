@@ -153,6 +153,33 @@ foreach ($rawKeywords as $k) {
                 ]) }}">
         @endif
 
+        {{-- Abstract (Stripped and Decoded) --}}
+        @if ($article->abstract)
+            <meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($article->abstract))) }}">
+        @endif
+
+        {{-- References (One tag per line) --}}
+        @php
+            $referencesStr = $article->currentPublication->references ?? $article->references;
+            $referencesArray = $referencesStr ? array_filter(array_map('trim', explode("\n", $referencesStr))) : [];
+        @endphp
+        @foreach ($referencesArray as $ref)
+            <meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
+        @endforeach
+
+        {{-- Dublin Core Metadata --}}
+        @if ($article->authors && $article->authors->isNotEmpty())
+            @foreach ($article->authors as $author)
+                <meta name="DC.Creator.PersonalName" content="{{ $author->first_name }} {{ $author->last_name }}">
+            @endforeach
+        @endif
+        @if ($publicationDate)
+            <meta name="DC.Date.issued" scheme="ISO8601" content="{{ $publicationDate->format('Y-m-d') }}">
+        @endif
+        @if ($article->abstract)
+            <meta name="DC.Description" xml:lang="en" content="{{ trim(strip_tags(html_entity_decode($article->abstract))) }}">
+        @endif
+
         {{-- Language --}}
         <meta name="citation_language" content="{{ $article->locale ?? 'en' }}">
     @endpush
