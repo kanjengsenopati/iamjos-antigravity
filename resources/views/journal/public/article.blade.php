@@ -154,6 +154,7 @@ foreach ($rawKeywords as $k) {
 
         {{-- Abstract URL (Landing Page) --}}
         <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
+        <meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
 
         {{-- PDF URL (CRITICAL - Must point to actual download file) --}}
         {{-- PDF URL (CRITICAL - Must point to actual download file w/ SEO friendly URL) --}}
