@@ -625,6 +625,16 @@ Route::prefix('{journal:slug}')->group(function () {
                     Route::post('/export/issues', 'exportIssues')->name('export.issues');
                 });
 
+            // Copernicus XML Export
+            Route::controller(\App\Http\Controllers\Admin\Tools\CopernicusExportController::class)
+                ->prefix('tools/importexport/copernicus')
+                ->name('tools.copernicus.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::match(['get', 'post'], '/export/articles', 'exportArticles')->name('export.articles');
+                    Route::match(['get', 'post'], '/export/issues', 'exportIssues')->name('export.issues');
+                });
+
             // Crossref XML Export (DOI Registration)
             Route::prefix('tools/importexport/crossref')->name('tools.crossref.')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'index'])->name('index');
