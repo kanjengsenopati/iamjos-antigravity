@@ -62,7 +62,7 @@ class CopernicusExportController extends Controller
 
         $submissions = Submission::whereIn('id', $ids)
             ->where('journal_id', $journal->id)
-            ->with(['authors', 'issue', 'section', 'currentPublication'])
+            ->with(['authors', 'issue', 'section', 'currentPublication', 'galleys'])
             ->get();
 
         if ($submissions->isEmpty()) {
@@ -101,7 +101,7 @@ class CopernicusExportController extends Controller
             ->where('journal_id', $journal->id)
             ->with(['submissions' => function($query) {
                 // Preload article relationships when fetching issues
-                $query->with(['authors', 'section', 'currentPublication']);
+                $query->with(['authors', 'section', 'currentPublication', 'galleys']);
             }])
             ->get();
 
@@ -127,11 +127,13 @@ class CopernicusExportController extends Controller
     {
         $missing = [];
         
-        if (empty($submission->currentPublication?->doi)) {
+        $doi = $submission->currentPublication?->doi ?? $submission->doi ?? '';
+        if (empty($doi)) {
             $missing[] = 'DOI';
         }
         
-        $cleanAbstract = trim(strip_tags(html_entity_decode(str_replace('&nbsp;', ' ', $submission->abstract), ENT_QUOTES, 'UTF-8')));
+        $abstract = $submission->currentPublication?->abstract ?? $submission->abstract ?? '';
+        $cleanAbstract = trim(strip_tags(html_entity_decode(str_replace('&nbsp;', ' ', $abstract), ENT_QUOTES, 'UTF-8')));
         if (empty($cleanAbstract)) {
             $missing[] = 'Abstract';
         }
