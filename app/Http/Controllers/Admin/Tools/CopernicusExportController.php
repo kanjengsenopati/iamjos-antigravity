@@ -24,9 +24,14 @@ class CopernicusExportController extends Controller
         // Fetch published submissions for the articles tab
         $submissions = Submission::where('journal_id', $journal->id)
             ->where('status', Submission::STATUS_PUBLISHED)
-            ->with(['authors', 'issue', 'section'])
+            ->with(['authors', 'issue', 'section', 'currentPublication', 'galleys'])
             ->latest('published_at')
             ->get();
+
+        // Validate completeness for Index Copernicus
+        foreach ($submissions as $submission) {
+            $submission->ici_missing_fields = $this->getMissingIciFields($submission);
+        }
 
         // Fetch published issues for the issues tab
         $issues = Issue::where('journal_id', $journal->id)
@@ -113,5 +118,48 @@ class CopernicusExportController extends Controller
             $content = trim($content);
             echo '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $content;
         }, $filename, ['Content-Type' => 'application/xml']);
+    }
+
+    /**
+     * Helper to validate article structure against Index Copernicus requirements.
+     */
+    private function getMissingIciFields(Submission $submission): array
+    {
+        $missing = [];
+        
+        if (empty($submission->currentPublication?->doi)) {
+            $missing[] = 'DOI';
+        }
+        
+        $cleanAbstract = trim(strip_tags(html_entity_decode(str_replace('&nbsp;', ' ', $submission->abstract), ENT_QUOTES, 'UTF-8')));
+        if (empty($cleanAbstract)) {
+            $missing[] = 'Abstract';
+        }
+        
+        $hasValidAuthor = false;
+        foreach ($submission->authors as $author) {
+            $firstName = $author->given_name ?? '';
+            $lastName = $author->family_name ?? '';
+            $name = $author->name ?? '';
+            
+            if ((!empty($firstName) || !empty($lastName) || !empty($name)) && !empty($author->email) && !empty($author->affiliation)) {
+                $hasValidAuthor = true;
+                break;
+            }
+        }
+        if (!$hasValidAuthor) {
+            $missing[] = 'Authors';
+        }
+        
+        if ($submission->galleys->isEmpty()) {
+            $missing[] = 'PDF';
+        }
+        
+        $refs = $submission->currentPublication?->references ?? $submission->references;
+        if (empty(trim($refs))) {
+            $missing[] = 'References';
+        }
+        
+        return $missing;
     }
 }
