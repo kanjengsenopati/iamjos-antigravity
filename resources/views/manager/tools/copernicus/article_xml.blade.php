@@ -5,10 +5,10 @@
         <article>
             <type>Original article</type>
             <languageVersion language="{{ $article->language ?? 'en' }}">
-                <title><![CDATA[{{ $article->title }}]]></title>
-                <abstract><![CDATA[{{ trim(strip_tags(html_entity_decode(str_replace('&nbsp;', ' ', $article->abstract), ENT_QUOTES, 'UTF-8'))) }}]]></abstract>
-                <pdfFileUrl><![CDATA[{{ route('journal.article.download.pdf', ['journal' => $journal->slug, 'seq_id' => $article->seq_id, 'filename' => \Str::slug($article->title)]) }}]]></pdfFileUrl>
-                <publicationDate>{{ $article->published_at ? $article->published_at->format('Y-m-d') : ($article->issue?->published_at ? $article->issue->published_at->format('Y-m-d') : '') }}</publicationDate>
+                <title><![CDATA[{{ $article->currentPublication?->title ?? $article->title }}]]></title>
+                <abstract><![CDATA[{{ trim(strip_tags(html_entity_decode(str_replace('&nbsp;', ' ', $article->currentPublication?->abstract ?? $article->abstract), ENT_QUOTES, 'UTF-8'))) }}]]></abstract>
+                <pdfFileUrl><![CDATA[{{ route('journal.article.download.pdf', ['journal' => $journal->slug, 'seq_id' => $article->seq_id, 'filename' => \Str::slug($article->currentPublication?->title ?? $article->title)]) }}]]></pdfFileUrl>
+                <publicationDate>{{ $article->currentPublication?->date_published ? $article->currentPublication->date_published->format('Y-m-d') : ($article->published_at ? $article->published_at->format('Y-m-d') : ($article->issue?->published_at ? $article->issue->published_at->format('Y-m-d') : '')) }}</publicationDate>
             </languageVersion>
             <authors>
                 @foreach($article->authors as $index => $author)
@@ -30,8 +30,15 @@
                 @endforeach
             </authors>
             <keywords language="{{ $article->language ?? 'en' }}">
-                @foreach($article->keywords as $keyword)
-                    <keyword><![CDATA[{{ trim($keyword->content) }}]]></keyword>
+                @php
+                    if ($article->currentPublication && !empty($article->currentPublication->keywords)) {
+                        $keywordsList = $article->currentPublication->keywords_array;
+                    } else {
+                        $keywordsList = $article->keywords->pluck('content')->toArray();
+                    }
+                @endphp
+                @foreach($keywordsList as $keyword)
+                    <keyword><![CDATA[{{ trim($keyword) }}]]></keyword>
                 @endforeach
             </keywords>
             <references>
@@ -43,7 +50,8 @@
                     <reference><![CDATA[{{ trim(strip_tags(html_entity_decode($reference))) }}]]></reference>
                 @endforeach
             </references>
-            <doi><![CDATA[{{ $article->currentPublication?->doi ?? '' }}]]></doi>
+            <pages><![CDATA[{{ $article->currentPublication?->pages ?? $article->pages ?? '' }}]]></pages>
+            <doi><![CDATA[{{ $article->currentPublication?->doi ?? $article->doi ?? '' }}]]></doi>
         </article>
     @endforeach
 </ici-import>

@@ -25,6 +25,21 @@
             </div>
         </div>
 
+        {{-- GLOBAL ALERTS --}}
+        @if (empty($journal->issn_online))
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-amber-800">Missing Configuration</h4>
+                    <p class="text-sm text-amber-700 mt-1">Journal E-ISSN is missing. Please update Journal Settings before exporting, otherwise the file will be rejected by Index Copernicus.</p>
+                </div>
+            </div>
+        @endif
+
         {{-- ALERTS --}}
         @if (session('success'))
             <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
@@ -89,6 +104,15 @@
                     method="POST">
                     @csrf
 
+                    <div class="mb-6 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                        <p class="text-sm text-indigo-700 flex items-center gap-2">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Hanya artikel dengan metadata lengkap yang dapat dipilih untuk diekspor. Silakan lengkapi data melalui menu Submissions jika tombol centang tidak aktif.
+                        </p>
+                    </div>
+
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                         <div>
                             <h3 class="font-bold text-lg text-slate-800">Select Published Articles</h3>
@@ -127,14 +151,21 @@
                                                 <td class="p-4">
                                                     <input type="checkbox" name="submission_ids[]"
                                                         value="{{ $submission->id }}"
-                                                        class="article-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                                        @if(!empty($submission->ici_missing_fields)) disabled @endif
+                                                        class="article-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed">
                                                 </td>
                                                 <td class="p-4">
                                                     <span
                                                         class="font-medium text-slate-800">{{ Str::limit($submission->title, 60) }}</span>
-                                                    @if ($submission->submission_code)
+                                                    @if(!empty($submission->ici_missing_fields))
+                                                        <div class="mt-1">
+                                                            <span class="inline-block text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
+                                                                Missing: {{ implode(', ', $submission->ici_missing_fields) }}
+                                                            </span>
+                                                        </div>
+                                                    @elseif ($submission->submission_code)
                                                         <span
-                                                            class="block text-xs text-slate-400">{{ $submission->submission_code }}</span>
+                                                            class="block text-xs text-slate-400 mt-1">{{ $submission->submission_code }}</span>
                                                     @endif
                                                 </td>
                                                 <td class="p-4 text-slate-600">
