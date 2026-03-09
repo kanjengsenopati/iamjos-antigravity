@@ -7,12 +7,13 @@ use App\Models\DiscussionFile;
 use App\Models\DiscussionMessage;
 use App\Models\EditorialAssignment;
 use App\Models\Journal;
-use App\Models\ReviewRound;
+use App\Http\Controllers\Controller;
 use App\Models\Submission;
-use App\Models\SubmissionDeclineLog;
 use App\Models\SubmissionFile;
 use App\Models\SubmissionLog;
-use App\Models\User;
+use App\Models\ReviewAssignment;
+use App\Models\ReviewRound;
+use App\Services\FileUploadSecurityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,9 @@ use Illuminate\View\View;
 
 class SubmissionWorkflowController extends Controller
 {
+    public function __construct(
+        protected FileUploadSecurityService $uploadSecurity
+    ) {}
     /**
      * Get the current journal from context.
      */
@@ -100,7 +104,7 @@ class SubmissionWorkflowController extends Controller
             ->filter()
             ->toArray();
 
-        $potentialEditors = User::whereHas('journalRoles', function ($query) use ($journal) {
+        $potentialEditors = \App\Models\User::whereHas('journalRoles', function ($query) use ($journal) {
             $query->where('journal_id', $journal->id)
                   ->whereHas('role', function ($q) {
                       $q->where('permit_submission', 1);
@@ -163,7 +167,7 @@ class SubmissionWorkflowController extends Controller
         }
 
         // Determine role based on user's roles in this journal
-        $user = User::find($validated['user_id']);
+        $user = \App\Models\User::find($validated['user_id']);
         $journalRole = $user->journalRoles()->where('journal_id', $journal->id)->first();
         
         // Default to 'editor' if no specific role found or if they are a manager/admin
@@ -368,9 +372,12 @@ class SubmissionWorkflowController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|file|max:10240', // 10MB
+            'file' => 'required|file',
             'stage' => 'required|string|in:submission,review,copyedit_draft,copyedited,production',
         ]);
+
+        // Security: validate file via FileUploadSecurityService
+        $this->uploadSecurity->validate($request->file('file'), 'manuscript', $request);
 
         // Map copyedit_draft and copyedited back to copyediting for policy check
         $policyStage = in_array($request->stage, ['copyedit_draft', 'copyedited']) ? 'copyediting' : $request->stage;

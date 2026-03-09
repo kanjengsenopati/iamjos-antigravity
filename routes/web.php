@@ -195,7 +195,7 @@ Route::post('translate_post', [TranslateController::class, 'translatePost'])->na
 Route::get('oai/stylesheet', function () {
     return response()->file(public_path('oai.xsl'), ['Content-Type' => 'text/xsl']);
 });
-Route::any('{journal}/oai', [App\Http\Controllers\Public\OaiController::class, 'handle'])->name('journal.oai');
+Route::any('{journal}/oai', [App\Http\Controllers\Public\OaiController::class, 'handle'])->middleware('throttle:60,1')->name('journal.oai');
 
 // =====================================================
 // JOURNAL REGISTRATION (Explicit Binding for Priority)

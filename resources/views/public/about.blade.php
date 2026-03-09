@@ -12,7 +12,7 @@
             @endphp
             @if(!empty($aboutContent))
             <div class="prose prose-lg max-w-none mb-12">
-                {!! $aboutContent !!}
+                {!! clean($aboutContent) !!}
             </div>
             @else
             {{-- No custom about content set --}}

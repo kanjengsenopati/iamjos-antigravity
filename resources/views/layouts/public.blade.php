@@ -358,7 +358,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
             @if($journal->page_footer)
                 <div class="border-t border-slate-800 mt-8 pt-8">
                     <div class="prose prose-sm prose-invert max-w-none text-slate-400">
-                        {!! $journal->page_footer !!}
+                        {!! clean($journal->page_footer) !!}
                     </div>
                 </div>
             @endif

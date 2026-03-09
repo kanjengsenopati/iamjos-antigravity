@@ -331,7 +331,7 @@ class SubmissionController extends Controller
                 // 2. Upload File
                 if ($request->hasFile('manuscript')) {
                     $file = $request->file('manuscript');
-                    $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", ['disk' => 'public']);
+                    $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", 'local');
 
                     $submission->update(['submission_file_path' => $path]);
 

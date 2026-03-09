@@ -23,7 +23,7 @@
             @endphp
             @if(!empty($editorialTeamContent))
             <div class="prose prose-lg max-w-none">
-                {!! $editorialTeamContent !!}
+                {!! clean($editorialTeamContent) !!}
             </div>
             @else
             {{-- No custom editorial team content set --}}

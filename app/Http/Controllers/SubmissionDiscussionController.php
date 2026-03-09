@@ -401,8 +401,8 @@ class SubmissionDiscussionController extends Controller
         if ($request->hasFile('upload')) {
             $file = $request->file('upload');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('uploads/ckeditor', $filename, 'public');
-            $url = asset('storage/' . $path);
+            $path = $file->storeAs('uploads/ckeditor', $filename, 'local');
+            $url = route('files.serve.ckeditor', ['filename' => $filename]);
 
             return response()->json([
                 'url' => $url,
@@ -422,7 +422,7 @@ class SubmissionDiscussionController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('discussion-files', ['disk' => 'public']);
+        $path = $file->store('discussion-files', 'local');
 
         $discussionFile = DiscussionFile::create([
             'id' => (string) Str::uuid(),

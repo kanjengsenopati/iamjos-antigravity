@@ -9,6 +9,7 @@ use App\Models\SubmissionFile;
 use App\Models\SubmissionLog;
 use App\Models\User;
 use App\Mail\RevisionRequestMail;
+use App\Services\FileUploadSecurityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +20,10 @@ use App\Services\WaGateway;
 
 class ReviewWorkflowController extends Controller
 {
+    public function __construct(
+        protected FileUploadSecurityService $uploadSecurity
+    ) {}
+
     private function getJournal()
     {
         return current_journal();
@@ -742,8 +747,11 @@ public function searchReviewers(Request $request, string $journalSlug)
         if ($submission->journal_id !== $journal->id) abort(404);
 
         $request->validate([
-            'file' => 'required|file|max:20480', // 20MB max
+            'file' => 'required|file',
         ]);
+
+        // Security: validate file via FileUploadSecurityService
+        $this->uploadSecurity->validate($request->file('file'), 'decision', $request);
 
         $file = $request->file('file');
         $path = $file->store("submissions/{$submission->id}/decision-files", 'local');

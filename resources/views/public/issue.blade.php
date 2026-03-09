@@ -40,7 +40,7 @@
 
                     @if ($issue->description)
                         <div class="prose max-w-none text-gray-700 mb-6">
-                            {!! $issue->description !!}
+                            {!! clean($issue->description) !!}
                         </div>
                     @endif
 

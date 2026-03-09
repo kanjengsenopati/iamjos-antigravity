@@ -310,7 +310,7 @@ class JournalUserManagementController extends Controller
 
             Log::error('Failed to create role', [
                 'journal_id' => $journal->id,
-                'request' => $request->all(),
+                'request' => $request->only(['name', 'permission_level', 'permit_submission', 'permit_review', 'permit_copyediting', 'permit_production', 'allow_registration', 'show_contributor', 'allow_submission']),
                 'exception' => $e,
             ]);
 
@@ -377,7 +377,7 @@ class JournalUserManagementController extends Controller
             Log::error('Failed to update role', [
                 'role_id' => $role->id,
                 'journal' => $journal,
-                'request' => $request->all(),
+                'request' => $request->only(['name', 'permission_level', 'stages', 'allow_registration', 'show_contributor', 'allow_submission']),
                 'exception' => $e,
             ]);
 

@@ -15,7 +15,7 @@
 
         {{-- Page Content --}}
         <div class="prose prose-lg max-w-none">
-            {!! $page->content !!}
+            {!! clean($page->content) !!}
         </div>
 
         {{-- Back Button --}}

@@ -54,38 +54,32 @@
                     <span class="text-sm font-medium text-gray-700">Document Preview</span>
                 </div>
                 <div class="flex items-center gap-2 text-xs text-gray-500">
-                    <i class="fa-solid fa-info-circle"></i>
-                    <span>Powered by Google Docs Viewer</span>
+                    <i class="fa-solid fa-shield-halved text-green-500"></i>
+                    <span>Self-hosted viewer &mdash; files never leave the server</span>
                 </div>
             </div>
 
-            {{-- Google Docs Viewer iframe --}}
-            <div class="relative" style="height: 80vh;">
-                {{-- Loading Placeholder --}}
-                <div id="preview-loading" class="absolute inset-0 flex items-center justify-center bg-gray-50">
-                    <div class="text-center">
-                        <i class="fa-solid fa-spinner fa-spin text-indigo-500 text-3xl mb-3"></i>
-                        <p class="text-gray-600 text-sm">Loading document preview...</p>
-                    </div>
-                </div>
-
-                <iframe id="preview-frame" src="{{ $previewUrl }}" class="w-full h-full border-0"
-                    onload="document.getElementById('preview-loading').style.display='none';" frameborder="0"
-                    allowfullscreen>
-                </iframe>
+            {{-- PDF.js Self-hosted Viewer --}}
+            <div style="height: 80vh;">
+                <x-pdf-viewer
+                    :fileUrl="$previewUrl"
+                    :fileName="$file->file_name"
+                    :downloadUrl="$downloadUrl"
+                    height="100%"
+                />
             </div>
         </div>
 
         {{-- Fallback Message --}}
-        <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div class="flex">
-                <i class="fa-solid fa-exclamation-triangle text-yellow-500 mt-0.5 mr-3"></i>
-                <div class="text-sm text-yellow-700">
-                    <p class="font-medium">Can't see the preview?</p>
+                <i class="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+                <div class="text-sm text-blue-700">
+                    <p class="font-medium">Having trouble viewing?</p>
                     <p class="mt-1">
                         If the document doesn't load, please try
                         <a href="{{ $downloadUrl }}" class="font-medium underline">downloading</a>
-                        the file directly or open it in a new tab.
+                        the file directly.
                     </p>
                 </div>
             </div>

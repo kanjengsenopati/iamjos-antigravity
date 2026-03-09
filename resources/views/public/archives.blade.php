@@ -85,7 +85,7 @@
                             {{-- DESCRIPTION --}}
                             @if($issue->description)
                                 <div class="prose max-w-none text-slate-700">
-                                    {!! $issue->description !!}
+                                    {!! clean($issue->description) !!}
                                 </div>
                             @endif
 

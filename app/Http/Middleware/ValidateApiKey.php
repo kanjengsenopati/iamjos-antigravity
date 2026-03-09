@@ -32,7 +32,7 @@ class ValidateApiKey
 
     private function isValidApiKey(Request $request): bool
     {
-        $apiKey = env('API_KEY');
+        $apiKey = config('app.api_key');
         return !empty($apiKey) && $request->header('x-api-key') === $apiKey;
     }
 

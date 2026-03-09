@@ -33,7 +33,7 @@
                        prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline">
 
                 @if($siteSettings && !empty($siteSettings->about_content))
-                    {!! $siteSettings->about_content !!}
+                    {!! clean($siteSettings->about_content) !!}
                 @else
                     <div class="not-prose text-center py-12">
                         <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">

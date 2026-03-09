@@ -7,12 +7,16 @@ use App\Models\Issue;
 use App\Models\PublicationGalley;
 use App\Models\Submission;
 use App\Models\SubmissionFile;
+use App\Services\FileUploadSecurityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductionWorkflowController extends Controller
 {
+    public function __construct(
+        protected FileUploadSecurityService $uploadSecurity
+    ) {}
     /**
      * Store a new galley for the submission
      * Supports both local file uploads and remote URLs
@@ -47,10 +51,15 @@ class ProductionWorkflowController extends Controller
         if ($isRemote) {
             $rules['url_remote'] = 'required|url|max:2048';
         } else {
-            $rules['file'] = 'required|file|max:51200'; // 50MB max
+            $rules['file'] = 'required|file';
         }
 
         $request->validate($rules);
+
+        // Security: validate file via FileUploadSecurityService
+        if (!$isRemote && $request->hasFile('file')) {
+            $this->uploadSecurity->validate($request->file('file'), 'galley', $request);
+        }
 
         $fileId = null;
 
@@ -152,10 +161,15 @@ class ProductionWorkflowController extends Controller
             $rules['url_remote'] = 'required|url|max:2048';
         } else {
             // File is optional on update (keep existing if not provided)
-            $rules['file'] = 'nullable|file|max:51200';
+            $rules['file'] = 'nullable|file';
         }
 
         $request->validate($rules);
+
+        // Security: validate file via FileUploadSecurityService
+        if (!$isRemote && $request->hasFile('file')) {
+            $this->uploadSecurity->validate($request->file('file'), 'galley', $request);
+        }
 
         $updateData = [
             'label' => strtoupper($request->label),

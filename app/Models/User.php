@@ -43,9 +43,8 @@ class User extends Authenticatable
         'locale',
         'date_last_login',
         'date_registered',
-        'must_change_password',
-        'disabled',
-        'disabled_reason',
+        // Security: 'disabled', 'disabled_reason', 'must_change_password'
+        // removed from $fillable — set these explicitly in admin-only methods
         'inline_help',
         'email_notifications',
         'privacy_consented_at',

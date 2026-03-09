@@ -405,7 +405,7 @@ foreach ($rawKeywords as $k) {
                         Abstract
                     </h3>
                     <div class="prose max-w-none text-slate-700 leading-relaxed text-justify">
-                        {!! $article->abstract !!}
+                        {!! clean($article->abstract) !!}
                     </div>
                 </div>
             @endif
@@ -523,7 +523,7 @@ foreach ($rawKeywords as $k) {
                                 $safeReferences,
                             );
                         @endphp
-                        {!! nl2br($linkedReferences) !!}
+                        {!! clean(nl2br($linkedReferences)) !!}
                     </div>
                 </div>
             @endif

@@ -9,7 +9,7 @@
             {{-- Journal Introduction --}}
             @if($journal->announcements_introduction)
                 <div class="mt-4 prose max-w-none text-gray-700">
-                    {!! $journal->announcements_introduction !!}
+                    {!! clean($journal->announcements_introduction) !!}
                 </div>
             @endif
         </div>
@@ -46,7 +46,7 @@
                             </a>
                             
                             <div class="mt-3 text-base text-gray-600 line-clamp-3">
-                                {!! strip_tags($announcement->excerpt ?? $announcement->content) !!}
+                                {!! clean(strip_tags($announcement->excerpt ?? $announcement->content)) !!}
                             </div>
                             
                             <div class="mt-4">
