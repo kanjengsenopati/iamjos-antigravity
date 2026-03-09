@@ -110,6 +110,15 @@ class ToolsController extends Controller
                 'available' => true,
             ],
             [
+                'key' => 'copernicus',
+                'title' => 'ICI XML Exporter',
+                'description' => 'Export articles and issues metadata in the format required by Index Copernicus (ICI) World of Journals.',
+                'icon' => 'server-stack',
+                'color' => 'indigo',
+                'route' => route('journal.settings.tools.copernicus.index', ['journal' => current_journal()->slug]),
+                'available' => true,
+            ],
+            [
                 'key' => 'crossref',
                 'title' => 'CrossRef XML Export',
                 'description' => 'Export article metadata in CrossRef XML format for DOI registration and citation linking.',
