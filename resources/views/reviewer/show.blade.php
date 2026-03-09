@@ -71,7 +71,7 @@
                     <div class="mb-6">
                         <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-2">Abstract</h3>
                         <div class="prose prose-sm max-w-none text-gray-600">
-                            {!! $submission->abstract !!}
+                            {!! clean($submission->abstract) !!}
                         </div>
                     </div>
 
@@ -303,7 +303,7 @@
                             <div>
                                 <h4 class="text-sm font-medium text-gray-500 mb-1">Comments for Author</h4>
                                 <div class="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4">
-                                    {!! $assignment->comments_for_author !!}
+                                    {!! clean($assignment->comments_for_author) !!}
                                 </div>
                             </div>
 
@@ -313,7 +313,7 @@
                                     </h4>
                                     <div
                                         class="prose prose-sm max-w-none text-gray-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                                        {!! $assignment->comments_for_editor !!}
+                                        {!! clean($assignment->comments_for_editor) !!}
                                     </div>
                                 </div>
                             @endif

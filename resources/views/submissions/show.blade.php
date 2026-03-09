@@ -5367,7 +5367,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         <div class="font-medium text-gray-900">{{ $log->email_subject ?? 'No Subject' }}</div>
                                                                     </div>
                                                                     <div class="p-4 prose prose-sm max-w-none text-gray-700">
-                                                                        {!! $log->email_body !!}
+                                                                        {!! clean($log->email_body) !!}
                                                                     </div>
                                                                 </div>
                                                             </div>

@@ -32,7 +32,7 @@
                     <div class="px-4 py-5 sm:p-6">
                         @if($content)
                             <div class="prose max-w-none text-gray-700">
-                                {!! $content !!}
+                                {!! clean($content) !!}
                             </div>
                         @else
                             <div class="rounded-md bg-blue-50 p-4">

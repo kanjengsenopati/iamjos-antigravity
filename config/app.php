@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Key
+    |--------------------------------------------------------------------------
+    |
+    | Used by ValidateApiKey middleware for internal API authentication.
+    |
+    */
+
+    'api_key' => env('API_KEY'),
+
 ];

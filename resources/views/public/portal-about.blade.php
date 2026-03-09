@@ -37,7 +37,7 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Content Container -->
             <article class="prose-content">
-                {!! $settings['about_content'] ?? '
+                {!! clean($settings['about_content'] ?? '
                 <h2>Selamat Datang di IAMJOS</h2>
                 <p>IAMJOS (Indonesian Academic Journal System) adalah platform publikasi jurnal akademik modern yang dirancang untuk mendukung ekosistem penelitian di Indonesia. Kami berkomitmen untuk menyediakan akses terbuka ke pengetahuan berkualitas tinggi dari berbagai disiplin ilmu.</p>
                 
@@ -70,7 +70,7 @@
                 
                 <h3>Bergabung Bersama Kami</h3>
                 <p>Apakah Anda seorang peneliti, akademisi, atau pengelola jurnal? Bergabunglah dengan komunitas IAMJOS untuk mengakses dan berbagi karya ilmiah berkualitas. Daftarkan jurnal Anda atau mulai berkontribusi sebagai penulis hari ini.</p>
-                ' !!}
+                ') !!}
             </article>
         </div>
     </section>

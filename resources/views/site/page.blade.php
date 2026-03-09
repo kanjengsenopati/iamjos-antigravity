@@ -31,7 +31,7 @@
             {{-- Content --}}
             <div class="px-6 py-8">
                 <div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline">
-                    {!! $page->content !!}
+                    {!! clean($page->content) !!}
                 </div>
             </div>
         </article>

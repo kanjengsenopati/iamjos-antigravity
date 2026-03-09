@@ -167,25 +167,21 @@ class SubmissionFileController extends Controller
             return redirect()->route('files.download', $file);
         }
 
-        // For local storage, we need to generate a temporary public URL
-        // Option 1: If using S3 or public storage, use URL directly
-        // Option 2: For local storage, create a signed route
+        // For local storage, create a signed route for the PDF.js viewer
+        // The file never leaves the server (no Google Docs Viewer)
 
-        // Generate a signed URL that's valid for 1 hour
+        // Generate a signed URL that's valid for 1 hour (served locally)
         $signedUrl = \URL::temporarySignedRoute(
             'files.serve',
             now()->addHour(),
             ['file' => $file->id]
         );
 
-        // Encode the URL for Google Docs Viewer
-        $googleDocsUrl = 'https://docs.google.com/gview?url=' . urlencode($signedUrl) . '&embedded=true';
-
         return view('submissions.file-preview', [
             'file' => $file,
             'journal' => $submission->journal,
             'journalSlug' => $submission->journal->slug,
-            'previewUrl' => $googleDocsUrl,
+            'previewUrl' => $signedUrl,
             'downloadUrl' => route('files.download', $file),
         ]);
     }

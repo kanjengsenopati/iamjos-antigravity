@@ -125,7 +125,7 @@
                         <div class="mb-6">
                             <h4 class="text-sm font-medium text-gray-700 mb-2">Abstract</h4>
                             <div class="prose prose-sm max-w-none text-gray-600 bg-gray-50 p-4 rounded-lg">
-                                {!! $submission->abstract !!}
+                                {!! clean($submission->abstract) !!}
                             </div>
                         </div>
 

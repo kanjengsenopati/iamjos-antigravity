@@ -43,7 +43,7 @@
                 <section class="mb-8">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
                         <div class="prose prose-lg prose-slate mx-auto text-slate-600 leading-relaxed">
-                            {!! $journal->summary !!}
+                            {!! clean($journal->summary) !!}
                         </div>
                     </div>
                 </section>
@@ -91,7 +91,7 @@
                             {{-- Description (HTML Rendered) --}}
                             @if ($currentIssue->description)
                                 <div class="prose prose-sm prose-slate max-w-none mb-4">
-                                    {!! $currentIssue->description !!}
+                                    {!! clean($currentIssue->description) !!}
                                 </div>
                             @endif
 
@@ -339,7 +339,7 @@
     @if (!empty($journal->additional_content))
         <section class="mt-12 pt-8 border-t border-slate-200">
             <div class="prose prose-slate max-w-none text-slate-600 text-center">
-                {!! $journal->additional_content !!}
+                {!! clean($journal->additional_content) !!}
             </div>
         </section>
     @endif
