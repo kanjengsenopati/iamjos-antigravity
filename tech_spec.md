@@ -657,16 +657,16 @@ Article view, issue view, archives, current issue, search, announcements, editor
 
 ## 7. Known Issues & Technical Debt
 
-| #   | Issue                                          | Severity  | Notes                                                                                                                                           |
-| --- | ---------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Duplicate route groups for User Management** | ⚠️ Medium | `journal.users.*` and `journal.admin.users.*` register identical routes — redundant                                                             |
-| 2   | **Role middleware commented out**              | ⚠️ Medium | Several route groups have `middleware('role:...')` commented out for development                                                                |
-| 3   | **Legacy controllers not in use**              | 🔧 Low    | ~30 Admin controllers from a previous project (BookingIna, BPD, BppOrganization, HotelBooking, MeetingRoom, etc.) are present but likely unused |
-| 4   | **No foreign key constraints**                 | ⚠️ Medium | Relations use index-only (no `foreign()` constraints) — data integrity relies on application logic                                              |
-| 5   | **Mixed slug resolution**                      | 🔧 Low    | Submissions resolve by `seq_id` with fallback to UUID/slug via 301 — adds complexity                                                            |
-| 6   | **Session table user_id type mismatch**        | 🔧 Low    | Two migrations to fix UUID type on sessions table — indicates schema evolution issues                                                           |
-| 7   | **No automated tests**                         | ⚠️ High   | Tests directory has only scaffolding (5 files). No meaningful test coverage                                                                     |
-| 8   | **Missing reviewer reminder**                  | 🔧 Medium | No scheduled job to remind overdue reviewers                                                                                                    |
+| #   | Issue                                          | Severity  | Notes                                                                                              |
+| --- | ---------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------- |
+| 1   | **Duplicate route groups for User Management** | ⚠️ Medium | `journal.users.*` and `journal.admin.users.*` register identical routes — redundant                |
+| 2   | **Role middleware commented out**              | ⚠️ Medium | Several route groups have `middleware('role:...')` commented out for development                   |
+| 3   | **Legacy controllers not in use**              | ✅ Fixed  | 29 Admin legacy controllers have been audited and permanently deleted.                             |
+| 4   | **No foreign key constraints**                 | ⚠️ Medium | Relations use index-only (no `foreign()` constraints) — data integrity relies on application logic |
+| 5   | **Mixed slug resolution**                      | 🔧 Low    | Submissions resolve by `seq_id` with fallback to UUID/slug via 301 — adds complexity               |
+| 6   | **Session table user_id type mismatch**        | 🔧 Low    | Two migrations to fix UUID type on sessions table — indicates schema evolution issues              |
+| 7   | **No automated tests**                         | ⚠️ High   | Tests directory has only scaffolding (5 files). No meaningful test coverage                        |
+| 8   | **Missing reviewer reminder**                  | 🔧 Medium | No scheduled job to remind overdue reviewers                                                       |
 
 ---
 
@@ -674,12 +674,12 @@ Article view, issue view, archives, current issue, search, announcements, editor
 
 ### HIGH Priority
 
-| Task                                | Description                                                                                  | Effort   |
-| ----------------------------------- | -------------------------------------------------------------------------------------------- | -------- |
-| Add reviewer reminder notifications | Scheduled job to email/WhatsApp reviewers approaching or past due dates                      | 2-3 days |
-| Re-enable role middleware           | Review and re-enable commented-out `middleware('role:...')` on route groups                  | 1 day    |
-| Add automated tests                 | Unit + Feature tests for submission workflow, review flow, and publishing                    | 5-7 days |
-| Clean up legacy controllers         | Remove unused controllers (BookingIna, BPD, MeetingRoom, etc.) or isolate to separate module | 1 day    |
+| Task                                | Description                                                                   | Effort   |
+| ----------------------------------- | ----------------------------------------------------------------------------- | -------- |
+| Add reviewer reminder notifications | Scheduled job to email/WhatsApp reviewers approaching or past due dates       | 2-3 days |
+| Re-enable role middleware           | Review and re-enable commented-out `middleware('role:...')` on route groups   | 1 day    |
+| Add automated tests                 | Unit + Feature tests for submission workflow, review flow, and publishing     | 5-7 days |
+| Clean up legacy controllers         | ~~Remove unused controllers (BookingIna, BPD, MeetingRoom, etc.)~~ **[DONE]** | 0.5 day  |
 
 ### MEDIUM Priority
 
@@ -712,4 +712,4 @@ IAMJOS is a substantially complete OJS 3.3 clone with modern Laravel 12 architec
 - ✅ **DONE** — 11 major modules fully functional
 - 🔧 **PARTIAL** — 1 item (reviewer reminders missing from otherwise complete notification system)
 - ❌ **MISSING** — Automated tests, plagiarism check
-- ⚠️ **TECH DEBT** — Legacy controllers, commented middleware, no FK constraints
+- ⚠️ **TECH DEBT** — Commented middleware, no FK constraints
