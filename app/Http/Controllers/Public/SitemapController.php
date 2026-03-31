@@ -25,6 +25,7 @@ class SitemapController extends Controller
             // ------------------------------------------
             ->select(
                 'submissions.id',
+                'submissions.seq_id',
                 'submissions.updated_at',
                 'submissions.journal_id',
                 'submissions.slug',
