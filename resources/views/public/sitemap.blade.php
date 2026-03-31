@@ -25,7 +25,7 @@
         @if ($article->journal)
             <url>
                 <loc>
-                    {{ route('journal.public.article', ['journal' => $article->journal->slug, 'article' => $article->seq_id]) }}
+                    {{ route('journal.public.article', ['journal' => $article->journal->slug, 'article' => $article->seq_id ?? $article->slug ?? $article->id]) }}
                 </loc>
                 <lastmod>{{ \Carbon\Carbon::parse($article->last_mod_date)->format('Y-m-d') }}</lastmod>
                 <changefreq>monthly</changefreq>
