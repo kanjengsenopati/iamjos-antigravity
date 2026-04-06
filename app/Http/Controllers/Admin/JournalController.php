@@ -314,18 +314,6 @@ class JournalController extends Controller
      */
     public function destroy(Journal $journal): RedirectResponse
     {
-        if ($journal->submissions()->exists()) {
-            return back()->with('error', 'Cannot delete journal with existing submissions.');
-        }
-
-        // Delete associated files
-        if ($journal->logo_path) {
-            Storage::disk('public')->delete($journal->logo_path);
-        }
-        if ($journal->thumbnail_path) {
-            Storage::disk('public')->delete($journal->thumbnail_path);
-        }
-
         $journal->delete();
 
         return redirect()->route('admin.journals.index')
