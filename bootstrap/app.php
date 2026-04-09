@@ -35,11 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'ads_rate_limit' => AdsTrackingRateLimit::class,
             'journal.context' => JournalContextMiddleware::class,
             'journal.detect' => DetectJournalContext::class,
+            'check_installed' => \App\Http\Middleware\CheckIfInstalled::class,
             // Spatie Permission middleware
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        $middleware->append(\App\Http\Middleware\RedirectIfUninstalled::class);
+
         // contoh jika mau auto-apply ke grup API:
         // $middleware->appendToGroup('api', [ValidateApiKey::class]);
     })

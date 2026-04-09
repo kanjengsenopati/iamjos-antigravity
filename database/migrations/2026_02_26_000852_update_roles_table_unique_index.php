@@ -12,6 +12,10 @@ return new class extends Migration
      */
 public function up(): void
 {
+    if (DB::getDriverName() === 'sqlite') {
+        return;
+    }
+
     // 1. Cek apakah indeks baru sudah ada di sistem PostgreSQL
     $indexExists = DB::select("
         SELECT 1 FROM pg_indexes 
@@ -32,6 +36,10 @@ public function up(): void
 
 public function down(): void
 {
+    if (DB::getDriverName() === 'sqlite') {
+        return;
+    }
+
     Schema::table('roles', function (Blueprint $table) {
         // Balikkan perubahan dengan aman
         DB::statement('ALTER TABLE roles DROP CONSTRAINT IF EXISTS roles_name_guard_name_journal_id_unique');

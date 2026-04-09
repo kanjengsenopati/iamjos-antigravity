@@ -34,7 +34,21 @@ use App\Http\Controllers\Journal\WebsiteSettingsController;
 use App\Http\Controllers\Journal\ProductionWorkflowController;
 use App\Http\Controllers\Admin\JournalUserManagementController;
 use App\Http\Controllers\Admin\Tools\CrossrefExportController;
+use App\Http\Controllers\InstallController;
 // Google OAuth Routes
+// =====================================================
+// INSTALLER WIZARD
+// =====================================================
+Route::prefix('install')->name('install.')->middleware(['web', 'check_installed'])->group(function () {
+    Route::get('/', [InstallController::class, 'index'])->name('index');
+    Route::get('/step-2', [InstallController::class, 'step2'])->name('step2');
+    Route::post('/test-database', [InstallController::class, 'testDatabase'])->name('test-database');
+    Route::get('/step-3', [InstallController::class, 'step3'])->name('step3');
+    Route::post('/test-smtp', [InstallController::class, 'testSmtp'])->name('test-smtp');
+    Route::get('/step-4', [InstallController::class, 'step4'])->name('step4');
+    Route::post('/execute', [InstallController::class, 'execute'])->name('execute');
+});
+
 // =====================================================
 // PORTAL HOME (List of all journals)
 // =====================================================
@@ -120,6 +134,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
     Route::get('/tools/crossref', [CrossrefExportController::class, 'index'])->name('journal.settings.tools.crossref.index');
     Route::post('/tools/crossref/download', [CrossrefExportController::class, 'export'])->name('journal.settings.tools.crossref.download');
     Route::post('/tools/crossref/save', [CrossrefExportController::class, 'saveSettings'])->name('journal.settings.tools.crossref.save');
+    Route::post('/tools/crossref/deposit', [CrossrefExportController::class, 'deposit'])->name('journal.settings.tools.crossref.deposit');
     // Journal Management (create new journals, etc.)
     Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
     Route::get('/journals/create', [JournalController::class, 'create'])->name('journals.create');
@@ -257,6 +272,9 @@ Route::prefix('{journal:slug}')->group(function () {
     Route::get('/issue/view/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
     // Legacy Issue Fallback
     Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue.legacy');
+    // LOCKSS/CLOCKSS Archiving Endpoints
+    // Route::get('/gateway/lockss', [\App\Http\Controllers\Public\LockssController::class, 'manifest'])->name('journal.lockss.manifest');
+    // Route::get('/gateway/clockss', [\App\Http\Controllers\Public\LockssController::class, 'clockssManifest'])->name('journal.clockss.manifest');
     // Custom Pages (from Navigation Menu Items)
     Route::get('/page/{path}', [PublicController::class, 'customPage'])->name('journal.custom-page');
     // --------- Article Routes (Google Scholar Indexing) ---------
@@ -640,6 +658,7 @@ Route::prefix('{journal:slug}')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'index'])->name('index');
                 Route::post('/download', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'export'])->name('download');
                 Route::post('/save', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'saveSettings'])->name('save');
+                Route::post('/deposit', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'deposit'])->name('deposit');
             });
         });
         // --------- Journal Admin Routes ---------

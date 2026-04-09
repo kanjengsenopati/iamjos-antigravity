@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('publications', function (Blueprint $table) {
-            $table->string('url_path')->nullable();
-        });
+        if (!Schema::hasColumn('publications', 'url_path')) {
+            Schema::table('publications', function (Blueprint $table) {
+                $table->string('url_path')->nullable();
+            });
+        }
     }
 
     /**
@@ -21,8 +23,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('publications', function (Blueprint $table) {
-            $table->dropColumn('url_path');
-        });
+        // Assuming we only drop it if this specific migration added it, 
+        // but since it might have been in the original create migration, it's safer not to drop it here
+        // or check for it. Let's just wrap it.
+        if (Schema::hasColumn('publications', 'url_path')) {
+            Schema::table('publications', function (Blueprint $table) {
+                $table->dropColumn('url_path');
+            });
+        }
     }
 };

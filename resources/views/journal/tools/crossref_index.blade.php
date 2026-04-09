@@ -104,7 +104,8 @@
                                 </div>
                                 <div>
                                     <label for="password" class="block mb-2 text-sm font-bold text-gray-700">Password</label>
-                                    <input type="password" id="password" name="password"
+                                    <input type="text" id="password" name="password"
+                                        value="{{ old('password', $journal->getSetting('crossref_password')) }}"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                     <p class="mt-1 text-xs text-orange-600">Please note that the password will be saved as plain text, i.e. not encrypted.</p>
                                 </div>
@@ -284,8 +285,11 @@
                     </div>
 
                     <div class="flex gap-2">
-                        <button type="button" disabled
-                            class="bg-gray-200 text-gray-400 font-medium py-2 px-4 rounded border border-gray-300 cursor-not-allowed text-sm">
+                        <button type="submit" 
+                            name="action" value="deposit"
+                            formaction="{{ route('journal.settings.tools.crossref.deposit', $journal->path) }}"
+                            @if(!$hasDepositorInfo) disabled @endif
+                            class="{{ !$hasDepositorInfo ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white' }} font-medium py-2 px-4 rounded shadow-sm border {{ !$hasDepositorInfo ? 'border-gray-300' : 'border-green-600' }} transition text-sm">
                             Deposit
                         </button>
 
