@@ -22,12 +22,14 @@ return new class extends Migration
 
         Schema::table('submission_logs', function (Blueprint $table) {
             if (Schema::hasColumn('submission_logs', 'file_id')) {
-                try {
-                    $table->dropForeign(['file_id']);
-                } catch (\Throwable $e) {
-                    // Ignore if foreign key doesn't exist
+                if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+                    try {
+                        $table->dropForeign(['file_id']);
+                    } catch (\Throwable $e) {
+                        // Ignore if foreign key doesn't exist
+                    }
+                    $table->dropColumn('file_id');
                 }
-                $table->dropColumn('file_id');
             }
         });
     }

@@ -110,4 +110,46 @@ class CrossrefExportController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
+
+    // 4. API Deposit Logic
+    public function deposit(Request $request, $journalPath)
+    {
+        $journal = \App\Models\Journal::where('path', $journalPath)->firstOrFail();
+        $ids = $request->input('submission_ids', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'Please select at least one article for deposit.');
+        }
+
+        $hasDepositorInfo = $journal->getSetting('crossref_depositor_name') 
+            && $journal->getSetting('crossref_depositor_email') 
+            && $journal->getSetting('crossref_username');
+
+        if (!$hasDepositorInfo) {
+            return back()->with('error', 'Crossref username and depositor information must be configured first.');
+        }
+
+        // Check if there are DOIs assigned
+        $submissions = \App\Models\Submission::whereIn('id', $ids)
+            ->where('journal_id', $journal->id)
+            ->with(['currentPublication'])
+            ->get();
+            
+        $invalidCount = 0;
+        foreach ($submissions as $sub) {
+            if (!$sub->currentPublication || empty($sub->currentPublication->doi)) {
+                $invalidCount++;
+            }
+        }
+        
+        if ($invalidCount > 0 && $invalidCount == $submissions->count()) {
+             return back()->with('error', 'None of the selected articles have DOIs assigned.');
+        }
+
+        // For large numbers, we dispatch to Job, otherwise process here or dispatch anyway.
+        // Let's use the Job pattern for UI action to avoid slow API hanging the server.
+        \App\Jobs\DepositCrossrefJob::dispatch($ids, $journal);
+
+        return back()->with('success', 'Selected articles have been queued for Crossref deposit.');
+    }
 }
