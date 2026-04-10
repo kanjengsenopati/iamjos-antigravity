@@ -9,7 +9,7 @@
         @foreach ($records as $record)
             <record>
                 <header>
-                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}
+                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->seq_id }}
                     </identifier>
                     <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}
                     </datestamp>

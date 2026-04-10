@@ -19,6 +19,11 @@ class OaiController extends Controller
                 ->orWhere('path', $journalPath)
                 ->firstOrFail();
             
+            // 1.2. Cek OAI Enabled
+            if (!$journal->enable_oai) {
+                return $this->oaiError('noRecordsMatch', 'OAI-PMH is not enabled for this journal.');
+            }
+            
             // 1.5 Validasi Verb (dan Landing Page)
             if (!$request->has('verb')) {
                 if (empty($request->query())) {
@@ -116,7 +121,7 @@ class OaiController extends Controller
                      }
                      $exists = Submission::where('journal_id', $journal->id)
                         ->where(function($q) use ($id) {
-                            $q->where('id', $id)->orWhere('slug', $id);
+                            $q->where('id', $id)->orWhere('slug', $id)->orWhere('seq_id', $id);
                         })->exists();
 
                      if (!$exists) {
@@ -181,7 +186,7 @@ class OaiController extends Controller
 
                 $recordRaw = Submission::where('journal_id', $journal->id)
                     ->where(function($q) use ($id) {
-                        $q->where('id', $id)->orWhere('slug', $id);
+                        $q->where('id', $id)->orWhere('slug', $id)->orWhere('seq_id', $id);
                     })
                     ->where('status', Submission::STATUS_PUBLISHED)
                     ->with(['publication', 'authors', 'keywords', 'issue', 'journal', 'galleys'])
