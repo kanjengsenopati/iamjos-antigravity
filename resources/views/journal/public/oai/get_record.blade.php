@@ -7,7 +7,7 @@
     <GetRecord>
         <record>
             <header>
-                <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->id }}</identifier>
+                <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->seq_id }}</identifier>
                 <datestamp>{{ $record->updated_at->utc()->format('Y-m-d\TH:i:s\Z') }}</datestamp>
                 <setSpec>{{ strtoupper($journal->abbreviation ?? 'JRN') }}:ART</setSpec>
             </header>
@@ -41,6 +41,13 @@
                     <dc:identifier>
                         {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]) }}
                     </dc:identifier>
+
+                    {{-- Rights (License) --}}
+                    @if ($journal->license_url)
+                        <dc:rights>{{ htmlspecialchars($journal->license_url, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:rights>
+                    @elseif ($journal->license_terms)
+                        <dc:rights>{{ htmlspecialchars($journal->license_terms, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:rights>
+                    @endif
 
                     {{-- Relation (PDF URL) --}}
                     @php
