@@ -31,11 +31,24 @@
                     <dc:description>{!! htmlspecialchars(strip_tags(html_entity_decode($record->abstract)), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:description>
                     <dc:publisher>{!! htmlspecialchars($journal->name, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:publisher>
                     <dc:date>
-                        {{ $record->publication->date_published ? \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') : '' }}
+                        {{ ($record->currentPublication && $record->currentPublication->date_published) ? \Carbon\Carbon::parse($record->currentPublication->date_published)->format('Y-m-d') : '' }}
                     </dc:date>
                     <dc:type>info:eu-repo/semantics/article</dc:type>
                     <dc:type>info:eu-repo/semantics/publishedVersion</dc:type>
                     <dc:format>application/pdf</dc:format>
+                    @if ($record->currentPublication && $record->currentPublication->pages)
+                        <dc:format>{{ $record->currentPublication->pages }}</dc:format>
+                    @endif
+
+                    {{-- DOI --}}
+                    @if ($record->currentPublication && $record->currentPublication->doi)
+                        <dc:identifier>doi:{{ $record->currentPublication->doi }}</dc:identifier>
+                    @endif
+
+                    {{-- Source / Issue Info --}}
+                    @if ($record->issue)
+                        <dc:source>{{ $journal->name }}; Vol. {{ $record->issue->volume }} No. {{ $record->issue->number }} ({{ $record->issue->year }})</dc:source>
+                    @endif
 
                     {{-- Identifier (Slug URL) --}}
                     <dc:identifier>

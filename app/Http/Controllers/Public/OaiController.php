@@ -166,7 +166,7 @@ class OaiController extends Controller
                 }
 
                 // Metadata Eager Load
-                $query->with(['publication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
+                $query->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
 
                 $records = $query->orderBy('updated_at', 'desc')->take(100)->get();
 
@@ -189,7 +189,7 @@ class OaiController extends Controller
                         $q->where('id', $id)->orWhere('slug', $id)->orWhere('seq_id', $id);
                     })
                     ->where('status', Submission::STATUS_PUBLISHED)
-                    ->with(['publication', 'authors', 'keywords', 'issue', 'journal', 'galleys'])
+                    ->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys'])
                     ->first();
 
                 if (!$recordRaw) {
