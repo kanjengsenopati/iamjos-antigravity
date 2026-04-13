@@ -150,14 +150,14 @@ class OaiController extends Controller
                 $query = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED);
                 
-                // Filter Tanggal (OAI-PMH 2.0 Inklusif dgn Truncation PostgreSQL)
+                // Filter Tanggal (OAI-PMH 2.0 Inklusif)
                 if ($request->has('from')) {
-                    $from = Carbon::parse($request->input('from'))->utc()->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at) >= ?", [$from]);
+                    $from = Carbon::parse($request->input('from'))->utc();
+                    $query->where('updated_at', '>=', $from);
                 }
                 if ($request->has('until')) {
-                    $until = Carbon::parse($request->input('until'))->utc()->format('Y-m-d H:i:s');
-                    $query->whereRaw("date_trunc('second', updated_at) <= ?", [$until]);
+                    $until = Carbon::parse($request->input('until'))->utc()->endOfSecond();
+                    $query->where('updated_at', '<=', $until);
                 }
 
                 // Filter Set (Jika ada parameter set, harus sesuai abbreviation jurnal)
