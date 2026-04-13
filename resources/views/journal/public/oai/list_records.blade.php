@@ -17,7 +17,18 @@
                         xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
                         <dc:title>{!! htmlspecialchars($record->title, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:title>
-                        <dc:creator>{!! htmlspecialchars(trim(($record->authors->first()->first_name ?? 'Unknown') . ' ' . ($record->authors->first()->last_name ?? '')), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:creator>
+                        @if(isset($record->authors) && is_iterable($record->authors))
+                            @foreach ($record->authors as $author)
+                                @php
+                                    $creatorName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? ''));
+                                @endphp
+                                @if($creatorName)
+                                    <dc:creator>{!! htmlspecialchars($creatorName, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:creator>
+                                @endif
+                            @endforeach
+                        @else
+                            <dc:creator>Unknown</dc:creator>
+                        @endif
                         {{-- Subject --}}
                         @if(isset($record->keywords) && is_iterable($record->keywords))
                             @foreach ($record->keywords as $keywordModel)
@@ -39,23 +50,25 @@
                         <dc:type>info:eu-repo/semantics/publishedVersion</dc:type>
                         <dc:format>application/pdf</dc:format>
                         @if ($record->currentPublication && $record->currentPublication->pages)
-                            <dc:format>{{ $record->currentPublication->pages }}</dc:format>
+                            <dc:format>{!! htmlspecialchars($record->currentPublication->pages, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:format>
                         @endif
 
                         {{-- DOI --}}
                         @if ($record->currentPublication && $record->currentPublication->doi)
-                            <dc:identifier>doi:{{ $record->currentPublication->doi }}</dc:identifier>
+                            <dc:identifier>{!! htmlspecialchars('https://doi.org/' . $record->currentPublication->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:identifier>
+                            <dc:identifier>{!! htmlspecialchars('doi:' . $record->currentPublication->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:identifier>
                         @endif
 
                         {{-- Source / Issue Info --}}
                         @if ($record->issue)
-                            <dc:source>{{ $journal->name }}; Vol. {{ $record->issue->volume }} No. {{ $record->issue->number }} ({{ $record->issue->year }})</dc:source>
+                            @php
+                                $sourceInfo = $journal->name . '; Vol. ' . ($record->issue->volume ?? '') . ' No. ' . ($record->issue->number ?? '') . ' (' . ($record->issue->year ?? '') . ')';
+                            @endphp
+                            <dc:source>{!! htmlspecialchars($sourceInfo, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:source>
                         @endif
 
                         {{-- Identifier (Slug URL) --}}
-                        <dc:identifier>
-                            {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]) }}
-                        </dc:identifier>
+                        <dc:identifier>{!! htmlspecialchars(route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:identifier>
 
                         {{-- Rights (License) --}}
                         @if ($journal->license_url)
@@ -69,13 +82,7 @@
                             $pdf = $record->galleys->first();
                         @endphp
                         @if ($pdf)
-                            <dc:relation>
-                                {{ route('journal.article.galley', ['journal' => $journal->slug, 'article' => $record->slug ?? $record->id, 'galley' => $pdf->id]) }}
-                            </dc:relation>
-                        @else
-                            <dc:relation>
-                                {{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]) }}
-                            </dc:relation>
+                            <dc:relation>{!! htmlspecialchars(route('journal.article.galley', ['journal' => $journal->slug, 'article' => $record->seq_id, 'galley' => $pdf->id]), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:relation>
                         @endif
 
                         <dc:language>{{ $record->locale ?? 'en' }}</dc:language>
