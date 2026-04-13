@@ -5,21 +5,10 @@
     <responseDate>{{ now()->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') }}</responseDate>
     <request{!! \App\Http\Controllers\Public\OaiController::getRequestAttributes() !!}>{{ url()->current() }}</request>
     <ListMetadataFormats>
-        {{-- Hardcoded Standard Formats --}}
         <metadataFormat>
             <metadataPrefix>oai_dc</metadataPrefix>
             <schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</schema>
             <metadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</metadataNamespace>
-        </metadataFormat>
-        <metadataFormat>
-            <metadataPrefix>marcxml</metadataPrefix>
-            <schema>http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd</schema>
-            <metadataNamespace>http://www.loc.gov/MARC21/slim</metadataNamespace>
-        </metadataFormat>
-        <metadataFormat>
-            <metadataPrefix>rfc1807</metadataPrefix>
-            <schema>http://www.openarchives.org/OAI/1.1/rfc1807.xsd</schema>
-            <metadataNamespace>http://info.internet.isi.edu:80/in-notes/rfc/files/rfc1807.txt</metadataNamespace>
         </metadataFormat>
     </ListMetadataFormats>
 </OAI-PMH>

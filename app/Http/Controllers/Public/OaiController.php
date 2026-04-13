@@ -121,7 +121,13 @@ class OaiController extends Controller
                      }
                      $exists = Submission::where('journal_id', $journal->id)
                         ->where(function($q) use ($id) {
-                            $q->where('id', $id)->orWhere('slug', $id)->orWhere('seq_id', $id);
+                            if (is_numeric($id)) {
+                                $q->where('seq_id', $id);
+                            } elseif (\Illuminate\Support\Str::isUuid($id)) {
+                                $q->where('id', $id);
+                            } else {
+                                $q->where('slug', $id);
+                            }
                         })->exists();
 
                      if (!$exists) {
@@ -186,7 +192,13 @@ class OaiController extends Controller
 
                 $recordRaw = Submission::where('journal_id', $journal->id)
                     ->where(function($q) use ($id) {
-                        $q->where('id', $id)->orWhere('slug', $id)->orWhere('seq_id', $id);
+                        if (is_numeric($id)) {
+                            $q->where('seq_id', $id);
+                        } elseif (\Illuminate\Support\Str::isUuid($id)) {
+                            $q->where('id', $id);
+                        } else {
+                            $q->where('slug', $id);
+                        }
                     })
                     ->where('status', Submission::STATUS_PUBLISHED)
                     ->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys'])
