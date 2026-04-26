@@ -841,21 +841,7 @@ foreach ($rawKeywords as $k) {
             </div>
 
             {{-- LICENSE --}}
-            @php
-                $license = $article->license ?? ($journal->default_license ?? 'CC BY 4.0');
-            @endphp
-            <div class="bg-slate-50 p-5 rounded border border-slate-200">
-                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">License</h4>
-                <img src="https://licensebuttons.net/l/by/4.0/88x31.png" alt="Creative Commons License"
-                    class="mb-2">
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    This work is licensed under a
-                    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank"
-                        class="text-blue-600 hover:underline">
-                        Creative Commons Attribution 4.0 International License
-                    </a>.
-                </p>
-            </div>
+            <x-public.article-license :journal="$journal" :publication="$article->currentPublication" />
 
             {{-- SHARE BUTTONS --}}
             <div class="bg-slate-50 p-5 rounded border border-slate-200">

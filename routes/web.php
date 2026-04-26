@@ -204,35 +204,115 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
 // =====================================================
 Route::get('translate', [TranslateController::class, 'index'])->name('translate');
 Route::post('translate_post', [TranslateController::class, 'translatePost'])->name('translate_post');
+$ojsPrefixEnabled = false;
+try {
+    if (\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+        $settings = \Illuminate\Support\Facades\Cache::rememberForever('site_settings', fn() => \App\Models\SiteSetting::first());
+        if ($settings && $settings->use_ojs_url_format) {
+            $ojsPrefixEnabled = true;
+        }
+    }
+} catch (\Exception $e) {}
+
 // =====================================================
 // OAI-PMH (Google Scholar Indexing)
 // =====================================================
 Route::get('oai/stylesheet', function () {
     return response()->file(public_path('oai.xsl'), ['Content-Type' => 'text/xsl']);
 });
-Route::any('{journal}/oai', [App\Http\Controllers\Public\OaiController::class, 'handle'])->middleware('throttle:60,1')->name('journal.oai');
+
+$registerOai = function () {
+    Route::any('oai', [\App\Http\Controllers\Public\OaiController::class, 'handle'])
+        ->middleware('throttle:60,1')
+        ->name('journal.oai');
+};
+
+$publicRoutes = function () {
+    // --------- Public Journal Pages ---------
+    Route::get('/', [\App\Http\Controllers\Journal\JournalHomepageController::class, 'index'])->name('journal.public.home');
+    Route::get('/current', [\App\Http\Controllers\PublicController::class, 'currentIssue'])->name('journal.public.current');
+    Route::get('/archives', [\App\Http\Controllers\PublicController::class, 'archives'])->name('journal.public.archives');
+    Route::get('/about', [\App\Http\Controllers\PublicController::class, 'about'])->name('journal.public.about');
+    // Announcements
+    Route::get('/announcement', [\App\Http\Controllers\PublicController::class, 'announcements'])->name('journal.announcement.index');
+    Route::get('/announcement/{id}', [\App\Http\Controllers\PublicController::class, 'announcement'])->name('journal.announcement.show');
+    // Information Pages (Readers, Authors, Librarians)
+    Route::get('/information/readers', [\App\Http\Controllers\PublicController::class, 'infoReaders'])->name('journal.info.readers');
+    Route::get('/information/authors', [\App\Http\Controllers\PublicController::class, 'infoAuthors'])->name('journal.info.authors');
+    Route::get('/information/librarians', [\App\Http\Controllers\PublicController::class, 'infoLibrarians'])->name('journal.info.librarians');
+    Route::get('/author-guidelines', [\App\Http\Controllers\PublicController::class, 'authorGuidelines'])->name('journal.public.author-guidelines');
+    Route::get('/editorial-team', [\App\Http\Controllers\PublicController::class, 'editorialTeam'])->name('journal.public.editorial-team');
+    Route::get('/search', [\App\Http\Controllers\SearchController::class, 'index'])->name('journal.public.search');
+    Route::get('/search/quick', [\App\Http\Controllers\SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
+    Route::get('/issue/view/{issue}', [\App\Http\Controllers\PublicController::class, 'issue'])->name('journal.public.issue');
+    // Legacy Issue Fallback
+    Route::get('/issue/{issue}', [\App\Http\Controllers\PublicController::class, 'issue'])->name('journal.public.issue.legacy');
+    // Custom Pages (from Navigation Menu Items)
+    Route::get('/page/{path}', [\App\Http\Controllers\PublicController::class, 'customPage'])->name('journal.custom-page');
+    // --------- Article Routes (Google Scholar Indexing) ---------
+    Route::get('/article/view/{article}', [\App\Http\Controllers\PublicController::class, 'article'])->name('journal.public.article');
+    Route::get('/article/{article}/view', [\App\Http\Controllers\PublicController::class, 'articleReader'])->name('journal.public.article.reader');
+    Route::get('/article/{article}/view-legacy', [\App\Http\Controllers\PublicController::class, 'article'])->name('journal.article.view');
+    Route::get('/article/{article}', [\App\Http\Controllers\PublicController::class, 'article'])->name('journal.public.article.legacy');
+    Route::get('/article/{article}/galley/{galley}/download', [\App\Http\Controllers\PublicController::class, 'downloadGalley'])->name('journal.article.download');
+    Route::get('/article/{article}/galley/{galley}', [\App\Http\Controllers\PublicController::class, 'viewGalley'])->name('journal.article.galley');
+    Route::get('/article/download/{seq_id}/{filename}.pdf', [\App\Http\Controllers\PublicController::class, 'downloadPdf'])->name('journal.article.download.pdf');
+    Route::get('/article/{article}/citation/ris', [\App\Http\Controllers\PublicController::class, 'exportCitationRIS'])->name('citation.ris');
+    Route::get('/article/{article}/citation/bibtex', [\App\Http\Controllers\PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');
+};
 
 // =====================================================
-// JOURNAL REGISTRATION (Explicit Binding for Priority)
+// REGISTER PUBLIC ROUTES
 // =====================================================
-Route::middleware('guest')->group(function () {
-    Route::get('/{journal:slug}/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])
-        ->name('journal.register');
-    Route::post('/{journal:slug}/register', [\App\Http\Controllers\JournalRegisterController::class, 'register'])
-        ->name('journal.register.store');
-});
+$registerPublicRoutesForPrefix = function ($prefix) use ($publicRoutes, $registerOai) {
+    Route::prefix($prefix)->group(function () use ($publicRoutes, $registerOai) {
+        // 1. OAI-PMH (Google Scholar Indexing)
+        Route::prefix('{journal}')->group($registerOai);
+
+        // 2. Journal Frontend Pages
+        Route::prefix('{journal}')->group(function () use ($publicRoutes) {
+            $publicRoutes();
+        });
+        
+        // 3. Journal Registration
+        Route::middleware('guest')->group(function () {
+            Route::get('/{journal}/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])
+                ->name('journal.register');
+            Route::post('/{journal}/register', [\App\Http\Controllers\JournalRegisterController::class, 'register'])
+                ->name('journal.register.store');
+        });
+    });
+};
+
+// Always register the routes WITHOUT index.php prefix first so that they match incoming requests
+// where the web server has stripped index.php from the request URI.
+// If OJS prefix is enabled, we apply a middleware to force redirect from /path to /index.php/path
+if ($ojsPrefixEnabled) {
+    Route::middleware([\App\Http\Middleware\EnforceOjsPrefix::class])->group(function () use ($registerPublicRoutesForPrefix) {
+        $registerPublicRoutesForPrefix('');
+    });
+} else {
+    $registerPublicRoutesForPrefix('');
+}
+
+// If OJS Prefix is enabled, register them AGAIN with index.php prefix.
+// Since these are registered last, their route names will overwrite the previous ones,
+// causing Laravel's route() helper to generate URLs WITH the index.php prefix.
+if ($ojsPrefixEnabled) {
+    $registerPublicRoutesForPrefix('index.php');
+}
 
 // =====================================================
-// JOURNAL-SCOPED PUBLIC ROUTES (Per-Journal Frontend)
-// These come AFTER all other routes to catch journal slugs
+// JOURNAL-SCOPED DASHBOARD & AUTH ROUTES
+// These always use the standard {journal} without index.php
 // =====================================================
-Route::prefix('{journal:slug}')->group(function () {
+Route::prefix('{journal}')->group(function () {
     // --------- Journal-Scoped Auth Routes (/{journal}/login) ---------
     Route::middleware(['journal.detect'])->group(function () {
-        Route::get('/login', [AuthController::class, 'index'])->name('journal.login')->middleware('guest');
-        Route::post('/login', [AuthController::class, 'authenticate'])->name('journal.authenticate')->middleware('guest');
-        Route::post('/logout', [AuthController::class, 'logout'])->name('journal.logout');
-        Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
+        Route::get('/login', [\App\Http\Controllers\Admin\AuthController::class, 'index'])->name('journal.login')->middleware('guest');
+        Route::post('/login', [\App\Http\Controllers\Admin\AuthController::class, 'authenticate'])->name('journal.authenticate')->middleware('guest');
+        Route::post('/logout', [\App\Http\Controllers\Admin\AuthController::class, 'logout'])->name('journal.logout');
+        Route::get('/auth/google', [\App\Http\Controllers\Admin\SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
     });
 
     // =====================================================
@@ -240,59 +320,19 @@ Route::prefix('{journal:slug}')->group(function () {
     // =====================================================
     Route::middleware(['auth', 'journal.context'])->group(function () {
         // --------- Journal Dashboard ---------
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('journal.dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('journal.dashboard');
         // --------- Profile Settings (Journal-Scoped) ---------
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('journal.profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('journal.profile.update');
-        Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('journal.profile.password');
-        Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('journal.profile.avatar');
-        Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('journal.profile.avatar.delete');
-        Route::put('/profile/roles', [ProfileController::class, 'updateRoles'])->name('journal.profile.roles.update');
-        Route::post('/profile/upload-image', [ProfileController::class, 'uploadImage'])->name('journal.profile.upload.image');
+        Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('journal.profile.edit');
+        Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('journal.profile.update');
+        Route::patch('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('journal.profile.password');
+        Route::patch('/profile/avatar', [\App\Http\Controllers\ProfileController::class, 'updateAvatar'])->name('journal.profile.avatar');
+        Route::delete('/profile/avatar', [\App\Http\Controllers\ProfileController::class, 'deleteAvatar'])->name('journal.profile.avatar.delete');
+        Route::put('/profile/roles', [\App\Http\Controllers\ProfileController::class, 'updateRoles'])->name('journal.profile.roles.update');
+        Route::post('/profile/upload-image', [\App\Http\Controllers\ProfileController::class, 'uploadImage'])->name('journal.profile.upload.image');
         
         // Journal Enrollment
-        Route::post('/enroll', [ProfileController::class, 'enroll'])->name('journal.enroll');
+        Route::post('/enroll', [\App\Http\Controllers\ProfileController::class, 'enroll'])->name('journal.enroll');
     });
-    // --------- Public Journal Pages ---------
-    Route::get('/', [JournalHomepageController::class, 'index'])->name('journal.public.home');
-    Route::get('/current', [PublicController::class, 'currentIssue'])->name('journal.public.current');
-    Route::get('/archives', [PublicController::class, 'archives'])->name('journal.public.archives');
-    Route::get('/about', [PublicController::class, 'about'])->name('journal.public.about');
-    // Announcements
-    Route::get('/announcement', [PublicController::class, 'announcements'])->name('journal.announcement.index');
-    Route::get('/announcement/{id}', [PublicController::class, 'announcement'])->name('journal.announcement.show');
-    // Information Pages (Readers, Authors, Librarians)
-    Route::get('/information/readers', [PublicController::class, 'infoReaders'])->name('journal.info.readers');
-    Route::get('/information/authors', [PublicController::class, 'infoAuthors'])->name('journal.info.authors');
-    Route::get('/information/librarians', [PublicController::class, 'infoLibrarians'])->name('journal.info.librarians');
-    Route::get('/author-guidelines', [PublicController::class, 'authorGuidelines'])->name('journal.public.author-guidelines');
-    Route::get('/editorial-team', [PublicController::class, 'editorialTeam'])->name('journal.public.editorial-team');
-    Route::get('/search', [SearchController::class, 'index'])->name('journal.public.search');
-    Route::get('/search/quick', [SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
-    Route::get('/issue/view/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue');
-    // Legacy Issue Fallback
-    Route::get('/issue/{issue}', [PublicController::class, 'issue'])->name('journal.public.issue.legacy');
-    // LOCKSS/CLOCKSS Archiving Endpoints
-    // Route::get('/gateway/lockss', [\App\Http\Controllers\Public\LockssController::class, 'manifest'])->name('journal.lockss.manifest');
-    // Route::get('/gateway/clockss', [\App\Http\Controllers\Public\LockssController::class, 'clockssManifest'])->name('journal.clockss.manifest');
-    // Custom Pages (from Navigation Menu Items)
-    Route::get('/page/{path}', [PublicController::class, 'customPage'])->name('journal.custom-page');
-    // --------- Article Routes (Google Scholar Indexing) ---------
-    // These routes support both ID, slug, and seq_id for SEO flexibility
-    Route::get('/article/view/{article}', [PublicController::class, 'article'])->name('journal.public.article');
-    Route::get('/article/{article}/view', [PublicController::class, 'articleReader'])->name('journal.public.article.reader');
-    // Article View (alias route for SEO with clean URL structure)
-    Route::get('/article/{article}/view-legacy', [PublicController::class, 'article'])->name('journal.article.view');
-    // Legacy Article Fallback
-    Route::get('/article/{article}', [PublicController::class, 'article'])->name('journal.public.article.legacy');
-    // Article Galley Download (CRITICAL for Google Scholar - must stream the actual file)
-    Route::get('/article/{article}/galley/{galley}/download', [PublicController::class, 'downloadGalley'])->name('journal.article.download');
-    Route::get('/article/{article}/galley/{galley}', [PublicController::class, 'viewGalley'])->name('journal.article.galley');
-    // SEO-Friendly PDF Galley Download (e.g. /{journal}/article/download/51/title-of-article.pdf)
-    Route::get('/article/download/{seq_id}/{filename}.pdf', [PublicController::class, 'downloadPdf'])->name('journal.article.download.pdf');
-    // Citation Export Routes
-    Route::get('/article/{article}/citation/ris', [PublicController::class, 'exportCitationRIS'])->name('citation.ris');
-    Route::get('/article/{article}/citation/bibtex', [PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');
     // =====================================================
     // JOURNAL-SCOPED DASHBOARD ROUTES (Protected)
     // =====================================================

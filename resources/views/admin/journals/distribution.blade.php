@@ -196,7 +196,7 @@
                         <!-- License Terms -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">License Terms</label>
-                            <textarea name="license[terms]" rows="6"
+                            <textarea name="license[terms]" rows="6" id="license_terms"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 placeholder="Enter the license terms that will be displayed with published content...">{{ old('license.terms', $journal->license_terms) }}</textarea>
                         </div>
@@ -248,14 +248,39 @@
                                 page title.</p>
                         </div>
 
-                        <!-- Custom Tags -->
+                        <!-- Custom Tags (Site verification) -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Custom Header Tags</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Custom Header Tags (Site Verification)</label>
                             <textarea name="indexing[custom_tags]" rows="4"
                                 class="w-full font-mono text-sm rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 placeholder="<meta name='google-site-verification' content='...' />">{{ old('indexing.custom_tags', $journal->custom_headers) }}</textarea>
                             <p class="mt-1 text-xs text-gray-500">Add custom HTML meta tags for the site header (e.g. for
                                 verification).</p>
+                        </div>
+
+                        <!-- Search Engine Indexing (Block via Meta Robots) -->
+                        <div class="border-t border-gray-200 pt-6">
+                            <h4 class="text-sm font-medium text-gray-900 mb-4">Search Engine Indexing</h4>
+                            <div class="relative flex items-start">
+                                <div class="flex h-5 items-center">
+                                    <input type="checkbox" name="indexing[block_search_indexing]" value="1" id="block_search_indexing"
+                                        {{ old('indexing.block_search_indexing', $journal->block_search_indexing) ? 'checked' : '' }}
+                                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="block_search_indexing" class="font-medium text-gray-700">Block search engines from indexing the site</label>
+                                    <p class="text-gray-500">If checked, a <code>&lt;meta name="robots" content="noindex, nofollow"&gt;</code> tag will be added to block search engines.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Meta Tags (Dynamic) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Custom Meta Tags</label>
+                            <textarea name="indexing[custom_meta_tags]" rows="4"
+                                class="w-full font-mono text-sm rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="<meta name='custom-tag' content='...' />">{{ old('indexing.custom_meta_tags', $journal->custom_meta_tags) }}</textarea>
+                            <p class="mt-1 text-xs text-gray-500">Add any additional HTML tags here. These will be added to the document <code>&lt;head&gt;</code>.</p>
                         </div>
 
                         <!-- Sitemap URL -->
@@ -399,7 +424,59 @@
             display: none !important;
         }
     </style>
-    <script>
-        // Javascript helpers can be placed here if needed in the future
-    </script>
+     <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
+        <script>
+            tinymce.init({
+                selector: '#license_terms',
+                height: 350,
+                menubar: false,
+                plugins: 'lists link image table code autoresize',
+                toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
+                branding: false,
+                license_key: 'gpl',
+                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.withCredentials = false;
+                    xhr.open('POST', '{{ route('journal.profile.upload.image', $journal->slug) }}');
+                    xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                    xhr.upload.onprogress = (e) => {
+                        progress(e.loaded / e.total * 100);
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status === 403) {
+                            reject({
+                                message: 'HTTP Error: ' + xhr.status,
+                                remove: true
+                            });
+                            return;
+                        }
+
+                        if (xhr.status < 200 || xhr.status >= 300) {
+                            reject('HTTP Error: ' + xhr.status);
+                            return;
+                        }
+
+                        const json = JSON.parse(xhr.responseText);
+
+                        if (!json || typeof json.location != 'string') {
+                            reject('Invalid JSON: ' + xhr.responseText);
+                            return;
+                        }
+
+                        resolve(json.location);
+                    };
+
+                    xhr.onerror = () => {
+                        reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                    };
+
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                    xhr.send(formData);
+                })
+            });
+        </script>
 @endpush

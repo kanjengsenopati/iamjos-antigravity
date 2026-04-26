@@ -15,6 +15,14 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 class Journal extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
+    
+    /**
+     * Get the route key name for Laravel's route model binding.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -48,6 +56,8 @@ class Journal extends Model
         'copyright_year_basis',
         'search_description',
         'custom_headers',
+        'block_search_indexing',
+        'custom_meta_tags',
         'open_access_policy',
         'enable_oai',
         'enable_lockss',
@@ -82,6 +92,7 @@ class Journal extends Model
             'wa_notifications_enabled' => 'boolean',
             'visible' => 'boolean',
             'settings' => 'array', // JSONB to array
+            'block_search_indexing' => 'boolean',
             'enable_oai' => 'boolean',
             'enable_lockss' => 'boolean',
             'enable_clockss' => 'boolean',
