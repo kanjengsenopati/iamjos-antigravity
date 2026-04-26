@@ -49,6 +49,8 @@ class DistributionSettingsController extends Controller
 
             'indexing.description' => 'nullable|string|max:500',
             'indexing.custom_tags' => 'nullable|string', // Intentionally allowing raw HTML meta tags, sanitization might be needed on output or restricted here if strict security
+            'indexing.block_search_indexing' => 'boolean',
+            'indexing.custom_meta_tags' => 'nullable|string',
 
             'access.open_access_policy' => 'nullable|string',
             'access.enable_oai' => 'boolean',
@@ -67,6 +69,8 @@ class DistributionSettingsController extends Controller
 
             'search_description' => $validated['indexing']['description'] ?? null,
             'custom_headers' => $validated['indexing']['custom_tags'] ?? null,
+            'block_search_indexing' => $request->boolean('indexing.block_search_indexing'),
+            'custom_meta_tags' => $validated['indexing']['custom_meta_tags'] ?? null,
 
             'open_access_policy' => $validated['access']['open_access_policy'] ?? null,
             'enable_oai' => $request->boolean('access.enable_oai'),

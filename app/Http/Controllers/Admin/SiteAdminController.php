@@ -72,6 +72,7 @@ class SiteAdminController extends Controller
             'header_bg_image' => 'boolean',
             'homepage_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'redirect_to_journal' => 'boolean',
+            'use_ojs_url_format' => 'boolean',
             'min_password_length' => 'required|integer|min:6|max:32',
             // WhatsApp Gateway Config
             'wa_api_url' => 'nullable|url',
@@ -86,6 +87,7 @@ class SiteAdminController extends Controller
         
         // Handle boolean checkboxes which might not be present in request
         $validated['redirect_to_journal'] = $request->has('redirect_to_journal');
+        $validated['use_ojs_url_format'] = $request->has('use_ojs_url_format');
         $validated['show_journal_summary'] = $request->has('show_journal_summary');
         $validated['header_bg_image'] = $request->has('header_bg_image');
 
@@ -110,6 +112,9 @@ class SiteAdminController extends Controller
         } else {
             \App\Models\SiteSetting::create($validated);
         }
+
+        // Clear route cache so dynamic prefix logic updates immediately
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
 
         return back()->with('success', 'Site settings updated successfully.');
     }

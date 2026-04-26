@@ -26,6 +26,7 @@ class SubmissionFactory extends Factory
     {
         return [
             'journal_id' => Journal::factory(),
+            'section_id' => \App\Models\Section::factory(),
             'user_id' => User::factory(),
             'issue_id' => Issue::factory(),
             'title' => $this->faker->sentence,
@@ -33,7 +34,7 @@ class SubmissionFactory extends Factory
             'stage' => Submission::STAGE_PRODUCTION,
             'submitted_at' => now(),
             'published_at' => now(),
-            'language' => 'en',
+            'seq_id' => $this->faker->unique()->numberBetween(1000, 9999),
         ];
     }
 }

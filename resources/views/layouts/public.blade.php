@@ -24,7 +24,12 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
     <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
     <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
-    <meta name="robots" content="index, follow">
+    @if($journal->block_search_indexing)
+        <meta name="robots" content="noindex, nofollow">
+    @else
+        <meta name="robots" content="index, follow">
+    @endif
+    <link rel="canonical" href="{{ url()->current() }}">
     <link rel="canonical" href="{{ url()->current() }}">
 
     {{-- Default Open Graph Tags (can be overridden by child views) --}}
@@ -56,6 +61,10 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
         <meta name="DC.Identifier" content="ISSN {{ $journal->issn_online }}">
     @endif
 
+    {{-- Custom Meta Tags (Distribution Settings) --}}
+    @if($journal->custom_meta_tags)
+        {!! $journal->custom_meta_tags !!}
+    @endif
 
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">

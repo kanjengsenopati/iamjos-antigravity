@@ -18,6 +18,7 @@ class SiteSetting extends Model
         'footer_content',
         'min_password_length',
         'redirect_to_journal',
+        'use_ojs_url_format',
         'wa_api_url',
         'wa_sender_number',
         'wa_device_id',
@@ -27,6 +28,7 @@ class SiteSetting extends Model
 
     protected $casts = [
         'redirect_to_journal' => 'boolean',
+        'use_ojs_url_format' => 'boolean',
         'min_password_length' => 'integer',
     ];
 }

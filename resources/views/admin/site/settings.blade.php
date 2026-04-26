@@ -117,6 +117,19 @@
                                     </span>
                                 </label>
                             </div>
+
+                            <!-- OJS URL Compatibility Mode -->
+                            <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <input type="checkbox" id="use_ojs_url_format" name="use_ojs_url_format" value="1"
+                                    {{ old('use_ojs_url_format', $siteSetting->use_ojs_url_format) ? 'checked' : '' }}
+                                    class="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                <label for="use_ojs_url_format" class="cursor-pointer">
+                                    <span class="block text-sm font-medium text-gray-900">OJS URL Compatibility Mode</span>
+                                    <span class="block text-xs text-gray-500 mt-1">
+                                        Jika diaktifkan, URL publik akan menggunakan prefix 'index.php' untuk menjaga kompatibilitas dengan link OJS lama yang sudah terdaftar di ISSN/OAI.
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
