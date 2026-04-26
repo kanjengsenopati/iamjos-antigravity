@@ -81,21 +81,19 @@ class CrossrefExportController extends Controller
 
         $submissions = \App\Models\Submission::whereIn('id', $ids)
             ->where('journal_id', $journal->id)
-            ->with(['authors', 'issue', 'currentPublication'])
+            ->with(['authors', 'issue', 'currentPublication', 'galleys.file'])
             ->get();
 
-        $batchId = '_' . time();
-        $filename = 'crossref-' . $journal->path . '-' . date('YmdHis') . '.xml';
+        // Unique batch ID in OJS format: YYYYMMDDHHMMSS000
+        $batchId = now()->format('YmdHis') . '000';
+        $filename = 'crossref-' . $journal->path . '-' . now()->format('YmdHis') . '.xml';
 
         // 2. Render View (Without XML Header)
         $content = view('journal.tools.crossref_xml', compact('submissions', 'journal', 'batchId'))->render();
 
-        // 3. Aggressive Cleaning (Remove BOM & Whitespace)
+        // 3. Clean BOM only — preserve 2-space indentation for OJS-compatible output
         $content = preg_replace('/^\xEF\xBB\xBF/', '', $content); // Remove BOM if present
         $content = trim($content);
-        
-        // Minify: Remove any whitespaces existing strictly between XML brackets.
-        $content = preg_replace('/>\s+</', '><', $content);
 
         // 4. Construct Final XML
         $xml = '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $content;
