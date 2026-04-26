@@ -1,59 +1,114 @@
-<ici-import>
-    <journal issn="{{ $journal->issn_online }}" />
-    @foreach($issues as $issue)
-        <issue number="{{ $issue->number }}" volume="{{ $issue->volume }}" year="{{ $issue->year }}" />
-        @foreach($issue->submissions as $article)
-            <article>
-                <type>Original article</type>
-                <languageVersion language="{{ $article->language ?? 'en' }}">
-                    <title><![CDATA[{{ $article->currentPublication?->title ?? $article->title }}]]></title>
-                    <abstract><![CDATA[{{ trim(strip_tags(html_entity_decode(str_replace('&nbsp;', ' ', $article->currentPublication?->abstract ?? $article->abstract), ENT_QUOTES, 'UTF-8'))) }}]]></abstract>
-                    <pdfFileUrl><![CDATA[{{ route('journal.article.download.pdf', ['journal' => $journal->slug, 'seq_id' => $article->seq_id, 'filename' => \Str::slug($article->currentPublication?->title ?? $article->title)]) }}]]></pdfFileUrl>
-                    <publicationDate>{{ $article->currentPublication?->date_published ? $article->currentPublication->date_published->format('Y-m-d') : ($article->published_at ? $article->published_at->format('Y-m-d') : ($issue->published_at ? $issue->published_at->format('Y-m-d') : '')) }}</publicationDate>
-                </languageVersion>
-                <authors>
-                    @foreach($article->authors as $index => $author)
-                        <author>
-                            @php
-                                $fullName = trim(($author->given_name ?? '') . ' ' . ($author->family_name ?? ''));
-                                if (empty($fullName)) $fullName = $author->name ?? '';
-                                $nameParts = explode(' ', trim($fullName));
-                                $surname = count($nameParts) > 1 ? array_pop($nameParts) : '';
-                                $name = count($nameParts) > 0 ? implode(' ', $nameParts) : $fullName;
-                            @endphp
-                            <name><![CDATA[{{ $name }}]]></name>
-                            <surname><![CDATA[{{ $surname }}]]></surname>
-                            <email><![CDATA[{{ $author->email }}]]></email>
-                            <order>{{ $index + 1 }}</order>
-                            <instituteAffiliation><![CDATA[{{ $author->affiliation }}]]></instituteAffiliation>
-                            <role>AUTHOR</role>
-                        </author>
-                    @endforeach
-                </authors>
-                <keywords language="{{ $article->language ?? 'en' }}">
-                    @php
-                        if ($article->currentPublication && !empty($article->currentPublication->keywords)) {
-                            $keywordsList = $article->currentPublication->keywords_array;
-                        } else {
-                            $keywordsList = $article->keywords->pluck('content')->toArray();
-                        }
-                    @endphp
-                    @foreach($keywordsList as $keyword)
-                        <keyword><![CDATA[{{ trim($keyword) }}]]></keyword>
-                    @endforeach
-                </keywords>
-                <references>
-                    @php
-                        $referencesStr = $article->currentPublication->references ?? $article->references;
-                        $referencesArray = $referencesStr ? array_filter(array_map('trim', explode("\n", $referencesStr))) : [];
-                    @endphp
-                    @foreach($referencesArray as $reference)
-                        <reference><![CDATA[{{ trim(strip_tags(html_entity_decode($reference))) }}]]></reference>
-                    @endforeach
-                </references>
-                <pages><![CDATA[{{ $article->currentPublication?->pages ?? $article->pages ?? '' }}]]></pages>
-                <doi><![CDATA[{{ $article->currentPublication?->doi ?? $article->doi ?? '' }}]]></doi>
-            </article>
-        @endforeach
+@php
+  $e = function ($string) {
+    if (empty($string)) return '';
+    $decoded = html_entity_decode(trim($string), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $plain   = strip_tags($decoded);
+    $plain   = preg_replace('/\s+/', ' ', $plain);
+    return htmlspecialchars(trim($plain), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+  };
+
+  $eRaw = function ($string) {
+    if (empty($string)) return '';
+    $decoded = htmlspecialchars_decode(trim($string), ENT_QUOTES);
+    return htmlspecialchars($decoded, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+  };
+
+  $splitPages = function ($pages) {
+    $parts = explode('-', (string) $pages, 2);
+    return [trim($parts[0] ?? ''), trim($parts[1] ?? '')];
+  };
+@endphp
+<ici-import xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://journals.indexcopernicus.com/ic-import.xsd">
+  <journal issn="{{ $journal->issn_online }}" />
+  @foreach($issues as $issue)
+    @php
+      $totalArticles = $issue->submissions->count();
+      $issueDate = $issue->published_at ? $issue->published_at->format('Y-m-d') : '';
+    @endphp
+    <issue
+      number="{{ $issue->number }}"
+      volume="{{ $issue->volume }}"
+      year="{{ $issue->year }}"
+      publicationDate="{{ $issueDate }}"
+      numberOfArticles="{{ $totalArticles }}" />
+    @foreach($issue->submissions as $article)
+      @php
+        $pub         = $article->currentPublication;
+        $artTitle    = $eRaw($pub?->title ?? $article->title ?? '');
+        $abstract    = $e($pub?->abstract ?? $article->abstract ?? '');
+        $doi         = $eRaw($pub?->doi ?? $article->doi ?? '');
+        $lang        = $article->language ?? 'en';
+        $pages       = $pub?->pages ?? $article->pages ?? '';
+        [$pageFrom, $pageTo] = $splitPages($pages);
+
+        // publicationDate for this article
+        $pubDate = '';
+        if ($pub?->date_published) {
+          $pubDate = $pub->date_published->format('Y-m-d');
+        } elseif ($article->published_at) {
+          $pubDate = $article->published_at->format('Y-m-d');
+        } elseif ($issue->published_at) {
+          $pubDate = $issue->published_at->format('Y-m-d');
+        }
+
+        // Keywords
+        if ($pub && !empty($pub->keywords)) {
+          $keywordsList = $pub->keywords_array;
+        } else {
+          $keywordsList = $article->keywords?->pluck('content')->toArray() ?? [];
+        }
+
+        // References
+        $referencesStr   = $pub?->references ?? $article->references ?? '';
+        $referencesArray = $referencesStr
+          ? array_values(array_filter(array_map('trim', explode("\n", $referencesStr))))
+          : [];
+      @endphp
+      <article>
+        <type>ORIGINAL_ARTICLE</type>
+        <languageVersion language="{{ $lang }}">
+          <title>{!! $artTitle !!}</title>
+          <abstract>{!! $abstract !!}</abstract>
+          <publicationDate>{{ $pubDate }}</publicationDate>
+          <doi>{!! $doi !!}</doi>
+          <keywords language="{{ $lang }}">
+            @foreach($keywordsList as $keyword)
+              <keyword>{!! $e($keyword) !!}</keyword>
+            @endforeach
+          </keywords>
+          @if ($pageFrom)
+            <pageFrom>{{ $pageFrom }}</pageFrom>
+          @endif
+          @if ($pageTo)
+            <pageTo>{{ $pageTo }}</pageTo>
+          @endif
+        </languageVersion>
+        <authors>
+          @foreach($article->authors as $index => $author)
+            @php
+              $fullName = trim(($author->first_name ?? $author->given_name ?? '') . ' ' . ($author->last_name ?? $author->family_name ?? ''));
+              if (empty($fullName)) $fullName = $author->name ?? '';
+            @endphp
+            <author>
+              <name>{!! $eRaw($fullName) !!}</name>
+              <surname/>
+              <email>{!! $eRaw($author->email ?? '') !!}</email>
+              <order>{{ $index + 1 }}</order>
+              <instituteAffiliation>{!! $e($author->affiliation ?? '') !!}</instituteAffiliation>
+              <role>AUTHOR</role>
+            </author>
+          @endforeach
+        </authors>
+        <references>
+          @foreach($referencesArray as $refIndex => $reference)
+            <reference>
+              <unparsedContent>{!! $e($reference) !!}</unparsedContent>
+              <order>{{ $refIndex + 1 }}</order>
+              <doi/>
+            </reference>
+          @endforeach
+        </references>
+      </article>
     @endforeach
+  @endforeach
 </ici-import>
