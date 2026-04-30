@@ -88,12 +88,13 @@ class FileUploadSecurityService
      */
     protected const PHP_SIGNATURES = [
         '<?php', '<?=', '<?', '<script language="php">', '<%',
+        '<script', 'javascript:', 'onload=', 'onerror=', 'onclick=',
     ];
 
     /**
      * Extensions whose first 8KB should be scanned for PHP code.
      */
-    protected const SCANNABLE_EXTENSIONS = ['doc', 'docx', 'rtf', 'html', 'htm', 'xml', 'odt'];
+    protected const SCANNABLE_EXTENSIONS = ['doc', 'docx', 'rtf', 'html', 'htm', 'xml', 'odt', 'pdf', 'svg'];
 
     /**
      * Validate an uploaded file against all security checks.

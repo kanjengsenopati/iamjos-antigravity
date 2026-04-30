@@ -92,6 +92,33 @@ class PublicationGalley extends Model
     }
 
     /**
+     * Get the SEO-friendly download URL for Google Scholar
+     */
+    public function getSeoDownloadUrlAttribute(): ?string
+    {
+        if ($this->is_remote && $this->url_remote) {
+            return $this->url_remote;
+        }
+
+        if ($this->file) {
+            $isPdf = \Illuminate\Support\Str::contains(strtolower($this->label), 'pdf') || 
+                     \Illuminate\Support\Str::contains(strtolower($this->file->mime_type ?? ''), 'pdf');
+            
+            if ($isPdf && $this->submission) {
+                return route('journal.article.download.pdf', [
+                    'journal' => $this->submission->journal->slug,
+                    'seq_id' => $this->submission->seq_id,
+                    'filename' => \Illuminate\Support\Str::slug($this->submission->title)
+                ]);
+            }
+
+            return route('files.download', $this->file);
+        }
+
+        return null;
+    }
+
+    /**
      * Get the public URL for this galley (for SEO)
      */
     public function getPublicUrlAttribute(): string

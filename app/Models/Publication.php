@@ -164,6 +164,18 @@ class Publication extends Model
     }
 
     /**
+     * Get parsed references as array
+     */
+    public function getParsedReferencesAttribute(): array
+    {
+        if (empty($this->references)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode("\n", $this->references))));
+    }
+
+    /**
      * Check if publication is published
      */
     public function isPublished(): bool

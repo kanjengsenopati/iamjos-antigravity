@@ -94,7 +94,10 @@
                   $fullName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? ''));
                 @endphp
                 <person_name contributor_role="author" sequence="{{ $index === 0 ? 'first' : 'additional' }}">
-                  <surname>{!! $escape($fullName) !!}</surname>
+                  @if (!empty($author->first_name))
+                    <given_name>{!! $escape($author->first_name) !!}</given_name>
+                  @endif
+                  <surname>{!! $escape($author->last_name ?: $author->first_name) !!}</surname>
                   @if ($author->orcid)
                     @php $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($author->orcid)); @endphp
                     <ORCID authenticated="true">https://orcid.org/{{ $cleanOrcid }}</ORCID>
@@ -150,7 +153,7 @@
                 $galleys = $article->galleys ?? collect();
                 $pdfGalley = $galleys->first(fn($g) => strtolower($g->label) === 'pdf')
                            ?? $galleys->first();
-                $pdfUrl = $pdfGalley?->download_url ?? $articleUrl;
+                $pdfUrl = $pdfGalley?->seo_download_url ?? $articleUrl;
               @endphp
               <doi>{{ $doi }}</doi>
               <resource>{{ $articleUrl }}</resource>
@@ -160,6 +163,16 @@
                 </item>
               </collection>
             </doi_data>
+
+            @if ($pub->parsed_references && count($pub->parsed_references) > 0)
+              <citation_list>
+                @foreach ($pub->parsed_references as $index => $ref)
+                  <citation key="ref{{ $index + 1 }}">
+                    <unstructured_citation>{!! $escape(strip_tags(html_entity_decode($ref))) !!}</unstructured_citation>
+                  </citation>
+                @endforeach
+              </citation_list>
+            @endif
 
           </journal_article>
         @endif

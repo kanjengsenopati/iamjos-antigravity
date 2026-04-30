@@ -105,6 +105,12 @@
                 @if ($author->affiliation)
                     <meta name="citation_author_institution" content="{{ $author->affiliation }}">
                 @endif
+                @if ($author->email)
+                    <meta name="citation_author_email" content="{{ $author->email }}">
+                @endif
+                @if ($author->orcid)
+                    <meta name="citation_author_orcid" content="{{ $author->orcid }}">
+                @endif
             @endforeach
         @endif
 
@@ -173,13 +179,11 @@ foreach ($rawKeywords as $k) {
         @endif
 
         {{-- References (One tag per line) --}}
-        @php
-            $referencesStr = $article->currentPublication->references ?? $article->references;
-            $referencesArray = $referencesStr ? array_filter(array_map('trim', explode("\n", $referencesStr))) : [];
-        @endphp
-        @foreach ($referencesArray as $ref)
-            <meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
-        @endforeach
+        @if ($article->currentPublication)
+            @foreach ($article->currentPublication->parsed_references as $ref)
+                <meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
+            @endforeach
+        @endif
 
         {{-- Dublin Core Metadata --}}
         @if ($pubAuthors && $pubAuthors->isNotEmpty())
@@ -615,7 +619,13 @@ foreach ($rawKeywords as $k) {
                 @if ($article->galleys && $article->galleys->isNotEmpty())
                     <div class="space-y-2">
                         @foreach ($article->galleys as $galley)
-                            <a href="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->id]) }}"
+                            @php
+                                $isPdf = Str::contains(strtolower($galley->label), 'pdf') || Str::contains(strtolower($galley->file_type ?? ''), 'pdf') || strtolower($galley->label) === 'pdf';
+                                $downloadRoute = $isPdf 
+                                    ? route('journal.article.download.pdf', ['journal' => $journal->slug, 'seq_id' => $article->seq_id, 'filename' => Str::slug($article->title)])
+                                    : route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->id]);
+                            @endphp
+                            <a href="{{ $downloadRoute }}"
                                 class="flex items-center justify-center w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded transition shadow-sm gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -650,129 +660,9 @@ foreach ($rawKeywords as $k) {
                 </div>
             @endif
 
-            {{-- HOW TO CITE (OJS 3.3 STYLE) --}}
+            @inject('citationService', 'App\Services\CitationService')
             @php
-                $year = $issue?->year ?? ($publicationDate?->year ?? now()->year);
-
-                /* ========= AUTHOR FORMAT ========= */
-
-                // Helper to title case names (fixes ALL CAPS inputs)
-                $toTitleCase = function ($str) {
-                    return mb_convert_case(trim($str ?? ''), MB_CASE_TITLE, 'UTF-8');
-                };
-
-                // APA: Last, F.
-                $authorsAPA =
-                    $article->authors
-                        ?->map(function ($author) use ($toTitleCase) {
-                            $last = $toTitleCase($author->last_name);
-                            $first = $toTitleCase($author->first_name);
-                            return $last ? $last . ', ' . mb_substr($first, 0, 1) . '.' : $first;
-                        })
-                        ->implode(', ') ?? 'Author';
-
-                // Full: First Last
-                $authorsFull =
-                    $article->authors
-                        ?->map(function ($author) use ($toTitleCase) {
-                            $first = $toTitleCase($author->first_name);
-                            $last = $toTitleCase($author->last_name);
-                            return trim($first . ' ' . $last);
-                        })
-                        ->implode(', ') ?? 'Author';
-
-                // IEEE/Vancouver: F. Last
-                $authorsIEEE =
-                    $article->authors
-                        ?->map(function ($author) use ($toTitleCase) {
-                            $first = $toTitleCase($author->first_name);
-                            $last = $toTitleCase($author->last_name);
-                            return ($first ? mb_substr($first, 0, 1) . '. ' : '') . $last;
-                        })
-                        ->implode(', ') ?? 'Author';
-
-                $journalName = $journal->name ?? '';
-                $volume = $issue?->volume;
-                $number = $issue?->number;
-                $pages = $article->currentPublication?->pages ?? '';
-                $doiUrl = $article->currentPublication?->doi
-                    ? 'https://doi.org/' . $article->currentPublication->doi
-                    : '';
-
-                /* ========= CITATION FORMATS ========= */
-
-                $citations = [
-                    'APA' =>
-                        "{$authorsAPA} ({$year}). {$article->title}. <em>{$journalName}</em>" .
-                        ($volume ? ", {$volume}" : '') .
-                        ($number ? "({$number})" : '') .
-                        ($pages ? ", {$pages}" : '') .
-                        ". {$doiUrl}",
-                    'ACM' =>
-                        "{$authorsFull}. {$year}. {$article->title}. <em>{$journalName}</em>" .
-                        ($volume ? ", {$volume}" : '') .
-                        ($number ? ", {$number}" : '') .
-                        ($pages ? ", {$pages}" : '') .
-                        ". DOI: {$doiUrl}",
-
-                    'ACS' =>
-                        "{$authorsFull}. {$article->title}. <em>{$journalName}</em> {$year}" .
-                        ($volume ? ", {$volume}" : '') .
-                        ($number ? "({$number})" : '') .
-                        ($pages ? ", {$pages}" : '') .
-                        ". {$doiUrl}",                   
-                    'ABNT' =>
-                        mb_strtoupper($authorsFull) .
-                        ". {$article->title}. {$journalName}, {$year}." .
-                        ($volume ? " v. {$volume}" : '') .
-                        ($number ? ", n. {$number}" : '') .
-                        ($pages ? ", p. {$pages}" : '') .
-                        ". Disponível em: {$doiUrl}",
-
-                    'Chicago' =>
-                        "{$authorsFull}. {$year}. \"{$article->title}.\" <em>{$journalName}</em>" .
-                        ($volume ? " {$volume}" : '') .
-                        ($number ? ", no. {$number}" : '') .
-                        ($pages ? ": {$pages}" : '') .
-                        ". {$doiUrl}",
-
-                    'Harvard' =>
-                        "{$authorsFull} ({$year}) '{$article->title}', <em>{$journalName}</em>" .
-                        ($volume ? ", vol. {$volume}" : '') .
-                        ($number ? ", no. {$number}" : '') .
-                        ($pages ? ", pp. {$pages}" : '') .
-                        ". Available at: {$doiUrl}",
-
-                    'IEEE' =>
-                        "{$authorsIEEE}, \"{$article->title},\" <em>{$journalName}</em>" .
-                        ($volume ? ", vol. {$volume}" : '') .
-                        ($number ? ", no. {$number}" : '') .
-                        ($pages ? ", pp. {$pages}" : '') .
-                        ", {$year}. {$doiUrl}",
-
-                    'MLA' =>
-                        "{$authorsFull}. \"{$article->title}.\" <em>{$journalName}</em>" .
-                        ($volume ? ", vol. {$volume}" : '') .
-                        ($number ? ", no. {$number}" : '') .
-                        ", {$year}" .
-                        ($pages ? ", pp. {$pages}" : '') .
-                        ". {$doiUrl}",
-
-                    'Turabian' =>
-                        "{$authorsFull}. \"{$article->title}.\" {$journalName}" .
-                        ($volume ? " {$volume}" : '') .
-                        ($number ? ", no. {$number}" : '') .
-                        " ({$year})" .
-                        ($pages ? ": {$pages}" : '') .
-                        ". {$doiUrl}",
-
-                    'Vancouver' =>
-                        "{$authorsIEEE}. {$article->title}. {$journalName}. {$year}" .
-                        ($volume ? ";{$volume}" : '') .
-                        ($number ? "({$number})" : '') .
-                        ($pages ? ":{$pages}" : '') .
-                        ". {$doiUrl}",
-                ];
+                $citations = $citationService->getAllFormats($article);
             @endphp
 
             <div x-data="{ format: 'APA', citations: @js($citations) }" class="bg-slate-50 p-5 rounded border border-slate-200">

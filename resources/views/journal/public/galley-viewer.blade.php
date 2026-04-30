@@ -93,7 +93,8 @@
         </div>
     </div>
 
-    <iframe src="{{ $downloadUrl }}" class="pdf-frame" title="PDF Viewer">
+    <iframe src="{{ $downloadUrl }}" class="pdf-frame" title="PDF Viewer" 
+        sandbox="allow-scripts allow-forms allow-popups">
         This browser does not support PDFs. Please download the PDF to view it: <a href="{{ $downloadUrl }}">Download
             PDF</a>
     </iframe>
