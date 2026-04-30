@@ -1,0 +1,65 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ "main", "staging", "dev" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Deployment Variables
+        id: vars
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "dest_path=${{ secrets.PROD_PATH }}" >> $GITHUB_OUTPUT
+            echo "env_name=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            echo "dest_path=${{ secrets.STAGING_PATH }}" >> $GITHUB_OUTPUT
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+          else
+            echo "dest_path=${{ secrets.DEV_PATH }}" >> $GITHUB_OUTPUT
+            echo "env_name=development" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Execute Remote SSH Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }} # Optional
+          script: |
+            echo "🚀 Deploying to ${{ steps.vars.outputs.env_name }} environment..."
+            cd ${{ steps.vars.outputs.dest_path }}
+            
+            # Maintenance Mode ON
+            php artisan down || true
+            
+            # Pull latest changes
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+            
+            # Install dependencies
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            
+            # Database Migration
+            php artisan migrate --force
+            
+            # Frontend Build
+            npm install
+            npm run build
+            
+            # Cache optimization
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            # Maintenance Mode OFF
+            php artisan up
+            
+            echo "✅ Deployment finished successfully!"
