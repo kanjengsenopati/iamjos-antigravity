@@ -54,14 +54,18 @@ class PortalController extends Controller
 
         // Common statistics (used by multiple blocks)
         if (array_intersect(['hero_search', 'stats_counter'], $blockKeys)) {
-            $stats = Cache::remember('portal_stats', 300, function () {
+            $stats = Cache::remember('portal_stats', 60, function () {
+                // Get optional base offsets from database for persistence
+                $baseJournals = (int)SiteContent::get('stats_journals_base', 0);
+                $baseArticles = (int)SiteContent::get('stats_articles_base', 0);
+                $baseAuthors = (int)SiteContent::get('stats_authors_base', 0);
+                $baseDownloads = (int)SiteContent::get('stats_downloads_base', 0);
+
                 return [
-                    'total_journals' => Journal::where('enabled', true)->count(),
-                    'total_articles' => Submission::where('status', Submission::STATUS_PUBLISHED)->count(),
-                    'total_authors' => User::whereHas('roles', function ($query) {
-                        $query->where('permission_level', Role::LEVEL_AUTHOR);
-                    })->count(),
-                    'total_downloads' => 50000, // Placeholder
+                    'total_journals' => Journal::count() + $baseJournals,
+                    'total_articles' => Submission::where('status', Submission::STATUS_PUBLISHED)->count() + $baseArticles,
+                    'total_authors' => User::count() + $baseAuthors,
+                    'total_downloads' => \App\Models\ArticleMetric::where('type', 'download')->count() + $baseDownloads,
                 ];
             });
 

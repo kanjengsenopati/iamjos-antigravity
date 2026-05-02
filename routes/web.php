@@ -196,7 +196,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin'])
             Route::post('/scan/cancel', 'cancel')->name('scan.cancel');
             Route::post('/reset', 'reset')->name('reset');
             Route::post('/{finding}/ignore', 'ignore')->name('ignore');
-            Route::delete('/{finding}', 'destroy')->name('destroy');
+        });
+
+    // OJS Migration Dashboard
+    Route::controller(\App\Http\Controllers\Admin\Tools\OjsMigrationController::class)
+        ->prefix('tools/migration')
+        ->name('tools.migration.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/config', 'storeConfig')->name('store');
+            Route::post('/run', 'runStep')->name('run');
         });
 });
 // =====================================================
@@ -700,7 +709,18 @@ Route::prefix('{journal}')->group(function () {
                 Route::post('/save', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'saveSettings'])->name('save');
                 Route::post('/deposit', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'deposit'])->name('deposit');
             });
+
+            // OJS Migration Dashboard (Journal Scoped)
+            Route::controller(\App\Http\Controllers\Admin\Tools\OjsMigrationController::class)
+                ->prefix('tools/migration')
+                ->name('tools.migration.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/config', 'storeConfig')->name('store');
+                    Route::post('/run', 'runStep')->name('run');
+                });
         });
+
         // --------- Journal Admin Routes ---------
         Route::prefix('admin')->name('journal.admin.')->middleware('role:Admin|Super Admin')->group(function () {
             // User Management (New Journal Manager Dashboard)

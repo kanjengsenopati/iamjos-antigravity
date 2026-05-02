@@ -76,7 +76,7 @@ class SubmissionDecision extends Notification
         }
 
         return $mail
-            ->action('View Submission', url('/submissions/' . $this->submission->id))
+            ->action('View Submission', route('journal.submissions.workflow', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
             ->salutation('Best regards, Editorial Team');
     }
 
@@ -115,7 +115,7 @@ class SubmissionDecision extends Notification
             'type' => 'submission_decision',
             'title' => $titles[$this->decision] ?? 'Submission Update',
             'message' => $messages[$this->decision] ?? 'There is an update on your submission.',
-            'url' => "/{$journal->slug}/submissions/{$this->submission->slug}",
+            'url' => route('journal.submissions.workflow', ['journal' => $journal->slug, 'submission' => $this->submission], false),
             'notification_type' => $types[$this->decision] ?? 'info',
             'icon' => $icons[$this->decision] ?? 'fa-gavel',
             'submission_id' => $this->submission->id,

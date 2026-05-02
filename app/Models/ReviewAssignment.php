@@ -68,6 +68,44 @@ class ReviewAssignment extends Model
     ];
 
     // =====================================================
+    // ROUTE MODEL BINDING
+    // =====================================================
+
+    /**
+     * Get the route key name for Laravel's route model binding.
+     * This makes URLs use /reviewer/rev-2026-xxxxx instead of UUID.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    /**
+     * Retrieve the model for a bound value.
+     * Handles backward compatibility for UUIDs via 301 Redirect.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        // If the value looks like a UUID, find it and redirect to the new slug
+        if (\Illuminate\Support\Str::isUuid($value)) {
+            $assignment = $this->where('id', $value)->first();
+            
+            if ($assignment && $assignment->slug) {
+                $currentUrl = request()->url();
+                $newUrl = str_replace($value, $assignment->slug, $currentUrl);
+                
+                if (request()->getQueryString()) {
+                    $newUrl .= '?' . request()->getQueryString();
+                }
+
+                throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect($newUrl, 301));
+            }
+        }
+
+        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
+    }
+
+    // =====================================================
     // BOOT
     // =====================================================
 

@@ -11,7 +11,7 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700|eb-garamond:400,500,600,700,800&display=swap" rel="stylesheet" />
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -24,6 +24,7 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['EB Garamond', 'serif'],
                     },
                 }
             }
@@ -41,76 +42,75 @@
         [x-cloak] {
             display: none !important;
         }
+        .academic-overlay {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
+            backdrop-blur: 2px;
+        }
+        .paper-texture {
+            background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            opacity: 0.05;
+        }
     </style>
 </head>
 
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen flex" x-data="{ showPassword: false }">
         <!-- Left Side - Brand Panel (Dynamic based on Journal Context) -->
-        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden"
-            @if ($journal && ($branding['cover_url'] ?? null)) style="background-image: url('{{ $branding['cover_url'] }}'); background-size: cover; background-position: center;" @endif>
+        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-900"
+            style="background-image: url('{{ ($journal && ($branding['cover_url'] ?? null)) ? $branding['cover_url'] : asset('assets/images/academic-bg.png') }}'); background-size: cover; background-position: center;">
+            
             <!-- Background Gradient Overlay -->
-            <div
-                class="absolute inset-0 {{ $journal ? 'bg-gradient-to-br from-gray-900/90 via-gray-800/85 to-gray-900/90' : 'bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900' }}">
-            </div>
+            <div class="absolute inset-0 academic-overlay"></div>
+            
+            <!-- Paper Texture Overlay -->
+            <div class="absolute inset-0 paper-texture"></div>
 
-            <!-- Abstract Pattern Overlay (only for portal context) -->
-            @unless ($journal)
-                <div class="absolute inset-0 opacity-10">
-                    <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <defs>
-                            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
-                            </pattern>
-                        </defs>
-                        <rect width="100" height="100" fill="url(#grid)" />
-                    </svg>
-                </div>
-            @endunless
-
-            <!-- Floating Circles (animated background elements) -->
-            <div
-                class="absolute top-20 left-20 w-72 h-72 {{ $journal ? 'bg-white' : 'bg-indigo-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse">
-            </div>
-            <div class="absolute bottom-20 right-20 w-96 h-96 {{ $journal ? 'bg-white' : 'bg-purple-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
-                style="animation-delay: 1s;"></div>
-            <div class="absolute top-1/2 left-1/3 w-64 h-64 {{ $journal ? 'bg-white' : 'bg-blue-500' }} rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
-                style="animation-delay: 2s;"></div>
+            <!-- Legacy Borders -->
+            <div class="absolute inset-12 border border-white/10 pointer-events-none"></div>
+            <div class="absolute inset-14 border border-white/5 pointer-events-none"></div>
 
             <!-- Content -->
-            <div class="relative z-10 flex flex-col justify-center px-12 xl:px-20 w-full">
+            <div class="relative z-10 flex flex-col justify-center px-16 xl:px-24 w-full">
                 <!-- Logo -->
                 <div class="mb-12">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-4">
                         @if ($journal && ($branding['logo_url'] ?? null))
-                            <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}"
-                                class="h-12 w-auto object-contain">
+                            <div class="p-2 bg-white/5 rounded-lg backdrop-blur-md border border-white/10">
+                                <img src="{{ $branding['logo_url'] }}" alt="{{ $journal->name }}"
+                                    class="h-14 w-auto object-contain">
+                            </div>
                         @else
                             <div
-                                class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                class="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
                                 <i class="fas fa-book-open text-2xl text-white"></i>
                             </div>
                         @endif
-                        <span class="text-2xl font-bold text-white tracking-tight">
-                            {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
-                        </span>
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-bold text-white tracking-widest uppercase">
+                                {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                            </span>
+                            <span class="text-[10px] text-indigo-300 font-bold tracking-[0.3em] uppercase">Academic Publishing</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Heading -->
-                <h1 class="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
+                <h1 class="text-4xl xl:text-6xl font-serif font-bold text-white leading-[1.1] mb-8">
                     @if ($journal)
                         {{ $branding['headline'] }}
                     @else
                         Advance Your<br>
-                        <span class="text-indigo-300">Academic Research</span>
+                        <span class="text-indigo-300 italic">Academic Research</span>
                     @endif
                 </h1>
 
                 <!-- Tagline -->
-                <p class="text-lg {{ $journal ? 'text-gray-200' : 'text-indigo-200' }} leading-relaxed max-w-md mb-12">
-                    {{ Str::limit($branding['tagline'] ?? $branding['description'], 160) }}
-                </p>
+                <div class="relative mb-12">
+                    <div class="absolute -left-6 top-0 bottom-0 w-1 bg-indigo-500/50"></div>
+                    <p class="text-xl font-medium text-gray-300 leading-relaxed max-w-md italic font-serif opacity-90">
+                        "{{ Str::limit(strip_tags($branding['tagline'] ?? $branding['description']), 160) }}"
+                    </p>
+                </div>
 
                 <!-- Features (show different content based on context) -->
                 @if ($journal)

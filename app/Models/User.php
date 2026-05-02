@@ -58,7 +58,42 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    // =====================================================
+    // ROUTE MODEL BINDING
+    // =====================================================
+
     /**
+     * Get the route key name for Laravel's route model binding.
+     * Use username for URLs instead of UUID for better readability and SEO.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'username';
+    }
+
+    /**
+     * Retrieve the model for a bound value.
+     * Handles backward compatibility for UUIDs via 301 Redirect.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        // If the value looks like a UUID, find it and redirect to username
+        if (\Illuminate\Support\Str::isUuid($value)) {
+            $user = $this->where('id', $value)->first();
+            
+            if ($user && $user->username) {
+                $currentUrl = request()->url();
+                $newUrl = str_replace($value, $user->username, $currentUrl);
+                
+                if (request()->getQueryString()) {
+                    $newUrl .= '?' . request()->getQueryString();
+                }
+
+                throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect($newUrl, 301));
+            }
+        }
+
+        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
     }
 
     // =====================================================

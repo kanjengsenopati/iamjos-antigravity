@@ -236,7 +236,7 @@
                                     <p class="text-sm font-semibold text-primary-600 mb-3">{{ $journal->abbreviation }}</p>
                                 @endif
                                 <p class="text-sm text-slate-500 line-clamp-2 leading-relaxed">
-                                    {{ $journal->description ?? 'No description available for this journal.' }}
+                                    {{ strip_tags($journal->description) ?: 'No description available for this journal.' }}
                                 </p>
                             </div>
 

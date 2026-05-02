@@ -32,7 +32,7 @@
                     </button>
                     
                     <div class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Sort By:</span>
+                        <span class="text-[10px] font-black tracking-tight text-slate-400">Sort By:</span>
                         <select onchange="window.location.href=this.value" 
                                 class="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0 pr-8">
                             <option value="{{ route('portal.journals', array_merge(request()->query(), ['sort' => 'name'])) }}" 
@@ -93,7 +93,7 @@
                         
                         {{-- Header --}}
                         <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-                            <h3 class="font-black text-xl text-slate-900 uppercase tracking-tight">Filters</h3>
+                            <h3 class="font-black text-xl text-slate-900 tracking-tight">Filters</h3>
                             <button @click="mobileFiltersOpen = false" 
                                     class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 bg-slate-50 rounded-full transition-colors">
                                 <i class="fa-solid fa-xmark text-lg"></i>
@@ -114,7 +114,7 @@
                         {{-- Footer --}}
                         <div class="p-6 border-t border-slate-100 bg-slate-50">
                             <button @click="mobileFiltersOpen = false" 
-                                    class="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all uppercase tracking-widest text-xs">
+                                    class="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all tracking-tight text-xs">
                                 Apply Filters
                             </button>
                         </div>
@@ -158,7 +158,7 @@
                                     </a>
                                 </div>
                             @endif
-                            <a href="{{ route('portal.journals') }}" class="text-[11px] font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-widest ml-1 transition-colors">Clear All</a>
+                            <a href="{{ route('portal.journals') }}" class="text-[11px] font-bold text-slate-400 hover:text-indigo-600 tracking-tight ml-1 transition-colors">Clear All</a>
                         </div>
                     @endif
                 </div>
@@ -189,7 +189,7 @@
                             We couldn't find any journals matching your current criteria. Broaden your search or explore all archives.
                         </p>
                         <a href="{{ route('portal.journals') }}" 
-                           class="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all uppercase tracking-widest text-xs">
+                           class="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all tracking-tight text-xs">
                             <i class="fa-solid fa-arrow-rotate-left"></i>
                             Discover all publications
                         </a>

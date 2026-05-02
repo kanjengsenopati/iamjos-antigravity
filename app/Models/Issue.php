@@ -204,4 +204,12 @@ class Issue extends Model
     {
         return $this->title ?: $this->identifier;
     }
+
+    /**
+     * Get a short version of the UUID for UI display fallback.
+     */
+    public function getIdShortAttribute(): string
+    {
+        return substr($this->id, 0, 8);
+    }
 }

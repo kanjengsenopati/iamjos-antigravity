@@ -3,7 +3,7 @@
 <div class="space-y-8">
     {{-- SEARCH SECTION --}}
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+        <h3 class="text-sm font-bold text-slate-400 tracking-tight mb-4 flex items-center gap-2">
             <i class="fa-solid fa-magnifying-glass text-indigo-600"></i>
             Search Journals
         </h3>
@@ -23,7 +23,7 @@
             @if($alpha && $alpha !== 'all') <input type="hidden" name="alpha" value="{{ $alpha }}"> @endif
             
             <button type="submit" 
-                    class="w-full mt-3 py-3 text-xs font-black text-white rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-50 hover:bg-indigo-700 transition-all uppercase tracking-widest">
+                    class="w-full mt-3 py-3 text-xs font-bold text-white rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-50 hover:bg-indigo-700 transition-all tracking-tight">
                 Search
             </button>
         </form>
@@ -32,13 +32,13 @@
     {{-- ALPHABETICAL FILTER --}}
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <h3 class="text-sm font-bold text-slate-400 tracking-tight flex items-center gap-2">
                 <i class="fa-solid fa-font text-indigo-600"></i>
                 Index
             </h3>
             @if($alpha && $alpha !== 'all')
                 <a href="{{ route('portal.journals', array_merge(request()->except('alpha'))) }}" 
-                   class="text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors">
+                   class="text-[10px] font-bold text-red-400 hover:text-red-600 tracking-tight transition-colors">
                     Clear
                 </a>
             @endif
@@ -71,7 +71,7 @@
 
     {{-- SUBJECT FIELDS --}}
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+        <h3 class="text-sm font-bold text-slate-400 tracking-tight mb-4 flex items-center gap-2">
             <i class="fa-solid fa-layer-group text-indigo-600"></i>
             Subject Fields
         </h3>
@@ -99,7 +99,7 @@
 
     {{-- ACCREDITATION --}}
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+        <h3 class="text-sm font-bold text-slate-400 tracking-tight mb-4 flex items-center gap-2">
             <i class="fa-solid fa-award text-indigo-600"></i>
             Accreditation
         </h3>

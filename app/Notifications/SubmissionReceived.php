@@ -41,9 +41,9 @@ class SubmissionReceived extends Notification
             ->line('Your submission has been received and is now under editorial review.')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
-            ->line('- **Submission ID:** ' . $this->submission->id)
-            ->line('- **Submitted:** ' . $this->submission->submitted_at->format('F j, Y'))
-            ->action('View Submission', url('/submissions/' . $this->submission->id))
+            ->line('- **Submission ID:** ' . ($this->submission->seq_id ?? 'N/A'))
+            ->line('- **Submitted:** ' . $this->submission->submitted_at?->format('F j, Y'))
+            ->action('View Submission', route('journal.submissions.workflow', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
             ->line('You will be notified when there are updates on your submission.')
             ->salutation('Best regards, Editorial Team');
     }
@@ -59,7 +59,7 @@ class SubmissionReceived extends Notification
             'type' => 'submission_received',
             'title' => 'Submission Received',
             'message' => "Your submission \"{$this->submission->title}\" has been received and is under review.",
-            'url' => "/{$journal->slug}/submissions/{$this->submission->slug}",
+            'url' => route('journal.submissions.workflow', ['journal' => $journal->slug, 'submission' => $this->submission], false),
             'notification_type' => 'success',
             'icon' => 'fa-check-circle',
             'submission_id' => $this->submission->id,

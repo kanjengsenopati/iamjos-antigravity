@@ -45,8 +45,8 @@ class ArticlePublished extends Notification implements ShouldQueue
             ->line('**Article Details:**')
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Issue:** ' . $this->issue->identifier)
-            ->line('- **Published:** ' . $this->submission->published_at->format('F j, Y'))
-            ->action('View Published Article', url('/articles/' . $this->submission->id))
+            ->line('- **Published:** ' . $this->submission->published_at?->format('F j, Y'))
+            ->action('View Published Article', route('journal.public.article', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
             ->line('Thank you for your contribution to our journal.')
             ->line('You can now share this publication with your colleagues and on social media.')
             ->salutation('Best regards, Editorial Team');
@@ -59,11 +59,15 @@ class ArticlePublished extends Notification implements ShouldQueue
     {
         return [
             'type' => 'article_published',
+            'title' => 'Article Published',
             'submission_id' => $this->submission->id,
             'issue_id' => $this->issue->id,
             'title' => $this->submission->title,
             'issue' => $this->issue->identifier,
             'message' => 'Your article "' . $this->submission->title . '" has been published!',
+            'url' => route('journal.public.article', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission], false),
+            'notification_type' => 'success',
+            'icon' => 'fa-check-circle',
         ];
     }
 }

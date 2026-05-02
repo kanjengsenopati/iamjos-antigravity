@@ -666,4 +666,12 @@ class Submission extends Model
     {
         return $this->authors()->where('is_corresponding', true)->first();
     }
+
+    /**
+     * Get a short version of the UUID for UI display fallback.
+     */
+    public function getIdShortAttribute(): string
+    {
+        return substr($this->id, 0, 8);
+    }
 }

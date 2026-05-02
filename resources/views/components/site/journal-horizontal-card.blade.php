@@ -60,7 +60,7 @@
 
             {{-- Description --}}
             <div class="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">
-                {{ $journal->description }}
+                {{ strip_tags($journal->description) }}
             </div>
         </div>
 

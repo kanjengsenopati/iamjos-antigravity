@@ -21,7 +21,9 @@ class PublicationObserver
      */
     public function updated(Publication $publication): void
     {
-        if ($publication->wasChanged('status')) {
+        // Re-deposit to Crossref if status changed OR if key metadata changed in a published article
+        if ($publication->wasChanged('status') || 
+            ($publication->isPublished() && $publication->wasChanged(['references', 'title', 'abstract', 'keywords', 'doi', 'pages']))) {
             $this->checkCrossrefDeposit($publication);
         }
     }

@@ -23,9 +23,9 @@
         {{-- Accreditation Badge --}}
         @if($journal->sinta_level)
             <div class="absolute top-4 right-4">
-                <span class="inline-flex items-center px-3 py-1 bg-white/90 backdrop-blur-md rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-white/20
+                <span class="inline-flex items-center px-3 py-1 bg-white/90 backdrop-blur-md rounded-xl text-[10px] font-black tracking-tight shadow-sm border border-white/20
                     {{ $journal->sinta_level <= 2 ? 'text-amber-600' : 'text-slate-600' }}">
-                    SINTA {{ $journal->sinta_level }}
+                    Sinta {{ $journal->sinta_level }}
                 </span>
             </div>
         @endif
@@ -38,13 +38,13 @@
         {{-- Tags Row --}}
         <div class="flex flex-wrap gap-2 mb-4">
             @if($journal->is_open_access)
-                <span class="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg">
+                <span class="text-[9px] font-black tracking-tight px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg">
                     OA
                 </span>
             @endif
             @if($journal->is_scopus_indexed)
-                <span class="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-blue-50 text-blue-600 rounded-lg">
-                    SCOPUS
+                <span class="text-[9px] font-black tracking-tight px-2 py-1 bg-blue-50 text-blue-600 rounded-lg">
+                    Scopus
                 </span>
             @endif
         </div>
@@ -57,16 +57,16 @@
         </h3>
 
         {{-- Meta Info --}}
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-wider">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] font-bold text-slate-400 mb-6 tracking-tight">
             @if($journal->issn_print)
                 <span class="flex items-center gap-1.5">
-                    <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[8px] font-black uppercase tracking-tighter">P-ISSN</span>
+                    <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[8px] font-black tracking-tighter">P-ISSN</span>
                     <span class="text-slate-600 tracking-normal">{{ $journal->issn_print }}</span>
                 </span>
             @endif
             @if($journal->issn_online)
                 <span class="flex items-center gap-1.5">
-                    <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[8px] font-black uppercase tracking-tighter">E-ISSN</span>
+                    <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[8px] font-black tracking-tighter">E-ISSN</span>
                     <span class="text-slate-600 tracking-normal">{{ $journal->issn_online }}</span>
                 </span>
             @endif
@@ -82,11 +82,11 @@
         {{-- Stats Grid --}}
         <div class="grid grid-cols-2 gap-4 mt-auto pt-6 border-t border-slate-50">
             <div class="px-3 py-2.5 bg-slate-50 rounded-2xl group-hover:bg-indigo-50/50 transition-colors border border-transparent group-hover:border-indigo-100/50">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Issues</p>
+                <p class="text-[9px] font-black text-slate-400 tracking-tight mb-1">Issues</p>
                 <p class="text-sm font-black text-slate-900">{{ number_format($journal->issues_count ?? 0) }}</p>
             </div>
             <div class="px-3 py-2.5 bg-slate-50 rounded-2xl group-hover:bg-indigo-50/50 transition-colors border border-transparent group-hover:border-indigo-100/50">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Articles</p>
+                <p class="text-[9px] font-black text-slate-400 tracking-tight mb-1">Articles</p>
                 <p class="text-sm font-black text-slate-900">{{ number_format($journal->submissions_count ?? 0) }}</p>
             </div>
         </div>
@@ -95,7 +95,7 @@
     {{-- Action Footer --}}
     <div class="px-6 pb-7">
         <a href="{{ route('journal.public.home', $journal->slug) }}"
-           class="w-full h-14 flex items-center justify-center gap-3 bg-indigo-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:-translate-y-1 transition-all duration-300">
+           class="w-full h-14 flex items-center justify-center gap-3 bg-indigo-600 text-white text-xs font-bold tracking-tight rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:-translate-y-1 transition-all duration-300">
             Explore Journal
             <i class="fa-solid fa-arrow-right-long transition-transform group-hover:translate-x-1"></i>
         </a>

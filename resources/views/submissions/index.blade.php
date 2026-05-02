@@ -316,8 +316,8 @@
                             <!-- Left: ID + Author + Title -->
                             <div class="flex items-center gap-4 min-w-0 flex-1">
                                 <!-- Submission ID (Numeric like OJS) -->
-                                <span class="text-sm font-medium text-gray-400 w-8 text-center flex-shrink-0">
-                                    {{ $loop->iteration + ($submissions->currentPage() - 1) * $submissions->perPage() }}
+                                <span class="text-sm font-bold text-gray-400 w-12 text-center flex-shrink-0 bg-gray-50 rounded py-1 border border-gray-100">
+                                    #{{ $submission->seq_id ?? $submission->id_short }}
                                 </span>
 
                                 <!-- Author & Title Stack -->

@@ -15,6 +15,11 @@ use App\Observers\PublicationObserver;
 class Publication extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
+    
+    /**
+     * Relationships that should be touched on save.
+     */
+    protected $touches = ['submission'];
 
 
     /**

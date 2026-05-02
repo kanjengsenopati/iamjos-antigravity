@@ -48,7 +48,7 @@ class ReviewInvitation extends Notification
             ->line('- **Due Date:** ' . $dueDate)
             ->line('')
             ->line('Please log in to accept or decline this invitation.')
-            ->action('View Invitation', url('/reviews/' . $this->review->id))
+            ->action('View Invitation', route('journal.reviewer.show', ['journal' => $submission->journal->slug, 'identifier' => $this->review]))
             ->line('If you are unable to review this manuscript, please decline as soon as possible so we can invite another reviewer.')
             ->salutation('Best regards, Editorial Team');
     }
@@ -65,7 +65,7 @@ class ReviewInvitation extends Notification
             'type' => 'review_invitation',
             'title' => 'New Review Assignment',
             'message' => "You have been invited to review \"{$submission->title}\".",
-            'url' => "/{$journal->slug}/reviewer/{$this->review->id}",
+            'url' => route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $this->review->slug], false),
             'notification_type' => 'info',
             'icon' => 'fa-clipboard-check',
             'review_id' => $this->review->id,
