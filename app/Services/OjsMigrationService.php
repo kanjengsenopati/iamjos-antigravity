@@ -234,6 +234,34 @@ class OjsMigrationService
             $titles = $metadata->where('setting_name', 'title')->pluck('setting_value', 'locale');
             $abstracts = $metadata->where('setting_name', 'abstract')->pluck('setting_value', 'locale');
 
+            // --- Deep Dive: Citations / References Extraction ---
+            $rawCitations = null;
+            $citationsSetting = $metadata->whereIn('setting_name', ['citations', 'references'])->first();
+            
+            if ($citationsSetting && !empty($citationsSetting->setting_value)) {
+                $rawCitations = $citationsSetting->setting_value;
+            } else {
+                try {
+                    if (\Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('citations')) {
+                        $citationRows = DB::connection('legacy')->table('citations')
+                            ->where('publication_id', $lSub->current_publication_id)
+                            ->orderBy('seq')
+                            ->pluck('raw_citation')
+                            ->toArray();
+                            
+                        if (!empty($citationRows)) {
+                            $rawCitations = implode("\n", array_filter($citationRows));
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Silently continue if citations table doesn't exist
+                }
+            }
+            
+            // Clean HTML from citations for clean Google Scholar indexing
+            $rawCitations = $rawCitations ? strip_tags($rawCitations) : null;
+            // ----------------------------------------------------
+
             $existingId = LegacyMapping::getMapping('submissions', $lSub->submission_id);
             
             // Self-healing: if no mapping, try to find by title and journal
@@ -255,6 +283,7 @@ class OjsMigrationService
                     'stage' => Submission::STAGE_PRODUCTION,
                     'title' => strip_tags($titles->first() ?? 'Untitled Migration'),
                     'abstract' => $abstracts->first() ?? null,
+                    'references' => $rawCitations, // Map extracted citations
                     'created_at' => $lSub->date_submitted,
                     'seq_id' => (int)$lSub->submission_id, // Map OJS submission_id to seq_id
                 ]
@@ -270,6 +299,7 @@ class OjsMigrationService
                 [
                     'title' => $titles->first(),
                     'abstract' => $abstracts->first(),
+                    'references' => $rawCitations, // Map extracted citations to Publication
                     'status' => Publication::STATUS_PUBLISHED,
                     'date_published' => $lSub->date_submitted,
                 ]
