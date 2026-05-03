@@ -152,11 +152,12 @@
                     x-transition:leave="transition ease-in duration-100"
                     x-transition:leave-start="opacity-100 translate-x-0"
                     x-transition:leave-end="opacity-0 -translate-x-2"
-                    class="absolute left-[calc(100%+12px)] top-0 min-w-[240px] w-max z-[100] bg-white rounded flex flex-col drop-shadow-[0_4px_16px_rgba(0,0,0,0.15)] before:content-[''] before:absolute before:top-4 before:-left-[8px] before:border-y-[8px] before:border-y-transparent before:border-r-[8px] before:border-r-white">
+                    class="absolute left-full ml-3 top-0 min-w-max z-[100] bg-white rounded flex flex-col shadow-xl before:content-[''] before:absolute before:top-4 before:-left-2 before:border-y-8 before:border-y-transparent before:border-r-8 before:border-r-white">
                     <div class="py-2">
                         @foreach ($userJournals as $j)
                             <a href="{{ route('journal.submissions.index', ['journal' => $j->slug]) }}"
-                                class="block px-5 py-2 text-[14px] text-[#007ab2] hover:bg-gray-100 transition-colors whitespace-nowrap font-medium">
+                                style="color: #007ab2;"
+                                class="block px-5 py-2 text-sm hover:bg-slate-50 transition-colors whitespace-nowrap font-medium">
                                 {{ $j->name }}
                             </a>
                         @endforeach
