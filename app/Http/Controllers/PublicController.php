@@ -341,13 +341,22 @@ class PublicController extends Controller
 
         // =============================================
         // ANALYTICS: Prepare Chart Data (Last 12 Months)
-        // Use DATE_FORMAT for MariaDB/MySQL compatibility (not TO_CHAR which is PostgreSQL)
+        // Handling multi-database drivers for month grouping
         // =============================================
+        $driver = DB::connection()->getDriverName();
+        $monthExpr = "DATE_FORMAT(date, '%Y-%m')"; // Default MySQL/MariaDB
+        
+        if ($driver === 'pgsql') {
+            $monthExpr = "TO_CHAR(date, 'YYYY-MM')";
+        } elseif ($driver === 'sqlite') {
+            $monthExpr = "strftime('%Y-%m', date)";
+        }
+
         $stats = DB::table('article_metrics')
-            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, type, count(*) as total")
+            ->selectRaw("{$monthExpr} as month, type, count(*) as total")
             ->where('submission_id', $article->id)
             ->where('date', '>=', now()->subYear())
-            ->groupBy('month', 'type')
+            ->groupBy(DB::raw($monthExpr), 'type')
             ->orderBy('month')
             ->get();
         
