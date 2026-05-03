@@ -67,7 +67,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 // =====================================================
 Route::get('/login', [AuthController::class, 'index'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate')->middleware('guest');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'create'])->name('register')->middleware('guest');
 Route::post('/register', [RegisterController::class, 'store'])->middleware('guest');
 Route::get('/forgot-password', [ForgotPasswordController::class, 'index'])->name('forgot-password');
@@ -320,7 +320,7 @@ Route::prefix('{journal}')->group(function () {
     Route::middleware(['journal.detect'])->group(function () {
         Route::get('/login', [\App\Http\Controllers\Admin\AuthController::class, 'index'])->name('journal.login')->middleware('guest');
         Route::post('/login', [\App\Http\Controllers\Admin\AuthController::class, 'authenticate'])->name('journal.authenticate')->middleware('guest');
-        Route::post('/logout', [\App\Http\Controllers\Admin\AuthController::class, 'logout'])->name('journal.logout');
+        Route::match(['get', 'post'], '/logout', [\App\Http\Controllers\Admin\AuthController::class, 'logout'])->name('journal.logout');
         Route::get('/auth/google', [\App\Http\Controllers\Admin\SocialAuthController::class, 'redirectToGoogle'])->name('auth.google.journal');
     });
 

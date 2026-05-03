@@ -109,6 +109,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         // 1. Capture current journal context before session invalidation
+        // Try to get from route first
         $journalSlug = $request->route('journal');
 
         // 2. Check session as fallback
@@ -117,17 +118,13 @@ class AuthController extends Controller
         }
 
         // 3. Fallback: Check Referer/Previous URL
-        // If the user hit the global /logout route from a journal page, we want to send them back to that journal.
         if (!$journalSlug) {
             $previousUrl = url()->previous();
             $path = parse_url($previousUrl, PHP_URL_PATH);
             if ($path) {
-                // Assuming journal applications are at /{slug}/...
                 $segments = explode('/', trim($path, '/'));
                 if (!empty($segments)) {
                     $potentialSlug = $segments[0];
-                    // Verify if this slug is actually a journal to avoid redirecting to 'admin' or 'login' as a slug
-                    // We only redirect if it's a valid journal
                     if (Journal::where('slug', $potentialSlug)->exists()) {
                         $journalSlug = $potentialSlug;
                     }
@@ -135,15 +132,21 @@ class AuthController extends Controller
             }
         }
 
-        // Logout the user
-        Auth::guard('web')->logout();
+        // Logout the user (Guard against null/already logged out)
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Safely invalidate session
+        try {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } catch (\Exception $e) {
+            // Silently ignore if session is already dead
+        }
 
         // Redirect based on context
         if ($journalSlug) {
-            // Verify the journal still exists and is enabled
             $journal = Journal::where('slug', $journalSlug)->where('enabled', true)->first();
             if ($journal) {
                 return redirect()->route('journal.public.home', ['journal' => $journalSlug])
@@ -151,7 +154,6 @@ class AuthController extends Controller
             }
         }
 
-        // Default: redirect to portal home
         return redirect()->route('portal.home')
             ->with('success', 'Anda berhasil logout.');
     }

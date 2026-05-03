@@ -28,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             '*/oai', // Allow OAI-PMH POST requests without CSRF token
+            'logout',
+            '*/logout',
         ]);
 
         $middleware->alias([
