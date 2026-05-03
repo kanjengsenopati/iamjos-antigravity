@@ -130,7 +130,8 @@
         @if ($userJournals->count() > 0)
             <div class="px-4 py-3 border-b border-slate-700/50 relative" x-data="{ journalOpen: false, search: '' }" @click.outside="journalOpen = false">
                 <button @click="journalOpen = !journalOpen"
-                    class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors text-left group">
+                    class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors text-left group"
+                    :class="{ 'bg-slate-800': journalOpen }">
                     <div
                         class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-sm">
                         <i class="fa-solid fa-book-open text-xs"></i>
@@ -139,45 +140,50 @@
                         <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Switch Journal</p>
                         <p class="text-sm font-medium text-white truncate">{{ $userJournals->count() }} Journal(s)</p>
                     </div>
-                    <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"
-                        :class="{ 'rotate-180': journalOpen }"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs transition-transform"
+                        :class="{ 'rotate-90': journalOpen }"></i>
                 </button>
 
-                <!-- Journal Dropdown -->
+                <!-- Journal Dropdown (Flyout to Right) -->
                 <div x-show="journalOpen" x-cloak
-                    x-transition:enter="transition ease-out duration-150"
-                    x-transition:enter-start="opacity-0 -translate-y-2"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-100"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 -translate-y-2"
-                    class="absolute left-3 right-3 top-[calc(100%-0.5rem)] z-[100] bg-slate-800 border border-slate-600 shadow-2xl rounded-xl overflow-hidden flex flex-col">
-                    <div class="p-2">
-                        <!-- Search -->
-                        <div class="mb-2">
-                            <input type="text" x-model="search" placeholder="Search journal..."
-                                class="w-full px-3 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-x-4"
+                    x-transition:enter-end="opacity-100 translate-x-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-x-0"
+                    x-transition:leave-end="opacity-0 -translate-x-4"
+                    class="absolute left-[calc(100%+0.5rem)] top-0 w-72 z-[100] bg-white border border-gray-100 shadow-2xl rounded-xl flex flex-col before:content-[''] before:absolute before:top-5 before:-left-2 before:border-y-8 before:border-y-transparent before:border-r-8 before:border-r-white">
+                    <div class="p-3">
+                        <!-- Header / Title -->
+                        <div class="mb-3 px-2 flex items-center justify-between">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Select Journal</span>
+                            <a href="{{ route('journal.select') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">View All</a>
                         </div>
+                        
+                        <!-- Search -->
+                        <div class="mb-3 relative">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" x-model="search" placeholder="Search journal..."
+                                class="w-full pl-8 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                        </div>
+
                         <!-- Journal List -->
-                        <div class="max-h-48 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+                        <div class="max-h-[60vh] overflow-y-auto space-y-1 custom-scrollbar pr-1">
                             @foreach ($userJournals as $j)
                                 <a href="{{ route('journal.submissions.index', ['journal' => $j->slug]) }}"
                                     x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
-                                    class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors group/j">
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors group/j border border-transparent hover:border-indigo-100">
                                     <div
-                                        class="w-6 h-6 rounded bg-slate-900 flex items-center justify-center text-[10px] font-bold text-slate-300 group-hover/j:bg-indigo-600 group-hover/j:text-white transition-colors shrink-0">
+                                        class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-600 group-hover/j:bg-indigo-600 group-hover/j:text-white transition-colors shrink-0 shadow-sm">
                                         {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
                                     </div>
-                                    <span
-                                        class="text-sm text-slate-300 truncate group-hover/j:text-white">{{ $j->name }}</span>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="block text-sm font-semibold text-gray-800 truncate group-hover/j:text-indigo-900">{{ $j->name }}</span>
+                                        <span class="block text-xs text-gray-500 truncate">{{ $j->abbreviation ?? 'Journal' }}</span>
+                                    </div>
                                 </a>
                             @endforeach
                         </div>
-                        <!-- View All -->
-                        <a href="{{ route('journal.select') }}"
-                            class="mt-2 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-300 bg-slate-900 rounded-lg hover:bg-slate-700 hover:text-white transition-colors">
-                            <i class="fa-solid fa-grid-2"></i> View All Journals
-                        </a>
                     </div>
                 </div>
             </div>
