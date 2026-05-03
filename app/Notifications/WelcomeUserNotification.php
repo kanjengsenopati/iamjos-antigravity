@@ -10,7 +10,7 @@ use App\Models\User;
 
 class WelcomeUserNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, \Illuminate\Queue\SerializesModels;
 
     protected User $user;
     protected ?string $journalName;
@@ -55,10 +55,11 @@ class WelcomeUserNotification extends Notification implements ShouldQueue
         }
 
         $message->line('**Your Account Details:**')
+            ->line('- **User ID:** #' . $notifiable->id)
             ->line('- **Username:** ' . $notifiable->username)
             ->line('- **Email:** ' . $notifiable->email)
             ->line('*(For security reasons, your password has been securely encrypted and is not displayed here. If you forget your password, you can use the "Forgot Password" feature on the login page.)*')
-            ->action('Log in to your account', route('login'))
+            ->action('Log in to your account', url('/login'))
             ->line('Once logged in, you can update your profile, submit articles, and track your submission progress.')
             ->salutation('Best regards, Editorial Team');
 

@@ -602,9 +602,7 @@
                     <p class="text-gray-500 text-sm">
                         &copy; {{ date('Y') }} IAMJOS. All rights reserved.
                     </p>
-                    {{-- <p class="text-gray-500 text-sm">
-                        Powered by <span class="text-primary-400">Laravel</span> &amp; <span class="text-primary-400">Open Journal Systems</span>
-                    </p> --}}
+                    {{-- {{-- Powered by Laravel & Open Journal Systems removed for branding --}} --}}
                 </div>
             </div>
         </div>

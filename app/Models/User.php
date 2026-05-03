@@ -168,7 +168,7 @@ class User extends Authenticatable
      * @param string|null $guard
      * @return bool
      */
-    public function hasRole($roles, string $guard = null): bool
+    public function hasRole($roles, ?string $guard = null): bool
     {
         $flattenRoles = function ($items) use (&$flattenRoles) {
             $flat = [];
