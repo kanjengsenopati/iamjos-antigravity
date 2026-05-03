@@ -106,13 +106,22 @@
                 </div>
             </div>
             
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-primary-800 hover:bg-primary-900 border border-primary-600 rounded-lg text-sm font-medium transition-all shadow-sm text-white">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span class="hidden sm:inline">Sign Out</span>
-                </button>
-            </form>
+            <div class="flex items-center gap-3">
+                @if(auth()->user()->hasRole('Super Admin'))
+                <a href="{{ route('admin.site.index') }}" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 rounded-lg text-sm font-medium transition-all shadow-sm text-white">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="hidden sm:inline">Site Administration</span>
+                </a>
+                @endif
+
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-primary-800 hover:bg-primary-900 border border-primary-600 rounded-lg text-sm font-medium transition-all shadow-sm text-white">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="hidden sm:inline">Sign Out</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -169,7 +178,7 @@
                 </div>
             @else
                 
-                @if(isset($showJoinOption) && $showJoinOption)
+            @if(isset($showJoinOption) && $showJoinOption && !auth()->user()->hasRole('Super Admin'))
                     <!-- Notice for Unassigned Users -->
                     <div class="mb-8 p-5 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col sm:flex-row items-center gap-5 sm:gap-6 relative overflow-hidden">
                         <div class="relative w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center shrink-0 border border-amber-200">

@@ -72,6 +72,11 @@ class JournalSelectController extends Controller
     {
         $user = auth()->user();
 
+        // Super Admin always goes to site admin dashboard by default
+        if ($user->hasRole('Super Admin')) {
+            return redirect()->route('admin.site.index');
+        }
+
         // Get journals the user is registered with
         $journals = JournalUserRole::getUserJournals($user);
 

@@ -78,8 +78,12 @@ class Role extends SpatieRole
         static::addGlobalScope('journal', function (Builder $builder) {
             $journalId = \current_journal()?->id;
             if ($journalId) {
-                // Mengunci query hanya pada journal_id yang sedang aktif.
-                $builder->where($builder->getQuery()->from . '.journal_id', $journalId);
+                // Modified: Include global roles (journal_id IS NULL)
+                // This ensures Super Admin and other global roles are always visible
+                $builder->where(function ($q) use ($journalId) {
+                    $q->where($q->from . '.journal_id', $journalId)
+                      ->orWhereNull($q->from . '.journal_id');
+                });
             }
         });
     }
@@ -115,10 +119,19 @@ class Role extends SpatieRole
         $guardName = $guardName ?? Guard::getDefaultName(static::class);
         $journalId = \current_journal()?->id;
 
+        // Try to find journal-specific role first
         $role = static::where('name', $name)
             ->where('guard_name', $guardName)
             ->where('journal_id', $journalId)
             ->first();
+
+        // Fallback to global role if not found and we were in a journal context
+        if (!$role && $journalId !== null) {
+            $role = static::where('name', $name)
+                ->where('guard_name', $guardName)
+                ->whereNull('journal_id')
+                ->first();
+        }
 
         if (!$role) {
             throw RoleDoesNotExist::named($name, $guardName);
