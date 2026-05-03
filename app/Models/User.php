@@ -170,20 +170,27 @@ class User extends Authenticatable
      */
     public function hasRole($roles, string $guard = null): bool
     {
-        if (is_string($roles) && false !== strpos($roles, '|')) {
-            $roles = explode('|', $roles);
-        }
+        $flattenRoles = function ($items) use (&$flattenRoles) {
+            $flat = [];
+            foreach ((is_array($items) || $items instanceof \Traversable ? $items : [$items]) as $item) {
+                if ($item instanceof \Spatie\Permission\Contracts\Role) {
+                    $flat[] = $item->name;
+                } elseif (is_array($item) || $item instanceof \Illuminate\Support\Collection) {
+                    $flat = array_merge($flat, $flattenRoles($item));
+                } elseif (is_string($item)) {
+                    if (strpos($item, '|') !== false) {
+                        $flat = array_merge($flat, explode('|', $item));
+                    } else {
+                        $flat[] = $item;
+                    }
+                } else {
+                    $flat[] = (string) $item;
+                }
+            }
+            return $flat;
+        };
 
-        if ($roles instanceof \Illuminate\Support\Collection) {
-            $roles = $roles->all();
-        }
-
-        // Flatten the array to handle cases where hasAnyRole passes a nested array via spread operator
-        $roles = \Illuminate\Support\Arr::flatten(is_array($roles) ? $roles : [$roles]);
-
-        $roles = array_map(function ($role) {
-            return $role instanceof \Spatie\Permission\Contracts\Role ? $role->name : $role;
-        }, $roles);
+        $rolesArray = $flattenRoles($roles);
 
         $modelHasRolesTable = config('permission.table_names.model_has_roles', 'model_has_roles');
         $rolesTable = config('permission.table_names.roles', 'roles');
@@ -193,7 +200,7 @@ class User extends Authenticatable
             ->join($rolesTable, $modelHasRolesTable.'.role_id', '=', $rolesTable.'.id')
             ->where($modelHasRolesTable.'.'.$modelMorphKey, $this->id)
             ->where($modelHasRolesTable.'.model_type', static::class)
-            ->whereIn($rolesTable.'.name', $roles)
+            ->whereIn($rolesTable.'.name', $rolesArray)
             ->exists();
     }
 
