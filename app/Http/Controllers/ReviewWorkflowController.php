@@ -215,90 +215,92 @@ class ReviewWorkflowController extends Controller
 
         $reviewRound = $submission->currentReviewRound();
 
-        DB::transaction(function () use ($request, $submission, $reviewRound) {
-            switch ($request->decision) {
-                case 'request_revisions':
-                    if ($reviewRound) {
-                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_REVISIONS_REQUESTED]);
-                    }
-                    $submission->update(['status' => Submission::STATUS_REVISION_REQUIRED]);
-                    break;
-
-                case 'resubmit_for_review':
-                    if ($reviewRound) {
-                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_RESUBMIT_FOR_REVIEW]);
-                    }
-                    // Create new review round
-                    ReviewRound::create([
-                        'submission_id' => $submission->id,
-                        'round' => ($reviewRound?->round ?? 0) + 1,
-                        'status' => ReviewRound::STATUS_PENDING,
-                    ]);
-                    break;
-
-                case 'accept':
-                    if ($reviewRound) {
-                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_APPROVED]);
-                    }
-                    // Move to Copyediting stage (stage_id = 3)
-                    // Status: queued_for_copyediting
-                    $submission->update([
-                        'stage_id' => 3, // Copyediting
-                        'status' => 'queued_for_copyediting',
-                        'accepted_at' => now(),
-                    ]);
-
-                    $submissionFileIds = [];
-                    // Promote selected files to Copyediting stage as DRAFT files
-                    if ($request->has('selected_files')) {
-                        $filesToPromote = SubmissionFile::whereIn('id', $request->selected_files)->get();
-                        foreach ($filesToPromote as $file) {
-                            $newFile = $file->replicate();
-                            $newFile->stage = SubmissionFile::STAGE_COPYEDIT_DRAFT; // Draft files for copyediting
-                            $newFile->metadata = array_merge($file->metadata ?? [], [
-                                'promoted_from_review_round' => $reviewRound->round ?? 1,
-                                'decision_type' => 'accept',
-                                'promoted_at' => now()->toIso8601String(),
-                            ]);
-                            $newFile->save();
-                            $submissionFileIds[] = $newFile->id;
+        try {
+            DB::transaction(function () use ($request, $submission, $reviewRound) {
+                switch ($request->decision) {
+                    case 'request_revisions':
+                        if ($reviewRound) {
+                            \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_REVISIONS_REQUESTED]);
                         }
-                    }
+                        $submission->update(['status' => Submission::STATUS_REVISION_REQUIRED]);
+                        break;
 
-                    // Log the acceptance and promotion
-                    SubmissionLog::log(
-                        submission:  $submission,
-                        eventType:   SubmissionLog::EVENT_STAGE_CHANGED,
-                        title:       'Submission Accepted',
-                        description: auth()->user()->name . ' accepted the submission and promoted ' . count($submissionFileIds) . ' file(s) to the Copyediting stage.',
-                        metadata:    [
-                            'decision' => 'accept',
-                            'files_promoted' => count($submissionFileIds),
-                        ],
-                        fileIds:     $submissionFileIds,
-                        stage:       Submission::STAGE_COPYEDITING,
-                        emailSubject: $request->boolean('send_email', true) ? 'Submission Accepted' : null,
-                        emailBody:   $request->boolean('send_email', true) ? $request->email_body : null
-                    );
+                    case 'resubmit_for_review':
+                        if ($reviewRound) {
+                            \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_RESUBMIT_FOR_REVIEW]);
+                        }
+                        // Create new review round
+                        ReviewRound::create([
+                            'submission_id' => $submission->id,
+                            'round' => ($reviewRound?->round ?? 0) + 1,
+                            'status' => ReviewRound::STATUS_PENDING,
+                        ]);
+                        break;
 
-                    // Email Handling
-                    if ($request->boolean('send_email', true)) {
-                        SendDecisionEmailJob::dispatch(
-                            $submission,
-                            $request->email_body,
-                            'accepted'
+                    case 'accept':
+                        if ($reviewRound) {
+                            \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_APPROVED]);
+                        }
+                        // Move to Copyediting stage (stage_id = 3)
+                        $submission->update([
+                            'stage_id'    => 3, // Copyediting
+                            'status'      => 'queued_for_copyediting',
+                            'accepted_at' => now(),
+                        ]);
+
+                        $submissionFileIds = [];
+                        // Promote selected files to Copyediting stage as DRAFT files
+                        if ($request->has('selected_files')) {
+                            $filesToPromote = SubmissionFile::whereIn('id', $request->selected_files)->get();
+                            foreach ($filesToPromote as $file) {
+                                $newFile = $file->replicate();
+                                $newFile->stage = SubmissionFile::STAGE_COPYEDIT_DRAFT;
+                                $newFile->metadata = array_merge($file->metadata ?? [], [
+                                    'promoted_from_review_round' => $reviewRound->round ?? 1,
+                                    'decision_type' => 'accept',
+                                    'promoted_at'   => now()->toIso8601String(),
+                                ]);
+                                $newFile->save();
+                                $submissionFileIds[] = $newFile->id;
+                            }
+                        }
+
+                        // Log the acceptance and promotion
+                        SubmissionLog::log(
+                            submission:   $submission,
+                            eventType:    SubmissionLog::EVENT_STAGE_CHANGED,
+                            title:        'Submission Accepted',
+                            description:  auth()->user()->name . ' accepted the submission and promoted ' . count($submissionFileIds) . ' file(s) to the Copyediting stage.',
+                            metadata:     ['decision' => 'accept', 'files_promoted' => count($submissionFileIds)],
+                            fileIds:      $submissionFileIds,
+                            stage:        Submission::STAGE_COPYEDITING,
+                            emailSubject: $request->boolean('send_email', true) ? 'Submission Accepted' : null,
+                            emailBody:    $request->boolean('send_email', true) ? $request->email_body : null
                         );
-                    }
-                    break;
 
-                case 'decline':
-                    if ($reviewRound) {
-                        \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_DECLINED]);
-                    }
-                    $submission->update(['status' => Submission::STATUS_REJECTED]);
-                    break;
-            }
-        });
+                        // Email Handling
+                        if ($request->boolean('send_email', true)) {
+                            SendDecisionEmailJob::dispatch($submission, $request->email_body, 'accepted');
+                        }
+                        break;
+
+                    case 'decline':
+                        if ($reviewRound) {
+                            \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_DECLINED]);
+                        }
+                        $submission->update(['status' => Submission::STATUS_REJECTED]);
+                        break;
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::error('Record decision failed', [
+                'submission_id' => $submission->id,
+                'decision'      => $request->decision,
+                'user_id'       => auth()->id(),
+                'error'         => $e->getMessage(),
+            ]);
+            return back()->with('error', 'Failed to record decision. Please try again.');
+        }
 
         // Send notifications to author (outside transaction for better error handling)
         $author = $submission->author ?? $submission->authors->first()?->user;
@@ -643,9 +645,10 @@ public function searchReviewers(Request $request, string $journalSlug)
         });
 
         // 7. Send email notification (outside transaction for better error handling)
-        if ($validated['send_email'] && !empty($validated['email_body'])) {
-            $author = $submission->author ?? $submission->authors->first()?->user;
+        // Resolve $author early so it is available for both email and WhatsApp blocks
+        $author = $submission->author ?? $submission->authors->first()?->user;
 
+        if ($validated['send_email'] && !empty($validated['email_body'])) {
             if ($author && $author->email) {
                 // Prepare attachments info for the email
                 $attachmentFiles = [];
@@ -1004,27 +1007,46 @@ public function searchReviewers(Request $request, string $journalSlug)
         ]);
 
         $copiedFiles = [];
-        foreach ($request->file_ids as $fileId) {
-            $originalFile = SubmissionFile::findOrFail($fileId);
+        try {
+            foreach ($request->file_ids as $fileId) {
+                $originalFile = SubmissionFile::findOrFail($fileId);
 
-            // Create a copy with copyedit_draft stage
-            $newFile = SubmissionFile::create([
+                // Security: ensure file belongs to this submission
+                if ($originalFile->submission_id !== $submission->id) {
+                    Log::warning('Attempt to copy file from another submission', [
+                        'file_id'       => $fileId,
+                        'submission_id' => $submission->id,
+                        'user_id'       => auth()->id(),
+                    ]);
+                    continue; // Skip unauthorized file silently
+                }
+
+                // Create a copy with copyedit_draft stage
+                $newFile = SubmissionFile::create([
+                    'submission_id' => $submission->id,
+                    'uploaded_by'   => auth()->id(),
+                    'file_path'     => $originalFile->file_path, // Same path (reference)
+                    'file_name'     => $originalFile->file_name,
+                    'file_type'     => $originalFile->file_type,
+                    'mime_type'     => $originalFile->mime_type,
+                    'file_size'     => $originalFile->file_size,
+                    'version'       => $originalFile->version,
+                    'stage'         => SubmissionFile::STAGE_COPYEDIT_DRAFT,
+                    'metadata'      => array_merge(
+                        $originalFile->metadata ?? [],
+                        ['copied_from_review' => true, 'original_file_id' => $fileId]
+                    ),
+                ]);
+
+                $copiedFiles[] = $newFile;
+            }
+        } catch (\Throwable $e) {
+            Log::error('copyReviewFilesToDraft failed', [
                 'submission_id' => $submission->id,
-                'uploaded_by' => auth()->id(),
-                'file_path' => $originalFile->file_path, // Same path (reference)
-                'file_name' => $originalFile->file_name,
-                'file_type' => $originalFile->file_type,
-                'mime_type' => $originalFile->mime_type,
-                'file_size' => $originalFile->file_size,
-                'version' => $originalFile->version,
-                'stage' => SubmissionFile::STAGE_COPYEDIT_DRAFT,
-                'metadata' => array_merge(
-                    $originalFile->metadata ?? [],
-                    ['copied_from_review' => true, 'original_file_id' => $fileId]
-                ),
+                'user_id'       => auth()->id(),
+                'error'         => $e->getMessage(),
             ]);
-
-            $copiedFiles[] = $newFile;
+            return response()->json(['success' => false, 'message' => 'Failed to copy files. Please try again.'], 500);
         }
 
         return response()->json([

@@ -252,6 +252,10 @@ class ProductionWorkflowController extends Controller
      */
     public function destroyGalley($journal, Submission $submission, PublicationGalley $galley)
     {
+        $journalModel = current_journal();
+        if ($submission->journal_id !== $journalModel->id) abort(404);
+        if ($galley->submission_id !== $submission->id) abort(404);
+
         // Delete the associated file from storage if it's a local file
         if (!$galley->is_remote && $galley->file) {
             Storage::disk('local')->delete($galley->file->file_path);
@@ -259,12 +263,12 @@ class ProductionWorkflowController extends Controller
         }
 
         $galley->delete();
-        
+
         return redirect()->route('journal.workflow.show', [
-            'journal' => $journal,
+            'journal'    => $journal,
             'submission' => $submission->slug,
-            'tab' => 'publication',
-            'subtab' => 'galleys'
+            'tab'        => 'publication',
+            'subtab'     => 'galleys'
         ])->with('success', 'Galley has been removed.');
     }
 
@@ -274,11 +278,19 @@ class ProductionWorkflowController extends Controller
      */
     public function assignToIssue(Request $request, $journal, Submission $submission)
     {
+        $journalModel = current_journal();
+        if ($submission->journal_id !== $journalModel->id) abort(404);
+
         $request->validate([
             'issue_id' => 'required|uuid|exists:issues,id',
         ]);
 
         $issue = Issue::findOrFail($request->issue_id);
+
+        // Ensure the issue belongs to the same journal
+        if ($issue->journal_id !== $journalModel->id) {
+            abort(403, 'Cannot assign to an issue from a different journal.');
+        }
 
         $submission->update([
             'issue_id' => $issue->id,
@@ -292,6 +304,9 @@ class ProductionWorkflowController extends Controller
      */
     public function unschedule($journal, Submission $submission)
     {
+        $journalModel = current_journal();
+        if ($submission->journal_id !== $journalModel->id) abort(404);
+
         $submission->update([
             'issue_id' => null,
         ]);
@@ -304,6 +319,9 @@ class ProductionWorkflowController extends Controller
      */
     public function publish(Request $request, $journal, Submission $submission)
     {
+        $journalModel = current_journal();
+        if ($submission->journal_id !== $journalModel->id) abort(404);
+
         // Validate prerequisites
         if (!$submission->hasGalleys()) {
             return back()->with('error', 'Cannot publish: No galley files uploaded. Please upload at least one galley (PDF) first.');
@@ -315,7 +333,7 @@ class ProductionWorkflowController extends Controller
 
         // Update submission status
         $submission->update([
-            'status' => Submission::STATUS_PUBLISHED,
+            'status'       => Submission::STATUS_PUBLISHED,
             'published_at' => now(),
         ]);
 
@@ -330,8 +348,11 @@ class ProductionWorkflowController extends Controller
      */
     public function unpublish($journal, Submission $submission)
     {
+        $journalModel = current_journal();
+        if ($submission->journal_id !== $journalModel->id) abort(404);
+
         $submission->update([
-            'status' => Submission::STATUS_ACCEPTED, // Revert to accepted
+            'status'       => Submission::STATUS_ACCEPTED, // Revert to accepted
             'published_at' => null,
         ]);
 
