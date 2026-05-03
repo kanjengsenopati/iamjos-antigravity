@@ -39,7 +39,8 @@ jobs:
             cd ${{ steps.vars.outputs.dest_path }}
             
             # Maintenance Mode ON
-            php artisan down || true
+            # Render premium 503 error page so it looks professional to visitors
+            php artisan down --render="errors::503" || true
             
             # Pull latest changes
             git fetch origin
