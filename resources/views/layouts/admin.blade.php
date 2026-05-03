@@ -144,38 +144,38 @@
                         :class="{ 'rotate-90': journalOpen }"></i>
                 </button>
 
-                <!-- Journal Dropdown (Premium Glassmorphism Flyout) -->
+                <!-- Journal Dropdown (Legacy Dark Theme Flyout) -->
                 <div x-show="journalOpen" x-cloak
-                    x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0 -translate-x-4 scale-95"
-                    x-transition:enter-end="opacity-100 translate-x-0 scale-100"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-x-0 scale-100"
-                    x-transition:leave-end="opacity-0 -translate-x-4 scale-95"
-                    class="absolute left-full ml-4 top-0 min-w-max max-w-xl z-[100] bg-white/85 backdrop-blur-md rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/60 flex flex-col before:content-[''] before:absolute before:top-6 before:-left-[10px] before:border-y-[10px] before:border-y-transparent before:border-r-[10px] before:border-r-white/80">
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-x-2"
+                    x-transition:enter-end="opacity-100 translate-x-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-x-0"
+                    x-transition:leave-end="opacity-0 -translate-x-2"
+                    class="absolute left-full ml-3 top-0 min-w-max max-w-md z-[100] bg-slate-800 rounded-xl shadow-2xl border border-slate-700 flex flex-col before:content-[''] before:absolute before:top-5 before:-left-2 before:border-y-8 before:border-y-transparent before:border-r-8 before:border-r-slate-800">
                     
-                    <div class="p-3">
+                    <div class="p-2">
                         <!-- Header -->
-                        <div class="px-4 pb-3 pt-2 flex items-center justify-between border-b border-slate-200/50 mb-3">
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Select Workspace</span>
-                            <a href="{{ route('journal.select') }}" class="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50/50 hover:bg-blue-100/50 px-3 py-1 rounded-full transition-colors border border-blue-100/50">View All</a>
+                        <div class="px-3 pb-2 pt-1 flex items-center justify-between border-b border-slate-700/80 mb-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select Workspace</span>
+                            <a href="{{ route('journal.select') }}" class="text-[11px] font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-2.5 py-0.5 rounded-md transition-colors">View All</a>
                         </div>
 
                         <!-- List -->
-                        <div class="max-h-[65vh] overflow-y-auto custom-scrollbar flex flex-col gap-1.5 px-1">
+                        <div class="max-h-[60vh] overflow-y-auto custom-scrollbar flex flex-col space-y-1 px-1 pr-2">
                             @foreach ($userJournals as $j)
                                 <a href="{{ route('journal.submissions.index', ['journal' => $j->slug]) }}"
-                                    class="group flex items-center gap-4 px-4 py-3 rounded-[16px] hover:bg-white/95 hover:shadow-[0_4px_15px_rgb(0,0,0,0.04)] border border-transparent hover:border-slate-100 transition-all duration-300">
+                                    class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
                                     
                                     <!-- Abbr Badge -->
-                                    <div class="w-12 h-12 rounded-[14px] bg-slate-50 flex items-center justify-center text-[14px] font-bold text-slate-500 border border-slate-100 shadow-sm group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 group-hover:shadow-md group-hover:shadow-blue-600/20 transition-all duration-300 shrink-0">
+                                    <div class="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-700 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-500 transition-colors shrink-0">
                                         {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
                                     </div>
                                     
                                     <!-- Info -->
-                                    <div class="flex flex-col min-w-0 pr-4">
-                                        <span class="text-[15px] font-semibold text-slate-800 group-hover:text-blue-700 transition-colors whitespace-nowrap">{{ $j->name }}</span>
-                                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 group-hover:text-blue-500/80 transition-colors">{{ $j->abbreviation ?? 'Journal' }}</span>
+                                    <div class="flex flex-col min-w-0 pr-2">
+                                        <span class="text-[13px] font-medium text-slate-200 group-hover:text-white transition-colors whitespace-nowrap">{{ $j->name }}</span>
+                                        <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest group-hover:text-indigo-300 transition-colors">{{ $j->abbreviation ?? 'Journal' }}</span>
                                     </div>
                                 </a>
                             @endforeach
