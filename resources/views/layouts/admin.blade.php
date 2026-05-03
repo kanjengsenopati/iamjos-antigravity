@@ -144,46 +144,22 @@
                         :class="{ 'rotate-90': journalOpen }"></i>
                 </button>
 
-                <!-- Journal Dropdown (Flyout to Right) -->
+                <!-- Journal Dropdown (OJS Style Flyout) -->
                 <div x-show="journalOpen" x-cloak
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 -translate-x-4"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-x-2"
                     x-transition:enter-end="opacity-100 translate-x-0"
-                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave="transition ease-in duration-100"
                     x-transition:leave-start="opacity-100 translate-x-0"
-                    x-transition:leave-end="opacity-0 -translate-x-4"
-                    class="absolute left-[calc(100%+0.5rem)] top-0 w-72 z-[100] bg-white border border-gray-100 shadow-2xl rounded-xl flex flex-col before:content-[''] before:absolute before:top-5 before:-left-2 before:border-y-8 before:border-y-transparent before:border-r-8 before:border-r-white">
-                    <div class="p-3">
-                        <!-- Header / Title -->
-                        <div class="mb-3 px-2 flex items-center justify-between">
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Select Journal</span>
-                            <a href="{{ route('journal.select') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">View All</a>
-                        </div>
-                        
-                        <!-- Search -->
-                        <div class="mb-3 relative">
-                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                            <input type="text" x-model="search" placeholder="Search journal..."
-                                class="w-full pl-8 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                        </div>
-
-                        <!-- Journal List -->
-                        <div class="max-h-[60vh] overflow-y-auto space-y-1 custom-scrollbar pr-1">
-                            @foreach ($userJournals as $j)
-                                <a href="{{ route('journal.submissions.index', ['journal' => $j->slug]) }}"
-                                    x-show="search === '' || '{{ strtolower($j->name . ' ' . ($j->abbreviation ?? '')) }}'.includes(search.toLowerCase())"
-                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors group/j border border-transparent hover:border-indigo-100">
-                                    <div
-                                        class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-600 group-hover/j:bg-indigo-600 group-hover/j:text-white transition-colors shrink-0 shadow-sm">
-                                        {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <span class="block text-sm font-semibold text-gray-800 truncate group-hover/j:text-indigo-900">{{ $j->name }}</span>
-                                        <span class="block text-xs text-gray-500 truncate">{{ $j->abbreviation ?? 'Journal' }}</span>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
+                    x-transition:leave-end="opacity-0 -translate-x-2"
+                    class="absolute left-[calc(100%+12px)] top-0 min-w-[240px] w-max z-[100] bg-white rounded flex flex-col drop-shadow-[0_4px_16px_rgba(0,0,0,0.15)] before:content-[''] before:absolute before:top-4 before:-left-[8px] before:border-y-[8px] before:border-y-transparent before:border-r-[8px] before:border-r-white">
+                    <div class="py-2">
+                        @foreach ($userJournals as $j)
+                            <a href="{{ route('journal.submissions.index', ['journal' => $j->slug]) }}"
+                                class="block px-5 py-2 text-[14px] text-[#007ab2] hover:bg-gray-100 transition-colors whitespace-nowrap font-medium">
+                                {{ $j->name }}
+                            </a>
+                        @endforeach
                     </div>
                 </div>
             </div>
