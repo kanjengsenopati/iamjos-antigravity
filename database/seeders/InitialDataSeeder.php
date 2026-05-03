@@ -93,86 +93,78 @@ class InitialDataSeeder extends Seeder
         $this->command->info("Sections created: " . count($sections));
 
         // =====================================================
-        // CREATE DEFAULT USERS
+        // CREATE DEMO USERS (Development/Staging Only)
         // =====================================================
+        // NOTE: Super Admin dibuat oleh SuperAdminSeeder terpisah.
+        // Demo users di bawah hanya untuk keperluan testing.
+        // Password dibaca dari .env (DEMO_USER_PASSWORD) atau default 'Demo@IamJOS2026!'
 
-        // Super Admin
-        $superAdmin = User::firstOrCreate(
-            ['email' => 'superadmin@iamjos.id'],
-            [
-                'name' => 'Super Administrator',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'affiliation' => 'IAMJOS System',
-                'country' => 'Indonesia',
-            ]
-        );
-        $superAdmin->syncRoles(['Super Admin']);
+        $demoPassword = env('DEMO_USER_PASSWORD', 'Demo@IamJOS2026!');
 
-        // Admin
+        // Journal Admin (demo)
         $admin = User::firstOrCreate(
             ['email' => 'admin@iamjos.id'],
             [
-                'name' => 'Journal Administrator',
-                'password' => Hash::make('password'),
+                'name'              => 'Journal Administrator',
+                'password'          => Hash::make($demoPassword),
                 'email_verified_at' => now(),
-                'affiliation' => 'IAMJOS Publishing',
-                'country' => 'Indonesia',
+                'affiliation'       => 'IAMJOS Publishing',
+                'country'           => 'Indonesia',
             ]
         );
         $admin->syncRoles(['Admin']);
 
-        // Editor
+        // Editor (demo)
         $editor = User::firstOrCreate(
             ['email' => 'editor@iamjos.id'],
             [
-                'name' => 'Chief Editor',
-                'password' => Hash::make('password'),
+                'name'              => 'Chief Editor',
+                'password'          => Hash::make($demoPassword),
                 'email_verified_at' => now(),
-                'affiliation' => 'Universitas Indonesia',
-                'country' => 'Indonesia',
-                'bio' => 'Professor of Computer Science with 15 years of experience in academic publishing.',
+                'affiliation'       => 'Universitas Indonesia',
+                'country'           => 'Indonesia',
+                'bio'               => 'Professor of Computer Science with 15 years of experience in academic publishing.',
             ]
         );
         $editor->syncRoles(['Editor']);
 
-        // Reviewer
+        // Reviewer (demo)
         $reviewer = User::firstOrCreate(
             ['email' => 'reviewer@iamjos.id'],
             [
-                'name' => 'Dr. Reviewer',
-                'password' => Hash::make('password'),
+                'name'              => 'Dr. Reviewer',
+                'password'          => Hash::make($demoPassword),
                 'email_verified_at' => now(),
-                'affiliation' => 'Institut Teknologi Bandung',
-                'country' => 'Indonesia',
-                'bio' => 'Associate Professor specializing in peer review methodology.',
+                'affiliation'       => 'Institut Teknologi Bandung',
+                'country'           => 'Indonesia',
+                'bio'               => 'Associate Professor specializing in peer review methodology.',
             ]
         );
         $reviewer->syncRoles(['Reviewer']);
 
-        // Author
+        // Author (demo)
         $author = User::firstOrCreate(
             ['email' => 'author@iamjos.id'],
             [
-                'name' => 'John Author',
-                'password' => Hash::make('password'),
+                'name'              => 'John Author',
+                'password'          => Hash::make($demoPassword),
                 'email_verified_at' => now(),
-                'affiliation' => 'Universitas Gadjah Mada',
-                'country' => 'Indonesia',
+                'affiliation'       => 'Universitas Gadjah Mada',
+                'country'           => 'Indonesia',
             ]
         );
         $author->syncRoles(['Author']);
 
-        $this->command->info('Default users created:');
+        $this->command->info('Demo users created (dev/staging only):');
         $this->command->table(
-            ['Email', 'Role', 'Password'],
+            ['Email', 'Role'],
             [
-                ['superadmin@iamjos.id', 'Super Admin', 'password'],
-                ['admin@iamjos.id', 'Admin', 'password'],
-                ['editor@iamjos.id', 'Editor', 'password'],
-                ['reviewer@iamjos.id', 'Reviewer', 'password'],
-                ['author@iamjos.id', 'Author', 'password'],
+                ['admin@iamjos.id',    'Admin'],
+                ['editor@iamjos.id',   'Editor'],
+                ['reviewer@iamjos.id', 'Reviewer'],
+                ['author@iamjos.id',   'Author'],
             ]
         );
+        $this->command->warn('⚠️  Demo user password diset via DEMO_USER_PASSWORD di .env');
     }
 }

@@ -20,9 +20,11 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         $this->call([
-            // 1. Setup Roles & Permissions (Required First)
+            // 1. Setup Roles & Permissions (WAJIB PERTAMA)
             RolesAndPermissionsSeeder::class,
-            // RoleSeeder::class,
+
+            // 2. Super Admin (WAJIB KEDUA - butuh roles sudah ada)
+            SuperAdminSeeder::class,
 
             // 3. Portal & Site Content (Public Pages)
             SiteContentSeeder::class,
@@ -31,7 +33,7 @@ class DatabaseSeeder extends Seeder
             // 4. Email Templates
             EmailTemplateSeeder::class,
 
-            // 5. Sample Journals & Initial Data
+            // 5. Sample Journals & Initial Data (Dev/Staging Only)
             JournalSeeder::class,
             InitialDataSeeder::class,
         ]);
@@ -39,11 +41,7 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
         $this->command->info('✅ IAMJOS Database seeded successfully!');
         $this->command->newLine();
-        $this->command->info('📋 Default Credentials:');
-        $this->command->info('   Email: superadmin@iamjos.id');
-        $this->command->info('   Password: password');
-        $this->command->newLine();
-        $this->command->warn('⚠️  Remember to change default password in production!');
+        $this->command->warn('⚠️  Pastikan password Super Admin sudah dicatat!');
         $this->command->newLine();
     }
 }
