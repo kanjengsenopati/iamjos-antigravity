@@ -174,13 +174,12 @@ class User extends Authenticatable
             $roles = explode('|', $roles);
         }
 
-        if (is_string($roles)) {
-            $roles = [$roles];
-        }
-
         if ($roles instanceof \Illuminate\Support\Collection) {
             $roles = $roles->all();
         }
+
+        // Flatten the array to handle cases where hasAnyRole passes a nested array via spread operator
+        $roles = \Illuminate\Support\Arr::flatten(is_array($roles) ? $roles : [$roles]);
 
         $roles = array_map(function ($role) {
             return $role instanceof \Spatie\Permission\Contracts\Role ? $role->name : $role;
