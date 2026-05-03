@@ -348,10 +348,9 @@ Route::prefix('{journal}')->group(function () {
     Route::middleware(['auth', 'journal.context'])->group(function () {
         // Stop Impersonating (Outside role middleware to avoid 403)
         Route::post('/users/stop-impersonating', [JournalUserManagementController::class, 'stopImpersonating'])->name('journal.users.stop-impersonating');
-        // --------- User Management (General / Manager) ---------
-        Route::
-        // middleware('role:Journal Manager|Editor|Admin|Super Admin')->
-        controller(JournalUserManagementController::class)->prefix('users')->name('journal.users.')->group(function () {
+        // --------- User Management (Journal Manager / Editor / Admin / Super Admin only) ---------
+        Route::middleware('role:Journal Manager|Editor|Admin|Super Admin')
+        ->controller(JournalUserManagementController::class)->prefix('users')->name('journal.users.')->group(function () {
             // 1. All Users
             Route::get('/', 'index')->name('index');
             Route::get('/create', 'create')->name('create');
@@ -409,9 +408,9 @@ Route::prefix('{journal}')->group(function () {
         Route::post('/{submission}/discussion/{discussion}/reopen', [SubmissionDiscussionController::class, 'reopen'])->name('journal.discussion.reopen');
         Route::put('/{submission}/discussion/{discussion}/message/{message}', [SubmissionDiscussionController::class, 'updateMessage'])->name('journal.discussion.message.update');
         Route::post('/{submission}/discussion/{discussion}/read', [SubmissionDiscussionController::class, 'markAsRead'])->name('journal.discussion.read');
-        // --------- Submission Workflow (OJS 3.3 Style) ---------
+        // --------- Submission Workflow (OJS 3.3 Style) — Editor & above only ---------
         Route::prefix('workflow')->name('journal.workflow.')
-        // ->middleware('role:Editor|Section Editor|Admin|Super Admin')
+        ->middleware('role:Editor|Section Editor|Journal Manager|Admin|Super Admin')
         ->group(function () {
             Route::post('/{submission}/file', [SubmissionWorkflowController::class, 'uploadFile'])->name('file.store');
             Route::post('/{submission}/discussion', [SubmissionWorkflowController::class, 'storeDiscussion'])->name('discussion.store');

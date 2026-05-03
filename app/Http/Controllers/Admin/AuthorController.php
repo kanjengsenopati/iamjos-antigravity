@@ -142,8 +142,10 @@ class AuthorController extends Controller
             return redirect()->route('author.index')->with('success', 'Berhasil menambah author');
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
-            dd($th);
+            Log::error('Failed to create author: ' . $th->getMessage(), [
+                'user_id' => auth()->id(),
+                'trace'   => $th->getTraceAsString(),
+            ]);
             return redirect()->back()->with('error', 'Gagal menambah author: ' . $th->getMessage())->withInput();
         }
     }

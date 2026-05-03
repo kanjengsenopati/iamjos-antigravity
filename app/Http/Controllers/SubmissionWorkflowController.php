@@ -778,11 +778,14 @@ class SubmissionWorkflowController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Submission has been declined and the author has been notified.');
+            return back()->with('success', 'Submission has been declined.');
         } catch (\Exception $e) {
             DB::rollBack();
-            dd($e);
-            return back()->with('error', 'Failed to decline submission: ' . $e->getMessage());
+            Log::error('Failed to decline submission: ' . $e->getMessage(), [
+                'submission_id' => $submission->id,
+                'user_id'       => auth()->id(),
+            ]);
+            return back()->with('error', 'Failed to decline submission. Please try again.');
         }
     }
 }
