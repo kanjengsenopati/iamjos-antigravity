@@ -44,8 +44,10 @@ class SendSubmissionNotifications implements ShouldQueue
             $this->author->notify(new SubmissionReceived($this->submission));
 
             // 2. Notify Journal Managers and Editors about the new submission
-            $editorsAndManagers = User::whereHas('roles', function ($q) {
-                $q->whereIn('name', ['Journal Manager', 'Editor', 'Admin', 'Super Admin']);
+            // Scoped specifically to this journal
+            $editorsAndManagers = User::whereHas('journalRoles', function ($q) {
+                $q->where('journal_id', $this->submission->journal_id)
+                  ->whereIn('permission_level', [\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_EDITOR, \App\Models\Role::LEVEL_MANAGER]);
             })->get();
 
             Notification::send($editorsAndManagers, new NewSubmissionNotification($this->submission));

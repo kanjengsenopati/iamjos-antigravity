@@ -78,12 +78,12 @@ class UserStatsController extends Controller
             ->get();
 
         // =====================================================
-        // GROWTH CHART (PostgreSQL: TO_CHAR for date grouping)
+        // GROWTH CHART (MariaDB: DATE_FORMAT for date grouping)
         // =====================================================
 
         $growth = User::whereIn('id', $journalUserIds)
             ->where('created_at', '>=', now()->subYear())
-            ->selectRaw("TO_CHAR(created_at, 'YYYY-MM') as month, count(*) as count")
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, count(*) as count")
             ->groupBy('month')
             ->orderBy('month')
             ->get();

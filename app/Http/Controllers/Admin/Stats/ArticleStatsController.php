@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class ArticleStatsController extends Controller
 {
-    protected const DATE_FORMAT_DAILY = "TO_CHAR(date, 'YYYY-MM-DD')";
+    protected const DATE_FORMAT_DAILY = "DATE_FORMAT(date, '%Y-%m-%d')";
 
     /**
      * Show the statistics dashboard page
@@ -161,8 +161,8 @@ class ArticleStatsController extends Controller
     protected function getChartData($journalId, $start, $end, $granularity = 'daily')
     {
         $dateFormat = match ($granularity) {
-            'weekly' => "TO_CHAR(date, 'IYYY-IW')",
-            'monthly' => "TO_CHAR(date, 'YYYY-MM')",
+            'weekly' => "DATE_FORMAT(date, '%Y-%u')", // ISO week
+            'monthly' => "DATE_FORMAT(date, '%Y-%m')",
             default => self::DATE_FORMAT_DAILY,
         };
 

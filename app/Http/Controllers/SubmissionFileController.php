@@ -94,7 +94,7 @@ class SubmissionFileController extends Controller
 
         if ($submission->user_id === $user->id) {
             $canDownload = true;
-        } elseif ($user->hasAnyRole(['Editor', 'Admin', 'Super Admin'])) {
+        } elseif ($user->hasJournalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_EDITOR], $submission->journal_id)) {
             $canDownload = true;
         } elseif ($user->hasRole('Reviewer')) {
             // First check if it's their own uploaded review attachment
@@ -138,7 +138,7 @@ class SubmissionFileController extends Controller
 
         if ($submission->user_id === $user->id) {
             $canView = true;
-        } elseif ($user->hasAnyRole(['Editor', 'Section Editor', 'Admin', 'Super Admin', 'Journal Manager'])) {
+        } elseif ($user->hasJournalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_EDITOR], $submission->journal_id)) {
             $canView = true;
         } elseif ($user->hasRole('Reviewer')) {
             $canView = $submission->reviewAssignments()
@@ -223,9 +223,9 @@ class SubmissionFileController extends Controller
     {
         $this->authorize('update', $file->submission);
 
-        // Only allow deletion of own uploads or by editor
+        // Only allow deletion of own uploads or by editor/admin of the journal
         $user = auth()->user();
-        if ($file->uploaded_by !== $user->id && !$user->hasAnyRole(['Editor', 'Admin', 'Super Admin'])) {
+        if ($file->uploaded_by !== $user->id && !$user->hasJournalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_EDITOR], $file->submission->journal_id)) {
             abort(403, 'You cannot delete this file.');
         }
 

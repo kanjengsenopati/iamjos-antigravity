@@ -144,9 +144,9 @@ class ReportController extends Controller
                 'submissions.status',
                 'submissions.stage',
                 'issues.title as issue',
-                DB::raw("TO_CHAR(submissions.submitted_at, 'YYYY-MM-DD') as submitted_at"),
-                DB::raw("TO_CHAR(submissions.accepted_at, 'YYYY-MM-DD') as accepted_at"),
-                DB::raw("TO_CHAR(submissions.published_at, 'YYYY-MM-DD') as published_at"),
+                DB::raw("DATE_FORMAT(submissions.submitted_at, '%Y-%m-%d') as submitted_at"),
+                DB::raw("DATE_FORMAT(submissions.accepted_at, '%Y-%m-%d') as accepted_at"),
+                DB::raw("DATE_FORMAT(submissions.published_at, '%Y-%m-%d') as published_at"),
             ])
             ->orderBy('submissions.submitted_at', 'desc');
     }
@@ -169,12 +169,12 @@ class ReportController extends Controller
                 'review_assignments.round',
                 'review_assignments.status',
                 'review_assignments.recommendation',
-                DB::raw("TO_CHAR(review_assignments.assigned_at, 'YYYY-MM-DD') as assigned_at"),
-                DB::raw("TO_CHAR(review_assignments.due_date, 'YYYY-MM-DD') as due_date"),
-                DB::raw("TO_CHAR(review_assignments.responded_at, 'YYYY-MM-DD') as responded_at"),
-                DB::raw("TO_CHAR(review_assignments.completed_at, 'YYYY-MM-DD') as completed_at"),
+                DB::raw("DATE_FORMAT(review_assignments.assigned_at, '%Y-%m-%d') as assigned_at"),
+                DB::raw("DATE_FORMAT(review_assignments.due_date, '%Y-%m-%d') as due_date"),
+                DB::raw("DATE_FORMAT(review_assignments.responded_at, '%Y-%m-%d') as responded_at"),
+                DB::raw("DATE_FORMAT(review_assignments.completed_at, '%Y-%m-%d') as completed_at"),
                 DB::raw("CASE WHEN review_assignments.completed_at IS NOT NULL AND review_assignments.assigned_at IS NOT NULL 
-                         THEN (review_assignments.completed_at::date - review_assignments.assigned_at::date) 
+                         THEN DATEDIFF(review_assignments.completed_at, review_assignments.assigned_at) 
                          ELSE NULL END as days_taken"),
             ])
             ->orderBy('review_assignments.created_at', 'desc');
@@ -193,16 +193,16 @@ class ReportController extends Controller
                 'submissions.submission_code as article_code',
                 'submissions.title as article_title',
                 'article_metrics.type as metric_type',
-                DB::raw("TO_CHAR(article_metrics.date, 'YYYY-MM') as month"),
+                DB::raw("DATE_FORMAT(article_metrics.date, '%Y-%m') as month"),
                 DB::raw('COUNT(*) as count'),
             ])
             ->groupBy(
                 'submissions.submission_code',
                 'submissions.title',
                 'article_metrics.type',
-                DB::raw("TO_CHAR(article_metrics.date, 'YYYY-MM')")
+                DB::raw("DATE_FORMAT(article_metrics.date, '%Y-%m')")
             )
-            ->orderBy(DB::raw("TO_CHAR(article_metrics.date, 'YYYY-MM')"), 'desc')
+            ->orderBy(DB::raw("DATE_FORMAT(article_metrics.date, '%Y-%m')"), 'desc')
             ->orderBy('count', 'desc');
     }
 }
