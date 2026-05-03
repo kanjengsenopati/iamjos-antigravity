@@ -57,31 +57,31 @@ class SearchController extends Controller
                 $submissionIds = SubmissionAuthor::whereHas('submission', function ($q) use ($journal) {
                     $q->where('journal_id', $journal->id);
                 })
-                    ->where('name', 'ilike', "%{$query}%")
+                    ->where('name', 'like', "%{$query}%")
                     ->pluck('submission_id');
 
                 $searchQuery->whereIn('id', $submissionIds);
             } elseif ($type === 'title') {
-                $searchQuery->where('title', 'ilike', "%{$query}%");
+                $searchQuery->where('title', 'like', "%{$query}%");
             } elseif ($type === 'keywords') {
                 $searchQuery->whereHas('keywords', function ($q) use ($query) {
-                    $q->where('content', 'ilike', "%{$query}%");
+                    $q->where('content', 'like', "%{$query}%");
                 });
             } elseif ($type === 'abstract') {
-                $searchQuery->where('abstract', 'ilike', "%{$query}%");
+                $searchQuery->where('abstract', 'like', "%{$query}%");
             } else {
                 // Search in all fields including author names
                 $authorSubmissionIds = SubmissionAuthor::whereHas('submission', function ($q) use ($journal) {
                     $q->where('journal_id', $journal->id);
                 })
-                    ->where('name', 'ilike', "%{$query}%")
+                    ->where('name', 'like', "%{$query}%")
                     ->pluck('submission_id');
 
                 $searchQuery->where(function ($q) use ($query, $authorSubmissionIds) {
-                    $q->where('title', 'ilike', "%{$query}%")
-                        ->orWhere('abstract', 'ilike', "%{$query}%")
+                    $q->where('title', 'like', "%{$query}%")
+                        ->orWhere('abstract', 'like', "%{$query}%")
                         ->orWhereHas('keywords', function ($subQ) use ($query) {
-                            $subQ->where('content', 'ilike', "%{$query}%");
+                            $subQ->where('content', 'like', "%{$query}%");
                         })
                         ->orWhereIn('id', $authorSubmissionIds);
                 });
@@ -128,9 +128,9 @@ class SearchController extends Controller
         $results = Submission::where('journal_id', $journal->id)
             ->published()
             ->where(function ($q) use ($query) {
-                $q->where('title', 'ilike', "%{$query}%")
+                $q->where('title', 'like', "%{$query}%")
                     ->orWhereHas('keywords', function ($subQ) use ($query) {
-                        $subQ->where('content', 'ilike', "%{$query}%");
+                        $subQ->where('content', 'like', "%{$query}%");
                     });
             })
             ->with('authors:id,submission_id,name')

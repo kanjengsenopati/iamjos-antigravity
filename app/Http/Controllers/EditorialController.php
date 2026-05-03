@@ -69,9 +69,9 @@ class EditorialController extends Controller
         // Search
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'ilike', "%{$search}%")
+                $q->where('title', 'like', "%{$search}%")
                     ->orWhereHas('author', function ($q) use ($search) {
-                        $q->where('name', 'ilike', "%{$search}%");
+                        $q->where('name', 'like', "%{$search}%");
                     });
             });
         }
@@ -122,7 +122,7 @@ class EditorialController extends Controller
 
         // Search
         if ($search) {
-            $query->where('title', 'ilike', "%{$search}%");
+            $query->where('title', 'like', "%{$search}%");
         }
 
         $submissions = $query->latest()->paginate(15);

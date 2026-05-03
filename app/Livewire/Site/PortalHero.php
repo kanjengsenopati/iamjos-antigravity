@@ -43,8 +43,8 @@ class PortalHero extends Component
         // Search Journals
         $journals = Journal::where('enabled', true)
             ->where(function ($q) {
-                $q->where('name', 'ilike', "%{$this->query}%")
-                  ->orWhere('description', 'ilike', "%{$this->query}%");
+                $q->where('name', 'like', "%{$this->query}%")
+                  ->orWhere('description', 'like', "%{$this->query}%");
             })
             ->take(3)
             ->get()
@@ -59,7 +59,7 @@ class PortalHero extends Component
 
         // Search Articles
         $articles = Submission::where('status', Submission::STATUS_PUBLISHED)
-            ->where('title', 'ilike', "%{$this->query}%")
+            ->where('title', 'like', "%{$this->query}%")
             ->take(3)
             ->get()
             ->map(function ($article) {

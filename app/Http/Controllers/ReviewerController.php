@@ -62,8 +62,8 @@ class ReviewerController extends Controller
         // Apply Search
         if ($search) {
             $assignments->whereHas('submission', function ($q) use ($search) {
-                $q->where('title', 'ilike', "%{$search}%")
-                  ->orWhere('submission_code', 'ilike', "%{$search}%");
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('submission_code', 'like', "%{$search}%");
             });
         }
 
@@ -176,12 +176,16 @@ class ReviewerController extends Controller
         // Notify editors via WhatsApp
         try {
             $assignment->load(['reviewer', 'submission']);
-            $editors = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('name', ['Editor', 'Admin', 'Super Admin']))->get();
+            // Use same journal-scoped query as accept() for consistency
+            $editors = \App\Models\User::whereHas('journalRoles', fn($q) =>
+                $q->where('journal_id', $assignment->submission->journal_id)
+                  ->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER])
+            )->get();
             foreach ($editors as $editor) {
                 WaGateway::sendTemplate($editor, 'reviewer_declined', [
-                    'name' => $editor->name,
+                    'name'          => $editor->name,
                     'reviewer_name' => $assignment->reviewer->name,
-                    'title' => $assignment->submission->title ?? 'Naskah',
+                    'title'         => $assignment->submission->title ?? 'Naskah',
                 ], $assignment->submission->journal_id);
             }
         } catch (\Exception $e) {
@@ -293,18 +297,29 @@ class ReviewerController extends Controller
      */
     private function notifyEditorsReviewCompleted(ReviewAssignment $assignment): void
     {
-        // Get editors with permission to make decisions
-        $editors = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('name', ['Editor', 'Admin', 'Super Admin']))->get();
+        // Get editors scoped to the submission's journal
+        $editors = \App\Models\User::whereHas('journalRoles', fn($q) =>
+            $q->where('journal_id', $assignment->submission->journal_id)
+              ->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER])
+        )->get();
 
         foreach ($editors as $editor) {
             // Send email notification
-            $editor->notify(new ReviewCompleted($assignment));
+            try {
+                $editor->notify(new ReviewCompleted($assignment));
+            } catch (\Throwable $e) {
+                Log::error('ReviewCompleted email failed for editor ' . $editor->id . ': ' . $e->getMessage());
+            }
 
             // Send WhatsApp notification
-            WaGateway::sendTemplate($editor, 'review_submitted', [
-                'name' => $editor->name,
-                'title' => $assignment->submission->title ?? 'Naskah',
-            ], $assignment->submission->journal_id);
+            try {
+                WaGateway::sendTemplate($editor, 'review_submitted', [
+                    'name'  => $editor->name,
+                    'title' => $assignment->submission->title ?? 'Naskah',
+                ], $assignment->submission->journal_id);
+            } catch (\Throwable $e) {
+                Log::error('ReviewCompleted WA failed for editor ' . $editor->id . ': ' . $e->getMessage());
+            }
         }
     }
     /**

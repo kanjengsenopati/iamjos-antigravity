@@ -140,6 +140,9 @@ class IssueController extends Controller
     {
         $journal = current_journal();
 
+        // Ownership check
+        if ($issue->journal_id !== $journal->id) abort(404);
+
         $validated = $request->validate([
             'volume' => 'required|integer|min:1',
             'number' => 'required|integer|min:1',
@@ -183,6 +186,9 @@ class IssueController extends Controller
      */
     public function publish(Issue $issue)
     {
+        $journal = current_journal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
         $issue->update([
             'is_published' => true,
             'published_at' => now(),
@@ -196,6 +202,9 @@ class IssueController extends Controller
      */
     public function unpublish(Issue $issue)
     {
+        $journal = current_journal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
         $issue->update([
             'is_published' => false,
             'published_at' => null,
@@ -209,6 +218,9 @@ class IssueController extends Controller
      */
     public function destroy(Issue $issue)
     {
+        $journal = current_journal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
         // Check if issue has any submissions
         if ($issue->submissions()->exists()) {
             return back()->with('error', 'Cannot delete issue with assigned submissions.');

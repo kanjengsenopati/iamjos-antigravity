@@ -82,9 +82,9 @@ class ReviewerApiController extends Controller
             ->when(!empty($excludeIds), fn($q) => $q->whereNotIn('id', $excludeIds))
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
-                    $sub->where('name', 'ILIKE', "%{$search}%")
-                        ->orWhere('email', 'ILIKE', "%{$search}%")
-                        ->orWhere('affiliation', 'ILIKE', "%{$search}%");
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('affiliation', 'like', "%{$search}%");
                 });
             })
 

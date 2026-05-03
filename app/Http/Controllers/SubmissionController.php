@@ -208,9 +208,6 @@ class SubmissionController extends Controller
     /**
      * Show the form for creating a new submission.
      */
-    /**
-     * Show the form for creating a new submission.
-     */
     public function create(): View
     {
         $journal = $this->getJournal();

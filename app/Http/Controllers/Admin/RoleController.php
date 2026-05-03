@@ -45,7 +45,7 @@ class RoleController extends Controller
                 //     $query->whereHas(
                 //         'permissions',
                 //         fn($q) =>
-                //         $q->where('name', 'ilike', "%{$keyword}%")
+                //         $q->where('name', 'like', "%{$keyword}%")
                 //     );
                 // })
                 ->make(true);

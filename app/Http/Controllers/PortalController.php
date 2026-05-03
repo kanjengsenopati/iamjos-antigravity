@@ -203,9 +203,9 @@ class PortalController extends Controller
                 $journals = Journal::where('enabled', true)
                     ->when($query, function ($q) use ($query) {
                         $q->where(function ($sub) use ($query) {
-                            $sub->where('name', 'ilike', "%{$query}%")
-                                ->orWhere('abbreviation', 'ilike', "%{$query}%")
-                                ->orWhere('description', 'ilike', "%{$query}%");
+                            $sub->where('name', 'like', "%{$query}%")
+                                ->orWhere('abbreviation', 'like', "%{$query}%")
+                                ->orWhere('description', 'like', "%{$query}%");
                         });
                     })
                     ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
@@ -218,14 +218,14 @@ class PortalController extends Controller
                 $articlesQuery = Submission::where('status', Submission::STATUS_PUBLISHED)
                     ->when($query, function ($q) use ($query) {
                         $q->where(function ($sub) use ($query) {
-                            $sub->where('title', 'ilike', "%{$query}%")
-                                ->orWhere('abstract', 'ilike', "%{$query}%")
+                            $sub->where('title', 'like', "%{$query}%")
+                                ->orWhere('abstract', 'like', "%{$query}%")
                                 ->orWhereHas('keywords', function($kw) use ($query) {
-                                    $kw->where('content', 'ilike', "%{$query}%");
+                                    $kw->where('content', 'like', "%{$query}%");
                                 })
                                 ->orWhereHas('authors', function($auth) use ($query) {
-                                    $auth->where('given_name', 'ilike', "%{$query}%")
-                                        ->orWhere('family_name', 'ilike', "%{$query}%");
+                                    $auth->where('given_name', 'like', "%{$query}%")
+                                        ->orWhere('family_name', 'like', "%{$query}%");
                                 });
                         });
                     })
@@ -266,13 +266,13 @@ class PortalController extends Controller
             ->where('visible', true)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ilike', "%{$search}%")
-                        ->orWhere('abbreviation', 'ilike', "%{$search}%")
-                        ->orWhere('description', 'ilike', "%{$search}%");
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('abbreviation', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             })
             ->when($alpha && $alpha !== 'all', function ($query) use ($alpha) {
-                $query->where('name', 'ilike', "{$alpha}%");
+                $query->where('name', 'like', "{$alpha}%");
             })
             ->withCount(['submissions' => fn($q) => $q->where('status', Submission::STATUS_PUBLISHED)])
             ->withCount(['issues' => fn($q) => $q->where('is_published', true)])
