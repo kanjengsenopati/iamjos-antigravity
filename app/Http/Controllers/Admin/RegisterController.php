@@ -138,8 +138,15 @@ class RegisterController extends Controller
         // Fire the Registered event (for email verification, etc.)
         event(new Registered($user));
 
+        // Send Welcome Email Notification (OJS USER_REGISTER equivalent)
+        try {
+            $user->notify(new \App\Notifications\WelcomeUserNotification($user));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to dispatch welcome email: ' . $e->getMessage());
+        }
+
         // Send WhatsApp welcome notification
-        WaGateway::sendTemplate($user, 'welcome', [
+        \App\Services\WaGateway::sendTemplate($user, 'welcome', [
             'name' => $user->name,
         ]);
 

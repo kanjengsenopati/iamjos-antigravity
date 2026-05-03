@@ -35,17 +35,24 @@ class SubmissionReceived extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+        // Get the author list nicely formatted
+        $authorList = $this->submission->authors->map(function ($author) {
+            return $author->first_name . ' ' . $author->last_name;
+        })->implode(', ');
+
         return (new MailMessage)
-            ->subject('Submission Received - ' . $this->submission->title)
+            ->subject('[' . ($this->submission->journal->abbreviation ?? 'JOURNAL') . '] Submission Acknowledgement')
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line('Your submission has been received and is now under editorial review.')
+            ->line('Thank you for submitting the manuscript, "' . $this->submission->title . '" to ' . $this->submission->journal->name . '.')
+            ->line('With the online journal management system that we are using, you will be able to track its progress through the editorial process by logging in to the journal web site:')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
-            ->line('- **Submission ID:** ' . ($this->submission->seq_id ?? 'N/A'))
+            ->line('- **Authors:** ' . ($authorList ?: $notifiable->name))
+            ->line('- **Submission ID:** ' . ($this->submission->seq_id ?? 'Pending'))
             ->line('- **Submitted:** ' . $this->submission->submitted_at?->format('F j, Y'))
-            ->action('View Submission', route('journal.submissions.workflow', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
-            ->line('You will be notified when there are updates on your submission.')
-            ->salutation('Best regards, Editorial Team');
+            ->action('Track Submission Progress', route('journal.submissions.workflow', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
+            ->line('If you have any questions, please contact me. Thank you for considering this journal as a venue for your work.')
+            ->salutation('Best regards,' . "\n" . 'Editorial Team' . "\n" . $this->submission->journal->name);
     }
 
     /**

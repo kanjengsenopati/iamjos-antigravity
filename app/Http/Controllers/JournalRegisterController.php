@@ -153,15 +153,9 @@ class JournalRegisterController extends Controller
             // Fire Registered Event
             event(new Registered($user));
 
-            // Send Email Welcome Notification (queued to background)
+            // Send Email Welcome Notification (OJS USER_REGISTER equivalent)
             try {
-                $emailBody = "Congratulations! Your account has been successfully created and you are now registered as an Author at {$journal->name}.\n\nYou can now log in and start submitting your manuscripts.\n\nThank you for joining us!";
-                Mail::to($user->email)->queue(new GeneralNotificationMail(
-                    emailSubject: 'Welcome to ' . $journal->name . ' – Registration Successful',
-                    emailBody: $emailBody,
-                    recipientName: $user->name,
-                    journalName: $journal->name,
-                ));
+                $user->notify(new \App\Notifications\WelcomeUserNotification($user, $journal->name));
             } catch (Exception $e) {
                 Log::error('Failed to queue welcome email: ' . $e->getMessage());
             }
