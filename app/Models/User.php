@@ -188,10 +188,11 @@ class User extends Authenticatable
 
         $modelHasRolesTable = config('permission.table_names.model_has_roles', 'model_has_roles');
         $rolesTable = config('permission.table_names.roles', 'roles');
+        $modelMorphKey = config('permission.column_names.model_morph_key', 'model_id');
 
         return DB::table($modelHasRolesTable)
             ->join($rolesTable, $modelHasRolesTable.'.role_id', '=', $rolesTable.'.id')
-            ->where($modelHasRolesTable.'.model_id', $this->id)
+            ->where($modelHasRolesTable.'.'.$modelMorphKey, $this->id)
             ->where($modelHasRolesTable.'.model_type', static::class)
             ->whereIn($rolesTable.'.name', $roles)
             ->exists();
