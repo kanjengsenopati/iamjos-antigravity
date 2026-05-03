@@ -161,6 +161,43 @@ class User extends Authenticatable
     // =====================================================
 
     /**
+     * Override Spatie's hasRole to prevent memory exhaustion in multi-tenant environments.
+     * Spatie's default implementation can load all roles into memory. We perform a direct DB query.
+     *
+     * @param string|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
+     * @param string|null $guard
+     * @return bool
+     */
+    public function hasRole($roles, string $guard = null): bool
+    {
+        if (is_string($roles) && false !== strpos($roles, '|')) {
+            $roles = explode('|', $roles);
+        }
+
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+
+        if ($roles instanceof \Illuminate\Support\Collection) {
+            $roles = $roles->all();
+        }
+
+        $roles = array_map(function ($role) {
+            return $role instanceof \Spatie\Permission\Contracts\Role ? $role->name : $role;
+        }, $roles);
+
+        $modelHasRolesTable = config('permission.table_names.model_has_roles', 'model_has_roles');
+        $rolesTable = config('permission.table_names.roles', 'roles');
+
+        return DB::table($modelHasRolesTable)
+            ->join($rolesTable, $modelHasRolesTable.'.role_id', '=', $rolesTable.'.id')
+            ->where($modelHasRolesTable.'.model_id', $this->id)
+            ->where($modelHasRolesTable.'.model_type', static::class)
+            ->whereIn($rolesTable.'.name', $roles)
+            ->exists();
+    }
+
+    /**
      * Cek Permission Level (Angka).
      * @param int|array $levels
      * @param string $journalId

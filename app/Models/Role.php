@@ -84,6 +84,10 @@ class Role extends SpatieRole
                     $q->where($q->from . '.journal_id', $journalId)
                       ->orWhereNull($q->from . '.journal_id');
                 });
+            } else {
+                // BUGFIX: Prevent Spatie Permission Registrar from loading all 170,000+ roles into cache
+                // When current_journal is null (e.g., CLI, Portal, or Cache builder), ONLY load global roles!
+                $builder->whereNull($builder->getQuery()->from . '.journal_id');
             }
         });
     }
