@@ -113,7 +113,8 @@ class SiteAdminController extends Controller
             \App\Models\SiteSetting::create($validated);
         }
 
-        // Clear route cache so dynamic prefix logic updates immediately
+        // Clear caches so dynamic prefix logic and settings updates take effect immediately
+        \Illuminate\Support\Facades\Cache::forget('site_settings');
         \Illuminate\Support\Facades\Artisan::call('route:clear');
 
         return back()->with('success', 'Site settings updated successfully.');
