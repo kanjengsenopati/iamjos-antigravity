@@ -221,8 +221,8 @@ $registerAllRoutes = function ($prefix = '') {
             Route::get('/article/{article}/view', [\App\Http\Controllers\PublicController::class, 'articleReader'])->name('journal.public.article.reader');
             Route::get('/article/{article}/view-legacy', [\App\Http\Controllers\PublicController::class, 'article'])->name('journal.article.view');
             Route::get('/article/{article}', [\App\Http\Controllers\PublicController::class, 'article'])->name('journal.public.article.legacy');
+            Route::get('/article/view/{article}/{galley}', [\App\Http\Controllers\PublicController::class, 'viewGalley'])->name('journal.article.galley');
             Route::get('/article/{article}/galley/{galley}/download', [\App\Http\Controllers\PublicController::class, 'downloadGalley'])->name('journal.article.download');
-            Route::get('/article/{article}/galley/{galley}', [\App\Http\Controllers\PublicController::class, 'viewGalley'])->name('journal.article.galley');
             Route::get('/article/download/{seq_id}/{filename}.pdf', [\App\Http\Controllers\PublicController::class, 'downloadPdf'])->name('journal.article.download.pdf');
             Route::get('/article/{article}/citation/ris', [\App\Http\Controllers\PublicController::class, 'exportCitationRIS'])->name('citation.ris');
             Route::get('/article/{article}/citation/bibtex', [\App\Http\Controllers\PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');

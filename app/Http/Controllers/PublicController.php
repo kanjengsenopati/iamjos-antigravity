@@ -803,11 +803,52 @@ class PublicController extends Controller
             return redirect($publicationGalley->url_remote);
         }
 
-        // Get website settings
-        $settings = $journal->getWebsiteSettings();
+        // =============================================
+        // PDF STREAMING (OJS Native Style & GS Compliance)
+        // =============================================
+        // If it's a PDF, stream it directly in the browser
+        $isPdf = \Str::contains(strtolower($publicationGalley->label), 'pdf') || 
+                 \Str::contains(strtolower($publicationGalley->file_type ?? ''), 'pdf') ||
+                 ($publicationGalley->file && str_contains($publicationGalley->file->mime_type, 'pdf'));
 
-        // Increment view counter
-        // $publicationGalley->increment('views'); // Column 'views' does not exist
+        if ($isPdf && $publicationGalley->file_id) {
+            $file = \App\Models\SubmissionFile::find($publicationGalley->file_id);
+            if ($file) {
+                $disk = Storage::disk('local');
+                if ($disk->exists($file->file_path)) {
+                    // Analytics: Log View/Download
+                    if (!preg_match('/bot|crawler|spider/i', request()->userAgent() ?? '')) {
+                        DB::table('article_metrics')->insert([
+                            'submission_id' => $submission->id,
+                            'type' => 'download',
+                            'ip_address' => request()->ip(),
+                            'country_code' => 'ID',
+                            'date' => now()->toDateString(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+
+                    return response()->stream(
+                        function () use ($disk, $file) {
+                            $stream = $disk->readStream($file->file_path);
+                            fpassthru($stream);
+                            fclose($stream);
+                        },
+                        200,
+                        [
+                            'Content-Type' => 'application/pdf',
+                            'Content-Disposition' => 'inline; filename="' . $file->file_name . '"',
+                            'Content-Length' => $disk->size($file->file_path),
+                            'Cache-Control' => 'public, max-age=86400',
+                        ]
+                    );
+                }
+            }
+        }
+
+        // For non-PDF galleys (HTML, etc.), use the viewer
+        $settings = $journal->getWebsiteSettings();
 
         return view('journal.public.galley-viewer', [
             'journal' => $journal,

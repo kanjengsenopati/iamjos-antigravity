@@ -166,10 +166,10 @@ foreach ($rawKeywords as $k) {
         {{-- PDF URL (CRITICAL - Must point to actual download file w/ SEO friendly URL) --}}
         @if ($pdfGalley)
             <meta name="citation_pdf_url"
-                content="{{ route('journal.article.download.pdf', [
+                content="{{ route('journal.article.galley', [
                     'journal' => $journal->slug, 
-                    'seq_id' => $article->seq_id, 
-                    'filename' => Str::slug($article->title)
+                    'article' => $article->seq_id, 
+                    'galley' => $pdfGalley->id
                 ]) }}">
         @endif
 
@@ -620,10 +620,7 @@ foreach ($rawKeywords as $k) {
                     <div class="space-y-2">
                         @foreach ($article->galleys as $galley)
                             @php
-                                $isPdf = Str::contains(strtolower($galley->label), 'pdf') || Str::contains(strtolower($galley->file_type ?? ''), 'pdf') || strtolower($galley->label) === 'pdf';
-                                $downloadRoute = $isPdf 
-                                    ? route('journal.article.download.pdf', ['journal' => $journal->slug, 'seq_id' => $article->seq_id, 'filename' => Str::slug($article->title)])
-                                    : route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->id]);
+                                $downloadRoute = route('journal.article.galley', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->id]);
                             @endphp
                             <a href="{{ $downloadRoute }}"
                                 class="flex items-center justify-center w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded transition shadow-sm gap-2">

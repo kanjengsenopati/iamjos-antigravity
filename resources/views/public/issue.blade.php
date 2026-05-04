@@ -129,7 +129,7 @@
                                                         {{-- Galley Buttons --}}
                                                         @if ($article->galleys && $article->galleys->isNotEmpty())
                                                             @foreach ($article->galleys as $galley)
-                                                                <a href="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id, 'galley' => $galley->id]) }}"
+                                                                <a href="{{ route('journal.article.galley', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->id]) }}"
                                                                     class="inline-flex items-center px-3 py-1.5 bg-gray-700 hover:bg-gray-800 text-white text-xs font-bold rounded shadow-sm transition group">
                                                                     <svg class="w-4 h-4 mr-1.5 opacity-80 group-hover:opacity-100"
                                                                         fill="none" stroke="currentColor"
