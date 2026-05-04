@@ -12,7 +12,7 @@
     <meta name="keywords" content="academic journals, research, publications, open access, Indonesia, scholarly articles">
     <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="{{ url('/') }}">
+    <link rel="canonical" href="{{ route('portal.home') }}">
 
     {{-- Favicon --}}
     <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
@@ -22,7 +22,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ $settings['site_title'] ?? 'IAMJOS' }}">
     <meta property="og:description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals.' }}">
-    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:url" content="{{ route('portal.home') }}">
     <meta property="og:site_name" content="IAMJOS">
     <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
     <meta property="og:image:width" content="512">

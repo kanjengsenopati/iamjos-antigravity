@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     {{-- 1. Main Landing Page --}}
     <url>
-        <loc>{{ url('/') }}</loc>
+        <loc>{{ route('portal.home') }}</loc>
         <lastmod>{{ now()->format('Y-m-d') }}</lastmod>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>

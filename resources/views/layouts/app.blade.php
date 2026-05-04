@@ -686,7 +686,7 @@
                     </button>
 
                     <!-- Logo (visible on mobile when sidebar is hidden) -->
-                    <a href="{{ $journalSlug ? route('journal.submissions.index', ['journal' => $journalSlug]) : url('/') }}"
+                    <a href="{{ $journalSlug ? route('journal.submissions.index', ['journal' => $journalSlug]) : route('portal.home') }}"
                         class="lg:hidden ml-2 flex items-center space-x-2">
                         <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
@@ -700,7 +700,7 @@
 
                     <!-- Breadcrumb (desktop) -->
                     <nav class="hidden lg:flex items-center space-x-2 text-sm">
-                        <a href="{{ $journalSlug ? route('journal.submissions.index', ['journal' => $journalSlug]) : url('/') }}"
+                        <a href="{{ $journalSlug ? route('journal.submissions.index', ['journal' => $journalSlug]) : route('portal.home') }}"
                             class="text-gray-500 hover:text-gray-700">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
