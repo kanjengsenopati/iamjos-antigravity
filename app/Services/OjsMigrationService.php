@@ -393,4 +393,108 @@ class OjsMigrationService
             }
         }
     }
+
+    /**
+     * Migrate Galleys & Physical Files
+     */
+    public function migrateGalleys(?string $baseUrl = null)
+    {
+        if (!$baseUrl) {
+            throw new \Exception("Base URL legacy belum diatur. Cloud download tidak dapat berjalan.");
+        }
+
+        $baseUrl = rtrim($baseUrl, '/');
+
+        // Detect correct table (OJS 3.3 vs 3.2-)
+        $galleyTable = \Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('publication_galleys') 
+            ? 'publication_galleys' 
+            : 'submission_galleys';
+
+        $legacyGalleys = DB::connection('legacy')->table($galleyTable)
+            ->join('submissions', "$galleyTable.submission_id", '=', 'submissions.submission_id')
+            ->join('journals', 'submissions.context_id', '=', 'journals.journal_id')
+            ->select(
+                "$galleyTable.*", 
+                'submissions.submission_id as legacy_submission_id',
+                'journals.path as journal_path'
+            )
+            ->get();
+
+        foreach ($legacyGalleys as $lGalley) {
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lGalley->legacy_submission_id);
+            if (!$newSubmissionId) continue;
+
+            $submission = Submission::with('journal')->find($newSubmissionId);
+            if (!$submission) continue;
+
+            // 1. Resolve File Meta from Legacy
+            $lFile = DB::connection('legacy')->table('submission_files')
+                ->where('submission_file_id', $lGalley->submission_file_id ?? ($lGalley->file_id ?? null))
+                ->first();
+
+            if (!$lFile && empty($lGalley->url_remote)) continue;
+
+            $filename = $lFile->original_file_name ?? "galley_{$lGalley->galley_id}.pdf";
+            $galleyId = $lGalley->galley_id ?? $lGalley->publication_galley_id;
+
+            // 2. Construct Target Directory (Matching Public URL Style)
+            // Path: public/journals/{slug}/articles/{seq_id}/galleys/{galley_seq_id}/
+            $targetDir = "journals/{$submission->journal->slug}/articles/{$submission->seq_id}/galleys/{$galleyId}";
+            $targetPath = "{$targetDir}/{$filename}";
+
+            // 3. Cloud Download
+            if (empty($lGalley->url_remote)) {
+                $downloadUrl = "{$baseUrl}/index.php/{$lGalley->journal_path}/article/download/{$lGalley->legacy_submission_id}/{$galleyId}";
+                
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(30)->get($downloadUrl);
+                    if ($response->successful()) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->put($targetPath, $response->body());
+                    }
+                } catch (\Exception $e) {
+                    // Log error but continue
+                    \Illuminate\Support\Facades\Log::error("Gagal mendownload galley {$galleyId}: " . $e->getMessage());
+                    continue;
+                }
+            } else {
+                // Remote Galley
+                $targetPath = $lGalley->url_remote;
+            }
+
+            // 4. Create SubmissionFile Record
+            $subFile = \App\Models\SubmissionFile::updateOrCreate(
+                [
+                    'submission_id' => $submission->id,
+                    'file_name' => $filename,
+                ],
+                [
+                    'file_path' => $targetPath,
+                    'file_type' => \App\Models\SubmissionFile::TYPE_GALLEY,
+                    'mime_type' => \Illuminate\Support\Arr::get([
+                        'pdf' => 'application/pdf',
+                        'html' => 'text/html',
+                    ], strtolower(pathinfo($filename, PATHINFO_EXTENSION)), 'application/octet-stream'),
+                    'file_size' => $lFile->file_size ?? 0,
+                    'stage' => \App\Models\SubmissionFile::STAGE_PRODUCTION,
+                    'uploaded_by' => User::first()->id,
+                ]
+            );
+
+            // 5. Create PublicationGalley Record
+            \App\Models\PublicationGalley::updateOrCreate(
+                [
+                    'submission_id' => $submission->id,
+                    'label' => $lGalley->label,
+                ],
+                [
+                    'file_id' => $subFile->id,
+                    'locale' => $lGalley->locale ?? 'en',
+                    'seq' => (int)$lGalley->seq,
+                    'seq_id' => (int)$galleyId, // Map legacy ID to seq_id for friendly URL
+                ]
+            );
+
+            LegacyMapping::setMapping('galleys', $galleyId, $submission->id);
+        }
+    }
 }

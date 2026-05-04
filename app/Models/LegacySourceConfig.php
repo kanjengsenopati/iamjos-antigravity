@@ -14,6 +14,7 @@ class LegacySourceConfig extends Model
         'database',
         'username',
         'password',
+        'base_url',
         'is_active',
         'last_synced_at',
     ];

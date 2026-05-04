@@ -66,6 +66,7 @@ class OjsMigrationController extends Controller
                 'database' => $request->database,
                 'username' => $request->username,
                 'password' => $request->password,
+                'base_url' => $request->base_url,
             ]
         );
 
@@ -101,6 +102,7 @@ class OjsMigrationController extends Controller
                 case 'submissions': $this->migrationService->migrateSubmissions(); break;
                 case 'authors': $this->migrationService->migrateAuthors(); break;
                 case 'metrics': $this->migrationService->migrateMetrics(); break;
+                case 'galleys': $this->migrationService->migrateGalleys($config->base_url); break;
                 default: throw new \Exception("Step tidak valid.");
             }
 

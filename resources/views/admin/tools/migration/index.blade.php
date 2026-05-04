@@ -91,6 +91,7 @@
                                 'issues' => 'Issues & Volumes',
                                 'submissions' => 'Submissions & Metadata',
                                 'authors' => 'Authors & Contributors',
+                                'galleys' => 'Galleys & Physical Files',
                                 'metrics_views' => 'Usage Metrics (Views)',
                                 'metrics_downloads' => 'Usage Metrics (Downloads)'
                             ] as $key => $label)
@@ -188,6 +189,11 @@
                             <input type="password" name="password" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Legacy Base URL (Cloud Download)</label>
+                        <input type="url" name="base_url" value="{{ $config->base_url ?? '' }}" placeholder="https://jurnal.univ.ac.id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        <p class="mt-1 text-[10px] text-slate-400 italic">Diperlukan untuk mengunduh PDF langsung dari server lama.</p>
+                    </div>
                     <div class="pt-4">
                         <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all">
                             Save Configuration
@@ -236,7 +242,7 @@ function migrationDashboard() {
         syncAll() {
             if (confirm('Jalankan Deep Resync untuk semua data? Ini mungkin memakan waktu.')) {
                 // Logic for batch run
-                const steps = ['journals', 'sections', 'issues', 'submissions', 'authors', 'metrics'];
+                const steps = ['journals', 'sections', 'issues', 'submissions', 'authors', 'galleys', 'metrics'];
                 this.runSequence(steps);
             }
         },
