@@ -82,7 +82,7 @@
                             $pdf = $record->galleys->first();
                         @endphp
                         @if ($pdf)
-                            <dc:relation>{!! htmlspecialchars(route('journal.article.galley', ['journal' => $journal->slug, 'article' => $record->seq_id, 'galley' => $pdf->id]), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:relation>
+                            <dc:relation>{!! htmlspecialchars(route('journal.article.galley', ['journal' => $journal->slug, 'article' => $record->seq_id, 'galley' => $pdf->seq_id ?? $pdf->id]), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:relation>
                         @endif
 
                         <dc:language>{{ $record->locale ?? 'en' }}</dc:language>

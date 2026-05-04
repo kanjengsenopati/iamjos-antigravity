@@ -791,8 +791,9 @@ class PublicController extends Controller
         // Load galleys
         $submission->load(['galleys', 'authors', 'section', 'issue']);
 
-        // Find the galley
-        $publicationGalley = $submission->galleys->where('id', $galley)->first();
+        // Find the galley (Try ID first for safety, then seq_id)
+        $publicationGalley = $submission->galleys->where('id', $galley)->first() 
+            ?? $submission->galleys->where('seq_id', $galley)->first();
 
         if (!$publicationGalley) {
             abort(404, 'Galley not found');

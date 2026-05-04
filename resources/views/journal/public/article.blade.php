@@ -169,7 +169,7 @@ foreach ($rawKeywords as $k) {
                 content="{{ route('journal.article.galley', [
                     'journal' => $journal->slug, 
                     'article' => $article->seq_id, 
-                    'galley' => $pdfGalley->id
+                    'galley' => $pdfGalley->seq_id ?? $pdfGalley->id
                 ]) }}">
         @endif
 
@@ -620,7 +620,7 @@ foreach ($rawKeywords as $k) {
                     <div class="space-y-2">
                         @foreach ($article->galleys as $galley)
                             @php
-                                $downloadRoute = route('journal.article.galley', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->id]);
+                                $downloadRoute = route('journal.article.galley', ['journal' => $journal->slug, 'article' => $article->seq_id, 'galley' => $galley->seq_id ?? $galley->id]);
                             @endphp
                             <a href="{{ $downloadRoute }}"
                                 class="flex items-center justify-center w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded transition shadow-sm gap-2">

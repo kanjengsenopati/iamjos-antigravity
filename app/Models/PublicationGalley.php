@@ -24,6 +24,7 @@ class PublicationGalley extends Model
         'url_remote',
         'is_remote',
         'seq',
+        'seq_id',
     ];
 
     /**
@@ -45,8 +46,9 @@ class PublicationGalley extends Model
      */
     public function resolveRouteBinding($value, $field = null)
     {
-        // First try to find by url_path, then by id
+        // First try to find by url_path, then by seq_id, then by id
         return $this->where('url_path', $value)
+            ->orWhere('seq_id', $value)
             ->orWhere('id', $value)
             ->firstOrFail();
     }
@@ -123,10 +125,10 @@ class PublicationGalley extends Model
      */
     public function getPublicUrlAttribute(): string
     {
-        $identifier = $this->url_path ?? $this->id;
+        $identifier = $this->url_path ?? $this->seq_id ?? $this->id;
         return route('journal.article.galley', [
             'journal' => $this->submission->journal->slug,
-            'submission' => $this->submission->slug,
+            'article' => $this->submission->seq_id ?? $this->submission->id,
             'galley' => $identifier,
         ]);
     }
