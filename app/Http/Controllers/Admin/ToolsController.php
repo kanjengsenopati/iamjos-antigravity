@@ -163,15 +163,6 @@ class ToolsController extends Controller
                 'route' => '#',
                 'available' => true,
             ],
-            [
-                'key' => 'migration',
-                'title' => 'Migration Dashboard',
-                'description' => 'Migrate data from legacy OJS MySQL database to IamJOS PostgreSQL with full audit trail.',
-                'icon' => 'server',
-                'color' => 'slate',
-                'route' => route('journal.settings.tools.migration.index', ['journal' => current_journal()->slug]),
-                'available' => auth()->user()->hasRole('Super Admin'),
-            ],
         ];
     }
 }

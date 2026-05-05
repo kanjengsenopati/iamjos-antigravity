@@ -24,53 +24,49 @@ class OjsMigrationController extends Controller
     {
         $config = LegacySourceConfig::where('is_active', true)->first();
         $stats = [];
-        $connectionError = null;
+        $fileError = null;
 
-        if ($config) {
-            try {
-                $this->migrationService->setupConnection([
-                    'driver' => $config->driver,
-                    'host' => $config->host,
-                    'port' => $config->port,
-                    'database' => $config->database,
-                    'username' => $config->username,
-                    'password' => $config->password,
-                ]);
-                $stats = $this->migrationService->getMigrationStats();
-            } catch (\Exception $e) {
-                $connectionError = $e->getMessage();
+        if ($config && $config->database) {
+            $filePath = storage_path('app/migrations/' . $config->database);
+            if (file_exists($filePath)) {
+                try {
+                    $stats = $this->migrationService->getMigrationStats();
+                } catch (\Exception $e) {
+                    $fileError = $e->getMessage();
+                }
+            } else {
+                $fileError = "File SQL tidak ditemukan di storage.";
             }
         }
 
-        return view('admin.tools.migration.index', compact('config', 'stats', 'connectionError'));
+        return view('admin.tools.migration.index', compact('config', 'stats', 'fileError'));
     }
 
     /**
-     * Store Configuration
+     * Handle SQL Dump Upload
      */
-    public function storeConfig(Request $request)
+    public function upload(Request $request)
     {
         $request->validate([
-            'host' => 'required',
-            'database' => 'required',
-            'username' => 'required',
-            'password' => 'nullable',
+            'sql_file' => 'required|file',
+            'base_url' => 'nullable|url',
         ]);
 
+        $file = $request->file('sql_file');
+        $filename = 'ojs_dump_' . time() . '.' . $file->getClientOriginalExtension();
+        
+        $path = $file->storeAs('migrations', $filename);
 
         LegacySourceConfig::updateOrCreate(
             ['is_active' => true],
             [
-                'host' => $request->host,
-                'port' => $request->port ?? '3306',
-                'database' => $request->database,
-                'username' => $request->username,
-                'password' => $request->password,
+                'driver' => 'sql_file',
+                'database' => $filename,
                 'base_url' => $request->base_url,
             ]
         );
 
-        return back()->with('success', 'Konfigurasi database legacy berhasil disimpan.');
+        return back()->with('success', 'File SQL berhasil diunggah. Anda dapat mulai memproses data.');
     }
 
     /**
@@ -81,20 +77,18 @@ class OjsMigrationController extends Controller
         $step = $request->step;
         $config = LegacySourceConfig::where('is_active', true)->first();
 
-        if (!$config) {
-            return response()->json(['success' => false, 'message' => 'Konfigurasi belum diset.']);
+        if (!$config || !$config->database) {
+            return response()->json(['success' => false, 'message' => 'File SQL belum diunggah.']);
         }
 
-        $this->migrationService->setupConnection([
-            'driver' => $config->driver,
-            'host' => $config->host,
-            'port' => $config->port,
-            'database' => $config->database,
-            'username' => $config->username,
-            'password' => $config->password,
-        ]);
+        $filePath = storage_path('app/migrations/' . $config->database);
+        if (!file_exists($filePath)) {
+            return response()->json(['success' => false, 'message' => 'File SQL hilang dari storage.']);
+        }
 
         try {
+            $this->migrationService->setSqlSource($filePath);
+
             switch ($step) {
                 case 'journals': $this->migrationService->migrateJournals(); break;
                 case 'sections': $this->migrationService->migrateSections(); break;
@@ -110,5 +104,22 @@ class OjsMigrationController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Reset Migration
+     */
+    public function reset()
+    {
+        $config = LegacySourceConfig::where('is_active', true)->first();
+        if ($config && $config->database) {
+            $path = storage_path('app/migrations/' . $config->database);
+            if (file_exists($path)) {
+                unlink($path);
+            }
+            $config->delete();
+        }
+        
+        return back()->with('success', 'Konfigurasi dan file migration telah dihapus.');
     }
 }

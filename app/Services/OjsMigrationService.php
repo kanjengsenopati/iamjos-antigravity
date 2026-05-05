@@ -16,51 +16,29 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 
-class OjsMigrationService
-{
-    /**
-     * Test connection to legacy database
-     */
-    public function testConnection(array $config): bool
+    protected $parser;
+    protected $sqlFile;
+
+    public function __construct(SqlDumpParserService $parser)
     {
-        try {
-            $this->setupConnection($config);
-            DB::connection('legacy')->getPdo();
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        $this->parser = $parser;
     }
 
     /**
-     * Setup dynamic database connection
+     * Set the SQL source file
      */
-    public function setupConnection(array $config)
+    public function setSqlSource(string $path)
     {
-        Config::set('database.connections.legacy', [
-            'driver' => $config['driver'] ?? 'mysql',
-            'host' => $config['host'],
-            'port' => $config['port'] ?? '3306',
-            'database' => $config['database'],
-            'username' => $config['username'],
-            'password' => $config['password'],
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'strict' => true,
-            'engine' => null,
-        ]);
-
-        DB::purge('legacy');
+        $this->sqlFile = $path;
+        $this->parser->setFile($path);
     }
 
     /**
-     * Get Migration Matrix Statistics
+     * Get Migration Matrix Statistics from SQL file
      */
     public function getMigrationStats(): array
     {
         $stats = [];
-        
         $modules = [
             'journals' => ['legacy_table' => 'journals', 'new_model' => Journal::class],
             'sections' => ['legacy_table' => 'sections', 'new_model' => Section::class],
@@ -74,42 +52,92 @@ class OjsMigrationService
             $legacyCount = 0;
             $legacyTable = $config['legacy_table'];
 
-            try {
-                // Resilient table detection
-                if (\Illuminate\Support\Facades\Schema::connection('legacy')->hasTable($legacyTable)) {
-                    $legacyCount = DB::connection('legacy')->table($legacyTable)->count();
-                } elseif ($key === 'submissions' && \Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('articles')) {
-                    $legacyCount = DB::connection('legacy')->table('articles')->count();
-                } elseif ($key === 'galleys') {
-                    if (\Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('publication_galleys')) {
-                        $legacyCount = DB::connection('legacy')->table('publication_galleys')->count();
-                    } elseif (\Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('submission_galleys')) {
-                        $legacyCount = DB::connection('legacy')->table('submission_galleys')->count();
-                    }
-                }
-            } catch (\Exception $e) {
-                // Fallback to 0 if table not accessible
-            }
-
+            // We don't want to count every time (slow), so we might want to cache this or just return 0 if not counted
+            // For now, let's just return current migration progress
             $stats[$key] = [
-                'legacy_count' => $legacyCount,
+                'legacy_count' => 'File Uploaded',
                 'migrated_count' => $config['new_model']::count(),
                 'mapping_count' => LegacyMapping::where('legacy_table', $legacyTable)->count(),
             ];
         }
 
-        // Resilient Metrics Stats
-        $stats['metrics_views'] = ['legacy_count' => 0, 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)->count()];
-        $stats['metrics_downloads'] = ['legacy_count' => 0, 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count()];
-
-        try {
-            if (\Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('metrics')) {
-                $stats['metrics_views']['legacy_count'] = DB::connection('legacy')->table('metrics')->whereIn('assoc_type', [259, 1048585])->sum('metric') ?: 0;
-                $stats['metrics_downloads']['legacy_count'] = DB::connection('legacy')->table('metrics')->where('assoc_type', 515)->sum('metric') ?: 0;
-            }
-        } catch (\Exception $e) {}
+        $stats['metrics_views'] = ['legacy_count' => '-', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)->count()];
+        $stats['metrics_downloads'] = ['legacy_count' => '-', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count()];
 
         return $stats;
+    }
+
+    /**
+     * Helper to get rows from a table as an array
+     */
+    protected function getLegacyRows(string $tableName): array
+    {
+        $rows = [];
+        foreach ($this->parser->getTableData($tableName) as $row) {
+            $rows[] = $row;
+        }
+        return $rows;
+    }
+
+    /**
+     * Helper to map numeric row to associative array
+     * This is the TRICKY part: we need to know the column order in the dump.
+     * Standard OJS dumps have a specific order, but it might vary.
+     * We'll assume the order from standard OJS schemas.
+     */
+    protected function mapRow(string $table, array $row)
+    {
+        $columns = [];
+        switch ($table) {
+            case 'journals':
+                $columns = ['journal_id', 'path', 'seq', 'primary_locale', 'enabled'];
+                break;
+            case 'journal_settings':
+                $columns = ['journal_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
+                break;
+            case 'sections':
+                $columns = ['section_id', 'journal_id', 'review_form_id', 'seq', 'editor_restricted', 'meta_indexed', 'meta_reviewed', 'abstracts_not_required', 'hide_title', 'hide_author', 'hide_about', 'disable_comments', 'abstract_word_count', 'abbrev'];
+                break;
+            case 'section_settings':
+                $columns = ['section_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
+                break;
+            case 'issues':
+                $columns = ['issue_id', 'journal_id', 'volume', 'number', 'year', 'published', 'current', 'date_published', 'date_notified', 'last_modified', 'access_status', 'open_access_date', 'show_volume', 'show_number', 'show_year', 'show_title', 'style_file_name', 'original_style_file_name'];
+                break;
+            case 'submissions':
+                $columns = ['submission_id', 'locale', 'context_id', 'section_id', 'language', 'date_submitted', 'last_modified', 'date_status_modified', 'status', 'submission_progress', 'current_publication_id', 'pages'];
+                break;
+            case 'publications':
+                $columns = ['publication_id', 'submission_id', 'access_status', 'date_published', 'last_modified', 'section_id', 'seq', 'status', 'url_path', 'version', 'issue_id'];
+                break;
+            case 'publication_settings':
+                $columns = ['publication_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
+                break;
+            case 'authors':
+                $columns = ['author_id', 'publication_id', 'email', 'include_in_browse', 'seq', 'user_group_id'];
+                break;
+            case 'author_settings':
+                $columns = ['author_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
+                break;
+            case 'metrics':
+                $columns = ['load_id', 'context_id', 'announcement_id', 'issue_id', 'submission_id', 'representation_id', 'submission_file_id', 'assoc_type', 'assoc_id', 'day', 'month', 'metric', 'metric_type'];
+                break;
+            case 'publication_galleys':
+            case 'submission_galleys':
+                $columns = ['galley_id', 'submission_id', 'locale', 'label', 'file_id', 'seq', 'remote_url'];
+                break;
+            case 'submission_files':
+                $columns = ['submission_file_id', 'source_submission_file_id', 'submission_id', 'file_stage', 'file_id', 'viewable', 'created_at', 'updated_at'];
+                break;
+        }
+
+        $result = new \stdClass();
+        foreach ($columns as $index => $col) {
+            if (isset($row[$index])) {
+                $result->$col = $row[$index];
+            }
+        }
+        return $result;
     }
 
     /**
@@ -117,12 +145,13 @@ class OjsMigrationService
      */
     public function migrateJournals()
     {
-        $legacyJournals = DB::connection('legacy')->table('journals')->get();
+        $settingsRows = collect($this->getLegacyRows('journal_settings'))
+            ->map(fn($r) => $this->mapRow('journal_settings', $r));
 
-        foreach ($legacyJournals as $lJournal) {
-            $settings = DB::connection('legacy')->table('journal_settings')
-                ->where('journal_id', $lJournal->journal_id)
-                ->get();
+        foreach ($this->parser->getTableData('journals') as $row) {
+            $lJournal = $this->mapRow('journals', $row);
+            
+            $settings = $settingsRows->where('journal_id', $lJournal->journal_id);
 
             $names = $settings->where('setting_name', 'name')->pluck('setting_value', 'locale');
             $descriptions = $settings->where('setting_name', 'description')->pluck('setting_value', 'locale');
@@ -146,16 +175,16 @@ class OjsMigrationService
      */
     public function migrateSections()
     {
-        $legacySections = DB::connection('legacy')->table('sections')->get();
+        $settingsRows = collect($this->getLegacyRows('section_settings'))
+            ->map(fn($r) => $this->mapRow('section_settings', $r));
 
-        foreach ($legacySections as $lSection) {
+        foreach ($this->parser->getTableData('sections') as $row) {
+            $lSection = $this->mapRow('sections', $row);
+
             $newJournalId = LegacyMapping::getMapping('journals', $lSection->journal_id);
             if (!$newJournalId) continue;
 
-            $settings = DB::connection('legacy')->table('section_settings')
-                ->where('section_id', $lSection->section_id)
-                ->get();
-
+            $settings = $settingsRows->where('section_id', $lSection->section_id);
             $titles = $settings->where('setting_name', 'title')->pluck('setting_value', 'locale');
 
             $section = Section::updateOrCreate(
@@ -179,16 +208,16 @@ class OjsMigrationService
      */
     public function migrateIssues()
     {
-        $legacyIssues = DB::connection('legacy')->table('issues')->get();
+        $settingsRows = collect($this->getLegacyRows('issue_settings'))
+            ->map(fn($r) => $this->mapRow('issue_settings', $r));
 
-        foreach ($legacyIssues as $lIssue) {
+        foreach ($this->parser->getTableData('issues') as $row) {
+            $lIssue = $this->mapRow('issues', $row);
+
             $newJournalId = LegacyMapping::getMapping('journals', $lIssue->journal_id);
             if (!$newJournalId) continue;
 
-            $settings = DB::connection('legacy')->table('issue_settings')
-                ->where('issue_id', $lIssue->issue_id)
-                ->get();
-
+            $settings = $settingsRows->where('issue_id', $lIssue->issue_id);
             $titles = $settings->where('setting_name', 'title')->pluck('setting_value', 'locale');
             $descriptions = $settings->where('setting_name', 'description')->pluck('setting_value', 'locale');
 
@@ -204,7 +233,7 @@ class OjsMigrationService
                     'description' => $descriptions->first() ?? null,
                     'is_published' => (bool)$lIssue->published,
                     'published_at' => $lIssue->date_published,
-                    'seq_id' => (int)$lIssue->issue_id, // Map OJS issue_id to seq_id
+                    'seq_id' => (int)$lIssue->issue_id,
                 ]
             );
 
@@ -217,54 +246,40 @@ class OjsMigrationService
      */
     public function migrateSubmissions()
     {
-        $legacySubmissions = DB::connection('legacy')->table('submissions')->get();
+        $publicationRows = collect($this->getLegacyRows('publications'))
+            ->map(fn($r) => $this->mapRow('publications', $r));
+        
+        $metadataRows = collect($this->getLegacyRows('publication_settings'))
+            ->map(fn($r) => $this->mapRow('publication_settings', $r));
 
-        foreach ($legacySubmissions as $lSub) {
+        foreach ($this->parser->getTableData('submissions') as $row) {
+            $lSub = $this->mapRow('submissions', $row);
+            
             $newJournalId = LegacyMapping::getMapping('journals', $lSub->context_id);
             $newSectionId = LegacyMapping::getMapping('sections', $lSub->section_id);
-            $newIssueId = LegacyMapping::getMapping('issues', $lSub->current_publication_id ? 
-                DB::connection('legacy')->table('publications')->where('publication_id', $lSub->current_publication_id)->value('issue_id') : null);
+            
+            $lPub = $publicationRows->where('publication_id', $lSub->current_publication_id)->first();
+            $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id) : null;
 
             if (!$newJournalId) continue;
 
-            $metadata = DB::connection('legacy')->table('publication_settings')
-                ->where('publication_id', $lSub->current_publication_id)
-                ->get();
+            $metadata = $metadataRows->where('publication_id', $lSub->current_publication_id);
 
             $titles = $metadata->where('setting_name', 'title')->pluck('setting_value', 'locale');
             $abstracts = $metadata->where('setting_name', 'abstract')->pluck('setting_value', 'locale');
 
-            // --- Deep Dive: Citations / References Extraction ---
+            // Citations extraction
             $rawCitations = null;
             $citationsSetting = $metadata->whereIn('setting_name', ['citations', 'references'])->first();
             
             if ($citationsSetting && !empty($citationsSetting->setting_value)) {
                 $rawCitations = $citationsSetting->setting_value;
-            } else {
-                try {
-                    if (\Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('citations')) {
-                        $citationRows = DB::connection('legacy')->table('citations')
-                            ->where('publication_id', $lSub->current_publication_id)
-                            ->orderBy('seq')
-                            ->pluck('raw_citation')
-                            ->toArray();
-                            
-                        if (!empty($citationRows)) {
-                            $rawCitations = implode("\n", array_filter($citationRows));
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Silently continue if citations table doesn't exist
-                }
             }
             
-            // Clean HTML from citations for clean Google Scholar indexing
             $rawCitations = $rawCitations ? strip_tags($rawCitations) : null;
-            // ----------------------------------------------------
 
             $existingId = LegacyMapping::getMapping('submissions', $lSub->submission_id);
             
-            // Self-healing: if no mapping, try to find by title and journal
             if (!$existingId) {
                 $existingId = Submission::where('journal_id', $newJournalId)
                     ->where('title', $titles->first())
@@ -276,16 +291,16 @@ class OjsMigrationService
                 ['id' => $existingId ?? Str::uuid()->toString()],
                 [
                     'journal_id' => $newJournalId,
-                    'user_id' => User::first()->id, // Placeholder
+                    'user_id' => User::first()->id,
                     'section_id' => $newSectionId,
                     'issue_id' => $newIssueId,
                     'status' => Submission::STATUS_PUBLISHED,
                     'stage' => Submission::STAGE_PRODUCTION,
                     'title' => strip_tags($titles->first() ?? 'Untitled Migration'),
                     'abstract' => $abstracts->first() ?? null,
-                    'references' => $rawCitations, // Map extracted citations
+                    'references' => $rawCitations,
                     'created_at' => $lSub->date_submitted,
-                    'seq_id' => (int)$lSub->submission_id, // Map OJS submission_id to seq_id
+                    'seq_id' => (int)$lSub->submission_id,
                 ]
             );
 
@@ -299,7 +314,7 @@ class OjsMigrationService
                 [
                     'title' => $titles->first(),
                     'abstract' => $abstracts->first(),
-                    'references' => $rawCitations, // Map extracted citations to Publication
+                    'references' => $rawCitations,
                     'status' => Publication::STATUS_PUBLISHED,
                     'date_published' => $lSub->date_submitted,
                 ]
@@ -312,27 +327,27 @@ class OjsMigrationService
      */
     public function migrateAuthors()
     {
-        $legacyAuthors = DB::connection('legacy')->table('authors')->get();
-
-        foreach ($legacyAuthors as $lAuthor) {
-            $lPublication = DB::connection('legacy')->table('publications')
-                ->where('publication_id', $lAuthor->publication_id)
-                ->first();
+        $publicationRows = collect($this->getLegacyRows('publications'))
+            ->map(fn($r) => $this->mapRow('publications', $r));
             
+        $settingsRows = collect($this->getLegacyRows('author_settings'))
+            ->map(fn($r) => $this->mapRow('author_settings', $r));
+
+        foreach ($this->parser->getTableData('authors') as $row) {
+            $lAuthor = $this->mapRow('authors', $row);
+            
+            $lPublication = $publicationRows->where('publication_id', $lAuthor->publication_id)->first();
             if (!$lPublication) continue;
 
             $newSubmissionId = LegacyMapping::getMapping('submissions', $lPublication->submission_id);
             if (!$newSubmissionId) continue;
 
-            $settings = DB::connection('legacy')->table('author_settings')
-                ->where('author_id', $lAuthor->author_id)
-                ->get();
+            $settings = $settingsRows->where('author_id', $lAuthor->author_id);
             
             $givenName = $settings->where('setting_name', 'givenName')->first()?->setting_value ?? '';
             $familyName = $settings->where('setting_name', 'familyName')->first()?->setting_value ?? '';
             $affiliation = $settings->where('setting_name', 'affiliation')->first()?->setting_value ?? null;
 
-            // Self-healing: check if author with same email already exists in this submission
             $existingAuthor = \App\Models\SubmissionAuthor::where('submission_id', $newSubmissionId)
                 ->where('email', $lAuthor->email)
                 ->first();
@@ -353,7 +368,6 @@ class OjsMigrationService
                 ]
             );
 
-            // CRITICAL: Set the mapping so dashboard shows "Synced"
             LegacyMapping::setMapping('authors', $lAuthor->author_id, $author->id);
         }
     }
@@ -363,9 +377,8 @@ class OjsMigrationService
      */
     public function migrateMetrics()
     {
-        $legacyMetrics = DB::connection('legacy')->table('metrics')->get();
-
-        foreach ($legacyMetrics as $lMetric) {
+        foreach ($this->parser->getTableData('metrics') as $row) {
+            $lMetric = $this->mapRow('metrics', $row);
             $legacySubId = $lMetric->submission_id ?? null;
             $type = ArticleMetric::TYPE_VIEW;
 
@@ -373,10 +386,8 @@ class OjsMigrationService
                 $type = ArticleMetric::TYPE_DOWNLOAD;
             }
 
-            if (!$legacySubId) {
-                if ($lMetric->assoc_type == 259 || $lMetric->assoc_type == 1048585) {
-                    $legacySubId = $lMetric->pkid ?? $lMetric->assoc_id;
-                }
+            if (!$legacySubId && ($lMetric->assoc_type == 259 || $lMetric->assoc_type == 1048585)) {
+                $legacySubId = $lMetric->pkid ?? $lMetric->assoc_id;
             }
 
             if (!$legacySubId) continue;
@@ -405,46 +416,40 @@ class OjsMigrationService
 
         $baseUrl = rtrim($baseUrl, '/');
 
-        // Detect correct table (OJS 3.3 vs 3.2-)
-        $galleyTable = \Illuminate\Support\Facades\Schema::connection('legacy')->hasTable('publication_galleys') 
-            ? 'publication_galleys' 
-            : 'submission_galleys';
+        $submissionsRows = collect($this->getLegacyRows('submissions'))->map(fn($r) => $this->mapRow('submissions', $r));
+        $journalsRows = collect($this->getLegacyRows('journals'))->map(fn($r) => $this->mapRow('journals', $r));
+        $filesRows = collect($this->getLegacyRows('submission_files'))->map(fn($r) => $this->mapRow('submission_files', $r));
 
-        $legacyGalleys = DB::connection('legacy')->table($galleyTable)
-            ->join('submissions', "$galleyTable.submission_id", '=', 'submissions.submission_id')
-            ->join('journals', 'submissions.context_id', '=', 'journals.journal_id')
-            ->select(
-                "$galleyTable.*", 
-                'submissions.submission_id as legacy_submission_id',
-                'journals.path as journal_path'
-            )
-            ->get();
+        $galleyTable = 'submission_galleys'; // Default to older OJS
+        // We'll check if publication_galleys has data
+        $galleyData = $this->parser->getTableData('publication_galleys');
+        if (!$galleyData->valid()) {
+            $galleyData = $this->parser->getTableData('submission_galleys');
+        } else {
+            $galleyTable = 'publication_galleys';
+        }
 
-        foreach ($legacyGalleys as $lGalley) {
-            $newSubmissionId = LegacyMapping::getMapping('submissions', $lGalley->legacy_submission_id);
+        foreach ($galleyData as $row) {
+            $lGalley = $this->mapRow($galleyTable, $row);
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lGalley->submission_id);
             if (!$newSubmissionId) continue;
 
             $submission = Submission::with('journal')->find($newSubmissionId);
             if (!$submission) continue;
 
-            // 1. Resolve File Meta from Legacy
-            $lFile = DB::connection('legacy')->table('submission_files')
-                ->where('submission_file_id', $lGalley->submission_file_id ?? ($lGalley->file_id ?? null))
-                ->first();
+            $lSub = $submissionsRows->where('submission_id', $lGalley->submission_id)->first();
+            $lJournal = $lSub ? $journalsRows->where('journal_id', $lSub->context_id)->first() : null;
+            $journalPath = $lJournal ? $lJournal->path : $submission->journal->slug;
 
-            if (!$lFile && empty($lGalley->url_remote)) continue;
+            $lFile = $filesRows->where('submission_file_id', $lGalley->file_id)->first();
+            if (!$lFile && empty($lGalley->remote_url)) continue;
 
-            $filename = $lFile->original_file_name ?? "galley_{$lGalley->galley_id}.pdf";
-            $galleyId = $lGalley->galley_id ?? $lGalley->publication_galley_id;
-
-            // 2. Construct Target Directory (Matching Public URL Style)
-            // Path: public/journals/{slug}/articles/{seq_id}/galleys/{galley_seq_id}/
-            $targetDir = "journals/{$submission->journal->slug}/articles/{$submission->seq_id}/galleys/{$galleyId}";
+            $filename = "galley_{$lGalley->galley_id}.pdf";
+            $targetDir = "journals/{$submission->journal->slug}/articles/{$submission->seq_id}/galleys/{$lGalley->galley_id}";
             $targetPath = "{$targetDir}/{$filename}";
 
-            // 3. Cloud Download
-            if (empty($lGalley->url_remote)) {
-                $downloadUrl = "{$baseUrl}/index.php/{$lGalley->journal_path}/article/download/{$lGalley->legacy_submission_id}/{$galleyId}";
+            if (empty($lGalley->remote_url)) {
+                $downloadUrl = "{$baseUrl}/index.php/{$journalPath}/article/download/{$lGalley->submission_id}/{$lGalley->galley_id}";
                 
                 try {
                     $response = \Illuminate\Support\Facades\Http::timeout(30)->get($downloadUrl);
@@ -452,16 +457,13 @@ class OjsMigrationService
                         \Illuminate\Support\Facades\Storage::disk('public')->put($targetPath, $response->body());
                     }
                 } catch (\Exception $e) {
-                    // Log error but continue
-                    \Illuminate\Support\Facades\Log::error("Gagal mendownload galley {$galleyId}: " . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::error("Gagal mendownload galley {$lGalley->galley_id}: " . $e->getMessage());
                     continue;
                 }
             } else {
-                // Remote Galley
-                $targetPath = $lGalley->url_remote;
+                $targetPath = $lGalley->remote_url;
             }
 
-            // 4. Create SubmissionFile Record
             $subFile = \App\Models\SubmissionFile::updateOrCreate(
                 [
                     'submission_id' => $submission->id,
@@ -470,17 +472,13 @@ class OjsMigrationService
                 [
                     'file_path' => $targetPath,
                     'file_type' => \App\Models\SubmissionFile::TYPE_GALLEY,
-                    'mime_type' => \Illuminate\Support\Arr::get([
-                        'pdf' => 'application/pdf',
-                        'html' => 'text/html',
-                    ], strtolower(pathinfo($filename, PATHINFO_EXTENSION)), 'application/octet-stream'),
-                    'file_size' => $lFile->file_size ?? 0,
+                    'mime_type' => 'application/pdf',
+                    'file_size' => 0,
                     'stage' => \App\Models\SubmissionFile::STAGE_PRODUCTION,
                     'uploaded_by' => User::first()->id,
                 ]
             );
 
-            // 5. Create PublicationGalley Record
             \App\Models\PublicationGalley::updateOrCreate(
                 [
                     'submission_id' => $submission->id,
@@ -490,11 +488,11 @@ class OjsMigrationService
                     'file_id' => $subFile->id,
                     'locale' => $lGalley->locale ?? 'en',
                     'seq' => (int)$lGalley->seq,
-                    'seq_id' => (int)$galleyId, // Map legacy ID to seq_id for friendly URL
+                    'seq_id' => (int)$lGalley->galley_id,
                 ]
             );
 
-            LegacyMapping::setMapping('galleys', $galleyId, $submission->id);
+            LegacyMapping::setMapping('galleys', $lGalley->galley_id, $submission->id);
         }
     }
 }

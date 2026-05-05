@@ -185,8 +185,9 @@ $registerAllRoutes = function ($prefix = '') {
 
             Route::controller(\App\Http\Controllers\Admin\Tools\OjsMigrationController::class)->prefix('tools/migration')->name('tools.migration.')->group(function () {
                 Route::get('/', 'index')->name('index');
-                Route::post('/config', 'storeConfig')->name('store');
+                Route::post('/upload', 'upload')->name('upload');
                 Route::post('/run', 'runStep')->name('run');
+                Route::post('/reset', 'reset')->name('reset');
             });
         });
 
@@ -534,11 +535,6 @@ $registerAllRoutes = function ($prefix = '') {
                         Route::post('/download', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'export'])->name('download');
                         Route::post('/save', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'saveSettings'])->name('save');
                         Route::post('/deposit', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'deposit'])->name('deposit');
-                    });
-                    Route::controller(\App\Http\Controllers\Admin\Tools\OjsMigrationController::class)->prefix('tools/migration')->name('tools.migration.')->group(function () {
-                        Route::get('/', 'index')->name('index');
-                        Route::post('/config', 'storeConfig')->name('store');
-                        Route::post('/run', 'runStep')->name('run');
                     });
                 });
 
