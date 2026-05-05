@@ -30,18 +30,21 @@ class OjsMigrationController extends Controller
         $journalBreakdown = [];
         $previewData = [];
 
-        if ($config && $config->database) {
-            $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
-            if (file_exists($filePath)) {
-                try {
+        if ($config) {
+            try {
+                if ($config->connection_name === 'ojs_legacy') {
+                    // --- Engine A: Direct Database ---
+                    $this->migrationService->setDbSource($config);
+                } elseif ($config->database && $config->database !== 'none') {
+                    // --- Engine B: SQL File ---
+                    $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
+                    if (!file_exists($filePath)) throw new \Exception("File SQL tidak ditemukan di storage.");
                     $this->migrationService->setSqlSource($filePath);
-                    $stats = $this->migrationService->getMigrationStats();
-                    $previewData = $this->migrationService->getSqlPreviewStats();
-                } catch (\Exception $e) {
-                    $fileError = $e->getMessage();
                 }
-            } else {
-                $fileError = "File SQL tidak ditemukan di storage.";
+                $stats = $this->migrationService->getMigrationStats();
+                $previewData = $this->migrationService->getSqlPreviewStats();
+            } catch (\Exception $e) {
+                $fileError = $e->getMessage();
             }
         }
 
@@ -90,7 +93,48 @@ class OjsMigrationController extends Controller
     {
         $type = $request->input('type', 'sql');
 
-        if ($type === 'sql') {
+        if ($type === 'database') {
+            // --- Engine A: Direct DB Connection ---
+            $request->validate([
+                'host'     => 'required|string',
+                'port'     => 'required|integer',
+                'database' => 'required|string',
+                'username' => 'required|string',
+            ]);
+
+            // Test the connection first
+            try {
+                \Illuminate\Support\Facades\Config::set('database.connections.ojs_legacy', [
+                    'driver'    => 'mysql',
+                    'host'      => $request->host,
+                    'port'      => $request->port,
+                    'database'  => $request->database,
+                    'username'  => $request->username,
+                    'password'  => $request->password ?? '',
+                    'charset'   => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'prefix'    => '',
+                ]);
+                DB::connection('ojs_legacy')->getPdo();
+            } catch (\Exception $e) {
+                return back()->withErrors(['host' => 'Koneksi gagal: ' . $e->getMessage()])->withInput();
+            }
+
+            LegacySourceConfig::updateOrCreate(
+                ['is_active' => true],
+                [
+                    'connection_name' => 'ojs_legacy',
+                    'driver'          => 'mysql',
+                    'host'            => $request->host,
+                    'port'            => (int)$request->port,
+                    'database'        => $request->database,
+                    'username'        => $request->username,
+                    'password'        => encrypt($request->password ?? ''),
+                ]
+            );
+
+        } elseif ($type === 'sql') {
+            // --- Engine B: SQL File Upload ---
             $request->validate([
                 'sql_file' => 'required|file',
             ]);
@@ -102,26 +146,25 @@ class OjsMigrationController extends Controller
             LegacySourceConfig::updateOrCreate(
                 ['is_active' => true],
                 [
-                    'driver' => 'sql_file',
-                    'database' => $filename,
-                    'host' => 'localhost',
-                    'username' => 'none',
-                    'password' => encrypt('none'),
+                    'connection_name' => 'sql_file',
+                    'driver'          => 'sql_file',
+                    'database'        => $filename,
+                    'host'            => 'localhost',
+                    'username'        => 'none',
+                    'password'        => encrypt('none'),
                 ]
             );
         } else {
-            $request->validate([
-                'base_url' => 'required|string',
-            ]);
-
+            // Legacy: files path
+            $request->validate(['base_url' => 'required|string']);
             LegacySourceConfig::updateOrCreate(
                 ['is_active' => true],
                 [
-                    'base_url' => $request->base_url,
-                    'host' => 'localhost',
-                    'database' => 'none',
-                    'username' => 'none',
-                    'password' => encrypt('none'),
+                    'base_url'  => $request->base_url,
+                    'host'      => 'localhost',
+                    'database'  => 'none',
+                    'username'  => 'none',
+                    'password'  => encrypt('none'),
                 ]
             );
         }
@@ -204,38 +247,44 @@ class OjsMigrationController extends Controller
      */
     public function runStep(Request $request)
     {
-        $step = $request->step;
+        $step   = $request->step;
         $config = LegacySourceConfig::where('is_active', true)->first();
 
-        if (!$config || !$config->database) {
-            return response()->json(['success' => false, 'message' => 'File SQL belum diunggah.']);
-        }
-
-        $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
-        if (!file_exists($filePath)) {
-            return response()->json(['success' => false, 'message' => 'File SQL hilang dari storage.']);
+        if (!$config) {
+            return response()->json(['success' => false, 'message' => 'Konfigurasi migrasi belum ada. Silakan isi di tab Database Source.']);
         }
 
         try {
-            $this->migrationService->setSqlSource($filePath);
+            // --- Route to correct engine ---
+            if ($config->connection_name === 'ojs_legacy') {
+                $this->migrationService->setDbSource($config);
+            } else {
+                $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
+                if (!file_exists($filePath)) {
+                    return response()->json(['success' => false, 'message' => 'File SQL hilang dari storage.']);
+                }
+                $this->migrationService->setSqlSource($filePath);
+            }
 
             switch ($step) {
-                case 'users': $this->migrationService->migrateUsers(); break;
-                case 'journals': $this->migrationService->migrateJournals(); break;
-                case 'sections': $this->migrationService->migrateSections(); break;
-                case 'issues': $this->migrationService->migrateIssues(); break;
+                case 'users':       $this->migrationService->migrateUsers(); break;
+                case 'journals':    $this->migrationService->migrateJournals(); break;
+                case 'sections':    $this->migrationService->migrateSections(); break;
+                case 'issues':      $this->migrationService->migrateIssues(); break;
                 case 'submissions': $this->migrationService->migrateSubmissions(); break;
-                case 'authors': $this->migrationService->migrateAuthors(); break;
-                case 'reviews': $this->migrationService->migrateReviews(); break;
+                case 'authors':     $this->migrationService->migrateAuthors(); break;
+                case 'reviews':     $this->migrationService->migrateReviews(); break;
                 case 'discussions': $this->migrationService->migrateDiscussions(); break;
-                case 'logs': $this->migrationService->migrateLogs(); break;
-                case 'metrics': $this->migrationService->migrateMetrics(); break;
-                case 'galleys': $this->migrationService->migrateGalleys($config->base_url); break;
+                case 'logs':        $this->migrationService->migrateLogs(); break;
+                case 'metrics':     $this->migrationService->migrateMetrics(); break;
+                case 'galleys':     $this->migrationService->migrateGalleys($config->base_url); break;
                 default: throw new \Exception("Step tidak valid.");
             }
 
-            return response()->json(['success' => true, 'message' => "Migrasi step $step berhasil."]);
+            $config->update(['last_synced_at' => now()]);
+            return response()->json(['success' => true, 'message' => "Migrasi step '{$step}' berhasil."]);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('MigrationStep Error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
     }

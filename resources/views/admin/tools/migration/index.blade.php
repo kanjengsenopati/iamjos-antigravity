@@ -64,17 +64,71 @@
                 </div>
 
                 <!-- SQL Tab Content -->
-                <div x-show="activeSetupTab === 'sql'" class="p-8">
-                    @if($config && $config->database)
-                            <div class="mb-6 p-4 bg-emerald-50 rounded-xl flex items-center justify-between border border-emerald-100">
-                                <div class="flex items-center gap-3">
-                                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    <span class="text-sm font-medium text-emerald-800">Database Ready: {{ $config->database }}</span>
-                                </div>
-                                <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
-                            </div>
-                        @endif
+                <div x-show="activeSetupTab === 'sql'" class="p-8" x-data="{ mode: '{{ $config && $config->connection_name === 'ojs_legacy' ? 'db' : 'file' }}' }">
+                    
+                    <div class="flex p-1 bg-slate-100 rounded-xl w-max mb-8">
+                        <button @click="mode = 'db'" 
+                            :class="mode === 'db' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                            class="px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                            Direct Database (Fast)
+                        </button>
+                        <button @click="mode = 'file'" 
+                            :class="mode === 'file' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                            class="px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            SQL File (ETL)
+                        </button>
+                    </div>
 
+                    @if($config && $config->database)
+                        <div class="mb-6 p-4 bg-emerald-50 rounded-xl flex items-center justify-between border border-emerald-100">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <span class="text-sm font-medium text-emerald-800">Source Ready: {{ $config->database }}</span>
+                            </div>
+                            <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                        </div>
+                    @endif
+
+                    <!-- Database Form -->
+                    <div x-show="mode === 'db'" x-transition>
+                        <form action="{{ route('admin.tools.migration.upload') }}" method="POST" class="space-y-6">
+                            @csrf
+                            <input type="hidden" name="type" value="database">
+                            
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Host</label>
+                                    <input type="text" name="host" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="127.0.0.1" value="{{ $config->host ?? '127.0.0.1' }}" required>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Port</label>
+                                    <input type="number" name="port" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="3306" value="{{ $config->port ?? '3306' }}" required>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database Name</label>
+                                    <input type="text" name="database" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="ojs_legacy_db" value="{{ $config->connection_name === 'ojs_legacy' ? $config->database : '' }}" required>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database User</label>
+                                    <input type="text" name="username" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="root" value="{{ $config->username ?? 'root' }}" required>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database Password</label>
+                                    <input type="password" name="password" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="Leave empty if none">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex justify-center items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Connect & Initialize
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- File Form -->
+                    <div x-show="mode === 'file'" x-transition style="display: none;">
                         <form action="{{ route('admin.tools.migration.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                             @csrf
                             <input type="hidden" name="type" value="sql">
@@ -94,16 +148,17 @@
                                 Upload & Initialize SQL
                             </button>
                         </form>
-
-                        @if($config && $config->database)
-                            <div class="mt-6 border-t border-slate-100 pt-6 flex justify-end">
-                                <button type="button" @click="activeSetupTab = 'progress'" class="flex items-center gap-2 text-blue-600 font-bold hover:underline text-sm">
-                                    Lanjut ke Migration Dashboard
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                </button>
-                            </div>
-                        @endif
                     </div>
+
+                    @if($config && $config->database)
+                        <div class="mt-6 border-t border-slate-100 pt-6 flex justify-end">
+                            <button type="button" @click="activeSetupTab = 'progress'" class="flex items-center gap-2 text-blue-600 font-bold hover:underline text-sm">
+                                Lanjut ke Migration Dashboard
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                        </div>
+                    @endif
+                </div>
 
                     <!-- Files Tab Content (Adopt WP File Manager Features) -->
                     <div x-show="activeSetupTab === 'files'" class="p-8" x-data="fileManager()">
@@ -367,25 +422,44 @@
                             <tr class="bg-slate-50/50">
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">Phase</th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">Description</th>
-                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">Migrated</th>
-                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">Status</th>
+                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
+                                    <span class="flex items-center justify-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Legacy (OJS)
+                                    </span>
+                                </th>
+                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
+                                    <span class="flex items-center justify-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Migrated
+                                    </span>
+                                </th>
+                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
+                                    <span class="flex items-center justify-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-slate-300 inline-block"></span> Native
+                                    </span>
+                                </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @foreach([
-                                'users' => ['label' => 'Users & Roles', 'desc' => 'Accounts, passwords (default), and group roles'],
-                                'journals' => ['label' => 'Journals', 'desc' => 'Core journal profiles and settings'],
-                                'sections' => ['label' => 'Sections', 'desc' => 'Journal taxonomies and abbreviations'],
-                                'issues' => ['label' => 'Issues', 'desc' => 'Volumes, numbers, and cover info'],
-                                'submissions' => ['label' => 'Articles', 'desc' => 'All submissions (published, review, etc)'],
-                                'authors' => ['label' => 'Authors', 'desc' => 'Contributor roles and affiliations'],
-                                'reviews' => ['label' => 'Review Workflow', 'desc' => 'Review assignments, rounds, and decisions'],
-                                'discussions' => ['label' => 'Discussions', 'desc' => 'Queries, notes, and messages'],
-                                'logs' => ['label' => 'Event Logs', 'desc' => 'System audit logs and email history'],
-                                'metrics' => ['label' => 'Statistics', 'desc' => 'Legacy usage and view counts'],
-                                'galleys' => ['label' => 'Files', 'desc' => 'All submission files and galleys']
+                                'users'       => ['label' => 'Users & Roles',    'desc' => 'Accounts, passwords (default), and group roles', 'step' => 'users'],
+                                'journals'    => ['label' => 'Journals',          'desc' => 'Core journal profiles and settings',              'step' => 'journals'],
+                                'sections'    => ['label' => 'Sections',          'desc' => 'Journal taxonomies and abbreviations',             'step' => 'sections'],
+                                'issues'      => ['label' => 'Issues',            'desc' => 'Volumes, numbers, and cover info',                 'step' => 'issues'],
+                                'submissions' => ['label' => 'Articles',          'desc' => 'All submissions (published, review, etc)',          'step' => 'submissions'],
+                                'authors'     => ['label' => 'Authors',           'desc' => 'Contributor roles and affiliations',               'step' => 'authors'],
+                                'reviews'     => ['label' => 'Review Workflow',   'desc' => 'Review assignments, rounds, and decisions',        'step' => 'reviews'],
+                                'discussions' => ['label' => 'Discussions',       'desc' => 'Queries, notes, and messages',                     'step' => 'discussions'],
+                                'logs'        => ['label' => 'Event Logs',        'desc' => 'System audit logs and email history',              'step' => 'logs'],
+                                'metrics'     => ['label' => 'Statistics',        'desc' => 'Legacy usage and view counts',                     'step' => 'metrics'],
+                                'galleys'     => ['label' => 'Files & Galleys',   'desc' => 'All submission files and galleys',                 'step' => 'galleys'],
                             ] as $key => $meta)
+                            @php
+                                $legacyCount   = $stats[$key]['legacy_count']   ?? '—';
+                                $migratedCount = $stats[$key]['migrated_count'] ?? 0;
+                                $nativeCount   = $stats[$key]['native_count']   ?? 0;
+                                $isSynced      = $migratedCount > 0;
+                            @endphp
                             <tr class="hover:bg-slate-50/30 transition-colors">
                                 <td class="px-6 py-4">
                                     <span class="text-sm font-bold text-slate-700">{{ $meta['label'] }}</span>
@@ -393,25 +467,32 @@
                                 <td class="px-6 py-4">
                                     <span class="text-xs text-slate-500">{{ $meta['desc'] }}</span>
                                 </td>
+                                {{-- Pillar 1: Legacy (OJS Source) --}}
                                 <td class="px-6 py-4 text-center">
-                                    <span class="text-sm font-mono font-bold text-emerald-600">{{ number_format($stats[$key]['migrated_count'] ?? 0) }}</span>
+                                    <span class="text-sm font-mono font-bold text-blue-600">
+                                        {{ is_numeric($legacyCount) ? number_format($legacyCount) : $legacyCount }}
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    @php 
-                                        $migratedCount = $stats[$key]['migrated_count'] ?? 0;
-                                    @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $migratedCount > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
-                                        {{ $migratedCount > 0 ? 'Synced' : 'Waiting' }}
+                                {{-- Pillar 2: Migrated (via LegacyMapping) --}}
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-mono font-bold {{ $isSynced ? 'text-emerald-600' : 'text-slate-300' }}">
+                                        {{ number_format($migratedCount) }}
+                                    </span>
+                                </td>
+                                {{-- Pillar 3: Native (existing, non-migrated) --}}
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-mono font-bold {{ $nativeCount > 0 ? 'text-amber-500' : 'text-slate-300' }}">
+                                        {{ number_format($nativeCount) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <button @click="runStep('{{ $key }}')" 
+                                    <button @click="runStep('{{ $meta['step'] }}')" 
                                         class="text-blue-600 hover:text-blue-800 font-bold text-sm disabled:opacity-50 flex items-center justify-end gap-2 ml-auto"
-                                        :disabled="loadingStep === '{{ $key }}'">
-                                        <template x-if="loadingStep === '{{ $key }}'">
+                                        :disabled="loadingStep === '{{ $meta['step'] }}'">
+                                        <template x-if="loadingStep === '{{ $meta['step'] }}'">
                                             <svg class="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                         </template>
-                                        <span x-text="loadingStep === '{{ $key }}' ? 'Processing...' : 'Run Step'"></span>
+                                        <span x-text="loadingStep === '{{ $meta['step'] }}' ? 'Processing...' : 'Run Step'"></span>
                                     </button>
                                 </td>
                             </tr>

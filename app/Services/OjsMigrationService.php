@@ -20,6 +20,8 @@ class OjsMigrationService
 {
     protected $parser;
     protected $sqlFile;
+    protected $dbConnection = null; // Engine A: direct DB mode
+    protected $legacyConfig = null;
 
     public function __construct(SqlDumpParserService $parser)
     {
@@ -27,92 +29,170 @@ class OjsMigrationService
     }
 
     /**
-     * Set the SQL source file
+     * Engine A: Set direct database source (MySQL)
+     */
+    public function setDbSource($config)
+    {
+        $this->legacyConfig = $config;
+        $this->sqlFile      = null;
+
+        Config::set('database.connections.ojs_legacy', [
+            'driver'    => 'mysql',
+            'host'      => $config->host,
+            'port'      => $config->port ?? 3306,
+            'database'  => $config->database,
+            'username'  => $config->username,
+            'password'  => $config->password ?? '', // Already decrypted via accessor
+            'charset'   => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix'    => '',
+        ]);
+
+        $this->dbConnection = 'ojs_legacy';
+    }
+
+    /**
+     * Engine B: Set SQL file source
      */
     public function setSqlSource(string $path)
     {
-        $this->sqlFile = $path;
+        $this->sqlFile      = $path;
+        $this->dbConnection = null;
         $this->parser->setFile($path);
     }
 
     /**
-     * Get Migration Matrix Statistics from SQL file
+     * Get Migration Matrix Statistics — 3-Pillar: Legacy | Migrated | Native
      */
     public function getMigrationStats(): array
     {
         $stats = [];
         $modules = [
-            'users'       => ['legacy_table' => 'users', 'new_model' => User::class],
-            'journals'    => ['legacy_table' => 'journals', 'new_model' => Journal::class],
-            'sections'    => ['legacy_table' => 'sections', 'new_model' => Section::class],
-            'issues'      => ['legacy_table' => 'issues', 'new_model' => Issue::class],
-            'submissions' => ['legacy_table' => 'submissions', 'new_model' => Submission::class],
-            'authors'     => ['legacy_table' => 'authors', 'new_model' => SubmissionAuthor::class],
+            'users'       => ['legacy_table' => 'users',              'new_model' => User::class],
+            'journals'    => ['legacy_table' => 'journals',           'new_model' => Journal::class],
+            'sections'    => ['legacy_table' => 'sections',           'new_model' => Section::class],
+            'issues'      => ['legacy_table' => 'issues',             'new_model' => Issue::class],
+            'submissions' => ['legacy_table' => 'submissions',        'new_model' => Submission::class],
+            'authors'     => ['legacy_table' => 'authors',            'new_model' => SubmissionAuthor::class],
             'reviews'     => ['legacy_table' => 'review_assignments', 'new_model' => \App\Models\ReviewAssignment::class],
-            'discussions' => ['legacy_table' => 'queries', 'new_model' => \App\Models\Discussion::class],
-            'logs'        => ['legacy_table' => 'event_log', 'new_model' => \App\Models\SubmissionLog::class],
-            'galleys'     => ['legacy_table' => 'galleys', 'new_model' => \App\Models\PublicationGalley::class],
+            'discussions' => ['legacy_table' => 'queries',            'new_model' => \App\Models\Discussion::class],
+            'logs'        => ['legacy_table' => 'event_log',          'new_model' => \App\Models\SubmissionLog::class],
+            'galleys'     => ['legacy_table' => 'galleys',            'new_model' => \App\Models\PublicationGalley::class],
         ];
 
         foreach ($modules as $key => $config) {
-            $legacyTable = $config['legacy_table'];
+            $legacyTable  = $config['legacy_table'];
+            $model        = $config['new_model'];
+            $mappingCount = LegacyMapping::where('legacy_table', $legacyTable)->count();
+            $totalCount   = $model::count();
+
+            // Legacy source count
+            if ($this->dbConnection) {
+                // Engine A: direct count from MySQL
+                try {
+                    $legacyCount = DB::connection($this->dbConnection)->table($legacyTable)->count();
+                } catch (\Exception $e) {
+                    $legacyCount = '?';
+                }
+            } else {
+                // Engine B: cannot count SQL file cheaply, show mapping count as reference
+                $legacyCount = $mappingCount > 0 ? $mappingCount : '—';
+            }
 
             $stats[$key] = [
-                'legacy_count' => 'File Uploaded',
-                'migrated_count' => $config['new_model']::count(),
-                'mapping_count' => LegacyMapping::where('legacy_table', $legacyTable)->count(),
+                'legacy_count'   => $legacyCount,
+                'migrated_count' => $mappingCount,                    // Records traceable to OJS
+                'native_count'   => max(0, $totalCount - $mappingCount), // Records not from OJS
             ];
         }
 
-        $stats['metrics_views'] = ['legacy_count' => '-', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)->count()];
-        $stats['metrics_downloads'] = ['legacy_count' => '-', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count()];
+        $stats['metrics_views']     = ['legacy_count' => '—', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)->count(),     'native_count' => 0];
+        $stats['metrics_downloads'] = ['legacy_count' => '—', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count(), 'native_count' => 0];
 
         return $stats;
     }
 
     /**
-     * Get preview of the data inside the SQL dump before migrating.
+     * Get preview stats per journal — supports both Engine A and B.
      */
     public function getSqlPreviewStats(): array
     {
-        if (!$this->parser) return [];
-        
         $preview = [];
-        $journals = $this->getLegacyRows('journals');
-        $journalSettings = $this->getLegacyRows('journal_settings');
-        $sections = $this->getLegacyRows('sections');
-        $issues = $this->getLegacyRows('issues');
-        $submissions = $this->getLegacyRows('submissions');
-        
-        $journalSettingsMap = collect($journalSettings)->map(fn($r) => $this->mapRow('journal_settings', $r));
-        $sectionsMap = collect($sections)->map(fn($r) => $this->mapRow('sections', $r));
-        $issuesMap = collect($issues)->map(fn($r) => $this->mapRow('issues', $r));
-        $submissionsMap = collect($submissions)->map(fn($r) => $this->mapRow('submissions', $r));
-        
-        foreach ($journals as $row) {
-            $lJournal = $this->mapRow('journals', $row);
-            $jId = $lJournal->journal_id;
-            
-            $name = $journalSettingsMap->where('journal_id', $jId)->where('setting_name', 'name')->first()?->setting_value ?? 'Unknown Journal';
-            
-            $preview[] = [
-                'id' => $jId,
-                'name' => $name,
-                'path' => $lJournal->path,
-                'sections_count' => $sectionsMap->where('journal_id', $jId)->count(),
-                'issues_count' => $issuesMap->where('journal_id', $jId)->count(),
-                'articles_count' => $submissionsMap->where('context_id', $jId)->count(),
-            ];
+
+        if ($this->dbConnection) {
+            // --- Engine A: Direct query from MySQL ---
+            $conn = $this->dbConnection;
+
+            $journals = DB::connection($conn)->table('journals')->get();
+
+            foreach ($journals as $lJournal) {
+                $jId  = $lJournal->journal_id;
+                $name = DB::connection($conn)->table('journal_settings')
+                    ->where('journal_id', $jId)
+                    ->where('setting_name', 'name')
+                    ->value('setting_value') ?? 'Unknown Journal';
+
+                $preview[] = [
+                    'id'             => $jId,
+                    'name'           => $name,
+                    'path'           => $lJournal->path,
+                    'sections_count' => DB::connection($conn)->table('sections')->where('journal_id', $jId)->count(),
+                    'issues_count'   => DB::connection($conn)->table('issues')->where('journal_id', $jId)->count(),
+                    'articles_count' => DB::connection($conn)->table('submissions')->where('context_id', $jId)->count(),
+                ];
+            }
+        } elseif ($this->parser && $this->sqlFile) {
+            // --- Engine B: SQL file parser ---
+            $journals        = $this->getLegacyRows('journals');
+            $journalSettings = $this->getLegacyRows('journal_settings');
+            $sections        = $this->getLegacyRows('sections');
+            $issues          = $this->getLegacyRows('issues');
+            $submissions     = $this->getLegacyRows('submissions');
+
+            $journalSettingsMap = collect($journalSettings)->map(fn($r) => $this->mapRow('journal_settings', $r));
+            $sectionsMap        = collect($sections)->map(fn($r) => $this->mapRow('sections', $r));
+            $issuesMap          = collect($issues)->map(fn($r) => $this->mapRow('issues', $r));
+            $submissionsMap     = collect($submissions)->map(fn($r) => $this->mapRow('submissions', $r));
+
+            foreach ($journals as $row) {
+                $lJournal = $this->mapRow('journals', $row);
+                $jId      = $lJournal->journal_id;
+
+                $name = $journalSettingsMap
+                    ->where('journal_id', $jId)
+                    ->where('setting_name', 'name')
+                    ->first()?->setting_value ?? 'Unknown Journal';
+
+                $preview[] = [
+                    'id'             => $jId,
+                    'name'           => $name,
+                    'path'           => $lJournal->path,
+                    'sections_count' => $sectionsMap->where('journal_id', $jId)->count(),
+                    'issues_count'   => $issuesMap->where('journal_id', $jId)->count(),
+                    'articles_count' => $submissionsMap->where('context_id', $jId)->count(),
+                ];
+            }
         }
-        
+
         return $preview;
     }
 
+
     /**
-     * Helper to get rows from a table as an array
+     * Dual-Engine getLegacyRows: auto-routes to DB or SQL parser
      */
     protected function getLegacyRows(string $tableName): array
     {
+        if ($this->dbConnection) {
+            // Engine A: direct MySQL query
+            try {
+                return DB::connection($this->dbConnection)->table($tableName)->get()->map(fn($r) => (array) $r)->toArray();
+            } catch (\Exception $e) {
+                return [];
+            }
+        }
+
+        // Engine B: SQL file parser
         $rows = [];
         foreach ($this->parser->getTableData($tableName) as $row) {
             $rows[] = $row;
@@ -209,6 +289,16 @@ class OjsMigrationService
         }
 
         $result = new \stdClass();
+
+        // Engine A returns associative arrays — map directly by key name
+        if (!empty($columns) && is_string(array_key_first($row))) {
+            foreach ($columns as $col) {
+                $result->$col = $row[$col] ?? null;
+            }
+            return $result;
+        }
+
+        // Engine B returns numeric indexed arrays — map by position
         foreach ($columns as $index => $col) {
             if (isset($row[$index])) {
                 $result->$col = $row[$index];
@@ -225,7 +315,7 @@ class OjsMigrationService
         $settingsRows = collect($this->getLegacyRows('journal_settings'))
             ->map(fn($r) => $this->mapRow('journal_settings', $r));
 
-        foreach ($this->parser->getTableData('journals') as $row) {
+        foreach ($this->getLegacyRows('journals') as $row) {
             $lJournal = $this->mapRow('journals', $row);
 
             // Guard: skip if path is null or empty
