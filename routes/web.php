@@ -189,6 +189,13 @@ $registerAllRoutes = function ($prefix = '') {
                 Route::post('/run', 'runStep')->name('run');
                 Route::post('/reset', 'reset')->name('reset');
             });
+
+            Route::controller(\App\Http\Controllers\Admin\FileManagerController::class)->prefix('file-manager')->name('file-manager.')->group(function () {
+                Route::get('/list', 'list')->name('list');
+                Route::post('/upload', 'upload')->name('upload');
+                Route::post('/create-folder', 'createFolder')->name('create-folder');
+                Route::post('/delete', 'delete')->name('delete');
+            });
         });
 
         // 6. TRANSLATE & OAI

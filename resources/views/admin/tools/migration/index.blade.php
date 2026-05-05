@@ -88,29 +88,82 @@
                         </form>
                     </div>
 
-                    <!-- Files Tab Content -->
-                    <div x-show="activeSetupTab === 'files'" class="p-8">
-                        @if($config && $config->base_url)
-                            <div class="mb-6 p-4 bg-emerald-50 rounded-xl flex items-center justify-between border border-emerald-100">
-                                <div class="flex items-center gap-3">
-                                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    <span class="text-sm font-medium text-emerald-800">Files Path: {{ $config->base_url }}</span>
-                                </div>
-                                <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                    <!-- Files Tab Content (Adopt WP File Manager Features) -->
+                    <div x-show="activeSetupTab === 'files'" class="p-8" x-data="fileManager()">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-2 text-sm">
+                                <template x-for="bc in breadcrumbs" :key="bc.path">
+                                    <div class="flex items-center">
+                                        <button @click="loadPath(bc.path)" class="text-slate-400 hover:text-blue-600 font-medium" x-text="bc.name"></button>
+                                        <svg class="w-4 h-4 text-slate-300 mx-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </template>
                             </div>
-                        @endif
+                            <div class="flex items-center gap-2">
+                                <button @click="$refs.fileInput.click()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    Upload Files
+                                </button>
+                                <button @click="createFolderPrompt()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    New Folder
+                                </button>
+                                <input type="file" x-ref="fileInput" @change="uploadFiles($event)" multiple class="hidden">
+                            </div>
+                        </div>
 
-                        <form action="{{ route('admin.tools.migration.upload') }}" method="POST" class="space-y-6">
+                        <!-- Explorer Grid -->
+                        <div class="border border-slate-100 rounded-[24px] overflow-hidden bg-slate-50/50 min-h-[400px]">
+                            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 p-4 gap-4" x-show="!loading">
+                                <template x-for="item in items" :key="item.path">
+                                    <div class="group relative bg-white p-4 rounded-2xl border border-transparent hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer text-center"
+                                        @click="item.type === 'dir' ? loadPath(item.path) : selectFile(item)">
+                                        <div class="flex justify-center mb-2">
+                                            <template x-if="item.type === 'dir'">
+                                                <svg class="w-12 h-12 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                                            </template>
+                                            <template x-if="item.type === 'file'">
+                                                <div class="relative">
+                                                    <svg class="w-12 h-12 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                                                    <span class="absolute bottom-1 right-1 text-[8px] font-bold text-white bg-blue-600 px-1 rounded" x-text="item.extension"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <p class="text-[11px] font-bold text-slate-700 truncate" x-text="item.name"></p>
+                                        <p class="text-[9px] text-slate-400 mt-0.5" x-text="item.size"></p>
+                                        
+                                        <!-- Actions -->
+                                        <button @click.stop="deleteItem(item)" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:bg-red-50 rounded-lg transition-all">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Loading/Empty State -->
+                            <div x-show="loading" class="flex items-center justify-center h-[400px]">
+                                <svg class="animate-spin h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </div>
+                            <div x-show="!loading && items.length === 0" class="flex flex-col items-center justify-center h-[400px] text-slate-400">
+                                <svg class="w-16 h-16 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                <p class="text-sm font-medium">Folder ini kosong</p>
+                            </div>
+                        </div>
+
+                        <!-- Footer Integration -->
+                        <form action="{{ route('admin.tools.migration.upload') }}" method="POST" class="mt-8 pt-8 border-t border-slate-50 space-y-6">
                             @csrf
                             <input type="hidden" name="type" value="files">
                             <div>
-                                <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">OJS Files Path (Relative to Project Root)</label>
-                                <input type="text" name="base_url" value="{{ $config->base_url ?? '' }}" placeholder="storage/app/migrations/files" class="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
-                                <p class="mt-2 text-[11px] text-slate-400 italic">Lokasi folder files OJS yang sudah diunggah ke server. Digunakan untuk migrasi PDF secara lokal.</p>
+                                <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Selected OJS Files Path</label>
+                                <div class="flex gap-2">
+                                    <input type="text" name="base_url" x-model="currentPath" placeholder="Click folder to select" class="flex-1 px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono text-slate-600 outline-none" readonly>
+                                    <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all text-sm">
+                                        Use This Folder
+                                    </button>
+                                </div>
+                                <p class="mt-2 text-[11px] text-slate-400 italic">Gunakan navigasi di atas untuk masuk ke direktori tempat file OJS berada.</p>
                             </div>
-                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all">
-                                Update Files Path
-                            </button>
                         </form>
                     </div>
                 </div>
@@ -125,6 +178,97 @@
                 @endif
             </div>
         @endif
+
+        <script>
+            function fileManager() {
+                return {
+                    items: [],
+                    breadcrumbs: [],
+                    currentPath: '{{ $config->base_url ?? "" }}',
+                    loading: false,
+                    init() {
+                        this.loadPath(this.currentPath);
+                    },
+                    async loadPath(path) {
+                        this.loading = true;
+                        try {
+                            const res = await fetch(`{{ route('admin.file-manager.list') }}?path=${path}`);
+                            const data = await res.json();
+                            this.items = data.items;
+                            this.breadcrumbs = data.breadcrumbs;
+                            this.currentPath = data.currentPath;
+                        } catch (e) {
+                            alert('Gagal memuat file');
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+                    async uploadFiles(e) {
+                        const files = e.target.files;
+                        if (!files.length) return;
+
+                        const formData = new FormData();
+                        formData.append('path', this.currentPath);
+                        for (let i = 0; i < files.length; i++) {
+                            formData.append('files[]', files[i]);
+                        }
+
+                        this.loading = true;
+                        try {
+                            await fetch(`{{ route('admin.file-manager.upload') }}`, {
+                                method: 'POST',
+                                body: formData,
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                            });
+                            this.loadPath(this.currentPath);
+                        } catch (e) {
+                            alert('Gagal mengunggah file');
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+                    async createFolderPrompt() {
+                        const name = prompt('Nama folder baru:');
+                        if (!name) return;
+
+                        try {
+                            await fetch(`{{ route('admin.file-manager.create-folder') }}`, {
+                                method: 'POST',
+                                body: JSON.stringify({ path: this.currentPath, name }),
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}' 
+                                }
+                            });
+                            this.loadPath(this.currentPath);
+                        } catch (e) {
+                            alert('Gagal membuat folder');
+                        }
+                    },
+                    async deleteItem(item) {
+                        if (!confirm(`Hapus ${item.name}?`)) return;
+
+                        try {
+                            await fetch(`{{ route('admin.file-manager.delete') }}`, {
+                                method: 'POST',
+                                body: JSON.stringify({ path: item.path }),
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}' 
+                                }
+                            });
+                            this.loadPath(this.currentPath);
+                        } catch (e) {
+                            alert('Gagal menghapus');
+                        }
+                    },
+                    selectFile(item) {
+                        // For migration purposes, we usually select a folder, but we can handle file clicks too
+                        console.log('Selected file:', item.path);
+                    }
+                }
+            }
+        </script>
 
         @if($config && $config->database && $config->base_url)
         <!-- Migration Progress State -->
