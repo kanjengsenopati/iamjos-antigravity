@@ -51,11 +51,8 @@ class OjsMigrationService
         ];
 
         foreach ($modules as $key => $config) {
-            $legacyCount = 0;
             $legacyTable = $config['legacy_table'];
 
-            // We don't want to count every time (slow), so we might want to cache this or just return 0 if not counted
-            // For now, let's just return current migration progress
             $stats[$key] = [
                 'legacy_count' => 'File Uploaded',
                 'migrated_count' => $config['new_model']::count(),
@@ -67,6 +64,44 @@ class OjsMigrationService
         $stats['metrics_downloads'] = ['legacy_count' => '-', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count()];
 
         return $stats;
+    }
+
+    /**
+     * Get preview of the data inside the SQL dump before migrating.
+     */
+    public function getSqlPreviewStats(): array
+    {
+        if (!$this->parser) return [];
+        
+        $preview = [];
+        $journals = $this->getLegacyRows('journals');
+        $journalSettings = $this->getLegacyRows('journal_settings');
+        $sections = $this->getLegacyRows('sections');
+        $issues = $this->getLegacyRows('issues');
+        $submissions = $this->getLegacyRows('submissions');
+        
+        $journalSettingsMap = collect($journalSettings)->map(fn($r) => $this->mapRow('journal_settings', $r));
+        $sectionsMap = collect($sections)->map(fn($r) => $this->mapRow('sections', $r));
+        $issuesMap = collect($issues)->map(fn($r) => $this->mapRow('issues', $r));
+        $submissionsMap = collect($submissions)->map(fn($r) => $this->mapRow('submissions', $r));
+        
+        foreach ($journals as $row) {
+            $lJournal = $this->mapRow('journals', $row);
+            $jId = $lJournal->journal_id;
+            
+            $name = $journalSettingsMap->where('journal_id', $jId)->where('setting_name', 'name')->first()?->setting_value ?? 'Unknown Journal';
+            
+            $preview[] = [
+                'id' => $jId,
+                'name' => $name,
+                'path' => $lJournal->path,
+                'sections_count' => $sectionsMap->where('journal_id', $jId)->count(),
+                'issues_count' => $issuesMap->where('journal_id', $jId)->count(),
+                'articles_count' => $submissionsMap->where('context_id', $jId)->count(),
+            ];
+        }
+        
+        return $preview;
     }
 
     /**

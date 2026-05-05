@@ -307,11 +307,54 @@
                 </div>
             </div>
 
-            <!-- Steps Grid -->
+            <!-- SQL Data Preview -->
+            @if(!empty($previewData))
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden mb-8">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">SQL Data Preview</h2>
+                        <p class="text-sm text-slate-500">Verifikasi data yang akan di-import dari file SQL sebelum melakukan sinkronisasi.</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-y border-slate-100">
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Nama Jurnal (SQL)</th>
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Section</th>
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Issue</th>
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Article</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @foreach($previewData as $p)
+                            <tr class="hover:bg-slate-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <span class="text-sm font-bold text-slate-800">{{ $p['name'] }}</span>
+                                    <br><span class="text-xs font-mono text-slate-400">{{ $p['path'] }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-mono font-bold text-blue-600">{{ $p['sections_count'] }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-mono font-bold text-emerald-600">{{ $p['issues_count'] }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-mono font-bold text-amber-600">{{ $p['articles_count'] }}</span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            <!-- Steps Grid (Migration Matrix) -->
             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Migration Matrix</h2>
+                        <h2 class="text-lg font-bold text-slate-800">Migration Matrix (Sync)</h2>
                         <p class="text-sm text-slate-500">Step-by-step data transformation.</p>
                     </div>
                     <button @click="syncAll()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">

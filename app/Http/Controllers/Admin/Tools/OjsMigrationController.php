@@ -28,12 +28,15 @@ class OjsMigrationController extends Controller
         $stats = [];
         $fileError = null;
         $journalBreakdown = [];
+        $previewData = [];
 
         if ($config && $config->database) {
             $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
             if (file_exists($filePath)) {
                 try {
+                    $this->migrationService->setSqlSource($filePath);
                     $stats = $this->migrationService->getMigrationStats();
+                    $previewData = $this->migrationService->getSqlPreviewStats();
                 } catch (\Exception $e) {
                     $fileError = $e->getMessage();
                 }
@@ -77,7 +80,7 @@ class OjsMigrationController extends Controller
             ];
         });
 
-        return view('admin.tools.migration.index', compact('config', 'stats', 'fileError', 'journalBreakdown'));
+        return view('admin.tools.migration.index', compact('config', 'stats', 'fileError', 'journalBreakdown', 'previewData'));
     }
 
     /**
