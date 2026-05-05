@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Tools;
 
 use App\Http\Controllers\Controller;
 use App\Models\LegacySourceConfig;
+use App\Models\LegacyMapping;
 use App\Services\OjsMigrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
