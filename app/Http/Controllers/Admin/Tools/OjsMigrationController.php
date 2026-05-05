@@ -89,6 +89,54 @@ class OjsMigrationController extends Controller
     }
 
     /**
+     * Reset Migration Progress
+     */
+    public function reset()
+    {
+        LegacyMapping::truncate();
+        
+        return back()->with('success', 'Progress migrasi berhasil direset.');
+    }
+
+    /**
+     * Reset All Article Data
+     */
+    public function resetArticles()
+    {
+        \App\Models\Submission::query()->forceDelete();
+        \App\Models\Publication::query()->forceDelete();
+        \App\Models\SubmissionFile::query()->forceDelete();
+        \App\Models\LegacyMapping::where('legacy_type', 'submissions')->delete();
+        \App\Models\LegacyMapping::where('legacy_type', 'galleys')->delete();
+        
+        return back()->with('success', 'Semua data artikel berhasil dihapus.');
+    }
+
+    /**
+     * Reset All Issue Data
+     */
+    public function resetIssues()
+    {
+        \App\Models\Issue::query()->forceDelete();
+        \App\Models\LegacyMapping::where('legacy_type', 'issues')->delete();
+        
+        return back()->with('success', 'Semua data issue berhasil dihapus.');
+    }
+
+    /**
+     * Reset All Journal Data
+     */
+    public function resetJournals()
+    {
+        // Journals often have many relations, we use forceDelete
+        \App\Models\Journal::query()->forceDelete();
+        \App\Models\LegacyMapping::where('legacy_type', 'journals')->delete();
+        \App\Models\LegacyMapping::where('legacy_type', 'sections')->delete();
+        
+        return back()->with('success', 'Semua data jurnal berhasil dihapus.');
+    }
+
+    /**
      * Run Migration Step
      */
     public function runStep(Request $request)

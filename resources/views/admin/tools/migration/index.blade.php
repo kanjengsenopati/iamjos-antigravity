@@ -359,7 +359,56 @@
         </div>
         @endif
     </div>
-</div>
+        <!-- Danger Zone -->
+        <div class="mt-12 bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-red-100/50 overflow-hidden">
+            <div class="p-6 border-b border-red-50 bg-red-50/30 flex items-center gap-3">
+                <div class="p-2 bg-red-100 rounded-lg">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-red-900">Danger Zone</h2>
+                    <p class="text-[11px] text-red-600/70 uppercase tracking-widest font-bold">Reset Migration Data</p>
+                </div>
+            </div>
+            <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Reset Articles -->
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset Articles</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus semua data Submission, Publication, dan Files dari database.</p>
+                    <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST" onsubmit="return confirm('Hapus SEMUA data artikel?')">
+                        @csrf
+                        <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
+                            RESET ARTICLES
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Reset Issues -->
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset Issues</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus semua data Issues (Voli/Nomor) dari database.</p>
+                    <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST" onsubmit="return confirm('Hapus SEMUA data issue?')">
+                        @csrf
+                        <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
+                            RESET ISSUES
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Reset Journals -->
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset Journals</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus semua data Jurnal, Sections, dan keterkaitannya (TOTAL RESET).</p>
+                    <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST" onsubmit="return confirm('PERINGATAN: Ini akan menghapus SEMUA data jurnal. Lanjutkan?')">
+                        @csrf
+                        <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
+                            RESET JOURNALS
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')

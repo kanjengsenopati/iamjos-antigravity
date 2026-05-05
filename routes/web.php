@@ -188,6 +188,9 @@ $registerAllRoutes = function ($prefix = '') {
                 Route::post('/upload', 'upload')->name('upload');
                 Route::post('/run', 'runStep')->name('run');
                 Route::post('/reset', 'reset')->name('reset');
+                Route::post('/reset-articles', 'resetArticles')->name('reset-articles');
+                Route::post('/reset-issues', 'resetIssues')->name('reset-issues');
+                Route::post('/reset-journals', 'resetJournals')->name('reset-journals');
             });
 
             Route::controller(\App\Http\Controllers\Admin\FileManagerController::class)->prefix('file-manager')->name('file-manager.')->group(function () {
