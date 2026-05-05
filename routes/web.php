@@ -187,7 +187,7 @@ $registerAllRoutes = function ($prefix = '') {
                 Route::get('/', 'index')->name('index');
                 Route::post('/upload', 'upload')->name('upload');
                 Route::post('/run', 'runStep')->name('run');
-                Route::post('/reset', 'reset')->name('reset');
+                Route::post('/reset-progress', 'resetProgress')->name('reset-progress');
                 Route::post('/reset-articles', 'resetArticles')->name('reset-articles');
                 Route::post('/reset-issues', 'resetIssues')->name('reset-issues');
                 Route::post('/reset-journals', 'resetJournals')->name('reset-journals');

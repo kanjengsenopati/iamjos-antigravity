@@ -91,9 +91,9 @@ class OjsMigrationController extends Controller
     /**
      * Reset Migration Progress
      */
-    public function reset()
+    public function resetProgress()
     {
-        LegacyMapping::truncate();
+        \App\Models\LegacyMapping::truncate();
         
         return back()->with('success', 'Progress migrasi berhasil direset.');
     }
