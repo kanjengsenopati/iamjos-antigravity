@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 
+class OjsMigrationService
+{
     protected $parser;
     protected $sqlFile;
 
