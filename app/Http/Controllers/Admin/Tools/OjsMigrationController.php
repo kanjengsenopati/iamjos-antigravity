@@ -63,6 +63,9 @@ class OjsMigrationController extends Controller
                 [
                     'driver' => 'sql_file',
                     'database' => $filename,
+                    'host' => 'localhost',
+                    'username' => 'none',
+                    'password' => encrypt('none'),
                 ]
             );
         } else {
@@ -74,6 +77,10 @@ class OjsMigrationController extends Controller
                 ['is_active' => true],
                 [
                     'base_url' => $request->base_url,
+                    'host' => 'localhost',
+                    'database' => 'none',
+                    'username' => 'none',
+                    'password' => encrypt('none'),
                 ]
             );
         }
