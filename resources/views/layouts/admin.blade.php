@@ -265,6 +265,17 @@
                 <span>System & Maintenance</span>
             </a>
 
+            <!-- OJS Migration -->
+            <a href="{{ route('admin.tools.migration.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                {{ request()->routeIs('admin.tools.migration.*') ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <span>OJS SQL Migration</span>
+            </a>
+
             <div class="pt-6 mt-6 border-t border-slate-700/50">
                 <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Quick Links</p>
 
