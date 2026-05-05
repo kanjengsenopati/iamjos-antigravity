@@ -54,7 +54,7 @@ $journals = $data['journals'] ?? collect();
                         {{-- Content --}}
                         <div class="flex-1 p-5 flex flex-col items-center text-center">
                             <h3 class="text-base md:text-lg font-extrabold uppercase text-indigo-900 mb-2 leading-snug">
-                                <a href="{{ route('journal.public.home', $journal->slug) }}" class="hover:text-indigo-600 transition-colors">
+                                <a href="{{ route('journal.public.home', $journal->path) }}" class="hover:text-indigo-600 transition-colors">
                                     {{ $journal->name }}
                                 </a>
                             </h3>
@@ -74,10 +74,10 @@ $journals = $data['journals'] ?? collect();
 
                         {{-- Footer Buttons --}}
                         <div class="mt-auto bg-slate-50 border-t border-slate-100 px-4 py-3 flex flex-row items-center justify-between gap-3">
-                            <a href="{{ route('journal.public.home', $journal->slug) }}" class="flex-1 text-center text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:underline underline-offset-2 transition-all">
+                            <a href="{{ route('journal.public.home', $journal->path) }}" class="flex-1 text-center text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:underline underline-offset-2 transition-all">
                                 View Journal
                             </a>
-                            <a href="{{ route('journal.public.current', $journal->slug) }}" class="flex-1 text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors">
+                            <a href="{{ route('journal.public.current', $journal->path) }}" class="flex-1 text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors">
                                 Current Issue
                             </a>
                         </div>

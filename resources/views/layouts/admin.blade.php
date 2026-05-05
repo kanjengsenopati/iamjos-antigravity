@@ -164,7 +164,7 @@
                         <!-- List -->
                         <div class="max-h-[60vh] overflow-y-auto custom-scrollbar flex flex-col space-y-1 px-1 pr-2">
                             @foreach ($userJournals as $j)
-                                <a href="{{ route('journal.submissions.index', ['journal' => $j->slug]) }}"
+                                <a href="{{ route('journal.submissions.index', ['journal' => $j->path]) }}"
                                     class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
                                     
                                     <!-- Abbr Badge -->

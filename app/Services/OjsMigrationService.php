@@ -168,6 +168,7 @@ class OjsMigrationService
             $journal = Journal::updateOrCreate(
                 ['path' => $lJournal->path],      // ✅ correct column name
                 [
+                    'slug'         => $lJournal->path,  // ✅ slug = path (used by getRouteKeyName)
                     'name'         => strip_tags($names->first() ?? 'Migrated Journal'),
                     'abbreviation' => $abbreviations->first() ?? strtoupper(substr($lJournal->path, 0, 6)),
                     'description'  => strip_tags($descriptions->first() ?? null),
