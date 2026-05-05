@@ -104,15 +104,20 @@ class OjsMigrationController extends Controller
      */
     public function resetArticles()
     {
-        \App\Models\Submission::query()->forceDelete();
-        \App\Models\Publication::query()->forceDelete();
-        \App\Models\SubmissionFile::query()->forceDelete();
+        $migratedSubmissions = \App\Models\LegacyMapping::where('legacy_table', 'submissions')->pluck('new_uuid')->filter();
+        $migratedPublications = \App\Models\LegacyMapping::where('legacy_table', 'publications')->pluck('new_uuid')->filter();
+        $migratedGalleys = \App\Models\LegacyMapping::where('legacy_table', 'galleys')->pluck('new_uuid')->filter();
+
+        if ($migratedSubmissions->isNotEmpty()) \App\Models\Submission::whereIn('id', $migratedSubmissions)->forceDelete();
+        if ($migratedPublications->isNotEmpty()) \App\Models\Publication::whereIn('id', $migratedPublications)->forceDelete();
+        if ($migratedGalleys->isNotEmpty()) \App\Models\SubmissionFile::whereIn('id', $migratedGalleys)->forceDelete();
+
         \App\Models\LegacyMapping::where('legacy_table', 'submissions')->delete();
         \App\Models\LegacyMapping::where('legacy_table', 'publications')->delete();
         \App\Models\LegacyMapping::where('legacy_table', 'galleys')->delete();
         \App\Models\LegacyMapping::where('legacy_table', 'authors')->delete();
         
-        return back()->with('success', 'Semua data artikel berhasil dihapus.');
+        return back()->with('success', 'Hanya data artikel hasil migrasi yang berhasil dihapus.');
     }
 
     /**
@@ -120,10 +125,15 @@ class OjsMigrationController extends Controller
      */
     public function resetIssues()
     {
-        \App\Models\Issue::query()->forceDelete();
+        $migratedIssues = \App\Models\LegacyMapping::where('legacy_table', 'issues')->pluck('new_uuid')->filter();
+        
+        if ($migratedIssues->isNotEmpty()) {
+            \App\Models\Issue::whereIn('id', $migratedIssues)->forceDelete();
+        }
+        
         \App\Models\LegacyMapping::where('legacy_table', 'issues')->delete();
         
-        return back()->with('success', 'Semua data issue berhasil dihapus.');
+        return back()->with('success', 'Hanya data issue hasil migrasi yang berhasil dihapus.');
     }
 
     /**
@@ -132,11 +142,21 @@ class OjsMigrationController extends Controller
     public function resetJournals()
     {
         // Journals often have many relations, we use forceDelete
-        \App\Models\Journal::query()->forceDelete();
+        $migratedJournals = \App\Models\LegacyMapping::where('legacy_table', 'journals')->pluck('new_uuid')->filter();
+        $migratedSections = \App\Models\LegacyMapping::where('legacy_table', 'sections')->pluck('new_uuid')->filter();
+
+        if ($migratedJournals->isNotEmpty()) {
+            \App\Models\Journal::whereIn('id', $migratedJournals)->forceDelete();
+        }
+        
+        if ($migratedSections->isNotEmpty()) {
+            \App\Models\Section::whereIn('id', $migratedSections)->forceDelete();
+        }
+
         \App\Models\LegacyMapping::where('legacy_table', 'journals')->delete();
         \App\Models\LegacyMapping::where('legacy_table', 'sections')->delete();
         
-        return back()->with('success', 'Semua data jurnal berhasil dihapus.');
+        return back()->with('success', 'Hanya data jurnal hasil migrasi yang berhasil dihapus.');
     }
 
     /**
