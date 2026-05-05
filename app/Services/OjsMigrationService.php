@@ -306,12 +306,25 @@ class OjsMigrationService
             $lSub = $this->mapRow('submissions', $row);
             
             $newJournalId = LegacyMapping::getMapping('journals', $lSub->context_id);
+            if (!$newJournalId) continue;
+
             $newSectionId = LegacyMapping::getMapping('sections', $lSub->section_id);
+            
+            // Fallback for orphaned submissions to prevent NOT NULL constraint violation
+            if (!$newSectionId) {
+                $fallbackSection = \App\Models\Section::where('journal_id', $newJournalId)->orderBy('sort_order')->first();
+                if (!$fallbackSection) {
+                    $fallbackSection = \App\Models\Section::create([
+                        'journal_id' => $newJournalId,
+                        'name' => 'Uncategorized (Migrated)',
+                        'abbreviation' => 'UNC',
+                    ]);
+                }
+                $newSectionId = $fallbackSection->id;
+            }
             
             $lPub = $publicationRows->where('publication_id', $lSub->current_publication_id)->first();
             $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id) : null;
-
-            if (!$newJournalId) continue;
 
             $metadata = $metadataRows->where('publication_id', $lSub->current_publication_id);
 
