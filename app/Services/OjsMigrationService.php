@@ -42,12 +42,16 @@ class OjsMigrationService
     {
         $stats = [];
         $modules = [
-            'journals' => ['legacy_table' => 'journals', 'new_model' => Journal::class],
-            'sections' => ['legacy_table' => 'sections', 'new_model' => Section::class],
-            'issues' => ['legacy_table' => 'issues', 'new_model' => Issue::class],
+            'users'       => ['legacy_table' => 'users', 'new_model' => User::class],
+            'journals'    => ['legacy_table' => 'journals', 'new_model' => Journal::class],
+            'sections'    => ['legacy_table' => 'sections', 'new_model' => Section::class],
+            'issues'      => ['legacy_table' => 'issues', 'new_model' => Issue::class],
             'submissions' => ['legacy_table' => 'submissions', 'new_model' => Submission::class],
-            'authors' => ['legacy_table' => 'authors', 'new_model' => SubmissionAuthor::class],
-            'galleys' => ['legacy_table' => 'galleys', 'new_model' => \App\Models\PublicationGalley::class],
+            'authors'     => ['legacy_table' => 'authors', 'new_model' => SubmissionAuthor::class],
+            'reviews'     => ['legacy_table' => 'review_assignments', 'new_model' => \App\Models\ReviewAssignment::class],
+            'discussions' => ['legacy_table' => 'queries', 'new_model' => \App\Models\Discussion::class],
+            'logs'        => ['legacy_table' => 'event_log', 'new_model' => \App\Models\SubmissionLog::class],
+            'galleys'     => ['legacy_table' => 'galleys', 'new_model' => \App\Models\PublicationGalley::class],
         ];
 
         foreach ($modules as $key => $config) {
@@ -138,11 +142,47 @@ class OjsMigrationService
             case 'section_settings':
                 $columns = ['section_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
                 break;
+            case 'users':
+                $columns = ['user_id', 'username', 'password', 'email', 'locales', 'date_last_email', 'date_registered', 'date_validated', 'date_last_login', 'must_change_password', 'disabled', 'disabled_reason', 'auth_id', 'auth_str', 'phone', 'mailing_address', 'billing_address', 'inline_help'];
+                break;
+            case 'user_settings':
+                $columns = ['user_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
+                break;
+            case 'user_groups':
+                $columns = ['user_group_id', 'context_id', 'role_id', 'is_default', 'show_title', 'permit_self_registration'];
+                break;
+            case 'user_user_groups':
+                $columns = ['user_group_id', 'user_id'];
+                break;
             case 'issues':
                 $columns = ['issue_id', 'journal_id', 'volume', 'number', 'year', 'published', 'current', 'date_published', 'date_notified', 'last_modified', 'access_status', 'open_access_date', 'show_volume', 'show_number', 'show_year', 'show_title', 'style_file_name', 'original_style_file_name'];
                 break;
             case 'submissions':
-                $columns = ['submission_id', 'locale', 'context_id', 'section_id', 'language', 'date_submitted', 'last_modified', 'date_status_modified', 'status', 'submission_progress', 'current_publication_id', 'pages'];
+                $columns = ['submission_id', 'locale', 'context_id', 'section_id', 'language', 'date_submitted', 'last_modified', 'date_status_modified', 'status', 'submission_progress', 'current_publication_id', 'pages', 'stage_id'];
+                break;
+            case 'stage_assignments':
+                $columns = ['stage_assignment_id', 'submission_id', 'user_group_id', 'user_id', 'date_assigned', 'stage_id', 'recommend_only'];
+                break;
+            case 'review_rounds':
+                $columns = ['review_round_id', 'submission_id', 'stage_id', 'round', 'review_revision', 'status'];
+                break;
+            case 'review_assignments':
+                $columns = ['review_id', 'submission_id', 'reviewer_id', 'stage_id', 'review_method', 'round', 'step', 'recommendation', 'declined', 'cancelled', 'date_assigned', 'date_notified', 'date_completed', 'date_due', 'date_response_due', 'quality'];
+                break;
+            case 'queries':
+                $columns = ['query_id', 'assoc_type', 'assoc_id', 'stage_id', 'sequence', 'is_closed'];
+                break;
+            case 'query_participants':
+                $columns = ['query_id', 'user_id'];
+                break;
+            case 'notes':
+                $columns = ['note_id', 'user_id', 'date_created', 'date_modified', 'contents', 'title', 'assoc_type', 'assoc_id'];
+                break;
+            case 'event_log':
+                $columns = ['log_id', 'assoc_type', 'assoc_id', 'user_id', 'date_logged', 'event_type', 'message', 'is_translated'];
+                break;
+            case 'email_log':
+                $columns = ['log_id', 'assoc_type', 'assoc_id', 'sender_id', 'date_sent', 'event_type', 'from_address', 'recipients', 'cc_receivers', 'bcc_receivers', 'subject', 'body'];
                 break;
             case 'publications':
                 $columns = ['publication_id', 'submission_id', 'access_status', 'date_published', 'last_modified', 'section_id', 'seq', 'status', 'url_path', 'version', 'issue_id'];
@@ -253,6 +293,88 @@ class OjsMigrationService
     }
 
     /**
+     * Migrate Users & Roles
+     */
+    public function migrateUsers()
+    {
+        $settingsRows = collect($this->getLegacyRows('user_settings'))
+            ->map(fn($r) => $this->mapRow('user_settings', $r));
+
+        $userUserGroups = collect($this->getLegacyRows('user_user_groups'))
+            ->map(fn($r) => $this->mapRow('user_user_groups', $r));
+            
+        $userGroups = collect($this->getLegacyRows('user_groups'))
+            ->map(fn($r) => $this->mapRow('user_groups', $r));
+
+        foreach ($this->parser->getTableData('users') as $row) {
+            $lUser = $this->mapRow('users', $row);
+
+            $settings = $settingsRows->where('user_id', $lUser->user_id);
+            $givenName = $settings->where('setting_name', 'givenName')->first()?->setting_value ?? $lUser->username;
+            $familyName = $settings->where('setting_name', 'familyName')->first()?->setting_value ?? '';
+            $affiliation = $settings->where('setting_name', 'affiliation')->first()?->setting_value ?? null;
+            $country = $settings->where('setting_name', 'country')->first()?->setting_value ?? null;
+            $orcid = $settings->where('setting_name', 'orcid')->first()?->setting_value ?? null;
+
+            $fullName = trim($givenName . ' ' . $familyName);
+
+            // Set default password
+            $password = bcrypt('IamJOS2026!');
+
+            $user = User::updateOrCreate(
+                ['username' => $lUser->username],
+                [
+                    'name' => $fullName ?: $lUser->username,
+                    'given_name' => $givenName,
+                    'family_name' => $familyName,
+                    'email' => $lUser->email ?? ($lUser->username . '@example.com'),
+                    'password' => $password,
+                    'affiliation' => $affiliation,
+                    'country' => $country,
+                    'orcid_id' => $orcid,
+                    'date_registered' => $lUser->date_registered,
+                    'date_last_login' => $lUser->date_last_login,
+                ]
+            );
+
+            LegacyMapping::setMapping('users', $lUser->user_id, $user->id);
+
+            // Now map roles
+            $uGroups = $userUserGroups->where('user_id', $lUser->user_id);
+            foreach ($uGroups as $ug) {
+                $group = $userGroups->where('user_group_id', $ug->user_group_id)->first();
+                if (!$group) continue;
+
+                $newJournalId = LegacyMapping::getMapping('journals', $group->context_id);
+                if (!$newJournalId) continue;
+
+                $roleName = match((int)$group->role_id) {
+                    1 => \App\Models\Role::ROLE_SUPERADMIN,
+                    16 => \App\Models\Role::ROLE_MANAGER,
+                    17 => \App\Models\Role::ROLE_EDITOR,
+                    18 => \App\Models\Role::ROLE_SECTION_EDITOR,
+                    19 => \App\Models\Role::ROLE_PRODUCTION,
+                    4096 => \App\Models\Role::ROLE_REVIEWER,
+                    65536 => \App\Models\Role::ROLE_AUTHOR,
+                    1048576 => \App\Models\Role::ROLE_READER,
+                    default => null
+                };
+
+                if ($roleName) {
+                    $iamjosRole = \App\Models\Role::where('name', $roleName)->where('journal_id', $newJournalId)->first();
+                    if ($iamjosRole) {
+                        \App\Models\JournalUserRole::updateOrCreate([
+                            'journal_id' => $newJournalId,
+                            'user_id' => $user->id,
+                            'role_id' => $iamjosRole->id
+                        ]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Migrate Issues
      */
     public function migrateIssues()
@@ -341,16 +463,70 @@ class OjsMigrationService
             
             $rawCitations = $rawCitations ? strip_tags($rawCitations) : null;
 
+            // Determine IamJOS Stage and Status
+            $lStageId = (int)($lSub->stage_id ?? 1);
+            $iamjosStageId = match($lStageId) {
+                1 => 1, // Submission
+                2, 3 => 2, // Review (Internal/External)
+                4 => 3, // Copyediting
+                5 => 4, // Production
+                default => 1
+            };
+
+            $iamjosStage = match($iamjosStageId) {
+                1 => Submission::STAGE_SUBMISSION,
+                2 => Submission::STAGE_REVIEW,
+                3 => Submission::STAGE_COPYEDITING,
+                4 => Submission::STAGE_PRODUCTION,
+                default => Submission::STAGE_SUBMISSION
+            };
+
+            if ((int)$lSub->status === 3) {
+                $iamjosStatus = Submission::STATUS_PUBLISHED;
+                $iamjosStageId = 4;
+                $iamjosStage = Submission::STAGE_PRODUCTION;
+            } elseif ((int)$lSub->status === 4) {
+                $iamjosStatus = Submission::STATUS_REJECTED;
+            } elseif ((int)$lSub->status === 0 && (int)($lSub->submission_progress ?? 0) > 0) {
+                $iamjosStatus = Submission::STATUS_DRAFT;
+            } else {
+                $iamjosStatus = match($iamjosStageId) {
+                    1 => Submission::STATUS_SUBMITTED,
+                    2 => Submission::STATUS_IN_REVIEW,
+                    3 => Submission::STATUS_QUEUED_FOR_COPYEDITING,
+                    4 => Submission::STATUS_IN_PRODUCTION,
+                    default => Submission::STATUS_SUBMITTED
+                };
+            }
+
+            // Find submitting user (fallback to SuperAdmin if not found)
+            // Typically the user who submitted is in stage_assignments or is the first author
+            $submittingUserId = User::first()->id ?? null;
+            $authorGroup = \App\Models\LegacyMapping::where('legacy_table', 'authors')
+                ->where('legacy_id', 'LIKE', $lSub->submission_id . '-%')
+                ->first();
+                
+            if ($authorGroup) {
+                // Not perfectly accurate but better than all being SuperAdmin. 
+                // A more precise map requires stage_assignments which we'll process later, 
+                // but we need a user_id NOW for the foreign key.
+                $author = \App\Models\SubmissionAuthor::find($authorGroup->new_uuid);
+                if ($author && $author->user_id) {
+                    $submittingUserId = $author->user_id;
+                }
+            }
+
             // Use OJS submission_id as stable unique key (seq_id) for idempotent re-runs
             $submission = Submission::updateOrCreate(
                 ['seq_id' => (int)$lSub->submission_id],
                 [
                     'journal_id' => $newJournalId,
-                    'user_id'    => User::first()->id,
+                    'user_id'    => $submittingUserId,
                     'section_id' => $newSectionId,
                     'issue_id'   => $newIssueId,
-                    'status'     => Submission::STATUS_PUBLISHED,
-                    'stage'      => Submission::STAGE_PRODUCTION,
+                    'status'     => $iamjosStatus,
+                    'stage'      => $iamjosStage,
+                    'stage_id'   => $iamjosStageId,
                     'title'      => strip_tags($titles->first() ?? 'Untitled Migration'),
                     'abstract'   => $abstracts->first() ?? null,
                     'references' => $rawCitations,
@@ -371,6 +547,256 @@ class OjsMigrationService
                     'references' => $rawCitations,
                     'status' => Publication::STATUS_PUBLISHED,
                     'date_published' => $lSub->date_submitted,
+                ]
+            );
+        }
+    }
+
+    /**
+     * Migrate Editorial & Review Workflow
+     */
+    public function migrateReviews()
+    {
+        // 1. Migrate Stage Assignments (Editorial Assignments)
+        foreach ($this->parser->getTableData('stage_assignments') as $row) {
+            $lStage = $this->mapRow('stage_assignments', $row);
+            
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lStage->submission_id);
+            $newUserId = LegacyMapping::getMapping('users', $lStage->user_id);
+            
+            if (!$newSubmissionId || !$newUserId) continue;
+
+            $submission = Submission::find($newSubmissionId);
+            if (!$submission) continue;
+
+            // If stage is submission (1) and role is author (65536) then update the submission's user_id
+            $groupRow = collect($this->getLegacyRows('user_groups'))->where('user_group_id', $lStage->user_group_id)->first();
+            if ($groupRow && $groupRow[2] == 65536 && $lStage->stage_id == 1) { // 2nd index is role_id
+                $submission->update(['user_id' => $newUserId]);
+            } else {
+                \App\Models\EditorialAssignment::updateOrCreate(
+                    [
+                        'submission_id' => $newSubmissionId,
+                        'user_id' => $newUserId,
+                    ],
+                    [
+                        'is_active' => true,
+                        // stage_assignments in OJS doesn't directly map nicely to IamJOS specific fields,
+                        // but creating the assignment grants them access
+                    ]
+                );
+            }
+        }
+
+        // 2. Migrate Review Rounds
+        foreach ($this->parser->getTableData('review_rounds') as $row) {
+            $lRound = $this->mapRow('review_rounds', $row);
+            
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lRound->submission_id);
+            if (!$newSubmissionId) continue;
+
+            $round = \App\Models\ReviewRound::updateOrCreate(
+                [
+                    'submission_id' => $newSubmissionId,
+                    'round' => (int)$lRound->round,
+                ],
+                [
+                    'status' => \App\Models\ReviewRound::STATUS_COMPLETED, // simplify
+                    'started_at' => now(), // fallback since OJS doesn't store start date in review_rounds table
+                ]
+            );
+            
+            LegacyMapping::setMapping('review_rounds', $lRound->review_round_id, $round->id);
+        }
+
+        // 3. Migrate Review Assignments
+        foreach ($this->parser->getTableData('review_assignments') as $row) {
+            $lRev = $this->mapRow('review_assignments', $row);
+            
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lRev->submission_id);
+            $newReviewerId = LegacyMapping::getMapping('users', $lRev->reviewer_id);
+            
+            if (!$newSubmissionId || !$newReviewerId) continue;
+
+            // Find matching review round
+            $round = \App\Models\ReviewRound::where('submission_id', $newSubmissionId)
+                        ->where('round', (int)$lRev->round)
+                        ->first();
+            
+            $roundId = $round ? $round->id : null;
+
+            // Recommendation Mapping
+            $recommendation = match((int)$lRev->recommendation) {
+                1 => \App\Models\ReviewAssignment::RECOMMEND_ACCEPT,
+                2 => \App\Models\ReviewAssignment::RECOMMEND_MINOR_REVISION,
+                3 => \App\Models\ReviewAssignment::RECOMMEND_MAJOR_REVISION,
+                4 => \App\Models\ReviewAssignment::RECOMMEND_REJECT,
+                default => null
+            };
+
+            // Status mapping
+            $status = \App\Models\ReviewAssignment::STATUS_PENDING;
+            if ($lRev->declined) $status = \App\Models\ReviewAssignment::STATUS_DECLINED;
+            elseif ($lRev->cancelled) $status = \App\Models\ReviewAssignment::STATUS_CANCELLED;
+            elseif ($lRev->date_completed) $status = \App\Models\ReviewAssignment::STATUS_COMPLETED;
+            elseif ($lRev->date_confirmed) $status = \App\Models\ReviewAssignment::STATUS_ACCEPTED;
+
+            \App\Models\ReviewAssignment::updateOrCreate(
+                [
+                    'submission_id' => $newSubmissionId,
+                    'reviewer_id' => $newReviewerId,
+                    'round' => (int)$lRev->round,
+                ],
+                [
+                    'review_round_id' => $roundId,
+                    'status' => $status,
+                    'recommendation' => $recommendation,
+                    'assigned_at' => $lRev->date_assigned,
+                    'due_date' => $lRev->date_due,
+                    'response_due_date' => $lRev->date_response_due,
+                    'completed_at' => $lRev->date_completed,
+                    'quality_rating' => (int)$lRev->quality,
+                    'review_method' => $lRev->review_method == 2 ? 'double-blind' : 'blind',
+                ]
+            );
+        }
+    }
+
+    /**
+     * Migrate Discussions
+     */
+    public function migrateDiscussions()
+    {
+        $participantsTable = collect($this->getLegacyRows('query_participants'))
+            ->map(fn($r) => $this->mapRow('query_participants', $r));
+            
+        $notesTable = collect($this->getLegacyRows('notes'))
+            ->map(fn($r) => $this->mapRow('notes', $r));
+
+        foreach ($this->parser->getTableData('queries') as $row) {
+            $lQuery = $this->mapRow('queries', $row);
+            
+            // 1048585 is ASSOC_TYPE_SUBMISSION
+            if ($lQuery->assoc_type != 1048585) continue;
+            
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lQuery->assoc_id);
+            if (!$newSubmissionId) continue;
+
+            $participants = $participantsTable->where('query_id', $lQuery->query_id);
+            
+            // Assume the first participant is the creator if we can't determine it
+            $creatorLegacyId = $participants->first()?->user_id;
+            $newCreatorId = $creatorLegacyId ? LegacyMapping::getMapping('users', $creatorLegacyId) : null;
+            if (!$newCreatorId) continue;
+
+            // Get the first note to act as the subject of the discussion
+            $discussionNotes = $notesTable->where('assoc_type', 1048586)->where('assoc_id', $lQuery->query_id)->sortBy('date_created');
+            $firstNote = $discussionNotes->first();
+            $subject = $firstNote ? strip_tags($firstNote->title ?? 'Discussion') : 'Discussion';
+
+            $discussion = \App\Models\Discussion::updateOrCreate(
+                [
+                    // using seq_id via legacy mapping would be cleaner but queries don't have natural keys easily,
+                    // we'll use a hack by storing legacy query_id in subject temporarily or just rely on standard creation.
+                    // To make it idempotent, we need a unique identifier. We can use the first note's date as a proxy.
+                    'submission_id' => $newSubmissionId,
+                    'stage_id' => (int)$lQuery->stage_id,
+                    'subject' => $subject,
+                    'created_at' => $firstNote ? $firstNote->date_created : now(),
+                ],
+                [
+                    'user_id' => $newCreatorId,
+                    'is_open' => !(bool)$lQuery->is_closed,
+                ]
+            );
+
+            LegacyMapping::setMapping('discussions', $lQuery->query_id, $discussion->id);
+
+            // Add Participants
+            $newParticipantIds = [];
+            foreach ($participants as $p) {
+                $pId = LegacyMapping::getMapping('users', $p->user_id);
+                if ($pId) $newParticipantIds[] = $pId;
+            }
+            if (!empty($newParticipantIds)) {
+                $discussion->syncParticipants($newParticipantIds);
+            }
+
+            // Add Messages (Notes)
+            foreach ($discussionNotes as $note) {
+                $noteUserId = LegacyMapping::getMapping('users', $note->user_id) ?? $newCreatorId;
+                
+                \App\Models\DiscussionMessage::updateOrCreate(
+                    [
+                        'discussion_id' => $discussion->id,
+                        'user_id' => $noteUserId,
+                        'created_at' => $note->date_created,
+                    ],
+                    [
+                        'body' => $note->contents ?? '',
+                    ]
+                );
+            }
+        }
+    }
+
+    /**
+     * Migrate Logs
+     */
+    public function migrateLogs()
+    {
+        // 1. Event Logs
+        foreach ($this->parser->getTableData('event_log') as $row) {
+            $lLog = $this->mapRow('event_log', $row);
+            
+            if ($lLog->assoc_type != 1048585) continue; // ASSOC_TYPE_SUBMISSION
+            
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lLog->assoc_id);
+            if (!$newSubmissionId) continue;
+
+            $newUserId = LegacyMapping::getMapping('users', $lLog->user_id);
+            $submission = Submission::find($newSubmissionId);
+
+            \App\Models\SubmissionLog::updateOrCreate(
+                [
+                    'submission_id' => $newSubmissionId,
+                    'created_at' => $lLog->date_logged,
+                    'event_type' => \App\Models\SubmissionLog::EVENT_STAGE_CHANGED, // fallback generic
+                ],
+                [
+                    'user_id' => $newUserId,
+                    'title' => 'System Event: ' . $lLog->event_type,
+                    'description' => $lLog->message ?? 'Migrated event',
+                    'stage' => $submission ? $submission->stage : 'submission',
+                ]
+            );
+        }
+
+        // 2. Email Logs
+        foreach ($this->parser->getTableData('email_log') as $row) {
+            $eLog = $this->mapRow('email_log', $row);
+            
+            if ($eLog->assoc_type != 1048585) continue;
+            
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $eLog->assoc_id);
+            if (!$newSubmissionId) continue;
+
+            $newSenderId = LegacyMapping::getMapping('users', $eLog->sender_id);
+            $submission = Submission::find($newSubmissionId);
+
+            \App\Models\SubmissionLog::updateOrCreate(
+                [
+                    'submission_id' => $newSubmissionId,
+                    'created_at' => $eLog->date_sent,
+                    'email_subject' => $eLog->subject,
+                ],
+                [
+                    'user_id' => $newSenderId,
+                    'event_type' => \App\Models\SubmissionLog::EVENT_DISCUSSION_MESSAGE, // email event
+                    'title' => 'Email Sent: ' . $eLog->subject,
+                    'description' => 'Sent to: ' . $eLog->recipients,
+                    'email_body' => $eLog->body,
+                    'stage' => $submission ? $submission->stage : 'submission',
                 ]
             );
         }

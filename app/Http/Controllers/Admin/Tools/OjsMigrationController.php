@@ -220,11 +220,15 @@ class OjsMigrationController extends Controller
             $this->migrationService->setSqlSource($filePath);
 
             switch ($step) {
+                case 'users': $this->migrationService->migrateUsers(); break;
                 case 'journals': $this->migrationService->migrateJournals(); break;
                 case 'sections': $this->migrationService->migrateSections(); break;
                 case 'issues': $this->migrationService->migrateIssues(); break;
                 case 'submissions': $this->migrationService->migrateSubmissions(); break;
                 case 'authors': $this->migrationService->migrateAuthors(); break;
+                case 'reviews': $this->migrationService->migrateReviews(); break;
+                case 'discussions': $this->migrationService->migrateDiscussions(); break;
+                case 'logs': $this->migrationService->migrateLogs(); break;
                 case 'metrics': $this->migrationService->migrateMetrics(); break;
                 case 'galleys': $this->migrationService->migrateGalleys($config->base_url); break;
                 default: throw new \Exception("Step tidak valid.");

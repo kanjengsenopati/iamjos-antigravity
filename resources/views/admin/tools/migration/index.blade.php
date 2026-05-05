@@ -374,13 +374,17 @@
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @foreach([
+                                'users' => ['label' => 'Users & Roles', 'desc' => 'Accounts, passwords (default), and group roles'],
                                 'journals' => ['label' => 'Journals', 'desc' => 'Core journal profiles and settings'],
                                 'sections' => ['label' => 'Sections', 'desc' => 'Journal taxonomies and abbreviations'],
                                 'issues' => ['label' => 'Issues', 'desc' => 'Volumes, numbers, and cover info'],
-                                'submissions' => ['label' => 'Articles', 'desc' => 'Full metadata and SEO content'],
+                                'submissions' => ['label' => 'Articles', 'desc' => 'All submissions (published, review, etc)'],
                                 'authors' => ['label' => 'Authors', 'desc' => 'Contributor roles and affiliations'],
+                                'reviews' => ['label' => 'Review Workflow', 'desc' => 'Review assignments, rounds, and decisions'],
+                                'discussions' => ['label' => 'Discussions', 'desc' => 'Queries, notes, and messages'],
+                                'logs' => ['label' => 'Event Logs', 'desc' => 'System audit logs and email history'],
                                 'metrics' => ['label' => 'Statistics', 'desc' => 'Legacy usage and view counts'],
-                                'galleys' => ['label' => 'Files', 'desc' => 'PDF downloads from legacy URL']
+                                'galleys' => ['label' => 'Files', 'desc' => 'All submission files and galleys']
                             ] as $key => $meta)
                             <tr class="hover:bg-slate-50/30 transition-colors">
                                 <td class="px-6 py-4">
