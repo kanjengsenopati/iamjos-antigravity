@@ -31,7 +31,10 @@ class SqlDumpParserService
         }
 
         $this->handle = fopen($this->filePath, 'r');
-        $pattern = "/INSERT INTO [\"'`]?" . preg_quote($tableName, '/') . "[\"'`]? VALUES/i";
+        // Support both: 
+        // INSERT INTO table VALUES ...
+        // INSERT INTO table (col1, col2) VALUES ...
+        $pattern = "/INSERT INTO [\"'`]?" . preg_quote($tableName, '/') . "[\"'`]?.*VALUES/i";
         
         $buffer = '';
         $inInsert = false;
@@ -49,12 +52,7 @@ class SqlDumpParserService
             if ($inInsert) {
                 $trimmed = rtrim($buffer);
                 if (substr($trimmed, -1) === ';') {
-                    // Cek apakah single quotes balanced (untuk menghindari break di tengah string)
-                    $cleanBuffer = preg_replace("/\\\\./", "", $buffer); // Hapus escaped chars
-                    $quoteCount = substr_count($cleanBuffer, "'");
-                    
-                    if ($quoteCount % 2 === 0) {
-                        // Statement selesai
+                    if ($this->isStatementComplete($buffer)) {
                         $valuesIndex = stripos($buffer, 'VALUES');
                         $valuesPart = substr($buffer, $valuesIndex + 6);
                         $valuesPart = rtrim(trim($valuesPart), ';');
@@ -76,7 +74,6 @@ class SqlDumpParserService
 
     /**
      * Parse the (val1, val2), (val3, val4) string into arrays
-     * This needs to be careful with strings containing commas or parentheses
      */
     protected function parseValues(string $valuesString)
     {
@@ -85,11 +82,9 @@ class SqlDumpParserService
         $length = strlen($valuesString);
         
         while ($currentPos < $length) {
-            // Find start of a row '('
             $start = strpos($valuesString, '(', $currentPos);
             if ($start === false) break;
             
-            // Find end of the row ')' correctly (handling escaped chars and strings)
             $end = $this->findClosingParenthesis($valuesString, $start);
             if ($end === false) break;
             
@@ -114,24 +109,20 @@ class SqlDumpParserService
 
         for ($i = $start + 1; $i < $len; $i++) {
             $char = $str[$i];
-
             if ($escaped) {
                 $escaped = false;
                 continue;
             }
-
             if ($char === '\\') {
                 $escaped = true;
                 continue;
             }
-
             if (($char === "'" || $char === '"') && !$inString) {
                 $inString = true;
                 $quoteChar = $char;
             } elseif ($char === $quoteChar && $inString) {
                 $inString = false;
             }
-
             if (!$inString && $char === ')') {
                 return $i;
             }
@@ -153,36 +144,30 @@ class SqlDumpParserService
 
         for ($i = 0; $i < $len; $i++) {
             $char = $rowStr[$i];
-
             if ($escaped) {
                 $current .= $char;
                 $escaped = false;
                 continue;
             }
-
             if ($char === '\\') {
                 $escaped = true;
                 continue;
             }
-
             if (($char === "'" || $char === '"') && !$inString) {
                 $inString = true;
                 $quoteChar = $char;
-                continue; // Don't include the quote itself if we want clean data
+                continue;
             } elseif ($char === $quoteChar && $inString) {
                 $inString = false;
                 continue;
             }
-
             if (!$inString && $char === ',') {
                 $cols[] = $this->cleanValue($current);
                 $current = '';
                 continue;
             }
-
             $current .= $char;
         }
-
         $cols[] = $this->cleanValue($current);
         return $cols;
     }
@@ -197,7 +182,36 @@ class SqlDumpParserService
         if (is_numeric($val)) {
             return strpos($val, '.') !== false ? (float)$val : (int)$val;
         }
-        // Handle escaped sequences if any left
         return stripcslashes($val);
+    }
+
+    /**
+     * Check if an INSERT statement is complete (balanced quotes)
+     */
+    protected function isStatementComplete(string $buffer)
+    {
+        $inString = false;
+        $quoteChar = '';
+        $escaped = false;
+        $len = strlen($buffer);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $buffer[$i];
+            if ($escaped) {
+                $escaped = false;
+                continue;
+            }
+            if ($char === '\\') {
+                $escaped = true;
+                continue;
+            }
+            if (($char === "'" || $char === '"') && !$inString) {
+                $inString = true;
+                $quoteChar = $char;
+            } elseif ($char === $quoteChar && $inString) {
+                $inString = false;
+            }
+        }
+        return !$inString;
     }
 }

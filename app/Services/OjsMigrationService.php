@@ -357,7 +357,7 @@ class OjsMigrationService
         $settingsRows = collect($this->getLegacyRows('section_settings'))
             ->map(fn($r) => $this->mapRow('section_settings', $r));
 
-        foreach ($this->parser->getTableData('sections') as $row) {
+        foreach ($this->getLegacyRows('sections') as $row) {
             $lSection = $this->mapRow('sections', $row);
 
             $newJournalId = LegacyMapping::getMapping('journals', $lSection->journal_id);
@@ -396,7 +396,7 @@ class OjsMigrationService
         $userGroups = collect($this->getLegacyRows('user_groups'))
             ->map(fn($r) => $this->mapRow('user_groups', $r));
 
-        foreach ($this->parser->getTableData('users') as $row) {
+        foreach ($this->getLegacyRows('users') as $row) {
             $lUser = $this->mapRow('users', $row);
 
             $settings = $settingsRows->where('user_id', $lUser->user_id);
@@ -472,7 +472,7 @@ class OjsMigrationService
         $settingsRows = collect($this->getLegacyRows('issue_settings'))
             ->map(fn($r) => $this->mapRow('issue_settings', $r));
 
-        foreach ($this->parser->getTableData('issues') as $row) {
+        foreach ($this->getLegacyRows('issues') as $row) {
             $lIssue = $this->mapRow('issues', $row);
 
             $newJournalId = LegacyMapping::getMapping('journals', $lIssue->journal_id);
@@ -514,7 +514,7 @@ class OjsMigrationService
         $metadataRows = collect($this->getLegacyRows('publication_settings'))
             ->map(fn($r) => $this->mapRow('publication_settings', $r));
 
-        foreach ($this->parser->getTableData('submissions') as $row) {
+        foreach ($this->getLegacyRows('submissions') as $row) {
             $lSub = $this->mapRow('submissions', $row);
             
             $newJournalId = LegacyMapping::getMapping('journals', $lSub->context_id);
@@ -648,7 +648,7 @@ class OjsMigrationService
     public function migrateReviews()
     {
         // 1. Migrate Stage Assignments (Editorial Assignments)
-        foreach ($this->parser->getTableData('stage_assignments') as $row) {
+        foreach ($this->getLegacyRows('stage_assignments') as $row) {
             $lStage = $this->mapRow('stage_assignments', $row);
             
             $newSubmissionId = LegacyMapping::getMapping('submissions', $lStage->submission_id);
@@ -679,7 +679,7 @@ class OjsMigrationService
         }
 
         // 2. Migrate Review Rounds
-        foreach ($this->parser->getTableData('review_rounds') as $row) {
+        foreach ($this->getLegacyRows('review_rounds') as $row) {
             $lRound = $this->mapRow('review_rounds', $row);
             
             $newSubmissionId = LegacyMapping::getMapping('submissions', $lRound->submission_id);
@@ -700,7 +700,7 @@ class OjsMigrationService
         }
 
         // 3. Migrate Review Assignments
-        foreach ($this->parser->getTableData('review_assignments') as $row) {
+        foreach ($this->getLegacyRows('review_assignments') as $row) {
             $lRev = $this->mapRow('review_assignments', $row);
             
             $newSubmissionId = LegacyMapping::getMapping('submissions', $lRev->submission_id);
@@ -763,7 +763,7 @@ class OjsMigrationService
         $notesTable = collect($this->getLegacyRows('notes'))
             ->map(fn($r) => $this->mapRow('notes', $r));
 
-        foreach ($this->parser->getTableData('queries') as $row) {
+        foreach ($this->getLegacyRows('queries') as $row) {
             $lQuery = $this->mapRow('queries', $row);
             
             // 1048585 is ASSOC_TYPE_SUBMISSION
@@ -836,7 +836,7 @@ class OjsMigrationService
     public function migrateLogs()
     {
         // 1. Event Logs
-        foreach ($this->parser->getTableData('event_log') as $row) {
+        foreach ($this->getLegacyRows('event_log') as $row) {
             $lLog = $this->mapRow('event_log', $row);
             
             if ($lLog->assoc_type != 1048585) continue; // ASSOC_TYPE_SUBMISSION
@@ -863,7 +863,7 @@ class OjsMigrationService
         }
 
         // 2. Email Logs
-        foreach ($this->parser->getTableData('email_log') as $row) {
+        foreach ($this->getLegacyRows('email_log') as $row) {
             $eLog = $this->mapRow('email_log', $row);
             
             if ($eLog->assoc_type != 1048585) continue;
@@ -903,7 +903,7 @@ class OjsMigrationService
         $settingsRows = collect($this->getLegacyRows('author_settings'))
             ->map(fn($r) => $this->mapRow('author_settings', $r));
 
-        foreach ($this->parser->getTableData('authors') as $row) {
+        foreach ($this->getLegacyRows('authors') as $row) {
             $lAuthor = $this->mapRow('authors', $row);
             
             $lPublication = $publicationRows->where('publication_id', $lAuthor->publication_id)->first();
@@ -945,7 +945,7 @@ class OjsMigrationService
      */
     public function migrateMetrics()
     {
-        foreach ($this->parser->getTableData('metrics') as $row) {
+        foreach ($this->getLegacyRows('metrics') as $row) {
             $lMetric = $this->mapRow('metrics', $row);
             $legacySubId = $lMetric->submission_id ?? null;
             $type = ArticleMetric::TYPE_VIEW;
@@ -988,11 +988,10 @@ class OjsMigrationService
         $journalsRows = collect($this->getLegacyRows('journals'))->map(fn($r) => $this->mapRow('journals', $r));
         $filesRows = collect($this->getLegacyRows('submission_files'))->map(fn($r) => $this->mapRow('submission_files', $r));
 
-        $galleyTable = 'submission_galleys'; // Default to older OJS
-        // We'll check if publication_galleys has data
-        $galleyData = $this->parser->getTableData('publication_galleys');
-        if (!$galleyData->valid()) {
-            $galleyData = $this->parser->getTableData('submission_galleys');
+        $galleyTable = 'submission_galleys';
+        $galleyData = $this->getLegacyRows('publication_galleys');
+        if (empty($galleyData)) {
+            $galleyData = $this->getLegacyRows('submission_galleys');
         } else {
             $galleyTable = 'publication_galleys';
         }
