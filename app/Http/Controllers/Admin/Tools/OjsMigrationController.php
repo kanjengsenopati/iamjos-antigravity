@@ -43,30 +43,42 @@ class OjsMigrationController extends Controller
     }
 
     /**
-     * Handle SQL Dump Upload
+     * Update Migration Configuration
      */
     public function upload(Request $request)
     {
-        $request->validate([
-            'sql_file' => 'required|file',
-            'base_url' => 'nullable|string',
-        ]);
+        $type = $request->input('type', 'sql');
 
-        $file = $request->file('sql_file');
-        $filename = 'ojs_dump_' . time() . '.' . $file->getClientOriginalExtension();
-        
-        $path = $file->storeAs('migrations', $filename);
+        if ($type === 'sql') {
+            $request->validate([
+                'sql_file' => 'required|file',
+            ]);
 
-        LegacySourceConfig::updateOrCreate(
-            ['is_active' => true],
-            [
-                'driver' => 'sql_file',
-                'database' => $filename,
-                'base_url' => $request->base_url,
-            ]
-        );
+            $file = $request->file('sql_file');
+            $filename = 'ojs_dump_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('migrations', $filename);
 
-        return back()->with('success', 'File SQL berhasil diunggah. Anda dapat mulai memproses data.');
+            LegacySourceConfig::updateOrCreate(
+                ['is_active' => true],
+                [
+                    'driver' => 'sql_file',
+                    'database' => $filename,
+                ]
+            );
+        } else {
+            $request->validate([
+                'base_url' => 'required|string',
+            ]);
+
+            LegacySourceConfig::updateOrCreate(
+                ['is_active' => true],
+                [
+                    'base_url' => $request->base_url,
+                ]
+            );
+        }
+
+        return back()->with('success', 'Konfigurasi berhasil diperbarui.');
     }
 
     /**

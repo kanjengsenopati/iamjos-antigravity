@@ -34,46 +34,101 @@
     @endif
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto">
-        @if(!$config)
-        <!-- Upload State -->
-        <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
-                <div class="p-8 border-b border-slate-50">
-                    <h2 class="text-lg font-bold text-slate-800">1. Upload SQL Dump</h2>
-                    <p class="text-sm text-slate-500">Unggah file dump (.sql) dari database MySQL OJS Anda.</p>
-                </div>
-                <form action="{{ route('admin.tools.migration.upload') }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
-                    @csrf
-                    <div class="border-2 border-dashed border-slate-200 rounded-[24px] p-12 text-center hover:border-blue-400 transition-all group cursor-pointer relative">
-                        <input type="file" name="sql_file" class="absolute inset-0 opacity-0 cursor-pointer" @change="fileName = $event.target.files[0].name">
-                        <div class="flex flex-col items-center">
-                            <div class="p-4 bg-blue-50 rounded-full mb-4 group-hover:bg-blue-100 transition-all">
-                                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
+    <div class="max-w-7xl mx-auto" x-data="{ activeSetupTab: '{{ $config ? 'progress' : 'sql' }}' }">
+        @if(!$config || !$config->database || !$config->base_url)
+            <!-- Setup State -->
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
+                    <!-- Tabs Header -->
+                    <div class="flex border-b border-slate-50">
+                        <button @click="activeSetupTab = 'sql'" 
+                            :class="activeSetupTab === 'sql' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="flex-1 py-4 text-sm font-bold border-b-2 transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" /></svg>
+                            1. Database Source (SQL)
+                        </button>
+                        <button @click="activeSetupTab = 'files'" 
+                            :class="activeSetupTab === 'files' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="flex-1 py-4 text-sm font-bold border-b-2 transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                            2. File Assets (Local Path)
+                        </button>
+                    </div>
+
+                    <!-- SQL Tab Content -->
+                    <div x-show="activeSetupTab === 'sql'" class="p-8">
+                        @if($config && $config->database)
+                            <div class="mb-6 p-4 bg-emerald-50 rounded-xl flex items-center justify-between border border-emerald-100">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span class="text-sm font-medium text-emerald-800">Database Ready: {{ $config->database }}</span>
+                                </div>
+                                <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
                             </div>
-                            <h3 class="text-slate-800 font-bold" x-text="fileName || 'Click or drag SQL file here'"></h3>
-                            <p class="text-slate-400 text-sm mt-1">Maximum file size: 512MB (.sql, .sql.gz)</p>
-                        </div>
+                        @endif
+
+                        <form action="{{ route('admin.tools.migration.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                            @csrf
+                            <input type="hidden" name="type" value="sql">
+                            <div class="border-2 border-dashed border-slate-200 rounded-[24px] p-12 text-center hover:border-blue-400 transition-all group cursor-pointer relative">
+                                <input type="file" name="sql_file" class="absolute inset-0 opacity-0 cursor-pointer" @change="fileName = $event.target.files[0].name">
+                                <div class="flex flex-col items-center">
+                                    <div class="p-4 bg-blue-50 rounded-full mb-4 group-hover:bg-blue-100 transition-all">
+                                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-slate-800 font-bold" x-text="fileName || 'Click or drag SQL file here'"></h3>
+                                    <p class="text-slate-400 text-sm mt-1">Maximum file size: 512MB (.sql)</p>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all">
+                                Upload & Initialize SQL
+                            </button>
+                        </form>
                     </div>
 
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">OJS Files Path (Relative to Project Root)</label>
-                        <input type="text" name="base_url" placeholder="storage/app/migrations/files" class="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
-                        <p class="mt-2 text-[11px] text-slate-400 italic">Lokasi folder files OJS yang sudah diunggah ke server. Digunakan untuk migrasi PDF secara lokal.</p>
-                    </div>
+                    <!-- Files Tab Content -->
+                    <div x-show="activeSetupTab === 'files'" class="p-8">
+                        @if($config && $config->base_url)
+                            <div class="mb-6 p-4 bg-emerald-50 rounded-xl flex items-center justify-between border border-emerald-100">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span class="text-sm font-medium text-emerald-800">Files Path: {{ $config->base_url }}</span>
+                                </div>
+                                <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                            </div>
+                        @endif
 
-                    <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex justify-center items-center gap-2">
-                        <span>Initialize Migration</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                    </button>
-                </form>
+                        <form action="{{ route('admin.tools.migration.upload') }}" method="POST" class="space-y-6">
+                            @csrf
+                            <input type="hidden" name="type" value="files">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">OJS Files Path (Relative to Project Root)</label>
+                                <input type="text" name="base_url" value="{{ $config->base_url ?? '' }}" placeholder="storage/app/migrations/files" class="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
+                                <p class="mt-2 text-[11px] text-slate-400 italic">Lokasi folder files OJS yang sudah diunggah ke server. Digunakan untuk migrasi PDF secara lokal.</p>
+                            </div>
+                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all">
+                                Update Files Path
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                @if($config && $config->database && $config->base_url)
+                    <div class="mt-8 text-center">
+                        <button @click="activeSetupTab = 'progress'" class="text-blue-600 font-bold flex items-center gap-2 mx-auto hover:underline">
+                            <span>Buka Migration Dashboard</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                        </button>
+                    </div>
+                @endif
             </div>
-        </div>
-        @else
+        @endif
+
+        @if($config && $config->database && $config->base_url)
         <!-- Migration Progress State -->
-        <div class="space-y-6">
+        <div x-show="activeSetupTab === 'progress'" class="space-y-6">
             <!-- File Info Card -->
             <div class="bg-white p-6 rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 flex items-center justify-between">
                 <div class="flex items-center gap-4">
