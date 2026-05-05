@@ -100,19 +100,19 @@
                             <div class="grid grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Host</label>
-                                    <input type="text" name="host" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="127.0.0.1" value="{{ $config->host ?? '127.0.0.1' }}" required>
+                                    <input type="text" name="host" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="127.0.0.1" value="{{ $config?->host ?? '127.0.0.1' }}" required>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Port</label>
-                                    <input type="number" name="port" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="3306" value="{{ $config->port ?? '3306' }}" required>
+                                    <input type="number" name="port" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="3306" value="{{ $config?->port ?? '3306' }}" required>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database Name</label>
-                                    <input type="text" name="database" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="ojs_legacy_db" value="{{ $config->connection_name === 'ojs_legacy' ? $config->database : '' }}" required>
+                                    <input type="text" name="database" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="ojs_legacy_db" value="{{ ($config?->connection_name === 'ojs_legacy') ? $config->database : '' }}" required>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database User</label>
-                                    <input type="text" name="username" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="root" value="{{ $config->username ?? 'root' }}" required>
+                                    <input type="text" name="username" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="root" value="{{ $config?->username ?? 'root' }}" required>
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database Password</label>
