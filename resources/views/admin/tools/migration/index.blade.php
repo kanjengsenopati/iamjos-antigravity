@@ -373,6 +373,117 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Journal Integrity Panel -->
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
+                <div class="p-6 border-b border-slate-50 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800">Journal Integrity Check</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Verifikasi data per-jurnal: issues dan artikel yang berhasil disinkronisasi.</p>
+                    </div>
+                    <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Complete</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Partial</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Empty</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Native</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50">
+                                <th class="px-4 py-3 w-6"></th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Journal Name</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Abbrev</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Path</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Issues</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Articles</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @forelse($journalBreakdown as $j)
+                            <tr class="hover:bg-slate-50/30 transition-colors">
+                                <td class="px-4 py-3">
+                                    @if($j['integrity'] === 'complete')
+                                        <span class="block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                    @elseif($j['integrity'] === 'partial')
+                                        <span class="block w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                                    @elseif($j['integrity'] === 'empty')
+                                        <span class="block w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                                    @else
+                                        <span class="block w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-sm font-bold text-slate-800">{{ $j['name'] }}</span>
+                                    @if(!$j['enabled'])
+                                        <span class="ml-2 text-[9px] bg-red-50 text-red-400 font-bold uppercase px-1.5 py-0.5 rounded-full">Disabled</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{{ $j['abbreviation'] }}</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-xs font-mono text-slate-400">{{ $j['path'] }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="text-sm font-mono font-bold {{ $j['issues_count'] > 0 ? 'text-emerald-600' : 'text-red-400' }}">
+                                        {{ $j['issues_count'] }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="text-sm font-mono font-bold {{ $j['articles_count'] > 0 ? 'text-emerald-600' : 'text-red-400' }}">
+                                        {{ $j['articles_count'] }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    @if($j['integrity'] === 'complete')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                            Complete
+                                        </span>
+                                    @elseif($j['integrity'] === 'partial')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
+                                            Partial
+                                        </span>
+                                    @elseif($j['integrity'] === 'empty')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            Empty
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
+                                            Native
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-10 text-center text-slate-400 text-sm">Belum ada journal yang terdaftar.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @php
+                    $emptyJournals  = collect($journalBreakdown)->where('integrity', 'empty')->count();
+                    $partialJournals = collect($journalBreakdown)->where('integrity', 'partial')->count();
+                @endphp
+                @if($emptyJournals > 0 || $partialJournals > 0)
+                <div class="p-4 bg-amber-50 border-t border-amber-100 flex items-start gap-3">
+                    <svg class="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p class="text-xs text-amber-800 font-medium leading-relaxed">
+                        <strong>Perhatian:</strong> Terdapat <strong>{{ $emptyJournals }} jurnal Empty</strong> dan <strong>{{ $partialJournals }} jurnal Partial</strong>.
+                        Kemungkinan jurnal tersebut tidak memiliki data di OJS dump, atau terjadi kegagalan migrasi parsial.
+                        Coba jalankan ulang <em>"Run Step → Issues"</em> dan <em>"Run Step → Articles"</em>.
+                    </p>
+                </div>
+                @endif
+            </div>
+
             <!-- Sync Summary Footer -->
             <div class="bg-emerald-900 text-white p-8 rounded-[24px] flex items-center justify-between shadow-xl shadow-emerald-100">
                 <div class="flex items-center gap-4">
@@ -450,44 +561,61 @@ function migrationDashboard() {
         fileName: '',
         loadingStep: null,
 
+        // Standard headers to always force JSON response from Laravel
+        getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest',
+            };
+        },
+
         runStep(step) {
             this.loadingStep = step;
             fetch('{{ route("admin.tools.migration.run") }}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
+                headers: this.getHeaders(),
                 body: JSON.stringify({ step: step })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok && res.headers.get('content-type')?.includes('application/json') === false) {
+                    throw new Error(`Server returned ${res.status}: Possible PHP error. Check Laravel logs.`);
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.success) {
                     window.location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('Migration Error:\n\n' + data.message);
+                    this.loadingStep = null;
                 }
             })
-            .catch(e => alert('Fatal Error: ' + e.message))
-            .finally(() => {
+            .catch(e => {
+                alert('Fatal Error: ' + e.message);
                 this.loadingStep = null;
             });
         },
 
         async syncAll() {
             if (confirm('Jalankan semua tahapan migrasi secara berurutan?')) {
-                const steps = ['journals', 'sections', 'issues', 'submissions', 'authors', 'metrics', 'galleys'];
+                const steps = ['journals', 'sections', 'issues', 'submissions', 'authors', 'metrics'];
                 for (const step of steps) {
                     this.loadingStep = step;
                     try {
                         const res = await fetch('{{ route("admin.tools.migration.run") }}', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            headers: this.getHeaders(),
                             body: JSON.stringify({ step: step })
                         });
+                        if (!res.ok && !res.headers.get('content-type')?.includes('application/json')) {
+                            alert(`Server error pada step ${step}. Lihat Laravel log untuk detail.`);
+                            break;
+                        }
                         const data = await res.json();
                         if (!data.success) {
-                            alert(`Gagal pada step ${step}: ${data.message}`);
+                            alert(`Gagal pada step ${step}:\n\n${data.message}`);
                             break;
                         }
                     } catch (e) {

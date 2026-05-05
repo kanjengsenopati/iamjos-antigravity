@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Tools;
 use App\Http\Controllers\Controller;
 use App\Models\LegacySourceConfig;
 use App\Models\LegacyMapping;
+use App\Models\Journal;
 use App\Services\OjsMigrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ class OjsMigrationController extends Controller
         $config = LegacySourceConfig::where('is_active', true)->first();
         $stats = [];
         $fileError = null;
+        $journalBreakdown = [];
 
         if ($config && $config->database) {
             $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
@@ -40,7 +42,42 @@ class OjsMigrationController extends Controller
             }
         }
 
-        return view('admin.tools.migration.index', compact('config', 'stats', 'fileError'));
+        // Per-journal integrity breakdown (always load if journals exist)
+        $journalBreakdown = Journal::withCount([
+            'issues',
+            'submissions as articles_count',
+        ])
+        ->with(['issues' => fn($q) => $q->select('id', 'journal_id')])
+        ->select('id', 'name', 'abbreviation', 'slug', 'path', 'enabled')
+        ->orderBy('name')
+        ->get()
+        ->map(function ($journal) {
+            $mappedJournals = LegacyMapping::where('legacy_table', 'journals')
+                ->where('new_uuid', $journal->id)
+                ->exists();
+
+            $mappedIssuesCount = LegacyMapping::where('legacy_table', 'issues')
+                ->whereIn('new_uuid', $journal->issues->pluck('id'))
+                ->count();
+
+            return [
+                'id'            => $journal->id,
+                'name'          => $journal->name,
+                'abbreviation'  => $journal->abbreviation,
+                'path'          => $journal->path ?? $journal->slug,
+                'enabled'       => $journal->enabled,
+                'is_migrated'   => $mappedJournals,
+                'issues_count'  => $journal->issues_count,
+                'articles_count'=> $journal->articles_count,
+                'mapped_issues' => $mappedIssuesCount,
+                'integrity'     => $mappedJournals
+                    ? ($journal->issues_count > 0 && $journal->articles_count > 0 ? 'complete'
+                        : ($journal->issues_count > 0 ? 'partial' : 'empty'))
+                    : 'native',
+            ];
+        });
+
+        return view('admin.tools.migration.index', compact('config', 'stats', 'fileError', 'journalBreakdown'));
     }
 
     /**
