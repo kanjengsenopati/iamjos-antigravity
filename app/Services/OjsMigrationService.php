@@ -19,13 +19,15 @@ use Illuminate\Support\Carbon;
 class OjsMigrationService
 {
     protected $parser;
+    protected $storage;
     protected $sqlFile;
     protected $dbConnection = null; // Engine A: direct DB mode
     protected $legacyConfig = null;
 
-    public function __construct(SqlDumpParserService $parser)
+    public function __construct(SqlDumpParserService $parser, MigrationStorageService $storage)
     {
         $this->parser = $parser;
+        $this->storage = $storage;
     }
 
     /**
@@ -59,6 +61,7 @@ class OjsMigrationService
         $this->sqlFile      = $path;
         $this->dbConnection = null;
         $this->parser->setFile($path);
+        $this->storage->setupConnection();
     }
 
     /**
@@ -94,9 +97,17 @@ class OjsMigrationService
                 } catch (\Exception $e) {
                     $legacyCount = '?';
                 }
+            } elseif ($this->sqlFile) {
+                // Engine B: count from SQLite bridge
+                $this->storage->setupConnection();
+                $conn = $this->storage->getConnectionName();
+                if (\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
+                    $legacyCount = DB::connection($conn)->table($legacyTable)->count();
+                } else {
+                    $legacyCount = 0;
+                }
             } else {
-                // Engine B: cannot count SQL file cheaply, show mapping count as reference
-                $legacyCount = $mappingCount > 0 ? $mappingCount : '—';
+                $legacyCount = '—';
             }
 
             $stats[$key] = [
@@ -181,7 +192,7 @@ class OjsMigrationService
     /**
      * Dual-Engine getLegacyRows: auto-routes to DB or SQL parser
      */
-    protected function getLegacyRows(string $tableName): array
+    public function getLegacyRows(string $tableName): array
     {
         if ($this->dbConnection) {
             // Engine A: direct MySQL query
@@ -192,12 +203,19 @@ class OjsMigrationService
             }
         }
 
-        // Engine B: SQL file parser
-        $rows = [];
-        foreach ($this->parser->getTableData($tableName) as $row) {
-            $rows[] = $row;
+        // Engine B: SQL Intermediate Storage (SQLite)
+        if ($this->sqlFile) {
+            $this->storage->setupConnection();
+            $conn = $this->storage->getConnectionName();
+            
+            if (!\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($tableName)) {
+                return [];
+            }
+
+            return DB::connection($conn)->table($tableName)->get()->map(fn($r) => (array) $r)->toArray();
         }
-        return $rows;
+
+        return [];
     }
 
     /**
@@ -289,20 +307,8 @@ class OjsMigrationService
         }
 
         $result = new \stdClass();
-
-        // Engine A returns associative arrays — map directly by key name
-        if (!empty($columns) && is_string(array_key_first($row))) {
-            foreach ($columns as $col) {
-                $result->$col = $row[$col] ?? null;
-            }
-            return $result;
-        }
-
-        // Engine B returns numeric indexed arrays — map by position
-        foreach ($columns as $index => $col) {
-            if (isset($row[$index])) {
-                $result->$col = $row[$index];
-            }
+        foreach ($row as $key => $val) {
+            $result->$key = $val;
         }
         return $result;
     }

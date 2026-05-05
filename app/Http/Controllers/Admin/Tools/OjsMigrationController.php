@@ -9,14 +9,17 @@ use App\Models\Journal;
 use App\Services\OjsMigrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\SqlDumpParserService;
 
 class OjsMigrationController extends Controller
 {
     protected $migrationService;
+    protected $parser;
 
-    public function __construct(OjsMigrationService $migrationService)
+    public function __construct(OjsMigrationService $migrationService, SqlDumpParserService $parser)
     {
         $this->migrationService = $migrationService;
+        $this->parser = $parser;
     }
 
     /**
@@ -93,6 +96,8 @@ class OjsMigrationController extends Controller
     {
         $type = $request->input('type', 'sql');
 
+        $msg = 'Konfigurasi berhasil diperbarui.';
+
         if ($type === 'database') {
             // --- Engine A: Direct DB Connection ---
             $request->validate([
@@ -143,7 +148,7 @@ class OjsMigrationController extends Controller
             $filename = 'ojs_dump_' . time() . '.' . $file->getClientOriginalExtension();
             $file->storeAs('migrations', $filename);
 
-            LegacySourceConfig::updateOrCreate(
+            $config = LegacySourceConfig::updateOrCreate(
                 ['is_active' => true],
                 [
                     'connection_name' => 'sql_file',
@@ -154,6 +159,15 @@ class OjsMigrationController extends Controller
                     'password'        => encrypt('none'),
                 ]
             );
+
+            // Trigger Indexing to SQLite
+            try {
+                $this->parser->setFile(storage_path("app/private/migrations/{$filename}"));
+                $this->parser->indexFile();
+                $msg = 'Konfigurasi berhasil diperbarui dan data SQL telah di-index ke SQLite.';
+            } catch (\Exception $e) {
+                return back()->with('error', 'Gagal memproses SQL: ' . $e->getMessage());
+            }
         } else {
             // Legacy: files path
             $request->validate(['base_url' => 'required|string']);
@@ -169,7 +183,7 @@ class OjsMigrationController extends Controller
             );
         }
 
-        return back()->with('success', 'Konfigurasi berhasil diperbarui.');
+        return back()->with('success', $msg);
     }
 
     /**

@@ -434,7 +434,7 @@
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
                                     <span class="flex items-center justify-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-slate-300 inline-block"></span> Native
+                                        <span class="w-2 h-2 rounded-full bg-slate-300 inline-block"></span> IamJOS
                                     </span>
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
@@ -479,7 +479,7 @@
                                         {{ number_format($migratedCount) }}
                                     </span>
                                 </td>
-                                {{-- Pillar 3: Native (existing, non-migrated) --}}
+                                {{-- Pillar 3: IamJOS (existing, non-migrated) --}}
                                 <td class="px-6 py-4 text-center">
                                     <span class="text-sm font-mono font-bold {{ $nativeCount > 0 ? 'text-amber-500' : 'text-slate-300' }}">
                                         {{ number_format($nativeCount) }}

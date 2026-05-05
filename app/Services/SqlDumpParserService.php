@@ -8,6 +8,12 @@ class SqlDumpParserService
 {
     protected $filePath;
     protected $handle;
+    protected $storage;
+
+    public function __construct(MigrationStorageService $storage)
+    {
+        $this->storage = $storage;
+    }
 
     /**
      * Set the SQL file path
@@ -21,47 +27,45 @@ class SqlDumpParserService
     }
 
     /**
-     * Get data for a specific table
-     * Returns a Generator for memory efficiency
+     * Index the whole SQL file into SQLite for high-integrity ETL
      */
-    public function getTableData(string $tableName)
+    public function indexFile()
     {
-        if (!$this->filePath) {
-            throw new \Exception("File belum diset.");
-        }
+        if (!$this->filePath) return;
 
+        $this->storage->clear();
         $this->handle = fopen($this->filePath, 'r');
-        // Support both: 
-        // INSERT INTO table VALUES ...
-        // INSERT INTO table (col1, col2) VALUES ...
-        $pattern = "/INSERT INTO [\"'`]?" . preg_quote($tableName, '/') . "[\"'`]?.*VALUES/i";
         
         $buffer = '';
         $inInsert = false;
+        $currentTable = '';
+        $currentColumns = [];
 
         while (($line = fgets($this->handle)) !== false) {
+            $trimmedLine = trim($line);
+            if (empty($trimmedLine) || str_starts_with($trimmedLine, '--') || str_starts_with($trimmedLine, '/*')) {
+                continue;
+            }
+
             if (!$inInsert) {
-                if (preg_match($pattern, $line)) {
+                // Look for INSERT INTO [table] (cols) VALUES
+                if (preg_match('/INSERT INTO [\"\'`]?(?<table>[a-zA-Z0-9_]+)[\"\'`]?\s*(?:\((?<cols>[^)]+)\))?\s*VALUES/i', $line, $matches)) {
+                    $currentTable = $matches['table'];
+                    $colString = $matches['cols'] ?? '';
+                    $currentColumns = $colString ? array_map(fn($c) => trim($c, " \"'`"), explode(',', $colString)) : [];
+                    
                     $buffer = $line;
                     $inInsert = true;
                 }
             } else {
                 $buffer .= $line;
             }
-            
-            if ($inInsert) {
-                $trimmed = rtrim($buffer);
-                if (substr($trimmed, -1) === ';') {
+
+            if ($inInsert && str_contains($line, ';')) {
+                $trimmed = rtrim(trim($buffer));
+                if (str_ends_with($trimmed, ';')) {
                     if ($this->isStatementComplete($buffer)) {
-                        $valuesIndex = stripos($buffer, 'VALUES');
-                        $valuesPart = substr($buffer, $valuesIndex + 6);
-                        $valuesPart = rtrim(trim($valuesPart), ';');
-                        
-                        $rows = $this->parseValues($valuesPart);
-                        foreach ($rows as $row) {
-                            yield $row;
-                        }
-                        
+                        $this->processInsertBlock($currentTable, $currentColumns, $buffer);
                         $buffer = '';
                         $inInsert = false;
                     }
@@ -70,6 +74,43 @@ class SqlDumpParserService
         }
 
         fclose($this->handle);
+    }
+
+    /**
+     * Process a full INSERT statement and load into SQLite
+     */
+    protected function processInsertBlock($tableName, $columns, $buffer)
+    {
+        $valuesIndex = stripos($buffer, 'VALUES');
+        if ($valuesIndex === false) return;
+
+        $valuesPart = substr($buffer, $valuesIndex + 6);
+        $valuesPart = rtrim(trim($valuesPart), ';');
+        
+        $rows = $this->parseValues($valuesPart);
+        if (empty($rows)) return;
+
+        // If we don't have column names, create generic ones col_0, col_1...
+        if (empty($columns)) {
+            $colCount = count($rows[0]);
+            for ($i = 0; $i < $colCount; $i++) {
+                $columns[] = "col_$i";
+            }
+        }
+
+        $this->storage->ensureTable($tableName, $columns);
+
+        // Prepare rows for SQLite bulk insert
+        $dataToInsert = [];
+        foreach ($rows as $row) {
+            $item = [];
+            foreach ($columns as $idx => $colName) {
+                $item[$colName] = $row[$idx] ?? null;
+            }
+            $dataToInsert[] = $item;
+        }
+
+        $this->storage->bulkInsert($tableName, $dataToInsert);
     }
 
     /**
@@ -173,20 +214,24 @@ class SqlDumpParserService
     }
 
     /**
-     * Clean up parsed value (convert NULL, numbers, etc)
+     * Clean up parsed value
      */
     protected function cleanValue(string $val)
     {
         $val = trim($val);
         if (strtoupper($val) === 'NULL') return null;
-        if (is_numeric($val)) {
-            return strpos($val, '.') !== false ? (float)$val : (int)$val;
+        
+        // Remove surrounding quotes if any
+        if ((str_starts_with($val, "'") && str_ends_with($val, "'")) || 
+            (str_starts_with($val, '"') && str_ends_with($val, '"'))) {
+            $val = substr($val, 1, -1);
         }
+        
         return stripcslashes($val);
     }
 
     /**
-     * Check if an INSERT statement is complete (balanced quotes)
+     * Check if an INSERT statement is complete
      */
     protected function isStatementComplete(string $buffer)
     {
