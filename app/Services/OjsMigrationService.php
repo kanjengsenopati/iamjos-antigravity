@@ -243,7 +243,7 @@ class OjsMigrationService
                     'year' => $lIssue->year,
                 ],
                 [
-                    'title' => $titles->first() ?? null,
+                    'title' => $titles->first() ?? "Vol. {$lIssue->volume} No. {$lIssue->number} ({$lIssue->year})",
                     'description' => $descriptions->first() ?? null,
                     'is_published' => (bool)$lIssue->published,
                     'published_at' => $lIssue->date_published,
@@ -371,10 +371,10 @@ class OjsMigrationService
                 [
                     'submission_id' => $newSubmissionId,
                     'email' => $lAuthor->email,
-                    'given_name' => $givenName,
+                    'given_name' => $givenName ?: 'Author',
                     'family_name' => $familyName,
-                    'name' => trim($givenName . ' ' . $familyName),
-                    'first_name' => $givenName,
+                    'name' => trim(($givenName ?: 'Author') . ' ' . $familyName),
+                    'first_name' => $givenName ?: 'Author',
                     'last_name' => $familyName,
                     'affiliation' => $affiliation,
                     'is_corresponding' => (bool)$lAuthor->include_in_browse,
