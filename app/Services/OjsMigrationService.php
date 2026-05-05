@@ -207,8 +207,8 @@ class OjsMigrationService
                     'abbreviation' => $lSection->abbrev ?? 'SEC',
                 ],
                 [
-                    'title' => $titles->first() ?? 'General Section',
-                    'seq' => (int)$lSection->seq,
+                    'name' => $titles->first() ?? 'General Section',
+                    'sort_order' => (int)$lSection->seq,
                     'is_active' => true,
                 ]
             );
