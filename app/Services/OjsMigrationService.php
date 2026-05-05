@@ -366,7 +366,7 @@ class OjsMigrationService
                     'version' => 1,
                 ],
                 [
-                    'title' => $titles->first(),
+                    'title' => strip_tags($titles->first() ?? 'Untitled Migration'),
                     'abstract' => $abstracts->first(),
                     'references' => $rawCitations,
                     'status' => Publication::STATUS_PUBLISHED,

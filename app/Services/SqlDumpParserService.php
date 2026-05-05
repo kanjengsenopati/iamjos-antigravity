@@ -31,23 +31,42 @@ class SqlDumpParserService
         }
 
         $this->handle = fopen($this->filePath, 'r');
-        $inTable = false;
-        $pattern = "/INSERT INTO [`']" . preg_quote($tableName, '/') . "[`'] VALUES/i";
+        $pattern = "/INSERT INTO [\"'`]?" . preg_quote($tableName, '/') . "[\"'`]? VALUES/i";
+        
+        $buffer = '';
+        $inInsert = false;
 
         while (($line = fgets($this->handle)) !== false) {
-            if (preg_match($pattern, $line)) {
-                // Extract values from the line
-                // Note: This is a simplified parser. Robust SQL parsing is hard.
-                // We'll assume the standard MySQL dump format: INSERT INTO `table` VALUES (...),(...);
-                
-                $valuesPart = substr($line, strpos(strtoupper($line), 'VALUES') + 6);
-                $valuesPart = rtrim(trim($valuesPart), ';');
-                
-                // Parse rows (standard MySQL dump uses (val,val),(val,val))
-                $rows = $this->parseValues($valuesPart);
-                
-                foreach ($rows as $row) {
-                    yield $row;
+            if (!$inInsert) {
+                if (preg_match($pattern, $line)) {
+                    $buffer = $line;
+                    $inInsert = true;
+                }
+            } else {
+                $buffer .= $line;
+            }
+            
+            if ($inInsert) {
+                $trimmed = rtrim($buffer);
+                if (substr($trimmed, -1) === ';') {
+                    // Cek apakah single quotes balanced (untuk menghindari break di tengah string)
+                    $cleanBuffer = preg_replace("/\\\\./", "", $buffer); // Hapus escaped chars
+                    $quoteCount = substr_count($cleanBuffer, "'");
+                    
+                    if ($quoteCount % 2 === 0) {
+                        // Statement selesai
+                        $valuesIndex = stripos($buffer, 'VALUES');
+                        $valuesPart = substr($buffer, $valuesIndex + 6);
+                        $valuesPart = rtrim(trim($valuesPart), ';');
+                        
+                        $rows = $this->parseValues($valuesPart);
+                        foreach ($rows as $row) {
+                            yield $row;
+                        }
+                        
+                        $buffer = '';
+                        $inInsert = false;
+                    }
                 }
             }
         }
