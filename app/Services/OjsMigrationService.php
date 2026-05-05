@@ -450,20 +450,38 @@ class OjsMigrationService
             $targetDir = "journals/{$submission->journal->slug}/articles/{$submission->seq_id}/galleys/{$lGalley->galley_id}";
             $targetPath = "{$targetDir}/{$filename}";
 
-            if (empty($lGalley->remote_url)) {
-                $downloadUrl = "{$baseUrl}/index.php/{$journalPath}/article/download/{$lGalley->submission_id}/{$lGalley->galley_id}";
-                
-                try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(30)->get($downloadUrl);
-                    if ($response->successful()) {
-                        \Illuminate\Support\Facades\Storage::disk('public')->put($targetPath, $response->body());
+            if ($baseUrl) {
+                // $baseUrl now used as LOCAL PATH to OJS files_dir
+                $filesDir = base_path($baseUrl);
+                $found = false;
+
+                // Pattern 1: {files_path}/{galley_id}.pdf
+                $path1 = $filesDir . "/{$lGalley->galley_id}.pdf";
+                if (file_exists($path1)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->put($targetPath, file_get_contents($path1));
+                    $found = true;
+                } 
+
+                // Pattern 2: Recursive search by submission_file_id
+                if (!$found) {
+                    $searchId = $lGalley->file_id;
+                    $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($filesDir));
+                    foreach ($iterator as $file) {
+                        if ($file->isFile() && str_starts_with($file->getFilename(), $searchId . '-')) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->put($targetPath, file_get_contents($file->getPathname()));
+                            $found = true;
+                            break;
+                        }
                     }
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error("Gagal mendownload galley {$lGalley->galley_id}: " . $e->getMessage());
+                }
+
+                if (!$found) {
+                    \Illuminate\Support\Facades\Log::warning("Gagal menemukan file galley untuk ID {$lGalley->galley_id} di path: {$baseUrl}");
                     continue;
                 }
             } else {
-                $targetPath = $lGalley->remote_url;
+                \Illuminate\Support\Facades\Log::error("Path file OJS belum diset. Lewati migrasi galley.");
+                continue;
             }
 
             $subFile = \App\Models\SubmissionFile::updateOrCreate(

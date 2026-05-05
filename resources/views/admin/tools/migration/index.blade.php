@@ -59,9 +59,9 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Legacy OJS Base URL</label>
-                        <input type="url" name="base_url" placeholder="https://jurnal-lama.ac.id" class="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
-                        <p class="mt-2 text-[11px] text-slate-400 italic">Diperlukan jika Anda ingin melakukan migrasi Galley (PDF) secara otomatis.</p>
+                        <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">OJS Files Path (Relative to Project Root)</label>
+                        <input type="text" name="base_url" placeholder="storage/app/migrations/files" class="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
+                        <p class="mt-2 text-[11px] text-slate-400 italic">Lokasi folder files OJS yang sudah diunggah ke server. Digunakan untuk migrasi PDF secara lokal.</p>
                     </div>
 
                     <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex justify-center items-center gap-2">

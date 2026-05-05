@@ -49,7 +49,7 @@ class OjsMigrationController extends Controller
     {
         $request->validate([
             'sql_file' => 'required|file',
-            'base_url' => 'nullable|url',
+            'base_url' => 'nullable|string',
         ]);
 
         $file = $request->file('sql_file');
