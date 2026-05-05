@@ -28,7 +28,7 @@ class OjsMigrationController extends Controller
         $fileError = null;
 
         if ($config && $config->database) {
-            $filePath = storage_path('app/migrations/' . $config->database);
+            $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
             if (file_exists($filePath)) {
                 try {
                     $stats = $this->migrationService->getMigrationStats();
@@ -149,7 +149,7 @@ class OjsMigrationController extends Controller
             return response()->json(['success' => false, 'message' => 'File SQL belum diunggah.']);
         }
 
-        $filePath = storage_path('app/migrations/' . $config->database);
+        $filePath = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
         if (!file_exists($filePath)) {
             return response()->json(['success' => false, 'message' => 'File SQL hilang dari storage.']);
         }
@@ -181,7 +181,7 @@ class OjsMigrationController extends Controller
     {
         $config = LegacySourceConfig::where('is_active', true)->first();
         if ($config && $config->database) {
-            $path = storage_path('app/migrations/' . $config->database);
+            $path = \Illuminate\Support\Facades\Storage::disk('local')->path('migrations/' . $config->database);
             if (file_exists($path)) {
                 unlink($path);
             }
