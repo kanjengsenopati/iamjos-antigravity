@@ -152,19 +152,30 @@ class OjsMigrationService
 
         foreach ($this->parser->getTableData('journals') as $row) {
             $lJournal = $this->mapRow('journals', $row);
-            
+
+            // Guard: skip if path is null or empty
+            if (empty($lJournal->path ?? null)) continue;
+
             $settings = $settingsRows->where('journal_id', $lJournal->journal_id);
 
-            $names = $settings->where('setting_name', 'name')->pluck('setting_value', 'locale');
-            $descriptions = $settings->where('setting_name', 'description')->pluck('setting_value', 'locale');
+            $names         = $settings->where('setting_name', 'name')->pluck('setting_value', 'locale');
+            $descriptions  = $settings->where('setting_name', 'description')->pluck('setting_value', 'locale');
+            $abbreviations = $settings->where('setting_name', 'acronym')->pluck('setting_value', 'locale');
+            $issnPrint     = $settings->where('setting_name', 'printIssn')->value('setting_value');
+            $issnOnline    = $settings->where('setting_name', 'onlineIssn')->value('setting_value');
+            $publisher     = $settings->where('setting_name', 'publisherInstitution')->value('setting_value');
 
             $journal = Journal::updateOrCreate(
-                ['slug' => $lJournal->path],
+                ['path' => $lJournal->path],      // ✅ correct column name
                 [
-                    'name' => strip_tags($names->first() ?? 'Migrated Journal'),
-                    'description' => strip_tags($descriptions->first() ?? null),
-                    'enabled' => (bool)$lJournal->enabled,
-                    'seq' => (int)$lJournal->seq,
+                    'name'         => strip_tags($names->first() ?? 'Migrated Journal'),
+                    'abbreviation' => $abbreviations->first() ?? strtoupper(substr($lJournal->path, 0, 6)),
+                    'description'  => strip_tags($descriptions->first() ?? null),
+                    'publisher'    => $publisher ?? null,
+                    'issn_print'   => $issnPrint ?? null,
+                    'issn_online'  => $issnOnline ?? null,
+                    'enabled'      => (bool)($lJournal->enabled ?? true),
+                    'visible'      => true,
                 ]
             );
 
