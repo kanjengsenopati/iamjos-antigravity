@@ -34,24 +34,32 @@
     @endif
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto" x-data="{ activeSetupTab: '{{ ($config && $config->database && $config->base_url) ? 'progress' : ($config && $config->database ? 'files' : 'sql') }}' }">
+    <div class="max-w-7xl mx-auto" x-data="{ activeSetupTab: '{{ $config && $config->database ? 'progress' : 'sql' }}' }">
         
         <!-- Setup State -->
-        <div class="max-w-4xl mx-auto" x-show="activeSetupTab !== 'progress'" x-cloak>
+        <div class="max-w-6xl mx-auto">
             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
                 <!-- Tabs Header -->
                 <div class="flex border-b border-slate-50">
                     <button @click="activeSetupTab = 'sql'" 
-                        :class="activeSetupTab === 'sql' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="flex-1 py-4 text-sm font-bold border-b-2 transition-all flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" /></svg>
-                        1. Database Source (SQL)
+                        :class="activeSetupTab === 'sql' ? 'border-blue-500 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'"
+                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2">
+                        <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px]" :class="activeSetupTab === 'sql' ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-200'">1</span>
+                        Database Source
+                    </button>
+                    <button @click="activeSetupTab = 'progress'" 
+                        :disabled="!{{ $config && $config->database ? 'true' : 'false' }}"
+                        :class="activeSetupTab === 'progress' ? 'border-blue-500 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'"
+                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
+                        <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px]" :class="activeSetupTab === 'progress' ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-200'">2</span>
+                        Migration Sync
                     </button>
                     <button @click="activeSetupTab = 'files'" 
-                        :class="activeSetupTab === 'files' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="flex-1 py-4 text-sm font-bold border-b-2 transition-all flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                        2. File Assets (Local Path)
+                        :disabled="!{{ $config && $config->database ? 'true' : 'false' }}"
+                        :class="activeSetupTab === 'files' ? 'border-blue-500 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'"
+                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
+                        <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px]" :class="activeSetupTab === 'files' ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-200'">3</span>
+                        Fill Assets
                     </button>
                 </div>
 
@@ -89,8 +97,8 @@
 
                         @if($config && $config->database)
                             <div class="mt-6 border-t border-slate-100 pt-6 flex justify-end">
-                                <button type="button" @click="activeSetupTab = 'files'" class="flex items-center gap-2 text-blue-600 font-bold hover:underline text-sm">
-                                    Lanjut ke Konfigurasi File Assets
+                                <button type="button" @click="activeSetupTab = 'progress'" class="flex items-center gap-2 text-blue-600 font-bold hover:underline text-sm">
+                                    Lanjut ke Migration Dashboard
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                 </button>
                             </div>
@@ -364,6 +372,21 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+            <!-- Sync Summary Footer -->
+            <div class="bg-emerald-900 text-white p-8 rounded-[24px] flex items-center justify-between shadow-xl shadow-emerald-100">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/10 rounded-2xl">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Migration Sync Complete?</h3>
+                        <p class="text-emerald-100 text-sm opacity-80">Pastikan semua data di atas sudah sinkron sebelum mengisi aset file.</p>
+                    </div>
+                </div>
+                <button @click="activeSetupTab = 'files'" class="bg-white text-emerald-900 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg">
+                    Next: Fill Assets (Tab 3)
+                </button>
             </div>
         </div>
         @endif
