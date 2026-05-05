@@ -237,17 +237,18 @@ class OjsMigrationService
 
             $issue = Issue::updateOrCreate(
                 [
-                    'journal_id' => $newJournalId,
-                    'volume' => $lIssue->volume,
-                    'number' => $lIssue->number,
-                    'year' => $lIssue->year,
+                    // OJS issue_id is globally unique across all journals — use as stable primary key
+                    'seq_id' => (int)$lIssue->issue_id,
                 ],
                 [
-                    'title' => $titles->first() ?? "Vol. {$lIssue->volume} No. {$lIssue->number} ({$lIssue->year})",
-                    'description' => $descriptions->first() ?? null,
+                    'journal_id'   => $newJournalId,
+                    'volume'       => (int)($lIssue->volume ?? 1),
+                    'number'       => (int)($lIssue->number ?? 1),
+                    'year'         => (int)($lIssue->year ?? date('Y')),
+                    'title'        => $titles->first() ?? "Vol. {$lIssue->volume} No. {$lIssue->number} ({$lIssue->year})",
+                    'description'  => $descriptions->first() ?? null,
                     'is_published' => (bool)$lIssue->published,
                     'published_at' => $lIssue->date_published,
-                    'seq_id' => (int)$lIssue->issue_id,
                 ]
             );
 
@@ -292,29 +293,20 @@ class OjsMigrationService
             
             $rawCitations = $rawCitations ? strip_tags($rawCitations) : null;
 
-            $existingId = LegacyMapping::getMapping('submissions', $lSub->submission_id);
-            
-            if (!$existingId) {
-                $existingId = Submission::where('journal_id', $newJournalId)
-                    ->where('title', $titles->first())
-                    ->whereDate('created_at', Carbon::parse($lSub->date_submitted)->toDateString())
-                    ->value('id');
-            }
-
+            // Use OJS submission_id as stable unique key (seq_id) for idempotent re-runs
             $submission = Submission::updateOrCreate(
-                ['id' => $existingId ?? Str::uuid()->toString()],
+                ['seq_id' => (int)$lSub->submission_id],
                 [
                     'journal_id' => $newJournalId,
-                    'user_id' => User::first()->id,
+                    'user_id'    => User::first()->id,
                     'section_id' => $newSectionId,
-                    'issue_id' => $newIssueId,
-                    'status' => Submission::STATUS_PUBLISHED,
-                    'stage' => Submission::STAGE_PRODUCTION,
-                    'title' => strip_tags($titles->first() ?? 'Untitled Migration'),
-                    'abstract' => $abstracts->first() ?? null,
+                    'issue_id'   => $newIssueId,
+                    'status'     => Submission::STATUS_PUBLISHED,
+                    'stage'      => Submission::STAGE_PRODUCTION,
+                    'title'      => strip_tags($titles->first() ?? 'Untitled Migration'),
+                    'abstract'   => $abstracts->first() ?? null,
                     'references' => $rawCitations,
                     'created_at' => $lSub->date_submitted,
-                    'seq_id' => (int)$lSub->submission_id,
                 ]
             );
 
@@ -358,27 +350,25 @@ class OjsMigrationService
 
             $settings = $settingsRows->where('author_id', $lAuthor->author_id);
             
-            $givenName = $settings->where('setting_name', 'givenName')->first()?->setting_value ?? '';
+            $givenName  = $settings->where('setting_name', 'givenName')->first()?->setting_value ?? '';
             $familyName = $settings->where('setting_name', 'familyName')->first()?->setting_value ?? '';
             $affiliation = $settings->where('setting_name', 'affiliation')->first()?->setting_value ?? null;
 
-            $existingAuthor = \App\Models\SubmissionAuthor::where('submission_id', $newSubmissionId)
-                ->where('email', $lAuthor->email)
-                ->first();
-
             $author = SubmissionAuthor::updateOrCreate(
-                ['id' => $existingAuthor?->id ?? Str::uuid()->toString()],
                 [
+                    // Stable key: same author in same submission identified by email+sort_order
                     'submission_id' => $newSubmissionId,
-                    'email' => $lAuthor->email,
-                    'given_name' => $givenName ?: 'Author',
-                    'family_name' => $familyName,
-                    'name' => trim(($givenName ?: 'Author') . ' ' . $familyName),
-                    'first_name' => $givenName ?: 'Author',
-                    'last_name' => $familyName,
-                    'affiliation' => $affiliation,
+                    'email'         => $lAuthor->email ?: "author_{$lAuthor->author_id}@migrated.local",
+                    'sort_order'    => (int)$lAuthor->seq,
+                ],
+                [
+                    'given_name'       => $givenName ?: 'Author',
+                    'family_name'      => $familyName,
+                    'name'             => trim(($givenName ?: 'Author') . ' ' . $familyName),
+                    'first_name'       => $givenName ?: 'Author',
+                    'last_name'        => $familyName,
+                    'affiliation'      => $affiliation,
                     'is_corresponding' => (bool)$lAuthor->include_in_browse,
-                    'sort_order' => (int)$lAuthor->seq,
                 ]
             );
 
