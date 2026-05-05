@@ -107,8 +107,10 @@ class OjsMigrationController extends Controller
         \App\Models\Submission::query()->forceDelete();
         \App\Models\Publication::query()->forceDelete();
         \App\Models\SubmissionFile::query()->forceDelete();
-        \App\Models\LegacyMapping::where('legacy_type', 'submissions')->delete();
-        \App\Models\LegacyMapping::where('legacy_type', 'galleys')->delete();
+        \App\Models\LegacyMapping::where('legacy_table', 'submissions')->delete();
+        \App\Models\LegacyMapping::where('legacy_table', 'publications')->delete();
+        \App\Models\LegacyMapping::where('legacy_table', 'galleys')->delete();
+        \App\Models\LegacyMapping::where('legacy_table', 'authors')->delete();
         
         return back()->with('success', 'Semua data artikel berhasil dihapus.');
     }
@@ -119,7 +121,7 @@ class OjsMigrationController extends Controller
     public function resetIssues()
     {
         \App\Models\Issue::query()->forceDelete();
-        \App\Models\LegacyMapping::where('legacy_type', 'issues')->delete();
+        \App\Models\LegacyMapping::where('legacy_table', 'issues')->delete();
         
         return back()->with('success', 'Semua data issue berhasil dihapus.');
     }
@@ -131,8 +133,8 @@ class OjsMigrationController extends Controller
     {
         // Journals often have many relations, we use forceDelete
         \App\Models\Journal::query()->forceDelete();
-        \App\Models\LegacyMapping::where('legacy_type', 'journals')->delete();
-        \App\Models\LegacyMapping::where('legacy_type', 'sections')->delete();
+        \App\Models\LegacyMapping::where('legacy_table', 'journals')->delete();
+        \App\Models\LegacyMapping::where('legacy_table', 'sections')->delete();
         
         return back()->with('success', 'Semua data jurnal berhasil dihapus.');
     }
