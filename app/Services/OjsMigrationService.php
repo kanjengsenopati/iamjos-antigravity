@@ -91,36 +91,47 @@ class OjsMigrationService
             'reviews'     => ['legacy_table' => 'review_assignments', 'new_model' => \App\Models\ReviewAssignment::class],
             'discussions' => ['legacy_table' => 'queries',            'new_model' => \App\Models\Discussion::class],
             'logs'        => ['legacy_table' => 'event_log',          'new_model' => \App\Models\SubmissionLog::class],
-            'galleys'     => ['legacy_table' => 'galleys',            'new_model' => \App\Models\PublicationGalley::class],
+            'galleys'     => ['legacy_table' => 'submission_galleys', 'new_model' => \App\Models\PublicationGalley::class],
         ];
 
         // Version Adjustment for table names
         if ($this->detectedVersion === 'OJS2') {
             $modules['submissions']['legacy_table'] = 'articles';
+            $modules['galleys']['legacy_table'] = 'article_galleys';
         }
 
         foreach ($modules as $key => $config) {
             $legacyTable  = $config['legacy_table'];
             $model        = $config['new_model'];
-            $mappingCount = LegacyMapping::where('legacy_table', $legacyTable)->count();
+            $mappingCount = LegacyMapping::where('legacy_table', $key === 'galleys' ? 'galleys' : $legacyTable)->count();
             $totalCount   = $model::count();
 
             // Legacy source count
+            $legacyCount = 0;
             if ($this->dbConnection) {
-                // Engine A: direct count from MySQL
                 try {
-                    $legacyCount = DB::connection($this->dbConnection)->table($legacyTable)->count();
+                    // Cek fallback untuk galleys jika submission_galleys kosong di versi transisi
+                    if ($key === 'galleys' && !DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable($legacyTable)) {
+                        $legacyTable = 'publication_galleys';
+                    }
+                    if (DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable($legacyTable)) {
+                        $legacyCount = DB::connection($this->dbConnection)->table($legacyTable)->count();
+                    }
                 } catch (\Exception $e) {
                     $legacyCount = '?';
                 }
             } elseif ($this->sqlFile) {
-                // Engine B: count from SQLite bridge
                 $this->storage->setupConnection();
                 $conn = $this->storage->getConnectionName();
-                if (\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
-                    $legacyCount = DB::connection($conn)->table($legacyTable)->count();
-                } else {
-                    $legacyCount = 0;
+                try {
+                    if ($key === 'galleys' && !\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
+                        $legacyTable = 'publication_galleys';
+                    }
+                    if (\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
+                        $legacyCount = DB::connection($conn)->table($legacyTable)->count();
+                    }
+                } catch (\Exception $e) {
+                    $legacyCount = '?';
                 }
             } else {
                 $legacyCount = '—';
@@ -128,13 +139,26 @@ class OjsMigrationService
 
             $stats[$key] = [
                 'legacy_count'   => $legacyCount,
-                'migrated_count' => $mappingCount,                    // Records traceable to OJS
-                'native_count'   => max(0, $totalCount - $mappingCount), // Records not from OJS
+                'migrated_count' => $mappingCount,
+                'native_count'   => max(0, $totalCount - $mappingCount),
             ];
         }
 
-        $stats['metrics_views']     = ['legacy_count' => '—', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)->count(),     'native_count' => 0];
-        $stats['metrics_downloads'] = ['legacy_count' => '—', 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count(), 'native_count' => 0];
+        // Hitung metrics jika ada
+        $metricsLegacyCount = 0;
+        if ($this->dbConnection) {
+            if (DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable('metrics')) {
+                $metricsLegacyCount = DB::connection($this->dbConnection)->table('metrics')->count();
+            }
+        } elseif ($this->sqlFile) {
+            $conn = $this->storage->getConnectionName();
+            if (\Illuminate\Support\Facades\Schema::connection($conn)->hasTable('metrics')) {
+                $metricsLegacyCount = DB::connection($conn)->table('metrics')->count();
+            }
+        }
+
+        $stats['metrics_views']     = ['legacy_count' => $metricsLegacyCount, 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)->count(),     'native_count' => 0];
+        $stats['metrics_downloads'] = ['legacy_count' => $metricsLegacyCount, 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count(), 'native_count' => 0];
 
         return $stats;
     }
