@@ -189,48 +189,201 @@ class OjsMigrationController extends Controller
     /**
      * Reset All Article Data
      */
-    public function resetArticles()
+    public function resetArticles(Request $request)
     {
-        $migratedSubmissions = \App\Models\LegacyMapping::where('legacy_table', 'submissions')->pluck('new_uuid')->filter();
-        $migratedPublications = \App\Models\LegacyMapping::where('legacy_table', 'publications')->pluck('new_uuid')->filter();
-        $migratedGalleys = \App\Models\LegacyMapping::where('legacy_table', 'galleys')->pluck('new_uuid')->filter();
+        $journalIds = $request->input('journal_ids');
+
+        $querySubmissions = \App\Models\LegacyMapping::where('legacy_table', 'submissions');
+        $queryPublications = \App\Models\LegacyMapping::where('legacy_table', 'publications');
+        $queryGalleys = \App\Models\LegacyMapping::where('legacy_table', 'galleys');
+        $queryAuthors = \App\Models\LegacyMapping::where('legacy_table', 'authors');
+
+        if (!empty($journalIds)) {
+            $submissionIds = \App\Models\Submission::whereIn('journal_id', $journalIds)->pluck('id');
+            $querySubmissions->whereIn('new_uuid', $submissionIds);
+            
+            // For publications, authors, galleys we need to link back to submissions
+            $queryPublications->whereIn('new_uuid', function($q) use ($submissionIds) {
+                $q->select('id')->from('publications')->whereIn('submission_id', $submissionIds);
+            });
+            $queryGalleys->whereIn('new_uuid', function($q) use ($submissionIds) {
+                $q->select('id')->from('submission_files')->whereIn('submission_id', $submissionIds);
+            });
+            $queryAuthors->whereIn('new_uuid', function($q) use ($submissionIds) {
+                $q->select('id')->from('authors')->whereIn('submission_id', $submissionIds);
+            });
+        }
+
+        $migratedSubmissions = $querySubmissions->pluck('new_uuid')->filter();
+        $migratedPublications = $queryPublications->pluck('new_uuid')->filter();
+        $migratedGalleys = $queryGalleys->pluck('new_uuid')->filter();
 
         if ($migratedSubmissions->isNotEmpty()) \App\Models\Submission::whereIn('id', $migratedSubmissions)->forceDelete();
         if ($migratedPublications->isNotEmpty()) \App\Models\Publication::whereIn('id', $migratedPublications)->forceDelete();
         if ($migratedGalleys->isNotEmpty()) \App\Models\SubmissionFile::whereIn('id', $migratedGalleys)->forceDelete();
 
-        \App\Models\LegacyMapping::where('legacy_table', 'submissions')->delete();
-        \App\Models\LegacyMapping::where('legacy_table', 'publications')->delete();
-        \App\Models\LegacyMapping::where('legacy_table', 'galleys')->delete();
-        \App\Models\LegacyMapping::where('legacy_table', 'authors')->delete();
+        // Delete mappings
+        $querySubmissions->delete();
+        $queryPublications->delete();
+        $queryGalleys->delete();
+        $queryAuthors->delete();
         
-        return back()->with('success', 'Hanya data artikel hasil migrasi yang berhasil dihapus.');
+        $scope = !empty($journalIds) ? 'pada jurnal terpilih' : 'seluruh jurnal';
+        return back()->with('success', "Hanya data artikel hasil migrasi {$scope} yang berhasil dihapus.");
     }
 
     /**
      * Reset All Issue Data
      */
-    public function resetIssues()
+    public function resetIssues(Request $request)
     {
-        $migratedIssues = \App\Models\LegacyMapping::where('legacy_table', 'issues')->pluck('new_uuid')->filter();
+        $journalIds = $request->input('journal_ids');
+        $query = \App\Models\LegacyMapping::where('legacy_table', 'issues');
+
+        if (!empty($journalIds)) {
+            $issueIds = \App\Models\Issue::whereIn('journal_id', $journalIds)->pluck('id');
+            $query->whereIn('new_uuid', $issueIds);
+        }
+
+        $migratedIssues = $query->pluck('new_uuid')->filter();
         
         if ($migratedIssues->isNotEmpty()) {
             \App\Models\Issue::whereIn('id', $migratedIssues)->forceDelete();
         }
         
-        \App\Models\LegacyMapping::where('legacy_table', 'issues')->delete();
+        $query->delete();
         
-        return back()->with('success', 'Hanya data issue hasil migrasi yang berhasil dihapus.');
+        $scope = !empty($journalIds) ? 'pada jurnal terpilih' : 'seluruh jurnal';
+        return back()->with('success', "Hanya data issue hasil migrasi {$scope} yang berhasil dihapus.");
+    }
+
+    /**
+     * Get issues and articles for a specific journal (JSON)
+     */
+    public function getJournalDetails(Journal $journal)
+    {
+        $issues = \App\Models\Issue::where('journal_id', $journal->id)
+            ->orderBy('year', 'desc')
+            ->orderBy('volume', 'desc')
+            ->orderBy('number', 'desc')
+            ->get()
+            ->map(fn($i) => [
+                'id' => $i->id,
+                'title' => $i->title ?? "Vol {$i->volume} No {$i->number} ({$i->year})",
+                'is_migrated' => LegacyMapping::where('legacy_table', 'issues')->where('new_uuid', $i->id)->exists(),
+            ]);
+
+        $articles = \App\Models\Submission::where('journal_id', $journal->id)
+            ->with('currentPublication')
+            ->latest()
+            ->limit(500) // Safety limit
+            ->get()
+            ->map(fn($s) => [
+                'id' => $s->id,
+                'title' => $s->currentPublication->title ?? 'Untitled',
+                'is_migrated' => LegacyMapping::where('legacy_table', 'submissions')->where('new_uuid', $s->id)->exists(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'journal' => ['id' => $journal->id, 'name' => $journal->name],
+            'issues' => $issues,
+            'articles' => $articles
+        ]);
+    }
+
+    /**
+     * Reset selected items (Issues/Articles)
+     */
+    public function resetSelectedItems(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:issues,articles',
+            'ids' => 'required|array'
+        ]);
+
+        $type = $request->type;
+        $ids = $request->ids;
+
+        if ($type === 'articles') {
+            \App\Models\Submission::whereIn('id', $ids)->forceDelete();
+            \App\Models\LegacyMapping::where('legacy_table', 'submissions')->whereIn('new_uuid', $ids)->delete();
+            \App\Models\LegacyMapping::where('legacy_table', 'publications')->whereIn('new_uuid', function($q) use ($ids) {
+                $q->select('id')->from('publications')->whereIn('submission_id', $ids);
+            })->delete();
+            \App\Models\LegacyMapping::where('legacy_table', 'authors')->whereIn('new_uuid', function($q) use ($ids) {
+                $q->select('id')->from('authors')->whereIn('submission_id', $ids);
+            })->delete();
+        } else {
+            \App\Models\Issue::whereIn('id', $ids)->forceDelete();
+            \App\Models\LegacyMapping::where('legacy_table', 'issues')->whereIn('new_uuid', $ids)->delete();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Item terpilih berhasil dihapus.']);
+    }
+
+    /**
+     * Reset specific journal data
+     */
+    public function resetJournal(Journal $journal)
+    {
+        // 1. Get all submission IDs for this journal
+        $submissionIds = \App\Models\Submission::where('journal_id', $journal->id)->pluck('id');
+        
+        // 2. Get all issue IDs for this journal
+        $issueIds = \App\Models\Issue::where('journal_id', $journal->id)->pluck('id');
+
+        // 3. Delete Submissions (will trigger cascaded deletes if configured, but let's be safe)
+        if ($submissionIds->isNotEmpty()) {
+            \App\Models\Submission::whereIn('id', $submissionIds)->forceDelete();
+            \App\Models\LegacyMapping::where('legacy_table', 'submissions')->whereIn('new_uuid', $submissionIds)->delete();
+            \App\Models\LegacyMapping::where('legacy_table', 'publications')->whereIn('new_uuid', function($q) use ($submissionIds) {
+                $q->select('id')->from('publications')->whereIn('submission_id', $submissionIds);
+            })->delete();
+        }
+
+        // 4. Delete Issues
+        if ($issueIds->isNotEmpty()) {
+            \App\Models\Issue::whereIn('id', $issueIds)->forceDelete();
+            \App\Models\LegacyMapping::where('legacy_table', 'issues')->whereIn('new_uuid', $issueIds)->delete();
+        }
+
+        // 5. Delete Sections
+        $sectionIds = \App\Models\Section::where('journal_id', $journal->id)->pluck('id');
+        if ($sectionIds->isNotEmpty()) {
+            \App\Models\Section::whereIn('id', $sectionIds)->forceDelete();
+            \App\Models\LegacyMapping::where('legacy_table', 'sections')->whereIn('new_uuid', $sectionIds)->delete();
+        }
+
+        // 6. Finally delete the journal if it was migrated
+        $isMigrated = \App\Models\LegacyMapping::where('legacy_table', 'journals')->where('new_uuid', $journal->id)->exists();
+        if ($isMigrated) {
+            $journal->forceDelete();
+            \App\Models\LegacyMapping::where('legacy_table', 'journals')->where('new_uuid', $journal->id)->delete();
+        }
+
+        return back()->with('success', "Data jurnal '{$journal->name}' berhasil dibersihkan.");
     }
 
     /**
      * Reset All Journal Data
      */
-    public function resetJournals()
+    public function resetJournals(Request $request)
     {
-        // Journals often have many relations, we use forceDelete
-        $migratedJournals = \App\Models\LegacyMapping::where('legacy_table', 'journals')->pluck('new_uuid')->filter();
-        $migratedSections = \App\Models\LegacyMapping::where('legacy_table', 'sections')->pluck('new_uuid')->filter();
+        $journalIds = $request->input('journal_ids');
+
+        $queryJournals = \App\Models\LegacyMapping::where('legacy_table', 'journals');
+        $querySections = \App\Models\LegacyMapping::where('legacy_table', 'sections');
+
+        if (!empty($journalIds)) {
+            $queryJournals->whereIn('new_uuid', $journalIds);
+            $querySections->whereIn('new_uuid', function($q) use ($journalIds) {
+                $q->select('id')->from('sections')->whereIn('journal_id', $journalIds);
+            });
+        }
+
+        $migratedJournals = $queryJournals->pluck('new_uuid')->filter();
+        $migratedSections = $querySections->pluck('new_uuid')->filter();
 
         if ($migratedJournals->isNotEmpty()) {
             \App\Models\Journal::whereIn('id', $migratedJournals)->forceDelete();
@@ -240,11 +393,13 @@ class OjsMigrationController extends Controller
             \App\Models\Section::whereIn('id', $migratedSections)->forceDelete();
         }
 
-        \App\Models\LegacyMapping::where('legacy_table', 'journals')->delete();
-        \App\Models\LegacyMapping::where('legacy_table', 'sections')->delete();
+        $queryJournals->delete();
+        $querySections->delete();
         
-        return back()->with('success', 'Hanya data jurnal hasil migrasi yang berhasil dihapus.');
+        $scope = !empty($journalIds) ? 'pada jurnal terpilih' : 'seluruh jurnal';
+        return back()->with('success', "Hanya data jurnal hasil migrasi {$scope} yang berhasil dihapus.");
     }
+
 
     /**
      * Run Migration Step
@@ -252,6 +407,7 @@ class OjsMigrationController extends Controller
     public function runStep(Request $request)
     {
         $step   = $request->step;
+        $journalIds = $request->input('journal_ids', []); // New: journal filter
         $config = LegacySourceConfig::where('is_active', true)->first();
 
         if (!$config) {
@@ -268,6 +424,11 @@ class OjsMigrationController extends Controller
                     return response()->json(['success' => false, 'message' => 'File SQL hilang dari storage.']);
                 }
                 $this->migrationService->setSqlSource($filePath);
+            }
+
+            // Apply journal filters if provided
+            if (!empty($journalIds)) {
+                $this->migrationService->setJournalFilters($journalIds);
             }
 
             switch ($step) {

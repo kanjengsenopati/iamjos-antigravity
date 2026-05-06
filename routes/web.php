@@ -192,6 +192,9 @@ $registerAllRoutes = function ($prefix = '') {
                 Route::post('/reset-articles', 'resetArticles')->name('reset-articles');
                 Route::post('/reset-issues', 'resetIssues')->name('reset-issues');
                 Route::post('/reset-journals', 'resetJournals')->name('reset-journals');
+                Route::post('/reset-journal/{journal}', 'resetJournal')->name('reset-journal');
+                Route::get('/details/{journal}', 'getJournalDetails')->name('details');
+                Route::post('/reset-items', 'resetSelectedItems')->name('reset-items');
             });
 
             Route::controller(\App\Http\Controllers\Admin\FileManagerController::class)->prefix('file-manager')->name('file-manager.')->group(function () {

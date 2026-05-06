@@ -364,17 +364,20 @@
 
             <!-- SQL Data Preview -->
             @if(!empty($previewData))
-            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden mb-8">
+             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden mb-8">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                     <div>
                         <h2 class="text-lg font-bold text-slate-800">SQL Data Preview</h2>
-                        <p class="text-sm text-slate-500">Verifikasi data yang akan di-import dari file SQL sebelum melakukan sinkronisasi.</p>
+                        <p class="text-sm text-slate-500">Pilih jurnal yang ingin di-import. Biarkan kosong untuk meng-import SEMUA.</p>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-slate-50/50 border-y border-slate-100">
+                                <th class="px-6 py-3 w-10">
+                                    <input type="checkbox" @change="toggleAllSource($event)" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                </th>
                                 <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Nama Jurnal (SQL)</th>
                                 <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Section</th>
                                 <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Issue</th>
@@ -384,6 +387,9 @@
                         <tbody class="divide-y divide-slate-50">
                             @foreach($previewData as $p)
                             <tr class="hover:bg-slate-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" :value="'{{ $p['id'] }}'" x-model="selectedSourceJournals" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                </td>
                                 <td class="px-6 py-4">
                                     <span class="text-sm font-bold text-slate-800">{{ $p['name'] }}</span>
                                     <br><span class="text-xs font-mono text-slate-400">{{ $p['path'] }}</span>
@@ -503,48 +509,90 @@
             </div>
 
             <!-- Journal Integrity Panel -->
-            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden" x-data="{ 
+                selectedTargetJournals: [],
+                allTargets: {!! json_encode(collect($journalBreakdown)->pluck('id')) !!},
+                toggleAllTargets() {
+                    this.selectedTargetJournals = this.selectedTargetJournals.length === this.allTargets.length ? [] : [...this.allTargets];
+                }
+            }">
                 <div class="p-6 border-b border-slate-50 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-800">Journal Integrity Check</h2>
                         <p class="text-xs text-slate-500 mt-0.5">Verifikasi data per-jurnal: issues dan artikel yang berhasil disinkronisasi.</p>
                     </div>
-                    <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Complete</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Partial</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Empty</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Native</span>
+                    
+                    <div class="flex items-center gap-4">
+                        <!-- Bulk Action Dropdown -->
+                        <div x-show="selectedTargetJournals.length > 0" x-cloak x-transition class="flex items-center gap-2 bg-red-50 px-4 py-2 rounded-xl border border-red-100">
+                            <span class="text-[10px] font-bold text-red-600 uppercase tracking-widest"><span x-text="selectedTargetJournals.length"></span> Selected</span>
+                            <div class="h-4 w-px bg-red-200"></div>
+                            <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST" class="inline" onsubmit="return confirm('Hapus artikel pada jurnal terpilih?')">
+                                @csrf
+                                <template x-for="id in selectedTargetJournals">
+                                    <input type="hidden" name="journal_ids[]" :value="id">
+                                </template>
+                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline">Reset Articles</button>
+                            </form>
+                            <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST" class="inline" onsubmit="return confirm('Hapus issue pada jurnal terpilih?')">
+                                @csrf
+                                <template x-for="id in selectedTargetJournals">
+                                    <input type="hidden" name="journal_ids[]" :value="id">
+                                </template>
+                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline ml-2">Reset Issues</button>
+                            </form>
+                            <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST" class="inline" onsubmit="return confirm('Hapus seluruh data (Jurnal, Section, Issue, Artikel) pada jurnal terpilih?')">
+                                @csrf
+                                <template x-for="id in selectedTargetJournals">
+                                    <input type="hidden" name="journal_ids[]" :value="id">
+                                </template>
+                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline ml-2">Reset Everything</button>
+                            </form>
+                        </div>
+
+                        <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Complete</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Partial</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Empty</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Native</span>
+                        </div>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-slate-50/50">
-                                <th class="px-4 py-3 w-6"></th>
+                                <th class="px-4 py-3 w-10">
+                                    <input type="checkbox" @click="toggleAllTargets()" :checked="selectedTargetJournals.length === allTargets.length && allTargets.length > 0" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
+                                </th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Journal Name</th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Abbrev</th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Path</th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Issues</th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Articles</th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Status</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @forelse($journalBreakdown as $j)
                             <tr class="hover:bg-slate-50/30 transition-colors">
                                 <td class="px-4 py-3">
-                                    @if($j['integrity'] === 'complete')
-                                        <span class="block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                                    @elseif($j['integrity'] === 'partial')
-                                        <span class="block w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                                    @elseif($j['integrity'] === 'empty')
-                                        <span class="block w-2.5 h-2.5 rounded-full bg-red-400"></span>
-                                    @else
-                                        <span class="block w-2.5 h-2.5 rounded-full bg-slate-300"></span>
-                                    @endif
+                                    <input type="checkbox" :value="'{{ $j['id'] }}'" x-model="selectedTargetJournals" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span class="text-sm font-bold text-slate-800">{{ $j['name'] }}</span>
+                                    <div class="flex items-center gap-2">
+                                        @if($j['integrity'] === 'complete')
+                                            <span class="block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                        @elseif($j['integrity'] === 'partial')
+                                            <span class="block w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                                        @elseif($j['integrity'] === 'empty')
+                                            <span class="block w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                                        @else
+                                            <span class="block w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                                        @endif
+                                        <span class="text-sm font-bold text-slate-800">{{ $j['name'] }}</span>
+                                    </div>
                                     @if(!$j['enabled'])
                                         <span class="ml-2 text-[9px] bg-red-50 text-red-400 font-bold uppercase px-1.5 py-0.5 rounded-full">Disabled</span>
                                     @endif
@@ -586,6 +634,21 @@
                                             Native
                                         </span>
                                     @endif
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button @click="showJournalDetails('{{ $j['id'] }}')" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View Details">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        </button>
+                                        @if($j['is_migrated'])
+                                            <form action="{{ route('admin.tools.migration.reset-journal', $j['id']) }}" method="POST" onsubmit="return confirm('Hapus semua data migrated untuk jurnal \'{{ $j['name'] }}\'? Artikel dan issue akan dihapus permanen.')">
+                                                @csrf
+                                                <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Reset All">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @empty
@@ -644,38 +707,144 @@
             <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Reset Articles -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset Articles</h3>
-                    <p class="text-[11px] text-slate-500 mb-4">Hapus semua data Submission, Publication, dan Files dari database.</p>
-                    <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST" onsubmit="return confirm('Hapus SEMUA data artikel?')">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Global Reset: Articles</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus SEMUA data Submission & Publication hasil migrasi dari seluruh jurnal.</p>
+                    <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST" onsubmit="return confirm('Hapus SEMUA artikel hasil migrasi dari database?')">
                         @csrf
                         <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
-                            RESET ARTICLES
+                            RESET ALL ARTICLES
                         </button>
                     </form>
                 </div>
 
                 <!-- Reset Issues -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset Issues</h3>
-                    <p class="text-[11px] text-slate-500 mb-4">Hapus semua data Issues (Voli/Nomor) dari database.</p>
-                    <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST" onsubmit="return confirm('Hapus SEMUA data issue?')">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Global Reset: Issues</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus SEMUA data Issues (Voli/Nomor) hasil migrasi dari seluruh jurnal.</p>
+                    <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST" onsubmit="return confirm('Hapus SEMUA data issue hasil migrasi?')">
                         @csrf
                         <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
-                            RESET ISSUES
+                            RESET ALL ISSUES
                         </button>
                     </form>
                 </div>
 
                 <!-- Reset Journals -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset Journals</h3>
-                    <p class="text-[11px] text-slate-500 mb-4">Hapus semua data Jurnal, Sections, dan keterkaitannya (TOTAL RESET).</p>
-                    <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST" onsubmit="return confirm('PERINGATAN: Ini akan menghapus SEMUA data jurnal. Lanjutkan?')">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Global Reset: Journals</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus SEMUA data Jurnal & Section hasil migrasi (TOTAL RESET).</p>
+                    <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST" onsubmit="return confirm('PERINGATAN: Ini akan menghapus SELURUH data jurnal hasil migrasi. Lanjutkan?')">
                         @csrf
                         <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
-                            RESET JOURNALS
+                            TOTAL RESET JOURNALS
                         </button>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drilldown Modal -->
+    <div x-show="detailsModal" 
+         x-cloak 
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100">
+        
+        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col" @click.away="detailsModal = false">
+            <!-- Modal Header -->
+            <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900" x-text="detailJournal.name"></h2>
+                    <p class="text-sm text-slate-500 mt-1">Select specific issues or articles to reset data.</p>
+                </div>
+                <button @click="detailsModal = false" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-full transition-all shadow-sm">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Modal Tabs -->
+            <div class="flex border-b border-slate-100 bg-white">
+                <button @click="activeTab = 'issues'" 
+                        :class="activeTab === 'issues' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
+                        class="px-8 py-4 text-sm font-bold border-b-2 transition-all">
+                    Issues (<span x-text="detailData.issues.length"></span>)
+                </button>
+                <button @click="activeTab = 'articles'" 
+                        :class="activeTab === 'articles' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
+                        class="px-8 py-4 text-sm font-bold border-b-2 transition-all">
+                    Articles (<span x-text="detailData.articles.length"></span>)
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-8 bg-slate-50/30">
+                <div x-show="detailLoading" class="flex flex-col items-center justify-center py-20">
+                    <svg class="animate-spin h-10 w-10 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <p class="text-sm text-slate-400 mt-4 font-medium">Fetching details...</p>
+                </div>
+
+                <div x-show="!detailLoading">
+                    <!-- Issues List -->
+                    <div x-show="activeTab === 'issues'">
+                        <div class="space-y-3">
+                            <template x-for="issue in detailData.issues" :key="issue.id">
+                                <label :class="issue.is_migrated ? 'bg-white border-slate-200' : 'bg-slate-100 opacity-50 cursor-not-allowed'" 
+                                       class="flex items-center p-4 rounded-2xl border transition-all hover:shadow-md cursor-pointer group">
+                                    <input type="checkbox" 
+                                           :value="issue.id" 
+                                           x-model="selectedIssues" 
+                                           :disabled="!issue.is_migrated"
+                                           class="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 transition-all">
+                                    <div class="ml-4 flex-1">
+                                        <p class="text-sm font-bold text-slate-800" x-text="issue.title"></p>
+                                        <p class="text-[10px] uppercase tracking-widest font-bold mt-0.5" 
+                                           :class="issue.is_migrated ? 'text-emerald-500' : 'text-slate-400'"
+                                           x-text="issue.is_migrated ? 'Migrated' : 'Native'"></p>
+                                    </div>
+                                    <svg x-show="issue.is_migrated" class="w-5 h-5 text-slate-300 group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Articles List -->
+                    <div x-show="activeTab === 'articles'">
+                        <div class="space-y-3">
+                            <template x-for="article in detailData.articles" :key="article.id">
+                                <label :class="article.is_migrated ? 'bg-white border-slate-200' : 'bg-slate-100 opacity-50 cursor-not-allowed'" 
+                                       class="flex items-center p-4 rounded-2xl border transition-all hover:shadow-md cursor-pointer group">
+                                    <input type="checkbox" 
+                                           :value="article.id" 
+                                           x-model="selectedArticles" 
+                                           :disabled="!article.is_migrated"
+                                           class="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 transition-all">
+                                    <div class="ml-4 flex-1">
+                                        <p class="text-sm font-bold text-slate-800 line-clamp-1" x-text="article.title"></p>
+                                        <p class="text-[10px] uppercase tracking-widest font-bold mt-0.5" 
+                                           :class="article.is_migrated ? 'text-emerald-500' : 'text-slate-400'"
+                                           x-text="article.is_migrated ? 'Migrated' : 'Native'"></p>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-8 border-t border-slate-100 bg-white flex items-center justify-between">
+                <p class="text-xs text-slate-400 font-medium">
+                    <span x-text="activeTab === 'issues' ? selectedIssues.length : selectedArticles.length"></span> items selected for deletion
+                </p>
+                <div class="flex gap-3">
+                    <button @click="detailsModal = false" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-all">Cancel</button>
+                    <button @click="resetSelectedItems()" 
+                            :disabled="detailLoading || (activeTab === 'issues' ? selectedIssues.length === 0 : selectedArticles.length === 0)"
+                            class="px-8 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none">
+                        Reset Selected
+                    </button>
                 </div>
             </div>
         </div>
@@ -688,6 +857,72 @@ function migrationDashboard() {
     return {
         fileName: '',
         loadingStep: null,
+        selectedSourceJournals: [], // Selected journal IDs from SQL source
+        
+        // Drilldown Modal State
+        detailsModal: false,
+        detailLoading: false,
+        detailJournal: { id: null, name: '' },
+        activeTab: 'issues',
+        detailData: { issues: [], articles: [] },
+        selectedIssues: [],
+        selectedArticles: [],
+
+        showJournalDetails(journalId) {
+            this.detailsModal = true;
+            this.detailLoading = true;
+            this.detailJournal.id = journalId;
+            this.selectedIssues = [];
+            this.selectedArticles = [];
+            
+            fetch(`{{ url('admin/tools/migration/details') }}/${journalId}`, {
+                headers: this.getHeaders()
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.detailJournal.name = data.journal.name;
+                this.detailData.issues = data.issues;
+                this.detailData.articles = data.articles;
+                this.detailLoading = false;
+            })
+            .catch(e => {
+                alert('Gagal mengambil detail: ' + e.message);
+                this.detailsModal = false;
+            });
+        },
+
+        resetSelectedItems() {
+            const type = this.activeTab;
+            const ids = type === 'issues' ? this.selectedIssues : this.selectedArticles;
+
+            if (!confirm(`Hapus ${ids.length} item ${type} terpilih? Tindakan ini tidak dapat dibatalkan.`)) return;
+
+            this.detailLoading = true;
+            fetch('{{ route("admin.tools.migration.reset-items") }}', {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ type: type, ids: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Refetch details to update list
+                    this.showJournalDetails(this.detailJournal.id);
+                } else {
+                    alert('Gagal menghapus: ' + data.message);
+                    this.detailLoading = false;
+                }
+            })
+            .catch(e => {
+                alert('Fatal Error: ' + e.message);
+                this.detailLoading = false;
+            });
+        },
+
+        toggleAllSource(event) {
+            const ids = {!! json_encode(collect($previewData)->pluck('id')) !!};
+            this.selectedSourceJournals = event.target.checked ? ids : [];
+        },
 
         // Standard headers to always force JSON response from Laravel
         getHeaders() {
@@ -704,7 +939,10 @@ function migrationDashboard() {
             fetch('{{ route("admin.tools.migration.run") }}', {
                 method: 'POST',
                 headers: this.getHeaders(),
-                body: JSON.stringify({ step: step })
+                body: JSON.stringify({ 
+                    step: step,
+                    journal_ids: this.selectedSourceJournals // Pass the filter
+                })
             })
             .then(res => {
                 if (!res.ok && res.headers.get('content-type')?.includes('application/json') === false) {
@@ -735,7 +973,10 @@ function migrationDashboard() {
                         const res = await fetch('{{ route("admin.tools.migration.run") }}', {
                             method: 'POST',
                             headers: this.getHeaders(),
-                            body: JSON.stringify({ step: step })
+                            body: JSON.stringify({ 
+                                step: step,
+                                journal_ids: this.selectedSourceJournals
+                            })
                         });
                         if (!res.ok && !res.headers.get('content-type')?.includes('application/json')) {
                             alert(`Server error pada step ${step}. Lihat Laravel log untuk detail.`);

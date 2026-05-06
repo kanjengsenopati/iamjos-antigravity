@@ -433,6 +433,25 @@ class OjsMigrationService
         return $result;
     }
 
+    protected $journalFilters = [];
+
+    /**
+     * Set journal filters (legacy journal IDs)
+     */
+    public function setJournalFilters(array $ids)
+    {
+        $this->journalFilters = $ids;
+    }
+
+    /**
+     * Check if a legacy record should be migrated based on journal filters
+     */
+    protected function shouldMigrate($legacyJournalId)
+    {
+        if (empty($this->journalFilters)) return true;
+        return in_array($legacyJournalId, $this->journalFilters);
+    }
+
     public function migrateJournals()
     {
         $settingsRows = collect($this->getLegacyRows('journal_settings'))
@@ -440,6 +459,9 @@ class OjsMigrationService
 
         foreach ($this->getLegacyRows('journals') as $row) {
             $lJournal = $this->mapRow('journals', $row);
+
+            // Filter by journal ID if requested
+            if (!$this->shouldMigrate($lJournal->journal_id)) continue;
 
             // Guard: skip if path is null or empty
             if (empty($lJournal->path ?? null)) continue;
@@ -482,6 +504,9 @@ class OjsMigrationService
 
         foreach ($this->getLegacyRows('sections') as $row) {
             $lSection = $this->mapRow('sections', $row);
+
+            // Filter by journal ID
+            if (!$this->shouldMigrate($lSection->journal_id)) continue;
 
             $newJournalId = LegacyMapping::getMapping('journals', $lSection->journal_id);
             if (!$newJournalId) continue;
@@ -605,6 +630,9 @@ class OjsMigrationService
         foreach ($this->getLegacyRows('issues') as $row) {
             $lIssue = $this->mapRow('issues', $row);
 
+            // Filter by journal ID
+            if (!$this->shouldMigrate($lIssue->journal_id)) continue;
+
             $newJournalId = LegacyMapping::getMapping('journals', $lIssue->journal_id);
             if (!$newJournalId) continue;
 
@@ -661,6 +689,9 @@ class OjsMigrationService
             // Null-safe access to handle inconsistent SQL dump formats
             $lContextId = $lSub->context_id ?? ($lSub->journal_id ?? null);
             
+            // Filter by journal ID
+            if (!$this->shouldMigrate($lContextId)) continue;
+
             $newJournalId = LegacyMapping::getMapping('journals', $lContextId);
             if (!$newJournalId) {
                 \Illuminate\Support\Facades\Log::warning("Skipping submission {$lId}: Journal mapping missing for context_id {$lContextId}");
