@@ -222,81 +222,92 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: SEARCH INDEXING -->
-                <div x-show="activeTab === 'indexing'" x-cloak x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                    <!-- TAB 2: SEARCH INDEXING -->
+                    <div x-show="activeTab === 'indexing'" x-cloak x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
 
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-magnifying-glass text-blue-600"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-semibold text-gray-900">Search Indexing</h3>
-                            <p class="text-sm text-gray-500">Manage search engine optimization (SEO) and indexing settings.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-6 max-w-4xl">
-                        <!-- Description -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Search Description</label>
-                            <textarea name="indexing[description]" rows="3"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                placeholder="A brief description of the journal for search results...">{{ old('indexing.description', $journal->search_description) }}</textarea>
-                            <p class="mt-1 text-xs text-gray-500">This text generally appears in search results below the
-                                page title.</p>
-                        </div>
-
-                        <!-- Custom Tags (Site verification) -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Custom Header Tags (Site Verification)</label>
-                            <textarea name="indexing[custom_tags]" rows="4"
-                                class="w-full font-mono text-sm rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                placeholder="<meta name='google-site-verification' content='...' />">{{ old('indexing.custom_tags', $journal->custom_headers) }}</textarea>
-                            <p class="mt-1 text-xs text-gray-500">Add custom HTML meta tags for the site header (e.g. for
-                                verification).</p>
-                        </div>
-
-                        <!-- Search Engine Indexing (Block via Meta Robots) -->
-                        <div class="border-t border-gray-200 pt-6">
-                            <h4 class="text-sm font-medium text-gray-900 mb-4">Search Engine Indexing</h4>
-                            <div class="relative flex items-start">
-                                <div class="flex h-5 items-center">
-                                    <input type="checkbox" name="indexing[block_search_indexing]" value="1" id="block_search_indexing"
-                                        {{ old('indexing.block_search_indexing', $journal->block_search_indexing) ? 'checked' : '' }}
-                                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                </div>
-                                <div class="ml-3 text-sm">
-                                    <label for="block_search_indexing" class="font-medium text-gray-700">Block search engines from indexing the site</label>
-                                    <p class="text-gray-500">If checked, a <code>&lt;meta name="robots" content="noindex, nofollow"&gt;</code> tag will be added to block search engines.</p>
-                                </div>
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-magnifying-glass text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900">Search Indexing & SEO</h3>
+                                <p class="text-sm text-gray-500">Configure how search engines (Google, Google Scholar) discover and display your journal.</p>
                             </div>
                         </div>
 
-                        <!-- Custom Meta Tags (Dynamic) -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Custom Meta Tags</label>
-                            <textarea name="indexing[custom_meta_tags]" rows="4"
-                                class="w-full font-mono text-sm rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                placeholder="<meta name='custom-tag' content='...' />">{{ old('indexing.custom_meta_tags', $journal->custom_meta_tags) }}</textarea>
-                            <p class="mt-1 text-xs text-gray-500">Add any additional HTML tags here. These will be added to the document <code>&lt;head&gt;</code>.</p>
-                        </div>
+                        <div class="grid grid-cols-1 gap-8 max-w-4xl">
+                            <!-- Description -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Journal Search Description (Meta Description)</label>
+                                <textarea name="indexing[description]" rows="3"
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    placeholder="A brief description of the journal for search results...">{{ old('indexing.description', $journal->search_description) }}</textarea>
+                                <div class="mt-2 flex items-center justify-between">
+                                    <p class="text-xs text-gray-500">A short summary of the journal's focus. Recommended length: 150-160 characters.</p>
+                                    <span class="text-[10px] font-medium px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">Highly Recommended</span>
+                                </div>
+                            </div>
 
-                        <!-- Sitemap URL -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sitemap URL</label>
-                            <div class="flex rounded-md shadow-sm">
-                                <input type="text" readonly value="{{ url('sitemap.xml') }}"
-                                    class="flex-1 min-w-0 block w-full px-3 py-2 rounded-lg border-gray-300 bg-gray-50 text-gray-500 sm:text-sm focus:border-gray-300 focus:ring-0">
-                                <a href="{{ url('sitemap.xml') }}" target="_blank"
-                                    class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <i class="fa-solid fa-arrow-up-right-from-square mr-2"></i> Open
-                                </a>
+                            <!-- Custom Tags (Site verification) -->
+                            <div class="p-5 bg-gray-50 rounded-xl border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-900 mb-2">Custom Header Tags (Site Verification)</label>
+                                <p class="text-xs text-gray-500 mb-3">Use this to verify your site with Google Search Console, Bing Webmaster, or to add global scripts.</p>
+                                <textarea name="indexing[custom_tags]" rows="3"
+                                    class="w-full font-mono text-xs rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    placeholder="<meta name='google-site-verification' content='...' />">{{ old('indexing.custom_headers', $journal->custom_headers) }}</textarea>
+                                <div class="mt-2 p-2 bg-blue-50/50 rounded border border-blue-100">
+                                    <p class="text-[10px] text-blue-700 italic">Example: &lt;meta name="google-site-verification" content="XYZ123..." /&gt;</p>
+                                </div>
+                            </div>
+
+                            <!-- Search Engine Indexing (Block via Meta Robots) - CRITICAL WARNING -->
+                            <div class="p-5 bg-red-50 rounded-xl border border-red-100">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex h-5 items-center mt-1">
+                                        <input type="checkbox" name="indexing[block_search_indexing]" value="1" id="block_search_indexing"
+                                            {{ old('indexing.block_search_indexing', $journal->block_search_indexing) ? 'checked' : '' }}
+                                            class="h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500">
+                                    </div>
+                                    <div>
+                                        <label for="block_search_indexing" class="text-sm font-bold text-red-900 flex items-center">
+                                            <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+                                            Block search engines from indexing the site
+                                        </label>
+                                        <p class="text-xs text-red-700 mt-1">
+                                            <strong>WARNING:</strong> If checked, Google Scholar and other search engines will NOT index your journal articles. 
+                                            Only use this during initial setup or site maintenance.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Meta Tags (Dynamic) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Global Meta Tags (Advanced)</label>
+                                <textarea name="indexing[custom_meta_tags]" rows="3"
+                                    class="w-full font-mono text-xs rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    placeholder="<meta name='custom-tag' content='...' />">{{ old('indexing.custom_meta_tags', $journal->custom_meta_tags) }}</textarea>
+                                <p class="mt-1 text-[11px] text-gray-500">These tags will be added to the <code>&lt;head&gt;</code> of every page in this journal.</p>
+                            </div>
+
+                            <!-- Sitemap URL -->
+                            <div class="pt-4 border-t border-gray-100">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Automatic XML Sitemap</label>
+                                <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200">
+                                    <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center">
+                                        <i class="fa-solid fa-sitemap text-sm"></i>
+                                    </div>
+                                    <code class="text-[11px] text-gray-600 flex-1">{{ url('sitemap.xml') }}</code>
+                                    <a href="{{ url('sitemap.xml') }}" target="_blank"
+                                        class="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-blue-600 transition-colors">
+                                        <i class="fa-solid fa-external-link mr-1"></i> Open
+                                    </a>
+                                </div>
+                                <p class="mt-2 text-[10px] text-gray-500 italic">Submit this URL to <a href="https://search.google.com/search-console" target="_blank" class="text-blue-500 hover:underline">Google Search Console</a> to speed up indexing.</p>
                             </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- TAB 3: ACCESS -->
                 <div x-show="activeTab === 'access'" x-cloak x-transition:enter="transition ease-out duration-200"
