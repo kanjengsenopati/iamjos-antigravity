@@ -111,8 +111,13 @@ class OjsMigrationService
             } else {
                 $mappingCount = LegacyMapping::where('legacy_table', $key === 'galleys' ? 'galleys' : $legacyTable)->count();
             }
-            
-            $totalCount   = $model::count();
+            if ($key === 'reviews') {
+                $totalCount = \App\Models\ReviewAssignment::count() 
+                            + \App\Models\ReviewRound::count() 
+                            + \App\Models\EditorialAssignment::count();
+            } else {
+                $totalCount = $model::count();
+            }
 
             // Legacy source count
             $legacyCount = 0;
@@ -176,10 +181,15 @@ class OjsMigrationService
                 $legacyCount = '—';
             }
 
+            // Harden mathematical consistency: Migrated + Native MUST equal Total
+            // If mappingCount > totalCount (due to merged legacy records like authors, or deleted migrated records),
+            // the actually existing migrated records in DB cannot exceed totalCount.
+            $migratedCountCap = min($mappingCount, $totalCount);
+            
             $stats[$key] = [
                 'legacy_count'   => $legacyCount,
-                'migrated_count' => $mappingCount,
-                'native_count'   => max(0, $totalCount - $mappingCount),
+                'migrated_count' => $migratedCountCap,
+                'native_count'   => $totalCount - $migratedCountCap,
                 'total_count'    => $totalCount,
             ];
         }
@@ -197,10 +207,12 @@ class OjsMigrationService
             }
         }
 
+        $metricsTotal = \App\Models\ArticleMetric::count();
         $stats['metrics'] = [
             'legacy_count'   => $metricsLegacyCount,
-            'migrated_count' => ArticleMetric::count(),
-            'native_count'   => 0
+            'migrated_count' => $metricsTotal, // All metrics are migrated in bulk
+            'native_count'   => 0,
+            'total_count'    => $metricsTotal
         ];
 
         return $stats;
