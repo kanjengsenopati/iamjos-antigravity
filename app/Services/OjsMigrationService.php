@@ -103,7 +103,13 @@ class OjsMigrationService
         foreach ($modules as $key => $config) {
             $legacyTable  = $config['legacy_table'];
             $model        = $config['new_model'];
-            $mappingCount = LegacyMapping::where('legacy_table', $key === 'galleys' ? 'galleys' : $legacyTable)->count();
+            
+            if ($key === 'reviews') {
+                $mappingCount = LegacyMapping::whereIn('legacy_table', ['review_assignments', 'review_rounds', 'stage_assignments'])->count();
+            } else {
+                $mappingCount = LegacyMapping::where('legacy_table', $key === 'galleys' ? 'galleys' : $legacyTable)->count();
+            }
+            
             $totalCount   = $model::count();
 
             // Legacy source count
@@ -114,7 +120,16 @@ class OjsMigrationService
                     if ($key === 'galleys' && !DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable($legacyTable)) {
                         $legacyTable = 'publication_galleys';
                     }
-                    if (DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable($legacyTable)) {
+
+                    if ($key === 'reviews') {
+                        $countRev = DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable('review_assignments') 
+                                    ? DB::connection($this->dbConnection)->table('review_assignments')->count() : 0;
+                        $countRound = DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable('review_rounds') 
+                                    ? DB::connection($this->dbConnection)->table('review_rounds')->count() : 0;
+                        $countStage = DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable('stage_assignments') 
+                                    ? DB::connection($this->dbConnection)->table('stage_assignments')->count() : 0;
+                        $legacyCount = $countRev + $countRound + $countStage;
+                    } elseif (DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable($legacyTable)) {
                         $legacyCount = DB::connection($this->dbConnection)->table($legacyTable)->count();
                     }
                 } catch (\Exception $e) {
@@ -127,7 +142,17 @@ class OjsMigrationService
                     if ($key === 'galleys' && !\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
                         $legacyTable = 'publication_galleys';
                     }
-                    if (\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
+
+                    if ($key === 'reviews') {
+                        // Aggregate multiple tables for Review Workflow
+                        $countRev = \Illuminate\Support\Facades\Schema::connection($conn)->hasTable('review_assignments') 
+                                    ? DB::connection($conn)->table('review_assignments')->count() : 0;
+                        $countRound = \Illuminate\Support\Facades\Schema::connection($conn)->hasTable('review_rounds') 
+                                    ? DB::connection($conn)->table('review_rounds')->count() : 0;
+                        $countStage = \Illuminate\Support\Facades\Schema::connection($conn)->hasTable('stage_assignments') 
+                                    ? DB::connection($conn)->table('stage_assignments')->count() : 0;
+                        $legacyCount = $countRev + $countRound + $countStage;
+                    } elseif (\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
                         $legacyCount = DB::connection($conn)->table($legacyTable)->count();
                     }
                 } catch (\Exception $e) {
