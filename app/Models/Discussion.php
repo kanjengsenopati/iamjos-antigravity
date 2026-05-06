@@ -60,6 +60,7 @@ class Discussion extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'discussion_participants')
+            ->using(DiscussionParticipant::class)
             ->withTimestamps();
     }
 

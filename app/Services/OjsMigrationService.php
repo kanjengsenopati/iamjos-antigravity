@@ -269,6 +269,8 @@ class OjsMigrationService
             $tables = \Illuminate\Support\Facades\Schema::connection($conn)->getTableListing();
             $tables = array_map('strtolower', $tables);
             
+            \Illuminate\Support\Facades\Log::info("OJS Migration: Schema Check - Tables found: " . count($tables) . " - Sample: " . implode(',', array_slice($tables, 0, 10)));
+
             if (in_array('publications', $tables) || in_array('publication_settings', $tables)) {
                 $this->detectedVersion = 'OJS33';
             } elseif (in_array('submissions', $tables)) {
@@ -277,7 +279,7 @@ class OjsMigrationService
                 $this->detectedVersion = 'OJS2';
             }
             
-            \Illuminate\Support\Facades\Log::info("OJS Migration: Detected Version {$this->detectedVersion} from tables: " . implode(',', array_slice($tables, 0, 10)) . "...");
+            \Illuminate\Support\Facades\Log::info("OJS Migration: Final Detected Version: {$this->detectedVersion}");
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("OJS Migration: Version detection failed: " . $e->getMessage());
             $this->detectedVersion = 'UNKNOWN';
@@ -285,6 +287,7 @@ class OjsMigrationService
 
         return $this->detectedVersion;
     }
+
 
 
     public function getDetectedVersion(): string
