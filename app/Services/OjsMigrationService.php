@@ -278,16 +278,7 @@ class OjsMigrationService
         return $this->detectedVersion;
     }
 
-    /**
-     * Clean timestamp for PostgreSQL compatibility
-     */
-    protected function cleanTimestamp($value)
-    {
-        if (empty($value) || $value === '0000-00-00 00:00:00' || $value === '0000-00-00') {
-            return null;
-        }
-        return $value;
-    }
+
     /**
      * Helper to map numeric row to associative array
      * This is the TRICKY part: we need to know the column order in the dump.
