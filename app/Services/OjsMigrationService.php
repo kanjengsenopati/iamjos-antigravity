@@ -157,8 +157,11 @@ class OjsMigrationService
             }
         }
 
-        $stats['metrics_views']     = ['legacy_count' => $metricsLegacyCount, 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)->count(),     'native_count' => 0];
-        $stats['metrics_downloads'] = ['legacy_count' => $metricsLegacyCount, 'migrated_count' => ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)->count(), 'native_count' => 0];
+        $stats['metrics'] = [
+            'legacy_count'   => $metricsLegacyCount,
+            'migrated_count' => ArticleMetric::count(),
+            'native_count'   => 0
+        ];
 
         return $stats;
     }
@@ -857,8 +860,8 @@ class OjsMigrationService
         foreach ($this->getLegacyRows('stage_assignments') as $row) {
             $lStage = $this->mapRow('stage_assignments', $row);
             
-            $newSubmissionId = LegacyMapping::getMapping('submissions', $lStage->submission_id);
-            $newUserId = LegacyMapping::getMapping('users', $lStage->user_id);
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lStage->submission_id ?? null);
+            $newUserId = LegacyMapping::getMapping('users', $lStage->user_id ?? null);
             
             if (!$newSubmissionId || !$newUserId) continue;
 
@@ -866,10 +869,10 @@ class OjsMigrationService
             if (!$submission) continue;
 
             // If stage is submission (1) and role is author (65536) then update the submission's user_id
-            $groupRowRaw = collect($this->getLegacyRows('user_groups'))->where('user_group_id', $lStage->user_group_id)->first();
+            $groupRowRaw = collect($this->getLegacyRows('user_groups'))->where('user_group_id', $lStage->user_group_id ?? null)->first();
             if ($groupRowRaw) {
                 $groupRow = $this->mapRow('user_groups', $groupRowRaw);
-                if ($groupRow->role_id == 65536 && $lStage->stage_id == 1) {
+                if (($groupRow->role_id ?? null) == 65536 && ($lStage->stage_id ?? 1) == 1) {
                     $submission->update(['user_id' => $newUserId]);
                 } else {
                     \App\Models\EditorialAssignment::updateOrCreate(
@@ -901,13 +904,13 @@ class OjsMigrationService
         foreach ($this->getLegacyRows('review_rounds') as $row) {
             $lRound = $this->mapRow('review_rounds', $row);
             
-            $newSubmissionId = LegacyMapping::getMapping('submissions', $lRound->submission_id);
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lRound->submission_id ?? null);
             if (!$newSubmissionId) continue;
 
             $round = \App\Models\ReviewRound::updateOrCreate(
                 [
                     'submission_id' => $newSubmissionId,
-                    'round' => (int)$lRound->round,
+                    'round' => (int)($lRound->round ?? 1),
                 ],
                 [
                     'status' => \App\Models\ReviewRound::STATUS_COMPLETED, // simplify
@@ -915,27 +918,27 @@ class OjsMigrationService
                 ]
             );
             
-            LegacyMapping::setMapping('review_rounds', $lRound->review_round_id, $round->id);
+            LegacyMapping::setMapping('review_rounds', $lRound->review_round_id ?? null, $round->id);
         }
 
         // 3. Migrate Review Assignments
         foreach ($this->getLegacyRows('review_assignments') as $row) {
             $lRev = $this->mapRow('review_assignments', $row);
             
-            $newSubmissionId = LegacyMapping::getMapping('submissions', $lRev->submission_id);
-            $newReviewerId = LegacyMapping::getMapping('users', $lRev->reviewer_id);
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lRev->submission_id ?? clone($lRev)->article_id ?? null);
+            $newReviewerId = LegacyMapping::getMapping('users', $lRev->reviewer_id ?? null);
             
             if (!$newSubmissionId || !$newReviewerId) continue;
 
             // Find matching review round
             $round = \App\Models\ReviewRound::where('submission_id', $newSubmissionId)
-                        ->where('round', (int)$lRev->round)
+                        ->where('round', (int)($lRev->round ?? 1))
                         ->first();
             
             $roundId = $round ? $round->id : null;
 
             // Recommendation Mapping
-            $recommendation = match((int)$lRev->recommendation) {
+            $recommendation = match((int)($lRev->recommendation ?? 0)) {
                 1 => \App\Models\ReviewAssignment::RECOMMEND_ACCEPT,
                 2 => \App\Models\ReviewAssignment::RECOMMEND_MINOR_REVISION,
                 3 => \App\Models\ReviewAssignment::RECOMMEND_MAJOR_REVISION,
@@ -945,27 +948,27 @@ class OjsMigrationService
 
             // Status mapping
             $status = \App\Models\ReviewAssignment::STATUS_PENDING;
-            if ($lRev->declined) $status = \App\Models\ReviewAssignment::STATUS_DECLINED;
-            elseif ($lRev->cancelled) $status = \App\Models\ReviewAssignment::STATUS_CANCELLED;
-            elseif ($lRev->date_completed) $status = \App\Models\ReviewAssignment::STATUS_COMPLETED;
-            elseif ($lRev->date_confirmed) $status = \App\Models\ReviewAssignment::STATUS_ACCEPTED;
+            if ($lRev->declined ?? false) $status = \App\Models\ReviewAssignment::STATUS_DECLINED;
+            elseif ($lRev->cancelled ?? false) $status = \App\Models\ReviewAssignment::STATUS_CANCELLED;
+            elseif ($lRev->date_completed ?? null) $status = \App\Models\ReviewAssignment::STATUS_COMPLETED;
+            elseif ($lRev->date_confirmed ?? null) $status = \App\Models\ReviewAssignment::STATUS_ACCEPTED;
 
             \App\Models\ReviewAssignment::updateOrCreate(
                 [
                     'submission_id' => $newSubmissionId,
                     'reviewer_id' => $newReviewerId,
-                    'round' => (int)$lRev->round,
+                    'round' => (int)($lRev->round ?? 1),
                 ],
                 [
                     'review_round_id' => $roundId,
                     'status' => $status,
                     'recommendation' => $recommendation,
-                    'assigned_at' => $lRev->date_assigned,
-                    'due_date' => $lRev->date_due,
-                    'response_due_date' => $lRev->date_response_due,
-                    'completed_at' => $lRev->date_completed,
-                    'quality_rating' => (int)$lRev->quality,
-                    'review_method' => $lRev->review_method == 2 ? 'double-blind' : 'blind',
+                    'assigned_at' => $lRev->date_assigned ?? null,
+                    'due_date' => $lRev->date_due ?? null,
+                    'response_due_date' => $lRev->date_response_due ?? null,
+                    'completed_at' => $lRev->date_completed ?? null,
+                    'quality_rating' => (int)($lRev->quality ?? 0),
+                    'review_method' => ($lRev->review_method ?? 1) == 2 ? 'double-blind' : 'blind',
                 ]
             );
         }
@@ -986,12 +989,12 @@ class OjsMigrationService
             $lQuery = $this->mapRow('queries', $row);
             
             // 1048585 is ASSOC_TYPE_SUBMISSION
-            if ($lQuery->assoc_type != 1048585) continue;
+            if (($lQuery->assoc_type ?? 0) != 1048585) continue;
             
-            $newSubmissionId = LegacyMapping::getMapping('submissions', $lQuery->assoc_id);
+            $newSubmissionId = LegacyMapping::getMapping('submissions', $lQuery->assoc_id ?? null);
             if (!$newSubmissionId) continue;
 
-            $participants = $participantsTable->where('query_id', $lQuery->query_id);
+            $participants = $participantsTable->where('query_id', $lQuery->query_id ?? null);
             
             // Assume the first participant is the creator if we can't determine it
             $creatorLegacyId = $participants->first()?->user_id;
@@ -999,7 +1002,7 @@ class OjsMigrationService
             if (!$newCreatorId) continue;
 
             // Get the first note to act as the subject of the discussion
-            $discussionNotes = $notesTable->where('assoc_type', 1048586)->where('assoc_id', $lQuery->query_id)->sortBy('date_created');
+            $discussionNotes = $notesTable->where('assoc_type', 1048586)->where('assoc_id', $lQuery->query_id ?? null)->sortBy('date_created');
             $firstNote = $discussionNotes->first();
             $subject = $firstNote ? strip_tags($firstNote->title ?? 'Discussion') : 'Discussion';
 
@@ -1009,7 +1012,7 @@ class OjsMigrationService
                     // we'll use a hack by storing legacy query_id in subject temporarily or just rely on standard creation.
                     // To make it idempotent, we need a unique identifier. We can use the first note's date as a proxy.
                     'submission_id' => $newSubmissionId,
-                    'stage_id' => (int)$lQuery->stage_id,
+                    'stage_id' => (int)($lQuery->stage_id ?? 1),
                     'subject' => $subject,
                     'created_at' => $firstNote ? $firstNote->date_created : now(),
                 ],
