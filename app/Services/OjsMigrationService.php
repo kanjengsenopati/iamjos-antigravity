@@ -321,6 +321,11 @@ class OjsMigrationService
         $isGeneric = isset($row['col_0']);
 
         if ($isGeneric && !empty($columns)) {
+            // Pre-initialize all expected columns to null to prevent "Undefined property" errors
+            foreach ($columns as $colName) {
+                $result->$colName = null;
+            }
+
             // Engine B fallback: Map col_0, col_1 to defined column names
             foreach ($columns as $idx => $colName) {
                 $genericKey = "col_$idx";
@@ -548,10 +553,14 @@ class OjsMigrationService
         foreach ($this->getLegacyRows('submissions') as $row) {
             $lSub = $this->mapRow('submissions', $row);
             
-            $newJournalId = LegacyMapping::getMapping('journals', $lSub->context_id);
+            // Null-safe access to handle inconsistent SQL dump formats
+            $lContextId = $lSub->context_id ?? ($lSub->journal_id ?? null);
+            $lSectionId = $lSub->section_id ?? null;
+
+            $newJournalId = LegacyMapping::getMapping('journals', $lContextId);
             if (!$newJournalId) continue;
 
-            $newSectionId = LegacyMapping::getMapping('sections', $lSub->section_id);
+            $newSectionId = LegacyMapping::getMapping('sections', $lSectionId);
             
             // Fallback for orphaned submissions to prevent NOT NULL constraint violation
             if (!$newSectionId) {
