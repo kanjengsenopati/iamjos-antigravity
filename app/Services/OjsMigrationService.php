@@ -21,8 +21,8 @@ class OjsMigrationService
     protected $parser;
     protected $storage;
     protected $sqlFile;
-    protected $dbConnection = null; // Engine A: direct DB mode
     protected $legacyConfig = null;
+    protected $detectedVersion = 'UNKNOWN'; // OJS2, OJS30, OJS33
 
     public function __construct(SqlDumpParserService $parser, MigrationStorageService $storage)
     {
@@ -51,6 +51,7 @@ class OjsMigrationService
         ]);
 
         $this->dbConnection = 'ojs_legacy';
+        $this->detectVersion();
     }
 
     /**
@@ -62,6 +63,7 @@ class OjsMigrationService
         $this->dbConnection = null;
         $this->parser->setFile($path);
         $this->storage->setupConnection();
+        $this->detectVersion();
     }
 
     /**
@@ -82,6 +84,11 @@ class OjsMigrationService
             'logs'        => ['legacy_table' => 'event_log',          'new_model' => \App\Models\SubmissionLog::class],
             'galleys'     => ['legacy_table' => 'galleys',            'new_model' => \App\Models\PublicationGalley::class],
         ];
+
+        // Version Adjustment for table names
+        if ($this->detectedVersion === 'OJS2') {
+            $modules['submissions']['legacy_table'] = 'articles';
+        }
 
         foreach ($modules as $key => $config) {
             $legacyTable  = $config['legacy_table'];
@@ -194,6 +201,12 @@ class OjsMigrationService
      */
     public function getLegacyRows(string $tableName): array
     {
+        // Version-based table name adjustment
+        if ($this->detectedVersion === 'OJS2') {
+            if ($tableName === 'submissions') $tableName = 'articles';
+            if ($tableName === 'publication_settings') $tableName = 'article_settings';
+        }
+
         if ($this->dbConnection) {
             // Engine A: direct MySQL query
             try {
@@ -219,6 +232,41 @@ class OjsMigrationService
     }
 
     /**
+     * Auto-detect OJS Version based on schema sniffing
+     */
+    public function detectVersion(): string
+    {
+        $conn = $this->dbConnection;
+        if (!$conn && $this->sqlFile) {
+            $this->storage->setupConnection();
+            $conn = $this->storage->getConnectionName();
+        }
+
+        if (!$conn) return $this->detectedVersion = 'UNKNOWN';
+
+        try {
+            $tables = \Illuminate\Support\Facades\Schema::connection($conn)->getTableListing();
+            
+            if (in_array('publications', $tables)) {
+                $this->detectedVersion = 'OJS33';
+            } elseif (in_array('submissions', $tables)) {
+                $this->detectedVersion = 'OJS30';
+            } elseif (in_array('articles', $tables)) {
+                $this->detectedVersion = 'OJS2';
+            }
+        } catch (\Exception $e) {
+            $this->detectedVersion = 'UNKNOWN';
+        }
+
+        return $this->detectedVersion;
+    }
+
+    public function getDetectedVersion(): string
+    {
+        return $this->detectedVersion;
+    }
+
+    /**
      * Clean timestamp for PostgreSQL compatibility
      */
     protected function cleanTimestamp($value)
@@ -228,7 +276,6 @@ class OjsMigrationService
         }
         return $value;
     }
-
     /**
      * Helper to map numeric row to associative array
      * This is the TRICKY part: we need to know the column order in the dump.
@@ -237,22 +284,34 @@ class OjsMigrationService
      */
     protected function mapRow(string $table, array $row)
     {
+        $v = $this->detectedVersion;
         $columns = [];
+        
         switch ($table) {
             case 'journals':
+            case 'contexts':
                 $columns = ['journal_id', 'path', 'seq', 'primary_locale', 'enabled'];
                 break;
             case 'journal_settings':
+            case 'context_settings':
                 $columns = ['journal_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
                 break;
             case 'sections':
-                $columns = ['section_id', 'journal_id', 'review_form_id', 'seq', 'editor_restricted', 'meta_indexed', 'meta_reviewed', 'abstracts_not_required', 'hide_title', 'hide_author', 'hide_about', 'disable_comments', 'abstract_word_count', 'abbrev'];
+                if ($v === 'OJS2') {
+                    $columns = ['section_id', 'journal_id', 'review_form_id', 'seq', 'editor_restricted', 'meta_indexed', 'meta_reviewed', 'abstracts_not_required', 'hide_title', 'hide_author', 'hide_about', 'disable_comments', 'abstract_word_count', 'abbrev'];
+                } else {
+                    $columns = ['section_id', 'context_id', 'review_form_id', 'seq', 'editor_restricted', 'meta_indexed', 'meta_reviewed', 'abstracts_not_required', 'hide_title', 'hide_author', 'hide_about', 'disable_comments', 'abstract_word_count', 'abbrev'];
+                }
                 break;
             case 'section_settings':
                 $columns = ['section_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
                 break;
             case 'users':
-                $columns = ['user_id', 'username', 'password', 'email', 'locales', 'date_last_email', 'date_registered', 'date_validated', 'date_last_login', 'must_change_password', 'disabled', 'disabled_reason', 'auth_id', 'auth_str', 'phone', 'mailing_address', 'billing_address', 'inline_help'];
+                if ($v === 'OJS2') {
+                    $columns = ['user_id', 'username', 'password', 'salutation', 'first_name', 'middle_name', 'last_name', 'initials', 'gender', 'affiliation', 'email', 'url', 'phone', 'fax', 'mailing_address', 'country', 'locales', 'date_last_email', 'date_registered', 'date_validated', 'date_last_login', 'must_change_password', 'disabled', 'disabled_reason', 'auth_id', 'auth_str'];
+                } else {
+                    $columns = ['user_id', 'username', 'password', 'email', 'url', 'phone', 'mailing_address', 'billing_address', 'country', 'locales', 'date_last_email', 'date_registered', 'date_validated', 'date_last_login', 'must_change_password', 'disabled', 'disabled_reason', 'auth_id', 'auth_str', 'inline_help'];
+                }
                 break;
             case 'user_settings':
                 $columns = ['user_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
@@ -267,7 +326,30 @@ class OjsMigrationService
                 $columns = ['issue_id', 'journal_id', 'volume', 'number', 'year', 'published', 'current', 'date_published', 'date_notified', 'last_modified', 'access_status', 'open_access_date', 'show_volume', 'show_number', 'show_year', 'show_title', 'style_file_name', 'original_style_file_name'];
                 break;
             case 'submissions':
-                $columns = ['submission_id', 'locale', 'context_id', 'section_id', 'language', 'date_submitted', 'last_modified', 'date_status_modified', 'status', 'submission_progress', 'current_publication_id', 'pages', 'stage_id'];
+            case 'articles':
+                if ($v === 'OJS2') {
+                    $columns = ['article_id', 'user_id', 'journal_id', 'section_id', 'language', 'comments_to_ed', 'date_submitted', 'last_modified', 'date_status_modified', 'status', 'submission_progress', 'current_round', 'pages', 'fast_tracked', 'hide_author', 'comments_status'];
+                } else {
+                    $columns = ['submission_id', 'locale', 'context_id', 'section_id', 'language', 'date_submitted', 'last_modified', 'date_status_modified', 'status', 'submission_progress', 'current_publication_id', 'pages', 'stage_id'];
+                }
+                break;
+            case 'publications':
+                $columns = ['publication_id', 'submission_id', 'access_status', 'date_published', 'last_modified', 'section_id', 'seq', 'status', 'url_path', 'version', 'issue_id'];
+                break;
+            case 'publication_settings':
+            case 'article_settings':
+                $columns = ['publication_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
+                if ($v === 'OJS2') $columns[0] = 'article_id';
+                break;
+            case 'authors':
+                if ($v === 'OJS2') {
+                    $columns = ['author_id', 'submission_id', 'first_name', 'middle_name', 'last_name', 'affiliation', 'country', 'email', 'url', 'user_group_id', 'primary_contact', 'seq'];
+                } else {
+                    $columns = ['author_id', 'publication_id', 'email', 'include_in_browse', 'seq', 'user_group_id'];
+                }
+                break;
+            case 'author_settings':
+                $columns = ['author_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
                 break;
             case 'stage_assignments':
                 $columns = ['stage_assignment_id', 'submission_id', 'user_group_id', 'user_id', 'date_assigned', 'stage_id', 'recommend_only'];
@@ -293,18 +375,6 @@ class OjsMigrationService
             case 'email_log':
                 $columns = ['log_id', 'assoc_type', 'assoc_id', 'sender_id', 'date_sent', 'event_type', 'from_address', 'recipients', 'cc_receivers', 'bcc_receivers', 'subject', 'body'];
                 break;
-            case 'publications':
-                $columns = ['publication_id', 'submission_id', 'access_status', 'date_published', 'last_modified', 'section_id', 'seq', 'status', 'url_path', 'version', 'issue_id'];
-                break;
-            case 'publication_settings':
-                $columns = ['publication_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
-                break;
-            case 'authors':
-                $columns = ['author_id', 'publication_id', 'email', 'include_in_browse', 'seq', 'user_group_id'];
-                break;
-            case 'author_settings':
-                $columns = ['author_id', 'locale', 'setting_name', 'setting_value', 'setting_type'];
-                break;
             case 'metrics':
                 $columns = ['load_id', 'context_id', 'announcement_id', 'issue_id', 'submission_id', 'representation_id', 'submission_file_id', 'assoc_type', 'assoc_id', 'day', 'month', 'metric', 'metric_type'];
                 break;
@@ -315,18 +385,19 @@ class OjsMigrationService
             case 'submission_files':
                 $columns = ['submission_file_id', 'source_submission_file_id', 'submission_id', 'file_stage', 'file_id', 'viewable', 'created_at', 'updated_at'];
                 break;
+            case 'published_articles':
+                $columns = ['published_article_id', 'article_id', 'issue_id', 'date_published', 'seq'];
+                break;
         }
 
         $result = new \stdClass();
         $isGeneric = isset($row['col_0']);
 
         if ($isGeneric && !empty($columns)) {
-            // Pre-initialize all expected columns to null to prevent "Undefined property" errors
             foreach ($columns as $colName) {
                 $result->$colName = null;
             }
 
-            // Engine B fallback: Map col_0, col_1 to defined column names
             foreach ($columns as $idx => $colName) {
                 $genericKey = "col_$idx";
                 if (array_key_exists($genericKey, $row)) {
@@ -334,7 +405,6 @@ class OjsMigrationService
                 }
             }
         } else {
-            // Engine A or Engine B with parsed columns: Use associative keys
             foreach ($row as $key => $val) {
                 $result->$key = $val;
             }
@@ -343,9 +413,6 @@ class OjsMigrationService
         return $result;
     }
 
-    /**
-     * Migrate Journals
-     */
     public function migrateJournals()
     {
         $settingsRows = collect($this->getLegacyRows('journal_settings'))
@@ -544,14 +611,23 @@ class OjsMigrationService
      */
     public function migrateSubmissions()
     {
+        $v = $this->detectedVersion;
+
         $publicationRows = collect($this->getLegacyRows('publications'))
             ->map(fn($r) => $this->mapRow('publications', $r));
         
         $metadataRows = collect($this->getLegacyRows('publication_settings'))
             ->map(fn($r) => $this->mapRow('publication_settings', $r));
 
+        $publishedArticles = [];
+        if ($v === 'OJS2') {
+            $publishedArticles = collect($this->getLegacyRows('published_articles'))
+                ->map(fn($r) => $this->mapRow('published_articles', $r));
+        }
+
         foreach ($this->getLegacyRows('submissions') as $row) {
             $lSub = $this->mapRow('submissions', $row);
+            $lId = ($v === 'OJS2') ? ($lSub->article_id ?? null) : ($lSub->submission_id ?? null);
             
             // Null-safe access to handle inconsistent SQL dump formats
             $lContextId = $lSub->context_id ?? ($lSub->journal_id ?? null);
@@ -575,10 +651,15 @@ class OjsMigrationService
                 $newSectionId = $fallbackSection->id;
             }
             
-            $lPub = $publicationRows->where('publication_id', $lSub->current_publication_id)->first();
-            $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id) : null;
-
-            $metadata = $metadataRows->where('publication_id', $lSub->current_publication_id);
+            if ($v === 'OJS2') {
+                $lPub = $publishedArticles->where('article_id', $lId)->first();
+                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id) : null;
+                $metadata = $metadataRows->where('article_id', $lId);
+            } else {
+                $lPub = $publicationRows->where('publication_id', $lSub->current_publication_id)->first();
+                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id) : null;
+                $metadata = $metadataRows->where('publication_id', $lSub->current_publication_id);
+            }
 
             $titles = $metadata->where('setting_name', 'title')->pluck('setting_value', 'locale');
             $abstracts = $metadata->where('setting_name', 'abstract')->pluck('setting_value', 'locale');
