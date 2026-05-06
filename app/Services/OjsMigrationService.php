@@ -951,7 +951,7 @@ class OjsMigrationService
                 ]
             );
 
-            LegacyMapping::setMapping('discussions', $lQuery->query_id, $discussion->id);
+            LegacyMapping::setMapping('queries', $lQuery->query_id, $discussion->id);
 
             // Add Participants
             $newParticipantIds = [];
@@ -1011,6 +1011,8 @@ class OjsMigrationService
                     'stage' => $submission ? $submission->stage : 'submission',
                 ]
             );
+
+            LegacyMapping::setMapping('event_log', $lLog->log_id, $newSubmissionId);
         }
 
         // 2. Email Logs
@@ -1040,6 +1042,8 @@ class OjsMigrationService
                     'stage' => $submission ? $submission->stage : 'submission',
                 ]
             );
+
+            LegacyMapping::setMapping('email_log', $eLog->log_id, $newSubmissionId);
         }
     }
 
@@ -1113,6 +1117,15 @@ class OjsMigrationService
             if (!$legacySubId) continue;
             $newSubmissionId = LegacyMapping::getMapping('submissions', $legacySubId);
             if (!$newSubmissionId) continue;
+
+            // Metrics are tricky to make idempotent without a unique legacy key.
+            // We'll use a composite check: same submission, same type, same date, same metric count.
+            $exists = ArticleMetric::where('submission_id', $newSubmissionId)
+                ->where('type', $type)
+                ->where('date', $lMetric->day ? Carbon::createFromFormat('Ymd', $lMetric->day)->format('Y-m-d') : now()->format('Y-m-d'))
+                ->exists();
+            
+            if ($exists) continue;
 
             for ($i = 0; $i < $lMetric->metric; $i++) {
                 ArticleMetric::create([
