@@ -783,7 +783,7 @@
                 </div>
             </div>
         </div>
-    </div>
+
 
     <!-- Drilldown Modal -->
     <div x-show="detailsModal" 
@@ -890,6 +890,7 @@
             </div>
         </div>
     </div>
+    </div> <!-- End of migrationDashboard scope -->
 @endsection
 
 @push('scripts')

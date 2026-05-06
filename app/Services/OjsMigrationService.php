@@ -866,9 +866,22 @@ class OjsMigrationService
             if (!$submission) continue;
 
             // If stage is submission (1) and role is author (65536) then update the submission's user_id
-            $groupRow = collect($this->getLegacyRows('user_groups'))->where('user_group_id', $lStage->user_group_id)->first();
-            if ($groupRow && $groupRow[2] == 65536 && $lStage->stage_id == 1) { // 2nd index is role_id
-                $submission->update(['user_id' => $newUserId]);
+            $groupRowRaw = collect($this->getLegacyRows('user_groups'))->where('user_group_id', $lStage->user_group_id)->first();
+            if ($groupRowRaw) {
+                $groupRow = $this->mapRow('user_groups', $groupRowRaw);
+                if ($groupRow->role_id == 65536 && $lStage->stage_id == 1) {
+                    $submission->update(['user_id' => $newUserId]);
+                } else {
+                    \App\Models\EditorialAssignment::updateOrCreate(
+                        [
+                            'submission_id' => $newSubmissionId,
+                            'user_id' => $newUserId,
+                        ],
+                        [
+                            'is_active' => true,
+                        ]
+                    );
+                }
             } else {
                 \App\Models\EditorialAssignment::updateOrCreate(
                     [
