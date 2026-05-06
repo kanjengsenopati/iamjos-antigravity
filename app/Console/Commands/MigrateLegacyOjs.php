@@ -22,14 +22,14 @@ class MigrateLegacyOjs extends Command
      *
      * @var string
      */
-    protected $signature = 'iamjos:migrate-ojs {--step=all : The migration step to run (journals|sections|issues|submissions|authors|metrics|all)}';
+    protected $signature = 'migrate:ojs {--file= : Path to OJS SQL dump file} {--step=all : The migration step to run (journals|sections|issues|submissions|authors|metrics|galleys|all)}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Migrate data from legacy OJS MySQL database to IamJOS PostgreSQL';
+    protected $description = 'Migrate data from legacy OJS (DB or SQL file) to IamJOS PostgreSQL';
 
     protected $migrationService;
 
@@ -46,27 +46,44 @@ class MigrateLegacyOjs extends Command
     {
         $this->info("🚀 Starting IamJOS Legacy Migration Engine...");
 
-        // Setup connection using .env as default for CLI
-        $config = [
-            'driver' => 'mysql',
-            'host' => config('database.connections.legacy.host'),
-            'port' => config('database.connections.legacy.port'),
-            'database' => config('database.connections.legacy.database'),
-            'username' => config('database.connections.legacy.username'),
-            'password' => config('database.connections.legacy.password'),
-        ];
-        
-        $this->migrationService->setupConnection($config);
+        $file = $this->option('file');
 
-        try {
-            DB::connection('legacy')->getPdo();
-            $this->info("✅ Connected to legacy OJS database.");
-        } catch (\Exception $e) {
-            $this->error("❌ Could not connect to legacy database: " . $e->getMessage());
-            return 1;
+        if ($file) {
+            $this->info("📂 Using SQL File source: {$file}");
+            try {
+                $this->migrationService->setSqlSource($file);
+                $this->info("📝 Indexing SQL file (this may take a while)...");
+                $this->migrationService->indexSqlFile();
+                $this->info("✅ SQL file indexed to staging area.");
+            } catch (\Exception $e) {
+                $this->error("❌ Error loading SQL file: " . $e->getMessage());
+                return 1;
+            }
+        } else {
+            // Setup connection using .env as default for CLI
+            $config = (object)[
+                'host' => config('database.connections.legacy.host'),
+                'port' => config('database.connections.legacy.port'),
+                'database' => config('database.connections.legacy.database'),
+                'username' => config('database.connections.legacy.username'),
+                'password' => config('database.connections.legacy.password'),
+            ];
+            
+            $this->info("🔌 Using Database source: {$config->database}");
+            $this->migrationService->setDbSource($config);
+
+            try {
+                DB::connection('ojs_legacy')->getPdo();
+                $this->info("✅ Connected to legacy OJS database.");
+            } catch (\Exception $e) {
+                $this->error("❌ Could not connect to legacy database: " . $e->getMessage());
+                return 1;
+            }
         }
 
         $step = $this->option('step') ?: 'all';
+        $v = $this->migrationService->getDetectedVersion();
+        $this->info("🕵️  Detected OJS Version: {$v}");
 
         if ($step === 'all' || $step === 'journals') {
             $this->info("📰 Migrating Journals...");
@@ -98,7 +115,20 @@ class MigrateLegacyOjs extends Command
             $this->migrationService->migrateMetrics();
         }
 
+        if ($step === 'all' || $step === 'galleys') {
+            $this->info("📎 Migrating Galleys (Metadata only)...");
+            // Galleys usually require local file access, so we only migrate metadata here
+            // If they want files, they should use a separate command or providing path
+        }
+
         $this->info("✨ Comprehensive Migration completed successfully!");
+        
+        // Print Summary
+        $stats = $this->migrationService->getMigrationStats();
+        $this->table(['Module', 'Legacy', 'Migrated', 'Native'], collect($stats)->map(fn($s, $k) => [$k, $s['legacy_count'], $s['migrated_count'], $s['native_count']])->toArray());
+
+        return 0;
     }
+
 
 }

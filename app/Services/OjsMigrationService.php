@@ -65,6 +65,15 @@ class OjsMigrationService
         $this->storage->setupConnection();
         $this->detectVersion();
     }
+    /**
+     * Engine B: Index the SQL file
+     */
+    public function indexSqlFile()
+    {
+        if ($this->parser) {
+            $this->parser->indexFile();
+        }
+    }
 
     /**
      * Get Migration Matrix Statistics — 3-Pillar: Legacy | Migrated | Native
