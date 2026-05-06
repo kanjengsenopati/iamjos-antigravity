@@ -907,13 +907,21 @@ class OjsMigrationService
             $newSubmissionId = LegacyMapping::getMapping('submissions', $lRound->submission_id ?? null);
             if (!$newSubmissionId) continue;
 
+            $roundStatus = match((int)($lRound->status ?? 0)) {
+                6, 11 => \App\Models\ReviewRound::STATUS_APPROVED,
+                7 => \App\Models\ReviewRound::STATUS_DECLINED,
+                8, 9 => \App\Models\ReviewRound::STATUS_REVISIONS_REQUESTED,
+                10 => \App\Models\ReviewRound::STATUS_RESUBMIT_FOR_REVIEW,
+                default => \App\Models\ReviewRound::STATUS_PENDING,
+            };
+
             $round = \App\Models\ReviewRound::updateOrCreate(
                 [
                     'submission_id' => $newSubmissionId,
                     'round' => (int)($lRound->round ?? 1),
                 ],
                 [
-                    'status' => \App\Models\ReviewRound::STATUS_COMPLETED, // simplify
+                    'status' => $roundStatus,
                     'started_at' => now(), // fallback since OJS doesn't store start date in review_rounds table
                 ]
             );
