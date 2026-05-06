@@ -541,20 +541,27 @@ class OjsMigrationService
                 $newJournalId = LegacyMapping::getMapping('journals', $group->context_id);
                 if (!$newJournalId) continue;
 
-                $roleName = match((int)$group->role_id) {
-                    1 => \App\Models\Role::ROLE_SUPERADMIN,
-                    16 => \App\Models\Role::ROLE_MANAGER,
-                    17 => \App\Models\Role::ROLE_EDITOR,
-                    18 => \App\Models\Role::ROLE_SECTION_EDITOR,
-                    19 => \App\Models\Role::ROLE_PRODUCTION,
-                    4096 => \App\Models\Role::ROLE_REVIEWER,
-                    65536 => \App\Models\Role::ROLE_AUTHOR,
-                    1048576 => \App\Models\Role::ROLE_READER,
+                $roleName = match((int)($group->role_id ?? 0)) {
+                    1 => 'Super Admin',
+                    16 => 'Journal manager',
+                    17 => 'Journal editor',
+                    18 => 'Section editor',
+                    19 => 'Production editor',
+                    4096 => 'Reviewer',
+                    65536 => 'Author',
+                    1048576 => 'Reader',
                     default => null
                 };
 
                 if ($roleName) {
-                    $iamjosRole = \App\Models\Role::where('name', $roleName)->where('journal_id', $newJournalId)->first();
+                    $iamjosRole = \App\Models\Role::where('name', $roleName)
+                        ->where('journal_id', $newJournalId)
+                        ->first();
+                    
+                    if (!$iamjosRole && $roleName === 'Super Admin') {
+                        $iamjosRole = \App\Models\Role::where('name', 'Super Admin')->whereNull('journal_id')->first();
+                    }
+
                     if ($iamjosRole) {
                         \App\Models\JournalUserRole::updateOrCreate([
                             'journal_id' => $newJournalId,
@@ -653,12 +660,12 @@ class OjsMigrationService
             
             if ($v === 'OJS2') {
                 $lPub = $publishedArticles->where('article_id', $lId)->first();
-                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id) : null;
+                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id ?? null) : null;
                 $metadata = $metadataRows->where('article_id', $lId);
             } else {
-                $lPub = $publicationRows->where('publication_id', $lSub->current_publication_id)->first();
-                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id) : null;
-                $metadata = $metadataRows->where('publication_id', $lSub->current_publication_id);
+                $lPub = $publicationRows->where('publication_id', $lSub->current_publication_id ?? null)->first();
+                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id ?? null) : null;
+                $metadata = $metadataRows->where('publication_id', $lSub->current_publication_id ?? null);
             }
 
             $titles = $metadata->where('setting_name', 'title')->pluck('setting_value', 'locale');
