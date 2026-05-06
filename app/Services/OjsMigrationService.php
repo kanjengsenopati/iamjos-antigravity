@@ -1063,12 +1063,13 @@ class OjsMigrationService
 
             $author = SubmissionAuthor::updateOrCreate(
                 [
-                    // Stable key: same author in same submission identified by email+sort_order
+                    // Use the same unique key as defined in the database migration
                     'submission_id' => $newSubmissionId,
                     'email'         => $lAuthor->email ?: "author_{$lAuthor->author_id}@migrated.local",
-                    'sort_order'    => (int)$lAuthor->seq,
                 ],
                 [
+                    'sort_order'       => (int)$lAuthor->seq,
+
                     'given_name'       => $givenName ?: 'Author',
                     'family_name'      => $familyName,
                     'name'             => trim(($givenName ?: 'Author') . ' ' . $familyName),

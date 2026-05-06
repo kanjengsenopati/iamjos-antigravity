@@ -55,6 +55,9 @@ class MigrateLegacyOjs extends Command
                 $this->info("📝 Indexing SQL file (this may take a while)...");
                 $this->migrationService->indexSqlFile();
                 $this->info("✅ SQL file indexed to staging area.");
+                
+                // Re-detect version after indexing
+                $this->migrationService->detectVersion();
             } catch (\Exception $e) {
                 $this->error("❌ Error loading SQL file: " . $e->getMessage());
                 return 1;
