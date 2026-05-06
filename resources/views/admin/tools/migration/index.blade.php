@@ -509,13 +509,7 @@
             </div>
 
             <!-- Journal Integrity Panel -->
-            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden" x-data="{ 
-                selectedTargetJournals: [],
-                allTargets: {!! json_encode(collect($journalBreakdown)->pluck('id')) !!},
-                toggleAllTargets() {
-                    this.selectedTargetJournals = this.selectedTargetJournals.length === this.allTargets.length ? [] : [...this.allTargets];
-                }
-            }">
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
                 <div class="p-6 border-b border-slate-50 flex items-center justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-800">Journal Integrity Check</h2>
@@ -578,7 +572,7 @@
                             @forelse($journalBreakdown as $j)
                             <tr class="hover:bg-slate-50/30 transition-colors">
                                 <td class="px-4 py-3">
-                                    <input type="checkbox" :value="'{{ $j['id'] }}'" x-model="selectedTargetJournals" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
+                                    <input type="checkbox" value="{{ $j['id'] }}" x-model="selectedTargetJournals" class="rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer">
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-2">
@@ -695,48 +689,95 @@
     </div>
         <!-- Danger Zone -->
         <div class="mt-12 bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-red-100/50 overflow-hidden">
-            <div class="p-6 border-b border-red-50 bg-red-50/30 flex items-center gap-3">
-                <div class="p-2 bg-red-100 rounded-lg">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div class="p-6 border-b border-red-50 bg-red-50/30 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-red-100 rounded-lg">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-red-900">Danger Zone — Reset Migration Data</h2>
+                        <p class="text-[11px] text-red-500/80 mt-0.5">Centang jurnal di tabel atas, atau biarkan kosong untuk reset semua jurnal.</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-sm font-bold text-red-900">Danger Zone</h2>
-                    <p class="text-[11px] text-red-600/70 uppercase tracking-widest font-bold">Reset Migration Data</p>
+                <!-- Selection indicator -->
+                <div x-show="selectedTargetJournals.length > 0" x-cloak class="flex items-center gap-2 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-xs font-bold text-amber-700"><span x-text="selectedTargetJournals.length"></span> jurnal dipilih — reset hanya pada jurnal ini</span>
+                </div>
+                <div x-show="selectedTargetJournals.length === 0" class="flex items-center gap-2 bg-red-50 border border-red-200 px-4 py-2 rounded-xl">
+                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-xs font-bold text-red-600">Tidak ada jurnal dipilih — akan reset SEMUA</span>
                 </div>
             </div>
+
+            <!-- Journal quick-select chips -->
+            <div class="px-8 pt-6 pb-2">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Pilih Jurnal Target (opsional):</p>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($journalBreakdown as $j)
+                    <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer transition-all text-[11px] font-bold select-none"
+                           :class="selectedTargetJournals.includes('{{ $j['id'] }}') ? 'bg-red-600 text-white border-red-600' : 'bg-white text-slate-500 border-slate-200 hover:border-red-300 hover:text-red-600'">
+                        <input type="checkbox" value="{{ $j['id'] }}" x-model="selectedTargetJournals" class="sr-only">
+                        <span class="w-1.5 h-1.5 rounded-full @if($j['integrity'] === 'complete') bg-emerald-400 @elseif($j['integrity'] === 'partial') bg-amber-400 @else bg-red-300 @endif"
+                              :class="selectedTargetJournals.includes('{{ $j['id'] }}') ? 'opacity-100' : ''"></span>
+                        {{ $j['abbreviation'] ?: $j['name'] }}
+                    </label>
+                    @endforeach
+                    <button type="button" @click="selectedTargetJournals = []" x-show="selectedTargetJournals.length > 0" x-cloak
+                            class="px-3 py-1.5 rounded-full border border-slate-200 text-[11px] font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all">
+                        Hapus Pilihan
+                    </button>
+                </div>
+            </div>
+
             <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Reset Articles -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Global Reset: Articles</h3>
-                    <p class="text-[11px] text-slate-500 mb-4">Hapus SEMUA data Submission & Publication hasil migrasi dari seluruh jurnal.</p>
-                    <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST" onsubmit="return confirm('Hapus SEMUA artikel hasil migrasi dari database?')">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset: Articles</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus data Submission & Publication hasil migrasi.</p>
+                    <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST"
+                          @submit.prevent="if(confirm(selectedTargetJournals.length > 0 ? `Hapus artikel pada ${selectedTargetJournals.length} jurnal terpilih?` : 'Hapus SEMUA artikel hasil migrasi dari database?')) { $el.submit(); }">
                         @csrf
-                        <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
-                            RESET ALL ARTICLES
+                        <template x-for="id in selectedTargetJournals" :key="id">
+                            <input type="hidden" name="journal_ids[]" :value="id">
+                        </template>
+                        <button type="submit" class="w-full py-2.5 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all flex items-center justify-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <span x-text="selectedTargetJournals.length > 0 ? `Reset Articles (${selectedTargetJournals.length} Jurnal)` : 'Reset ALL Articles'"></span>
                         </button>
                     </form>
                 </div>
 
                 <!-- Reset Issues -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Global Reset: Issues</h3>
-                    <p class="text-[11px] text-slate-500 mb-4">Hapus SEMUA data Issues (Voli/Nomor) hasil migrasi dari seluruh jurnal.</p>
-                    <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST" onsubmit="return confirm('Hapus SEMUA data issue hasil migrasi?')">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset: Issues</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus data Issues (Vol/Nomor) hasil migrasi.</p>
+                    <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST"
+                          @submit.prevent="if(confirm(selectedTargetJournals.length > 0 ? `Hapus issue pada ${selectedTargetJournals.length} jurnal terpilih?` : 'Hapus SEMUA data issue hasil migrasi?')) { $el.submit(); }">
                         @csrf
-                        <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
-                            RESET ALL ISSUES
+                        <template x-for="id in selectedTargetJournals" :key="id">
+                            <input type="hidden" name="journal_ids[]" :value="id">
+                        </template>
+                        <button type="submit" class="w-full py-2.5 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all flex items-center justify-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <span x-text="selectedTargetJournals.length > 0 ? `Reset Issues (${selectedTargetJournals.length} Jurnal)` : 'Reset ALL Issues'"></span>
                         </button>
                     </form>
                 </div>
 
                 <!-- Reset Journals -->
-                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Global Reset: Journals</h3>
-                    <p class="text-[11px] text-slate-500 mb-4">Hapus SEMUA data Jurnal & Section hasil migrasi (TOTAL RESET).</p>
-                    <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST" onsubmit="return confirm('PERINGATAN: Ini akan menghapus SELURUH data jurnal hasil migrasi. Lanjutkan?')">
+                <div class="p-6 bg-slate-50 rounded-2xl border border-red-100">
+                    <h3 class="text-sm font-bold text-red-800 mb-1">Reset: Journals (Total)</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Hapus data Jurnal, Section, Issue & Artikel sekaligus.</p>
+                    <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST"
+                          @submit.prevent="if(confirm(selectedTargetJournals.length > 0 ? `HAPUS TOTAL data pada ${selectedTargetJournals.length} jurnal terpilih?` : 'PERINGATAN: Ini akan menghapus SELURUH data jurnal hasil migrasi. Lanjutkan?')) { $el.submit(); }">
                         @csrf
-                        <button type="submit" class="w-full py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all">
-                            TOTAL RESET JOURNALS
+                        <template x-for="id in selectedTargetJournals" :key="id">
+                            <input type="hidden" name="journal_ids[]" :value="id">
+                        </template>
+                        <button type="submit" class="w-full py-2.5 bg-red-600 text-white text-[11px] font-bold rounded-lg hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-md shadow-red-200">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span x-text="selectedTargetJournals.length > 0 ? `Total Reset (${selectedTargetJournals.length} Jurnal)` : 'TOTAL RESET SEMUA'"></span>
                         </button>
                     </form>
                 </div>
@@ -859,6 +900,13 @@ function migrationDashboard() {
         loadingStep: null,
         selectedSourceJournals: [], // Selected journal IDs from SQL source
         
+        // Target Reset State (for already migrated journals)
+        selectedTargetJournals: [],
+        allTargets: {!! json_encode(collect($journalBreakdown)->pluck('id')) !!},
+        toggleAllTargets() {
+            this.selectedTargetJournals = this.selectedTargetJournals.length === this.allTargets.length ? [] : [...this.allTargets];
+        },
+
         // Drilldown Modal State
         detailsModal: false,
         detailLoading: false,
