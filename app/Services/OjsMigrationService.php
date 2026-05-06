@@ -129,6 +129,18 @@ class OjsMigrationService
 
         return $stats;
     }
+    /**
+     * Clean and format timestamp
+     */
+    protected function cleanTimestamp($ts)
+    {
+        if (!$ts || $ts === '0000-00-00 00:00:00') return now();
+        try {
+            return Carbon::parse($ts);
+        } catch (\Exception $e) {
+            return now();
+        }
+    }
 
     /**
      * Get preview stats per journal — supports both Engine A and B.
@@ -632,16 +644,35 @@ class OjsMigrationService
                 ->map(fn($r) => $this->mapRow('published_articles', $r));
         }
 
-        foreach ($this->getLegacyRows('submissions') as $row) {
-            $lSub = $this->mapRow('submissions', $row);
+        foreach ($this->getLegacyRows($v === 'OJS2' ? 'articles' : 'submissions') as $row) {
+            $lSub = $this->mapRow($v === 'OJS2' ? 'articles' : 'submissions', $row);
             $lId = ($v === 'OJS2') ? ($lSub->article_id ?? null) : ($lSub->submission_id ?? null);
             
+            if (!$lId) continue;
+
             // Null-safe access to handle inconsistent SQL dump formats
             $lContextId = $lSub->context_id ?? ($lSub->journal_id ?? null);
-            $lSectionId = $lSub->section_id ?? null;
-
+            
             $newJournalId = LegacyMapping::getMapping('journals', $lContextId);
-            if (!$newJournalId) continue;
+            if (!$newJournalId) {
+                \Illuminate\Support\Facades\Log::warning("Skipping submission {$lId}: Journal mapping missing for context_id {$lContextId}");
+                continue;
+            }
+
+            // OJS 3.3+ moves section_id and current_publication to publications table
+            $lPub = null;
+            if ($v === 'OJS2') {
+                $lPub = $publishedArticles->where('article_id', $lId)->first();
+                $lSectionId = $lSub->section_id ?? null;
+                $metadata = $metadataRows->where('article_id', $lId);
+            } else {
+                $currentPubId = $lSub->current_publication_id ?? null;
+                $lPub = $publicationRows->where('publication_id', $currentPubId)->first();
+                
+                // If not in submissions, section_id might be in publications
+                $lSectionId = $lSub->section_id ?? ($lPub->section_id ?? null);
+                $metadata = $metadataRows->where('publication_id', $currentPubId);
+            }
 
             $newSectionId = LegacyMapping::getMapping('sections', $lSectionId);
             
@@ -649,24 +680,21 @@ class OjsMigrationService
             if (!$newSectionId) {
                 $fallbackSection = \App\Models\Section::where('journal_id', $newJournalId)->orderBy('sort_order')->first();
                 if (!$fallbackSection) {
-                    $fallbackSection = \App\Models\Section::create([
-                        'journal_id' => $newJournalId,
-                        'name' => 'Uncategorized (Migrated)',
-                        'abbreviation' => 'UNC',
-                    ]);
+                    $fallbackSection = \App\Models\Section::updateOrCreate(
+                        ['journal_id' => $newJournalId, 'name' => 'Uncategorized (Migrated)'],
+                        ['abbreviation' => 'UNC']
+                    );
                 }
                 $newSectionId = $fallbackSection->id;
             }
             
-            if ($v === 'OJS2') {
-                $lPub = $publishedArticles->where('article_id', $lId)->first();
-                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id ?? null) : null;
-                $metadata = $metadataRows->where('article_id', $lId);
-            } else {
-                $lPub = $publicationRows->where('publication_id', $lSub->current_publication_id ?? null)->first();
-                $newIssueId = $lPub ? LegacyMapping::getMapping('issues', $lPub->issue_id ?? null) : null;
-                $metadata = $metadataRows->where('publication_id', $lSub->current_publication_id ?? null);
+            // Get Issue ID
+            $lIssueId = $lPub->issue_id ?? null;
+            // OJS 3.3 might store issueId in publication_settings
+            if (!$lIssueId && $metadata->isNotEmpty()) {
+                $lIssueId = $metadata->where('setting_name', 'issueId')->first()?->setting_value;
             }
+            $newIssueId = $lIssueId ? LegacyMapping::getMapping('issues', $lIssueId) : null;
 
             $titles = $metadata->where('setting_name', 'title')->pluck('setting_value', 'locale');
             $abstracts = $metadata->where('setting_name', 'abstract')->pluck('setting_value', 'locale');
@@ -674,18 +702,16 @@ class OjsMigrationService
             // Citations extraction
             $rawCitations = null;
             $citationsSetting = $metadata->whereIn('setting_name', ['citations', 'references'])->first();
-            
             if ($citationsSetting && !empty($citationsSetting->setting_value)) {
                 $rawCitations = $citationsSetting->setting_value;
             }
-            
             $rawCitations = $rawCitations ? strip_tags($rawCitations) : null;
 
             // Determine IamJOS Stage and Status
             $lStageId = (int)($lSub->stage_id ?? 1);
             $iamjosStageId = match($lStageId) {
                 1 => 1, // Submission
-                2, 3 => 2, // Review (Internal/External)
+                2, 3 => 2, // Review
                 4 => 3, // Copyediting
                 5 => 4, // Production
                 default => 1
@@ -705,8 +731,6 @@ class OjsMigrationService
                 $iamjosStage = Submission::STAGE_PRODUCTION;
             } elseif ((int)$lSub->status === 4) {
                 $iamjosStatus = Submission::STATUS_REJECTED;
-            } elseif ((int)$lSub->status === 0 && (int)($lSub->submission_progress ?? 0) > 0) {
-                $iamjosStatus = Submission::STATUS_DRAFT;
             } else {
                 $iamjosStatus = match($iamjosStageId) {
                     1 => Submission::STATUS_SUBMITTED,
@@ -717,26 +741,12 @@ class OjsMigrationService
                 };
             }
 
-            // Find submitting user (fallback to SuperAdmin if not found)
-            // Typically the user who submitted is in stage_assignments or is the first author
+            // Find submitting user
             $submittingUserId = User::first()->id ?? null;
-            $authorGroup = \App\Models\LegacyMapping::where('legacy_table', 'authors')
-                ->where('legacy_id', 'LIKE', $lSub->submission_id . '-%')
-                ->first();
-                
-            if ($authorGroup) {
-                // Not perfectly accurate but better than all being SuperAdmin. 
-                // A more precise map requires stage_assignments which we'll process later, 
-                // but we need a user_id NOW for the foreign key.
-                $author = \App\Models\SubmissionAuthor::find($authorGroup->new_uuid);
-                if ($author && $author->user_id) {
-                    $submittingUserId = $author->user_id;
-                }
-            }
-
-            // Use OJS submission_id as stable unique key (seq_id) for idempotent re-runs
+            
+            // Idempotent migration using original OJS ID as seq_id
             $submission = Submission::updateOrCreate(
-                ['seq_id' => (int)$lSub->submission_id],
+                ['seq_id' => (int)$lId],
                 [
                     'journal_id' => $newJournalId,
                     'user_id'    => $submittingUserId,
@@ -748,11 +758,12 @@ class OjsMigrationService
                     'title'      => strip_tags($titles->first() ?? 'Untitled Migration'),
                     'abstract'   => $abstracts->first() ?? null,
                     'references' => $rawCitations,
-                    'created_at' => $this->cleanTimestamp($lSub->date_submitted),
+                    'submitted_at' => $this->cleanTimestamp($lSub->date_submitted ?? ($lSub->date_created ?? null)),
+                    'created_at' => $this->cleanTimestamp($lSub->date_submitted ?? ($lSub->date_created ?? null)),
                 ]
             );
 
-            LegacyMapping::setMapping('submissions', $lSub->submission_id, $submission->id);
+            LegacyMapping::setMapping('submissions', $lId, $submission->id);
             
             Publication::updateOrCreate(
                 [
@@ -760,15 +771,19 @@ class OjsMigrationService
                     'version' => 1,
                 ],
                 [
+                    'section_id' => $newSectionId,
+                    'issue_id' => $newIssueId,
                     'title' => strip_tags($titles->first() ?? 'Untitled Migration'),
                     'abstract' => $abstracts->first(),
                     'references' => $rawCitations,
                     'status' => Publication::STATUS_PUBLISHED,
-                    'date_published' => $this->cleanTimestamp($lSub->date_submitted),
+                    'pages' => $lPub->pages ?? null,
+                    'date_published' => $this->cleanTimestamp($lPub->date_published ?? ($lSub->date_submitted ?? null)),
                 ]
             );
         }
     }
+
 
     /**
      * Migrate Editorial & Review Workflow

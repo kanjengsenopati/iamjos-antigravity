@@ -91,20 +91,22 @@ class SqlDumpParserService
         if (empty($rows)) return;
 
         // If we don't have column names, create generic ones col_0, col_1...
-        if (empty($columns)) {
+        $detectedColumns = $columns;
+        if (empty($detectedColumns)) {
             $colCount = count($rows[0]);
             for ($i = 0; $i < $colCount; $i++) {
-                $columns[] = "col_$i";
+                $detectedColumns[] = "col_$i";
             }
         }
 
-        $this->storage->ensureTable($tableName, $columns);
+        $this->storage->ensureTable($tableName, $detectedColumns);
 
         // Prepare rows for SQLite bulk insert
         $dataToInsert = [];
         foreach ($rows as $row) {
             $item = [];
-            foreach ($columns as $idx => $colName) {
+            foreach ($detectedColumns as $idx => $colName) {
+                // Ensure we don't overflow if row is shorter than columns
                 $item[$colName] = $row[$idx] ?? null;
             }
             $dataToInsert[] = $item;
@@ -112,6 +114,7 @@ class SqlDumpParserService
 
         $this->storage->bulkInsert($tableName, $dataToInsert);
     }
+
 
     /**
      * Parse the (val1, val2), (val3, val4) string into arrays

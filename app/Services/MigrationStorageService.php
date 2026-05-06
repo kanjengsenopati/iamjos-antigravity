@@ -71,10 +71,32 @@ class MigrationStorageService
                 foreach ($columns as $column) {
                     $table->text($column)->nullable();
                 }
-                $table->index($columns[0]); // Index the first column (usually ID)
+                if (!empty($columns)) {
+                    $table->index($columns[0]); // Index the first column (usually ID)
+                }
+            });
+        } else {
+            // Table exists, check for missing columns
+            foreach ($columns as $column) {
+                $this->addColumn($tableName, $column);
+            }
+        }
+    }
+
+    /**
+     * Dynamically add a column to an existing table
+     */
+    public function addColumn(string $tableName, string $columnName)
+    {
+        $this->setupConnection();
+        
+        if (!Schema::connection($this->connectionName)->hasColumn($tableName, $columnName)) {
+            Schema::connection($this->connectionName)->table($tableName, function (Blueprint $table) use ($columnName) {
+                $table->text($columnName)->nullable();
             });
         }
     }
+
 
     /**
      * Bulk insert data into SQLite
