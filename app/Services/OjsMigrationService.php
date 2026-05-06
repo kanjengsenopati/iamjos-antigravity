@@ -267,20 +267,25 @@ class OjsMigrationService
 
         try {
             $tables = \Illuminate\Support\Facades\Schema::connection($conn)->getTableListing();
+            $tables = array_map('strtolower', $tables);
             
-            if (in_array('publications', $tables)) {
+            if (in_array('publications', $tables) || in_array('publication_settings', $tables)) {
                 $this->detectedVersion = 'OJS33';
             } elseif (in_array('submissions', $tables)) {
                 $this->detectedVersion = 'OJS30';
             } elseif (in_array('articles', $tables)) {
                 $this->detectedVersion = 'OJS2';
             }
+            
+            \Illuminate\Support\Facades\Log::info("OJS Migration: Detected Version {$this->detectedVersion} from tables: " . implode(',', array_slice($tables, 0, 10)) . "...");
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("OJS Migration: Version detection failed: " . $e->getMessage());
             $this->detectedVersion = 'UNKNOWN';
         }
 
         return $this->detectedVersion;
     }
+
 
     public function getDetectedVersion(): string
     {
@@ -373,7 +378,7 @@ class OjsMigrationService
                 $columns = ['review_id', 'submission_id', 'reviewer_id', 'stage_id', 'review_method', 'round', 'step', 'recommendation', 'declined', 'cancelled', 'date_assigned', 'date_notified', 'date_completed', 'date_due', 'date_response_due', 'quality'];
                 break;
             case 'queries':
-                $columns = ['query_id', 'assoc_type', 'assoc_id', 'stage_id', 'sequence', 'is_closed'];
+                $columns = ['query_id', 'assoc_type', 'assoc_id', 'stage_id', 'sequence', 'closed'];
                 break;
             case 'query_participants':
                 $columns = ['query_id', 'user_id'];
@@ -939,7 +944,7 @@ class OjsMigrationService
                 ],
                 [
                     'user_id' => $newCreatorId,
-                    'is_open' => !(bool)$lQuery->is_closed,
+                    'is_open' => !((bool)($lQuery->is_closed ?? ($lQuery->closed ?? false))),
                 ]
             );
 
