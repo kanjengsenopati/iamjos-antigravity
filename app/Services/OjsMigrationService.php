@@ -106,6 +106,8 @@ class OjsMigrationService
             
             if ($key === 'reviews') {
                 $mappingCount = LegacyMapping::whereIn('legacy_table', ['review_assignments', 'review_rounds', 'stage_assignments'])->count();
+            } elseif ($key === 'logs') {
+                $mappingCount = LegacyMapping::whereIn('legacy_table', ['event_log', 'email_log'])->count();
             } else {
                 $mappingCount = LegacyMapping::where('legacy_table', $key === 'galleys' ? 'galleys' : $legacyTable)->count();
             }
@@ -129,6 +131,12 @@ class OjsMigrationService
                         $countStage = DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable('stage_assignments') 
                                     ? DB::connection($this->dbConnection)->table('stage_assignments')->count() : 0;
                         $legacyCount = $countRev + $countRound + $countStage;
+                    } elseif ($key === 'logs') {
+                        $countEvent = DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable('event_log') 
+                                    ? DB::connection($this->dbConnection)->table('event_log')->count() : 0;
+                        $countEmail = DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable('email_log') 
+                                    ? DB::connection($this->dbConnection)->table('email_log')->count() : 0;
+                        $legacyCount = $countEvent + $countEmail;
                     } elseif (DB::connection($this->dbConnection)->getSchemaBuilder()->hasTable($legacyTable)) {
                         $legacyCount = DB::connection($this->dbConnection)->table($legacyTable)->count();
                     }
@@ -152,6 +160,12 @@ class OjsMigrationService
                         $countStage = \Illuminate\Support\Facades\Schema::connection($conn)->hasTable('stage_assignments') 
                                     ? DB::connection($conn)->table('stage_assignments')->count() : 0;
                         $legacyCount = $countRev + $countRound + $countStage;
+                    } elseif ($key === 'logs') {
+                        $countEvent = \Illuminate\Support\Facades\Schema::connection($conn)->hasTable('event_log') 
+                                    ? DB::connection($conn)->table('event_log')->count() : 0;
+                        $countEmail = \Illuminate\Support\Facades\Schema::connection($conn)->hasTable('email_log') 
+                                    ? DB::connection($conn)->table('email_log')->count() : 0;
+                        $legacyCount = $countEvent + $countEmail;
                     } elseif (\Illuminate\Support\Facades\Schema::connection($conn)->hasTable($legacyTable)) {
                         $legacyCount = DB::connection($conn)->table($legacyTable)->count();
                     }
@@ -166,6 +180,7 @@ class OjsMigrationService
                 'legacy_count'   => $legacyCount,
                 'migrated_count' => $mappingCount,
                 'native_count'   => max(0, $totalCount - $mappingCount),
+                'total_count'    => $totalCount,
             ];
         }
 
@@ -899,8 +914,9 @@ class OjsMigrationService
                 $groupRow = $this->mapRow('user_groups', $groupRowRaw);
                 if (($groupRow->role_id ?? null) == 65536 && ($lStage->stage_id ?? 1) == 1) {
                     $submission->update(['user_id' => $newUserId]);
+                    LegacyMapping::setMapping('stage_assignments', $lStage->stage_assignment_id ?? null, $submission->id);
                 } else {
-                    \App\Models\EditorialAssignment::updateOrCreate(
+                    $assignment = \App\Models\EditorialAssignment::updateOrCreate(
                         [
                             'submission_id' => $newSubmissionId,
                             'user_id' => $newUserId,
@@ -909,9 +925,10 @@ class OjsMigrationService
                             'is_active' => true,
                         ]
                     );
+                    LegacyMapping::setMapping('stage_assignments', $lStage->stage_assignment_id ?? null, $assignment->id);
                 }
             } else {
-                \App\Models\EditorialAssignment::updateOrCreate(
+                $assignment = \App\Models\EditorialAssignment::updateOrCreate(
                     [
                         'submission_id' => $newSubmissionId,
                         'user_id' => $newUserId,
@@ -922,6 +939,7 @@ class OjsMigrationService
                         // but creating the assignment grants them access
                     ]
                 );
+                LegacyMapping::setMapping('stage_assignments', $lStage->stage_assignment_id ?? null, $assignment->id);
             }
         }
 
@@ -986,7 +1004,7 @@ class OjsMigrationService
             elseif ($lRev->date_completed ?? null) $status = \App\Models\ReviewAssignment::STATUS_COMPLETED;
             elseif ($lRev->date_confirmed ?? null) $status = \App\Models\ReviewAssignment::STATUS_ACCEPTED;
 
-            \App\Models\ReviewAssignment::updateOrCreate(
+            $assignment = \App\Models\ReviewAssignment::updateOrCreate(
                 [
                     'submission_id' => $newSubmissionId,
                     'reviewer_id' => $newReviewerId,
@@ -1004,6 +1022,8 @@ class OjsMigrationService
                     'review_method' => ($lRev->review_method ?? 1) == 2 ? 'double-blind' : 'blind',
                 ]
             );
+            
+            LegacyMapping::setMapping('review_assignments', $lRev->review_id ?? null, $assignment->id);
         }
     }
 

@@ -430,7 +430,7 @@
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">Description</th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
                                     <span class="flex items-center justify-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Legacy (OJS)
+                                        <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Legacy
                                     </span>
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
@@ -440,7 +440,12 @@
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
                                     <span class="flex items-center justify-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-slate-300 inline-block"></span> IamJOS
+                                        <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> IamJOS
+                                    </span>
+                                </th>
+                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
+                                    <span class="flex items-center justify-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-slate-800 inline-block"></span> Total Data
                                     </span>
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
@@ -464,6 +469,7 @@
                                 $legacyCount   = $stats[$key]['legacy_count']   ?? '—';
                                 $migratedCount = $stats[$key]['migrated_count'] ?? 0;
                                 $nativeCount   = $stats[$key]['native_count']   ?? 0;
+                                $totalCount    = $stats[$key]['total_count']    ?? 0;
                                 $isSynced      = $migratedCount > 0;
                             @endphp
                             <tr class="hover:bg-slate-50/30 transition-colors">
@@ -489,6 +495,12 @@
                                 <td class="px-6 py-4 text-center">
                                     <span class="text-sm font-mono font-bold {{ $nativeCount > 0 ? 'text-amber-500' : 'text-slate-300' }}">
                                         {{ number_format($nativeCount) }}
+                                    </span>
+                                </td>
+                                {{-- Pillar 4: Total Data --}}
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-mono font-bold text-slate-800">
+                                        {{ number_format($totalCount) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
