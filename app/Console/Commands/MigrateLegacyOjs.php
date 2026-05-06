@@ -88,6 +88,11 @@ class MigrateLegacyOjs extends Command
         $v = $this->migrationService->getDetectedVersion();
         $this->info("🕵️  Detected OJS Version: {$v}");
 
+        if ($step === 'all' || $step === 'users') {
+            $this->info("👥 Migrating Users & Roles...");
+            $this->migrationService->migrateUsers();
+        }
+
         if ($step === 'all' || $step === 'journals') {
             $this->info("📰 Migrating Journals...");
             $this->migrationService->migrateJournals();
@@ -113,10 +118,21 @@ class MigrateLegacyOjs extends Command
             $this->migrationService->migrateAuthors();
         }
 
+        if ($step === 'all' || $step === 'discussions') {
+            $this->info("💬 Migrating Discussions...");
+            $this->migrationService->migrateDiscussions();
+        }
+
+        if ($step === 'all' || $step === 'logs') {
+            $this->info("📜 Migrating Activity Logs...");
+            $this->migrationService->migrateLogs();
+        }
+
         if ($step === 'all' || $step === 'metrics') {
             $this->info("📊 Migrating Usage Metrics...");
             $this->migrationService->migrateMetrics();
         }
+
 
         if ($step === 'all' || $step === 'galleys') {
             $this->info("📎 Migrating Galleys (Metadata only)...");
