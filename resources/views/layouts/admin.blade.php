@@ -44,7 +44,20 @@
     <!-- Alpine.js -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    <!-- TinyMCE -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -89,11 +102,15 @@
 
 <body class="h-full bg-gray-50" x-data="{ sidebarOpen: false }">
     <!-- Mobile Sidebar Overlay -->
-    <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+    <div x-show="sidebarOpen" 
+        x-cloak
+        x-transition:enter="transition-opacity ease-linear duration-300"
         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
         x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0" class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
-        @click="sidebarOpen = false" x-cloak>
+        x-transition:leave-end="opacity-0" 
+        class="fixed inset-0 z-40 bg-gray-900/50 hidden lg:hidden"
+        :class="{ 'block': sidebarOpen, 'hidden': !sidebarOpen }"
+        @click="sidebarOpen = false">
     </div>
 
     <!-- Sidebar -->
