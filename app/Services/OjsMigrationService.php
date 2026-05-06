@@ -307,9 +307,23 @@ class OjsMigrationService
         }
 
         $result = new \stdClass();
-        foreach ($row as $key => $val) {
-            $result->$key = $val;
+        $isGeneric = isset($row['col_0']);
+
+        if ($isGeneric && !empty($columns)) {
+            // Engine B fallback: Map col_0, col_1 to defined column names
+            foreach ($columns as $idx => $colName) {
+                $genericKey = "col_$idx";
+                if (array_key_exists($genericKey, $row)) {
+                    $result->$colName = $row[$genericKey];
+                }
+            }
+        } else {
+            // Engine A or Engine B with parsed columns: Use associative keys
+            foreach ($row as $key => $val) {
+                $result->$key = $val;
+            }
         }
+        
         return $result;
     }
 
