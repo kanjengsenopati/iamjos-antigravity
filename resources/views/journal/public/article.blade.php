@@ -163,13 +163,19 @@ foreach ($rawKeywords as $k) {
         <meta name="citation_fulltext_html_url" content="{{ route('journal.public.article', [$journal->slug, $article->seq_id]) }}">
 
         {{-- PDF URL (CRITICAL - Must point to actual download file) --}}
-        {{-- PDF URL (CRITICAL - Must point to actual download file w/ SEO friendly URL) --}}
+        {{-- PDF URL (CRITICAL - Must point to actual download file w/ SEO friendly URL ending in .pdf) --}}
         @if ($pdfGalley)
+            @php
+                $safeAuthor = \Illuminate\Support\Str::slug($pubAuthors?->first()?->last_name ?? 'author');
+                $safeTitle = \Illuminate\Support\Str::slug(\Illuminate\Support\Str::limit($pubTitle, 30, ''));
+                $safeYear = $pubDate ? $pubDate->format('Y') : date('Y');
+                $seoFilename = "{$safeAuthor}-{$safeTitle}-{$safeYear}";
+            @endphp
             <meta name="citation_pdf_url"
-                content="{{ route('journal.article.galley', [
+                content="{{ route('journal.article.download.pdf', [
                     'journal' => $journal->slug, 
-                    'article' => $article->seq_id, 
-                    'galley' => $pdfGalley->seq_id ?? $pdfGalley->id
+                    'seq_id' => $article->seq_id, 
+                    'filename' => $seoFilename
                 ]) }}">
         @endif
 

@@ -111,10 +111,13 @@
                                     <!-- Publisher Name -->
                                     <div>
                                         <label for="publisher"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Publisher Name</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">Publisher / Institution Name</label>
                                         <input type="text" name="publisher" id="publisher"
                                             value="{{ old('publisher', $journal->publisher ?? '') }}"
-                                            placeholder="e.g., University Press" class="w-full">
+                                            placeholder="e.g., University Press / Association" class="w-full border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm">
+                                        <p class="mt-1 text-xs text-amber-600 font-medium">
+                                            <i class="fa-solid fa-circle-info mr-1"></i> Essential for Google Scholar metadata indexing
+                                        </p>
                                     </div>
 
                                     <!-- ISSN Print -->
