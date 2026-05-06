@@ -147,9 +147,9 @@ class OjsMigrationService
                     'id'             => $jId,
                     'name'           => $name,
                     'path'           => $lJournal->path,
-                    'sections_count' => DB::connection($conn)->table('sections')->where('journal_id', $jId)->count(),
-                    'issues_count'   => DB::connection($conn)->table('issues')->where('journal_id', $jId)->count(),
-                    'articles_count' => DB::connection($conn)->table('submissions')->where('context_id', $jId)->count(),
+                    'sections_count' => DB::connection($conn)->table('sections')->where('journal_id', $jId)->count() ?: DB::connection($conn)->table('sections')->where('context_id', $jId)->count(),
+                    'issues_count'   => DB::connection($conn)->table('issues')->where('journal_id', $jId)->count() ?: DB::connection($conn)->table('issues')->where('context_id', $jId)->count(),
+                    'articles_count' => DB::connection($conn)->table('submissions')->where('context_id', $jId)->count() ?: DB::connection($conn)->table('submissions')->where('journal_id', $jId)->count(),
                 ];
             }
         } elseif ($this->parser && $this->sqlFile) {
@@ -178,9 +178,9 @@ class OjsMigrationService
                     'id'             => $jId,
                     'name'           => $name,
                     'path'           => $lJournal->path,
-                    'sections_count' => $sectionsMap->where('journal_id', $jId)->count(),
-                    'issues_count'   => $issuesMap->where('journal_id', $jId)->count(),
-                    'articles_count' => $submissionsMap->where('context_id', $jId)->count(),
+                    'sections_count' => ($sectionsMap->where('journal_id', $jId)->count() ?: $sectionsMap->where('context_id', $jId)->count()),
+                    'issues_count'   => ($issuesMap->where('journal_id', $jId)->count() ?: $issuesMap->where('context_id', $jId)->count()),
+                    'articles_count' => ($submissionsMap->where('context_id', $jId)->count() ?: $submissionsMap->where('journal_id', $jId)->count()),
                 ];
             }
         }
@@ -216,6 +216,17 @@ class OjsMigrationService
         }
 
         return [];
+    }
+
+    /**
+     * Clean timestamp for PostgreSQL compatibility
+     */
+    protected function cleanTimestamp($value)
+    {
+        if (empty($value) || $value === '0000-00-00 00:00:00' || $value === '0000-00-00') {
+            return null;
+        }
+        return $value;
     }
 
     /**
@@ -442,8 +453,8 @@ class OjsMigrationService
                     'affiliation' => $affiliation,
                     'country' => $country,
                     'orcid_id' => $orcid,
-                    'date_registered' => $lUser->date_registered,
-                    'date_last_login' => $lUser->date_last_login,
+                    'date_registered' => $this->cleanTimestamp($lUser->date_registered),
+                    'date_last_login' => $this->cleanTimestamp($lUser->date_last_login),
                 ]
             );
 
@@ -515,7 +526,7 @@ class OjsMigrationService
                     'title'        => $titles->first() ?? "Vol. {$lIssue->volume} No. {$lIssue->number} ({$lIssue->year})",
                     'description'  => $descriptions->first() ?? null,
                     'is_published' => (bool)$lIssue->published,
-                    'published_at' => $lIssue->date_published,
+                    'published_at' => $this->cleanTimestamp($lIssue->date_published),
                 ]
             );
 
@@ -640,7 +651,7 @@ class OjsMigrationService
                     'title'      => strip_tags($titles->first() ?? 'Untitled Migration'),
                     'abstract'   => $abstracts->first() ?? null,
                     'references' => $rawCitations,
-                    'created_at' => $lSub->date_submitted,
+                    'created_at' => $this->cleanTimestamp($lSub->date_submitted),
                 ]
             );
 
@@ -656,7 +667,7 @@ class OjsMigrationService
                     'abstract' => $abstracts->first(),
                     'references' => $rawCitations,
                     'status' => Publication::STATUS_PUBLISHED,
-                    'date_published' => $lSub->date_submitted,
+                    'date_published' => $this->cleanTimestamp($lSub->date_submitted),
                 ]
             );
         }

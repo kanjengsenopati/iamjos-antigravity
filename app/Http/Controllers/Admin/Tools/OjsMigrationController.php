@@ -51,40 +51,30 @@ class OjsMigrationController extends Controller
             }
         }
 
-        // Per-journal integrity breakdown (always load if journals exist)
-        $journalBreakdown = Journal::withCount([
-            'issues',
-            'submissions as articles_count',
-        ])
-        ->with(['issues' => fn($q) => $q->select('id', 'journal_id')])
-        ->select('id', 'name', 'abbreviation', 'slug', 'path', 'enabled')
-        ->orderBy('name')
-        ->get()
-        ->map(function ($journal) {
-            $mappedJournals = LegacyMapping::where('legacy_table', 'journals')
-                ->where('new_uuid', $journal->id)
-                ->exists();
+        // Per-journal integrity breakdown
+        $journalBreakdown = Journal::withCount(['issues', 'submissions'])
+            ->orderBy('name')
+            ->get()
+            ->map(function ($journal) {
+                $mappedJournals = LegacyMapping::where('legacy_table', 'journals')
+                    ->where('new_uuid', $journal->id)
+                    ->exists();
 
-            $mappedIssuesCount = LegacyMapping::where('legacy_table', 'issues')
-                ->whereIn('new_uuid', $journal->issues->pluck('id'))
-                ->count();
-
-            return [
-                'id'            => $journal->id,
-                'name'          => $journal->name,
-                'abbreviation'  => $journal->abbreviation,
-                'path'          => $journal->path ?? $journal->slug,
-                'enabled'       => $journal->enabled,
-                'is_migrated'   => $mappedJournals,
-                'issues_count'  => $journal->issues_count,
-                'articles_count'=> $journal->articles_count,
-                'mapped_issues' => $mappedIssuesCount,
-                'integrity'     => $mappedJournals
-                    ? ($journal->issues_count > 0 && $journal->articles_count > 0 ? 'complete'
-                        : ($journal->issues_count > 0 ? 'partial' : 'empty'))
-                    : 'native',
-            ];
-        });
+                return [
+                    'id'            => $journal->id,
+                    'name'          => $journal->name,
+                    'abbreviation'  => $journal->abbreviation,
+                    'path'          => $journal->path ?? $journal->slug,
+                    'enabled'       => $journal->enabled,
+                    'is_migrated'   => $mappedJournals,
+                    'issues_count'  => (int)$journal->issues_count,
+                    'articles_count'=> (int)$journal->submissions_count,
+                    'integrity'     => $mappedJournals
+                        ? ($journal->issues_count > 0 && $journal->submissions_count > 0 ? 'complete'
+                            : ($journal->issues_count > 0 ? 'partial' : 'empty'))
+                        : 'native',
+                ];
+            });
 
         return view('admin.tools.migration.index', compact('config', 'stats', 'fileError', 'journalBreakdown', 'previewData'));
     }
