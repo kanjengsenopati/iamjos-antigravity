@@ -41,7 +41,7 @@
                             @endforeach
                         @endif
                         <dc:description>{!! htmlspecialchars(strip_tags(html_entity_decode($record->abstract)), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:description>
-                        <dc:publisher>{!! htmlspecialchars($journal->name, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:publisher>
+                        <dc:publisher>{!! htmlspecialchars($journal->publisher ?? $journal->name, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:publisher>
                         @if ($record->currentPublication && $record->currentPublication->date_published)
                             <dc:date>{{ \Carbon\Carbon::parse($record->currentPublication->date_published)->format('Y-m-d') }}
                             </dc:date>
@@ -77,12 +77,16 @@
                             <dc:rights>{{ htmlspecialchars($journal->license_terms, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:rights>
                         @endif
 
-                        {{-- Relation (PDF URL) --}}
+                        {{-- Relation (PDF URL - SEO friendly .pdf route for Google Scholar) --}}
                         @php
                             $pdf = $record->galleys->first();
+                            $oaiAuthor = \Illuminate\Support\Str::slug($record->authors?->first()?->last_name ?? 'article');
+                            $oaiTitle = \Illuminate\Support\Str::slug(\Illuminate\Support\Str::limit($record->title, 30, ''));
+                            $oaiYear = ($record->currentPublication && $record->currentPublication->date_published) ? \Carbon\Carbon::parse($record->currentPublication->date_published)->format('Y') : date('Y');
+                            $oaiFilename = "{$oaiAuthor}-{$oaiTitle}-{$oaiYear}";
                         @endphp
                         @if ($pdf)
-                            <dc:relation>{!! htmlspecialchars(route('journal.article.galley', ['journal' => $journal->slug, 'article' => $record->seq_id, 'galley' => $pdf->seq_id ?? $pdf->id]), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:relation>
+                            <dc:relation>{!! htmlspecialchars(route('journal.article.download.pdf', ['journal' => $journal->slug, 'seq_id' => $record->seq_id, 'filename' => $oaiFilename]), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:relation>
                         @endif
 
                         <dc:language>{{ $record->locale ?? 'en' }}</dc:language>
