@@ -64,7 +64,7 @@ if ($val) $processedKeywords[] = trim((string)$val);
 @if($author->email)<meta name="citation_author_email" content="{{ $author->email }}">@endif
 @if($author->orcid)<meta name="citation_author_orcid" content="{{ $author->orcid }}">@endif
 @endforeach
-@foreach($processedKeywords as $keyword)<meta name="citation_keywords" content="{{ $keyword }}">
+@foreach($processedKeywords as $keyword)<meta name="citation_keywords" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ $keyword }}">
 @endforeach
 <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
 <meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
@@ -74,7 +74,7 @@ $safeTitle = Str::slug(Str::limit($pubTitle, 30, ''));
 $seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y') : date('Y'));
 @endphp
 <meta name="citation_pdf_url" content="{{ route('journal.article.download.pdf', [$journal->slug, $article->seq_id, $seoFilename]) }}">@endif
-@if($pubAbstract)<meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">@endif
+@if($pubAbstract)<meta name="citation_abstract" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">@endif
 @if($article->currentPublication)@foreach($article->currentPublication->parsed_references as $ref)<meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
 @endforeach
 @endif
@@ -86,7 +86,7 @@ $seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y')
 @if($article->submitted_at)<meta name="DC.Date.dateSubmitted" scheme="ISO8601" content="{{ $article->submitted_at->format('Y-m-d') }}">@endif
 @if($pubDate)<meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">@endif
 @if($pub->updated_at)<meta name="DC.Date.modified" scheme="ISO8601" content="{{ $pub->updated_at->format('Y-m-d') }}">@endif
-@if($pubAbstract)<meta name="DC.Description" xml:lang="en" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">@endif
+@if($pubAbstract)<meta name="DC.Description" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">@endif
 <meta name="DC.Format" scheme="IMT" content="application/pdf">
 @if($pubDoi)<meta name="DC.Identifier.DOI" content="{{ $pubDoi }}">@endif
 <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
