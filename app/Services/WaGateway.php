@@ -232,6 +232,8 @@ class WaGateway
             'review_submitted' => "Halo {name}, reviewer telah mengirimkan review untuk naskah '{title}'. Silakan cek dashboard untuk detailnya.",
             'reviewer_accepted' => "Halo {name}, Reviewer {reviewer_name} telah menerima undangan review untuk naskah '{title}'.",
             'reviewer_declined' => "Halo {name}, Reviewer {reviewer_name} telah menolak undangan review untuk naskah '{title}'.",
+            'reviewer_reminder_upcoming' => "Halo {name}, ini pengingat bahwa review Anda untuk naskah '{title}' jatuh tempo pada {due_date}. Mohon segera menyelesaikannya. Terima kasih.",
+            'reviewer_reminder_overdue' => "PENTING: Halo {name}, review Anda untuk naskah '{title}' seharusnya sudah selesai pada {due_date}. Mohon segera mengirimkan hasil review Anda. Terima kasih.",
         ];
     }
     
@@ -254,6 +256,8 @@ class WaGateway
             'review_submitted' => ['name', 'title'],
             'reviewer_accepted' => ['name', 'reviewer_name', 'title'],
             'reviewer_declined' => ['name', 'reviewer_name', 'title'],
+            'reviewer_reminder_upcoming' => ['name', 'title', 'due_date'],
+            'reviewer_reminder_overdue' => ['name', 'title', 'due_date'],
         ];
     }
 }

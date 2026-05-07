@@ -177,24 +177,29 @@ $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
     @else
         {{-- No Current Issue --}}
         <section class="mb-8">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
-                     style="background: {{ $primaryColor }}15;">
-                    <i class="fa-solid fa-book text-2xl" style="color: {{ $primaryColor }};"></i>
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
+                {{-- Icon + Title: same row, left-aligned --}}
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                         style="background: {{ $primaryColor }}15;">
+                        <i class="fa-solid fa-book text-xl" style="color: {{ $primaryColor }};"></i>
+                    </div>
+                    <h3 class="text-[22px] font-bold text-slate-900 leading-tight">Welcome to {{ $journal->name }}</h3>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Welcome to {{ $journal->name }}</h3>
-                <p class="text-slate-600 mb-6 max-w-md mx-auto">
+                {{-- Description: justify alignment --}}
+                <p class="text-[14px] font-medium text-slate-600 mb-8 text-justify leading-relaxed">
                     {{ $journal->description ?? 'A peer-reviewed scholarly journal dedicated to advancing knowledge and research.' }}
                 </p>
-                <div class="flex flex-wrap justify-center gap-3">
+                {{-- Buttons: left-aligned --}}
+                <div class="flex flex-wrap gap-3">
                     <a href="{{ route('journal.submissions.create', $journal->slug) }}"
-                       class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white rounded-lg transition-all"
+                       class="inline-flex items-center px-5 py-2.5 text-sm font-bold text-white rounded-xl transition-all shadow-sm hover:shadow-md"
                        style="background: {{ $primaryColor }};">
                         <i class="fa-solid fa-paper-plane mr-2"></i>
                         Submit Your Research
                     </a>
                     <a href="{{ route('journal.public.about', $journal->slug) }}"
-                       class="inline-flex items-center px-5 py-2.5 text-sm font-medium border rounded-lg transition-colors hover:bg-slate-50"
+                       class="inline-flex items-center px-5 py-2.5 text-sm font-bold border rounded-xl transition-colors hover:bg-slate-50"
                        style="color: {{ $primaryColor }}; border-color: {{ $primaryColor }};">
                         <i class="fa-solid fa-info-circle mr-2"></i>
                         Learn More

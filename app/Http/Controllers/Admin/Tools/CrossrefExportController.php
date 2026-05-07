@@ -12,9 +12,9 @@ class CrossrefExportController extends Controller
     /**
      * Display the OJS 3.3 Style Interface
      */
-    public function index(Request $request, $journalPath)
+    public function index(Request $request)
     {
-        $journal = Journal::where('path', $journalPath)->firstOrFail();
+        $journal = current_journal();
         
         // 1. Filter Logic (OJS Style)
         $status = $request->input('status', 'not_deposited'); // Default OJS usually shows 'not_deposited'
@@ -40,9 +40,9 @@ class CrossrefExportController extends Controller
     }
 
     // 2. Save Settings Logic
-    public function saveSettings(Request $request, $journalPath)
+    public function saveSettings(Request $request)
     {
-        $journal = Journal::where('path', $journalPath)->firstOrFail();
+        $journal = current_journal();
 
         $validated = $request->validate([
             'depositor_name' => 'required|string|max:255',
@@ -69,10 +69,10 @@ class CrossrefExportController extends Controller
     }
 
     // 2. XML Export Logic
-    public function export(Request $request, $journalPath)
+    public function export(Request $request)
     {
         // 1. Fetch Data
-        $journal = \App\Models\Journal::where('path', $journalPath)->firstOrFail();
+        $journal = current_journal();
         $ids = $request->input('submission_ids', []);
 
         if (empty($ids)) {
@@ -110,9 +110,9 @@ class CrossrefExportController extends Controller
     }
 
     // 4. API Deposit Logic
-    public function deposit(Request $request, $journalPath)
+    public function deposit(Request $request)
     {
-        $journal = \App\Models\Journal::where('path', $journalPath)->firstOrFail();
+        $journal = current_journal();
         $ids = $request->input('submission_ids', []);
 
         if (empty($ids)) {

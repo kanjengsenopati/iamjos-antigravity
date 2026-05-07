@@ -258,6 +258,20 @@ class PortalController extends Controller
      */
     public function journals(Request $request): View
     {
+        if ($request->has('debug_counts')) {
+            return response()->json([
+                'total_journals' => \App\Models\Journal::count(),
+                'total_issues' => \App\Models\Issue::count(),
+                'total_issues_with_trashed' => \App\Models\Issue::withTrashed()->count(),
+                'total_submissions' => \App\Models\Submission::count(),
+                'total_submissions_with_trashed' => \App\Models\Submission::withTrashed()->count(),
+                'published_issues' => \App\Models\Issue::where('is_published', true)->count(),
+                'published_submissions' => \App\Models\Submission::where('status', 'published')->count(),
+                'connection' => config('database.default'),
+                'database' => config('database.connections.pgsql.database'),
+            ]);
+        }
+
         $search = $request->get('search', '');
         $alpha = $request->get('alpha', '');
         $sort = $request->get('sort', 'name');

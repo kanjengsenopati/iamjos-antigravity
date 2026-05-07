@@ -40,9 +40,18 @@
 
             {{-- Journal Summary Section --}}
             @if ($journal->show_summary && !empty($journal->summary))
-                <section class="mb-8">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-                        <div class="prose prose-lg prose-slate mx-auto text-slate-600 leading-relaxed">
+                <section class="mb-8 px-5">
+                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                                style="background: {{ $primaryColor }}15;">
+                                <i class="fa-solid fa-book-open text-xl" style="color: {{ $primaryColor }};"></i>
+                            </div>
+                            <h2 class="text-[22px] font-bold text-slate-900 leading-tight">
+                                Welcome to {{ $journal->name }}
+                            </h2>
+                        </div>
+                        <div class="text-[14px] font-medium text-slate-600 leading-relaxed text-justify prose prose-slate max-w-none">
                             {!! clean($journal->summary) !!}
                         </div>
                     </div>
@@ -62,7 +71,7 @@
 
                     {{-- Issue Info Block (Cover + Description) --}}
                     <div
-                        class="flex flex-col md:flex-row gap-6 mb-10 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        class="flex flex-col md:flex-row gap-6 mb-10 bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
                         {{-- Cover Image (Fixed Size) --}}
                         <div class="flex-shrink-0">
                             @if ($currentIssue->cover_path)
@@ -128,7 +137,7 @@
                     @endphp
 
                     @if ($issueArticles->isNotEmpty())
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
                             <h3 class="text-xl font-bold text-slate-700 border-b border-slate-200 pb-2 mb-6">Articles
                             </h3>
 
@@ -266,25 +275,31 @@
                 </section>
             @else
                 {{-- No Current Issue --}}
-                <section class="mb-8">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-                            style="background: {{ $primaryColor }}15;">
-                            <i class="fa-solid fa-book text-2xl" style="color: {{ $primaryColor }};"></i>
+                <section class="mb-8 px-5">
+                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                                style="background: {{ $primaryColor }}15;">
+                                <i class="fa-solid fa-book text-xl" style="color: {{ $primaryColor }};"></i>
+                            </div>
+                            <h2 class="text-[22px] font-bold text-slate-900 leading-tight">
+                                Welcome to {{ $journal->name }}
+                            </h2>
                         </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-2">Welcome to {{ $journal->name }}</h3>
-                        <p class="text-slate-600 mb-6 max-w-md mx-auto">
+                        
+                        <p class="text-[14px] font-medium text-slate-600 mb-8 text-justify leading-relaxed">
                             {{ $journal->description ?? 'A peer-reviewed scholarly journal dedicated to advancing knowledge and research.' }}
                         </p>
-                        <div class="flex flex-wrap justify-center gap-3">
+
+                        <div class="flex flex-wrap gap-3">
                             <a href="{{ route('journal.submissions.create', $journal->slug) }}"
-                                class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white rounded-lg transition-all"
+                                class="inline-flex items-center px-5 py-2.5 text-sm font-bold text-white rounded-xl transition-all shadow-sm hover:shadow-md"
                                 style="background: {{ $primaryColor }};">
                                 <i class="fa-solid fa-paper-plane mr-2"></i>
                                 Submit Your Research
                             </a>
                             <a href="{{ route('journal.public.about', $journal->slug) }}"
-                                class="inline-flex items-center px-5 py-2.5 text-sm font-medium border rounded-lg transition-colors hover:bg-slate-50"
+                                class="inline-flex items-center px-5 py-2.5 text-sm font-bold border rounded-xl transition-colors hover:bg-slate-50"
                                 style="color: {{ $primaryColor }}; border-color: {{ $primaryColor }};">
                                 <i class="fa-solid fa-info-circle mr-2"></i>
                                 Learn More
@@ -292,6 +307,57 @@
                         </div>
                     </div>
                 </section>
+
+                {{-- Latest Articles (Alternative when no issue) --}}
+                @if ($latestArticles->isNotEmpty())
+                    <section class="mb-8 px-5">
+                        <div class="mb-6 flex items-center justify-between">
+                            <h2 class="text-xl font-bold text-slate-700 uppercase tracking-wide inline-block border-b-4 border-orange-400 pb-1">
+                                Latest Articles
+                            </h2>
+                            <a href="{{ route('journal.public.archives', $journal->slug) }}" class="text-sm font-bold text-blue-600 hover:underline">
+                                View All Archives
+                            </a>
+                        </div>
+
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+                            <div class="space-y-8">
+                                @foreach ($latestArticles as $article)
+                                    <div class="flex flex-col md:flex-row gap-4 border-b border-slate-100 pb-6 last:border-0">
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-lg font-bold text-blue-700 leading-tight mb-1">
+                                                <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
+                                                    class="hover:underline">
+                                                    {{ $article->title }}
+                                                </a>
+                                            </h4>
+                                            
+                                            <div class="mt-2 mb-3">
+                                                @foreach ($article->authors as $author)
+                                                    <span class="text-sm font-bold text-slate-700">{{ $author->first_name }} {{ $author->last_name }}</span>@if(!$loop->last), @endif
+                                                @endforeach
+                                            </div>
+
+                                            <div class="flex flex-wrap items-center gap-4 mt-4">
+                                                @if ($article->galleys->isNotEmpty())
+                                                    @foreach ($article->galleys as $galley)
+                                                        <a href="{{ route('journal.article.download', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id, 'galley' => $galley->id]) }}"
+                                                            class="inline-flex items-center px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded shadow-sm transition">
+                                                            <svg class="w-4 h-4 mr-1.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                                            </svg>
+                                                            {{ $galley->label ?? 'PDF' }}
+                                                        </a>
+                                                    @endforeach
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                @endif
             @endif
 
             {{-- Announcements Section --}}

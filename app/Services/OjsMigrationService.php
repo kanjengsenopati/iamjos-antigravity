@@ -1342,6 +1342,17 @@ class OjsMigrationService
                 }
 
                 if (!$found) {
+                    \App\Models\MigrationError::log(
+                        'missing_file',
+                        "Gagal menemukan file galley untuk ID {$lGalley->galley_id} di path: {$baseUrl}",
+                        $galleyTable,
+                        $lGalley->galley_id,
+                        [
+                            'submission_id' => $lGalley->submission_id,
+                            'file_id' => $lGalley->file_id,
+                            'label' => $lGalley->label
+                        ]
+                    );
                     \Illuminate\Support\Facades\Log::warning("Gagal menemukan file galley untuk ID {$lGalley->galley_id} di path: {$baseUrl}");
                     continue;
                 }

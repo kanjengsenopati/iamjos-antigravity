@@ -763,18 +763,20 @@ class SubmissionWorkflowController extends Controller
             ]);
 
             // Notify the author about the decline
-            // if (!empty($validated['notify_author']) || true) { // Default to always notify
-            //     try {
-            //         $author = $submission->user;
-            //         $author->notify(new \App\Notifications\SubmissionDeclinedNotification(
-            //             $submission,
-            //             auth()->user(),
-            //             $validated['reason']
-            //         ));
-            //     } catch (\Exception $e) {
-            //         Log::error('Failed to send decline notification: ' . $e->getMessage());
-            //     }
-            // }
+            if (!empty($validated['notify_author'])) {
+                try {
+                    $author = $submission->author;
+                    if ($author) {
+                        $author->notify(new \App\Notifications\SubmissionDeclinedNotification(
+                            $submission,
+                            auth()->user(),
+                            $validated['reason']
+                        ));
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to send decline notification: ' . $e->getMessage());
+                }
+            }
 
             DB::commit();
 

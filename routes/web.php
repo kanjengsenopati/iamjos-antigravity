@@ -1,6 +1,7 @@
 <?php
 // New Controllers
 use Illuminate\Support\Facades\Route;
+Route::get('/debug-data', [App\Http\Controllers\Public\SitemapController::class, 'index']);
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PublicController;
@@ -67,7 +68,22 @@ $registerAllRoutes = function ($prefix = '') {
         });
 
         // 2. PORTAL HOME
-        Route::get('/', [PortalController::class, 'index'])->name('portal.home');
+        Route::get('/debug-counts', function() {
+    $journals = \App\Models\Journal::withCount([
+        'submissions' => fn($q) => $q->where('status', 'published'),
+        'issues' => fn($q) => $q->where('is_published', true)
+    ])->get();
+    
+    return $journals->map(fn($j) => [
+        'name' => $j->name,
+        'subs' => $j->submissions_count,
+        'issues' => $j->issues_count,
+        'total_subs_raw' => $j->submissions()->count(),
+        'total_issues_raw' => $j->issues()->count()
+    ]);
+});
+
+Route::get('/', [PortalController::class, 'index'])->name('portal.home');
         Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
         Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
         Route::get('/about', [PortalController::class, 'about'])->name('portal.about');
@@ -129,11 +145,7 @@ $registerAllRoutes = function ($prefix = '') {
             Route::post('/clear-templates', [SiteAdminController::class, 'clearTemplateCache'])->name('site.clear-templates');
             Route::post('/clear-logs', [SiteAdminController::class, 'clearScheduledTaskLogs'])->name('site.clear-logs');
             
-            // Tools > Crossref
-            Route::get('/tools/crossref', [CrossrefExportController::class, 'index'])->name('journal.settings.tools.crossref.index');
-            Route::post('/tools/crossref/download', [CrossrefExportController::class, 'export'])->name('journal.settings.tools.crossref.download');
-            Route::post('/tools/crossref/save', [CrossrefExportController::class, 'saveSettings'])->name('journal.settings.tools.crossref.save');
-            Route::post('/tools/crossref/deposit', [CrossrefExportController::class, 'deposit'])->name('journal.settings.tools.crossref.deposit');
+
 
             Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
             Route::get('/journals/create', [JournalController::class, 'create'])->name('journals.create');
@@ -502,6 +514,10 @@ $registerAllRoutes = function ($prefix = '') {
                         Route::post('/reorder', 'reorder')->name('reorder');
                         Route::post('/system-block', 'addSystemBlock')->name('system-block');
                     });
+
+
+
+
                     Route::controller(\App\Http\Controllers\Admin\Stats\ArticleStatsController::class)->prefix('statistics')->name('statistics.')->group(function () {
                         Route::get('/articles', 'index')->name('articles');
                         Route::get('/articles/data', 'getData')->name('articles.data');

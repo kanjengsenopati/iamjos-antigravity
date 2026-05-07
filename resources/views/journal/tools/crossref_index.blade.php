@@ -11,7 +11,7 @@
                 <h1 class="text-2xl font-bold text-slate-800">Crossref XML Export Plugin</h1>
                 <p class="text-slate-500 text-sm mt-1">Export article metadata for DOI registration.</p>
             </div>
-            <a href="{{ route('journal.settings.tools.index', $journal->path) }}"
+            <a href="{{ route('journal.settings.tools.index', $journal->slug) }}"
                 class="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2001/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
@@ -44,7 +44,7 @@
             @if ($tab == 'settings')
                 <div class="max-w-4xl">
                     <div class="mb-6 flex items-center justify-between">
-                        <a href="{{ route('journal.settings.doi.edit', $journal->path) }}" class="text-blue-600 hover:underline text-sm font-medium">DOI Plugin Settings</a>
+                        <a href="{{ route('journal.settings.doi.edit', $journal->slug) }}" class="text-blue-600 hover:underline text-sm font-medium">DOI Plugin Settings</a>
                     </div>
                     
                     @if(empty($journal->doi_prefix))
@@ -58,14 +58,14 @@
                             <div class="ml-3">
                                 <h3 class="text-sm font-medium text-orange-800">DOI Prefix Not Configured</h3>
                                 <div class="mt-2 text-sm text-orange-700">
-                                    <p>You must configure a valid DOI Prefix before you can register DOIs with Crossref. Please visit the <a href="{{ route('journal.settings.doi.edit', $journal->path) }}" class="font-bold underline hover:text-orange-900">DOI Plugin Settings</a> to set it up.</p>
+                                    <p>You must configure a valid DOI Prefix before you can register DOIs with Crossref. Please visit the <a href="{{ route('journal.settings.doi.edit', $journal->slug) }}" class="font-bold underline hover:text-orange-900">DOI Plugin Settings</a> to set it up.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     @endif
 
-                    <form action="{{ route('journal.settings.tools.crossref.save', $journal->path) }}" method="POST">
+                    <form action="{{ route('journal.settings.tools.crossref.save', $journal->slug) }}" method="POST">
                         @csrf
                         
                         {{-- Depositor Info --}}
@@ -194,7 +194,7 @@
             @endif
 
             {{-- CONTENT FORM --}}
-            <form action="{{ route('journal.settings.tools.crossref.download', $journal->path) }}" method="POST">
+            <form action="{{ route('journal.settings.tools.crossref.download', $journal->slug) }}" method="POST">
                 @csrf
 
                 <div class="bg-white rounded border border-gray-200 overflow-hidden mb-6">
@@ -287,7 +287,7 @@
                     <div class="flex gap-2">
                         <button type="submit" 
                             name="action" value="deposit"
-                            formaction="{{ route('journal.settings.tools.crossref.deposit', $journal->path) }}"
+                            formaction="{{ route('journal.settings.tools.crossref.deposit', $journal->slug) }}"
                             @if(!$hasDepositorInfo) disabled @endif
                             class="{{ !$hasDepositorInfo ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white' }} font-medium py-2 px-4 rounded shadow-sm border {{ !$hasDepositorInfo ? 'border-gray-300' : 'border-green-600' }} transition text-sm">
                             Deposit

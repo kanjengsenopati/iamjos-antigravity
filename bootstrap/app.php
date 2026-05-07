@@ -51,6 +51,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule) {
         // Lebih aman pisahkan argumen
+        $schedule->job(new \App\Jobs\ReviewerReminderJob)->dailyAt('08:00');
+        
         $schedule->command('fetch:phri-news', ['1w'])->dailyAt('01:00');
         $schedule->command('phri:sync-provinces')->dailyAt('02:00');
         $schedule->command('phri:sync-regencies')->dailyAt('02:15');
