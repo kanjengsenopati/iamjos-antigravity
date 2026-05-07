@@ -13,6 +13,7 @@ class DiscussionParticipant extends Pivot
 
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $table = 'discussion_participants';
 
 
     protected $fillable = [
