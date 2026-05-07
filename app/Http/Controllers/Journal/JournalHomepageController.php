@@ -57,6 +57,14 @@ class JournalHomepageController extends Controller
             ->orderBy('published_at', 'desc')
             ->first();
 
+        // Get latest articles (Fallback or for sidebar/sections)
+        $latestArticles = $journal->submissions()
+            ->where('status', 'published')
+            ->with(['authors', 'galleys', 'currentPublication'])
+            ->orderBy('published_at', 'desc')
+            ->take(10)
+            ->get();
+
         // Get published articles count
         $publishedCount = $journal->submissions()
             ->where('status', 'published')
@@ -69,6 +77,7 @@ class JournalHomepageController extends Controller
             'editorialTeam',
             'indexedInImages',
             'currentIssue',
+            'latestArticles',
             'publishedCount'
         ));
     }
