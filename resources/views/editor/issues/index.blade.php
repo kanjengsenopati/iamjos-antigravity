@@ -33,7 +33,7 @@
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Issues</p>
@@ -49,7 +49,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Published</p>
@@ -65,7 +65,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Upcoming</p>
@@ -81,7 +81,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Articles</p>
@@ -99,45 +99,48 @@
             </div>
 
             <!-- Tabs -->
-            <div x-data="{ activeTab: 'future' }" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div x-data="{ activeTab: 'future' }" class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
                 <!-- Tab Headers -->
-                <div class="border-b border-gray-200">
-                    <nav class="flex -mb-px">
+                <div class="bg-slate-50/50 border-b border-slate-200 px-2 pt-2">
+                    <nav class="flex gap-2">
                         <button @click="activeTab = 'future'"
                             :class="activeTab === 'future'
-                                ?
-                                'border-indigo-500 text-indigo-600 bg-indigo-50/50' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-all duration-200">
-                            <svg class="w-5 h-5 inline-block mr-2 -mt-0.5" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Future Issues
-                            <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full"
-                                :class="activeTab === 'future' ? 'bg-indigo-100 text-indigo-700' :
-                                    'bg-gray-100 text-gray-600'">
-                                {{ $upcomingCount }}
-                            </span>
+                                ? 'bg-white text-indigo-600 border-x border-t border-slate-200 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
+                                : 'text-slate-500 hover:text-slate-700 border-transparent'"
+                            class="flex-1 py-4 px-6 text-center border-b-2 font-bold text-sm transition-all duration-300 -mb-px">
+                            <div class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>Future Issues</span>
+                                <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                    :class="activeTab === 'future' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'">
+                                    {{ $upcomingCount }}
+                                </span>
+                            </div>
+                            <!-- Active Indicator Line -->
+                            <div x-show="activeTab === 'future'" class="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 rounded-t-full"></div>
                         </button>
+
                         <button @click="activeTab = 'back'"
                             :class="activeTab === 'back'
-                                ?
-                                'border-indigo-500 text-indigo-600 bg-indigo-50/50' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-all duration-200">
-                            <svg class="w-5 h-5 inline-block mr-2 -mt-0.5" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                            </svg>
-                            Back Issues
-                            <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full"
-                                :class="activeTab === 'back' ? 'bg-indigo-100 text-indigo-700' :
-                                    'bg-gray-100 text-gray-600'">
-                                {{ $publishedCount }}
-                            </span>
+                                ? 'bg-white text-indigo-600 border-x border-t border-slate-200 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
+                                : 'text-slate-500 hover:text-slate-700 border-transparent'"
+                            class="flex-1 py-4 px-6 text-center border-b-2 font-bold text-sm transition-all duration-300 -mb-px">
+                            <div class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
+                                <span>Back Issues</span>
+                                <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                    :class="activeTab === 'back' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'">
+                                    {{ $publishedCount }}
+                                </span>
+                            </div>
+                            <!-- Active Indicator Line -->
+                            <div x-show="activeTab === 'back'" class="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 rounded-t-full"></div>
                         </button>
                     </nav>
                 </div>
@@ -148,7 +151,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach ($futureIssues as $issue)
                                 <div
-                                    class="group bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
+                                    class="group bg-gradient-to-br from-white to-gray-50 rounded-[24px] border border-gray-200 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
                                     <!-- Cover Image -->
                                     <div
                                         class="aspect-[3/4] bg-gradient-to-br from-indigo-100 to-indigo-200 relative overflow-hidden">
@@ -247,7 +250,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach ($backIssues as $issue)
                                 <div
-                                    class="group bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
+                                    class="group bg-gradient-to-br from-white to-gray-50 rounded-[24px] border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
                                     <!-- Cover Image -->
                                     <div
                                         class="aspect-[3/4] bg-gradient-to-br from-emerald-50 to-emerald-100 relative overflow-hidden">
