@@ -105,9 +105,9 @@
                     <nav class="flex gap-2">
                         <button @click="activeTab = 'future'"
                             :class="activeTab === 'future'
-                                ? 'bg-white text-indigo-600 border-x border-t border-slate-200 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
+                                ? 'bg-white text-indigo-600 border-x border-t border-indigo-500 border-b-0 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
                                 : 'text-slate-500 hover:text-slate-700 border-transparent'"
-                            class="flex-1 py-4 px-6 text-center border-b-2 font-bold text-sm transition-all duration-300 -mb-px">
+                            class="flex-1 py-4 px-6 text-center border-b-4 font-bold text-sm transition-all duration-300 -mb-[4px] relative">
                             <div class="flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -119,15 +119,13 @@
                                     {{ $upcomingCount }}
                                 </span>
                             </div>
-                            <!-- Active Indicator Line -->
-                            <div x-show="activeTab === 'future'" class="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 rounded-t-full"></div>
                         </button>
 
                         <button @click="activeTab = 'back'"
                             :class="activeTab === 'back'
-                                ? 'bg-white text-indigo-600 border-x border-t border-slate-200 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
+                                ? 'bg-white text-indigo-600 border-x border-t border-indigo-500 border-b-0 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
                                 : 'text-slate-500 hover:text-slate-700 border-transparent'"
-                            class="flex-1 py-4 px-6 text-center border-b-2 font-bold text-sm transition-all duration-300 -mb-px">
+                            class="flex-1 py-4 px-6 text-center border-b-4 font-bold text-sm transition-all duration-300 -mb-[4px] relative">
                             <div class="flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -139,8 +137,6 @@
                                     {{ $publishedCount }}
                                 </span>
                             </div>
-                            <!-- Active Indicator Line -->
-                            <div x-show="activeTab === 'back'" class="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 rounded-t-full"></div>
                         </button>
                     </nav>
                 </div>
