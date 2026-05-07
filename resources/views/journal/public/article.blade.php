@@ -23,128 +23,92 @@
     {{-- CRITICAL for academic indexing --}}
     {{-- ============================================ --}}
     @push('meta_tags')
-        @php
-            $pub = $article->currentPublication ?? $article;
-            $pubTitle = $pub->title ?? $article->title;
-            $pubDate = $pub->date_published ?? ($issue?->published_at ?? $article->published_at);
-            $pubPages = $pub->pages ?? $article->pages;
-            $pubDoi = $pub->doi ?? $article->doi;
-            $pubKeywords = $pub->keywords ?? $article->keywords;
-            $pubAbstract = $pub->abstract ?? $article->abstract;
-            $pubAuthors = $pub->authors ?? $article->authors;
-
-            // Process Keywords for multi-tag output
-            $processedKeywords = [];
-            if ($pubKeywords) {
-                $rawK = is_string($pubKeywords) ? (str_starts_with(trim($pubKeywords), '[') ? json_decode($pubKeywords, true) : explode(',', $pubKeywords)) : $pubKeywords;
-                foreach ($rawK as $k) {
-                    $val = is_array($k) ? ($k['value'] ?? ($k['content'] ?? null)) : (is_object($k) ? ($k->content ?? ($k->value ?? null)) : $k);
-                    if ($val) $processedKeywords[] = trim((string)$val);
-                }
-            }
-        @endphp
-
-        {{-- 1. GOOGLE SCHOLAR / HIGHWIRE PRESS --}}
-        <meta name="gs_meta_revision" content="1.1">
-        <meta name="citation_title" content="{{ $pubTitle }}">
-        <meta name="citation_journal_title" content="{{ $journal->name }}">
-        @if ($journal->abbreviation) <meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}"> @endif
-        @if ($journal->publisher) <meta name="citation_publisher" content="{{ $journal->publisher }}"> @endif
-        <meta name="citation_language" content="{{ $article->locale ?? 'en' }}">
-        
-        @if ($pubDate)
-            <meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
-            <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
-            <meta name="citation_year" content="{{ $issue->year ?? $pubDate->format('Y') }}">
-        @endif
-
-        @if ($issue)
-            @if ($issue->volume) <meta name="citation_volume" content="{{ $issue->volume }}"> @endif
-            @if ($issue->number) <meta name="citation_issue" content="{{ $issue->number }}"> @endif
-        @endif
-
-        @if ($pubPages)
-            @php $pages = explode('-', $pubPages); @endphp
-            <meta name="citation_firstpage" content="{{ trim($pages[0] ?? $pubPages) }}">
-            @if(isset($pages[1])) <meta name="citation_lastpage" content="{{ trim($pages[1]) }}"> @endif
-        @endif
-
-        @if ($pubDoi) <meta name="citation_doi" content="{{ $pubDoi }}"> @endif
-        @if ($journal->issn_online) <meta name="citation_issn" content="{{ $journal->issn_online }}"> @elseif($journal->issn_print) <meta name="citation_issn" content="{{ $journal->issn_print }}"> @endif
-
-        @foreach ($pubAuthors as $author)
-            <meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
-            @if ($author->affiliation) <meta name="citation_author_institution" content="{{ $author->affiliation }}"> @endif
-            @if ($author->email) <meta name="citation_author_email" content="{{ $author->email }}"> @endif
-            @if ($author->orcid) <meta name="citation_author_orcid" content="{{ $author->orcid }}"> @endif
-        @endforeach
-
-        @foreach ($processedKeywords as $keyword)
-            <meta name="citation_keywords" content="{{ $keyword }}">
-        @endforeach
-
-        <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
-        <meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
-        @if ($pdfGalley)
-            @php
-                $safeAuthor = Str::slug($pubAuthors->first()?->last_name ?? 'author');
-                $safeTitle = Str::slug(Str::limit($pubTitle, 30, ''));
-                $seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y') : date('Y'));
-            @endphp
-            <meta name="citation_pdf_url" content="{{ route('journal.article.download.pdf', [$journal->slug, $article->seq_id, $seoFilename]) }}">
-        @endif
-        @if ($pubAbstract) <meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}"> @endif
-        
-        @if ($article->currentPublication)
-            @foreach ($article->currentPublication->parsed_references as $ref)
-                <meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
-            @endforeach
-        @endif
-
-        {{-- 2. DUBLIN CORE (OJS COMPLIANT) --}}
-        <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
-        <meta name="DC.Title" content="{{ $pubTitle }}">
-        @foreach ($pubAuthors as $author)
-            <meta name="DC.Creator.PersonalName" content="{{ $author->first_name }} {{ $author->last_name }}">
-        @endforeach
-        
-        {{-- Granular Dates --}}
-        @if ($article->created_at) <meta name="DC.Date.created" scheme="ISO8601" content="{{ $article->created_at->format('Y-m-d') }}"> @endif
-        @if ($article->submitted_at) <meta name="DC.Date.dateSubmitted" scheme="ISO8601" content="{{ $article->submitted_at->format('Y-m-d') }}"> @endif
-        @if ($pubDate) <meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}"> @endif
-        @if ($pub->updated_at) <meta name="DC.Date.modified" scheme="ISO8601" content="{{ $pub->updated_at->format('Y-m-d') }}"> @endif
-
-        @if ($pubAbstract) <meta name="DC.Description" xml:lang="en" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}"> @endif
-        <meta name="DC.Format" scheme="IMT" content="application/pdf">
-        @if ($pubDoi) <meta name="DC.Identifier.DOI" content="{{ $pubDoi }}"> @endif
-        <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
-        <meta name="DC.Language" scheme="ISO639-1" content="{{ $article->locale ?? 'en' }}">
-        
-        {{-- Rights / License --}}
-        @php
-            $copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
-            $copyrightYear = $pub->copyright_year ?? ($issue->year ?? date('Y'));
-            $licenseUrl = $pub->license_url ?? $journal->license_url;
-        @endphp
-        <meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ $copyrightHolder }}">
-        @if($licenseUrl) <meta name="DC.Rights" content="{{ $licenseUrl }}"> @endif
-
-        {{-- Source --}}
-        <meta name="DC.Source" content="{{ $journal->name }}">
-        @if ($journal->issn_online) <meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}"> @elseif($journal->issn_print) <meta name="DC.Source.ISSN" content="{{ $journal->issn_print }}"> @endif
-        @if ($issue)
-            @if ($issue->volume) <meta name="DC.Source.Volume" content="{{ $issue->volume }}"> @endif
-            @if ($issue->number) <meta name="DC.Source.Issue" content="{{ $issue->number }}"> @endif
-        @endif
-        <meta name="DC.Source.URI" content="{{ route('journal.public.home', $journal->slug) }}">
-        
-        @foreach ($processedKeywords as $keyword)
-            <meta name="DC.Subject" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ $keyword }}">
-        @endforeach
-        
-        <meta name="DC.Type" content="Text.Serial.Journal">
-        <meta name="DC.Type.articleType" content="Articles">
-    @endpush
+@php
+$pub = $article->currentPublication ?? $article;
+$pubTitle = $pub->title ?? $article->title;
+$pubDate = $pub->date_published ?? ($issue?->published_at ?? $article->published_at);
+$pubPages = $pub->pages ?? $article->pages;
+$pubDoi = $pub->doi ?? $article->doi;
+$pubKeywords = $pub->keywords ?? $article->keywords;
+$pubAbstract = $pub->abstract ?? $article->abstract;
+$pubAuthors = $pub->authors ?? $article->authors;
+$processedKeywords = [];
+if ($pubKeywords) {
+$rawK = is_string($pubKeywords) ? (str_starts_with(trim($pubKeywords), '[') ? json_decode($pubKeywords, true) : explode(',', $pubKeywords)) : $pubKeywords;
+foreach ($rawK as $k) {
+$val = is_array($k) ? ($k['value'] ?? ($k['content'] ?? null)) : (is_object($k) ? ($k->content ?? ($k->value ?? null)) : $k);
+if ($val) $processedKeywords[] = trim((string)$val);
+}
+}
+@endphp
+<meta name="gs_meta_revision" content="1.1">
+<meta name="citation_title" content="{{ $pubTitle }}">
+<meta name="citation_journal_title" content="{{ $journal->name }}">
+@if($journal->abbreviation)<meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}">@endif
+@if($journal->publisher)<meta name="citation_publisher" content="{{ $journal->publisher }}">@endif
+<meta name="citation_language" content="{{ $article->locale ?? 'en' }}">
+@if($pubDate)<meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
+<meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
+<meta name="citation_year" content="{{ $issue->year ?? $pubDate->format('Y') }}">@endif
+@if($issue)@if($issue->volume)<meta name="citation_volume" content="{{ $issue->volume }}">@endif
+@if($issue->number)<meta name="citation_issue" content="{{ $issue->number }}">@endif
+@endif
+@if($pubPages)@php $pages = explode('-', $pubPages); @endphp
+<meta name="citation_firstpage" content="{{ trim($pages[0] ?? $pubPages) }}">
+@if(isset($pages[1]))<meta name="citation_lastpage" content="{{ trim($pages[1]) }}">@endif
+@endif
+@if($pubDoi)<meta name="citation_doi" content="{{ $pubDoi }}">@endif
+@if($journal->issn_online)<meta name="citation_issn" content="{{ $journal->issn_online }}">@elseif($journal->issn_print)<meta name="citation_issn" content="{{ $journal->issn_print }}">@endif
+@foreach($pubAuthors as $author)<meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
+@if($author->affiliation)<meta name="citation_author_institution" content="{{ $author->affiliation }}">@endif
+@if($author->email)<meta name="citation_author_email" content="{{ $author->email }}">@endif
+@if($author->orcid)<meta name="citation_author_orcid" content="{{ $author->orcid }}">@endif
+@endforeach
+@foreach($processedKeywords as $keyword)<meta name="citation_keywords" content="{{ $keyword }}">
+@endforeach
+<meta name="citation_abstract_html_url" content="{{ url()->current() }}">
+<meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
+@if($pdfGalley)@php
+$safeAuthor = Str::slug($pubAuthors->first()?->last_name ?? 'author');
+$safeTitle = Str::slug(Str::limit($pubTitle, 30, ''));
+$seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y') : date('Y'));
+@endphp
+<meta name="citation_pdf_url" content="{{ route('journal.article.download.pdf', [$journal->slug, $article->seq_id, $seoFilename]) }}">@endif
+@if($pubAbstract)<meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">@endif
+@if($article->currentPublication)@foreach($article->currentPublication->parsed_references as $ref)<meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
+@endforeach
+@endif
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
+<meta name="DC.Title" content="{{ $pubTitle }}">
+@foreach($pubAuthors as $author)<meta name="DC.Creator.PersonalName" content="{{ $author->first_name }} {{ $author->last_name }}">
+@endforeach
+@if($article->created_at)<meta name="DC.Date.created" scheme="ISO8601" content="{{ $article->created_at->format('Y-m-d') }}">@endif
+@if($article->submitted_at)<meta name="DC.Date.dateSubmitted" scheme="ISO8601" content="{{ $article->submitted_at->format('Y-m-d') }}">@endif
+@if($pubDate)<meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">@endif
+@if($pub->updated_at)<meta name="DC.Date.modified" scheme="ISO8601" content="{{ $pub->updated_at->format('Y-m-d') }}">@endif
+@if($pubAbstract)<meta name="DC.Description" xml:lang="en" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">@endif
+<meta name="DC.Format" scheme="IMT" content="application/pdf">
+@if($pubDoi)<meta name="DC.Identifier.DOI" content="{{ $pubDoi }}">@endif
+<meta name="DC.Identifier.URI" content="{{ url()->current() }}">
+<meta name="DC.Language" scheme="ISO639-1" content="{{ $article->locale ?? 'en' }}">
+@php
+$copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
+$copyrightYear = $pub->copyright_year ?? ($issue->year ?? date('Y'));
+$licenseUrl = $pub->license_url ?? $journal->license_url;
+@endphp
+<meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ $copyrightHolder }}">
+@if($licenseUrl)<meta name="DC.Rights" content="{{ $licenseUrl }}">@endif
+<meta name="DC.Source" content="{{ $journal->name }}">
+@if($journal->issn_online)<meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">@elseif($journal->issn_print)<meta name="DC.Source.ISSN" content="{{ $journal->issn_print }}">@endif
+@if($issue)@if($issue->volume)<meta name="DC.Source.Volume" content="{{ $issue->volume }}">@endif
+@if($issue->number)<meta name="DC.Source.Issue" content="{{ $issue->number }}">@endif
+@endif
+<meta name="DC.Source.URI" content="{{ route('journal.public.home', $journal->slug) }}">
+@foreach($processedKeywords as $keyword)<meta name="DC.Subject" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ $keyword }}">
+@endforeach
+<meta name="DC.Type" content="Text.Serial.Journal">
+<meta name="DC.Type.articleType" content="Articles">
+@endpush
     {{-- Schema.org JSON-LD for ScholarlyArticle --}}
     @php
         $schemaData = [

@@ -19,31 +19,31 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- Basic SEO Meta Tags --}}
-    <title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
-    <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
+{{-- Basic SEO Meta Tags --}}
+<title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
+<meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
 
-    {{-- ============================================ --}}
-    {{-- ACADEMIC METADATA (GS / OJS COMPLIANCE)      --}}
-    {{-- ============================================ --}}
-    @stack('meta_tags')
+{{-- ============================================ --}}
+{{-- ACADEMIC METADATA (GS / OJS COMPLIANCE)      --}}
+{{-- ============================================ --}}
+@stack('meta_tags')
 
-    {{-- Dublin Core Metadata (Fallback) --}}
-    <meta name="DC.Title" content="{{ $title ?? $journal->name }}">
-    <meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
-    @if($journal->issn_online)
-        <meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
-    @endif
+{{-- Dublin Core Metadata (Fallback) --}}
+<meta name="DC.Title" content="{{ $title ?? $journal->name }}">
+<meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
+@if($journal->issn_online)
+<meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
+@endif
 
-    {{-- Secondary SEO Meta Tags --}}
-    <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
-    <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
-    @if($journal->block_search_indexing)
-        <meta name="robots" content="noindex, nofollow">
-    @else
-        <meta name="robots" content="index, follow">
-    @endif
-    <link rel="canonical" href="{{ url()->current() }}">
+{{-- Secondary SEO Meta Tags --}}
+<meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
+<meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
+@if($journal->block_search_indexing)
+<meta name="robots" content="noindex, nofollow">
+@else
+<meta name="robots" content="index, follow">
+@endif
+<link rel="canonical" href="{{ url()->current() }}">
 
     {{-- Default Open Graph Tags --}}
     <meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
