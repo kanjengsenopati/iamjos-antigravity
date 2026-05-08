@@ -40,7 +40,7 @@ class SitemapController extends Controller
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
         // 1. Portal Home
-        $xml .= $this->urlEntry(route('portal.home'), null, 'daily', '1.0');
+        $xml .= $this->urlEntry(route('portal.home'), null, 'daily', '0.99');
 
         // 2. Per-Journal Content
         foreach ($journals as $journal) {
