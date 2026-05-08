@@ -31,14 +31,14 @@
 
         {{-- Authors List --}}
         @if($authors->isNotEmpty())
-            <div class="flex items-start gap-2 mb-3">
-                <div class="mt-0.5 shrink-0 text-slate-400">
+            <div class="flex items-start gap-3 mb-4">
+                <div class="mt-1 shrink-0 text-slate-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
-                <div class="flex flex-wrap gap-x-2 gap-y-1">
+                <div class="flex flex-col gap-1.5">
                     @foreach($authors as $author)
-                        <x-text.body class="text-sm">
-                            <span class="font-bold text-slate-700">{{ $author->first_name }} {{ $author->last_name }}</span>@if($author->affiliation)<span class="text-slate-400 font-normal">, {{ $author->affiliation }}</span>@endif@if(!$loop->last)<span class="text-slate-300">;</span>@endif
+                        <x-text.body class="text-[14px] leading-tight">
+                            <span class="font-bold text-slate-700">{{ $author->first_name }} {{ $author->last_name }}</span>@if($author->affiliation)<span class="text-slate-400 font-normal">, {{ $author->affiliation }}</span>@endif
                         </x-text.body>
                     @endforeach
                 </div>
@@ -47,13 +47,15 @@
 
         {{-- DOI --}}
         @if($doi)
-            <div class="flex items-center gap-2 mb-4">
+            <div class="flex items-center gap-2 mb-5">
                 <div class="shrink-0 text-orange-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                 </div>
-                <x-text.caption class="text-blue-600 font-semibold tracking-normal lowercase italic">
-                    DOI: <a href="https://doi.org/{{ $doi }}" target="_blank" class="hover:underline">https://doi.org/{{ $doi }}</a>
-                </x-text.caption>
+                <div class="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg">
+                    <x-text.caption class="text-blue-600 font-semibold tracking-normal lowercase italic">
+                        doi: <a href="https://doi.org/{{ $doi }}" target="_blank" class="hover:underline">https://doi.org/{{ $doi }}</a>
+                    </x-text.caption>
+                </div>
             </div>
         @endif
 
@@ -71,18 +73,20 @@
             </div>
 
             {{-- Metrics --}}
-            <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+            <div class="flex items-center gap-4 bg-slate-50/80 backdrop-blur-sm px-5 py-2.5 rounded-2xl border border-slate-100/50 shadow-sm">
                 <div class="flex items-center gap-1.5" title="Abstract Views">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <x-text.caption class="font-bold text-slate-500">
-                        {{ $views }} <span class="text-[10px] uppercase tracking-wider font-medium text-slate-400 ml-0.5">Views</span>
+                    <x-text.caption class="font-bold text-slate-500 flex items-center gap-1">
+                        <span class="italic text-slate-700 text-sm">{{ $views }}</span>
+                        <span class="text-[9px] uppercase tracking-widest font-bold text-slate-400">Views</span>
                     </x-text.caption>
                 </div>
                 <div class="w-px h-3 bg-slate-200"></div>
                 <div class="flex items-center gap-1.5" title="File Downloads">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                    <x-text.caption class="font-bold text-slate-500">
-                        {{ $downloads }} <span class="text-[10px] uppercase tracking-wider font-medium text-slate-400 ml-0.5">Downloads</span>
+                    <x-text.caption class="font-bold text-slate-500 flex items-center gap-1">
+                        <span class="italic text-slate-700 text-sm">{{ $downloads }}</span>
+                        <span class="text-[9px] uppercase tracking-widest font-bold text-slate-400">Downloads</span>
                     </x-text.caption>
                 </div>
             </div>
