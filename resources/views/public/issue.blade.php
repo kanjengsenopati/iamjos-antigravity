@@ -1,6 +1,15 @@
 @php $title = $issue->display_title; @endphp
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
+    @push('meta_tags')
+        <meta name="citation_journal_title" content="{{ $journal->name }}">
+        @if ($journal->issn_online)
+            <meta name="citation_issn" content="{{ $journal->issn_online }}">
+        @endif
+        <meta name="citation_volume" content="{{ $issue->volume }}">
+        <meta name="citation_issue" content="{{ $issue->number }}">
+        <meta name="citation_publication_date" content="{{ $issue->published_at?->format('Y/m/d') }}">
+    @endpush
 
     <!-- Issue Header -->
     <section class="bg-white border-b border-gray-200">

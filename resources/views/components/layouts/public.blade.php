@@ -78,6 +78,10 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     @endif
 
     {{-- Custom Meta Tags (Distribution Settings) --}}
+    @if($journal->custom_headers)
+        {!! $journal->custom_headers !!}
+    @endif
+
     @if($journal->custom_meta_tags)
         {!! $journal->custom_meta_tags !!}
     @endif

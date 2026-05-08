@@ -1,6 +1,35 @@
 @php $title = $submission->title; @endphp
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
+    @push('meta_tags')
+        {{-- Google Scholar / Highwire Press Meta Tags --}}
+        <meta name="citation_title" content="{{ $submission->title }}">
+        @foreach ($submission->authors as $author)
+            <meta name="citation_author" content="{{ $author->name }}">
+            @if($author->affiliation)
+                <meta name="citation_author_institution" content="{{ $author->affiliation }}">
+            @endif
+        @endforeach
+        <meta name="citation_publication_date" content="{{ $submission->published_at?->format('Y/m/d') }}">
+        <meta name="citation_journal_title" content="{{ $journal->name }}">
+        @if ($journal->issn_online)
+            <meta name="citation_issn" content="{{ $journal->issn_online }}">
+        @endif
+        @if ($submission->issue)
+            <meta name="citation_volume" content="{{ $submission->issue->volume }}">
+            <meta name="citation_issue" content="{{ $submission->issue->number }}">
+        @endif
+        @if ($submission->doi)
+            <meta name="citation_doi" content="{{ $submission->doi }}">
+        @endif
+        <meta name="citation_abstract_html_url" content="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}">
+        @foreach ($submission->files as $file)
+            @if(Str::endsWith($file->file_name, '.pdf'))
+                <meta name="citation_pdf_url" content="{{ route('files.download', $file) }}">
+            @endif
+        @endforeach
+        <meta name="citation_language" content="{{ app()->getLocale() }}">
+    @endpush
 
     <article class="bg-white">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
