@@ -44,6 +44,10 @@ class SitemapController extends Controller
 
         // 2. Per-Journal Content
         foreach ($journals as $journal) {
+            if (empty($journal->slug)) {
+                continue;
+            }
+
             // Journal Home
             $xml .= $this->urlEntry(
                 route('journal.public.home', ['journal' => $journal->slug]),
@@ -75,7 +79,6 @@ class SitemapController extends Controller
                             '0.5'
                         );
                     } catch (\Exception $e) {
-                        // Skip routes that fail to generate
                         continue;
                     }
                 }
@@ -83,6 +86,7 @@ class SitemapController extends Controller
 
             // Individual Announcements
             foreach ($journal->announcements as $announcement) {
+                if (empty($announcement->id)) continue;
                 $xml .= $this->urlEntry(
                     route('journal.announcement.show', ['journal' => $journal->slug, 'id' => $announcement->id]),
                     $announcement->updated_at?->toAtomString(),
@@ -93,6 +97,7 @@ class SitemapController extends Controller
 
             // Published Issues
             foreach ($journal->issues as $issue) {
+                if (empty($issue->seq_id)) continue;
                 $xml .= $this->urlEntry(
                     route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id]),
                     $issue->published_at?->toAtomString() ?? $issue->updated_at?->toAtomString(),
@@ -103,6 +108,7 @@ class SitemapController extends Controller
 
             // Published Articles
             foreach ($journal->submissions as $submission) {
+                if (empty($submission->seq_id)) continue;
                 $xml .= $this->urlEntry(
                     route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]),
                     $submission->published_at?->toAtomString() ?? $submission->updated_at?->toAtomString(),
