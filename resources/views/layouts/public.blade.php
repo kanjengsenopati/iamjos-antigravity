@@ -62,6 +62,11 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="twitter:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
 
     {{-- Custom Meta Tags (Distribution Settings) --}}
+    <!-- IamJOS_SEO_VERIFY_2026 -->
+    @if($journal->custom_headers)
+        {!! $journal->custom_headers !!}
+    @endif
+
     @if($journal->custom_meta_tags)
         {!! $journal->custom_meta_tags !!}
     @endif
