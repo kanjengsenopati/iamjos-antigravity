@@ -15,77 +15,58 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    {{-- Favicon --}}
-    @if($journal->favicon_path ?? false)
-    <link rel="icon" href="{{ Storage::url($journal->favicon_path) }}">
-    @else
-    <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
-    <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
-    @endif
-
-    {{-- Basic SEO Meta Tags --}}
-    <title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
-    
-    {{-- ============================================ --}}
-    {{-- ACADEMIC METADATA (GS / OJS COMPLIANCE)      --}}
-    {{-- ============================================ --}}
-    @stack('meta_tags')
-
-    <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
-    <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
-    <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
-    @if($journal->block_search_indexing)
-        <meta name="robots" content="noindex, nofollow">
-    @else
-        <meta name="robots" content="index, follow">
-    @endif
-    <link rel="canonical" href="{{ url()->current() }}">
-
-    {{-- Default Open Graph Tags (can be overridden by child views) --}}
-    <meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="{{ $title ?? $journal->name }}">
-    <meta property="og:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
-    <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
-    @if($journal->logo_path ?? false)
-    <meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
-    @else
-    <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
-    <meta property="og:image:width" content="512">
-    <meta property="og:image:height" content="512">
-    @endif
-
-    {{-- Twitter Card Tags --}}
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $title ?? $journal->name }}">
-    <meta name="twitter:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
-    @if($journal->logo_path ?? false)
-    <meta name="twitter:image" content="{{ Storage::url($journal->logo_path) }}">
-    @else
-    <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
-    @endif
-
-
-    {{-- Dublin Core Metadata (Alternative for Scholar) --}}
-    <meta name="DC.Title" content="{{ $title ?? $journal->name }}">
-    <meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
-    @if($journal->issn_online)
-    <meta name="DC.Identifier" content="ISSN {{ $journal->issn_online }}">
-    @endif
-
-    {{-- Custom Meta Tags (Distribution Settings) --}}
-    @if($journal->custom_headers)
-        {!! $journal->custom_headers !!}
-    @endif
-
-    @if($journal->custom_meta_tags)
-        {!! $journal->custom_meta_tags !!}
-    @endif
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@if($journal->favicon_path ?? false)
+<link rel="icon" href="{{ Storage::url($journal->favicon_path) }}">
+@else
+<link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
+<link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
+@endif
+<title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
+@stack('meta_tags')
+<meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
+<meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
+<meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
+@if($journal->block_search_indexing)
+<meta name="robots" content="noindex, nofollow">
+@else
+<meta name="robots" content="index, follow">
+@endif
+<link rel="canonical" href="{{ url()->current() }}">
+<meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ $title ?? $journal->name }}">
+<meta property="og:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
+<meta property="og:url" content="{{ url()->current() }}">
+<meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
+@if($journal->logo_path ?? false)
+<meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
+@else
+<meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+@endif
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $title ?? $journal->name }}">
+<meta name="twitter:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
+@if($journal->logo_path ?? false)
+<meta name="twitter:image" content="{{ Storage::url($journal->logo_path) }}">
+@else
+<meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
+@endif
+<meta name="DC.Title" content="{{ $title ?? $journal->name }}">
+<meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
+@if($journal->issn_online)
+<meta name="DC.Identifier" content="ISSN {{ $journal->issn_online }}">
+@endif
+@if($journal->custom_headers)
+{!! $journal->custom_headers !!}
+@endif
+@if($journal->custom_meta_tags)
+{!! $journal->custom_meta_tags !!}
+@endif
 
 
     {{-- Fonts --}}
