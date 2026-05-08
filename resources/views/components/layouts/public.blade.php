@@ -276,46 +276,56 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     @else
     {{-- CASE 2: Standard Branding Header (No Background Image) --}}
     <header class="bg-white border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex items-center space-x-4">
-                {{-- Logo --}}
-                @if($journal->logo_path)
-                <img src="{{ Storage::url($journal->logo_path) }}"
-                    alt="{{ $journal->name }}"
-                    class="h-16 w-auto">
-                @else
-                <div class="w-16 h-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold"
-                    style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
-                    {{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}
+        <div class="max-w-7xl mx-auto px-5 py-8"> {{-- px-5 per PakRT rules --}}
+            <div class="flex flex-col md:flex-row items-center md:items-center gap-4 md:gap-6 text-center md:text-left">
+                {{-- Row 1: Logo --}}
+                <div class="flex-shrink-0">
+                    @if($journal->logo_path)
+                    <img src="{{ Storage::url($journal->logo_path) }}"
+                        alt="{{ $journal->name }}"
+                        class="h-20 md:h-24 w-auto object-contain">
+                    @else
+                    <div class="w-20 h-20 md:w-24 md:h-24 rounded-[24px] flex items-center justify-center text-white shadow-lg"
+                        style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">
+                        <x-text.h1 class="text-white">{{ strtoupper(substr($journal->abbreviation ?? $journal->name ?? 'J', 0, 2)) }}</x-text.h1>
+                    </div>
+                    @endif
                 </div>
-                @endif
 
-                {{-- Journal Title & Description --}}
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-900">
+                {{-- Row 2 & 3 Container --}}
+                <div class="flex flex-col gap-1">
+                    {{-- Row 2: Journal Title --}}
+                    <x-text.h1>
                         {{ $journal->name ?? 'Academic Journal' }}
-                    </h1>
-                    {{-- Dynamic ISSN Information Block --}}
+                    </x-text.h1>
+
+                    {{-- Row 3: ISSN Information --}}
                     @if($journal->issn_online || $journal->issn_print)
-                    <div class="flex items-center gap-2 mt-1 text-sm text-slate-600">
+                    <div class="flex flex-wrap justify-center md:justify-start items-center gap-x-3 gap-y-1">
                         @if($journal->issn_online)
-                            @if($journal->url_issn_online)
-                                <a href="{{ $journal->url_issn_online }}" target="_blank" class="hover:text-indigo-600 hover:underline transition-colors duration-200">E-ISSN: {{ $journal->issn_online }}</a>
-                            @else
-                                <span>E-ISSN: {{ $journal->issn_online }}</span>
-                            @endif
+                            <x-text.caption class="not-italic">
+                                <span class="font-bold text-slate-700">E-ISSN:</span> 
+                                @if($journal->url_issn_online)
+                                    <a href="{{ $journal->url_issn_online }}" target="_blank" class="hover:text-blue-600 transition-colors">{{ $journal->issn_online }}</a>
+                                @else
+                                    {{ $journal->issn_online }}
+                                @endif
+                            </x-text.caption>
                         @endif
 
                         @if($journal->issn_online && $journal->issn_print)
-                            <span class="mx-1 text-slate-400">|</span>
+                            <span class="hidden md:block text-slate-300">|</span>
                         @endif
 
                         @if($journal->issn_print)
-                            @if($journal->url_issn_print)
-                                <a href="{{ $journal->url_issn_print }}" target="_blank" class="hover:text-indigo-600 hover:underline transition-colors duration-200">P-ISSN: {{ $journal->issn_print }}</a>
-                            @else
-                                <span>P-ISSN: {{ $journal->issn_print }}</span>
-                            @endif
+                            <x-text.caption class="not-italic">
+                                <span class="font-bold text-slate-700">P-ISSN:</span>
+                                @if($journal->url_issn_print)
+                                    <a href="{{ $journal->url_issn_print }}" target="_blank" class="hover:text-blue-600 transition-colors">{{ $journal->issn_print }}</a>
+                                @else
+                                    {{ $journal->issn_print }}
+                                @endif
+                            </x-text.caption>
                         @endif
                     </div>
                     @endif
