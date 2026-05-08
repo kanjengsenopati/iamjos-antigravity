@@ -18,20 +18,15 @@ class SitemapController extends Controller
     {
         $journals = \App\Models\Journal::where('enabled', true)
             ->where('visible', true)
-            ->get();
-
-        $issues = \App\Models\Issue::where('is_published', true)
-            ->with('journal')
-            ->get();
-
-        $submissions = \App\Models\Submission::where('status', 'published')
-            ->with(['journal', 'authors'])
+            ->with([
+                'issues' => fn($q) => $q->where('is_published', true),
+                'submissions' => fn($q) => $q->where('status', 'published'),
+                'announcements' => fn($q) => $q->where('is_active', true)
+            ])
             ->get();
 
         return response()->view('public.sitemap', [
             'journals' => $journals,
-            'issues' => $issues,
-            'submissions' => $submissions,
         ])->header('Content-Type', 'text/xml');
     }
 }
