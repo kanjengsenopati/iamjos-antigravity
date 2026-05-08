@@ -29,6 +29,12 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 
     {{-- Basic SEO Meta Tags --}}
     <title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
+    
+    {{-- ============================================ --}}
+    {{-- ACADEMIC METADATA (GS / OJS COMPLIANCE)      --}}
+    {{-- ============================================ --}}
+    @stack('meta_tags')
+
     <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
     <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
     <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
@@ -64,11 +70,6 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
     @endif
 
-    {{-- ============================================ --}}
-    {{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS --}}
-    {{-- Child views can push additional meta tags here --}}
-    {{-- ============================================ --}}
-    @stack('meta_tags')
 
     {{-- Dublin Core Metadata (Alternative for Scholar) --}}
     <meta name="DC.Title" content="{{ $title ?? $journal->name }}">

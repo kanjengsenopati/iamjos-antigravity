@@ -44,39 +44,75 @@ if ($val) $processedKeywords[] = trim((string)$val);
 <meta name="gs_meta_revision" content="1.1">
 <meta name="citation_title" content="{{ $pubTitle }}">
 <meta name="citation_journal_title" content="{{ $journal->name }}">
-@if($journal->abbreviation)<meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}">@endif
-@if($journal->publisher)<meta name="citation_publisher" content="{{ $journal->publisher }}">@endif
+@if ($journal->abbreviation)
+    <meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}">
+@endif
+@if ($journal->publisher)
+    <meta name="citation_publisher" content="{{ $journal->publisher }}">
+@endif
 <meta name="citation_language" content="{{ $article->locale ?? 'en' }}">
-@if($pubDate)<meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
-<meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
-<meta name="citation_year" content="{{ $issue->year ?? $pubDate->format('Y') }}">@endif
-@if($issue)@if($issue->volume)<meta name="citation_volume" content="{{ $issue->volume }}">@endif
-@if($issue->number)<meta name="citation_issue" content="{{ $issue->number }}">@endif
+@if ($pubDate)
+    <meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
+    <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
+    <meta name="citation_year" content="{{ $issue->year ?? $pubDate->format('Y') }}">
 @endif
-@if($pubPages)@php $pages = explode('-', $pubPages); @endphp
-<meta name="citation_firstpage" content="{{ trim($pages[0] ?? $pubPages) }}">
-@if(isset($pages[1]))<meta name="citation_lastpage" content="{{ trim($pages[1]) }}">@endif
+@if ($issue)
+    @if ($issue->volume)
+        <meta name="citation_volume" content="{{ $issue->volume }}">
+    @endif
+    @if ($issue->number)
+        <meta name="citation_issue" content="{{ $issue->number }}">
+    @endif
 @endif
-@if($pubDoi)<meta name="citation_doi" content="{{ $pubDoi }}">@endif
-@if($journal->issn_online)<meta name="citation_issn" content="{{ $journal->issn_online }}">@elseif($journal->issn_print)<meta name="citation_issn" content="{{ $journal->issn_print }}">@endif
-@foreach($pubAuthors as $author)<meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
-@if($author->affiliation)<meta name="citation_author_institution" content="{{ $author->affiliation }}">@endif
-@if($author->email)<meta name="citation_author_email" content="{{ $author->email }}">@endif
-@if($author->orcid)<meta name="citation_author_orcid" content="{{ $author->orcid }}">@endif
+@if ($pubPages)
+    @php $pages = explode('-', $pubPages); @endphp
+    <meta name="citation_firstpage" content="{{ trim($pages[0] ?? $pubPages) }}">
+    @if (isset($pages[1]))
+        <meta name="citation_lastpage" content="{{ trim($pages[1]) }}">
+    @endif
+@endif
+@if ($pubDoi)
+    <meta name="citation_doi" content="{{ $pubDoi }}">
+@endif
+@if ($journal->issn_online)
+    <meta name="citation_issn" content="{{ $journal->issn_online }}">
+@elseif($journal->issn_print)
+    <meta name="citation_issn" content="{{ $journal->issn_print }}">
+@endif
+@foreach ($pubAuthors as $author)
+    <meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
+    @if ($author->affiliation)
+        <meta name="citation_author_institution" content="{{ $author->affiliation }}">
+    @endif
+    @if ($author->email)
+        <meta name="citation_author_email" content="{{ $author->email }}">
+    @endif
+    @if ($author->orcid)
+        <meta name="citation_author_orcid" content="{{ $author->orcid }}">
+    @endif
 @endforeach
-@foreach($processedKeywords as $keyword)<meta name="citation_keywords" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ $keyword }}">
+@foreach ($processedKeywords as $keyword)
+    <meta name="citation_keywords" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ $keyword }}">
 @endforeach
 <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
 <meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
-@if($pdfGalley)@php
-$safeAuthor = Str::slug($pubAuthors->first()?->last_name ?? 'author');
-$safeTitle = Str::slug(Str::limit($pubTitle, 30, ''));
-$seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y') : date('Y'));
-@endphp
-<meta name="citation_pdf_url" content="{{ route('journal.article.download.pdf', [$journal->slug, $article->seq_id, $seoFilename]) }}">@endif
-@if($pubAbstract)<meta name="citation_abstract" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">@endif
-@if($article->currentPublication)@foreach($article->currentPublication->parsed_references as $ref)<meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
-@endforeach
+@if ($pdfGalley)
+    @php
+        $safeAuthor = Str::slug($pubAuthors->first()?->last_name ?? 'author');
+        $safeTitle = Str::slug(Str::limit($pubTitle, 30, ''));
+        $seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y') : date('Y'));
+    @endphp
+    <meta name="citation_pdf_url"
+        content="{{ route('journal.article.download.pdf', [$journal->slug, $article->seq_id, $seoFilename]) }}">
+@endif
+@if ($pubAbstract)
+    <meta name="citation_abstract" xml:lang="{{ $article->locale ?? 'en' }}"
+        content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
+@endif
+@if ($article->currentPublication)
+    @foreach ($article->currentPublication->parsed_references as $ref)
+        <meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
+    @endforeach
 @endif
 <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
 <meta name="DC.Title" content="{{ $pubTitle }}">
