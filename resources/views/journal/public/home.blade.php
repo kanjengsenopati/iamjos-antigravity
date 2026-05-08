@@ -8,7 +8,6 @@
 @endphp
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$journal->name . ' - Home'">
-    <!-- IamJOS_BODY_DEBUG_2026 -->
     {{-- Announcement Banner (if any urgent announcements) --}}
     @if ($announcements->where('is_urgent', true)->isNotEmpty())
         @php $urgentAnnouncement = $announcements->where('is_urgent', true)->first(); @endphp

@@ -78,7 +78,6 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     @endif
 
     {{-- Custom Meta Tags (Distribution Settings) --}}
-    <!-- IamJOS_SEO_VERIFY_2026 -->
     @if($journal->custom_headers)
         {!! $journal->custom_headers !!}
     @endif
