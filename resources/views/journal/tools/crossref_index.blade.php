@@ -76,13 +76,13 @@
                                 <div>
                                     <label for="depositor_name" class="block mb-2 text-sm font-bold text-gray-700">Depositor name *</label>
                                     <input type="text" id="depositor_name" name="depositor_name" required
-                                        value="{{ old('depositor_name', $journal->getSetting('crossref_depositor_name')) }}"
+                                        value="{{ old('depositor_name', $journal->getSetting('crossref_depositor_name') ?? 'Siswanto') }}"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                 </div>
                                 <div>
                                     <label for="depositor_email" class="block mb-2 text-sm font-bold text-gray-700">Depositor email *</label>
                                     <input type="email" id="depositor_email" name="depositor_email" required
-                                        value="{{ old('depositor_email', $journal->getSetting('crossref_depositor_email')) }}"
+                                        value="{{ old('depositor_email', $journal->getSetting('crossref_depositor_email') ?? 'syswebcosmg@gmail.com') }}"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                 </div>
                             </div>
