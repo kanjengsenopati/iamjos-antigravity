@@ -603,6 +603,117 @@ $licenseUrl = $pub->license_url ?? $journal->license_url;
                 @endif
             </div>
 
+            {{-- HOW TO CITE WIDGET (Premium PakRT Native) --}}
+            {{-- HOW TO CITE WIDGET (Premium PakRT Native) --}}
+            <div class="bg-white p-6 rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+                <h4 class="font-bold text-slate-800 text-sm uppercase mb-4 tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-quote-left text-primary-500"></i>
+                    How to Cite
+                </h4>
+
+                @php
+                    // Pre-generate Citations for better performance
+                    $pub = $article->currentPublication ?? $article;
+                    $authors = $pub->authors;
+                    $year = $issue->year ?? ($pub->date_published ? $pub->date_published->format('Y') : date('Y'));
+                    $month = $issue->published_at ? $issue->published_at->format('M') : ($pub->date_published ? $pub->date_published->format('M') : '');
+                    
+                    // Author formatting for APA (Last, F. M.)
+                    $apaAuthors = $authors->map(function($a) {
+                        $last = $a->last_name ?? '';
+                        $firstInitial = $a->first_name ? substr($a->first_name, 0, 1) . '.' : '';
+                        return trim($last . ', ' . $firstInitial);
+                    })->implode(', ');
+
+                    // Author formatting for IEEE (F. M. Last)
+                    $ieeeAuthors = $authors->map(function($a) {
+                        $last = $a->last_name ?? '';
+                        $firstInitial = $a->first_name ? substr($a->first_name, 0, 1) . '.' : '';
+                        return trim($firstInitial . ' ' . $last);
+                    })->implode(', ');
+
+                    $vol = $issue->volume ?? '';
+                    $num = $issue->number ?? '';
+                    $pages = $pub->pages ?? '';
+                    $doi = $pub->doi ?? '';
+
+                    // APA 7th Edition Style
+                    $apaCitation = "{$apaAuthors} ({$year}). {$pub->title}. <i>{$journal->name}</i>";
+                    if ($vol || $num) {
+                        $apaCitation .= ", <i>" . ($vol ?: '') . "</i>" . ($num ? "({$num})" : "");
+                    }
+                    if ($pages) $apaCitation .= ", {$pages}";
+                    if ($doi) $apaCitation .= ". https://doi.org/{$doi}";
+
+                    // IEEE Style
+                    $ieeeCitation = "{$ieeeAuthors}, \"{$pub->title},\" <i>{$journal->name}</i>";
+                    if ($vol) $ieeeCitation .= ", vol. {$vol}";
+                    if ($num) $ieeeCitation .= ", no. {$num}";
+                    if ($pages) $ieeeCitation .= ", pp. {$pages}";
+                    if ($month || $year) $ieeeCitation .= ", " . trim($month . ' ' . $year);
+                    if ($doi) $ieeeCitation .= ", doi: {$doi}.";
+                @endphp
+
+                <div class="mb-4">
+                    <select id="citationFormat" onchange="switchCitation()"
+                        class="w-full bg-slate-50 border-none text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-primary-500 block p-2.5 font-medium cursor-pointer">
+                        <option value="apa">APA 7th Edition</option>
+                        <option value="ieee">IEEE Style</option>
+                    </select>
+                </div>
+
+                <div class="relative group">
+                    <div id="citationContent" class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200 min-h-[100px] italic">
+                        {!! $apaCitation !!}
+                    </div>
+                    
+                    <button onclick="copyCitation()" 
+                        class="absolute top-2 right-2 p-2 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm text-slate-400 hover:text-emerald-600 transition-colors"
+                        title="Copy to Clipboard">
+                        <i id="copyIcon" class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+
+                <div class="mt-5 grid grid-cols-2 gap-3">
+                    <a href="{{ route('citation.ris', [$journal->slug, $article->slug ?? $article->id]) }}" 
+                        class="flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition uppercase tracking-wider">
+                        <i class="fa-solid fa-file-export text-slate-400"></i>
+                        RIS (EndNote)
+                    </a>
+                    <a href="{{ route('citation.bibtex', [$journal->slug, $article->slug ?? $article->id]) }}" 
+                        class="flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition uppercase tracking-wider">
+                        <i class="fa-solid fa-code text-slate-400"></i>
+                        BibTeX
+                    </a>
+                </div>
+            </div>
+
+            <script>
+                const citations = {
+                    apa: `{!! addslashes($apaCitation) !!}`,
+                    ieee: `{!! addslashes($ieeeCitation) !!}`
+                };
+
+                function switchCitation() {
+                    const format = document.getElementById('citationFormat').value;
+                    document.getElementById('citationContent').innerHTML = citations[format];
+                }
+
+                function copyCitation() {
+                    const content = document.getElementById('citationContent').innerText;
+                    navigator.clipboard.writeText(content).then(() => {
+                        const icon = document.getElementById('copyIcon');
+                        icon.classList.replace('fa-copy', 'fa-check');
+                        icon.classList.add('text-emerald-600');
+                        
+                        setTimeout(() => {
+                            icon.classList.replace('fa-check', 'fa-copy');
+                            icon.classList.remove('text-emerald-600');
+                        }, 2000);
+                    });
+                }
+            </script>
+
             {{-- ISSUE INFORMATION --}}
             @if ($issue)
                 <div class="bg-slate-50 p-5 rounded border border-slate-200">
