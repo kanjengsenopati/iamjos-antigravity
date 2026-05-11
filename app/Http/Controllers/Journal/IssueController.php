@@ -103,6 +103,7 @@ class IssueController extends Controller
             'description' => 'nullable|string',
             'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,NULL,id,journal_id,' . $journal->id],
             'cover' => 'nullable|image|max:2048',
+            'doi_suffix' => 'nullable|string|max:255',
         ]);
 
         $issueData = [
@@ -117,8 +118,14 @@ class IssueController extends Controller
             'show_title' => $request->boolean('show_title', false),
             'description' => $validated['description'] ?? null,
             'url_path' => $validated['url_path'] ?? null,
+            'doi_suffix' => $validated['doi_suffix'] ?? null,
             'is_published' => false,
         ];
+
+        // If manual DOI suffix provided, construct full DOI
+        if (!empty($issueData['doi_suffix']) && $journal->doi_prefix) {
+            $issueData['doi'] = $journal->doi_prefix . '/' . $issueData['doi_suffix'];
+        }
 
         // Handle cover image upload
         if ($request->hasFile('cover')) {
@@ -155,6 +162,7 @@ class IssueController extends Controller
             'description' => 'nullable|string',
             'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,' . $issue->id . ',id,journal_id,' . $journal->id],
             'cover' => 'nullable|image|max:2048',
+            'doi_suffix' => 'nullable|string|max:255',
         ]);
 
         $issueData = [
@@ -168,7 +176,15 @@ class IssueController extends Controller
             'show_title' => $request->boolean('show_title', false),
             'description' => $validated['description'] ?? null,
             'url_path' => $validated['url_path'] ?? null,
+            'doi_suffix' => $validated['doi_suffix'] ?? null,
         ];
+
+        // If manual DOI suffix provided, construct full DOI
+        if (!empty($issueData['doi_suffix']) && $journal->doi_prefix) {
+            $issueData['doi'] = $journal->doi_prefix . '/' . $issueData['doi_suffix'];
+        } elseif (empty($issueData['doi_suffix'])) {
+            $issueData['doi'] = null; // Clear DOI if suffix is removed
+        }
 
         // Handle cover image upload
         if ($request->hasFile('cover')) {
@@ -189,10 +205,25 @@ class IssueController extends Controller
         $journal = current_journal();
         if ($issue->journal_id !== $journal->id) abort(404);
 
-        $issue->update([
+        $issueData = [
             'is_published' => true,
             'published_at' => now(),
-        ]);
+        ];
+
+        // Auto-assign DOI if enabled and missing
+        if (empty($issue->doi)) {
+            $generatedDoi = \App\Services\DoiService::generateForIssue($issue, $journal);
+            if ($generatedDoi) {
+                $issueData['doi'] = $generatedDoi;
+                // Extract suffix from full DOI
+                $prefix = $journal->doi_prefix;
+                if ($prefix && str_starts_with($generatedDoi, $prefix . '/')) {
+                    $issueData['doi_suffix'] = substr($generatedDoi, strlen($prefix) + 1);
+                }
+            }
+        }
+
+        $issue->update($issueData);
 
         return back()->with('success', "Issue {$issue->identifier} has been published.");
     }

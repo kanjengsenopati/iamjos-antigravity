@@ -25,12 +25,19 @@ class CrossrefExportController extends Controller
             ->where('status', Submission::STATUS_PUBLISHED) // Only Published Articles
             ->with(['authors', 'issue', 'currentPublication']);
 
-        // 3. Apply Status Filter (Simulated Logic)
+        // 3. Apply Status Filter
         if ($status == 'not_deposited') {
-            // Logic: Articles that don't have a 'registered' flag yet
-            // $query->whereNull('doi_status'); 
+            $query->whereHas('currentPublication', function ($q) {
+                $q->where('doi_status', 'not_deposited')->orWhereNull('doi_status');
+            });
         } elseif ($status == 'active') {
-            // $query->where('doi_status', 'active');
+            $query->whereHas('currentPublication', function ($q) {
+                $q->where('doi_status', 'active');
+            });
+        } elseif ($status == 'failed') {
+            $query->whereHas('currentPublication', function ($q) {
+                $q->where('doi_status', 'failed');
+            });
         }
 
         // 4. Pagination
@@ -50,6 +57,7 @@ class CrossrefExportController extends Controller
             'username' => 'nullable|string|max:255',
             'password' => 'nullable|string|max:255',
             'automatic_deposit' => 'sometimes|boolean',
+            'auto_poll_status' => 'sometimes|boolean',
             'test_mode' => 'sometimes|boolean',
         ]);
 
@@ -58,14 +66,41 @@ class CrossrefExportController extends Controller
         $journal->setSetting('crossref_username', $validated['username']);
         
         if (!empty($validated['password'])) {
-             $journal->setSetting('crossref_password', $validated['password']);
+             $journal->setSetting('crossref_password', encrypt($validated['password']));
         }
 
         $journal->setSetting('crossref_automatic_deposit', $request->boolean('automatic_deposit'));
+        $journal->setSetting('crossref_auto_poll_status', $request->boolean('auto_poll_status'));
         $journal->setSetting('crossref_test_mode', $request->boolean('test_mode'));
         $journal->save();
 
         return redirect()->back()->with('success', 'Crossref settings saved successfully.');
+    }
+
+    // 4. Mark Active Logic (Manual Override)
+    public function markActive(Request $request)
+    {
+        $journal = current_journal();
+        $ids = $request->input('submission_ids', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'Please select at least one article to mark as active.');
+        }
+
+        $submissions = \App\Models\Submission::where('journal_id', $journal->id)
+            ->whereIn('id', $ids)
+            ->with(['currentPublication'])
+            ->get();
+
+        foreach ($submissions as $submission) {
+            $pub = $submission->currentPublication;
+            if ($pub) {
+                $pub->doi_status = 'active';
+                $pub->save();
+            }
+        }
+
+        return back()->with('success', 'DOI status marked as active successfully for selected articles.');
     }
 
     // 2. XML Export Logic
@@ -85,7 +120,7 @@ class CrossrefExportController extends Controller
             ->get();
 
         // Unique batch ID in OJS format: YYYYMMDDHHMMSS000
-        $batchId = now()->format('YmdHis') . '000';
+        $batchId = (string) \Illuminate\Support\Str::uuid();
         $filename = 'crossref-' . $journal->path . '-' . now()->format('YmdHis') . '.xml';
 
         // 2. Render View (Without XML Header)
@@ -134,9 +169,17 @@ class CrossrefExportController extends Controller
             ->get();
             
         $invalidCount = 0;
+        $batchId = (string) \Illuminate\Support\Str::uuid();
+
         foreach ($submissions as $sub) {
             if (!$sub->currentPublication || empty($sub->currentPublication->doi)) {
                 $invalidCount++;
+            } else {
+                // Update publication status
+                $sub->currentPublication->update([
+                    'doi_status' => 'submitted',
+                    'crossref_batch_id' => $batchId
+                ]);
             }
         }
         

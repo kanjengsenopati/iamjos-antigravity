@@ -56,11 +56,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 @else
 <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
 @endif
-<meta name="DC.Title" content="{{ $title ?? $journal->name }}">
-<meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
-@if($journal->issn_online)
-<meta name="DC.Identifier" content="ISSN {{ $journal->issn_online }}">
-@endif
+{{-- DC metadata moved to page-level @push('meta_tags') to avoid duplicates --}}
 @if($journal->custom_headers)
 {!! $journal->custom_headers !!}
 @endif

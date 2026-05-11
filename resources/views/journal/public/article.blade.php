@@ -92,7 +92,7 @@ if ($val) $processedKeywords[] = trim((string)$val);
 @endif
 @endforeach
 @foreach ($processedKeywords as $keyword)
-<meta name="citation_keywords" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ $keyword }}">
+<meta name="citation_keywords" content="{{ $keyword }}">
 @endforeach
 <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
 <meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
@@ -105,7 +105,7 @@ $seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y')
 <meta name="citation_pdf_url" content="{{ route('journal.article.download.pdf', [$journal->slug, $article->seq_id, $seoFilename]) }}">
 @endif
 @if ($pubAbstract)
-<meta name="citation_abstract" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
+<meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
 @endif
 @if ($article->currentPublication)
 @foreach ($article->currentPublication->parsed_references as $ref)
@@ -227,13 +227,13 @@ $licenseUrl = $pub->license_url ?? $journal->license_url;
             ];
         }
 
-        if ($article->doi) {
+        if ($pubDoi) {
             $schemaData['identifier'] = [
                 '@type' => 'PropertyValue',
                 'propertyID' => 'DOI',
-                'value' => $article->doi,
+                'value' => $pubDoi,
             ];
-            $schemaData['sameAs'] = 'https://doi.org/' . $article->doi;
+            $schemaData['sameAs'] = 'https://doi.org/' . $pubDoi;
         }
     @endphp
     <script type="application/ld+json">

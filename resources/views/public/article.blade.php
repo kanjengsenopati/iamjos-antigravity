@@ -2,33 +2,95 @@
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
     @push('meta_tags')
-        {{-- Google Scholar / Highwire Press Meta Tags --}}
-        <meta name="citation_title" content="{{ $submission->title }}">
-        @foreach ($submission->authors as $author)
-            <meta name="citation_author" content="{{ $author->name }}">
-            @if($author->affiliation)
-                <meta name="citation_author_institution" content="{{ $author->affiliation }}">
-            @endif
-        @endforeach
-        <meta name="citation_publication_date" content="{{ $submission->published_at?->format('Y/m/d') }}">
+        {{-- ============================================ --}}
+        {{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS --}}
+        {{-- GS-01 FIX: Aligned with journal/public/article.blade.php --}}
+        {{-- ============================================ --}}
+        @php
+            $pub = $submission->currentPublication ?? $submission;
+            $pubDoi = $pub->doi ?? $submission->doi;
+            $pubDate = $pub->date_published ?? ($submission->issue?->published_at ?? $submission->published_at);
+            $pubPages = $pub->pages ?? $submission->pages;
+            $pubAbstract = $pub->abstract ?? $submission->abstract;
+            $pubAuthors = $pub->authors ?? $submission->authors;
+        @endphp
+        <meta name="gs_meta_revision" content="1.1">
+        <meta name="citation_title" content="{{ $pub->title ?? $submission->title }}">
         <meta name="citation_journal_title" content="{{ $journal->name }}">
-        @if ($journal->issn_online)
-            <meta name="citation_issn" content="{{ $journal->issn_online }}">
+        @if ($journal->abbreviation)
+            <meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}">
+        @endif
+        @if ($journal->publisher)
+            <meta name="citation_publisher" content="{{ $journal->publisher }}">
+        @endif
+        <meta name="citation_language" content="{{ $submission->locale ?? app()->getLocale() }}">
+        @if ($pubDate)
+            <meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
+            <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
+            <meta name="citation_year" content="{{ $submission->issue?->year ?? $pubDate->format('Y') }}">
         @endif
         @if ($submission->issue)
-            <meta name="citation_volume" content="{{ $submission->issue->volume }}">
-            <meta name="citation_issue" content="{{ $submission->issue->number }}">
+            @if ($submission->issue->volume)
+                <meta name="citation_volume" content="{{ $submission->issue->volume }}">
+            @endif
+            @if ($submission->issue->number)
+                <meta name="citation_issue" content="{{ $submission->issue->number }}">
+            @endif
         @endif
-        @if ($submission->doi)
-            <meta name="citation_doi" content="{{ $submission->doi }}">
+        @if ($pubPages)
+            @php $pages = explode('-', $pubPages); @endphp
+            <meta name="citation_firstpage" content="{{ trim($pages[0] ?? $pubPages) }}">
+            @if (isset($pages[1]))
+                <meta name="citation_lastpage" content="{{ trim($pages[1]) }}">
+            @endif
         @endif
+        @if ($pubDoi)
+            <meta name="citation_doi" content="{{ $pubDoi }}">
+        @endif
+        @if ($journal->issn_online)
+            <meta name="citation_issn" content="{{ $journal->issn_online }}">
+        @elseif($journal->issn_print)
+            <meta name="citation_issn" content="{{ $journal->issn_print }}">
+        @endif
+        @foreach ($pubAuthors as $author)
+            <meta name="citation_author" content="{{ $author->first_name ?? '' }} {{ $author->last_name ?? $author->name ?? '' }}">
+            @if ($author->affiliation)
+                <meta name="citation_author_institution" content="{{ $author->affiliation }}">
+            @endif
+            @if ($author->email ?? false)
+                <meta name="citation_author_email" content="{{ $author->email }}">
+            @endif
+            @if ($author->orcid ?? false)
+                <meta name="citation_author_orcid" content="{{ $author->orcid }}">
+            @endif
+        @endforeach
         <meta name="citation_abstract_html_url" content="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}">
         @foreach ($submission->files as $file)
             @if(Str::endsWith($file->file_name, '.pdf'))
                 <meta name="citation_pdf_url" content="{{ route('files.download', $file) }}">
             @endif
         @endforeach
-        <meta name="citation_language" content="{{ app()->getLocale() }}">
+        @if ($pubAbstract)
+            <meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
+        @endif
+        {{-- Dublin Core Metadata --}}
+        <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
+        <meta name="DC.Title" content="{{ $pub->title ?? $submission->title }}">
+        @foreach ($pubAuthors as $author)
+            <meta name="DC.Creator.PersonalName" content="{{ $author->first_name ?? '' }} {{ $author->last_name ?? $author->name ?? '' }}">
+        @endforeach
+        @if ($pubDate)
+            <meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">
+        @endif
+        @if ($pubDoi)
+            <meta name="DC.Identifier.DOI" content="{{ $pubDoi }}">
+        @endif
+        <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
+        <meta name="DC.Source" content="{{ $journal->name }}">
+        @if ($journal->issn_online)
+            <meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
+        @endif
+        <meta name="DC.Type" content="Text.Serial.Journal">
     @endpush
 
     <article class="bg-white">

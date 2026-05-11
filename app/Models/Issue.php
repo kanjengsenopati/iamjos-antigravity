@@ -35,6 +35,8 @@ class Issue extends Model
         'cover_path',
         'metadata',
         'seq_id',
+        'doi',
+        'doi_suffix',
     ];
 
     /**

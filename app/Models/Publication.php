@@ -48,6 +48,8 @@ class Publication extends Model
         'url_path',
         'doi',
         'doi_suffix',
+        'doi_status',
+        'crossref_batch_id',
         'copyright_holder',
         'copyright_year',
         'license_url',

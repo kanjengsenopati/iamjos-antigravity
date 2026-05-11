@@ -674,4 +674,24 @@ class Submission extends Model
     {
         return substr($this->id, 0, 8);
     }
+    /**
+     * DOI-02 FIX: Get DOI from the current publication.
+     * 
+     * This provides a single source of truth for DOI resolution.
+     * Templates and services can reliably use $submission->doi instead
+     * of guessing whether to access publication or submission metadata.
+     */
+    public function getDoiAttribute(): ?string
+    {
+        return $this->currentPublication?->doi ?? null;
+    }
+
+    /**
+     * Get full DOI URL (https://doi.org/...) for display and linking.
+     */
+    public function getDoiUrlAttribute(): ?string
+    {
+        $doi = $this->doi;
+        return $doi ? "https://doi.org/{$doi}" : null;
+    }
 }

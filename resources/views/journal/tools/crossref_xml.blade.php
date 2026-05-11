@@ -25,9 +25,9 @@
     return $escape(trim($plain));
   };
 @endphp
-<doi_batch xmlns="http://www.crossref.org/schema/4.3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  version="4.3.6"
-  xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 https://www.crossref.org/schemas/crossref4.3.6.xsd">
+<doi_batch xmlns="http://www.crossref.org/schema/5.3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  version="5.3.1"
+  xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 https://www.crossref.org/schemas/crossref5.3.1.xsd">
 
   <head>
     <doi_batch_id>{{ $batchId }}</doi_batch_id>
@@ -69,6 +69,12 @@
           @if ($firstItem->issue->number)
             <issue>{{ $firstItem->issue->number }}</issue>
           @endif
+          @if (!empty($firstItem->issue->doi))
+            <doi_data>
+              <doi>{{ $firstItem->issue->doi }}</doi>
+              <resource>{{ trim(route('journal.issue', ['journal' => $journal->slug, 'issue' => $firstItem->issue->id])) }}</resource>
+            </doi_data>
+          @endif
         </journal_issue>
       @endif
 
@@ -100,10 +106,10 @@
                   <surname>{!! $escape($author->last_name ?: $author->first_name) !!}</surname>
                   @if ($author->orcid)
                     @php $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($author->orcid)); @endphp
-                    <ORCID authenticated="true">https://orcid.org/{{ $cleanOrcid }}</ORCID>
+                    <ORCID authenticated="{{ !empty($author->orcid_verified) ? 'true' : 'false' }}">https://orcid.org/{{ $cleanOrcid }}</ORCID>
                   @elseif ($author->user && $author->user->orcid_id)
                     @php $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($author->user->orcid_id)); @endphp
-                    <ORCID authenticated="true">https://orcid.org/{{ $cleanOrcid }}</ORCID>
+                    <ORCID authenticated="{{ !empty($author->user->orcid_verified) ? 'true' : 'false' }}">https://orcid.org/{{ $cleanOrcid }}</ORCID>
                   @endif
                 </person_name>
               @endforeach
@@ -115,13 +121,16 @@
               </jats:abstract>
             @endif
 
+            @php
+              $pubDateResolved = $pub->date_published ?? ($article->issue?->published_at ?? $article->published_at);
+            @endphp
+            @if ($pubDateResolved)
             <publication_date media_type="online">
-              @if ($pub->date_published)
-                <month>{{ $pub->date_published->format('m') }}</month>
-                <day>{{ $pub->date_published->format('d') }}</day>
-                <year>{{ $pub->date_published->format('Y') }}</year>
-              @endif
+                <month>{{ $pubDateResolved->format('m') }}</month>
+                <day>{{ $pubDateResolved->format('d') }}</day>
+                <year>{{ $pubDateResolved->format('Y') }}</year>
             </publication_date>
+            @endif
 
             {{-- Pages: split into first_page / last_page --}}
             @if ($pub->pages)
@@ -134,27 +143,33 @@
               </pages>
             @endif
 
-            {{-- Access Indicators --}}
+            {{-- Access Indicators (Dynamic License) --}}
+            @php
+              $licenseUrl = $pub->license_url ?? ($journal->license_url ?? 'https://creativecommons.org/licenses/by/4.0');
+            @endphp
             <ai:program name="AccessIndicators">
-              <ai:license_ref>https://creativecommons.org/licenses/by/4.0</ai:license_ref>
+              <ai:license_ref>{{ $licenseUrl }}</ai:license_ref>
             </ai:program>
 
-            <doi_data>
-              @php
-                $doi = $pub->doi
-                  ? trim($pub->doi)
-                  : ($journal->doi_prefix
-                      ? trim($journal->doi_prefix) . '/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id
-                      : '10.xxxx/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id);
-                $articleUrl = trim(route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->seq_id ?? $article->seq_id]));
+            @php
+              // CR-03 FIX: Only generate DOI if publication has one OR journal has a valid prefix.
+              // Never use placeholder '10.xxxx/' — it will be rejected by Crossref.
+              $doi = null;
+              if (!empty($pub->doi)) {
+                  $doi = trim($pub->doi);
+              } elseif (!empty($journal->doi_prefix) && str_starts_with($journal->doi_prefix, '10.')) {
+                  $doi = trim($journal->doi_prefix) . '/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id;
+              }
+              $articleUrl = trim(route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->seq_id ?? $article->seq_id]));
 
-                // Resolve PDF galley URL for iParadigms crawler.
-                // Prefer a galley with label 'PDF'; fall back to the first available galley.
-                $galleys = $article->galleys ?? collect();
-                $pdfGalley = $galleys->first(fn($g) => strtolower($g->label) === 'pdf')
-                           ?? $galleys->first();
-                $pdfUrl = $pdfGalley?->seo_download_url ?? $articleUrl;
-              @endphp
+              // Resolve PDF galley URL for iParadigms crawler.
+              $galleys = $article->galleys ?? collect();
+              $pdfGalley = $galleys->first(fn($g) => strtolower($g->label) === 'pdf')
+                         ?? $galleys->first();
+              $pdfUrl = $pdfGalley?->seo_download_url ?? $articleUrl;
+            @endphp
+            @if ($doi)
+            <doi_data>
               <doi>{{ $doi }}</doi>
               <resource>{{ $articleUrl }}</resource>
               <collection property="crawler-based">
@@ -163,6 +178,7 @@
                 </item>
               </collection>
             </doi_data>
+            @endif
 
             @if ($pub->parsed_references && count($pub->parsed_references) > 0)
               <citation_list>

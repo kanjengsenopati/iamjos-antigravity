@@ -154,15 +154,17 @@ class DoiService
             $year = $issue->year ?? date('Y');
         }
 
-        // Use submission ID for uniqueness
-        $submissionId = $publication->submission_id ?? random_int(1000, 9999);
+        // DOI-01 FIX: Use seq_id for deterministic, human-readable DOI suffixes
+        // instead of UUID substrings which are non-deterministic and collision-prone.
+        $submission = $publication->submission;
+        $articleId = $submission?->seq_id ?? ($publication->submission_id ? substr($publication->submission_id, -8) : random_int(1000, 9999));
 
         return sprintf(
             '%s.v%di%d.%s',
             $journal->path,
             $volume,
             $issueNumber,
-            substr($submissionId, -8) // Last 8 chars of UUID for readability
+            $articleId
         );
     }
 
@@ -194,8 +196,9 @@ class DoiService
             $year = $issue->year ?? date('Y');
         }
 
-        // Use last 8 chars of submission ID for readability
-        $articleId = substr($publication->submission_id ?? '00000000', -8);
+        // DOI-01 FIX: Use seq_id for deterministic article ID in patterns
+        $submission = $publication->submission;
+        $articleId = $submission?->seq_id ?? ($publication->submission_id ? substr($publication->submission_id, -8) : '00000000');
 
         $replacements = [
             '%j' => $journal->path,
@@ -250,6 +253,18 @@ class DoiService
                 $publication = $submission->publications->first();
                 
                 if (!$publication) {
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                // DOI-04 FIX: Skip publications with manually-assigned DOIs
+                // to prevent overwriting intentional manual assignments.
+                $suffixType = $journal->doi_suffix_type ?? 'default';
+                if ($suffixType === 'manual' && !empty($publication->doi)) {
+                    $stats['skipped']++;
+                    continue;
+                }
+                if (!empty($publication->doi_suffix) && $suffixType === 'manual') {
                     $stats['skipped']++;
                     continue;
                 }

@@ -266,7 +266,7 @@
                                 Custom URL
                             </h3>
 
-                            <div>
+                            <div class="mb-6">
                                 <label for="url_path" class="block text-sm font-medium text-gray-700 mb-1">
                                     URL Path <span class="text-gray-400">(Optional)</span>
                                 </label>
@@ -275,18 +275,49 @@
                                     placeholder="e.g., vol1-no2-2026"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('url_path') border-red-500 @enderror">
                                 <p class="mt-2 text-sm text-gray-500">
-                                    <svg class="w-4 h-4 inline-block mr-1 text-gray-400" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    An optional path to use in the URL instead of the issue ID. Only letters, numbers,
-                                    dashes, and underscores allowed.
+                                    An optional path to use in the URL instead of the issue ID.
                                 </p>
                                 @error('url_path')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
+                        </div>
+
+                        <!-- DOI Identifiers (OJS Compliance) -->
+                        <div class="pt-6 border-t border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                </svg>
+                                Public Identifiers (DOI)
+                            </h3>
+
+                            @if($journal->doi_enabled && in_array('issues', $journal->doi_objects ?? []))
+                                <div>
+                                    <label for="doi_suffix" class="block text-sm font-medium text-gray-700 mb-1">
+                                        DOI Suffix <span class="text-gray-400">(Optional)</span>
+                                    </label>
+                                    <div class="flex items-center">
+                                        <span class="inline-flex items-center px-4 py-3 rounded-l-xl border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                            {{ $journal->doi_prefix }}/
+                                        </span>
+                                        <input type="text" id="doi_suffix" name="doi_suffix" 
+                                            value="{{ old('doi_suffix') }}"
+                                            placeholder="e.g. v{{ $suggestedVolume }}i{{ $suggestedNumber }}"
+                                            class="flex-1 px-4 py-3 rounded-r-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('doi_suffix') border-red-500 @enderror">
+                                    </div>
+                                    <p class="mt-2 text-sm text-gray-500">
+                                        Leave empty to automatically generate a DOI based on the journal's pattern when published.
+                                    </p>
+                                    @error('doi_suffix')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @else
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-500">
+                                    DOI registration for Issues is currently disabled in <a href="{{ route('journal.settings.tools.crossref.index', $journal->slug) }}" class="text-indigo-600 hover:underline">Crossref settings</a>.
+                                </div>
+                            @endif
                         </div>
                     </div>
 

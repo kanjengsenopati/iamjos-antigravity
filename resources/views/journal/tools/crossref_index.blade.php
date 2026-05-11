@@ -104,10 +104,10 @@
                                 </div>
                                 <div>
                                     <label for="password" class="block mb-2 text-sm font-bold text-gray-700">Password</label>
-                                    <input type="text" id="password" name="password"
-                                        value="{{ old('password', $journal->getSetting('crossref_password')) }}"
+                                    <input type="password" id="password" name="password"
+                                        placeholder="{{ $journal->getSetting('crossref_password') ? '••••••••' : '' }}"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                    <p class="mt-1 text-xs text-orange-600">Please note that the password will be saved as plain text, i.e. not encrypted.</p>
+                                    <p class="mt-1 text-xs text-green-600">Password will be encrypted before storage.</p>
                                 </div>
                             </div>
                         </div>
@@ -124,6 +124,17 @@
                                 </div>
                                 <label for="automatic_deposit" class="ml-2 text-sm font-medium text-gray-900">
                                     IAMJOS will deposit assigned DOIs automatically to CrossRef.
+                                </label>
+                            </div>
+
+                            <div class="flex items-start mb-4">
+                                <div class="flex items-center h-5">
+                                    <input id="auto_poll_status" name="auto_poll_status" type="checkbox" value="1"
+                                        {{ $journal->getSetting('crossref_auto_poll_status') ? 'checked' : '' }}
+                                        class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 text-blue-600">
+                                </div>
+                                <label for="auto_poll_status" class="ml-2 text-sm font-medium text-gray-900">
+                                    Automatically check and update the status of deposited DOIs (Auto-polling).
                                 </label>
                             </div>
 
@@ -253,10 +264,20 @@
                                         ({{ $sub->issue->year ?? '-' }})
                                     </td>
                                     <td class="p-4">
-                                        @if (isset($sub->doi_status) && $sub->doi_status == 'active')
+                                        @if (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'active')
                                             <span
                                                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                                 Active
+                                            </span>
+                                        @elseif (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'submitted')
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                Submitted
+                                            </span>
+                                        @elseif (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'failed')
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                Failed
                                             </span>
                                         @else
                                             <span
@@ -304,7 +325,9 @@
                             Download XML
                         </button>
 
-                        <button type="button"
+                        <button type="submit"
+                            name="action" value="markActive"
+                            formaction="{{ route('journal.settings.tools.crossref.mark_active', $journal->slug) }}"
                             class="bg-white text-gray-700 font-medium py-2 px-4 rounded border border-gray-300 hover:bg-gray-50 transition text-sm">
                             Mark Active
                         </button>

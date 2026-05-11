@@ -16,14 +16,15 @@ class CrossrefDepositService
      */
     public function generateXml($submissions, Journal $journal)
     {
-        $batchId = '_' . time();
+        $batchId = (string) Str::uuid();
         $content = view('journal.tools.crossref_xml', compact('submissions', 'journal', 'batchId'))->render();
 
-        // Aggressive Cleaning (Remove BOM & Whitespace)
+        // Cleaning (Remove BOM & leading/trailing whitespace)
         $content = preg_replace('/^\xEF\xBB\xBF/', '', $content); // Remove BOM if present
         $content = trim($content);
         
-        // Minify: Remove any whitespaces existing strictly between XML brackets.
+        // CR-08 FIX: Only collapse whitespace between structural tags (not inside text content).
+        // This preserves whitespace within <jats:p>, <unstructured_citation>, <title>, etc.
         $content = preg_replace('/>\s+</', '><', $content);
 
         return '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $content;
@@ -68,7 +69,16 @@ class CrossrefDepositService
             : 'https://doi.crossref.org/servlet/deposit';
         
         $username = $journal->getSetting('crossref_username');
-        $password = $journal->getSetting('crossref_password') ?? '';
+        $password = '';
+        $rawPassword = $journal->getSetting('crossref_password');
+        if ($rawPassword) {
+            try {
+                $password = decrypt($rawPassword);
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                // Fallback for legacy plaintext passwords not yet encrypted
+                $password = $rawPassword;
+            }
+        }
 
         try {
             $response = Http::attach('fname', $xmlString, $filename)
@@ -99,8 +109,20 @@ class CrossrefDepositService
                 'journal_id' => $journal->id,
                 'submission_id' => $submission->id,
                 'status' => $status,
+                'crossref_batch_id' => $batchId,
                 'message' => substr($message, 0, 500),
             ]);
+
+            // Update publication doi_status
+            if ($status === 'Success') {
+                $pub = $submission->currentPublication;
+                if ($pub) {
+                    $pub->update([
+                        'doi_status' => 'submitted',
+                        'crossref_batch_id' => $batchId
+                    ]);
+                }
+            }
         }
 
         return [
