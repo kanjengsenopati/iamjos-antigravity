@@ -565,6 +565,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::post('/download', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'export'])->name('download');
                         Route::post('/save', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'saveSettings'])->name('save');
                         Route::post('/deposit', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'deposit'])->name('deposit');
+                        Route::post('/mark-active', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'markActive'])->name('mark_active');
                     });
                 });
 
