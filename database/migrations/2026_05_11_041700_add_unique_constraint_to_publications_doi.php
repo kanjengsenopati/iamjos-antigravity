@@ -15,23 +15,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('publications', function (Blueprint $table) {
-            try {
-                // Drop existing non-unique index if it exists
-                // We wrap this in try-catch because of potential permission issues on some VPS
+        // 1. Try to drop the index in a separate block
+        try {
+            Schema::table('publications', function (Blueprint $table) {
                 $table->dropIndex(['doi']);
-            } catch (\Exception $e) {
-                // Ignore if index doesn't exist or permission denied
-            }
-            
-            try {
-                // Add unique index — allows NULL (unpublished articles without DOI)
+            });
+        } catch (\Exception $e) {
+            // Silence permission/existence errors
+        }
+
+        // 2. Try to add unique constraint in a separate block
+        try {
+            Schema::table('publications', function (Blueprint $table) {
                 $table->string('doi')->nullable()->unique()->change();
-            } catch (\Exception $e) {
-                // If unique constraint fails due to permission, we log it but don't stop
-                \Illuminate\Support\Facades\Log::warning('Failed to add unique constraint to publications.doi: ' . $e->getMessage());
-            }
-        });
+            });
+        } catch (\Exception $e) {
+            // Silence if this also fails, but log it
+            \Illuminate\Support\Facades\Log::warning('Failed to add unique constraint to publications.doi: ' . $e->getMessage());
+        }
     }
 
     /**
