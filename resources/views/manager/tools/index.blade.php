@@ -41,32 +41,36 @@
             </div>
         @endif
 
-        {{-- TABS NAVIGATION --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-            <div class="border-b border-slate-200">
-                <nav class="flex">
+        {{-- MAIN CONTENT --}}
+        <div class="bg-white rounded-[24px] shadow-sm border border-[#DAD8F4] overflow-hidden">
+            {{-- TABS NAVIGATION (Seamless Door Style) --}}
+            <div class="relative">
+                <div class="absolute inset-x-0 bottom-0 border-b border-[#DAD8F4]"></div>
+                <nav class="relative flex overflow-x-auto no-scrollbar">
                     <button @click="activeTab = 'import'"
                         :class="activeTab === 'import' ?
-                            'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
-                            'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
+                            'border-transparent text-slate-400 hover:text-slate-600'"
+                        class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                         </svg>
                         Import / Export
+                        <div x-show="activeTab === 'import'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                     </button>
                     <button @click="activeTab = 'permissions'"
                         :class="activeTab === 'permissions' ?
-                            'border-red-600 text-red-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
-                            'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
+                            'border-transparent text-slate-400 hover:text-slate-600'"
+                        class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
                             </path>
                         </svg>
                         Permissions
+                        <div x-show="activeTab === 'permissions'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                     </button>
                 </nav>
             </div>
