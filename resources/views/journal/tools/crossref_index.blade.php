@@ -32,7 +32,7 @@
             <div class="border-b border-slate-200">
                 <nav class="flex">
                     <a href="?tab=settings"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all {{ $tab === 'settings' ? 'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 {{ $tab === 'settings' ? 'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50' }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
@@ -43,7 +43,7 @@
                         Settings
                     </a>
                     <a href="?tab=articles"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all {{ $tab === 'articles' ? 'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 {{ $tab === 'articles' ? 'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50' }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
