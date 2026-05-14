@@ -57,9 +57,9 @@
                 <nav class="flex">
                     <button @click="tab = 'import'"
                         :class="tab === 'import' ?
-                            'border-indigo-500 text-indigo-600 bg-indigo-50/50' :
+                            'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r' :
                             'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center justify-center gap-2 transition-all">
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
@@ -68,9 +68,9 @@
                     </button>
                     <button @click="tab = 'articles'"
                         :class="tab === 'articles' ?
-                            'border-indigo-500 text-indigo-600 bg-indigo-50/50' :
+                            'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r' :
                             'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center justify-center gap-2 transition-all">
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -80,9 +80,9 @@
                     </button>
                     <button @click="tab = 'issues'"
                         :class="tab === 'issues' ?
-                            'border-indigo-500 text-indigo-600 bg-indigo-50/50' :
+                            'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r' :
                             'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center justify-center gap-2 transition-all">
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
