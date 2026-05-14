@@ -3,45 +3,57 @@
 @section('title', 'Crossref XML Export Plugin - ' . $journal->name)
 
 @section('content')
-    <div class="bg-white rounded-lg shadow-sm min-h-screen">
+    <div class="space-y-6">
 
         {{-- Header Area --}}
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div
+            class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200/60 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Crossref XML Export Plugin</h1>
-                <p class="text-slate-500 text-sm mt-1">Export article metadata for DOI registration.</p>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('journal.settings.tools.index', ['journal' => $journal->slug]) }}"
+                        class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text">
+                        Crossref XML Export Plugin
+                    </h1>
+                </div>
+                <p class="text-sm text-slate-500 mt-1 ml-8">Export article metadata for DOI registration.</p>
             </div>
-            <a href="{{ route('journal.settings.tools.index', $journal->slug) }}"
-                class="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2001/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Tools
-            </a>
         </div>
 
-        <div class="p-6">
+        {{-- MAIN CONTENT --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
 
-            {{-- OJS 3.3 STYLE TABS --}}
-            <div class="border-b border-gray-200 mb-6">
-                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
-                    <li class="mr-2">
-                        <a href="?tab=settings"
-                            class="inline-block p-4 rounded-t-lg border-b-2 {{ $tab == 'settings' ? 'text-blue-600 border-blue-600 active' : 'text-gray-500 border-transparent hover:text-gray-600 hover:border-gray-300' }}">
-                            Settings
-                        </a>
-                    </li>
-                    <li class="mr-2">
-                        <a href="?tab=articles"
-                            class="inline-block p-4 rounded-t-lg border-b-2 {{ $tab == 'articles' ? 'text-blue-600 border-blue-600' : 'text-gray-500 border-transparent hover:text-gray-600 hover:border-gray-300' }}">
-                            Articles
-                        </a>
-                    </li>
-                </ul>
-            </div>
+            {{-- TABS NAVIGATION --}}
+            <div class="border-b border-slate-200">
+                <nav class="flex">
+                    <a href="?tab=settings"
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all {{ $tab === 'settings' ? 'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Settings
+                    </a>
+                    <a href="?tab=articles"
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all {{ $tab === 'articles' ? 'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        Articles
+                    </a>
+                </div>
 
-            @if ($tab == 'settings')
+            <div class="p-6">
                 <div class="max-w-4xl">
                     <div class="mb-6 flex items-center justify-between">
                         <a href="{{ route('journal.settings.doi.edit', $journal->slug) }}" class="text-blue-600 hover:underline text-sm font-medium">DOI Plugin Settings</a>
@@ -339,6 +351,7 @@
                 </div>
             </form>
             @endif
+            </div>
         </div>
     </div>
 
