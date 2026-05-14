@@ -352,7 +352,6 @@
                 </div>
             </form>
             @endif
-            @endif
             </div>
         </div>
     </div>
