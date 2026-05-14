@@ -39,43 +39,43 @@
 
         {{-- Tabs Navigation (Seamless Door Style) --}}
         <div class="relative mb-8">
-            <div class="absolute inset-x-0 bottom-0 border-b border-slate-200"></div>
+            <div class="absolute inset-x-0 bottom-0 border-b border-[#DAD8F4]"></div>
             <nav class="relative flex overflow-x-auto no-scrollbar">
                 <button @click="activeTab = 'appearance'"
                     :class="activeTab === 'appearance' ?
                         'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                    class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                        'border-transparent text-slate-400 hover:text-slate-600'"
+                    class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
                     <i class="fa-solid fa-palette text-lg opacity-70"></i>
                     Appearance
-                    <div x-show="activeTab === 'appearance'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                    <div x-show="activeTab === 'appearance'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                 </button>
                 <button @click="activeTab = 'information'"
                     :class="activeTab === 'information' ?
                         'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                    class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                        'border-transparent text-slate-400 hover:text-slate-600'"
+                    class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
                     <i class="fa-solid fa-info-circle text-lg opacity-70"></i>
                     Information
-                    <div x-show="activeTab === 'information'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                    <div x-show="activeTab === 'information'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                 </button>
                 <button @click="activeTab = 'sections'"
                     :class="activeTab === 'sections' ?
                         'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                    class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                        'border-transparent text-slate-400 hover:text-slate-600'"
+                    class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
                     <i class="fa-solid fa-th-large text-lg opacity-70"></i>
                     Sections
-                    <div x-show="activeTab === 'sections'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                    <div x-show="activeTab === 'sections'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                 </button>
                 <button @click="activeTab = 'security'"
                     :class="activeTab === 'security' ?
                         'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                    class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                        'border-transparent text-slate-400 hover:text-slate-600'"
+                    class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
                     <i class="fa-solid fa-shield-halved text-lg opacity-70"></i>
                     Security
-                    <div x-show="activeTab === 'security'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                    <div x-show="activeTab === 'security'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                 </button>
             </nav>
         </div>
@@ -93,34 +93,37 @@
 
                 {{-- Sub Tabs Navigation (Seamless Door Style) --}}
                 <div class="relative mb-6">
-                    <div class="absolute inset-x-0 bottom-0 border-b border-slate-200"></div>
+                    <div class="absolute inset-x-0 bottom-0 border-b border-[#DAD8F4]"></div>
                     <nav class="relative flex space-x-2">
                         <button type="button" @click="appearanceTab = 'setup'"
                             :class="appearanceTab === 'setup' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-xl border-t border-l border-r' :
-                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 whitespace-nowrap py-3 px-6 font-bold text-sm transition-all duration-200 -mb-[1px]">
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 whitespace-nowrap py-3 px-6 font-bold text-sm transition-all duration-200 -mb-[1px]">
                             Setup
-                            <div x-show="appearanceTab === 'setup'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="appearanceTab === 'setup'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                         </button>
                         <button type="button" @click="appearanceTab = 'advanced'"
                             :class="appearanceTab === 'advanced' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-xl border-t border-l border-r' :
-                                'border-b-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 whitespace-nowrap py-3 px-6 font-bold text-sm transition-all duration-200 -mb-[1px]">
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 whitespace-nowrap py-3 px-6 font-bold text-sm transition-all duration-200 -mb-[1px]">
                             Advanced
-                            <div x-show="appearanceTab === 'advanced'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="appearanceTab === 'advanced'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                         </button>
                         <button type="button" @click="appearanceTab = 'menu_nav'"
                             :class="appearanceTab === 'menu_nav' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-xl border-t border-l border-r' :
-                                'border-b-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 whitespace-nowrap py-3 px-6 font-bold text-sm transition-all duration-200 -mb-[1px]">
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 whitespace-nowrap py-3 px-6 font-bold text-sm transition-all duration-200 -mb-[1px]">
                             Menu Nav
-                            <div x-show="appearanceTab === 'menu_nav'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="appearanceTab === 'menu_nav'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
                         </button>
                     </nav>
                 </div>
+
+                {{-- CONTENT CARD --}}
+                <div class="bg-white rounded-[24px] shadow-sm border border-[#DAD8F4] p-8">
 
                 {{-- Sub-tab: SETUP (Old Setup Content) --}}
                 <div x-show="appearanceTab === 'setup'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -626,10 +629,11 @@
             {{-- ============================================ --}}
             {{-- Tab: INFORMATION --}}
             {{-- ============================================ --}}
-            <div x-show="activeTab === 'information'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                {{-- Information for Readers --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+            <div x-show="activeTab === 'information'" x-cloak class="space-y-6">
+                <div class="bg-white rounded-[24px] shadow-sm border border-[#DAD8F4] p-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {{-- Information for Readers --}}
+                        <div class="bg-gray-50/50 rounded-2xl border border-[#DAD8F4]/50 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">For Readers</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Information for readers will be displayed on the journal's website.
@@ -654,8 +658,8 @@
                     <p class="text-sm text-gray-500 mb-4">
                         Information for librarians will be displayed on the journal's website.
                     </p>
-                    <textarea name="info_librarians" id="info_librarians" rows="6"
-                        class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm">{{ $journal->info_librarians }}</textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -663,8 +667,9 @@
             {{-- Tab: SECURITY --}}
             {{-- ============================================ --}}
             <div x-show="activeTab === 'security'" x-cloak class="space-y-6">
-                {{-- reCAPTCHA Config --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                <div class="bg-white rounded-[24px] shadow-sm border border-[#DAD8F4] p-8">
+                    {{-- reCAPTCHA Config --}}
+                    <div class="h-fit">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
                             <i class="fa-solid fa-robot text-indigo-600"></i>
@@ -711,7 +716,8 @@
                                 </p>
                             </div>
                         </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
             </div>
 
