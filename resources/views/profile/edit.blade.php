@@ -158,55 +158,55 @@
             </div>
 
             <!-- Tabbed Interface -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden" x-data="{ activeTab: 'identity' }">
-                <!-- Tab Navigation (Seamless Door Style) -->
-                <div class="relative">
-                    <div class="absolute inset-x-0 bottom-0 border-b border-slate-200"></div>
+            <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] p-8" x-data="{ activeTab: 'identity' }">
+                <!-- Tabs Navigation (Seamless Door Style) -->
+                <div class="relative mb-8">
+                    <div class="absolute inset-x-0 bottom-0 border-b-2 border-[#DAD8F4]"></div>
                     <nav class="relative flex overflow-x-auto no-scrollbar">
                         <button @click="activeTab = 'identity'" type="button"
                             :class="activeTab === 'identity' ?
-                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-user text-lg opacity-70"></i>
                             Identity
-                            <div x-show="activeTab === 'identity'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="activeTab === 'identity'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="activeTab = 'contact'" type="button"
                             :class="activeTab === 'contact' ?
-                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-address-book text-lg opacity-70"></i>
                             Contact
-                            <div x-show="activeTab === 'contact'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="activeTab === 'contact'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="activeTab = 'public'" type="button"
                             :class="activeTab === 'public' ?
-                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-globe text-lg opacity-70"></i>
                             Public
-                            <div x-show="activeTab === 'public'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="activeTab === 'public'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="activeTab = 'password'" type="button"
                             :class="activeTab === 'password' ?
-                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-lock text-lg opacity-70"></i>
                             Password
-                            <div x-show="activeTab === 'password'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="activeTab === 'password'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="activeTab = 'roles'" type="button"
                             :class="activeTab === 'roles' ?
-                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t border-l border-r' :
-                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="relative z-10 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[1px]">
+                                'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
+                                'border-transparent text-slate-400 hover:text-slate-600'"
+                            class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-user-tag text-lg opacity-70"></i>
                             Roles
-                            <div x-show="activeTab === 'roles'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-20"></div>
+                            <div x-show="activeTab === 'roles'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                     </nav>
                 </div>
