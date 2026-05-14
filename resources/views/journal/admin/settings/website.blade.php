@@ -37,35 +37,39 @@
             </div>
         @endif
 
-        {{-- Tabs Navigation (OJS 3.3 Style) --}}
-        <div class="border-b border-gray-200 mb-6">
-            <nav class="flex space-x-8">
+        {{-- Tabs Navigation (Soft Outset Style) --}}
+        <div class="border-b border-slate-200 mb-8">
+            <nav class="flex overflow-x-auto no-scrollbar">
                 <button @click="activeTab = 'appearance'"
-                    :class="activeTab === 'appearance' ? 'border-indigo-500 text-indigo-600' :
-                        'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <i class="fa-solid fa-palette mr-2"></i>
+                    :class="activeTab === 'appearance' ?
+                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                    class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                    <i class="fa-solid fa-palette text-lg opacity-70"></i>
                     Appearance
                 </button>
                 <button @click="activeTab = 'information'"
-                    :class="activeTab === 'information' ? 'border-indigo-500 text-indigo-600' :
-                        'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    :class="activeTab === 'information' ?
+                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                    class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                    <i class="fa-solid fa-info-circle text-lg opacity-70"></i>
                     Information
                 </button>
                 <button @click="activeTab = 'sections'"
-                    :class="activeTab === 'sections' ? 'border-indigo-500 text-indigo-600' :
-                        'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <i class="fa-solid fa-th-large mr-2"></i>
+                    :class="activeTab === 'sections' ?
+                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                    class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                    <i class="fa-solid fa-th-large text-lg opacity-70"></i>
                     Sections
                 </button>
                 <button @click="activeTab = 'security'"
-                    :class="activeTab === 'security' ? 'border-indigo-500 text-indigo-600' :
-                        'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <i class="fa-solid fa-shield-halved mr-2"></i>
+                    :class="activeTab === 'security' ?
+                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                    class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                    <i class="fa-solid fa-shield-halved text-lg opacity-70"></i>
                     Security
                 </button>
             </nav>
@@ -82,25 +86,28 @@
             {{-- ============================================ --}}
             <div x-show="activeTab === 'appearance'" x-cloak class="space-y-6" x-data="{ appearanceTab: 'setup' }">
 
-                {{-- Sub Tabs Navigation --}}
-                <div class="border-b border-gray-200 mb-4">
-                    <nav class="-mb-px flex space-x-6">
+                {{-- Sub Tabs Navigation (Soft Outset Style) --}}
+                <div class="border-b border-slate-200 mb-6">
+                    <nav class="flex space-x-2">
                         <button type="button" @click="appearanceTab = 'setup'"
-                            :class="appearanceTab === 'setup' ? 'border-indigo-500 text-indigo-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
+                            :class="appearanceTab === 'setup' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="whitespace-nowrap py-3 px-6 border-b-2 font-bold text-sm transition-all duration-200">
                             Setup
                         </button>
                         <button type="button" @click="appearanceTab = 'advanced'"
-                            :class="appearanceTab === 'advanced' ? 'border-indigo-500 text-indigo-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
+                            :class="appearanceTab === 'advanced' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="whitespace-nowrap py-3 px-6 border-b-2 font-bold text-sm transition-all duration-200">
                             Advanced
                         </button>
                         <button type="button" @click="appearanceTab = 'menu_nav'"
-                            :class="appearanceTab === 'menu_nav' ? 'border-indigo-500 text-indigo-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
+                            :class="appearanceTab === 'menu_nav' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="whitespace-nowrap py-3 px-6 border-b-2 font-bold text-sm transition-all duration-200">
                             Menu Nav
                         </button>
                     </nav>

@@ -159,46 +159,49 @@
 
             <!-- Tabbed Interface -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden" x-data="{ activeTab: 'identity' }">
-                <!-- Tab Navigation -->
-                <div class="border-b border-gray-200 bg-gray-50">
-                    <nav class="flex overflow-x-auto -mb-px" aria-label="Tabs">
+                <!-- Tab Navigation (Soft Outset Style) -->
+                <div class="border-b border-slate-200">
+                    <nav class="flex overflow-x-auto no-scrollbar">
                         <button @click="activeTab = 'identity'" type="button"
-                            :class="activeTab === 'identity' ? 'border-primary-600 text-primary-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
-                            <i class="fa-solid fa-user mr-2"></i>
+                            :class="activeTab === 'identity' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            <i class="fa-solid fa-user text-lg opacity-70"></i>
                             Identity
                         </button>
                         <button @click="activeTab = 'contact'" type="button"
-                            :class="activeTab === 'contact' ? 'border-primary-600 text-primary-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
-                            <i class="fa-solid fa-address-book mr-2"></i>
+                            :class="activeTab === 'contact' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            <i class="fa-solid fa-address-book text-lg opacity-70"></i>
                             Contact
                         </button>
                         <button @click="activeTab = 'public'" type="button"
-                            :class="activeTab === 'public' ? 'border-primary-600 text-primary-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
-                            <i class="fa-solid fa-globe mr-2"></i>
+                            :class="activeTab === 'public' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            <i class="fa-solid fa-globe text-lg opacity-70"></i>
                             Public
                         </button>
                         <button @click="activeTab = 'password'" type="button"
-                            :class="activeTab === 'password' ? 'border-primary-600 text-primary-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
-                            <i class="fa-solid fa-lock mr-2"></i>
+                            :class="activeTab === 'password' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            <i class="fa-solid fa-lock text-lg opacity-70"></i>
                             Password
                         </button>
-                        {{-- @if ($journal && $availableRoles->isNotEmpty()) --}}
                         <button @click="activeTab = 'roles'" type="button"
-                            :class="activeTab === 'roles' ? 'border-primary-600 text-primary-600' :
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
-                            <i class="fa-solid fa-user-tag mr-2"></i>
+                            :class="activeTab === 'roles' ?
+                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                            class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            <i class="fa-solid fa-user-tag text-lg opacity-70"></i>
                             Roles
                         </button>
-                        {{-- @endif --}}
                     </nav>
                 </div>
 
