@@ -42,7 +42,7 @@
             <nav class="flex overflow-x-auto no-scrollbar">
                 <button @click="activeTab = 'appearance'"
                     :class="activeTab === 'appearance' ?
-                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                         'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                     class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                     <i class="fa-solid fa-palette text-lg opacity-70"></i>
@@ -50,7 +50,7 @@
                 </button>
                 <button @click="activeTab = 'information'"
                     :class="activeTab === 'information' ?
-                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                         'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                     class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                     <i class="fa-solid fa-info-circle text-lg opacity-70"></i>
@@ -58,7 +58,7 @@
                 </button>
                 <button @click="activeTab = 'sections'"
                     :class="activeTab === 'sections' ?
-                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                         'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                     class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                     <i class="fa-solid fa-th-large text-lg opacity-70"></i>
@@ -66,7 +66,7 @@
                 </button>
                 <button @click="activeTab = 'security'"
                     :class="activeTab === 'security' ?
-                        'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                        'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                         'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                     class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                     <i class="fa-solid fa-shield-halved text-lg opacity-70"></i>
@@ -91,21 +91,21 @@
                     <nav class="flex space-x-2">
                         <button type="button" @click="appearanceTab = 'setup'"
                             :class="appearanceTab === 'setup' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="whitespace-nowrap py-3 px-6 border-b-2 font-bold text-sm transition-all duration-200">
                             Setup
                         </button>
                         <button type="button" @click="appearanceTab = 'advanced'"
                             :class="appearanceTab === 'advanced' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="whitespace-nowrap py-3 px-6 border-b-2 font-bold text-sm transition-all duration-200">
                             Advanced
                         </button>
                         <button type="button" @click="appearanceTab = 'menu_nav'"
                             :class="appearanceTab === 'menu_nav' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-xl border-t border-l border-r shadow-sm' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="whitespace-nowrap py-3 px-6 border-b-2 font-bold text-sm transition-all duration-200">
                             Menu Nav

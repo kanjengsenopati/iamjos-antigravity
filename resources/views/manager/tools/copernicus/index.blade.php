@@ -71,7 +71,7 @@
                 <nav class="flex">
                     <button @click="tab = 'articles'"
                         :class="tab === 'articles' ?
-                            'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                            'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                             'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                         class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@
                     </button>
                     <button @click="tab = 'issues'"
                         :class="tab === 'issues' ?
-                            'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                            'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                             'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                         class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

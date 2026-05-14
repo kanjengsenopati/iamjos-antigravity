@@ -164,7 +164,7 @@
                     <nav class="flex overflow-x-auto no-scrollbar">
                         <button @click="activeTab = 'identity'" type="button"
                             :class="activeTab === 'identity' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                             <i class="fa-solid fa-user text-lg opacity-70"></i>
@@ -172,7 +172,7 @@
                         </button>
                         <button @click="activeTab = 'contact'" type="button"
                             :class="activeTab === 'contact' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                             <i class="fa-solid fa-address-book text-lg opacity-70"></i>
@@ -180,7 +180,7 @@
                         </button>
                         <button @click="activeTab = 'public'" type="button"
                             :class="activeTab === 'public' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                             <i class="fa-solid fa-globe text-lg opacity-70"></i>
@@ -188,7 +188,7 @@
                         </button>
                         <button @click="activeTab = 'password'" type="button"
                             :class="activeTab === 'password' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                             <i class="fa-solid fa-lock text-lg opacity-70"></i>
@@ -196,7 +196,7 @@
                         </button>
                         <button @click="activeTab = 'roles'" type="button"
                             :class="activeTab === 'roles' ?
-                                'border-indigo-600 text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
+                                'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
                                 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
                             class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                             <i class="fa-solid fa-user-tag text-lg opacity-70"></i>
