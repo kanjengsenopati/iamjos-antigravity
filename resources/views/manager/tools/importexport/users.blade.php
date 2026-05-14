@@ -57,9 +57,9 @@
                 <nav class="flex">
                     <button @click="tab = 'import'"
                         :class="tab === 'import' ?
-                            'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
-                            'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            'border-[#DAD8F4] border-b-white text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r' :
+                            'border-b-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
@@ -68,9 +68,9 @@
                     </button>
                     <button @click="tab = 'export'"
                         :class="tab === 'export' ?
-                            'border-[#DAD8F4] text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r shadow-[0_-4px_10px_rgba(0,0,0,0.02)]' :
-                            'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b-2 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
+                            'border-[#DAD8F4] border-b-white text-indigo-600 bg-white -mb-[1px] rounded-t-2xl border-t border-l border-r' :
+                            'border-b-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
+                        class="flex-1 md:flex-none whitespace-nowrap py-4 px-8 border-b font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
