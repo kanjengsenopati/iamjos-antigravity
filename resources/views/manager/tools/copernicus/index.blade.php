@@ -133,10 +133,10 @@
                     </div>
 
                     @if ($submissions->count() > 0)
-                        <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="border-2 border-slate-50 bg-slate-50/30 rounded-[24px] overflow-hidden">
                             <div class="max-h-[500px] overflow-y-auto">
                                 <table class="w-full text-sm text-left">
-                                    <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10">
+                                    <thead class="bg-slate-50 text-slate-600 border-b-2 border-[#DAD8F4] sticky top-0 z-10">
                                         <tr>
                                             <th class="p-4 w-12">
                                                 <input type="checkbox" onChange="document.querySelectorAll('.article-checkbox').forEach(cb => cb.checked = this.checked)"
@@ -232,10 +232,10 @@
                     </div>
 
                     @if ($issues->count() > 0)
-                        <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="border-2 border-slate-50 bg-slate-50/30 rounded-[24px] overflow-hidden">
                             <div class="max-h-[500px] overflow-y-auto">
                                 <table class="w-full text-sm text-left">
-                                    <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10">
+                                    <thead class="bg-slate-50 text-slate-600 border-b-2 border-[#DAD8F4] sticky top-0 z-10">
                                         <tr>
                                             <th class="p-4 w-12">
                                                 <input type="checkbox" onChange="document.querySelectorAll('.issue-checkbox').forEach(cb => cb.checked = this.checked)"

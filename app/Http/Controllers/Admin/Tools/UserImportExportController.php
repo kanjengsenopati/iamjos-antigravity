@@ -38,7 +38,7 @@ class UserImportExportController extends Controller
             ->with(['roles' => function($q) use ($journal) {
                 $q->where('journal_id', $journal->id);
             }])
-            ->get();
+            ->paginate(50);
 
         return view('manager.tools.importexport.users', compact('journal', 'users'));
     }

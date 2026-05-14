@@ -128,7 +128,7 @@
                 {{-- Sub-tab: SETUP (Old Setup Content) --}}
                 <div x-show="appearanceTab === 'setup'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Logo Upload --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Logo</h3>
@@ -159,7 +159,7 @@
                     </div>
 
                     {{-- Journal Thumbnail --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Journal Thumbnail</h3>
@@ -188,7 +188,7 @@
                     </div>
 
                     {{-- Homepage Image --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Homepage Image</h3>
@@ -233,7 +233,7 @@
                     </div>
 
                     {{-- Page Footer (Rich Text) --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                         <h3 class="text-lg font-semibold text-gray-900 mb-1">Page Footer</h3>
                         <p class="text-sm text-gray-500 mb-4">
                             Custom HTML content that will appear at the bottom of every page.
@@ -251,7 +251,7 @@
                     </div>
 
                     {{-- Additional Content (Homepage Bottom) --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                         <h3 class="text-lg font-semibold text-gray-900 mb-1">Additional Content</h3>
                         <p class="text-sm text-gray-500 mb-4">
                             Any content entered here will appear on your homepage after the latest issue content.
@@ -269,7 +269,7 @@
 
                     {{-- Announcements --}}
                     <div x-data="{ enabled: {{ $journal->enable_announcements ? 'true' : 'false' }}, onHomepage: {{ $journal->show_announcements_on_homepage ? 'true' : 'false' }} }"
-                        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                        class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
 
                         <div class="mb-6">
                             <h3 class="text-lg font-semibold text-gray-900 mb-1">Announcements</h3>
@@ -345,7 +345,7 @@
                 {{-- Sub-tab: ADVANCED (Old Appearance Content) --}}
                 <div x-show="appearanceTab === 'advanced'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Favicon Upload --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Favicon</h3>
@@ -382,7 +382,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6">Theme Colors</h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -442,7 +442,7 @@
                 {{-- Sub-tab: MENU NAV --}}
                 <div x-show="appearanceTab === 'menu_nav'" x-cloak class="grid grid-cols-1 gap-6">
                     {{-- NAVIGATION & SIDEBAR SETTINGS --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Navigation & Layout</h3>
                         <p class="text-sm text-gray-500 mb-6">
                             Configure your journal's navigation menus and sidebar content.
@@ -543,7 +543,7 @@
             {{-- Tab: SECTIONS (Visibility Toggles) --}}
             {{-- ============================================ --}}
             <div x-show="activeTab === 'sections'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] p-8 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-6">Homepage Sections</h3>
                     <p class="text-sm text-gray-500 mb-6">Control which sections appear on your journal homepage.</p>
 
@@ -584,7 +584,7 @@
                 </div>
 
                 {{-- Indexed In Logos --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] p-8 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Indexing Databases</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Upload logos of indexing databases where your journal is listed (Scopus, Google Scholar, DOAJ,
@@ -643,7 +643,7 @@
                 </div>
 
                 {{-- Information for Authors --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">For Authors</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Information for authors will be displayed on the journal's website.
@@ -653,7 +653,7 @@
                 </div>
 
                 {{-- Information for Librarians --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">For Librarians</h3>
                     <p class="text-sm text-gray-500 mb-4">
                         Information for librarians will be displayed on the journal's website.

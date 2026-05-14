@@ -72,9 +72,9 @@
             @endif
 
             <!-- Avatar Section (Standalone) -->
-            <div class="mb-6 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="p-6">
-                    <div class="flex flex-col md:flex-row items-center md:items-start gap-6" x-data="{ previewUrl: null }">
+            <div class="mb-6 bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] overflow-hidden">
+                <div class="p-8">
+                    <div class="flex flex-col md:flex-row items-center md:items-start gap-8" x-data="{ previewUrl: null }">
                         <!-- Avatar Display -->
                         <div class="relative">
                             @if ($user->avatar_url)
@@ -218,8 +218,11 @@
 
                     <!-- TAB 1: Identity -->
                     <div x-show="activeTab === 'identity'" x-cloak>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Identity Information</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <i class="fa-solid fa-id-card text-indigo-600 text-xl"></i>
+                            <h3 class="text-lg font-bold text-slate-800">Identity Information</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                             <!-- Public Name -->
                             <div class="md:col-span-2">
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
@@ -321,8 +324,11 @@
 
                     <!-- TAB 2: Contact -->
                     <div x-show="activeTab === 'contact'" x-cloak>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Contact Information</h3>
-                        <div class="grid grid-cols-1 gap-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <i class="fa-solid fa-envelope-open-text text-indigo-600 text-xl"></i>
+                            <h3 class="text-lg font-bold text-slate-800">Contact Information</h3>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                             <!-- Email (Read-only) -->
                             <div>
                                 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
@@ -370,8 +376,11 @@
 
                     <!-- TAB 3: Public Profile -->
                     <div x-show="activeTab === 'public'" x-cloak>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Public Profile</h3>
-                        <div class="grid grid-cols-1 gap-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <i class="fa-solid fa-user-astronaut text-indigo-600 text-xl"></i>
+                            <h3 class="text-lg font-bold text-slate-800">Public Profile</h3>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                             <!-- Bio Statement with CKEditor 4 -->
                             <div>
                                 <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">
@@ -449,8 +458,11 @@
 
                 <!-- Password Tab Content (Separate Form) -->
                 <div x-show="activeTab === 'password'" x-cloak class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Change Password</h3>
-                    <form action="{{ route('journal.profile.password', $journal->slug) }}" method="POST">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fa-solid fa-key text-indigo-600 text-xl"></i>
+                        <h3 class="text-lg font-bold text-slate-800">Change Password</h3>
+                    </div>
+                    <form action="{{ route('journal.profile.password', $journal->slug) }}" method="POST" class="p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                         @csrf
                         @method('PATCH')
 
@@ -516,9 +528,9 @@
             </div>
 
             <!-- Account Stats -->
-            <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
+            <div class="mt-6 bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] overflow-hidden">
+                <div class="px-8 py-5 border-b-2 border-[#DAD8F4] bg-slate-50/50">
+                    <h2 class="text-lg font-bold text-slate-800">Account Information</h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">

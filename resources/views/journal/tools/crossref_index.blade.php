@@ -26,7 +26,7 @@
         </div>
 
         {{-- MAIN CONTENT --}}
-        <div class="bg-white rounded-2xl shadow-sm border-2 border-[#DAD8F4] overflow-hidden">
+        <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] overflow-hidden">
 
             {{-- TABS NAVIGATION (Seamless Door Style) --}}
             <div class="relative">
@@ -225,9 +225,9 @@
             <form action="{{ route('journal.settings.tools.crossref.download', $journal->slug) }}" method="POST">
                 @csrf
 
-                <div class="bg-white rounded border border-gray-200 overflow-hidden mb-6">
+                <div class="bg-white rounded-[24px] border-2 border-[#DAD8F4] overflow-hidden mb-6">
                     <table class="w-full text-left border-collapse text-sm">
-                        <thead class="bg-gray-50 text-gray-700 border-b border-gray-200 uppercase text-xs">
+                        <thead class="bg-slate-50 text-slate-700 border-b-2 border-[#DAD8F4] uppercase text-xs">
                             <tr>
                                 <th class="p-4 w-10 text-center">
                                     <input type="checkbox" id="selectAll" onclick="toggleAll(this)"
@@ -316,8 +316,8 @@
                 </div>
 
                 {{-- ACTION BUTTONS BAR --}}
-                <div class="flex items-center justify-between bg-gray-50 p-4 rounded border border-gray-200">
-                    <div class="text-xs text-gray-500">
+                <div class="flex items-center justify-between bg-slate-50/50 p-4 rounded-[24px] border-2 border-[#DAD8F4]">
+                    <div class="text-xs text-slate-500 font-bold">
                         Showing {{ $submissions->firstItem() ?? 0 }} to {{ $submissions->lastItem() ?? 0 }} of
                         {{ $submissions->total() }} items
                     </div>

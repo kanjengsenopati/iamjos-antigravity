@@ -79,7 +79,7 @@
                             </path>
                         </svg>
                         Export Users
-                        <div x-show="tab === 'export'" class="absolute -bottom-[1px] inset-x-0 h-[2px] bg-white z-30"></div>
+                        <div x-show="tab === 'export'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                     </button>
                 </nav>
             </div>
@@ -139,9 +139,9 @@
                         </button>
                     </div>
 
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="border-2 border-slate-50 bg-slate-50/30 rounded-[24px] overflow-hidden">
                         <table class="w-full text-sm text-left">
-                            <thead class="bg-slate-50 text-slate-600">
+                            <thead class="bg-slate-50 text-slate-600 border-b-2 border-[#DAD8F4]">
                                 <tr>
                                     <th class="p-4 w-12">
                                         <input type="checkbox" @change="toggleAll($event)" class="rounded border-slate-300">
@@ -173,6 +173,16 @@
                                 @endforeach
                             </tbody>
                         </table>
+                    </div>
+
+                    {{-- PAGINATION & FOOTER --}}
+                    <div class="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="text-xs text-slate-500 font-bold">
+                            Showing {{ $users->firstItem() ?? 0 }} to {{ $users->lastItem() ?? 0 }} of {{ $users->total() }} users
+                        </div>
+                        <div class="flex-1 flex justify-end">
+                            {{ $users->links() }}
+                        </div>
                     </div>
                 </form>
             </div>

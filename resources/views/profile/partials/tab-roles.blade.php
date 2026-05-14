@@ -2,9 +2,9 @@
     @csrf
     @method('PUT')
 
-    <div class="border-b pb-4 mb-4">
-        <h3 class="text-lg font-medium leading-6 text-gray-900">Journal Roles</h3>
-        <p class="mt-1 text-sm text-gray-500">Select the roles you wish to assume in this journal.</p>
+    <div class="border-b-2 border-[#DAD8F4] pb-6 mb-8">
+        <h3 class="text-xl font-bold text-slate-800">Journal Roles</h3>
+        <p class="mt-1 text-sm text-slate-500 font-medium">Select the roles you wish to assume in this journal.</p>
     </div>
 
     @if ($availableRoles->isEmpty())
@@ -28,10 +28,10 @@
         <div x-data="{ selected: @js($userRolesIds) }" class="grid grid-cols-1 md:grid-cols-2 gap-2">
 
             @foreach ($availableRoles as $role)
-                <label class="relative flex cursor-pointer rounded-xl border p-5 shadow-sm transition-all duration-200"
+                <label class="relative flex cursor-pointer rounded-[24px] border-2 p-5 shadow-sm transition-all duration-200"
                     :class="selected.includes('{{ $role->id }}') ?
-                        'border-blue-600 ring-1 ring-blue-600 bg-blue-50' :
-                        'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'">
+                        'border-emerald-600 ring-1 ring-emerald-600 bg-emerald-50/30' :
+                        'border-slate-100 bg-white hover:border-indigo-300 hover:shadow-md'">
 
                     <input type="checkbox" name="selected_roles[]" value="{{ $role->id }}" class="sr-only"
                         x-model="selected">
@@ -39,8 +39,8 @@
                     <div class="flex flex-1 gap-4">
                         <div class="flex-shrink-0">
                             <span class="inline-flex items-center justify-center h-10 w-10 rounded-full"
-                                :class="selected.includes('{{ $role->id }}') ? 'bg-blue-100 text-blue-600' :
-                                    'bg-gray-100 text-gray-500'">
+                                :class="selected.includes('{{ $role->id }}') ? 'bg-emerald-100 text-emerald-600' :
+                                    'bg-slate-100 text-slate-400'">
                                 @if ($role->name === 'Author')
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -66,12 +66,12 @@
                         </div>
 
                         <div class="flex flex-col">
-                            <span class="text-base font-semibold"
-                                :class="selected.includes('{{ $role->id }}') ? 'text-blue-900' : 'text-gray-900'">
+                            <span class="text-base font-bold"
+                                :class="selected.includes('{{ $role->id }}') ? 'text-emerald-900' : 'text-slate-800'">
                                 {{ $role->name }}
                             </span>
-                            <span class="mt-1 text-sm leading-snug"
-                                :class="selected.includes('{{ $role->id }}') ? 'text-blue-700' : 'text-gray-500'">
+                            <span class="mt-1 text-sm leading-snug font-medium"
+                                :class="selected.includes('{{ $role->id }}') ? 'text-emerald-700' : 'text-slate-500'">
                                 @if ($role->name === 'Author')
                                     Submit manuscripts and track your work.
                                 @elseif($role->name === 'Reviewer')
@@ -84,7 +84,7 @@
                     </div>
 
                     <div x-show="selected.includes('{{ $role->id }}')" x-cloak
-                        class="absolute top-4 right-4 bg-blue-600 text-white rounded-full p-1 shadow-sm">
+                        class="absolute top-4 right-4 bg-emerald-600 text-white rounded-full p-1 shadow-sm">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
@@ -102,12 +102,12 @@
     @endif
 </form>
 
-<div class="relative py-8">
+<div class="relative py-12">
     <div class="absolute inset-0 flex items-center" aria-hidden="true">
-        <div class="w-full border-t border-gray-300"></div>
+        <div class="w-full border-t-2 border-slate-100"></div>
     </div>
     <div class="relative flex justify-center">
-        <span class="bg-white px-3 text-base font-semibold text-gray-900">Other Journals</span>
+        <span class="bg-white px-6 text-lg font-bold text-slate-800">Enroll in Other Journals</span>
     </div>
 </div>
 
@@ -125,16 +125,16 @@
                 $isEnrolled = in_array($otherJournal->id, $enrolledJournalIds);
             @endphp
             <div
-                class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm flex items-center justify-between hover:bg-gray-50 transition">
-                <div class="flex items-center space-x-4">
+                class="rounded-[24px] border-2 border-slate-50 bg-white p-5 shadow-sm flex items-center justify-between hover:border-indigo-300 hover:shadow-md transition-all group">
+                <div class="flex items-center space-x-6">
                     <div
-                        class="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-md flex items-center justify-center text-gray-500 font-bold text-xl uppercase">
+                        class="flex-shrink-0 h-14 w-14 bg-slate-50 rounded-[18px] flex items-center justify-center text-indigo-600 font-bold text-2xl uppercase border-2 border-white shadow-sm group-hover:bg-indigo-50 transition-colors">
                         {{ substr($otherJournal->name, 0, 1) }}
                     </div>
 
                     <div>
-                        <h4 class="text-base font-bold text-gray-900">{{ $otherJournal->name }}</h4>
-                        <p class="text-sm text-gray-500 truncate max-w-md">
+                        <h4 class="text-lg font-bold text-slate-800">{{ $otherJournal->name }}</h4>
+                        <p class="text-sm text-slate-500 font-medium truncate max-w-md">
                             {{ $otherJournal->description ?? 'Open Access Journal' }}</p>
                     </div>
                 </div>
