@@ -54,6 +54,7 @@
                 </div>
 
             <div class="p-6">
+                @if ($tab == 'settings')
                 <div class="max-w-4xl">
                     <div class="mb-6 flex items-center justify-between">
                         <a href="{{ route('journal.settings.doi.edit', $journal->slug) }}" class="text-blue-600 hover:underline text-sm font-medium">DOI Plugin Settings</a>
@@ -350,6 +351,7 @@
                     {{ $submissions->appends(request()->query())->links() }}
                 </div>
             </form>
+            @endif
             @endif
             </div>
         </div>
