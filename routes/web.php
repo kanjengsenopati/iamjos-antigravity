@@ -560,6 +560,27 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::match(['get', 'post'], '/export/articles', 'exportArticles')->name('export.articles');
                         Route::match(['get', 'post'], '/export/issues', 'exportIssues')->name('export.issues');
                     });
+                    Route::controller(\App\Http\Controllers\Admin\Tools\UserImportExportController::class)->prefix('tools/importexport/users')->name('tools.users.')->group(function () {
+                        Route::get('/', 'index')->name('index');
+                        Route::post('/import', 'import')->name('import');
+                        Route::post('/export', 'export')->name('export');
+                    });
+                    Route::controller(\App\Http\Controllers\Admin\Tools\PubmedExportController::class)->prefix('tools/importexport/pubmed')->name('tools.pubmed.')->group(function () {
+                        Route::get('/', 'index')->name('index');
+                        Route::post('/export', 'export')->name('export');
+                    });
+                    Route::controller(\App\Http\Controllers\Admin\Tools\DoajExportController::class)->prefix('tools/importexport/doaj')->name('tools.doaj.')->group(function () {
+                        Route::get('/', 'index')->name('index');
+                        Route::post('/export', 'export')->name('export');
+                    });
+                    Route::controller(\App\Http\Controllers\Admin\Tools\DataciteExportController::class)->prefix('tools/importexport/datacite')->name('tools.datacite.')->group(function () {
+                        Route::get('/', 'index')->name('index');
+                        Route::post('/export', 'export')->name('export');
+                    });
+                    Route::controller(\App\Http\Controllers\Admin\Tools\QuickSubmitController::class)->prefix('tools/quicksubmit')->name('tools.quicksubmit.')->group(function () {
+                        Route::get('/', 'index')->name('index');
+                        Route::post('/store', 'store')->name('store');
+                    });
                     Route::prefix('tools/importexport/crossref')->name('tools.crossref.')->group(function () {
                         Route::get('/', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'index'])->name('index');
                         Route::post('/download', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'export'])->name('download');

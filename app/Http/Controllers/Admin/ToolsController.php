@@ -106,7 +106,7 @@ class ToolsController extends Controller
                 'description' => 'Import and export user accounts and roles in XML format for bulk management.',
                 'icon' => 'users',
                 'color' => 'purple',
-                'route' => '#',
+                'route' => route('journal.settings.tools.users.index', ['journal' => current_journal()->slug]),
                 'available' => true,
             ],
             [
@@ -133,7 +133,7 @@ class ToolsController extends Controller
                 'description' => 'Export article metadata in PubMed XML format for indexing in MEDLINE/PubMed.',
                 'icon' => 'beaker',
                 'color' => 'emerald',
-                'route' => '#',
+                'route' => route('journal.settings.tools.pubmed.index', ['journal' => current_journal()->slug]),
                 'available' => true,
             ],
             [
@@ -142,7 +142,7 @@ class ToolsController extends Controller
                 'description' => 'Export journal metadata for the Directory of Open Access Journals (DOAJ) indexing.',
                 'icon' => 'globe-alt',
                 'color' => 'amber',
-                'route' => '#',
+                'route' => route('journal.settings.tools.doaj.index', ['journal' => current_journal()->slug]),
                 'available' => true,
             ],
             [
@@ -151,7 +151,7 @@ class ToolsController extends Controller
                 'description' => 'Export or register article and supplementary file metadata in DataCite format for DOIs.',
                 'icon' => 'document-text',
                 'color' => 'rose',
-                'route' => '#',
+                'route' => route('journal.settings.tools.datacite.index', ['journal' => current_journal()->slug]),
                 'available' => true,
             ],
             [
@@ -160,7 +160,7 @@ class ToolsController extends Controller
                 'description' => 'Quickly add published articles without going through the full submission workflow.',
                 'icon' => 'bolt',
                 'color' => 'cyan',
-                'route' => '#',
+                'route' => route('journal.settings.tools.quicksubmit.index', ['journal' => current_journal()->slug]),
                 'available' => true,
             ],
         ];
