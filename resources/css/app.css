@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
+@source "../views/**/*.blade.php";
+@source "../js/**/*.js";
+@source "../../app/Livewire/**/*.php";
+@source "../../app/Http/Livewire/**/*.php";
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
-@source "../../storage/framework/views/*.php";
-@source "../**/*.blade.php";
-@source "../**/*.js";
 
 @import "./custom.css";
