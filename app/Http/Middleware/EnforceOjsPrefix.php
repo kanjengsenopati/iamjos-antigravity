@@ -25,6 +25,7 @@ class EnforceOjsPrefix
                 str_starts_with($uri, '/storage') || 
                 str_starts_with($uri, '/site') ||
                 str_starts_with($uri, '/vendor') ||
+                str_starts_with($uri, '/livewire') ||
                 str_ends_with($uri, '.css') ||
                 str_ends_with($uri, '.js') ||
                 str_ends_with($uri, '.png') ||
