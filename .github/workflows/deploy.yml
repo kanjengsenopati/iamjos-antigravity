@@ -36,7 +36,7 @@ jobs:
             cd ${{ env.TARGET_PATH }}
             git pull origin ${{ env.BRANCH_NAME }}
             composer install --no-dev --optimize-autoloader
-            npm install && npm run build && cp public/build/.vite/manifest.json public/build/manifest.json
+            npm install && npm run build && ([ -f public/build/.vite/manifest.json ] && cp public/build/.vite/manifest.json public/build/manifest.json || true)
             php artisan cache:clear
             php artisan migrate --force
             php artisan config:cache

@@ -256,7 +256,7 @@ class PortalController extends Controller
     /**
      * Display all journals page with filtering.
      */
-    public function journals(Request $request): View
+    public function journals(Request $request): \Illuminate\View\View|\Illuminate\Http\JsonResponse
     {
         if ($request->has('debug_counts')) {
             return response()->json([
