@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Role;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -61,15 +61,15 @@ return new class extends Migration
         ];
 
         foreach ($roles_config as $roleName => $config) {
-            $role = Role::where('name', $roleName)->first();
-            if ($role) {
-                $role->permission_level = $config['level'];
-                $role->permit_submission = in_array('permit_submission', $config['permits']);
-                $role->permit_review = in_array('permit_review', $config['permits']);
-                $role->permit_copyediting = in_array('permit_copyediting', $config['permits']);
-                $role->permit_production = in_array('permit_production', $config['permits']);
-                $role->save();
-            }
+            DB::table($tableNames['roles'])
+                ->where('name', $roleName)
+                ->update([
+                    'permission_level' => $config['level'],
+                    'permit_submission' => in_array('permit_submission', $config['permits']),
+                    'permit_review' => in_array('permit_review', $config['permits']),
+                    'permit_copyediting' => in_array('permit_copyediting', $config['permits']),
+                    'permit_production' => in_array('permit_production', $config['permits']),
+                ]);
         }
     }
 
