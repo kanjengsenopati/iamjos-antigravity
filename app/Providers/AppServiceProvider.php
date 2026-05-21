@@ -32,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (str_starts_with(config('app.url'), 'https://')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         Paginator::defaultView('vendor.pagination.tailwind');
         // Paginator::defaultSimpleView('vendor.pagination.simple-tailwind');
 
