@@ -68,6 +68,9 @@ jobs:
           mkdir -p bootstrap/cache
           chmod -R 775 storage bootstrap/cache
           php artisan key:generate --ansi
+          # Capture APP_KEY dari .env dan export ke GITHUB_ENV
+          APP_KEY=$(grep '^APP_KEY=' .env | cut -d '=' -f2)
+          echo "APP_KEY=$APP_KEY" >> $GITHUB_ENV
         env:
           APP_ENV: testing
           DB_CONNECTION: pgsql
