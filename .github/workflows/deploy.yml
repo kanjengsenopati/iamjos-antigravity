@@ -98,6 +98,7 @@ jobs:
         run: php artisan test --parallel --ansi
         env:
           APP_ENV: testing
+          APP_KEY: ${{ env.APP_KEY }}
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
@@ -107,6 +108,7 @@ jobs:
           CACHE_STORE: array
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: array
+          IAMJOS_LICENSE_CHECK_ENABLED: "false"
 
       - name: PHPStan — Analisis Statis Level 5
         run: vendor/bin/phpstan analyse --level=5 --no-progress --ansi
@@ -226,6 +228,14 @@ jobs:
             # ─── 1. Pull kode terbaru ───────────────────────────────────
             echo "📥 Mengambil kode terbaru dari branch ${{ env.BRANCH_NAME }}..."
             git pull origin ${{ env.BRANCH_NAME }}
+
+            # ─── 1.5 Pastikan direktori storage ada dan writable ───────
+            mkdir -p storage/framework/cache/data
+            mkdir -p storage/framework/sessions
+            mkdir -p storage/framework/views
+            mkdir -p storage/logs
+            mkdir -p bootstrap/cache
+            chmod -R 775 storage bootstrap/cache
 
             # ─── 2. Backup database SEBELUM migration ──────────────────
             # Hanya untuk production dan staging (bukan dev)
