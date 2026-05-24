@@ -51,7 +51,7 @@ return new class extends Migration
         // Find users with Author role who have no submission_authors records
         $orphanedAuthorIds = DB::table('users')
             ->join('model_has_roles', function($join) {
-                $join->on('users.id', '=', 'model_has_roles.model_id')
+                $join->on('users.id', '=', 'model_has_roles.model_uuid')
                     ->where('model_has_roles.model_type', '=', 'App\\Models\\User');
             })
             ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
@@ -68,7 +68,7 @@ return new class extends Migration
             // Remove role assignments
             DB::table('model_has_roles')
                 ->where('model_type', 'App\\Models\\User')
-                ->whereIn('model_id', $orphanedAuthorIds)
+                ->whereIn('model_uuid', $orphanedAuthorIds)
                 ->delete();
             
             // Remove journal user roles
