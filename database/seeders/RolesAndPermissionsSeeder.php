@@ -83,11 +83,19 @@ class RolesAndPermissionsSeeder extends Seeder
         // =====================================================
 
         // 0. READER - Basic registered user
-        $readerRole = Role::firstOrCreate(['name' => 'Reader', 'guard_name' => 'web']);
+        $readerRole = Role::firstOrCreate([
+            'name' => 'Reader',
+            'guard_name' => 'web',
+            'permission_level' => 6, // LEVEL_READER
+        ]);
         // Reader has no specific restricted permissions by default, but role existence is required
 
         // 1. AUTHOR - Can submit and manage own articles
-        $authorRole = Role::firstOrCreate(['name' => 'Author', 'guard_name' => 'web']);
+        $authorRole = Role::firstOrCreate([
+            'name' => 'Author',
+            'guard_name' => 'web',
+            'permission_level' => 5, // LEVEL_AUTHOR
+        ]);
         $authorRole->syncPermissions([
             'submissions.view-own',
             'submissions.create',
@@ -96,17 +104,29 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // 2. REVIEWER - Can review assigned articles
-        $reviewerRole = Role::firstOrCreate(['name' => 'Reviewer', 'guard_name' => 'web']);
+        $reviewerRole = Role::firstOrCreate([
+            'name' => 'Reviewer',
+            'guard_name' => 'web',
+            'permission_level' => 4, // LEVEL_REVIEWER
+        ]);
         $reviewerRole->syncPermissions([
             'reviews.view-own',
             'reviews.submit',
         ]);
 
         // 2b. COPYEDITOR (Optional OJS role)
-        $copyeditorRole = Role::firstOrCreate(['name' => 'Copyeditor', 'guard_name' => 'web']);
+        $copyeditorRole = Role::firstOrCreate([
+            'name' => 'Copyeditor',
+            'guard_name' => 'web',
+            'permission_level' => 3, // LEVEL_ASSISTANT
+        ]);
 
         // 3. EDITOR - Can manage submissions and make decisions
-        $editorRole = Role::firstOrCreate(['name' => 'Editor', 'guard_name' => 'web']);
+        $editorRole = Role::firstOrCreate([
+            'name' => 'Editor',
+            'guard_name' => 'web',
+            'permission_level' => 2, // LEVEL_EDITOR
+        ]);
         $editorRole->syncPermissions([
             'submissions.view-own',
             'submissions.create',
@@ -123,7 +143,11 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // 3b. SECTION EDITOR
-        $sectionEditorRole = Role::firstOrCreate(['name' => 'Section Editor', 'guard_name' => 'web']);
+        $sectionEditorRole = Role::firstOrCreate([
+            'name' => 'Section Editor',
+            'guard_name' => 'web',
+            'permission_level' => 2, // LEVEL_SECTION_EDITOR
+        ]);
         $sectionEditorRole->syncPermissions([
             'submissions.view-own',
             'submissions.view-all', // Needs policy refinement for actual section scoping
@@ -134,7 +158,11 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // 3c. JOURNAL MANAGER
-        $journalManagerRole = Role::firstOrCreate(['name' => 'Journal Manager', 'guard_name' => 'web']);
+        $journalManagerRole = Role::firstOrCreate([
+            'name' => 'Journal Manager',
+            'guard_name' => 'web',
+            'permission_level' => 1, // LEVEL_MANAGER
+        ]);
         $journalManagerRole->syncPermissions([
             'users.view',
             'users.create',
@@ -153,7 +181,11 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // 4. ADMIN - Can manage users, sections, and journal settings
-        $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $adminRole = Role::firstOrCreate([
+            'name' => 'Admin',
+            'guard_name' => 'web',
+            'permission_level' => 1, // LEVEL_ADMIN
+        ]);
         $adminRole->syncPermissions([
             // All Editor permissions
             'submissions.view-own',
@@ -182,7 +214,11 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // 5. SUPER ADMIN - Has all permissions
-        $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $superAdminRole = Role::firstOrCreate([
+            'name' => 'Super Admin',
+            'guard_name' => 'web',
+            'permission_level' => 0, // LEVEL_SUPER_ADMIN
+        ]);
         $superAdminRole->syncPermissions(Permission::all());
 
         $this->command->info('Roles and Permissions seeded successfully!');
