@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('abstract')->nullable();
             $table->text('keywords')->nullable(); // Comma-separated atau bisa pakai jsonb
+            $table->string('locale')->default('en')->index(); // Language/locale (en, id, etc.)
 
             // Status Workflow
             // Enum: draft, submitted, in_review, revision_required, accepted, rejected, published

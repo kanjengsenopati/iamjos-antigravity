@@ -29,6 +29,7 @@ class SubmissionFactory extends Factory
             'user_id'      => User::factory(),
             'issue_id'     => null, // null by default — assign issue secara eksplisit jika diperlukan
             'title'        => $this->faker->sentence,
+            'locale'       => 'en', // Default locale
             'status'       => Submission::STATUS_PUBLISHED,
             'stage'        => Submission::STAGE_PRODUCTION,
             'submitted_at' => now(),

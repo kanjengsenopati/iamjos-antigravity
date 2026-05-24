@@ -53,6 +53,7 @@ class Submission extends Model
         'submission_code',
         'subtitle',
         'abstract',
+        'locale',
         'submission_file_path',
         'status',
         'stage',
