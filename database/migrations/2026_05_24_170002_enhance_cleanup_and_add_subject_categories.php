@@ -11,21 +11,23 @@ return new class extends Migration
      * 
      * 1. Clean up orphaned demo authors (users with Author role but no submissions)
      * 2. Add default subject categories for "Browse by Subject" section
+     * 
+     * NOTE: Categories are NO LONGER auto-inserted. Admin must configure them manually.
      */
     public function up(): void
     {
-        Log::info('Starting enhanced cleanup and subject categories setup...');
+        Log::info('Starting enhanced cleanup (categories auto-insert DISABLED)...');
         
         try {
             DB::transaction(function () {
                 // Phase 1: Clean up orphaned demo authors
                 $this->cleanupOrphanedAuthors();
                 
-                // Phase 2: Add default subject categories
-                $this->addDefaultCategories();
+                // Phase 2: DELETE any existing demo categories
+                $this->cleanupDemoCategories();
             });
             
-            Log::info('Enhanced cleanup and categories setup completed successfully');
+            Log::info('Enhanced cleanup completed successfully');
         } catch (\Exception $e) {
             Log::error('Enhanced cleanup migration failed', [
                 'error' => $e->getMessage(),
@@ -89,82 +91,24 @@ return new class extends Migration
     
     /**
      * Add default subject categories for Browse by Subject section.
+     * 
+     * DEPRECATED: This method is no longer called. Categories must be added manually by admin.
      */
     private function addDefaultCategories(): void
     {
-        $categories = [
-            [
-                'name' => 'Science & Technology',
-                'path' => 'science-technology',
-                'slug' => 'science-technology',
-                'description' => 'Computer Science, Engineering, Mathematics, Physics, Chemistry',
-                'icon' => 'flask',
-                'color' => 'blue',
-                'sort_order' => 1,
-            ],
-            [
-                'name' => 'Medicine & Health',
-                'path' => 'medicine-health',
-                'slug' => 'medicine-health',
-                'description' => 'Clinical Medicine, Public Health, Nursing, Pharmacy, Biomedical Sciences',
-                'icon' => 'heartbeat',
-                'color' => 'red',
-                'sort_order' => 2,
-            ],
-            [
-                'name' => 'Social Sciences',
-                'path' => 'social-sciences',
-                'slug' => 'social-sciences',
-                'description' => 'Psychology, Sociology, Anthropology, Political Science, Economics',
-                'icon' => 'users',
-                'color' => 'green',
-                'sort_order' => 3,
-            ],
-            [
-                'name' => 'Arts & Humanities',
-                'path' => 'arts-humanities',
-                'slug' => 'arts-humanities',
-                'description' => 'Literature, History, Philosophy, Languages, Cultural Studies',
-                'icon' => 'palette',
-                'color' => 'purple',
-                'sort_order' => 4,
-            ],
-            [
-                'name' => 'Business & Economics',
-                'path' => 'business-economics',
-                'slug' => 'business-economics',
-                'description' => 'Management, Finance, Marketing, Accounting, Entrepreneurship',
-                'icon' => 'chart-line',
-                'color' => 'yellow',
-                'sort_order' => 5,
-            ],
-            [
-                'name' => 'Education',
-                'path' => 'education',
-                'slug' => 'education',
-                'description' => 'Pedagogy, Curriculum Development, Educational Technology, Learning Sciences',
-                'icon' => 'graduation-cap',
-                'color' => 'indigo',
-                'sort_order' => 6,
-            ],
-        ];
+        Log::info('addDefaultCategories() is deprecated - categories must be configured manually');
+    }
+    
+    /**
+     * Clean up any demo categories that were auto-inserted.
+     */
+    private function cleanupDemoCategories(): void
+    {
+        // Delete site-level categories (journal_id IS NULL)
+        $deletedCount = DB::table('categories')
+            ->whereNull('journal_id')
+            ->delete();
         
-        foreach ($categories as $category) {
-            // Check if category already exists
-            $exists = DB::table('categories')
-                ->where('slug', $category['slug'])
-                ->exists();
-            
-            if (!$exists) {
-                DB::table('categories')->insert(array_merge($category, [
-                    'id' => \Illuminate\Support\Str::uuid()->toString(),
-                    'journal_id' => null, // Site-level category
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]));
-                
-                Log::info('Added category', ['name' => $category['name']]);
-            }
-        }
+        Log::info('Cleaned up site-level categories', ['count' => $deletedCount]);
     }
 };

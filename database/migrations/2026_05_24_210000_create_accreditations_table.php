@@ -9,6 +9,9 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * Creates accreditations table but does NOT insert default data.
+     * Admin must configure accreditations manually via Super Admin Panel.
      */
     public function up(): void
     {
@@ -23,55 +26,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Insert default accreditations
-        $accreditations = [
-            [
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'name' => 'SINTA 1',
-                'slug' => 'sinta-1',
-                'level' => 'S1',
-                'color' => 'amber',
-                'sort_order' => 1,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'name' => 'SINTA 2',
-                'slug' => 'sinta-2',
-                'level' => 'S2',
-                'color' => 'slate',
-                'sort_order' => 2,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'name' => 'Scopus Indexed',
-                'slug' => 'scopus',
-                'level' => 'SC',
-                'color' => 'blue',
-                'sort_order' => 3,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'name' => 'DOAJ',
-                'slug' => 'doaj',
-                'level' => 'DJ',
-                'color' => 'purple',
-                'sort_order' => 4,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ];
-
-        DB::table('accreditations')->insert($accreditations);
+        // NO default data inserted - admin must configure manually
     }
 
     /**
