@@ -9,10 +9,8 @@
         @foreach ($records as $record)
             <record>
                 <header>
-                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->seq_id }}
-                    </identifier>
-                    <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}
-                    </datestamp>
+                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->seq_id }}</identifier>
+                    <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}</datestamp>
                     <setSpec>{{ $journal->path }}</setSpec>
                 </header>
                 <metadata>
@@ -22,8 +20,7 @@
 
                         <bib-version>v2.0</bib-version>
                         <id>{{ $record->id }}</id>
-                        <entry>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('F d, Y') }}
-                        </entry>
+                        <entry>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('F d, Y') }}</entry>
                         <organization>{{ $journal->name }}</organization>
                         <title>{{ $record->publication->title }}</title>
                         <type>Research Article</type>
@@ -43,5 +40,5 @@
                 </metadata>
             </record>
         @endforeach
-        </{{ $verb }}>
+    </{{ $verb }}>
 </OAI-PMH>

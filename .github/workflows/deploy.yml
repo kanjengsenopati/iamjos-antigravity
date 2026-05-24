@@ -112,6 +112,8 @@ jobs:
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: array
           IAMJOS_LICENSE_CHECK_ENABLED: "false"
+          # Skip Vite manifest requirement in tests
+          ASSET_URL: ""
 
       - name: PHPStan — Analisis Statis Level 5
         run: vendor/bin/phpstan analyse --level=5 --no-progress --ansi

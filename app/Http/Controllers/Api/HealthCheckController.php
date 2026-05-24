@@ -54,14 +54,23 @@ class HealthCheckController extends Controller
             $storageOk = $checks['storage']->status === 'ok';
             $queueOk   = $checks['queue']->status === 'ok';
 
+            // Komponen kritis: database, redis, storage
+            // Komponen non-kritis: queue
+            $criticalComponentsFailed = !$dbOk || !$redisOk || !$storageOk;
+            $nonCriticalComponentsFailed = !$queueOk;
+
             if ($dbOk && $redisOk && $storageOk && $queueOk) {
+                // Semua komponen sehat
                 $overallStatus = HealthStatus::Healthy;
-            } elseif ($dbOk && $redisOk && (!$storageOk || !$queueOk)) {
-                // Komponen non-kritis (storage/queue) error, tapi DB dan Redis ok
+            } elseif ($criticalComponentsFailed) {
+                // Komponen kritis (DB, Redis, atau Storage) error
+                $overallStatus = HealthStatus::Unhealthy;
+            } elseif ($nonCriticalComponentsFailed) {
+                // Hanya komponen non-kritis (queue) error
                 $overallStatus = HealthStatus::Degraded;
             } else {
-                // Komponen kritis (DB atau Redis) error
-                $overallStatus = HealthStatus::Unhealthy;
+                // Fallback (seharusnya tidak pernah tercapai)
+                $overallStatus = HealthStatus::Healthy;
             }
 
             // Hitung uptime dari waktu bootstrap cache atau REQUEST_TIME
