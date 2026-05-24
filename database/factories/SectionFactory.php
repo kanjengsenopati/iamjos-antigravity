@@ -12,9 +12,12 @@ class SectionFactory extends Factory
 
     public function definition()
     {
+        $name = $this->faker->words(3, true);
+        
         return [
             'journal_id' => Journal::factory(),
-            'name' => $this->faker->words(3, true),
+            'name' => $name,
+            'title' => $name, // Same as name for consistency
             'abbreviation' => $this->faker->lexify('???'),
             'is_active' => true,
             'sort_order' => 0,

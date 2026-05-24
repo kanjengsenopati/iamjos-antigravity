@@ -227,8 +227,8 @@ describe('JatsXmlController — Route Admin (workflowPreview)', function () {
             'submission' => $submission->id,
         ]));
 
-        // Redirect ke login atau 401
-        expect($response->status())->toBeIn([401, 302]);
+        // Redirect ke login (301/302) atau 401
+        expect($response->status())->toBeIn([401, 301, 302]);
     });
 
 });

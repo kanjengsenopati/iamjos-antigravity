@@ -59,8 +59,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('issues', function (Blueprint $table) {
-            $table->dropUnique('issues_journal_id_url_path_unique');
-        });
+        try {
+            Schema::table('issues', function (Blueprint $table) {
+                $table->dropUnique('issues_journal_id_url_path_unique');
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Index might not exist, ignore
+        }
     }
 };

@@ -20,6 +20,7 @@ return new class extends Migration
 
             // Data Section
             $table->string('name'); // Misal: "Original Articles", "Review Articles"
+            $table->string('title')->nullable(); // Alias untuk name (untuk backward compatibility)
             $table->string('abbreviation')->nullable(); // Misal: "OA", "RA"
             $table->text('policy')->nullable(); // Kebijakan section
             $table->boolean('is_active')->default(true);

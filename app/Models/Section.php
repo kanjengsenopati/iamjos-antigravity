@@ -19,6 +19,7 @@ class Section extends Model
     protected $fillable = [
         'journal_id',
         'name',
+        'title',
         'abbreviation',
         'policy',
         'meta_indexed',
@@ -36,6 +37,29 @@ class Section extends Model
         'meta_reviewed' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    // =====================================================
+    // ACCESSORS & MUTATORS
+    // =====================================================
+
+    /**
+     * Get title attribute (fallback to name for backward compatibility)
+     */
+    public function getTitleAttribute($value): ?string
+    {
+        return $value ?? $this->attributes['name'] ?? null;
+    }
+
+    /**
+     * Set title attribute (also set name for consistency)
+     */
+    public function setTitleAttribute($value): void
+    {
+        $this->attributes['title'] = $value;
+        if (empty($this->attributes['name'])) {
+            $this->attributes['name'] = $value;
+        }
+    }
 
     // =====================================================
     // RELATIONSHIPS
