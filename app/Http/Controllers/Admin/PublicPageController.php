@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\SitePage;
 use App\Models\SiteContentBlock;
 use App\Models\NavigationMenu;
