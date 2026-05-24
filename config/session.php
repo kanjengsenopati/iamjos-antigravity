@@ -67,14 +67,15 @@ return [
     | Session Database Connection
     |--------------------------------------------------------------------------
     |
-    | When using the "database" or "redis" session drivers, you may specify a
+    | When using the "database" session driver, you may specify a database
     | connection that should be used to manage these sessions. This should
     | correspond to a connection in your database configuration options.
     |
+    | For Redis sessions, leave this as null and use 'store' instead.
+    |
     */
 
-    // Untuk Redis session, gunakan koneksi 'session' yang menggunakan DB terpisah (REDIS_SESSION_DB=2)
-    'connection' => env('SESSION_CONNECTION', 'session'),
+    'connection' => env('SESSION_CONNECTION', null),
 
     /*
     |--------------------------------------------------------------------------
@@ -98,11 +99,13 @@ return [
     | define the cache store which should be used to store the session data
     | between requests. This must match one of your defined cache stores.
     |
+    | For Redis sessions, specify the Redis connection name here.
+    |
     | Affects: "dynamodb", "memcached", "redis"
     |
     */
 
-    'store' => env('SESSION_STORE'),
+    'store' => env('SESSION_STORE', 'session'),
 
     /*
     |--------------------------------------------------------------------------
