@@ -61,11 +61,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Build frontend assets for tests
         run: |
-          npm ci --silent
+          rm -rf node_modules package-lock.json
+          npm install
           npm run build
 
       - name: Siapkan environment testing
@@ -156,7 +156,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Cache Composer dependencies (production)
         uses: actions/cache@v4
@@ -170,7 +169,9 @@ jobs:
         run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: Build assets production (Vite)
         run: npm run build
