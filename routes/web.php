@@ -36,6 +36,7 @@ use App\Http\Controllers\Admin\Tools\CrossrefExportController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\Public\JatsXmlController;
 use App\Http\Controllers\Public\LockssController;
+use App\Http\Controllers\Admin\PublicPageController;
 
 // =====================================================
 // OJS PREFIX CONFIGURATION
@@ -158,6 +159,9 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 Route::put('/{sitePage}', 'update')->name('update');
                 Route::delete('/{sitePage}', 'destroy')->name('destroy');
                 Route::post('/{sitePage}/toggle', 'toggle')->name('toggle');
+
+            // Unified Public Page Management
+            Route::get('/public-page', [PublicPageController::class, 'index'])->name('public-page.index');
                 Route::post('/reorder', 'reorder')->name('reorder');
             });
 
@@ -167,6 +171,10 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 Route::put('/items/{item}', 'updateItem')->name('items.update');
                 Route::delete('/items/{item}', 'destroyItem')->name('items.destroy');
                 Route::post('/items/reorder', 'reorderItems')->name('items.reorder');
+            });
+
+            Route::controller(\App\Http\Controllers\Admin\PublicPageController::class)->prefix('public-page')->name('public-page.')->group(function () {
+                Route::get('/', 'index')->name('index');
             });
 
             Route::controller(\App\Http\Controllers\MalwareGuardController::class)->prefix('malware')->name('malware.')->group(function () {
