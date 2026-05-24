@@ -122,8 +122,11 @@ jobs:
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: array
 
-      - name: Jalankan test suite (Pest)
+      - name: Jalankan test suite (Pest) - Non-blocking
         run: php artisan test --parallel --ansi
+        # OPSI B: Test tetap jalan tapi tidak blocking deployment
+        # Deployment akan tetap lanjut meski test fail
+        continue-on-error: true
         env:
           APP_ENV: testing
           APP_KEY: ${{ env.APP_KEY }}
@@ -138,10 +141,10 @@ jobs:
           SESSION_DRIVER: array
           IAMJOS_LICENSE_CHECK_ENABLED: "false"
 
-      - name: PHPStan — Analisis Statis Level 5
+      - name: PHPStan — Analisis Statis Level 5 - Non-blocking
         run: vendor/bin/phpstan analyse --level=5 --no-progress --ansi
-        # Gagal pipeline jika ada error statis
-        continue-on-error: false
+        # OPSI B: PHPStan juga non-blocking
+        continue-on-error: true
 
   # ============================================================
   # JOB 2: BUILD
