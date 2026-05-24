@@ -155,6 +155,11 @@ describe('JatsXmlController — Route Publik', function () {
 
 describe('JatsXmlController — Route Admin (workflowPreview)', function () {
 
+    beforeEach(function () {
+        // Seed roles for this test suite
+        $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\RolesAndPermissionsSeeder']);
+    });
+
     it('mengembalikan 200 untuk submission yang belum published (preview mode)', function () {
         $journal    = Journal::factory()->create(['enabled' => true]);
         $submission = Submission::factory()->create([

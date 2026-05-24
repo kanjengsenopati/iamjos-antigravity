@@ -78,6 +78,15 @@ describe('Health Check API', function () {
         $this->mock(DatabaseChecker::class, fn($mock) =>
             $mock->shouldReceive('check')->andReturn(CheckResult::error('Database connection failed', 500.0))
         );
+        $this->mock(RedisChecker::class, fn($mock) =>
+            $mock->shouldReceive('check')->andReturn(CheckResult::ok(1.0))
+        );
+        $this->mock(StorageChecker::class, fn($mock) =>
+            $mock->shouldReceive('check')->andReturn(CheckResult::ok(3.0))
+        );
+        $this->mock(QueueChecker::class, fn($mock) =>
+            $mock->shouldReceive('check')->andReturn(CheckResult::ok(2.0))
+        );
 
         $response = $this->getJson('/api/v1/health');
 

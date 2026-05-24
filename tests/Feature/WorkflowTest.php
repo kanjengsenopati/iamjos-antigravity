@@ -26,6 +26,9 @@ class WorkflowTest extends TestCase
     {
         parent::setUp();
 
+        // Seed roles and permissions
+        $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\RolesAndPermissionsSeeder']);
+
         // 1. Setup Journal and Users
         $this->journal = Journal::factory()->create(['slug' => 'test-journal', 'enabled' => true]);
         $this->section = Section::factory()->create(['journal_id' => $this->journal->id]);
