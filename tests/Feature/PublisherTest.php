@@ -15,7 +15,7 @@ class PublisherTest extends TestCase
             echo "Error: " . $response->getContent() . "\n";
         }
         
-        $this->assertIn($response->status(), [200, 302]);
+        $this->assertContains($response->status(), [200, 302]);
     }
 
     public function test_publisher_model()

@@ -14,7 +14,10 @@
 uses(
     Tests\TestCase::class,
     Illuminate\Foundation\Testing\RefreshDatabase::class,
-)->in('Feature');
+)->beforeEach(function () {
+    // Seed roles and permissions for all feature tests
+    $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\RolesAndPermissionsSeeder']);
+})->in('Feature');
 
 uses(
     Tests\TestCase::class,
