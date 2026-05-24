@@ -35,6 +35,7 @@ use App\Http\Controllers\Admin\JournalUserManagementController;
 use App\Http\Controllers\Admin\Tools\CrossrefExportController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\Public\JatsXmlController;
+use App\Http\Controllers\Public\LockssController;
 
 // =====================================================
 // OJS PREFIX CONFIGURATION
@@ -210,6 +211,8 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
         // 7. JOURNAL PUBLIC ROUTES
         Route::prefix('{journal}')->group(function () {
             Route::any('oai', [\App\Http\Controllers\Public\OaiController::class, 'handle'])->middleware('throttle:60,1')->name('journal.oai');
+            Route::get('lockss', [\App\Http\Controllers\Public\LockssController::class, 'manifest'])->name('journal.lockss.manifest');
+            Route::get('clockss', [\App\Http\Controllers\Public\LockssController::class, 'clockssManifest'])->name('journal.clockss.manifest');
 
             Route::get('/', [\App\Http\Controllers\Journal\JournalHomepageController::class, 'index'])->name('journal.public.home');
             Route::get('/current', [\App\Http\Controllers\PublicController::class, 'currentIssue'])->name('journal.public.current');
