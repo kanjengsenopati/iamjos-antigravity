@@ -1,4 +1,4 @@
-@props(['search', 'sort', 'alpha', 'alphabet', 'brandColor' => '#00629B'])
+@props(['search', 'sort', 'alpha', 'alphabet', 'subjectCategories' => collect(), 'accreditations' => collect(), 'brandColor' => '#00629B'])
 
 <div class="space-y-8">
     {{-- SEARCH SECTION --}}
@@ -76,24 +76,17 @@
             Subject Fields
         </h3>
         <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-sidebar-scroll">
-            @foreach([
-                'Engineering & Tech', 
-                'Health & Medicine', 
-                'Social Sciences', 
-                'Humanities', 
-                'Education', 
-                'Economy & Business', 
-                'Agriculture', 
-                'Computer & IT'
-            ] as $subject)
+            @forelse($subjectCategories as $category)
                 <label class="flex items-center gap-3 py-2 px-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group">
                     <input type="checkbox" 
                            name="subject[]" 
-                           value="{{ $subject }}" 
+                           value="{{ $category->slug }}" 
                            class="w-4 h-4 rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 transition-all">
-                    <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{{ $subject }}</span>
+                    <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{{ $category->name }}</span>
                 </label>
-            @endforeach
+            @empty
+                <p class="text-sm text-slate-400 text-center py-4">No subject fields available</p>
+            @endforelse
         </div>
     </div>
 
@@ -104,25 +97,22 @@
             Accreditation
         </h3>
         <div class="space-y-1.5">
-            @foreach([
-                ['value' => 'sinta-1', 'label' => 'SINTA 1', 'level' => 'S1', 'color' => 'bg-amber-100 text-amber-700'],
-                ['value' => 'sinta-2', 'label' => 'SINTA 2', 'level' => 'S2', 'color' => 'bg-slate-100 text-slate-700'],
-                ['value' => 'scopus', 'label' => 'Scopus Indexed', 'level' => 'SC', 'color' => 'bg-blue-100 text-blue-700'],
-                ['value' => 'doaj', 'label' => 'DOAJ', 'level' => 'DJ', 'color' => 'bg-purple-100 text-purple-700'],
-            ] as $accreditation)
+            @forelse($accreditations as $accreditation)
                 <label class="flex items-center gap-3 py-2 px-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group">
                     <input type="checkbox" 
                            name="accreditation[]" 
-                           value="{{ $accreditation['value'] }}" 
+                           value="{{ $accreditation->slug }}" 
                            class="w-4 h-4 rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500 transition-all">
                     <span class="flex items-center gap-3 text-sm font-medium text-slate-600 group-hover:text-slate-900">
-                        <span class="w-6 h-6 flex items-center justify-center rounded text-[10px] font-black {{ $accreditation['color'] }}">
-                            {{ $accreditation['level'] }}
+                        <span class="w-6 h-6 flex items-center justify-center rounded text-[10px] font-black bg-{{ $accreditation->color }}-100 text-{{ $accreditation->color }}-700">
+                            {{ $accreditation->level }}
                         </span>
-                        {{ $accreditation['label'] }}
+                        {{ $accreditation->name }}
                     </span>
                 </label>
-            @endforeach
+            @empty
+                <p class="text-sm text-slate-400 text-center py-4">No accreditations available</p>
+            @endforelse
         </div>
     </div>
 </div>

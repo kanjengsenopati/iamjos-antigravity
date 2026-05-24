@@ -62,6 +62,8 @@
                         :sort="$sort" 
                         :alpha="$alpha" 
                         :alphabet="$alphabet" 
+                        :subject-categories="$subjectCategories"
+                        :accreditations="$accreditations"
                         :brand-color="$brandColor" 
                     />
                 </div>
@@ -107,6 +109,8 @@
                                 :sort="$sort" 
                                 :alpha="$alpha" 
                                 :alphabet="$alphabet" 
+                                :subject-categories="$subjectCategories"
+                                :accreditations="$accreditations"
                                 :brand-color="$brandColor" 
                             />
                         </div>

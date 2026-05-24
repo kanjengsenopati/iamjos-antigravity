@@ -313,7 +313,18 @@ class PortalController extends Controller
         $totalJournals = Journal::where('enabled', true)->where('visible', true)->count();
         $settings = SiteContent::getAll();
 
-        return view('site.journals', compact('journals', 'search', 'alpha', 'sort', 'alphabet', 'totalJournals', 'settings'));
+        // Load subject categories for filter
+        $subjectCategories = \App\Models\Category::whereNull('journal_id')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        // Load accreditations for filter
+        $accreditations = \App\Models\Accreditation::active()
+            ->ordered()
+            ->get();
+
+        return view('site.journals', compact('journals', 'search', 'alpha', 'sort', 'alphabet', 'totalJournals', 'settings', 'subjectCategories', 'accreditations'));
     }
 
     /**
