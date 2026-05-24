@@ -28,3 +28,7 @@ Thumbs.db
 *.sql.gz
 *.tar.gz
 /scratch/
+
+# Dev scratch/test scripts (root-level)
+test_*.php
+scratch_*.php

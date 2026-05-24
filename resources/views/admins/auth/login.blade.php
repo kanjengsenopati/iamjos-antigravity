@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | {{ $journal->name ?? config('app.name', 'IAMJOS') }}</title>
     <meta name="description"
-        content="{{ $journal ? $journal->name . ' - Login' : 'Indonesian Academic Journal System - Login' }}">
+        content="{{ $journal ? $journal->name . ' - Login' : \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') . ' - Login' }}">
     <meta name="robots" content="noindex, nofollow">
 
     <!-- Fonts -->
@@ -34,7 +34,7 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    @if (($journal ?? false) && ($journal->is_recaptcha_enabled ?? false) && ($siteSetting->recaptcha_site_key ?? false))
+    @if (($journal ?? false) && ($journal->is_recaptcha_enabled ?? false) && ($recaptchaSiteKey ?? false))
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @endif
 
@@ -286,8 +286,8 @@
                     </div>
 
                     <!-- reCAPTCHA Widget -->
-                    @if (($journal ?? false) && ($journal->is_recaptcha_enabled ?? false) && ($siteSetting->recaptcha_site_key ?? false))
-                        <div class="g-recaptcha" data-sitekey="{{ $siteSetting->recaptcha_site_key }}"></div>
+                    @if (($journal ?? false) && ($journal->is_recaptcha_enabled ?? false) && ($recaptchaSiteKey ?? false))
+                        <div class="g-recaptcha" data-sitekey="{{ $recaptchaSiteKey }}"></div>
                         @error('g-recaptcha-response')
                             <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -332,7 +332,7 @@
                     <p class="text-center text-xs text-gray-400">
                         © {{ date('Y') }} {{ $journal ? $journal->name : config('app.name', 'IAMJOS') }}.
                         @unless ($journal)
-                            Indonesian Academic Journal System.
+                            {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
                         @endunless
                     </p>
                 </div>

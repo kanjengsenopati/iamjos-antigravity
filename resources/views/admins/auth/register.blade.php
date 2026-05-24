@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | {{ config('app.name', 'IAMJOS') }}</title>
-    <meta name="description" content="Indonesian Academic Journal System - Create Account">
+    <meta name="description" content="{{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }} - Create Account">
     <meta name="robots" content="noindex, nofollow">
 
     <!-- Fonts -->
@@ -59,10 +59,10 @@
                         class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i class="fas fa-book-open text-xl text-white"></i>
                     </div>
-                    <span class="text-2xl font-bold text-gray-900">IAMJOS</span>
+                    <span class="text-2xl font-bold text-gray-900">{{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}</span>
                 </a>
                 <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Create your account</h1>
-                <p class="text-gray-500">Join the Indonesian Academic Journal System community</p>
+                <p class="text-gray-500">Join the {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }} community</p>
             </div>
 
             <!-- Registration Card -->
@@ -561,7 +561,7 @@
             <!-- Footer -->
             <div class="mt-8 text-center">
                 <p class="text-xs text-gray-400">
-                    © {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. Indonesian Academic Journal System.
+                    © {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
                 </p>
             </div>
         </div>
