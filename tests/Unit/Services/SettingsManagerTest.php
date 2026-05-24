@@ -87,6 +87,7 @@ describe('SettingsManager — Scope Site', function () {
         if (!\App\Models\SiteSetting::exists()) {
             \App\Models\SiteSetting::create(['site_title' => 'Test Site']);
         }
+        Cache::flush(); // Clear cache between tests
     });
 
     it('mengembalikan default jika key tidak ada', function () {
