@@ -19,8 +19,11 @@ class Category extends Model
     protected $fillable = [
         'journal_id',
         'name',
+        'slug',
         'path',
         'description',
+        'icon',
+        'color',
         'sort_order',
         'is_active',
     ];
@@ -40,10 +43,13 @@ class Category extends Model
     {
         parent::boot();
 
-        // Auto-generate path from name if not provided
+        // Auto-generate path and slug from name if not provided
         static::creating(function ($category) {
             if (empty($category->path)) {
                 $category->path = Str::slug($category->name);
+            }
+            if (empty($category->slug)) {
+                $category->slug = Str::slug($category->name);
             }
         });
     }

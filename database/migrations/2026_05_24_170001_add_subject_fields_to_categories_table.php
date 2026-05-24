@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            $table->string('slug')->nullable()->after('name');
+            $table->string('icon')->nullable()->after('description');
+            $table->string('color')->nullable()->after('icon');
+            
+            // Make journal_id nullable for site-level categories
+            $table->uuid('journal_id')->nullable()->change();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            $table->dropColumn(['slug', 'icon', 'color']);
+        });
+    }
+};
