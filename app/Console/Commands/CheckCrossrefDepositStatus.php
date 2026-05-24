@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Facades\Settings;
 use Illuminate\Console\Command;
 use App\Models\Journal;
 use App\Models\Publication;
@@ -59,7 +60,8 @@ class CheckCrossrefDepositStatus extends Command
                     // https://api.crossref.org/deposits?filter=batch-id:{batch_id} (requires authentication).
                     // Using the /works/{doi} endpoint is simpler and does not require auth.
                     
-                    $url = "https://api.crossref.org/works/" . urlencode($pub->doi);
+                    $apiBaseUrl = rtrim(Settings::system('crossref_api_base_url', 'https://api.crossref.org/works/'), '/') . '/';
+                    $url = $apiBaseUrl . urlencode($pub->doi);
                     $response = Http::timeout(10)->get($url);
 
                     if ($response->successful()) {
