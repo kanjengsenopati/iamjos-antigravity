@@ -324,9 +324,18 @@ jobs:
 
             # ─── 6. Rebuild cache aplikasi ─────────────────────────────
             echo "⚡ Membangun ulang cache aplikasi..."
+            # Clear cache dulu sebelum rebuild
+            php artisan cache:clear --ansi || true
+            php artisan config:clear --ansi || true
+            php artisan route:clear --ansi || true
+            php artisan view:clear --ansi || true
+            
+            # Rebuild cache
             php artisan config:cache --ansi
             php artisan route:cache --ansi
             php artisan view:cache --ansi
+            
+            # Livewire assets (skip jika error)
             php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
 
             # ─── 7. Restart services ───────────────────────────────────
@@ -352,7 +361,34 @@ jobs:
             else
               echo "❌ GAGAL: Health check mengembalikan HTTP $HTTP_STATUS"
               echo "   Periksa log aplikasi di: ${{ env.TARGET_PATH }}/storage/logs/"
-              exit 1
+              echo ""
+              echo "📋 Menampilkan 50 baris terakhir dari log Laravel:"
+              tail -n 50 storage/logs/laravel-$(date +%Y-%m-%d).log 2>/dev/null || \
+                tail -n 50 storage/logs/laravel.log 2>/dev/null || \
+                echo "   Log file tidak ditemukan"
+              echo ""
+              echo "🔄 Mencoba clear semua cache..."
+              php artisan cache:clear --ansi || true
+              php artisan config:clear --ansi || true
+              php artisan route:clear --ansi || true
+              php artisan view:clear --ansi || true
+              php artisan optimize:clear --ansi || true
+              echo ""
+              echo "🔄 Restart PHP-FPM..."
+              sudo systemctl restart php8.4-fpm 2>/dev/null || \
+                sudo systemctl restart php-fpm 2>/dev/null || true
+              echo ""
+              echo "⏳ Tunggu 5 detik dan coba health check lagi..."
+              sleep 5
+              HTTP_STATUS_RETRY=$(curl -s -o /dev/null -w "%{http_code}" \
+                --max-time 10 \
+                "${{ env.APP_URL }}/api/v1/health")
+              if [ "$HTTP_STATUS_RETRY" = "200" ] || [ "$HTTP_STATUS_RETRY" = "503" ]; then
+                echo "✅ Health check OK setelah retry (HTTP $HTTP_STATUS_RETRY)"
+              else
+                echo "❌ Health check masih fail setelah retry (HTTP $HTTP_STATUS_RETRY)"
+                exit 1
+              fi
             fi
 
             echo ""
