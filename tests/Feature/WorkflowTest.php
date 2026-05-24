@@ -35,9 +35,16 @@ class WorkflowTest extends TestCase
         $this->reviewer = User::factory()->create();
 
         // Assign Roles (Manual sync to pivot table because of custom Role model)
+        // Ensure Editor role exists before using it
+        $editorRole = Role::where('permission_level', Role::LEVEL_EDITOR)->first();
+        
+        if (!$editorRole) {
+            $this->fail('Editor role not found. Ensure RolesAndPermissionsSeeder has run.');
+        }
+        
         $this->editor->journalRoles()->create([
             'journal_id' => $this->journal->id,
-            'role_id' => Role::where('permission_level', Role::LEVEL_EDITOR)->first()->id
+            'role_id' => $editorRole->id
         ]);
     }
 

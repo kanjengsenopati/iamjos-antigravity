@@ -21,6 +21,10 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 describe('SettingsManager — Scope System', function () {
 
+    beforeEach(function () {
+        Cache::flush(); // Clear cache between tests
+    });
+
     it('mengembalikan default jika key tidak ada', function () {
         $manager = app(SettingsManager::class);
 
@@ -123,6 +127,10 @@ describe('SettingsManager — Scope Site', function () {
 
 describe('SettingsManager — Scope Journal', function () {
 
+    beforeEach(function () {
+        Cache::flush(); // Clear cache between tests
+    });
+
     it('mengembalikan default jika key tidak ada untuk journal tertentu', function () {
         $journal = Journal::factory()->create();
         $manager = app(SettingsManager::class);
@@ -189,6 +197,14 @@ describe('SettingsManager — Scope Journal', function () {
 });
 
 describe('Settings Facade', function () {
+
+    beforeEach(function () {
+        Cache::flush(); // Clear cache between tests
+        // Ensure site_settings row exists
+        if (!\App\Models\SiteSetting::exists()) {
+            \App\Models\SiteSetting::create(['site_title' => 'Test Site']);
+        }
+    });
 
     it('Settings::system() berfungsi sebagai proxy ke SettingsManager::system()', function () {
         Settings::setSystem('facade_test', 'facade_value', 'string');
