@@ -12,6 +12,7 @@ Fixed multiple critical test failures identified in GitHub Actions logs:
 3. RoleDoesNotExist - Editor role not seeded in tests
 4. OaiMultiFormatTest - malformed RFC1807 XML
 5. HealthCheckTest - Redis/queue configuration issues
+6. **HOTFIX**: Publishers migration - datatype mismatch (bigint vs uuid)
 
 ## Root Causes & Solutions
 
@@ -89,8 +90,19 @@ Created migration with:
 - id (primary key)
 - name (required)
 - email, website, address, city, country, postal_code, phone (optional)
-- admin_id (foreign key to users table)
+- admin_id (UUID foreign key to users table) - **FIXED**: Changed from bigint to uuid
 - timestamps
+
+**IMPORTANT**: The admin_id column must use UUID type to match users.id column type in PostgreSQL.
+
+```php
+// Correct implementation:
+$table->uuid('admin_id')->nullable();
+$table->foreign('admin_id')->references('id')->on('users')->nullOnDelete();
+
+// Wrong (causes PostgreSQL foreign key constraint error):
+$table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
+```
 
 #### c. Publisher Factory
 **File**: `database/factories/PublisherFactory.php`
@@ -165,6 +177,40 @@ This ensures:
 
 ---
 
+### 6. Publishers Migration: Datatype Mismatch (HOTFIX)
+
+**Error**: 
+```
+SQLSTATE[42804]: Datatype mismatch: 7 ERROR: foreign key constraint "publishers_admin_id_foreign" 
+cannot be implemented
+DETAIL: Key columns "admin_id" and "id" are of incompatible types: bigint and uuid.
+```
+
+**Root Cause**: The publishers table defined `admin_id` as bigint using `foreignId()`, but the users table uses UUID for its primary key. PostgreSQL cannot create a foreign key constraint between columns of different types.
+
+**Solution**: Changed admin_id column type from bigint to uuid:
+
+**File**: `database/migrations/2026_05_24_100000_create_publishers_table.php`
+
+```php
+// Before (WRONG - causes PostgreSQL error):
+$table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
+
+// After (CORRECT - matches users.id type):
+$table->uuid('admin_id')->nullable();
+$table->foreign('admin_id')->references('id')->on('users')->nullOnDelete();
+```
+
+**Key Learning**: When creating foreign keys in Laravel migrations:
+- Always check the referenced column's data type
+- Use matching data types for foreign key columns
+- `foreignId()` creates bigint, which doesn't match UUID columns
+- Explicitly define UUID columns when referencing UUID primary keys
+
+**Commit**: 3b4796bd
+
+---
+
 ### 5. HealthCheckTest: Redis/Queue Configuration
 
 **Error**: 
@@ -221,11 +267,12 @@ All feature tests now automatically seed roles and permissions before each test:
 
 1. ✅ Publisher model created with proper relationships
 2. ✅ Publisher migration created with all required fields
-3. ✅ Publisher factory created for testing
-4. ✅ assertIn() replaced with assertContains()
-5. ✅ RFC1807 XML declaration fixed
-6. ✅ Role seeding added to Pest.php beforeEach
-7. ✅ All changes committed and pushed to GitHub
+3. ✅ **HOTFIX**: Publisher admin_id changed from bigint to uuid
+4. ✅ Publisher factory created for testing
+5. ✅ assertIn() replaced with assertContains()
+6. ✅ RFC1807 XML declaration fixed
+7. ✅ Role seeding added to Pest.php beforeEach
+8. ✅ All changes committed and pushed to GitHub
 
 ## Expected Test Results
 
@@ -280,5 +327,14 @@ Task 8 successfully resolved all critical test failures by:
 2. Fixing incorrect PHPUnit assertion method
 3. Adding automatic role seeding for all feature tests
 4. Fixing RFC1807 XML declaration format
+5. **HOTFIX**: Fixing datatype mismatch in publishers migration (bigint → uuid)
 
 All changes follow Laravel best practices and maintain backward compatibility.
+
+### Key Takeaways
+
+1. **Foreign Key Types**: Always match foreign key column types with referenced column types
+2. **UUID vs BigInt**: `foreignId()` creates bigint, use explicit `uuid()` for UUID foreign keys
+3. **PostgreSQL Strictness**: PostgreSQL enforces type matching for foreign key constraints
+4. **Test Environment**: Automatic role seeding ensures consistent RBAC setup in tests
+5. **XML Generation**: Proper XML declaration without whitespace is critical for well-formed XML
