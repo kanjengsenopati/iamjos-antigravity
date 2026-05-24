@@ -14,8 +14,17 @@ Successfully implemented comprehensive production database cleanup and made "Bro
 
 ## Changes Implemented
 
-### 1. Enhanced Cleanup Migration
-**File**: `database/migrations/2026_05_24_170000_enhance_cleanup_and_add_subject_categories.php`
+### 1. Database Schema Update (RUNS FIRST)
+**File**: `database/migrations/2026_05_24_170001_add_subject_fields_to_categories_table.php`
+
+**Changes**:
+- ✅ Added `slug` field for URL-friendly category identifiers
+- ✅ Added `icon` field for FontAwesome icon names
+- ✅ Added `color` field for category color themes
+- ✅ Made `journal_id` nullable for site-level categories
+
+### 2. Enhanced Cleanup Migration (RUNS SECOND)
+**File**: `database/migrations/2026_05_24_170002_enhance_cleanup_and_add_subject_categories.php`
 
 **Actions**:
 - ✅ Cleaned up orphaned demo authors (users with Author role but no submissions)
@@ -30,14 +39,31 @@ Successfully implemented comprehensive production database cleanup and made "Bro
 5. Business & Economics (yellow, chart-line icon)
 6. Education (indigo, graduation-cap icon)
 
-### 2. Database Schema Update
-**File**: `database/migrations/2026_05_24_170001_add_subject_fields_to_categories_table.php`
+---
 
-**Changes**:
-- ✅ Added `slug` field for URL-friendly category identifiers
-- ✅ Added `icon` field for FontAwesome icon names
-- ✅ Added `color` field for category color themes
-- ✅ Made `journal_id` nullable for site-level categories
+## Bug Fixes
+
+### Critical Fix #1: Migration Order
+**Issue**: Migration failed with error `column "slug" does not exist`
+
+**Root Cause**: Migration `2026_05_24_170000` tried to use `slug` column before migration `2026_05_24_170001` created it
+
+**Solution**: Renamed migration from `170000` to `170002` so it runs AFTER the schema update
+
+### Critical Fix #2: model_uuid vs model_id
+**Issue**: Migration failed with error `column model_has_roles.model_id does not exist`
+
+**Root Cause**: Laravel's Spatie Permission package uses `model_uuid` for UUID-based models, not `model_id`
+
+**Solution**: Changed query from:
+```php
+->on('users.id', '=', 'model_has_roles.model_id')
+```
+
+To:
+```php
+->on('users.id', '=', 'model_has_roles.model_uuid')
+```
 
 ### 3. Controller Update
 **File**: `app/Http/Controllers/PortalController.php`
@@ -56,25 +82,6 @@ Successfully implemented comprehensive production database cleanup and made "Bro
 
 ---
 
-## Bug Fixes
-
-### Critical Fix: model_uuid vs model_id
-**Issue**: Migration failed with error `column model_has_roles.model_id does not exist`
-
-**Root Cause**: Laravel's Spatie Permission package uses `model_uuid` for UUID-based models, not `model_id`
-
-**Solution**: Changed query from:
-```php
-->on('users.id', '=', 'model_has_roles.model_id')
-```
-
-To:
-```php
-->on('users.id', '=', 'model_has_roles.model_uuid')
-```
-
----
-
 ## Expected Results
 
 After deployment completes:
@@ -88,8 +95,8 @@ After deployment completes:
 
 ## Deployment
 
-- ✅ Committed: `fix: use model_uuid instead of model_id in cleanup migration`
-- ✅ Pushed to GitHub: commit 208af845
+- ✅ Committed: `fix: reorder migrations - add columns before using them`
+- ✅ Pushed to GitHub: commit fe8d4cc7
 - ⏳ GitHub Actions: Deploying to https://ejournal.apdesyi.or.id/
 - ⏳ Migration: Will run automatically on deployment
 
