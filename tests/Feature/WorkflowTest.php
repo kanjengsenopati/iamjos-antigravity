@@ -37,7 +37,7 @@ class WorkflowTest extends TestCase
         // Assign Roles (Manual sync to pivot table because of custom Role model)
         $this->editor->journalRoles()->create([
             'journal_id' => $this->journal->id,
-            'role_id' => Role::where('level', Role::LEVEL_EDITOR)->first()->id
+            'role_id' => Role::where('permission_level', Role::LEVEL_EDITOR)->first()->id
         ]);
     }
 

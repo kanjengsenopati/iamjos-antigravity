@@ -66,17 +66,15 @@
         // 3. Map to Integer ID
         $primaryContactId = $primaryAuthor ? $mapAuthorId[$primaryAuthor->id] ?? 0 : 0;
 
-        {{-- SECTION REF: Use actual section abbreviation, fallback to 'ART' --}}
-        @php
-            $sectionRef = 'ART'; // Default fallback
-            if ($submission->section) {
-                if (isset($submission->section->abbrev)) {
-                    $sectionRef = strtoupper($submission->section->abbrev);
-                } elseif (isset($submission->section->abbreviation)) {
-                    $sectionRef = strtoupper($submission->section->abbreviation);
-                }
+        // SECTION REF: Use actual section abbreviation, fallback to 'ART'
+        $sectionRef = 'ART'; // Default fallback
+        if ($submission->section) {
+            if (isset($submission->section->abbrev)) {
+                $sectionRef = strtoupper($submission->section->abbrev);
+            } elseif (isset($submission->section->abbreviation)) {
+                $sectionRef = strtoupper($submission->section->abbreviation);
             }
-        @endphp
+        }
 
         // DOI from current publication
         $pubDoi = $submission->currentPublication?->doi ?? null;
