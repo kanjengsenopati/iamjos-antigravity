@@ -79,59 +79,56 @@ Vite manifest not found at: /home/runner/work/.../public/build/manifest.json
 - `ExampleTest`
 - `JournalDistributionTest`
 - `JatsXmlControllerTest`
+- Dan semua feature tests yang render views
 
 ### Root Cause
 Test environment tidak build frontend assets (Vite), tapi beberapa test me-render views yang memerlukan Vite manifest.
 
 ### Solution
 
+**Approach 1: Build Assets Before Tests (RECOMMENDED - IMPLEMENTED)**
+
 **File:** `.github/workflows/deploy.yml`
 
-Tambahkan environment variable `ASSET_URL=""` untuk skip Vite manifest requirement:
+Tambahkan step untuk build Vite assets SEBELUM menjalankan tests:
 
 ```yaml
-- name: Jalankan test suite (Pest)
-  run: php artisan test --parallel --ansi
-  env:
-    APP_ENV: testing
-    APP_KEY: ${{ env.APP_KEY }}
-    DB_CONNECTION: pgsql
-    DB_HOST: 127.0.0.1
-    DB_PORT: 5432
-    DB_DATABASE: iamjos_test
-    DB_USERNAME: postgres
-    DB_PASSWORD: postgres
-    CACHE_STORE: array
-    QUEUE_CONNECTION: sync
-    SESSION_DRIVER: array
-    IAMJOS_LICENSE_CHECK_ENABLED: "false"
-    # Skip Vite manifest requirement in tests
-    ASSET_URL: ""
+- name: Setup Node.js for test assets
+  uses: actions/setup-node@v4
+  with:
+    node-version: '20'
+    cache: 'npm'
+
+- name: Build frontend assets for tests
+  run: |
+    npm ci --silent
+    npm run build
+
+- name: Siapkan environment testing
+  run: |
+    cp .env.example .env
+    # ... rest of setup
 ```
 
-### Alternative Solutions (Not Used)
+**File:** `phpunit.xml`
 
-1. **Build assets before tests** (slower, not recommended):
-   ```yaml
-   - name: Build assets for tests
-     run: |
-       npm ci
-       npm run build
-   ```
+Tambahkan environment variables untuk test:
 
-2. **Mock Vite in test base class**:
-   ```php
-   public function setUp(): void
-   {
-       parent::setUp();
-       config(['app.asset_url' => '']);
-   }
-   ```
+```xml
+<php>
+    <env name="ASSET_URL" value=""/>
+    <env name="IAMJOS_LICENSE_CHECK_ENABLED" value="false"/>
+</php>
+```
+
+**Approach 2: Skip Vite Manifest (Alternative - Not Used)**
+
+Set `ASSET_URL=""` di environment untuk skip Vite manifest requirement. Approach ini lebih cepat tapi tidak test real rendering behavior.
 
 ### Impact
-- ✅ Tests yang render views tidak lagi memerlukan Vite manifest
-- ✅ Test execution lebih cepat (tidak perlu build assets)
-- ✅ Konsisten dengan test environment best practices
+- ✅ Tests yang render views sekarang berjalan dengan assets yang di-build
+- ✅ Test execution lebih lambat (~30 detik untuk npm build) tapi lebih akurat
+- ✅ Konsisten dengan production environment
 
 ---
 
@@ -188,13 +185,77 @@ Newline di tengah tag membuat XML parser gagal.
 
 ---
 
+## 🐛 Bug #4: Unit Tests Dependency Injection Issues
+
+### Problem
+Unit tests gagal dengan error:
+```
+Target class [config] does not exist
+Target [Illuminate\Contracts\Cache\Repository] is not instantiable
+```
+
+**Affected Tests:**
+- `LicenseServiceTest`
+- Other unit tests using `app()` helper
+
+### Root Cause
+Unit tests tidak menggunakan Laravel's `TestCase` class, sehingga service container tidak ter-initialize dengan benar.
+
+### Solution
+
+**File:** `tests/Pest.php`
+
+Tambahkan `TestCase` untuk Unit tests:
+
+```php
+uses(
+    Tests\TestCase::class,
+    Illuminate\Foundation\Testing\RefreshDatabase::class,
+)->in('Feature');
+
+uses(
+    Tests\TestCase::class,
+)->in('Unit');
+```
+
+**Before:**
+```php
+// Unit tests tidak punya TestCase
+uses(
+    Tests\TestCase::class,
+    Illuminate\Foundation\Testing\RefreshDatabase::class,
+)->in('Feature');
+```
+
+**After:**
+```php
+// Unit tests sekarang menggunakan TestCase
+uses(
+    Tests\TestCase::class,
+    Illuminate\Foundation\Testing\RefreshDatabase::class,
+)->in('Feature');
+
+uses(
+    Tests\TestCase::class,
+)->in('Unit');
+```
+
+### Impact
+- ✅ Unit tests sekarang memiliki akses ke service container
+- ✅ `app()`, `config()`, dan facade helpers berfungsi dengan benar
+- ✅ Dependency injection bekerja di unit tests
+
+---
+
 ## 📊 Summary of Changes
 
 | File | Change | Impact |
 |------|--------|--------|
 | `app/Http/Controllers/Api/HealthCheckController.php` | Fix degraded vs unhealthy logic | Health check API returns correct status |
-| `.github/workflows/deploy.yml` | Add `ASSET_URL=""` to test env | Tests don't require Vite manifest |
+| `.github/workflows/deploy.yml` | Build Vite assets before tests | Tests have real assets, more accurate testing |
 | `resources/views/journal/public/oai/formats/rfc1807.blade.php` | Remove whitespace in XML tags | RFC1807 XML is well-formed |
+| `tests/Pest.php` | Add TestCase to Unit tests | Unit tests have service container access |
+| `phpunit.xml` | Add ASSET_URL and LICENSE env vars | Consistent test environment configuration |
 
 ## 🧪 Verification
 
@@ -219,22 +280,32 @@ php artisan test --filter=JatsXmlControllerTest
 ## 📝 Commit Message
 
 ```
-fix: resolve multiple test failures in CI/CD pipeline
+fix: resolve 86 test failures in CI/CD pipeline
 
 1. Health Check: Fix degraded vs unhealthy status logic
    - Properly classify queue failures as degraded (non-critical)
    - Critical components (DB, Redis, Storage) failures = unhealthy
    
-2. Vite Manifest: Skip asset compilation in tests
-   - Add ASSET_URL="" to test environment
-   - Tests no longer require frontend build
+2. Vite Manifest: Build assets before running tests
+   - Add npm ci + npm run build step before tests
+   - Tests now have real Vite manifest
+   - More accurate testing of view rendering
    
 3. RFC1807 XML: Remove whitespace in XML tags
    - Fix malformed XML in OAI-PMH RFC1807 format
    - Ensure all XML tags are on single lines
 
-Closes: CI/CD test failures
-Impact: All test suites now pass successfully
+4. Unit Tests: Add TestCase to Pest configuration
+   - Unit tests now extend Tests\TestCase
+   - Service container properly initialized
+   - Dependency injection works in unit tests
+
+5. Test Environment: Add missing env vars to phpunit.xml
+   - Add ASSET_URL="" for fallback
+   - Add IAMJOS_LICENSE_CHECK_ENABLED=false
+
+Closes: CI/CD test failures (86 failing tests)
+Impact: All test suites should now pass successfully
 ```
 
 ---

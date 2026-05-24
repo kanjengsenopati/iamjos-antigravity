@@ -57,6 +57,17 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
 
+      - name: Setup Node.js for test assets
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build frontend assets for tests
+        run: |
+          npm ci --silent
+          npm run build
+
       - name: Siapkan environment testing
         run: |
           cp .env.example .env
@@ -112,8 +123,6 @@ jobs:
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: array
           IAMJOS_LICENSE_CHECK_ENABLED: "false"
-          # Skip Vite manifest requirement in tests
-          ASSET_URL: ""
 
       - name: PHPStan — Analisis Statis Level 5
         run: vendor/bin/phpstan analyse --level=5 --no-progress --ansi
