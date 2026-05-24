@@ -18,12 +18,11 @@ return new class extends Migration
         // Validate configuration
         $superAdminEmail = config('auth.super_admin_email', env('SUPER_ADMIN_EMAIL'));
         if (empty($superAdminEmail)) {
-            $this->command->warn('⚠️  SUPER_ADMIN_EMAIL not configured - will preserve all existing users');
+            Log::warning('SUPER_ADMIN_EMAIL not configured - will preserve all existing users');
             $superAdminEmail = 'none@example.com'; // Dummy value to prevent deletion of all users
         }
         
-        $this->command->info('🧹 Starting production demo data cleanup...');
-        $this->command->newLine();
+        Log::info('Starting production demo data cleanup...');
         
         try {
             DB::transaction(function () use ($superAdminEmail) {
@@ -31,12 +30,13 @@ return new class extends Migration
                 $journalIds = $this->identifyDemoJournals();
                 $userIds = $this->identifyDemoUsers($superAdminEmail);
                 
-                $this->command->info('📊 Identification Phase:');
-                $this->command->info("   ✓ Found {$journalIds->count()} demo journals");
-                $this->command->info("   ✓ Found {$userIds->count()} demo users");
+                Log::info('Identification Phase', [
+                    'demo_journals' => $journalIds->count(),
+                    'demo_users' => $userIds->count(),
+                ]);
                 
                 if ($journalIds->isEmpty() && $userIds->isEmpty()) {
-                    $this->command->warn('   ⚠️  No demo data found to remove');
+                    Log::warning('No demo data found to remove');
                     return;
                 }
                 
@@ -45,43 +45,41 @@ return new class extends Migration
                     ->whereIn('journal_id', $journalIds)
                     ->pluck('id');
                 
-                $this->command->info("   ✓ Found {$submissionIds->count()} submissions to remove");
-                $this->command->newLine();
+                Log::info('Found submissions to remove', ['count' => $submissionIds->count()]);
                 
                 // Phase 1-7: Deletions
                 $counts = [];
                 
                 if ($submissionIds->isNotEmpty()) {
-                    $this->command->info('🗑️  Phase 1: Metrics & Logs');
+                    Log::info('Phase 1: Metrics & Logs');
                     $counts = array_merge($counts, $this->deleteMetricsAndLogs($journalIds, $submissionIds));
                     
-                    $this->command->info('🗑️  Phase 2: Workflow Data');
+                    Log::info('Phase 2: Workflow Data');
                     $counts = array_merge($counts, $this->deleteWorkflowData($submissionIds));
                     
-                    $this->command->info('🗑️  Phase 3: Publication Data');
+                    Log::info('Phase 3: Publication Data');
                     $counts = array_merge($counts, $this->deletePublicationData($submissionIds));
                     
-                    $this->command->info('🗑️  Phase 4: Submission Data');
+                    Log::info('Phase 4: Submission Data');
                     $counts = array_merge($counts, $this->deleteSubmissions($submissionIds));
                 }
                 
                 if ($journalIds->isNotEmpty()) {
-                    $this->command->info('🗑️  Phase 5: Journal Content');
+                    Log::info('Phase 5: Journal Content');
                     $counts = array_merge($counts, $this->deleteJournalContent($journalIds));
                     
-                    $this->command->info('🗑️  Phase 6: Journals');
+                    Log::info('Phase 6: Journals');
                     $counts['journals'] = $this->deleteJournals($journalIds);
                 }
                 
                 if ($userIds->isNotEmpty()) {
-                    $this->command->info('🗑️  Phase 7: Demo Users');
+                    Log::info('Phase 7: Demo Users');
                     $counts['users'] = $this->deleteDemoUsers($userIds);
                 }
                 
                 $this->logCleanupSummary($counts, $superAdminEmail);
             });
         } catch (\Exception $e) {
-            $this->command->error('❌ Cleanup failed: ' . $e->getMessage());
             Log::error('Production cleanup migration failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -95,18 +93,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $this->command->newLine();
-        $this->command->warn('⚠️  ROLLBACK WARNING');
-        $this->command->warn('');
-        $this->command->warn('This migration removed demo data from production.');
-        $this->command->warn('Deleted data CANNOT be automatically restored.');
-        $this->command->warn('');
-        $this->command->info('To restore demo data:');
-        $this->command->info('  1. Ensure APP_ENV is set to "local" or "staging"');
-        $this->command->info('  2. Run: php artisan db:seed --class=DemoSeeder');
-        $this->command->warn('');
-        $this->command->warn('⚠️  DO NOT run DemoSeeder in production!');
-        $this->command->newLine();
+        Log::warning('ROLLBACK WARNING: This migration removed demo data from production.');
+        Log::warning('Deleted data CANNOT be automatically restored.');
+        Log::info('To restore demo data: 1. Set APP_ENV=local or staging, 2. Run: php artisan db:seed --class=DemoSeeder');
+        Log::warning('DO NOT run DemoSeeder in production!');
     }
     
     private function identifyDemoJournals(): Collection
@@ -319,17 +309,11 @@ return new class extends Migration
     {
         $totalRecords = array_sum($counts);
         
-        Log::info('Production cleanup completed', [
+        Log::info('Production cleanup completed successfully', [
             'total_records' => $totalRecords,
             'breakdown' => $counts,
             'super_admin_preserved' => $superAdminEmail,
+            'system_infrastructure' => 'Intact',
         ]);
-        
-        $this->command->newLine();
-        $this->command->info('✅ Production cleanup completed successfully!');
-        $this->command->info("   Total records removed: {$totalRecords}");
-        $this->command->info("   Super admin preserved: {$superAdminEmail}");
-        $this->command->info('   System infrastructure: Intact');
-        $this->command->newLine();
     }
 };
