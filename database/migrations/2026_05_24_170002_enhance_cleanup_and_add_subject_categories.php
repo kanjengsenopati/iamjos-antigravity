@@ -95,6 +95,7 @@ return new class extends Migration
         $categories = [
             [
                 'name' => 'Science & Technology',
+                'path' => 'science-technology',
                 'slug' => 'science-technology',
                 'description' => 'Computer Science, Engineering, Mathematics, Physics, Chemistry',
                 'icon' => 'flask',
@@ -103,6 +104,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Medicine & Health',
+                'path' => 'medicine-health',
                 'slug' => 'medicine-health',
                 'description' => 'Clinical Medicine, Public Health, Nursing, Pharmacy, Biomedical Sciences',
                 'icon' => 'heartbeat',
@@ -111,6 +113,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Social Sciences',
+                'path' => 'social-sciences',
                 'slug' => 'social-sciences',
                 'description' => 'Psychology, Sociology, Anthropology, Political Science, Economics',
                 'icon' => 'users',
@@ -119,6 +122,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Arts & Humanities',
+                'path' => 'arts-humanities',
                 'slug' => 'arts-humanities',
                 'description' => 'Literature, History, Philosophy, Languages, Cultural Studies',
                 'icon' => 'palette',
@@ -127,6 +131,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Business & Economics',
+                'path' => 'business-economics',
                 'slug' => 'business-economics',
                 'description' => 'Management, Finance, Marketing, Accounting, Entrepreneurship',
                 'icon' => 'chart-line',
@@ -135,6 +140,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Education',
+                'path' => 'education',
                 'slug' => 'education',
                 'description' => 'Pedagogy, Curriculum Development, Educational Technology, Learning Sciences',
                 'icon' => 'graduation-cap',
@@ -152,6 +158,7 @@ return new class extends Migration
             if (!$exists) {
                 DB::table('categories')->insert(array_merge($category, [
                     'id' => \Illuminate\Support\Str::uuid()->toString(),
+                    'journal_id' => null, // Site-level category
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]));
