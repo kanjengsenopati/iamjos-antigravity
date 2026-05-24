@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('country')->nullable();
             $table->string('postal_code')->nullable();
             $table->string('phone')->nullable();
-            $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->uuid('admin_id')->nullable();
+            $table->foreign('admin_id')->references('id')->on('users')->nullOnDelete();
             $table->timestamps();
         });
     }
