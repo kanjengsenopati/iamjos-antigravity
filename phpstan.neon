@@ -1,0 +1,23 @@
+parameters:
+    level: 5
+    paths:
+        - app
+
+    # Abaikan path yang tidak perlu dianalisis
+    excludePaths:
+        - app/Http/Middleware/TrustProxies.php
+
+    # Abaikan error yang umum di Laravel karena magic methods
+    ignoreErrors:
+        # Eloquent Builder magic methods
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        - '#Call to an undefined method Illuminate\\Database\\Query\\Builder#'
+        # Facade static calls
+        - '#Static call to instance method#'
+
+    # Aktifkan fitur bleeding edge untuk deteksi error yang lebih baik
+    # phpVersion: 80400
+
+    # Nonaktifkan beberapa check yang terlalu strict untuk codebase Laravel
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
