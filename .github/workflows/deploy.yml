@@ -60,6 +60,13 @@ jobs:
       - name: Siapkan environment testing
         run: |
           cp .env.example .env
+          # Buat direktori yang diperlukan Laravel (tidak di-commit ke git)
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          mkdir -p bootstrap/cache
+          chmod -R 775 storage bootstrap/cache
           php artisan key:generate --ansi
         env:
           APP_ENV: testing
