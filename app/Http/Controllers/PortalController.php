@@ -135,15 +135,17 @@ class PortalController extends Controller
         if (in_array('subject_categories', $blockKeys)) {
             $data['subject_categories'] = [
                 'categories' => Cache::remember('subject_categories', 3600, function () {
-                    return \App\Models\Category::orderBy('sort_order')
+                    return \App\Models\Category::whereNull('journal_id') // Only site-level categories
+                        ->where('is_active', true) // Only active categories
+                        ->orderBy('sort_order')
                         ->get()
                         ->map(function ($category) {
                             return [
                                 'name' => $category->name,
                                 'slug' => $category->slug,
                                 'description' => $category->description,
-                                'icon' => $category->icon ?? 'folder',
-                                'color' => $category->color ?? 'primary',
+                                'icon' => $category->icon ?? 'fa-folder',
+                                'color' => $category->color ?? 'blue',
                                 'journal_count' => 0, // Can be enhanced later
                             ];
                         });

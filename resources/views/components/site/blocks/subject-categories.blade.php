@@ -9,10 +9,9 @@ $layout = $config['layout'] ?? 'icon-grid';
 $columns = $config['columns'] ?? 6;
 $showCount = $config['show_count'] ?? true;
 
-$defaultCategories = [];
-
-$categories = $config['categories'] ?? $defaultCategories;
-$categoryData = $data['categories'] ?? [];
+// ONLY use database-driven categories from $data
+// NO hardcoded categories - admin must configure via Super Admin Panel
+$categories = $data['categories'] ?? collect([]);
 
 // Color mappings
 $colorClasses = [
@@ -31,6 +30,8 @@ $colorClasses = [
 ];
 @endphp
 
+{{-- Only show section if categories exist in database --}}
+@if($categories->isNotEmpty())
 <section class="py-16 md:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Section Header --}}
@@ -49,7 +50,7 @@ $colorClasses = [
                 @php
                     $color = $category['color'] ?? 'blue';
                     $classes = $colorClasses[$color] ?? $colorClasses['blue'];
-                    $count = $categoryData[$category['slug'] ?? ''] ?? 0;
+                    $count = $category['journal_count'] ?? 0;
                 @endphp
                 
                 <a href="{{ route('portal.search', ['category' => $category['slug'] ?? Str::slug($category['name'])]) }}"
@@ -75,3 +76,4 @@ $colorClasses = [
         </div>
     </div>
 </section>
+@endif
