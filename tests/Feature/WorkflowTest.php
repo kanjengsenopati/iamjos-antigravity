@@ -36,7 +36,11 @@ class WorkflowTest extends TestCase
 
         // Assign Roles (Manual sync to pivot table because of custom Role model)
         // Ensure Editor role exists before using it
-        $editorRole = Role::where('permission_level', Role::LEVEL_EDITOR)->first();
+        // Use withoutGlobalScope to find global roles (journal_id = NULL)
+        $editorRole = Role::withoutGlobalScope('journal')
+            ->where('permission_level', Role::LEVEL_EDITOR)
+            ->whereNull('journal_id')
+            ->first();
         
         if (!$editorRole) {
             $this->fail('Editor role not found. Ensure RolesAndPermissionsSeeder has run.');
