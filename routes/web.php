@@ -1,7 +1,5 @@
 <?php
-// New Controllers
 use Illuminate\Support\Facades\Route;
-Route::get('/debug-data', [App\Http\Controllers\Public\SitemapController::class, 'index']);
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PublicController;
@@ -36,6 +34,7 @@ use App\Http\Controllers\Journal\ProductionWorkflowController;
 use App\Http\Controllers\Admin\JournalUserManagementController;
 use App\Http\Controllers\Admin\Tools\CrossrefExportController;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\Public\JatsXmlController;
 
 // =====================================================
 // OJS PREFIX CONFIGURATION
@@ -43,10 +42,7 @@ use App\Http\Controllers\InstallController;
 $ojsPrefixEnabled = false;
 try {
     if (\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
-        $settings = \Illuminate\Support\Facades\Cache::rememberForever('site_settings', fn() => \App\Models\SiteSetting::first());
-        if ($settings && $settings->use_ojs_url_format) {
-            $ojsPrefixEnabled = true;
-        }
+        $ojsPrefixEnabled = (bool) \App\Facades\Settings::site('use_ojs_url_format', false);
     }
 } catch (\Exception $e) {}
 
@@ -68,21 +64,6 @@ $registerAllRoutes = function ($prefix = '') {
         });
 
         // 2. PORTAL HOME
-        Route::get('/debug-counts', function() {
-    $journals = \App\Models\Journal::withCount([
-        'submissions' => fn($q) => $q->where('status', 'published'),
-        'issues' => fn($q) => $q->where('is_published', true)
-    ])->get();
-    
-    return $journals->map(fn($j) => [
-        'name' => $j->name,
-        'subs' => $j->submissions_count,
-        'issues' => $j->issues_count,
-        'total_subs_raw' => $j->submissions()->count(),
-        'total_issues_raw' => $j->issues()->count()
-    ]);
-});
-
 Route::get('/', [PortalController::class, 'index'])->name('portal.home');
         Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
         Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
@@ -144,7 +125,9 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::post('/clear-cache', [SiteAdminController::class, 'clearDataCache'])->name('site.clear-cache');
             Route::post('/clear-templates', [SiteAdminController::class, 'clearTemplateCache'])->name('site.clear-templates');
             Route::post('/clear-logs', [SiteAdminController::class, 'clearScheduledTaskLogs'])->name('site.clear-logs');
-            
+
+            Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('system-settings.index');
+            Route::post('/system-settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])->name('system-settings.update');
 
 
             Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
@@ -253,6 +236,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::get('/article/download/{seq_id}/{filename}.pdf', [\App\Http\Controllers\PublicController::class, 'downloadPdf'])->name('journal.article.download.pdf');
             Route::get('/article/{article}/citation/ris', [\App\Http\Controllers\PublicController::class, 'exportCitationRIS'])->name('citation.ris');
             Route::get('/article/{article}/citation/bibtex', [\App\Http\Controllers\PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');
+            Route::get('/article/{article}/jats', [JatsXmlController::class, 'article'])->name('journal.article.jats');
 
             Route::middleware('guest')->group(function () {
                 Route::get('/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])->name('journal.register');
@@ -392,6 +376,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::post('/doi/suffix', [PublicationController::class, 'updateDoiSuffix'])->name('doi.suffix');
                         Route::get('/sections', [PublicationController::class, 'getSections'])->name('sections.list');
                     });
+                    Route::get('/{submission}/jats', [JatsXmlController::class, 'workflowPreview'])->name('jats');
                 });
 
                 Route::prefix('editorial')->name('journal.editorial.')->middleware('role:Editor|Admin|Super Admin')->group(function () {
@@ -534,6 +519,12 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::get('/reports', 'index')->name('reports');
                         Route::post('/reports/preview', 'preview')->name('reports.preview');
                         Route::post('/reports/export', 'export')->name('reports.export');
+                    });
+                    Route::controller(\App\Http\Controllers\Admin\Stats\CounterStatsController::class)->prefix('statistics')->name('statistics.')->group(function () {
+                        Route::get('/counter', 'index')->name('counter');
+                        Route::get('/counter/tr', 'titleReport')->name('counter.tr');
+                        Route::get('/counter/ir', 'itemReport')->name('counter.ir');
+                        Route::get('/counter/ir/csv', 'exportCsv')->name('counter.ir.csv');
                     });
                     Route::controller(\App\Http\Controllers\Journal\ScholarMonitorController::class)->prefix('stats/scholar')->name('stats.scholar.')->group(function () {
                         Route::get('/', 'index')->name('index');

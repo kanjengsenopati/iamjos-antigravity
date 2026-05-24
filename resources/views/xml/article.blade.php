@@ -66,8 +66,11 @@
         // 3. Map to Integer ID
         $primaryContactId = $primaryAuthor ? $mapAuthorId[$primaryAuthor->id] ?? 0 : 0;
 
-        // SECTION REF: Hardcoded to 'ART' as per OJS 3.3 Default Standard
-        $sectionRef = 'ART';
+        {{-- SECTION REF: Use actual section abbreviation, fallback to 'ART' --}}
+        $sectionRef = strtoupper($submission->section?->abbrev ?? $submission->section?->abbreviation ?? 'ART');
+
+        // DOI from current publication
+        $pubDoi = $submission->currentPublication?->doi ?? null;
     @endphp
 
     <publication xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" locale="en_US" version="1" status="1"
@@ -75,6 +78,9 @@
         access_status="0" xsi:schemaLocation="http://pkp.sfu.ca native.xsd">
 
         <id type="internal" advice="ignore">{{ $articleIntId }}</id>
+        @if ($pubDoi)
+            <id type="doi" advice="update">{{ $pubDoi }}</id>
+        @endif
         <title locale="en_US">{{ $submission->title }}</title>
         @if ($submission->subtitle)
             <subtitle locale="en_US">{{ $submission->subtitle }}</subtitle>
@@ -101,7 +107,8 @@
                 {{-- USER GROUP REF: Hardcoded to 'Author' (Case Sensitive) --}}
                 <author include_in_browse="true" user_group_ref="Author" seq="{{ $seq++ }}"
                     id="{{ $authorIntId }}">
-                    <givenname locale="en_US">{{ $author->first_name ?? $author->given_name }}</givenname>
+                    <givenname locale="en_US">{{ $author->first_name ?? $author->given_name ?? '' }}</givenname>
+                    <familyname locale="en_US">{{ $author->last_name ?? $author->family_name ?? '' }}</familyname>
 
                     {{-- Affiliation before Email --}}
                     @if ($author->affiliation)
@@ -109,7 +116,10 @@
                     @endif
 
                     <country>{{ $author->country ?? 'ID' }}</country>
-                    <email>{{ $author->email }}</email>
+                    <email>{{ $author->email ?? '' }}</email>
+                    @if ($author->orcid)
+                        <orcid>{{ $author->orcid }}</orcid>
+                    @endif
                 </author>
             @endforeach
         </authors>

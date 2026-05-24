@@ -3,8 +3,8 @@
 
 @php
     $config = $block->config ?? [];
-    $title = $config['title'] ?? 'Latest Publications';
-    $subtitle = $config['subtitle'] ?? 'Recently published research articles';
+    $title = $config['title'] ?? '';
+    $subtitle = $config['subtitle'] ?? '';
     $layout = $config['layout'] ?? 'cards';
     $columns = $config['columns'] ?? 3;
     $limit = $config['limit'] ?? 6;
@@ -26,12 +26,16 @@
                     <i class="fa-solid fa-clock mr-2"></i>
                     Just Published
                 </span>
+                @if($title)
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                     {{ $title }}
                 </h2>
+                @endif
+                @if($subtitle)
                 <p class="text-lg text-gray-600">
                     {{ $subtitle }}
                 </p>
+                @endif
             </div>
             <a href="{{ route('portal.search', ['sort' => 'newest']) }}"
                 class="mt-4 md:mt-0 inline-flex items-center text-blue-600 font-semibold hover:text-blue-700">

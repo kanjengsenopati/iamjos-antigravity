@@ -9,6 +9,9 @@ $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
 // If homepage_image exists AND show_homepage_image_in_header is TRUE -> show as header background
 // Otherwise -> show standard branding header
 $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_image_in_header;
+
+$siteTitle = \App\Facades\Settings::site('site_title', 'IAMJOS');
+$siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System');
 @endphp
 
 <!DOCTYPE html>
@@ -24,11 +27,11 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
 <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
 @endif
-<title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
+<title>{{ $title ?? $journal->name ?? $siteTitle }}</title>
 @stack('meta_tags')
 <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
 <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
-<meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
+<meta name="generator" content="{{ $siteTitle }} - {{ $siteIntro }}">
 @if($journal->block_search_indexing)
 <meta name="robots" content="noindex, nofollow">
 @else

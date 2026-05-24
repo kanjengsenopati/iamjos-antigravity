@@ -8,9 +8,9 @@ use App\Models\Role;
 use App\Models\SiteContent;
 use App\Models\SiteContentBlock;
 use App\Models\SitePage;
-use App\Models\SiteSetting;
 use App\Models\Submission;
 use App\Models\User;
+use App\Facades\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
@@ -64,7 +64,7 @@ class PortalController extends Controller
                 return [
                     'total_journals' => Journal::count() + $baseJournals,
                     'total_articles' => Submission::where('status', Submission::STATUS_PUBLISHED)->count() + $baseArticles,
-                    'total_authors' => User::count() + $baseAuthors,
+                    'total_authors'  => \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'Author'))->count() + $baseAuthors,
                     'total_downloads' => \App\Models\ArticleMetric::where('type', 'download')->count() + $baseDownloads,
                 ];
             });
@@ -310,7 +310,9 @@ class PortalController extends Controller
     {
 
         // Merge with site settings (for about_content from SiteSetting)
-        $siteSettings = SiteSetting::first();
+        $siteSettings = (object) [
+            'about_content' => Settings::site('about_content', ''),
+        ];
 
         return view('site.about', compact('siteSettings'));
     }

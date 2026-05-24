@@ -1,11 +1,11 @@
-# 📜 IAMJOS HOLY GRAIL PRD
+﻿# 📜 IAMJOS HOLY GRAIL PRD
 **Version**: 1.1 (Migration Focused)
 **Status**: DRAFT / LIVING DOCUMENT
 
 ---
 
 ## 1. Visi & Misi
-IamJOS adalah platform manajemen jurnal akademik modern yang dirancang untuk menggantikan sistem legacy (seperti OJS) dengan arsitektur yang lebih aman, cepat, dan berbasis data terpusat (Central Command Center).
+IamJOS adalah platform manajemen jurnal akademik modern yang dirancang untuk menggantikan sistem legacy (seperti OJS) dengan arsitektur yang lebih aman, cepat, dan berbasis data terpusat (KAMPUS (Kantor Manajemen Pusat IamJOS)).
 
 ---
 
@@ -45,7 +45,7 @@ Memindahkan seluruh data dari OJS (MySQL) ke IamJOS (PostgreSQL) tanpa kehilanga
 
 ---
 
-## 4. Central Command Center (CCC)
+## 4. KAMPUS (Kantor Manajemen Pusat IamJOS)
 *   Remote License Management.
 *   Monitoring Kesehatan Server (Telemetry).
 *   OTA (Over-The-Air) Updates untuk security patches.
@@ -57,7 +57,7 @@ Memindahkan seluruh data dari OJS (MySQL) ke IamJOS (PostgreSQL) tanpa kehilanga
 2.  **Phase 2**: Migrasi Konten (Submissions, Publications).
 3.  **Phase 3**: Migrasi Sejarah & Workflow (Log, Review, Discussion).
 4.  **Phase 4**: Security Shield Integration.
-5.  **Phase 5**: Central Command Center Deployment.
+5.  **Phase 5**: KAMPUS (Kantor Manajemen Pusat IamJOS) Deployment.
 
 ---
 *Dokumen ini adalah Kitab Suci pengembangan IamJOS. Setiap perubahan kode harus merujuk pada PRD ini.*

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\RecordArticleMetricJob;
 use App\Models\Issue;
 use App\Models\Journal;
 use Illuminate\View\View;
@@ -28,6 +29,35 @@ class PublicController extends Controller
         }
 
         return $journal;
+    }
+
+    /**
+     * Resolve GeoIP data from an IP address.
+     *
+     * Uses stevebauman/location if installed; falls back to null values.
+     * To enable real GeoIP: composer require stevebauman/location
+     *
+     * @return array{0: string|null, 1: string|null} [countryCode, city]
+     */
+    protected function resolveGeoIp(string $ip): array
+    {
+        // Use stevebauman/location if available
+        if (class_exists(\Stevebauman\Location\Facades\Location::class)) {
+            try {
+                $position = \Stevebauman\Location\Facades\Location::get($ip);
+                if ($position) {
+                    return [
+                        $position->countryCode ?: null,
+                        $position->cityName    ?: null,
+                    ];
+                }
+            } catch (\Throwable) {
+                // GeoIP lookup failed — fall through to null
+            }
+        }
+
+        // No GeoIP package installed — store null rather than a fake country code
+        return [null, null];
     }
 
     // =====================================================
@@ -322,21 +352,19 @@ class PublicController extends Controller
                 str_contains($userAgent, 'spider');
 
         if (!$isBot) {
-            // Mock location data (replace with actual GeoIP package like stevebauman/location)
-            $countryCode = 'ID'; // Default
-            $city = null;
-            
-            // Log the view
-            DB::table('article_metrics')->insert([
-                'submission_id' => $article->id,
-                'type' => 'view',
-                'ip_address' => $ip,
-                'country_code' => $countryCode,
-                'city' => $city,
-                'date' => now()->toDateString(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // GeoIP resolution — use IP-based lookup if available, otherwise null
+            // Install stevebauman/location for real GeoIP: composer require stevebauman/location
+            [$countryCode, $city] = $this->resolveGeoIp($ip);
+
+            // Log the view asynchronously via queued job
+            RecordArticleMetricJob::dispatch(
+                $article->id,
+                'view',
+                $ip,
+                $countryCode,
+                $city,
+                now()->toDateString()
+            );
         }
 
         // =============================================
@@ -656,19 +684,16 @@ class PublicController extends Controller
                  str_contains($userAgent, 'spider');
 
         if (!$isBot) {
-            $countryCode = 'ID'; // Mock (replace with GeoIP)
-            $city = null;
-            
-            DB::table('article_metrics')->insert([
-                'submission_id' => $submission->id,
-                'type' => 'download',
-                'ip_address' => $ip,
-                'country_code' => $countryCode,
-                'city' => $city,
-                'date' => now()->toDateString(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            [$countryCode, $city] = $this->resolveGeoIp($ip);
+
+            RecordArticleMetricJob::dispatch(
+                $submission->id,
+                'download',
+                $ip,
+                $countryCode,
+                $city,
+                now()->toDateString()
+            );
         }
 
         // Increment download counter
@@ -739,15 +764,15 @@ class PublicController extends Controller
 
         // Analytics
         if (!preg_match('/bot|crawler|spider/i', request()->userAgent() ?? '')) {
-            DB::table('article_metrics')->insert([
-                'submission_id' => $submission->id,
-                'type' => 'download',
-                'ip_address' => request()->ip(),
-                'country_code' => 'ID',
-                'date' => now()->toDateString(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            [$countryCode, $city] = $this->resolveGeoIp(request()->ip());
+            RecordArticleMetricJob::dispatch(
+                $submission->id,
+                'download',
+                request()->ip(),
+                $countryCode,
+                $city,
+                now()->toDateString()
+            );
         }
 
         // Return file stream with inline disposition for browser preview but with correct filename
@@ -819,15 +844,15 @@ class PublicController extends Controller
                 if ($disk->exists($file->file_path)) {
                     // Analytics: Log View/Download
                     if (!preg_match('/bot|crawler|spider/i', request()->userAgent() ?? '')) {
-                        DB::table('article_metrics')->insert([
-                            'submission_id' => $submission->id,
-                            'type' => 'download',
-                            'ip_address' => request()->ip(),
-                            'country_code' => 'ID',
-                            'date' => now()->toDateString(),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
+                        [$countryCode, $city] = $this->resolveGeoIp(request()->ip());
+                        RecordArticleMetricJob::dispatch(
+                            $submission->id,
+                            'download',
+                            request()->ip(),
+                            $countryCode,
+                            $city,
+                            now()->toDateString()
+                        );
                     }
 
                     return response()->stream(
@@ -862,78 +887,93 @@ class PublicController extends Controller
 
     /**
      * Export citation in RIS format (for EndNote, Zotero, Mendeley)
+     * RIS 2001 spec: https://en.wikipedia.org/wiki/RIS_(file_format)
      */
     public function exportCitationRIS(string $journalSlug, $article)
     {
         $journal = $this->resolveJournal($journalSlug);
 
-        // Resolve article by ID or slug
         $submission = Submission::where('journal_id', $journal->id)
             ->where(function ($q) use ($article) {
                 $q->Where('slug', $article);
             })
-            ->with(['authors', 'issue', 'section'])
+            ->with(['authors', 'issue', 'section', 'currentPublication', 'keywords'])
             ->published()
             ->firstOrFail();
 
-        $issue = $submission->issue;
-        $publicationDate = $issue?->published_at ?? $submission->published_at;
+        $pub            = $submission->currentPublication;
+        $issue          = $submission->issue;
+        $publicationDate = $pub?->date_published ?? ($issue?->published_at ?? $submission->published_at);
+        $doi            = $pub?->doi ?? null;
+        $pages          = $pub?->pages ?? null;
+        $abstract       = $pub?->abstract ?? $submission->abstract ?? null;
 
-        // Build RIS format
-        $ris = "TY  - JOUR\n";
-        $ris .= "TI  - {$submission->title}\n";
-        
-        // Authors
+        $ris  = "TY  - JOUR\n";
+        $ris .= "TI  - " . ($pub?->title ?? $submission->title) . "\n";
+
+        // Authors: Last, First (RIS standard)
         foreach ($submission->authors as $author) {
-            $lastName = $author->family_name ?? $author->last_name ?? '';
-            $firstName = $author->given_name ?? $author->first_name ?? '';
-            $ris .= "AU  - {$lastName}, {$firstName}\n";
+            $lastName  = $author->family_name ?? $author->last_name ?? '';
+            $firstName = $author->given_name  ?? $author->first_name ?? '';
+            if ($lastName || $firstName) {
+                $ris .= "AU  - {$lastName}, {$firstName}\n";
+            }
         }
 
-        // Publication details
         $ris .= "T2  - {$journal->name}\n";
-        
+
+        // ISSN (SN field)
+        $issn = $journal->issn_online ?? $journal->issn_print ?? null;
+        if ($issn) {
+            $ris .= "SN  - {$issn}\n";
+        }
+
         if ($publicationDate) {
             $ris .= "PY  - {$publicationDate->year}\n";
             $ris .= "DA  - {$publicationDate->format('Y/m/d')}\n";
         }
-        
-        if ($issue && $issue->volume) {
+
+        if ($issue?->volume) {
             $ris .= "VL  - {$issue->volume}\n";
         }
-        
-        if ($issue && $issue->number) {
+        if ($issue?->number) {
             $ris .= "IS  - {$issue->number}\n";
         }
-        
-        if ($submission->pages) {
-            $pages = explode('-', $submission->pages);
-            $ris .= "SP  - " . trim($pages[0]) . "\n";
-            if (isset($pages[1])) {
-                $ris .= "EP  - " . trim($pages[1]) . "\n";
+
+        // Pages: SP (start) and EP (end)
+        if ($pages) {
+            $pageParts = explode('-', $pages, 2);
+            $ris .= "SP  - " . trim($pageParts[0]) . "\n";
+            if (isset($pageParts[1])) {
+                $ris .= "EP  - " . trim($pageParts[1]) . "\n";
             }
         }
-        
-        if ($submission->doi) {
-            $ris .= "DO  - {$submission->doi}\n";
-            $ris .= "UR  - https://doi.org/{$submission->doi}\n";
+
+        if ($doi) {
+            $ris .= "DO  - {$doi}\n";
+            $ris .= "UR  - https://doi.org/{$doi}\n";
         }
-        
-        if ($submission->abstract) {
-            $abstractClean = strip_tags($submission->abstract);
-            $ris .= "AB  - {$abstractClean}\n";
+
+        if ($abstract) {
+            $ris .= "AB  - " . trim(strip_tags($abstract)) . "\n";
         }
-        
-        if ($submission->keywords && is_array($submission->keywords)) {
-            foreach ($submission->keywords as $keyword) {
-                $ris .= "KW  - {$keyword}\n";
+
+        // Keywords — use keywords relation (BelongsToMany), not is_array check
+        foreach ($submission->keywords as $keyword) {
+            $kwText = $keyword->content ?? $keyword->name ?? null;
+            if ($kwText) {
+                $ris .= "KW  - {$kwText}\n";
             }
         }
-        
+
         if ($journal->publisher) {
             $ris .= "PB  - {$journal->publisher}\n";
         }
-        
+
+        // Language (LA field)
+        $lang = preg_replace('/_[A-Z]{2}$/', '', $submission->locale ?? 'en');
+        $ris .= "LA  - {$lang}\n";
+
         $ris .= "ER  - \n";
 
         return response($ris)
@@ -943,68 +983,99 @@ class PublicController extends Controller
 
     /**
      * Export citation in BibTeX format
+     * BibTeX spec: https://www.bibtex.org/Format/
      */
     public function exportCitationBibTeX(string $journalSlug, $article)
     {
         $journal = $this->resolveJournal($journalSlug);
 
-        // Resolve article by ID or slug
         $submission = Submission::where('journal_id', $journal->id)
             ->where(function ($q) use ($article) {
                 $q->Where('slug', $article);
             })
-            ->with(['authors', 'issue', 'section'])
+            ->with(['authors', 'issue', 'section', 'currentPublication', 'keywords'])
             ->published()
             ->firstOrFail();
 
-        $issue = $submission->issue;
-        $publicationDate = $issue?->published_at ?? $submission->published_at;
+        $pub            = $submission->currentPublication;
+        $issue          = $submission->issue;
+        $publicationDate = $pub?->date_published ?? ($issue?->published_at ?? $submission->published_at);
+        $doi            = $pub?->doi ?? null;
+        $pages          = $pub?->pages ?? null;
+        $abstract       = $pub?->abstract ?? $submission->abstract ?? null;
 
-        // Generate citation key (FirstAuthorLastName + Year)
+        // BibTeX special character escaping
+        // Escapes: { } \ % $ # & _ ^ ~ < >
+        $escapeBibtex = function (string $str): string {
+            // Protect existing braces first, then escape special chars
+            $str = str_replace('\\', '\\\\', $str);
+            $str = str_replace('%',  '\\%',  $str);
+            $str = str_replace('$',  '\\$',  $str);
+            $str = str_replace('#',  '\\#',  $str);
+            $str = str_replace('&',  '\\&',  $str);
+            $str = str_replace('_',  '\\_',  $str);
+            $str = str_replace('^',  '\\^{}', $str);
+            $str = str_replace('~',  '\\~{}', $str);
+            return $str;
+        };
+
+        // Citation key: FirstAuthorLastName + Year + seq_id suffix for uniqueness
         $firstAuthor = $submission->authors->first();
-        $lastName = $firstAuthor ? ($firstAuthor->family_name ?? $firstAuthor->last_name ?? 'Author') : 'Author';
-        $year = $publicationDate?->year ?? now()->year;
-        $citationKey = Str::slug($lastName) . $year;
+        $lastName    = $firstAuthor ? ($firstAuthor->family_name ?? $firstAuthor->last_name ?? 'Author') : 'Author';
+        $year        = $publicationDate?->year ?? now()->year;
+        $citationKey = Str::slug($lastName) . $year . '-' . $submission->seq_id;
 
-        // Build BibTeX format
-        $bibtex = "@article{{$citationKey},\n";
-        $bibtex .= "  title = {{{$submission->title}}},\n";
-        
-        // Authors
-        $authors = $submission->authors->map(function($author) {
-            $lastName = $author->family_name ?? $author->last_name ?? '';
-            $firstName = $author->given_name ?? $author->first_name ?? '';
-            return "{$firstName} {$lastName}";
-        })->implode(' and ');
-        $bibtex .= "  author = {{{$authors}}},\n";
-        
-        $bibtex .= "  journal = {{{$journal->name}}},\n";
-        
+        $bibtex  = "@article{{$citationKey},\n";
+        $bibtex .= "  title     = {{" . $escapeBibtex($pub?->title ?? $submission->title) . "}},\n";
+
+        // Authors: First Last and First Last (BibTeX standard)
+        $authors = $submission->authors->map(function ($a) {
+            $first = $a->given_name  ?? $a->first_name  ?? '';
+            $last  = $a->family_name ?? $a->last_name   ?? '';
+            return trim("{$first} {$last}");
+        })->filter()->implode(' and ');
+        $bibtex .= "  author    = {{" . $escapeBibtex($authors) . "}},\n";
+
+        $bibtex .= "  journal   = {{" . $escapeBibtex($journal->name) . "}},\n";
+
         if ($publicationDate) {
-            $bibtex .= "  year = {{{$publicationDate->year}}},\n";
+            $bibtex .= "  year      = {{{$publicationDate->year}}},\n";
+            $bibtex .= "  month     = {{{$publicationDate->format('m')}}},\n";
         }
-        
-        if ($issue && $issue->volume) {
-            $bibtex .= "  volume = {{{$issue->volume}}},\n";
+        if ($issue?->volume) {
+            $bibtex .= "  volume    = {{{$issue->volume}}},\n";
         }
-        
-        if ($issue && $issue->number) {
-            $bibtex .= "  number = {{{$issue->number}}},\n";
+        if ($issue?->number) {
+            $bibtex .= "  number    = {{{$issue->number}}},\n";
         }
-        
-        if ($submission->pages) {
-            $bibtex .= "  pages = {{{$submission->pages}}},\n";
+        if ($pages) {
+            $bibtex .= "  pages     = {{" . str_replace('-', '--', $pages) . "}},\n";
         }
-        
-        if ($submission->doi) {
-            $bibtex .= "  doi = {{{$submission->doi}}},\n";
-            $bibtex .= "  url = {{https://doi.org/{$submission->doi}}},\n";
+        if ($doi) {
+            $bibtex .= "  doi       = {{{$doi}}},\n";
+            $bibtex .= "  url       = {{https://doi.org/{$doi}}},\n";
         }
-        
         if ($journal->publisher) {
-            $bibtex .= "  publisher = {{{$journal->publisher}}},\n";
+            $bibtex .= "  publisher = {{" . $escapeBibtex($journal->publisher) . "}},\n";
         }
-        
+
+        // ISSN
+        $issn = $journal->issn_online ?? $journal->issn_print ?? null;
+        if ($issn) {
+            $bibtex .= "  issn      = {{{$issn}}},\n";
+        }
+
+        // Abstract
+        if ($abstract) {
+            $bibtex .= "  abstract  = {{" . $escapeBibtex(trim(strip_tags($abstract))) . "}},\n";
+        }
+
+        // Keywords
+        $kwList = $submission->keywords->map(fn($k) => $k->content ?? $k->name ?? '')->filter()->implode(', ');
+        if ($kwList) {
+            $bibtex .= "  keywords  = {{" . $escapeBibtex($kwList) . "}},\n";
+        }
+
         $bibtex .= "}\n";
 
         return response($bibtex)
@@ -1019,43 +1090,43 @@ class PublicController extends Controller
     {
         $defaults = [
             // Content
-            'about' => '',
+            'about'    => '',
             'masthead' => ['about' => '', 'editorial_team' => ''],
 
             // Appearance
-            'hero_image' => null,
-            'primary_color' => '#4F46E5',
+            'hero_image'      => null,
+            'primary_color'   => '#4F46E5',
             'secondary_color' => '#7C3AED',
 
-            // Hero Content
-            'hero_title' => $journal->name,
-            'hero_description' => $journal->description ?? 'A peer-reviewed scholarly journal dedicated to advancing knowledge and research.',
-            'hero_tagline' => 'Peer-Reviewed • Open Access • Indexed',
+            // Hero Content — use journal data, never fake taglines
+            'hero_title'       => $journal->name,
+            'hero_description' => $journal->description ?? '',
+            'hero_tagline'     => '',
 
-            // Stats
-            'stat_acceptance_rate' => '25%',
-            'stat_review_time' => '4 Weeks',
-            'stat_impact_factor' => 'N/A',
-            'stat_citations' => '1000+',
+            // Stats — empty by default; journal must set real values
+            'stat_acceptance_rate' => '',
+            'stat_review_time'     => '',
+            'stat_impact_factor'   => '',
+            'stat_citations'       => '',
 
             // Section Visibility
-            'show_announcements' => true,
+            'show_announcements'  => true,
             'show_editorial_team' => true,
-            'show_indexed_in' => true,
-            'show_stats' => true,
+            'show_indexed_in'     => true,
+            'show_stats'          => false,
 
             // Indexed In
             'indexed_in_images' => [],
 
             // Footer
-            'footer_description' => $journal->description ?? 'A leading academic journal.',
-            'social_facebook' => '',
-            'social_twitter' => '',
-            'social_linkedin' => '',
-            'social_instagram' => '',
-            'contact_email' => '',
-            'contact_phone' => '',
-            'contact_address' => '',
+            'footer_description' => $journal->description ?? '',
+            'social_facebook'    => '',
+            'social_twitter'     => '',
+            'social_linkedin'    => '',
+            'social_instagram'   => '',
+            'contact_email'      => '',
+            'contact_phone'      => '',
+            'contact_address'    => '',
         ];
 
         $actual = $journal->getWebsiteSettings();

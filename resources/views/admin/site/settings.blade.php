@@ -47,7 +47,7 @@
                                     Site Title
                                 </label>
                                 <input type="text" id="site_title" name="site_title"
-                                    value="{{ old('site_title', $siteSetting->site_title) }}"
+                                    value="{{ old('site_title', Settings::site('site_title', '')) }}"
                                     class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <p class="mt-1 text-xs text-gray-500">The main title displayed on the browser tab and meta
                                     tags.
@@ -60,7 +60,7 @@
                                     Site Introduction
                                 </label>
                                 <textarea id="site_intro" name="site_intro" rows="3"
-                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('site_intro', $siteSetting->site_intro) }}</textarea>
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('site_intro', Settings::site('site_intro', '')) }}</textarea>
                                 <p class="mt-1 text-xs text-gray-500">A brief description displayed on the portal homepage.
                                 </p>
                             </div>
@@ -71,7 +71,7 @@
                                     About the Site
                                 </label>
                                 <textarea id="about_content" name="about_content" rows="8"
-                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 tinymce-editor">{{ old('about_content', $siteSetting->about_content) }}</textarea>
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 tinymce-editor">{{ old('about_content', Settings::site('about_content', '')) }}</textarea>
                                 <p class="mt-1 text-xs text-gray-500">Custom HTML content for the portal about page.
                                     Supports rich text formatting.</p>
                             </div>
@@ -82,7 +82,7 @@
                                     Footer Content
                                 </label>
                                 <textarea id="footer_content" name="footer_content" rows="8"
-                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 tinymce-editor">{{ old('footer_content', $siteSetting->footer_content) }}</textarea>
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 tinymce-editor">{{ old('footer_content', Settings::site('footer_content', '')) }}</textarea>
                                 <p class="mt-1 text-xs text-gray-500">Custom HTML content for the portal footer. Supports
                                     rich text formatting.</p>
                             </div>
@@ -100,14 +100,14 @@
                                 </label>
                                 <input type="number" id="min_password_length" name="min_password_length" min="6"
                                     max="32"
-                                    value="{{ old('min_password_length', $siteSetting->min_password_length) }}"
+                                    value="{{ old('min_password_length', Settings::site('min_password_length', 8)) }}"
                                     class="w-full sm:w-1/2 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             </div>
 
                             <!-- Redirect to Journal -->
                             <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                                 <input type="checkbox" id="redirect_to_journal" name="redirect_to_journal" value="1"
-                                    {{ old('redirect_to_journal', $siteSetting->redirect_to_journal) ? 'checked' : '' }}
+                                    {{ old('redirect_to_journal', Settings::site('redirect_to_journal', false)) ? 'checked' : '' }}
                                     class="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                 <label for="redirect_to_journal" class="cursor-pointer">
                                     <span class="block text-sm font-medium text-gray-900">Redirect to Single Journal</span>
@@ -121,7 +121,7 @@
                             <!-- OJS URL Compatibility Mode -->
                             <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
                                 <input type="checkbox" id="use_ojs_url_format" name="use_ojs_url_format" value="1"
-                                    {{ old('use_ojs_url_format', $siteSetting->use_ojs_url_format) ? 'checked' : '' }}
+                                    {{ old('use_ojs_url_format', Settings::site('use_ojs_url_format', false)) ? 'checked' : '' }}
                                     class="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                 <label for="use_ojs_url_format" class="cursor-pointer">
                                     <span class="block text-sm font-medium text-gray-900">OJS URL Compatibility Mode</span>
@@ -155,7 +155,7 @@
                             </label>
                             <input id="wa_api_url" name="wa_api_url" type="url"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                value="{{ old('wa_api_url', $siteSetting->wa_api_url) }}"
+                                value="{{ old('wa_api_url', Settings::site('wa_api_url', '')) }}"
                                 placeholder="https://api.wa-gateway.com/v1/send">
                             @error('wa_api_url')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -168,7 +168,7 @@
                             </label>
                             <input id="wa_sender_number" name="wa_sender_number" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                value="{{ old('wa_sender_number', $siteSetting->wa_sender_number) }}"
+                                value="{{ old('wa_sender_number', Settings::site('wa_sender_number', '')) }}"
                                 placeholder="628123456789">
                             <p class="mt-1 text-xs text-gray-500">Format: 628xxx (Country code included).</p>
                             @error('wa_sender_number')
@@ -182,7 +182,7 @@
                             </label>
                             <input id="wa_device_id" name="wa_device_id" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
-                                value="{{ old('wa_device_id', $siteSetting->wa_device_id) }}">
+                                value="{{ old('wa_device_id', Settings::site('wa_device_id', '')) }}">
                             @error('wa_device_id')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -213,7 +213,7 @@
                             </label>
                             <input id="recaptcha_site_key" name="recaptcha_site_key" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
-                                value="{{ old('recaptcha_site_key', $siteSetting->recaptcha_site_key) }}"
+                                value="{{ old('recaptcha_site_key', Settings::site('recaptcha_site_key', '')) }}"
                                 placeholder="6LeIxAcTAAAAAJcZZZZZZZZZZZZZZZZZZZZZZZZ">
                             <p class="mt-1 text-xs text-gray-500">Public key used in the HTML code.</p>
                             @error('recaptcha_site_key')
@@ -227,7 +227,7 @@
                             </label>
                             <input id="recaptcha_secret_key" name="recaptcha_secret_key" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
-                                value="{{ old('recaptcha_secret_key', $siteSetting->recaptcha_secret_key) }}"
+                                value="{{ old('recaptcha_secret_key', Settings::site('recaptcha_secret_key', '')) }}"
                                 placeholder="6LeIxAcTAAAAAGG-vFI1TnRWxXXXXXXXXXXXXXXX">
                             <p class="mt-1 text-xs text-gray-500">Private key for server-side validation.</p>
                             @error('recaptcha_secret_key')

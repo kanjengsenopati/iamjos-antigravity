@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Global Search - IAMJOS')
+@section('title', 'Global Search - ' . \App\Facades\Settings::site('site_title', 'IAMJOS'))
 
 @php
     $brandColor = $settings['primary_color'] ?? '#00629B';

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Journal;
 use App\Models\SiteContent;
-use App\Models\SiteSetting;
+use App\Facades\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -37,13 +37,20 @@ class SiteAdminController extends Controller
      */
     public function siteSettings()
     {
-        $siteSetting = SiteSetting::firstOrCreate([], [
-            'site_title' => config('app.name'),
-            'site_intro' => 'Welcome to our academic journal portal.',
-            'min_password_length' => 8,
-            'redirect_to_journal' => false,
-            'footer_content' => '',
-        ]);
+        $siteSetting = (object) [
+            'site_title'           => Settings::site('site_title', config('app.name')),
+            'site_intro'           => Settings::site('site_intro', 'Welcome to our academic journal portal.'),
+            'about_content'        => Settings::site('about_content', ''),
+            'footer_content'       => Settings::site('footer_content', ''),
+            'min_password_length'  => Settings::site('min_password_length', 8),
+            'redirect_to_journal'  => Settings::site('redirect_to_journal', false),
+            'use_ojs_url_format'   => Settings::site('use_ojs_url_format', false),
+            'wa_api_url'           => Settings::site('wa_api_url', ''),
+            'wa_sender_number'     => Settings::site('wa_sender_number', ''),
+            'wa_device_id'         => Settings::site('wa_device_id', ''),
+            'recaptcha_site_key'   => Settings::site('recaptcha_site_key', ''),
+            'recaptcha_secret_key' => Settings::site('recaptcha_secret_key', ''),
+        ];
 
         return view('admin.site.settings', compact('siteSetting'));
     }
@@ -83,8 +90,6 @@ class SiteAdminController extends Controller
             'recaptcha_secret_key' => 'nullable|string|max:255',
         ]);
 
-        $settings = \App\Models\SiteSetting::first();
-        
         // Handle boolean checkboxes which might not be present in request
         $validated['redirect_to_journal'] = $request->has('redirect_to_journal');
         $validated['use_ojs_url_format'] = $request->has('use_ojs_url_format');
@@ -107,14 +112,12 @@ class SiteAdminController extends Controller
             $validated['homepage_image'] = $path;
         }
 
-        if ($settings) {
-            $settings->update($validated);
-        } else {
-            \App\Models\SiteSetting::create($validated);
+        // Persist each field through Settings facade (flushSite() is called automatically per setSite())
+        foreach ($validated as $key => $value) {
+            Settings::setSite($key, $value);
         }
 
-        // Clear caches so dynamic prefix logic and settings updates take effect immediately
-        \Illuminate\Support\Facades\Cache::forget('site_settings');
+        // Clear route cache so dynamic prefix logic takes effect immediately
         \Illuminate\Support\Facades\Artisan::call('route:clear');
 
         return back()->with('success', 'Site settings updated successfully.');

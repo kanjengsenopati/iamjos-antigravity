@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Facades\Settings;
 use App\Models\Journal;
 use App\Models\Submission;
 use App\Models\CrossrefLog;
@@ -63,10 +64,10 @@ class CrossrefDepositService
 
         $isTestMode = $journal->getSetting('crossref_test_mode');
         
-        // API Endpoints
-        $url = $isTestMode 
-            ? 'https://test.crossref.org/servlet/deposit' 
-            : 'https://doi.crossref.org/servlet/deposit';
+        // API Endpoints — loaded from system settings (database-driven, not hardcoded)
+        $url = $isTestMode
+            ? Settings::system('crossref_deposit_url_test', 'https://test.crossref.org/servlet/deposit')
+            : Settings::system('crossref_deposit_url_live', 'https://doi.crossref.org/servlet/deposit');
         
         $username = $journal->getSetting('crossref_username');
         $password = '';

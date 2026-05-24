@@ -9,9 +9,77 @@
 
     // Publication date logic
     $publicationDate = $issue?->published_at ?? $article->published_at;
+
+    // -------------------------------------------------------
+    // Pre-compute shared variables used in both meta tags
+    // and the references section HTML
+    // -------------------------------------------------------
+    $pub         = $article->currentPublication ?? $article;
+    $pubTitle    = $pub->title ?? $article->title;
+    $pubDate     = $pub->date_published ?? ($issue?->published_at ?? $article->published_at);
+    $pubPages    = $pub->pages ?? $article->pages;
+    $pubDoi      = $pub->doi ?? $article->doi;
+    $pubKeywords = $pub->keywords ?? $article->keywords;
+    $pubAbstract = $pub->abstract ?? $article->abstract;
+    $pubAuthors  = $pub->authors ?? $article->authors;
+
+    // BCP47 locale (id_ID → id, en_US → en)
+    $rawLocale   = $article->locale ?? app()->getLocale() ?? 'en';
+    $bcp47Locale = preg_replace('/_[A-Z]{2}$/', '', $rawLocale);
+
+    // ISSN
+    $issnValue = $journal->issn_online ?? $journal->issn_print ?? null;
+
+    // Pages
+    $firstPage = $lastPage = null;
+    if ($pubPages) {
+        $pageParts = explode('-', $pubPages, 2);
+        $firstPage = trim($pageParts[0]);
+        $lastPage  = isset($pageParts[1]) ? trim($pageParts[1]) : null;
+    }
+
+    // Keywords
+    $processedKeywords = [];
+    if ($pubKeywords) {
+        $rawK = is_string($pubKeywords)
+            ? (str_starts_with(trim($pubKeywords), '[') ? json_decode($pubKeywords, true) : explode(',', $pubKeywords))
+            : (is_iterable($pubKeywords) ? $pubKeywords : []);
+        foreach ($rawK as $k) {
+            $val = is_array($k)
+                ? ($k['value'] ?? ($k['content'] ?? ($k['name'] ?? null)))
+                : (is_object($k) ? ($k->content ?? ($k->value ?? ($k->name ?? null))) : $k);
+            if ($val) $processedKeywords[] = trim((string) $val);
+        }
+    }
+
+    // Build parsed references array — split raw text by newline, strip empty lines
+    // OJS uses Citation objects; we use the raw references field split by newline as equivalent
+    $parsedRefs = [];
+    $rawRefs = $pub->references ?? $article->references ?? null;
+    if ($rawRefs) {
+        $parsedRefs = array_values(array_filter(
+            array_map('trim', explode("\n", $rawRefs)),
+            fn($r) => strlen($r) > 5
+        ));
+    }
+
+    // PDF galley URL — standard galley route (OJS-compatible path)
+    $pdfGalleyUrl = null;
+    if ($pdfGalley) {
+        $pdfGalleyUrl = route('journal.article.galley', [
+            'journal' => $journal->slug,
+            'article' => $article->seq_id,
+            'galley'  => $pdfGalley->seq_id ?? $pdfGalley->id,
+        ]);
+    }
+
+    // Copyright
+    $copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
+    $copyrightYear   = $pub->copyright_year ?? ($issue->year ?? date('Y'));
+    $licenseUrl      = $pub->license_url ?? ($journal->license_url ?? null);
 @endphp
 
-<x-layouts.public :journal="$journal" :settings="$settings" :title="$article->title . ' | ' . $journal->name">
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$article->title . ' | ' . $journal->name" :article="true">
 
 
 
@@ -24,149 +92,182 @@
     {{-- ============================================ --}}
     @push('meta_tags')
 @php
-$pub = $article->currentPublication ?? $article;
-$pubTitle = $pub->title ?? $article->title;
-$pubDate = $pub->date_published ?? ($issue?->published_at ?? $article->published_at);
-$pubPages = $pub->pages ?? $article->pages;
-$pubDoi = $pub->doi ?? $article->doi;
-$pubKeywords = $pub->keywords ?? $article->keywords;
-$pubAbstract = $pub->abstract ?? $article->abstract;
-$pubAuthors = $pub->authors ?? $article->authors;
-$processedKeywords = [];
-if ($pubKeywords) {
-$rawK = is_string($pubKeywords) ? (str_starts_with(trim($pubKeywords), '[') ? json_decode($pubKeywords, true) : explode(',', $pubKeywords)) : $pubKeywords;
-foreach ($rawK as $k) {
-$val = is_array($k) ? ($k['value'] ?? ($k['content'] ?? null)) : (is_object($k) ? ($k->content ?? ($k->value ?? null)) : $k);
-if ($val) $processedKeywords[] = trim((string)$val);
-}
-}
+/**
+ * Google Scholar / HighWire Press + Dublin Core Meta Tags
+ * Aligned with OJS 3.x GoogleScholarPlugin.php (pkp/googleScholar)
+ * Reference: https://github.com/pkp/googleScholar/blob/main/GoogleScholarPlugin.php
+ * Variables pre-computed in the outer @php block above.
+ */
 @endphp
+
+{{-- ============================================================ --}}
+{{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS                    --}}
+{{-- Aligned with OJS pkp/googleScholar plugin (2025)             --}}
+{{-- Required: gs_meta_revision, citation_title, citation_author, --}}
+{{--           citation_date, citation_journal_title              --}}
+{{-- ============================================================ --}}
 <meta name="gs_meta_revision" content="1.1">
-<meta name="citation_title" content="{{ $pubTitle }}">
-<meta name="citation_journal_title" content="{{ $journal->name }}">
+
+{{-- Journal identification --}}
+<meta name="citation_journal_title" content="{{ htmlspecialchars($journal->name) }}">
 @if ($journal->abbreviation)
-<meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}">
+<meta name="citation_journal_abbrev" content="{{ htmlspecialchars($journal->abbreviation) }}">
 @endif
 @if ($journal->publisher)
-<meta name="citation_publisher" content="{{ $journal->publisher }}">
+<meta name="citation_publisher" content="{{ htmlspecialchars($journal->publisher) }}">
 @endif
-<meta name="citation_language" content="{{ $article->locale ?? 'en' }}">
+@php $issnValue = $journal->issn_online ?? $journal->issn_print ?? null; @endphp
+@if ($issnValue)
+<meta name="citation_issn" content="{{ htmlspecialchars($issnValue) }}">
+@endif
+
+{{-- Article title --}}
+<meta name="citation_title" content="{{ htmlspecialchars($pubTitle) }}">
+
+{{-- Language (BCP47 format: "id" not "id_ID") --}}
+<meta name="citation_language" content="{{ $bcp47Locale }}">
+
+{{-- Publication date — OJS uses citation_date only (not citation_publication_date) --}}
 @if ($pubDate)
-<meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
 <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
-<meta name="citation_year" content="{{ $issue->year ?? $pubDate->format('Y') }}">
 @endif
+
+{{-- Online date — only when different from publication date --}}
+@if ($article->published_at && $pubDate && $article->published_at->format('Y-m-d') !== $pubDate->format('Y-m-d'))
+<meta name="citation_online_date" content="{{ $article->published_at->format('Y/m/d') }}">
+@endif
+
+{{-- Issue metadata --}}
 @if ($issue)
-@if ($issue->volume)
-<meta name="citation_volume" content="{{ $issue->volume }}">
+@if ($issue->volume && $issue->getShowVolume ?? true)
+<meta name="citation_volume" content="{{ htmlspecialchars($issue->volume) }}">
 @endif
-@if ($issue->number)
-<meta name="citation_issue" content="{{ $issue->number }}">
-@endif
-@endif
-@if ($pubPages)
-@php $pages = explode('-', $pubPages); @endphp
-<meta name="citation_firstpage" content="{{ trim($pages[0] ?? $pubPages) }}">
-@if (isset($pages[1]))
-<meta name="citation_lastpage" content="{{ trim($pages[1]) }}">
+@if ($issue->number && $issue->getShowNumber ?? true)
+<meta name="citation_issue" content="{{ htmlspecialchars($issue->number) }}">
 @endif
 @endif
+
+{{-- Pages --}}
+@if ($firstPage)
+<meta name="citation_firstpage" content="{{ htmlspecialchars($firstPage) }}">
+@endif
+@if ($lastPage)
+<meta name="citation_lastpage" content="{{ htmlspecialchars($lastPage) }}">
+@endif
+
+{{-- DOI --}}
 @if ($pubDoi)
-<meta name="citation_doi" content="{{ $pubDoi }}">
+<meta name="citation_doi" content="{{ htmlspecialchars($pubDoi) }}">
 @endif
-@if ($journal->issn_online)
-<meta name="citation_issn" content="{{ $journal->issn_online }}">
-@elseif($journal->issn_print)
-<meta name="citation_issn" content="{{ $journal->issn_print }}">
-@endif
+
+{{-- Authors — OJS: getFullName(false, false) excludes preferred name & title/suffix --}}
+{{-- Privacy: citation_author_email intentionally omitted (OJS does not include it) --}}
 @foreach ($pubAuthors as $author)
-<meta name="citation_author" content="{{ $author->first_name }} {{ $author->last_name }}">
+@php
+    // Build display name: prefer first+last, fallback to name field
+    $authorName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? ''));
+    if (empty($authorName)) {
+        $authorName = $author->preferred_public_name ?? $author->name ?? null;
+    }
+@endphp
+@if ($authorName)
+<meta name="citation_author" content="{{ htmlspecialchars($authorName) }}">
 @if ($author->affiliation)
-<meta name="citation_author_institution" content="{{ $author->affiliation }}">
-@endif
-@if ($author->email)
-<meta name="citation_author_email" content="{{ $author->email }}">
+<meta name="citation_author_institution" content="{{ htmlspecialchars($author->affiliation) }}">
 @endif
 @if ($author->orcid)
-<meta name="citation_author_orcid" content="{{ $author->orcid }}">
+<meta name="citation_author_orcid" content="{{ htmlspecialchars($author->orcid) }}">
+@endif
 @endif
 @endforeach
+
+{{-- Keywords — with xml:lang (OJS includes this) --}}
 @foreach ($processedKeywords as $keyword)
-<meta name="citation_keywords" content="{{ $keyword }}">
+<meta name="citation_keywords" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars($keyword) }}">
 @endforeach
+
+{{-- Abstract URL and full text URL --}}
 <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
+@if ($pdfGalleyUrl)
 <meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
-@if ($pdfGalley)
-@php
-$safeAuthor = Str::slug($pubAuthors->first()?->last_name ?? 'author');
-$safeTitle = Str::slug(Str::limit($pubTitle, 30, ''));
-$seoFilename = "{$safeAuthor}-{$safeTitle}-" . ($pubDate ? $pubDate->format('Y') : date('Y'));
-@endphp
-<meta name="citation_pdf_url" content="{{ route('journal.article.download.pdf', [$journal->slug, $article->seq_id, $seoFilename]) }}">
+<meta name="citation_pdf_url" content="{{ $pdfGalleyUrl }}">
 @endif
+
+{{-- Abstract — with xml:lang (OJS includes this) --}}
 @if ($pubAbstract)
-<meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
+<meta name="citation_abstract" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
 @endif
-@if ($article->currentPublication)
-@foreach ($article->currentPublication->parsed_references as $ref)
-<meta name="citation_reference" content="{{ trim(strip_tags(html_entity_decode($ref))) }}">
+
+{{-- References — properly escaped with htmlspecialchars (OJS: htmlspecialchars($citation->getRawCitation())) --}}
+{{-- Limit to 50 to avoid page size issues --}}
+@foreach (array_slice($parsedRefs, 0, 50) as $ref)
+<meta name="citation_reference" content="{{ htmlspecialchars($ref) }}">
 @endforeach
-@endif
-<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
-<meta name="DC.Title" content="{{ $pubTitle }}">
+
+{{-- ============================================================ --}}
+{{-- DUBLIN CORE METADATA                                         --}}
+{{-- Aligned with OJS DC metadata plugin                          --}}
+{{-- ============================================================ --}}
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
+<meta name="DC.Title" content="{{ htmlspecialchars($pubTitle) }}">
+
 @foreach ($pubAuthors as $author)
-<meta name="DC.Creator.PersonalName" content="{{ $author->first_name }} {{ $author->last_name }}">
+@php
+    $dcName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? ''));
+    if (empty($dcName)) $dcName = $author->preferred_public_name ?? $author->name ?? null;
+@endphp
+@if ($dcName)
+<meta name="DC.Creator.PersonalName" content="{{ htmlspecialchars($dcName) }}">
+@endif
 @endforeach
-@if ($article->created_at)
-<meta name="DC.Date.created" scheme="ISO8601" content="{{ $article->created_at->format('Y-m-d') }}">
+
+@if ($pubAbstract)
+<meta name="DC.Description" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
+@endif
+
+@if ($pubDate)
+<meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">
 @endif
 @if ($article->submitted_at)
 <meta name="DC.Date.dateSubmitted" scheme="ISO8601" content="{{ $article->submitted_at->format('Y-m-d') }}">
 @endif
-@if ($pubDate)
-<meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">
-@endif
-@if ($pub->updated_at)
+@if ($pub->updated_at ?? false)
 <meta name="DC.Date.modified" scheme="ISO8601" content="{{ $pub->updated_at->format('Y-m-d') }}">
 @endif
-@if ($pubAbstract)
-<meta name="DC.Description" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
-@endif
+
 <meta name="DC.Format" scheme="IMT" content="application/pdf">
+<meta name="DC.Language" scheme="ISO639-1" content="{{ $bcp47Locale }}">
+
 @if ($pubDoi)
-<meta name="DC.Identifier.DOI" content="{{ $pubDoi }}">
+<meta name="DC.Identifier.DOI" content="{{ htmlspecialchars($pubDoi) }}">
 @endif
 <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
-<meta name="DC.Language" scheme="ISO639-1" content="{{ $article->locale ?? 'en' }}">
-@php
-$copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
-$copyrightYear = $pub->copyright_year ?? ($issue->year ?? date('Y'));
-$licenseUrl = $pub->license_url ?? $journal->license_url;
-@endphp
-<meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ $copyrightHolder }}">
+
+<meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ htmlspecialchars($copyrightHolder) }}">
 @if ($licenseUrl)
-<meta name="DC.Rights" content="{{ $licenseUrl }}">
+<meta name="DC.Rights" content="{{ htmlspecialchars($licenseUrl) }}">
 @endif
-<meta name="DC.Source" content="{{ $journal->name }}">
-@if ($journal->issn_online)
-<meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
-@elseif($journal->issn_print)
-<meta name="DC.Source.ISSN" content="{{ $journal->issn_print }}">
+
+<meta name="DC.Source" content="{{ htmlspecialchars($journal->name) }}">
+@if ($issnValue)
+<meta name="DC.Source.ISSN" content="{{ htmlspecialchars($issnValue) }}">
 @endif
 @if ($issue)
 @if ($issue->volume)
-<meta name="DC.Source.Volume" content="{{ $issue->volume }}">
+<meta name="DC.Source.Volume" content="{{ htmlspecialchars($issue->volume) }}">
 @endif
 @if ($issue->number)
-<meta name="DC.Source.Issue" content="{{ $issue->number }}">
+<meta name="DC.Source.Issue" content="{{ htmlspecialchars($issue->number) }}">
 @endif
 @endif
 <meta name="DC.Source.URI" content="{{ route('journal.public.home', $journal->slug) }}">
+
 @foreach ($processedKeywords as $keyword)
-<meta name="DC.Subject" xml:lang="{{ $article->locale ?? 'en' }}" content="{{ $keyword }}">
+<meta name="DC.Subject" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars($keyword) }}">
 @endforeach
+
 <meta name="DC.Type" content="Text.Serial.Journal">
-<meta name="DC.Type.articleType" content="Articles">
+<meta name="DC.Type.articleType" content="{{ htmlspecialchars($article->section?->title ?? 'Articles') }}">
 @endpush
     {{-- Schema.org JSON-LD for ScholarlyArticle --}}
     @php
@@ -456,42 +557,53 @@ $licenseUrl = $pub->license_url ?? $journal->license_url;
                 @endif
             </div>
 
-            {{-- 7. REFERENCES (Orange Underline) --}}
-            {{-- 7. REFERENCES (Orange Underline) --}}
-            @php
-                $references = $article->currentPublication->references ?? $article->references;
-            @endphp
-            @if ($references)
-                <div class="pt-6">
-                    <h3
-                        class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
+            {{-- 7. REFERENCES — OJS-compatible structure --}}
+            {{-- OJS: <section class="item references"> with <p> per citation --}}
+            {{-- Source: pkp/ojs article_details.tpl --}}
+            @if (!empty($parsedRefs))
+                <section class="item references pt-6" id="references">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
                         References
-                    </h3>
-                    <div class="prose prose-sm max-w-none text-slate-600 text-sm leading-relaxed">
-                        @php
-                            $safeReferences = e($references);
-                            $linkedReferences = preg_replace_callback(
-                                '/(https?:\/\/[^\s]+)/',
-                                function ($matches) {
-                                    $url = $matches[1];
-                                    $trailing = '';
-                                    if (preg_match('/[.,;]$/', $url, $m)) {
-                                        $url = substr($url, 0, -1);
-                                        $trailing = $m[0];
-                                    }
-                                    return '<a href="' .
-                                        $url .
-                                        '" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">' .
-                                        $url .
-                                        '</a>' .
-                                        $trailing;
-                                },
-                                $safeReferences,
-                            );
-                        @endphp
-                        {!! clean(nl2br($linkedReferences)) !!}
+                    </h2>
+                    <div class="value space-y-2 text-slate-600 text-sm leading-relaxed">
+                        @foreach ($parsedRefs as $ref)
+                            @php
+                                // Escape the reference text, then linkify URLs (OJS: getRawCitationWithLinks())
+                                $safeRef = e($ref);
+                                $linkedRef = preg_replace_callback(
+                                    '/(https?:\/\/[^\s\)\]>]+)/',
+                                    function ($m) {
+                                        $url = $m[1];
+                                        // Strip trailing punctuation that's not part of the URL
+                                        $trailing = '';
+                                        if (preg_match('/[.,;:)\]]+$/', $url, $t)) {
+                                            $url = substr($url, 0, -strlen($t[0]));
+                                            $trailing = e($t[0]);
+                                        }
+                                        return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer" '
+                                            . 'class="text-blue-600 hover:text-blue-800 hover:underline break-all">'
+                                            . $url . '</a>' . $trailing;
+                                    },
+                                    $safeRef
+                                );
+                            @endphp
+                            <p class="reference-item">{!! $linkedRef !!}</p>
+                        @endforeach
                     </div>
-                </div>
+                </section>
+            @elseif ($article->currentPublication->references ?? $article->references ?? null)
+                {{-- Fallback: raw references text (OJS fallback: citationsRaw|escape|nl2br) --}}
+                @php
+                    $rawRefText = $article->currentPublication->references ?? $article->references;
+                @endphp
+                <section class="item references pt-6" id="references">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
+                        References
+                    </h2>
+                    <div class="value text-slate-600 text-sm leading-relaxed">
+                        {!! nl2br(e($rawRefText)) !!}
+                    </div>
+                </section>
             @endif
 
             {{-- 8. SIMILAR ARTICLES (Blue Header) --}}
@@ -686,6 +798,12 @@ $licenseUrl = $pub->license_url ?? $journal->license_url;
                         BibTeX
                     </a>
                 </div>
+                {{-- JATS XML Download --}}
+                <a href="{{ route('journal.article.jats', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
+                   class="flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition uppercase tracking-wider mt-3">
+                    <i class="fa-solid fa-file-code text-slate-400"></i>
+                    JATS XML
+                </a>
             </div>
 
             <script>
@@ -772,6 +890,10 @@ $licenseUrl = $pub->license_url ?? $journal->license_url;
                         class="block hover:underline">
                         ⬇ BibTeX
                     </a>
+                    <a href="{{ route('journal.article.jats', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
+                        class="block hover:underline">
+                        ⬇ JATS XML
+                    </a>
                 </div>
             </div>
 
@@ -802,6 +924,37 @@ $licenseUrl = $pub->license_url ?? $journal->license_url;
 
             {{-- LICENSE --}}
             <x-public.article-license :journal="$journal" :publication="$article->currentPublication" />
+
+            {{-- FUNDING INFORMATION --}}
+            @php
+                $fundingInfo = $article->currentPublication?->funding_info ?? [];
+            @endphp
+            @if (!empty($fundingInfo) && is_array($fundingInfo))
+                <div class="bg-slate-50 p-5 rounded border border-slate-200">
+                    <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-hand-holding-dollar text-slate-400"></i>
+                        Funding
+                    </h4>
+                    <ul class="space-y-2 text-sm text-slate-600">
+                        @foreach ($fundingInfo as $funder)
+                            @if (!empty($funder['funder_name']))
+                                <li>
+                                    <span class="font-medium text-slate-800">{{ $funder['funder_name'] }}</span>
+                                    @if (!empty($funder['award_number']))
+                                        <span class="text-slate-500"> — Grant: {{ $funder['award_number'] }}</span>
+                                    @endif
+                                    @if (!empty($funder['funder_doi']))
+                                        <a href="https://doi.org/{{ $funder['funder_doi'] }}" target="_blank"
+                                           class="ml-1 text-xs text-primary-500 hover:underline">
+                                            <i class="fa-solid fa-external-link-alt"></i>
+                                        </a>
+                                    @endif
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             {{-- SHARE BUTTONS --}}
             <div class="bg-slate-50 p-5 rounded border border-slate-200">

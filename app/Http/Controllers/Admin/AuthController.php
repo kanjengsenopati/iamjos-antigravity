@@ -10,7 +10,7 @@ use App\Http\Requests\Admin\AuthRequest;
 use App\Models\Admin;
 use App\Models\Journal;
 use App\Models\User;
-use App\Models\SiteSetting;
+use App\Facades\Settings;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -35,9 +35,10 @@ class AuthController extends Controller
         $branding = $this->getBrandingData($journal);
 
         // Get global site settings
-        $siteSetting = SiteSetting::first();
+        $recaptchaSiteKey = Settings::site('recaptcha_site_key');
+        $recaptchaSecretKey = Settings::site('recaptcha_secret_key');
 
-        return view('admins.auth.login', compact('journal', 'branding', 'siteSetting'));
+        return view('admins.auth.login', compact('journal', 'branding', 'recaptchaSiteKey', 'recaptchaSecretKey'));
     }
 
     /**
@@ -71,10 +72,10 @@ class AuthController extends Controller
         }
 
         // Validate reCAPTCHA only for journal context if enabled and global keys are present
-        $siteSetting = \App\Models\SiteSetting::first();
-        if ($journal && $journal->is_recaptcha_enabled && $siteSetting && $siteSetting->recaptcha_secret_key) {
+        $recaptchaSecretKey = Settings::site('recaptcha_secret_key');
+        if ($journal && $journal->is_recaptcha_enabled && $recaptchaSecretKey) {
             $request->validate([
-                'g-recaptcha-response' => ['required', new \App\Rules\RecaptchaRule($siteSetting->recaptcha_secret_key)]
+                'g-recaptcha-response' => ['required', new \App\Rules\RecaptchaRule($recaptchaSecretKey)]
             ]);
         }
 

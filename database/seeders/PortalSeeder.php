@@ -140,7 +140,7 @@ class PortalSeeder extends Seeder
                 'icon' => 'fa-solid fa-search',
             ],
             [
-                'title' => 'About IAMJOS',
+                'title' => 'About',
                 'type' => NavigationMenuItem::TYPE_ROUTE,
                 'route_name' => 'portal.about',
                 'icon' => 'fa-solid fa-info-circle',

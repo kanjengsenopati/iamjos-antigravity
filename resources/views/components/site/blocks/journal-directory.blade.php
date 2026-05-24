@@ -3,8 +3,8 @@
 
 @php
 $config = $block->config ?? [];
-$title = $config['title'] ?? 'All Journals';
-$subtitle = $config['subtitle'] ?? 'Browse our complete collection';
+$title = $config['title'] ?? '';
+$subtitle = $config['subtitle'] ?? '';
 $layout = $config['layout'] ?? 'grid';
 $columns = $config['columns'] ?? 4;
 $showSearch = $config['show_search'] ?? true;
@@ -19,12 +19,16 @@ $journals = $data['journals'] ?? collect();
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Section Header --}}
         <div class="text-center mb-12">
+            @if($title)
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                 {{ $title }}
             </h2>
+            @endif
+            @if($subtitle)
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                 {{ $subtitle }}
             </p>
+            @endif
         </div>
 
         {{-- Search & Filter Bar --}}

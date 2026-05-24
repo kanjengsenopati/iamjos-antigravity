@@ -9,20 +9,7 @@ $layout = $config['layout'] ?? 'icon-grid';
 $columns = $config['columns'] ?? 6;
 $showCount = $config['show_count'] ?? true;
 
-$defaultCategories = [
-    ['name' => 'Science & Technology', 'icon' => 'fa-flask', 'color' => 'blue', 'slug' => 'science-technology'],
-    ['name' => 'Medicine & Health', 'icon' => 'fa-heartbeat', 'color' => 'red', 'slug' => 'medicine-health'],
-    ['name' => 'Social Sciences', 'icon' => 'fa-users', 'color' => 'green', 'slug' => 'social-sciences'],
-    ['name' => 'Arts & Humanities', 'icon' => 'fa-palette', 'color' => 'purple', 'slug' => 'arts-humanities'],
-    ['name' => 'Business & Economics', 'icon' => 'fa-chart-bar', 'color' => 'amber', 'slug' => 'business-economics'],
-    ['name' => 'Education', 'icon' => 'fa-graduation-cap', 'color' => 'indigo', 'slug' => 'education'],
-    ['name' => 'Law', 'icon' => 'fa-gavel', 'color' => 'slate', 'slug' => 'law'],
-    ['name' => 'Engineering', 'icon' => 'fa-cogs', 'color' => 'orange', 'slug' => 'engineering'],
-    ['name' => 'Agriculture', 'icon' => 'fa-leaf', 'color' => 'emerald', 'slug' => 'agriculture'],
-    ['name' => 'Islamic Studies', 'icon' => 'fa-mosque', 'color' => 'teal', 'slug' => 'islamic-studies'],
-    ['name' => 'Computer Science', 'icon' => 'fa-laptop-code', 'color' => 'cyan', 'slug' => 'computer-science'],
-    ['name' => 'Mathematics', 'icon' => 'fa-calculator', 'color' => 'gray', 'slug' => 'mathematics'],
-];
+$defaultCategories = [];
 
 $categories = $config['categories'] ?? $defaultCategories;
 $categoryData = $data['categories'] ?? [];
@@ -62,7 +49,7 @@ $colorClasses = [
                 @php
                     $color = $category['color'] ?? 'blue';
                     $classes = $colorClasses[$color] ?? $colorClasses['blue'];
-                    $count = $categoryData[$category['slug'] ?? ''] ?? rand(5, 30);
+                    $count = $categoryData[$category['slug'] ?? ''] ?? 0;
                 @endphp
                 
                 <a href="{{ route('portal.search', ['category' => $category['slug'] ?? Str::slug($category['name'])]) }}"

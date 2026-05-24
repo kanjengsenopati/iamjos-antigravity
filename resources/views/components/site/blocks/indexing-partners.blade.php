@@ -13,7 +13,7 @@
 
 @php
 $config = $block->config ?? [];
-$title = $config['title'] ?? 'Indexed by Major Databases';
+$title = $config['title'] ?? '';
 $layout = $config['layout'] ?? 'auto'; // auto, static-grid, marquee
 $logos = $config['logos'] ?? [];
 

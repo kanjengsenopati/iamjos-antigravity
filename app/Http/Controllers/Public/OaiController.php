@@ -46,23 +46,29 @@ class OaiController extends Controller
                 }
             }
 
-        // 4. Cek Resumption Token (Eksklusivitas)
+        // 4. Resumption Token — exclusive argument check
         if ($request->has('resumptionToken')) {
-            // Count arguments. verb + resumptionToken = 2.
-            $paramCount = count($request->query()); 
-            if ($paramCount > 2) { 
+            $paramCount = count($request->query());
+            if ($paramCount > 2) {
                 return $this->oaiError('badArgument', 'resumptionToken is an exclusive argument');
             }
-            return $this->oaiError('badResumptionToken', 'Invalid resumptionToken');
+            // Decode and validate token: base64(json{verb,cursor,from,until,set,journalId})
+            $tokenData = $this->decodeResumptionToken($request->input('resumptionToken'));
+            if (!$tokenData) {
+                return $this->oaiError('badResumptionToken', 'Invalid or expired resumptionToken');
+            }
+            // Re-dispatch with token data
+            return $this->handleResumptionToken($request, $journal, $tokenData);
         }
 
         // 5. Validasi MetadataPrefix
+        $supportedFormats = ['oai_dc', 'marc21', 'rfc1807'];
         if (in_array($verb, ['ListRecords', 'ListIdentifiers', 'GetRecord'])) {
             if (!$request->has('metadataPrefix')) {
                 return $this->oaiError('badArgument', 'Missing metadataPrefix');
             }
-            if ($request->input('metadataPrefix') !== 'oai_dc') {
-                return $this->oaiError('cannotDisseminateFormat', 'Only oai_dc is supported');
+            if (!in_array($request->input('metadataPrefix'), $supportedFormats)) {
+                return $this->oaiError('cannotDisseminateFormat', 'Supported formats: ' . implode(', ', $supportedFormats));
             }
         }
 
@@ -99,9 +105,11 @@ class OaiController extends Controller
             case 'Identify':
                 $earliestDate = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED)
-                    ->min('updated_at'); 
+                    ->min('published_at'); // Use published_at, not updated_at
                 
-                $earliestDate = $earliestDate ? Carbon::parse($earliestDate) : now();
+                $earliestDate = $earliestDate
+                    ? \Carbon\Carbon::parse($earliestDate)
+                    : now();
 
                 $xmlContent = view('journal.public.oai.identify', [
                     'journal' => $journal,
@@ -150,7 +158,7 @@ class OaiController extends Controller
                 $query = Submission::where('journal_id', $journal->id)
                     ->where('status', Submission::STATUS_PUBLISHED);
                 
-                // Filter Tanggal (OAI-PMH 2.0 Inklusif)
+                // Date range filtering (OAI-PMH 2.0 inclusive)
                 if ($request->has('from')) {
                     $from = Carbon::parse($request->input('from'))->utc();
                     $query->where('updated_at', '>=', $from);
@@ -160,28 +168,50 @@ class OaiController extends Controller
                     $query->where('updated_at', '<=', $until);
                 }
 
-                // Filter Set (Jika ada parameter set, harus sesuai abbreviation jurnal)
+                // Set filtering
                 if ($request->has('set')) {
                     $set = $request->input('set');
                     $journalAbbr = strtoupper($journal->abbreviation ?? 'JRN');
-                    // Dukung format JCO atau JCO:ART
                     if ($set !== $journalAbbr && $set !== $journalAbbr . ':ART') {
-                         // Jika set tidak cocok, paksa query mengembalikan hasil kosong
-                         $query->whereRaw('1 = 0');
+                        $query->whereRaw('1 = 0');
                     }
                 }
 
-                // Metadata Eager Load
                 $query->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
 
-                $records = $query->orderBy('updated_at', 'desc')->take(100)->get();
+                // Pagination with resumption tokens (OAI-PMH 2.0 compliance)
+                $pageSize    = 100;
+                $cursor      = 0;
+                $totalRecords = $query->count();
+                $records     = $query->orderBy('updated_at', 'desc')
+                                     ->skip($cursor)
+                                     ->take($pageSize)
+                                     ->get();
 
                 if ($records->isEmpty()) {
                     return $this->oaiError('noRecordsMatch', 'No records found');
                 }
 
-                $view = ($verb === 'ListIdentifiers') ? 'journal.public.oai.list_identifiers' : 'journal.public.oai.list_records';
-                return response()->view($view, compact('records', 'journal', 'verb'))
+                // Build resumption token if there are more records
+                $resumptionToken = null;
+                if ($totalRecords > $pageSize) {
+                    $resumptionToken = $this->buildResumptionToken([
+                        'verb'     => $verb,
+                        'cursor'   => $pageSize,
+                        'from'     => $request->input('from'),
+                        'until'    => $request->input('until'),
+                        'set'      => $request->input('set'),
+                        'journal'  => $journal->slug,
+                    ]);
+                }
+
+                $view = ($verb === 'ListIdentifiers')
+                    ? 'journal.public.oai.list_identifiers'
+                    : 'journal.public.oai.list_records';
+
+                $metadataPrefix = $request->input('metadataPrefix', 'oai_dc');
+
+                return response()->view($view, compact('records', 'journal', 'verb', 'resumptionToken', 'totalRecords', 'cursor', 'metadataPrefix'))
                     ->header('Content-Type', 'text/xml; charset=UTF-8');
 
             case 'GetRecord':
@@ -209,8 +239,9 @@ class OaiController extends Controller
                 }
                 
                 $record = $recordRaw;
+                $metadataPrefix = $request->input('metadataPrefix', 'oai_dc');
 
-                return response()->view('journal.public.oai.get_record', compact('record', 'journal'))
+                return response()->view('journal.public.oai.get_record', compact('record', 'journal', 'metadataPrefix'))
                     ->header('Content-Type', 'text/xml; charset=UTF-8');
         }
         
@@ -225,6 +256,79 @@ class OaiController extends Controller
         if (!$oaiString) return null;
         $parts = explode('/', $oaiString);
         return end($parts);
+    }
+
+    /**
+     * Build a resumption token (base64-encoded JSON payload, expires in 24h).
+     */
+    private function buildResumptionToken(array $data): string
+    {
+        $data['expires'] = now()->addHours(24)->timestamp;
+        return base64_encode(json_encode($data));
+    }
+
+    /**
+     * Decode and validate a resumption token. Returns null if invalid or expired.
+     */
+    private function decodeResumptionToken(string $token): ?array
+    {
+        $decoded = base64_decode($token, true);
+        if (!$decoded) return null;
+        $data = json_decode($decoded, true);
+        if (!is_array($data)) return null;
+        if (isset($data['expires']) && $data['expires'] < now()->timestamp) {
+            return null;
+        }
+        return $data;
+    }
+
+    /**
+     * Handle ListRecords/ListIdentifiers continuation via resumption token.
+     */
+    private function handleResumptionToken(Request $request, $journal, array $tokenData)
+    {
+        $verb   = $tokenData['verb'] ?? 'ListRecords';
+        $cursor = (int) ($tokenData['cursor'] ?? 0);
+
+        $query = Submission::where('journal_id', $journal->id)
+            ->where('status', Submission::STATUS_PUBLISHED);
+
+        if (!empty($tokenData['from'])) {
+            $query->where('updated_at', '>=', Carbon::parse($tokenData['from'])->utc());
+        }
+        if (!empty($tokenData['until'])) {
+            $query->where('updated_at', '<=', Carbon::parse($tokenData['until'])->utc()->endOfSecond());
+        }
+        if (!empty($tokenData['set'])) {
+            $journalAbbr = strtoupper($journal->abbreviation ?? 'JRN');
+            $set = $tokenData['set'];
+            if ($set !== $journalAbbr && $set !== $journalAbbr . ':ART') {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $query->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
+
+        $pageSize     = 100;
+        $totalRecords = $query->count();
+        $records      = $query->orderBy('updated_at', 'desc')->skip($cursor)->take($pageSize)->get();
+
+        if ($records->isEmpty()) {
+            return $this->oaiError('noRecordsMatch', 'No records found');
+        }
+
+        $nextCursor      = $cursor + $pageSize;
+        $resumptionToken = null;
+        if ($nextCursor < $totalRecords) {
+            $resumptionToken = $this->buildResumptionToken(array_merge($tokenData, ['cursor' => $nextCursor]));
+        }
+
+        $view = ($verb === 'ListIdentifiers')
+            ? 'journal.public.oai.list_identifiers'
+            : 'journal.public.oai.list_records';
+
+        return response()->view($view, compact('records', 'journal', 'verb', 'resumptionToken', 'totalRecords', 'cursor'))
+            ->header('Content-Type', 'text/xml; charset=UTF-8');
     }
 
     public static function getRequestAttributes()

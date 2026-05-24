@@ -307,7 +307,7 @@
                 <div class="flex space-x-6 mt-4 md:mt-0 text-sm text-gray-500">
                     <a href="#" class="hover:text-gray-900">Privacy Policy</a>
                     <a href="#" class="hover:text-gray-900">Open Access Policy</a>
-                    <a href="{{ route('portal.home') }}" class="hover:text-gray-900">IAMJOS Portal</a>
+                    <a href="{{ route('portal.home') }}" class="hover:text-gray-900">{{ \App\Facades\Settings::site('site_title', 'IAMJOS') }} Portal</a>
                 </div>
             </div>
         </div>

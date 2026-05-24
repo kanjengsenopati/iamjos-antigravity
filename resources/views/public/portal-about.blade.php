@@ -1,7 +1,7 @@
 @extends('layouts.portal')
 
 @section('title', $settings['about_title'] ?? 'About Us')
-@section('description', 'Tentang IAMJOS - Platform Jurnal Akademik Indonesia')
+@section('description', 'Tentang ' . \App\Facades\Settings::site('site_title', 'IAMJOS') . ' - Platform Jurnal Akademik Indonesia')
 
 @section('content')
     <!-- Hero Section -->

@@ -6,29 +6,32 @@ $config = $block->config ?? [];
 $layout = $config['layout'] ?? 'horizontal';
 $showAnimation = $config['show_animation'] ?? true;
 
+// Stats dari config block — label dan icon bisa dikustomisasi admin
+$configStats = $config['stats'] ?? [];
+
 $stats = [
     [
-        'label' => 'Journals',
+        'label' => collect($configStats)->firstWhere('count_type', 'journals')['label'] ?? 'Journals',
         'value' => $data['total_journals'] ?? 0,
-        'icon' => 'fa-book',
+        'icon'  => collect($configStats)->firstWhere('count_type', 'journals')['icon'] ?? 'fa-book',
         'color' => 'blue',
     ],
     [
-        'label' => 'Articles',
+        'label' => collect($configStats)->firstWhere('count_type', 'articles')['label'] ?? 'Articles',
         'value' => $data['total_articles'] ?? 0,
-        'icon' => 'fa-file-lines',
+        'icon'  => collect($configStats)->firstWhere('count_type', 'articles')['icon'] ?? 'fa-file-lines',
         'color' => 'green',
     ],
     [
-        'label' => 'Authors',
+        'label' => collect($configStats)->firstWhere('count_type', 'authors')['label'] ?? 'Authors',
         'value' => $data['total_authors'] ?? 0,
-        'icon' => 'fa-users',
+        'icon'  => collect($configStats)->firstWhere('count_type', 'authors')['icon'] ?? 'fa-users',
         'color' => 'purple',
     ],
     [
-        'label' => 'Downloads',
-        'value' => $data['total_downloads'] ?? 50000,
-        'icon' => 'fa-download',
+        'label' => collect($configStats)->firstWhere('count_type', 'downloads')['label'] ?? 'Downloads',
+        'value' => $data['total_downloads'] ?? 0,
+        'icon'  => collect($configStats)->firstWhere('count_type', 'downloads')['icon'] ?? 'fa-download',
         'color' => 'amber',
     ],
 ];

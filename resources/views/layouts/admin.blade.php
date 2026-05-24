@@ -5,10 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Site Administration') | IAMJOS Admin</title>
+    @php
+        $siteTitle = \App\Facades\Settings::site('site_title', 'IAMJOS');
+        $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System');
+    @endphp
+    <title>@yield('title', 'Site Administration') | {{ $siteTitle }} Admin</title>
 
     {{-- SEO & Meta Tags --}}
-    <meta name="description" content="Site Administration for IAMJOS - Indonesian Academic Journal System">
+    <meta name="description" content="Site Administration for {{ $siteTitle }} - {{ $siteIntro }}">
     <meta name="robots" content="noindex, nofollow">
 
     {{-- Favicon --}}
@@ -17,18 +21,18 @@
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
-    <meta property="og:title" content="@yield('title', 'Site Administration') | IAMJOS Admin">
-    <meta property="og:description" content="Site Administration for IAMJOS - Indonesian Academic Journal System">
+    <meta property="og:title" content="@yield('title', 'Site Administration') | {{ $siteTitle }} Admin">
+    <meta property="og:description" content="Site Administration for {{ $siteTitle }} - {{ $siteIntro }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:site_name" content="IAMJOS Admin">
+    <meta property="og:site_name" content="{{ $siteTitle }} Admin">
     <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('title', 'Site Administration') | IAMJOS Admin">
-    <meta name="twitter:description" content="Site Administration for IAMJOS - Indonesian Academic Journal System">
+    <meta name="twitter:title" content="@yield('title', 'Site Administration') | {{ $siteTitle }} Admin">
+    <meta name="twitter:description" content="Site Administration for {{ $siteTitle }} - {{ $siteIntro }}">
     <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
 
     <!-- Fonts -->
@@ -128,7 +132,7 @@
                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                 </div>
-                <span class="text-lg font-bold tracking-tight">IAMJOS Admin</span>
+                <span class="text-lg font-bold tracking-tight">{{ $siteTitle }} Admin</span>
             </a>
 
             <!-- Mobile Close Button -->
@@ -237,6 +241,17 @@
                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span>Site Settings</span>
+            </a>
+
+            <!-- System Settings -->
+            <a href="{{ route('admin.system-settings.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                       {{ request()->routeIs('admin.system-settings.*') ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                </svg>
+                <span>System Settings</span>
             </a>
 
             <!-- Site Appearance (Page Builder) -->

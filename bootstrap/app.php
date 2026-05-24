@@ -2,7 +2,6 @@
 
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\ValidateApiKey;
-use App\Http\Middleware\AdsTrackingRateLimit;
 use App\Http\Middleware\JournalContextMiddleware;
 use App\Http\Middleware\DetectJournalContext;
 use Illuminate\Console\Scheduling\Schedule;
@@ -36,7 +35,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'validate_api_key' => ValidateApiKey::class,
-            'ads_rate_limit' => AdsTrackingRateLimit::class,
             'journal.context' => JournalContextMiddleware::class,
             'journal.detect' => DetectJournalContext::class,
             'check_installed' => \App\Http\Middleware\CheckIfInstalled::class,
@@ -44,6 +42,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            // IAMJOS License middleware
+            'iamjos.license' => \App\Http\Middleware\LicenseMiddleware::class,
         ]);
 
         $middleware->append(\App\Http\Middleware\RedirectIfUninstalled::class);
@@ -52,17 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // $middleware->appendToGroup('api', [ValidateApiKey::class]);
     })
     ->withSchedule(function (Schedule $schedule) {
-        // Lebih aman pisahkan argumen
         $schedule->job(new \App\Jobs\ReviewerReminderJob)->dailyAt('08:00');
-        
-        $schedule->command('fetch:phri-news', ['1w'])->dailyAt('01:00');
-        $schedule->command('phri:sync-provinces')->dailyAt('02:00');
-        $schedule->command('phri:sync-regencies')->dailyAt('02:15');
-        $schedule->command('phri:sync-meetingrooms')->dailyAt('02:30');
-        $schedule->command('events:fetch')->dailyAt('01:45');
-        $schedule->command('media:sync-phri --pages=2')->everySixHours()
-            ->withoutOverlapping()
-            ->onOneServer();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

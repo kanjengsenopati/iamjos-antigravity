@@ -1,4 +1,11 @@
 @php
+  /**
+   * Crossref XML Deposit — Schema 5.3.1
+   * Reference: https://www.crossref.org/schemas/crossref5.3.1.xsd
+   * Markup guide: https://www.crossref.org/documentation/schema-library/markup-guide-record-types/journals-and-articles/
+   */
+
+  // XML-safe escape: decode HTML entities first, then re-encode for XML
   $escape = function ($string) {
     if (empty($string)) return '';
     $decoded = htmlspecialchars_decode(trim($string), ENT_QUOTES);
@@ -11,39 +18,50 @@
     return [trim($parts[0] ?? ''), trim($parts[1] ?? '')];
   };
 
-  // Intensive abstract cleaning: decode HTML entities first, then strip tags,
-  // then normalise whitespace before XML-escaping.
+  // Clean abstract: decode HTML entities, strip tags, normalise whitespace, XML-escape
   $cleanAbstract = function ($string) use ($escape) {
     if (empty($string)) return '';
-    // 1. Decode all HTML entities (e.g. &nbsp; -> space, &amp; -> &)
     $decoded = html_entity_decode($string, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    // 2. Strip any remaining HTML/XML tags
-    $plain = strip_tags($decoded);
-    // 3. Normalise whitespace (replace multiple spaces/newlines with a single space)
-    $plain = preg_replace('/\s+/', ' ', $plain);
-    // 4. XML-encode for safe embedding
+    $plain   = strip_tags($decoded);
+    $plain   = preg_replace('/\s+/', ' ', $plain);
     return $escape(trim($plain));
   };
+
+  // BCP47 locale (id_ID → id)
+  $toBcp47 = fn($locale) => preg_replace('/_[A-Z]{2}$/', '', $locale ?? 'en');
+
+  // Detect DOI in a reference string and extract it
+  $extractDoi = function ($ref) {
+    if (preg_match('/\b(10\.\d{4,}\/\S+)/i', $ref, $m)) {
+      return rtrim($m[1], '.,;)');
+    }
+    return null;
+  };
 @endphp
-<doi_batch xmlns="http://www.crossref.org/schema/5.3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<doi_batch xmlns="http://www.crossref.org/schema/5.3.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   version="5.3.1"
   xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 https://www.crossref.org/schemas/crossref5.3.1.xsd">
 
   <head>
     <doi_batch_id>{{ $batchId }}</doi_batch_id>
-    <timestamp>{{ now()->format('YmdHis') . '000' }}</timestamp>
+    {{-- timestamp must be incremented with each deposit; use microseconds for uniqueness --}}
+    <timestamp>{{ now()->format('YmdHis') }}{{ str_pad(now()->micro, 6, '0', STR_PAD_LEFT) }}</timestamp>
     <depositor>
       <depositor_name>{!! $escape($journal->getSetting('crossref_depositor_name') ?: $journal->name) !!}</depositor_name>
-      <email_address>{!! $escape($journal->getSetting('crossref_depositor_email') ?: ($journal->email ?: 'admin@example.com')) !!}</email_address>
+      <email_address>{!! $escape($journal->getSetting('crossref_depositor_email') ?: ($journal->email ?? 'admin@example.com')) !!}</email_address>
     </depositor>
     <registrant>{!! $escape($journal->publisher ?? $journal->name) !!}</registrant>
   </head>
 
   <body>
     <journal>
-      <journal_metadata>
+      {{-- language attribute recommended by Crossref for multilingual journals --}}
+      <journal_metadata language="{{ $toBcp47($submissions->first()?->locale ?? 'en') }}">
         <full_title>{!! $escape($journal->name) !!}</full_title>
-        <abbrev_title>{!! $escape($journal->abbreviation ?? $journal->name) !!}</abbrev_title>
+        @if ($journal->abbreviation)
+          <abbrev_title>{!! $escape($journal->abbreviation) !!}</abbrev_title>
+        @endif
         @if ($journal->issn_online)
           <issn media_type="electronic">{{ $journal->issn_online }}</issn>
         @endif
@@ -52,14 +70,19 @@
         @endif
       </journal_metadata>
 
-      {{-- ISSUE DATA (taken from first selected article) --}}
+      {{-- ISSUE DATA — only year is required; month/day are optional --}}
       @php $firstItem = $submissions->first(); @endphp
       @if ($firstItem && $firstItem->issue)
+        @php
+          $issueDate = $firstItem->issue->published_at ?? null;
+        @endphp
         <journal_issue>
           <publication_date media_type="online">
-            <month>{{ $firstItem->issue->month ?? date('m') }}</month>
-            <day>{{ $firstItem->issue->day ?? date('d') }}</day>
-            <year>{{ $firstItem->issue->year ?? date('Y') }}</year>
+            @if ($issueDate)
+              <month>{{ $issueDate->format('m') }}</month>
+              <day>{{ $issueDate->format('d') }}</day>
+            @endif
+            <year>{{ $firstItem->issue->year ?? ($issueDate ? $issueDate->format('Y') : date('Y')) }}</year>
           </publication_date>
           @if ($firstItem->issue->volume)
             <journal_volume>
@@ -72,7 +95,7 @@
           @if (!empty($firstItem->issue->doi))
             <doi_data>
               <doi>{{ $firstItem->issue->doi }}</doi>
-              <resource>{{ trim(route('journal.issue', ['journal' => $journal->slug, 'issue' => $firstItem->issue->id])) }}</resource>
+              <resource>{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $firstItem->issue->seq_id ?? $firstItem->issue->id]) }}</resource>
             </doi_data>
           @endif
         </journal_issue>
@@ -80,9 +103,7 @@
 
       {{-- ARTICLES LOOP --}}
       @foreach ($submissions as $article)
-        @php
-          $pub = $article->currentPublication;
-        @endphp
+        @php $pub = $article->currentPublication; @endphp
         @if ($pub)
           <journal_article
             xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
@@ -90,49 +111,60 @@
             publication_type="full_text"
             metadata_distribution_opts="any">
 
+            {{-- TITLES: include subtitle if available --}}
             <titles>
               <title>{!! $escape(strip_tags($pub->title)) !!}</title>
+              @if ($pub->subtitle)
+                <subtitle>{!! $escape(strip_tags($pub->subtitle)) !!}</subtitle>
+              @endif
             </titles>
 
+            {{-- CONTRIBUTORS: include affiliation for Scopus/WoS disambiguation --}}
             <contributors>
               @foreach ($pub->authors as $index => $author)
                 @php
-                  $fullName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? ''));
+                  $givenName  = trim($author->first_name ?? '');
+                  $familyName = trim($author->last_name ?? $author->first_name ?? '');
+                  $cleanOrcid = null;
+                  $rawOrcid   = $author->orcid ?? ($author->user->orcid_id ?? null);
+                  if ($rawOrcid) {
+                    $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($rawOrcid));
+                  }
+                  $orcidVerified = !empty($author->orcid_verified) || !empty($author->user->orcid_verified);
                 @endphp
                 <person_name contributor_role="author" sequence="{{ $index === 0 ? 'first' : 'additional' }}">
-                  @if (!empty($author->first_name))
-                    <given_name>{!! $escape($author->first_name) !!}</given_name>
+                  @if ($givenName)
+                    <given_name>{!! $escape($givenName) !!}</given_name>
                   @endif
-                  <surname>{!! $escape($author->last_name ?: $author->first_name) !!}</surname>
-                  @if ($author->orcid)
-                    @php $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($author->orcid)); @endphp
-                    <ORCID authenticated="{{ !empty($author->orcid_verified) ? 'true' : 'false' }}">https://orcid.org/{{ $cleanOrcid }}</ORCID>
-                  @elseif ($author->user && $author->user->orcid_id)
-                    @php $cleanOrcid = preg_replace('/^https?:\/\/(www\.)?orcid\.org\//', '', trim($author->user->orcid_id)); @endphp
-                    <ORCID authenticated="{{ !empty($author->user->orcid_verified) ? 'true' : 'false' }}">https://orcid.org/{{ $cleanOrcid }}</ORCID>
+                  <surname>{!! $escape($familyName) !!}</surname>
+                  @if ($author->affiliation)
+                    <affiliation>{!! $escape($author->affiliation) !!}</affiliation>
+                  @endif
+                  @if ($cleanOrcid)
+                    <ORCID authenticated="{{ $orcidVerified ? 'true' : 'false' }}">https://orcid.org/{{ $cleanOrcid }}</ORCID>
                   @endif
                 </person_name>
               @endforeach
             </contributors>
 
+            {{-- ABSTRACT (JATS) --}}
             @if ($pub->abstract)
               <jats:abstract>
                 <jats:p>{!! $cleanAbstract($pub->abstract) !!}</jats:p>
               </jats:abstract>
             @endif
 
-            @php
-              $pubDateResolved = $pub->date_published ?? ($article->issue?->published_at ?? $article->published_at);
-            @endphp
+            {{-- PUBLICATION DATE --}}
+            @php $pubDateResolved = $pub->date_published ?? ($article->issue?->published_at ?? $article->published_at); @endphp
             @if ($pubDateResolved)
-            <publication_date media_type="online">
+              <publication_date media_type="online">
                 <month>{{ $pubDateResolved->format('m') }}</month>
                 <day>{{ $pubDateResolved->format('d') }}</day>
                 <year>{{ $pubDateResolved->format('Y') }}</year>
-            </publication_date>
+              </publication_date>
             @endif
 
-            {{-- Pages: split into first_page / last_page --}}
+            {{-- PAGES --}}
             @if ($pub->pages)
               @php [$firstPage, $lastPage] = $splitPages($pub->pages); @endphp
               <pages>
@@ -143,49 +175,109 @@
               </pages>
             @endif
 
-            {{-- Access Indicators (Dynamic License) --}}
-            @php
-              $licenseUrl = $pub->license_url ?? ($journal->license_url ?? 'https://creativecommons.org/licenses/by/4.0');
-            @endphp
+            {{-- ACCESS INDICATORS (license) --}}
+            @php $licenseUrl = $pub->license_url ?? ($journal->license_url ?? 'https://creativecommons.org/licenses/by/4.0'); @endphp
             <ai:program name="AccessIndicators">
               <ai:license_ref>{{ $licenseUrl }}</ai:license_ref>
             </ai:program>
 
+            {{-- FUNDING INFORMATION (Crossref Funder Registry) --}}
+            {{-- Dibutuhkan oleh banyak funder (Kemendikbud, BRIN, dll.) untuk compliance --}}
             @php
-              // CR-03 FIX: Only generate DOI if publication has one OR journal has a valid prefix.
-              // Never use placeholder '10.xxxx/' — it will be rejected by Crossref.
-              $doi = null;
-              if (!empty($pub->doi)) {
-                  $doi = trim($pub->doi);
-              } elseif (!empty($journal->doi_prefix) && str_starts_with($journal->doi_prefix, '10.')) {
-                  $doi = trim($journal->doi_prefix) . '/' . trim($journal->path) . '.v' . ($article->issue->volume ?? '0') . 'i' . ($article->issue->number ?? '0') . '.' . $article->id;
+              $fundingInfo = $pub->funding_info ?? [];
+              // Pastikan array (bukan null atau string)
+              if (!is_array($fundingInfo)) {
+                $fundingInfo = [];
               }
-              $articleUrl = trim(route('journal.public.article', ['journal' => $journal->slug, 'article' => $pub->seq_id ?? $article->seq_id]));
-
-              // Resolve PDF galley URL for iParadigms crawler.
-              $galleys = $article->galleys ?? collect();
-              $pdfGalley = $galleys->first(fn($g) => strtolower($g->label) === 'pdf')
-                         ?? $galleys->first();
-              $pdfUrl = $pdfGalley?->seo_download_url ?? $articleUrl;
             @endphp
-            @if ($doi)
-            <doi_data>
-              <doi>{{ $doi }}</doi>
-              <resource>{{ $articleUrl }}</resource>
-              <collection property="crawler-based">
-                <item crawler="iParadigms">
-                  <resource>{{ $pdfUrl }}</resource>
-                </item>
-              </collection>
-            </doi_data>
+            @if (!empty($fundingInfo))
+              <fr:program xmlns:fr="http://www.crossref.org/fundref.xsd" name="fundref">
+                @foreach ($fundingInfo as $funder)
+                  @if (!empty($funder['funder_name']))
+                    <fr:assertion name="fundgroup">
+                      <fr:assertion name="funder_name">
+                        {!! $escape($funder['funder_name']) !!}
+                        @if (!empty($funder['funder_doi']))
+                          <fr:assertion name="funder_identifier">{{ $escape($funder['funder_doi']) }}</fr:assertion>
+                        @endif
+                      </fr:assertion>
+                      @if (!empty($funder['award_number']))
+                        <fr:assertion name="award_number">{{ $escape($funder['award_number']) }}</fr:assertion>
+                      @endif
+                    </fr:assertion>
+                  @endif
+                @endforeach
+              </fr:program>
             @endif
 
-            @if ($pub->parsed_references && count($pub->parsed_references) > 0)
+            {{-- DOI DATA --}}
+            @php
+              $doi = null;
+              if (!empty($pub->doi)) {
+                $doi = trim($pub->doi);
+              } elseif (!empty($journal->doi_prefix) && str_starts_with($journal->doi_prefix, '10.')) {
+                // Only auto-generate if prefix is valid — never use placeholder
+                $doi = trim($journal->doi_prefix) . '/' . trim($journal->path)
+                     . '.v' . ($article->issue->volume ?? '0')
+                     . 'i' . ($article->issue->number ?? '0')
+                     . '.' . $article->seq_id;
+              }
+              // Use $article->seq_id (Submission) — Publication does not have seq_id
+              $articleUrl = route('journal.public.article', [
+                'journal' => $journal->slug,
+                'article' => $article->seq_id,
+              ]);
+              // PDF galley URL — use stable galley route
+              $galleys    = $article->galleys ?? collect();
+              $pdfGalley  = $galleys->first(fn($g) => strtolower($g->label ?? '') === 'pdf')
+                          ?? $galleys->first();
+              $pdfUrl     = $pdfGalley
+                ? route('journal.article.galley', [
+                    'journal' => $journal->slug,
+                    'article' => $article->seq_id,
+                    'galley'  => $pdfGalley->seq_id ?? $pdfGalley->id,
+                  ])
+                : $articleUrl;
+            @endphp
+            @if ($doi)
+              <doi_data>
+                <doi>{{ $doi }}</doi>
+                <resource>{{ $articleUrl }}</resource>
+                <collection property="crawler-based">
+                  <item crawler="iParadigms">
+                    <resource>{{ $pdfUrl }}</resource>
+                  </item>
+                </collection>
+              </doi_data>
+            @endif
+
+            {{-- CITATION LIST --}}
+            {{-- Key format: key-{doi}-{index} for uniqueness across deposits --}}
+            {{-- Structured citations preferred; DOI extracted when present --}}
+            @php
+              $parsedRefs = $pub->parsed_references ?? [];
+              $doiForKey  = $doi ?? $batchId;
+            @endphp
+            @if (count($parsedRefs) > 0)
               <citation_list>
-                @foreach ($pub->parsed_references as $index => $ref)
-                  <citation key="ref{{ $index + 1 }}">
-                    <unstructured_citation>{!! $escape(strip_tags(html_entity_decode($ref))) !!}</unstructured_citation>
-                  </citation>
+                @foreach ($parsedRefs as $index => $ref)
+                  @php
+                    $refText    = trim($ref);
+                    $refDoi     = $extractDoi($refText);
+                    $citationKey = 'key-' . preg_replace('/[^a-zA-Z0-9\-]/', '-', $doiForKey) . '-' . ($index + 1);
+                  @endphp
+                  @if ($refText)
+                    <citation key="{{ $citationKey }}">
+                      @if ($refDoi)
+                        {{-- Structured: DOI extracted — Crossref can match this precisely --}}
+                        <doi>{{ $refDoi }}</doi>
+                        <unstructured_citation>{!! $escape(strip_tags($refText)) !!}</unstructured_citation>
+                      @else
+                        {{-- Unstructured fallback — use $escape() only, no html_entity_decode() --}}
+                        <unstructured_citation>{!! $escape(strip_tags($refText)) !!}</unstructured_citation>
+                      @endif
+                    </citation>
+                  @endif
                 @endforeach
               </citation_list>
             @endif

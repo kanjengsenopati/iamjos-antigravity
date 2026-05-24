@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Search: {{ $query }} - IAMJOS</title>
+    <title>Search: {{ $query }} - {{ \App\Facades\Settings::site('site_title', 'IAMJOS') }}</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,7 +55,7 @@
                         <span class="text-white font-bold text-lg font-display">I</span>
                     </div>
                     <div class="hidden sm:block">
-                        <h1 class="text-lg font-bold font-display text-gray-900">IAMJOS</h1>
+                        <h1 class="text-lg font-bold font-display text-gray-900">{{ \App\Facades\Settings::site('site_title', 'IAMJOS') }}</h1>
                         <p class="text-xs text-gray-500 -mt-0.5">Portal Jurnal Akademik</p>
                     </div>
                 </a>
@@ -215,9 +215,9 @@
                     <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center">
                         <span class="text-white font-bold text-sm">I</span>
                     </div>
-                    <span class="font-semibold">IAMJOS</span>
+                    <span class="font-semibold">{{ \App\Facades\Settings::site('site_title', 'IAMJOS') }}</span>
                 </div>
-                <p class="text-gray-400 text-sm">&copy; {{ date('Y') }} IAMJOS. All rights reserved.</p>
+                <p class="text-gray-400 text-sm">&copy; {{ date('Y') }} {{ \App\Facades\Settings::site('site_title', 'IAMJOS') }}. All rights reserved.</p>
             </div>
         </div>
     </footer>

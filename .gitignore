@@ -29,6 +29,25 @@ Thumbs.db
 *.tar.gz
 /scratch/
 
+# ============================================================
+# IAMJOS — File sensitif yang tidak boleh masuk repository
+# ============================================================
+
+# Script test ad-hoc di root (gunakan tests/ untuk test yang proper)
+test_*.php
+scratch_*.php
+
+# Environment files — hanya .env.example yang boleh di-commit
+.env.*
+!.env.example
+
+# File temporary health check
+health-check-probe.tmp
+
+# Database dump directories
+/db_*/
+/iamjoss.sql/
+
 # Dev scratch/test scripts (root-level)
 test_*.php
 scratch_*.php

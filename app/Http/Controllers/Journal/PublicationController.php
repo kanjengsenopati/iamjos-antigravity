@@ -97,11 +97,39 @@ class PublicationController extends Controller
     {
         $validated = $request->validate([
             'copyright_holder' => 'nullable|string|max:255',
-            'copyright_year' => 'nullable|integer|min:1900|max:2100',
-            'license_url' => 'nullable|url|max:500',
+            'copyright_year'   => 'nullable|integer|min:1900|max:2100',
+            'license_url'      => 'nullable|url|max:500',
+            'funding_info'     => 'nullable|string', // JSON string dari Alpine.js
         ]);
+
+        // Parse dan validasi funding_info dari JSON string
+        $fundingInfo = null;
+        if (!empty($validated['funding_info'])) {
+            $decoded = json_decode($validated['funding_info'], true);
+            if (is_array($decoded)) {
+                // Filter: hanya simpan funder yang punya nama
+                $fundingInfo = array_values(array_filter($decoded, function ($f) {
+                    return !empty(trim($f['funder_name'] ?? ''));
+                }));
+                // Sanitasi setiap field
+                $fundingInfo = array_map(function ($f) {
+                    return [
+                        'funder_name'  => trim($f['funder_name'] ?? ''),
+                        'funder_doi'   => trim($f['funder_doi'] ?? ''),
+                        'award_number' => trim($f['award_number'] ?? ''),
+                    ];
+                }, $fundingInfo);
+            }
+        }
+
         $publication = $submission->getOrCreatePublication();
-        $publication->update($validated);
+        $publication->update([
+            'copyright_holder' => $validated['copyright_holder'] ?? null,
+            'copyright_year'   => $validated['copyright_year'] ?? null,
+            'license_url'      => $validated['license_url'] ?? null,
+            'funding_info'     => $fundingInfo,
+        ]);
+
         return back()->with('success', 'License information updated successfully.');
     }
     /**

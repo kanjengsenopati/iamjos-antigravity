@@ -42,8 +42,6 @@ class SuperAdminSeeder extends Seeder
                 'name'              => $name,
                 'password'          => Hash::make($password),
                 'email_verified_at' => now(),
-                'affiliation'       => 'IamJOS System',
-                'country'           => 'Indonesia',
             ]
         );
 

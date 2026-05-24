@@ -3,8 +3,8 @@
 
 @php
 $config = $block->config ?? [];
-$headline = $config['headline'] ?? 'Stay Updated';
-$subheadline = $config['subheadline'] ?? 'Get the latest publications delivered to your inbox';
+$headline = $config['headline'] ?? '';
+$subheadline = $config['subheadline'] ?? '';
 $buttonText = $config['button_text'] ?? 'Subscribe';
 $background = $config['background'] ?? 'gradient';
 @endphp

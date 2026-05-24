@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\Submission;
 use App\Models\Journal;
 use App\Models\User;
-use App\Models\Issue;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SubmissionFactory extends Factory
@@ -25,16 +24,16 @@ class SubmissionFactory extends Factory
     public function definition()
     {
         return [
-            'journal_id' => Journal::factory(),
-            'section_id' => \App\Models\Section::factory(),
-            'user_id' => User::factory(),
-            'issue_id' => Issue::factory(),
-            'title' => $this->faker->sentence,
-            'status' => Submission::STATUS_PUBLISHED,
-            'stage' => Submission::STAGE_PRODUCTION,
+            'journal_id'   => Journal::factory(),
+            'section_id'   => \App\Models\Section::factory(),
+            'user_id'      => User::factory(),
+            'issue_id'     => null, // null by default — assign issue secara eksplisit jika diperlukan
+            'title'        => $this->faker->sentence,
+            'status'       => Submission::STATUS_PUBLISHED,
+            'stage'        => Submission::STAGE_PRODUCTION,
             'submitted_at' => now(),
             'published_at' => now(),
-            'seq_id' => $this->faker->unique()->numberBetween(1000, 9999),
+            'seq_id'       => $this->faker->unique()->numberBetween(1000, 99999),
         ];
     }
 }

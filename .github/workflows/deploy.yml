@@ -1,47 +1,313 @@
-name: Deploy to VPS
+name: CI/CD Pipeline — IAMJOS
 
+# ============================================================
+# Trigger: semua push dan pull request ke branch utama
+# ============================================================
 on:
   push:
-    branches:
-      - dev
-      - staging
-      - main
+    branches: [main, staging, dev]
+  pull_request:
+    branches: [main, staging, dev]
 
 jobs:
-  deploy:
+  # ============================================================
+  # JOB 1: TEST
+  # Berjalan pada semua push dan pull request.
+  # Pipeline berhenti di sini jika test atau analisis statis gagal.
+  # ============================================================
+  test:
+    name: 🧪 Test & Analisis Statis
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: iamjos_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - name: Set deployment environment variables
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pgsql, pdo_pgsql, redis, gd, zip, bcmath, intl, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
+
+      - name: Siapkan environment testing
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: iamjos_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+          SESSION_DRIVER: array
+
+      - name: Jalankan migrasi database untuk testing
+        run: php artisan migrate --force --ansi
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: iamjos_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+          SESSION_DRIVER: array
+
+      - name: Jalankan test suite (Pest)
+        run: php artisan test --parallel --ansi
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: iamjos_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+          SESSION_DRIVER: array
+
+      - name: PHPStan — Analisis Statis Level 5
+        run: vendor/bin/phpstan analyse --level=5 --no-progress --ansi
+        # Gagal pipeline jika ada error statis
+        continue-on-error: false
+
+  # ============================================================
+  # JOB 2: BUILD
+  # Hanya berjalan setelah job test lulus.
+  # Hanya pada push (bukan pull request).
+  # ============================================================
+  build:
+    name: 🔨 Build Assets Production
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pgsql, pdo_pgsql, redis, gd, zip, bcmath, intl, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Composer dependencies (production)
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-prod-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-prod-${{ runner.os }}-
+
+      - name: Install PHP dependencies (production, tanpa dev)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Build assets production (Vite)
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-assets-${{ github.sha }}
+          path: |
+            public/build/
+          retention-days: 1
+
+  # ============================================================
+  # JOB 3: DEPLOY
+  # Hanya berjalan setelah job build selesai.
+  # Hanya pada push ke branch main, staging, atau dev.
+  #
+  # PENTING: Untuk branch 'main', GitHub Environment 'production'
+  # harus dikonfigurasi dengan required reviewers di:
+  # Settings → Environments → production → Required reviewers
+  # Ini memastikan ada approval manual sebelum deploy ke production.
+  # ============================================================
+  deploy:
+    name: 🚀 Deploy ke ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push'
+
+    # Environment GitHub — 'production' memerlukan approval manual
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || github.ref_name == 'staging' && 'staging' || 'development' }}
+      url: ${{ github.ref_name == 'main' && 'https://iamjos.id' || github.ref_name == 'staging' && 'https://staging.iamjos.id' || 'https://dev.iamjos.id' }}
+
+    steps:
+      - name: Tentukan variabel deployment berdasarkan branch
         id: set-env
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "TARGET_PATH=${{ secrets.PROD_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=main" >> $GITHUB_ENV
+            echo "APP_URL=https://iamjos.id" >> $GITHUB_ENV
+            echo "ENV_LABEL=PRODUCTION" >> $GITHUB_ENV
           elif [ "${{ github.ref_name }}" = "staging" ]; then
             echo "TARGET_PATH=${{ secrets.STAGING_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=staging" >> $GITHUB_ENV
-          elif [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "APP_URL=https://staging.iamjos.id" >> $GITHUB_ENV
+            echo "ENV_LABEL=STAGING" >> $GITHUB_ENV
+          else
             echo "TARGET_PATH=${{ secrets.DEV_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=dev" >> $GITHUB_ENV
+            echo "APP_URL=https://dev.iamjos.id" >> $GITHUB_ENV
+            echo "ENV_LABEL=DEVELOPMENT" >> $GITHUB_ENV
           fi
 
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v0.1.9
+      - name: Deploy ke VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT || '22' }}
+          # set -e: hentikan script jika ada perintah yang gagal
           script: |
+            set -e
+
+            echo "🚀 Memulai deployment ke ${{ env.ENV_LABEL }}..."
             cd ${{ env.TARGET_PATH }}
+
+            # ─── 1. Pull kode terbaru ───────────────────────────────────
+            echo "📥 Mengambil kode terbaru dari branch ${{ env.BRANCH_NAME }}..."
             git pull origin ${{ env.BRANCH_NAME }}
-            composer install --no-dev --optimize-autoloader
-            npm install && npm run build && ([ -f public/build/.vite/manifest.json ] && cp public/build/.vite/manifest.json public/build/manifest.json || true)
-            php artisan cache:clear
-            php artisan migrate --force
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan livewire:publish --assets
-            sudo systemctl restart php-fpm
-            sudo systemctl restart nginx
+
+            # ─── 2. Backup database SEBELUM migration ──────────────────
+            # Hanya untuk production dan staging (bukan dev)
+            if [ "${{ env.BRANCH_NAME }}" = "main" ] || [ "${{ env.BRANCH_NAME }}" = "staging" ]; then
+              echo "📦 Membuat backup database PostgreSQL..."
+              BACKUP_DIR="/var/backups/iamjos"
+              mkdir -p $BACKUP_DIR
+              BACKUP_FILE="$BACKUP_DIR/backup-${{ env.BRANCH_NAME }}-$(date +%Y%m%d-%H%M%S).sql.gz"
+
+              # Ambil kredensial DB dari .env
+              DB_HOST=$(grep '^DB_HOST=' .env | cut -d '=' -f2)
+              DB_PORT=$(grep '^DB_PORT=' .env | cut -d '=' -f2 || echo "5432")
+              DB_DATABASE=$(grep '^DB_DATABASE=' .env | cut -d '=' -f2)
+              DB_USERNAME=$(grep '^DB_USERNAME=' .env | cut -d '=' -f2)
+              DB_PASSWORD=$(grep '^DB_PASSWORD=' .env | cut -d '=' -f2)
+
+              PGPASSWORD="$DB_PASSWORD" pg_dump \
+                -h "$DB_HOST" \
+                -p "$DB_PORT" \
+                -U "$DB_USERNAME" \
+                -d "$DB_DATABASE" \
+                --no-password \
+                | gzip > "$BACKUP_FILE"
+
+              # Verifikasi backup berhasil (exit code non-zero = gagal)
+              if [ $? -ne 0 ] || [ ! -f "$BACKUP_FILE" ]; then
+                echo "❌ GAGAL: Backup database tidak berhasil. Deployment dihentikan."
+                exit 1
+              fi
+
+              echo "✅ Backup berhasil: $BACKUP_FILE"
+
+              # Hapus backup yang lebih dari 7 hari
+              find $BACKUP_DIR -name "backup-*.sql.gz" -mtime +7 -delete
+              echo "🧹 Backup lama (>7 hari) telah dihapus."
+            fi
+
+            # ─── 3. Install PHP dependencies ───────────────────────────
+            echo "📦 Menginstall PHP dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+            # ─── 4. Build assets frontend ──────────────────────────────
+            echo "🔨 Membangun assets frontend..."
+            npm ci --silent
+            npm run build
+
+            # Salin manifest Vite jika diperlukan
+            [ -f public/build/.vite/manifest.json ] && \
+              cp public/build/.vite/manifest.json public/build/manifest.json || true
+
+            # ─── 5. Jalankan database migration ────────────────────────
+            echo "🗄️ Menjalankan database migration..."
+            php artisan migrate --force --ansi
+
+            # ─── 6. Rebuild cache aplikasi ─────────────────────────────
+            echo "⚡ Membangun ulang cache aplikasi..."
+            php artisan config:cache --ansi
+            php artisan route:cache --ansi
+            php artisan view:cache --ansi
+            php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
+
+            # ─── 7. Restart services ───────────────────────────────────
+            echo "🔄 Merestart services..."
+            # Gunakan reload (graceful) bukan restart untuk zero-downtime
+            sudo systemctl reload php8.4-fpm 2>/dev/null || \
+              sudo systemctl reload php-fpm 2>/dev/null || \
+              sudo kill -USR2 $(cat /run/php/php8.4-fpm.pid 2>/dev/null) 2>/dev/null || true
+            sudo systemctl reload nginx 2>/dev/null || true
+
+            # ─── 8. Verifikasi health check setelah deployment ─────────
+            echo "🏥 Menunggu aplikasi siap (5 detik)..."
+            sleep 5
+
+            echo "🏥 Menjalankan verifikasi health check..."
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 10 \
+              "${{ env.APP_URL }}/api/v1/health")
+
+            if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "503" ]; then
+              # 200 = healthy, 503 = degraded/unhealthy tapi aplikasi berjalan
+              echo "✅ Health check OK — Aplikasi berjalan (HTTP $HTTP_STATUS)"
+            else
+              echo "❌ GAGAL: Health check mengembalikan HTTP $HTTP_STATUS"
+              echo "   Periksa log aplikasi di: ${{ env.TARGET_PATH }}/storage/logs/"
+              exit 1
+            fi
+
+            echo ""
+            echo "🎉 Deployment ke ${{ env.ENV_LABEL }} berhasil!"
+            echo "   Branch: ${{ env.BRANCH_NAME }}"
+            echo "   Commit: ${{ github.sha }}"
+            echo "   URL: ${{ env.APP_URL }}"

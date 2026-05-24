@@ -3,7 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $content['hero_title'] ?? 'IAMJOS' }} - Portal Jurnal Akademik</title>
+    @php
+        use App\Facades\Settings;
+        $siteTitle = Settings::site('site_title', 'IAMJOS');
+        $siteIntro = Settings::site('site_intro', 'Indonesian Academic Journal System');
+    @endphp
+    <title>{{ $content['hero_title'] ?? $siteTitle }} - Portal Jurnal Akademik</title>
     <meta name="description" content="{{ $content['hero_subtitle'] ?? 'Platform Jurnal Akademik Indonesia' }}">
 
     <!-- Google Fonts -->
@@ -148,7 +153,7 @@
                         <span class="text-white font-bold text-xl font-display">I</span>
                     </div>
                     <div class="hidden sm:block">
-                        <h1 class="text-xl font-bold font-display" :class="scrolled ? 'text-gray-900' : 'text-white'">IAMJOS</h1>
+                        <h1 class="text-xl font-bold font-display" :class="scrolled ? 'text-gray-900' : 'text-white'">{{ $siteTitle }}</h1>
                         <p class="text-xs -mt-0.5" :class="scrolled ? 'text-gray-500' : 'text-white/70'">Portal Jurnal Akademik</p>
                     </div>
                 </a>
@@ -522,12 +527,12 @@
                             <span class="text-white font-bold text-xl font-display">I</span>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold font-display">IAMJOS</h3>
+                            <h3 class="text-xl font-bold font-display">{{ $siteTitle }}</h3>
                             <p class="text-sm text-gray-400">Portal Jurnal Akademik</p>
                         </div>
                     </div>
                     <p class="text-gray-400 mb-6 max-w-md leading-relaxed">
-                        {{ $content['footer_about'] ?? 'IAMJOS adalah platform open-access untuk publikasi dan penyebaran karya ilmiah di Indonesia. Kami berkomitmen untuk memajukan dunia akademik dengan menyediakan akses mudah ke pengetahuan berkualitas.' }}
+                        {{ $content['footer_about'] ?? $siteTitle . ' adalah platform open-access untuk publikasi dan penyebaran karya ilmiah di Indonesia. Kami berkomitmen untuk memajukan dunia akademik dengan menyediakan akses mudah ke pengetahuan berkualitas.' }}
                     </p>
                     <!-- Social Links -->
                     <div class="flex items-center space-x-4">
@@ -600,7 +605,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <p class="text-gray-500 text-sm">
-                        &copy; {{ date('Y') }} IAMJOS. All rights reserved.
+                        &copy; {{ date('Y') }} {{ $siteTitle }}. All rights reserved.
                     </p>
                     {{-- {{-- Powered by Laravel & Open Journal Systems removed for branding --}} --}}
                 </div>

@@ -22,14 +22,14 @@ class SiteContentBlockSeeder extends Seeder
                 'sort_order' => 1,
                 'is_active' => true,
                 'config' => [
-                    'headline' => 'Discover Academic Excellence',
-                    'subheadline' => 'Search across peer-reviewed journals and scholarly articles',
-                    'background_type' => 'gradient', // gradient, image, solid
+                    'headline' => '',
+                    'subheadline' => '',
+                    'background_type' => 'gradient',
                     'background_gradient' => 'from-slate-900 via-blue-900 to-indigo-900',
                     'background_image' => null,
                     'show_stats' => true,
-                    'show_popular_topics' => true,
-                    'popular_topics' => ['Artificial Intelligence', 'Education', 'Economics', 'Health Sciences'],
+                    'show_popular_topics' => false,
+                    'popular_topics' => [],
                 ],
             ],
             [
@@ -47,7 +47,7 @@ class SiteContentBlockSeeder extends Seeder
                         ['label' => 'Journals', 'icon' => 'fa-book', 'count_type' => 'journals'],
                         ['label' => 'Articles', 'icon' => 'fa-file-text', 'count_type' => 'articles'],
                         ['label' => 'Authors', 'icon' => 'fa-users', 'count_type' => 'authors'],
-                        ['label' => 'Countries', 'icon' => 'fa-globe', 'count_type' => 'static', 'value' => '50+'],
+                        ['label' => 'Downloads', 'icon' => 'fa-download', 'count_type' => 'downloads'],
                     ],
                 ],
             ],
@@ -77,21 +77,14 @@ class SiteContentBlockSeeder extends Seeder
                 'icon' => 'fa-solid fa-th-large',
                 'category' => 'navigation',
                 'sort_order' => 4,
-                'is_active' => true,
+                'is_active' => false, // Disabled by default — admin configures categories per-installation
                 'config' => [
-                    'title' => 'Browse by Subject',
-                    'subtitle' => 'Find journals in your research area',
-                    'layout' => 'icon-grid', // icon-grid, list, dropdown
+                    'title' => '',
+                    'subtitle' => '',
+                    'layout' => 'icon-grid',
                     'columns' => 6,
                     'show_count' => true,
-                    'categories' => [
-                        ['name' => 'Science & Technology', 'icon' => 'fa-flask', 'color' => 'blue'],
-                        ['name' => 'Medicine & Health', 'icon' => 'fa-heartbeat', 'color' => 'red'],
-                        ['name' => 'Social Sciences', 'icon' => 'fa-users', 'color' => 'green'],
-                        ['name' => 'Arts & Humanities', 'icon' => 'fa-palette', 'color' => 'purple'],
-                        ['name' => 'Business & Economics', 'icon' => 'fa-chart-bar', 'color' => 'amber'],
-                        ['name' => 'Education', 'icon' => 'fa-graduation-cap', 'color' => 'indigo'],
-                    ],
+                    'categories' => [], // Admin adds categories via dashboard
                 ],
             ],
             [

@@ -1,5 +1,5 @@
 {{-- Master Public Layout Component for Journal Pages (OJS 3.3 Parity) --}}
-@props(['journal', 'settings' => [], 'title' => null, 'description' => null])
+@props(['journal', 'settings' => [], 'title' => null, 'description' => null, 'article' => false])
 
 @php
 $primaryColor = $settings['primary_color'] ?? '#0369a1';
@@ -9,6 +9,9 @@ $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
 // If homepage_image exists AND show_homepage_image_in_header is TRUE -> show as header background
 // Otherwise -> show standard branding header
 $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_image_in_header;
+
+$siteTitle = \App\Facades\Settings::site('site_title', 'IAMJOS');
+$siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System');
 @endphp
 
 <!DOCTYPE html>
@@ -20,20 +23,22 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
 {{-- Basic SEO Meta Tags --}}
-<title>{{ $title ?? $journal->name ?? 'IAMJOS' }}</title>
-<meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
+<title>{{ $title ?? $journal->name ?? $siteTitle }}</title>
+<meta name="generator" content="{{ $siteTitle }} - {{ $siteIntro }}">
 
 {{-- ============================================ --}}
 {{-- ACADEMIC METADATA (GS / OJS COMPLIANCE)      --}}
 {{-- ============================================ --}}
 @stack('meta_tags')
 
-{{-- Dublin Core Metadata (Fallback) --}}
+{{-- Dublin Core Metadata (Fallback — only on non-article pages that don't push to meta_tags stack) --}}
+@unless($attributes->has('article'))
 <meta name="DC.Title" content="{{ $title ?? $journal->name }}">
 <meta name="DC.Publisher" content="{{ $journal->publisher ?? $journal->name }}">
 @if($journal->issn_online)
 <meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
 @endif
+@endunless
 
 {{-- Secondary SEO Meta Tags --}}
 <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
@@ -47,7 +52,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
 
     {{-- Default Open Graph Tags --}}
     <meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{{ $article ? 'article' : 'website' }}">
     <meta property="og:title" content="{{ $title ?? $journal->name }}">
     <meta property="og:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
     <meta property="og:url" content="{{ url()->current() }}">
@@ -389,7 +394,7 @@ $showImageInHeader = $journal->homepage_image_path && $journal->show_homepage_im
                         <i class="fa-solid fa-arrow-left mr-1"></i> Back to Portal
                     </a>
                     <span class="text-slate-700">|</span>
-                    <span class="text-slate-600">Powered by <strong class="text-slate-400">IAMJOS</strong></span>
+                    <span class="text-slate-600">Powered by <strong class="text-slate-400">{{ $siteTitle }}</strong></span>
                 </div>
             </div>
         </div>

@@ -4,9 +4,13 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
 @props(['primaryMenu' => null, 'userMenu' => null, 'settings' => []])
 
 @php
+    use App\Facades\Settings;
     // Use passed menu data or fallback to direct queries if not provided
     $primaryMenuItems = $primaryMenu ?? collect();
-    $userMenuItems = $userMenu ?? collect();
+    $userMenuItems    = $userMenu ?? collect();
+    // Site title dari Settings (SiteSetting table) — lebih reliable dari SiteContent
+    $navSiteTitle = Settings::site('site_title', config('app.name'));
+    $navSiteLogo  = $settings['site_logo'] ?? Settings::site('site_logo');
 @endphp
 
 <div x-data="{ mobileMenuOpen: false }">
@@ -15,16 +19,22 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
  
             {{-- LOGO --}}
             <a href="{{ route('portal.home') }}" class="flex items-center gap-2">
-                @if (!empty($settings['site_logo']))
-                    <img src="{{ Storage::url($settings['site_logo']) }}" class="h-8">
+                @if (!empty($navSiteLogo))
+                    <img src="{{ Storage::url($navSiteLogo) }}" class="h-8" alt="{{ $navSiteTitle }}">
+                @elseif($navSiteTitle)
+                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        {{ strtoupper(substr($navSiteTitle, 0, 2)) }}
+                    </div>
                 @else
-                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                        IJ
+                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-book-open text-xs text-white"></i>
                     </div>
                 @endif
+                @if($navSiteTitle)
                 <span class="hidden sm:block font-bold text-slate-800">
-                    {{ $settings['site_name'] ?? 'IAMJOS' }}
+                    {{ $navSiteTitle }}
                 </span>
+                @endif
             </a>
  
             {{-- PRIMARY MENU --}}

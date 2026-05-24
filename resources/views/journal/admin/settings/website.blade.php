@@ -680,7 +680,7 @@
                         </div>
                     </div>
 
-                    @if ($siteSetting && $siteSetting->recaptcha_site_key && $siteSetting->recaptcha_secret_key)
+                    @if ($recaptchaSiteKey && $recaptchaSecretKey)
                         {{-- Enable/Disable Checkbox --}}
                         <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
                             <div class="relative flex items-start">

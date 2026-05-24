@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Facades\Settings;
 use App\Models\ReviewAssignment;
 use App\Notifications\ReviewerReminder;
 use Illuminate\Bus\Queueable;
@@ -41,6 +42,12 @@ class ReviewerReminderJob implements ShouldQueue
 
         $reminderCount = 0;
 
+        // Load reminder configuration from system settings (database-driven)
+        $reminderDaysRaw = Settings::system('reviewer_reminder_days_before', '7,3,1,0');
+        $reminderDays = array_map('intval', array_filter(array_map('trim', explode(',', $reminderDaysRaw))));
+
+        $overdueInterval = (int) Settings::system('reviewer_reminder_overdue_interval_days', 3);
+
         foreach ($assignments as $assignment) {
             $reviewer = $assignment->reviewer;
             if (!$reviewer) continue;
@@ -51,17 +58,14 @@ class ReviewerReminderJob implements ShouldQueue
             $shouldRemind = false;
             $type = 'upcoming';
 
-            // Reminder Logic:
-            // - 7 days before due date
-            // - 3 days before due date
-            // - 1 day before due date
-            // - On due date
-            // - Every 3 days after due date (overdue)
+            // Reminder Logic (days configured via system settings):
+            // - N days before due date (configurable via reviewer_reminder_days_before)
+            // - Every N days after due date (configurable via reviewer_reminder_overdue_interval_days)
 
-            if ($daysLeft == 7 || $daysLeft == 3 || $daysLeft == 1 || $daysLeft == 0) {
+            if (in_array((int) $daysLeft, $reminderDays, true)) {
                 $shouldRemind = true;
                 $type = 'upcoming';
-            } elseif ($daysLeft < 0 && abs($daysLeft) % 3 == 0) {
+            } elseif ($daysLeft < 0 && $overdueInterval > 0 && abs($daysLeft) % $overdueInterval == 0) {
                 $shouldRemind = true;
                 $type = 'overdue';
             }

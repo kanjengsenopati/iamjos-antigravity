@@ -1,6 +1,6 @@
 # 🚀 IamJOS — Quick Setup Guide
 
-IamJOS is an open-source academic journal management system inspired by [OJS (Open Journal Systems)](https://pkp.sfu.ca/software/ojs/).  
+IamJOS is a **commercial proprietary** academic journal management platform. All rights reserved. Unauthorized copying, distribution, or modification is strictly prohibited.  
 Fresh installations start **empty** — no demo journals, no sample data. You create journals and assign editors via the Admin Dashboard.
 
 ---
@@ -123,6 +123,68 @@ php artisan storage:link
 
 ---
 
+## Redis Setup (Production)
+
+Redis diperlukan untuk cache, queue, dan session di production. Driver `database` tidak direkomendasikan untuk production karena setiap operasi cache/queue tetap hit database.
+
+### Instalasi Redis
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+### Konfigurasi Password (Wajib di Production)
+
+Edit `/etc/redis/redis.conf`:
+```
+requirepass your-strong-redis-password
+```
+
+Restart Redis: `sudo systemctl restart redis-server`
+
+### Konfigurasi Multiple Database
+
+IAMJOS menggunakan 3 database Redis terpisah untuk menghindari konflik antar penggunaan:
+
+| Database | Env Var | Default | Kegunaan |
+|----------|---------|---------|----------|
+| DB 0 | `REDIS_DB` | `0` | Queue dan koneksi default |
+| DB 1 | `REDIS_CACHE_DB` | `1` | Cache aplikasi |
+| DB 2 | `REDIS_SESSION_DB` | `2` | Session pengguna |
+
+Ketika beberapa instance IAMJOS berbagi satu Redis server, isolasi dicapai melalui prefix `IAMJOS_INSTANCE_ID`.
+
+### Verifikasi Koneksi
+
+```bash
+redis-cli -a your-password ping
+# Output: PONG
+
+redis-cli -a your-password info server | grep redis_version
+```
+
+### Konfigurasi `.env` untuk Redis
+
+```env
+IAMJOS_INSTANCE_ID=nama-unik-instance-ini
+
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=your-strong-redis-password
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_CACHE_DB=1
+REDIS_SESSION_DB=2
+
+CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
+```
+
+---
+
 ## Production Deployment Checklist
 
 - [ ] Set `APP_ENV=production` and `APP_DEBUG=false`
@@ -137,7 +199,12 @@ php artisan storage:link
 - [ ] Configure web server (Nginx/Apache) to serve `public/` directory
 - [ ] Set up SSL (Let's Encrypt / Cloudflare)
 - [ ] Configure SMTP for email notifications
-- [ ] Set up queue workers: `php artisan queue:work`
+- [ ] Set up queue workers via Supervisor (lihat `docs/SUPERVISOR_CONFIG.md`):
+  ```bash
+  # Nama queue harus sesuai IAMJOS_INSTANCE_ID
+  php artisan queue:work redis --queue={IAMJOS_INSTANCE_ID}-default
+  ```
+- [ ] Set up cron scheduler: `* * * * * php artisan schedule:run`
 
 ---
 
@@ -167,4 +234,6 @@ iamjos-php/
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+IamJOS is **commercial proprietary software**. All rights reserved.
+
+Unauthorized copying, distribution, modification, or use of this software without a valid license is strictly prohibited. Contact [support@iamjos.id](mailto:support@iamjos.id) for licensing information.

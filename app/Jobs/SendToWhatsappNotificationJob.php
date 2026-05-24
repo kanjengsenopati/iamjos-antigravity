@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
-use App\Models\SiteSetting;
+use App\Facades\Settings;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -56,18 +56,11 @@ class SendToWhatsappNotificationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        // Fetch credentials from database (dynamic, not hardcoded)
-        $settings = SiteSetting::first();
+        // Fetch credentials from database via Settings facade (cached, not hardcoded)
+        $apiUrl  = Settings::site('wa_api_url');
+        $deviceId = Settings::site('wa_device_id');
 
         // Graceful handling: if credentials are missing, log warning and exit
-        if (!$settings) {
-            Log::warning('SendToWhatsappNotificationJob: No site_settings record found.');
-            return;
-        }
-
-        $apiUrl = $settings->wa_api_url;
-        $deviceId = $settings->wa_device_id;
-
         if (empty($apiUrl) || empty($deviceId)) {
             Log::warning('SendToWhatsappNotificationJob: WhatsApp credentials not configured.', [
                 'has_api_url' => !empty($apiUrl),

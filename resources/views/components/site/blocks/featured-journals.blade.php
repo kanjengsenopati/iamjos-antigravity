@@ -3,8 +3,8 @@
 
 @php
 $config = $block->config ?? [];
-$title = $config['title'] ?? 'Featured Journals';
-$subtitle = $config['subtitle'] ?? 'Explore our top-rated peer-reviewed publications';
+$title = $config['title'] ?? '';
+$subtitle = $config['subtitle'] ?? '';
 $layout = $config['layout'] ?? 'grid';
 $columns = $config['columns'] ?? 4;
 $limit = $config['limit'] ?? 8;
@@ -22,12 +22,16 @@ $journals = $data['journals'] ?? collect();
                 <i class="fa-solid fa-star mr-2"></i>
                 Featured
             </span>
+            @if($title)
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                 {{ $title }}
             </h2>
+            @endif
+            @if($subtitle)
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                 {{ $subtitle }}
             </p>
+            @endif
         </div>
 
         {{-- Journals Grid --}}

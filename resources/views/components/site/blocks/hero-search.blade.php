@@ -7,11 +7,9 @@
     // Data (Optional binding, keeping it available if needed in future)
     $journalsCount = $data['total_journals'] ?? 50;
 
-    // Headline configuration if dynamically passed, otherwise default to the requested text
-    $headline = $config['headline'] ?? 'Discover Academic Excellence with IAMJOS.';
-    $subheadline =
-        $config['subheadline'] ??
-        'A secure, open-access platform for managing academic journal submissions, peer reviews, and publications.';
+    // Headline configuration — dari database block config, kosong jika tidak diset
+    $headline = $config['headline'] ?? '';
+    $subheadline = $config['subheadline'] ?? '';
 
     // Fetch top 3 popular keywords from database with caching
     $popularKeywords = Cache::remember('portal_popular_keywords_hero', 3600, function () {
@@ -70,20 +68,19 @@
             </div>
         @endif
 
-        {{-- 2. HEADLINE (Big & Bold with Gradient) --}}
+        {{-- 2. HEADLINE --}}
+        @if($headline)
         <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4 max-w-4xl leading-[1.1]">
-            Discover
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-                Academic Excellence
-            </span>
-            <br class="hidden md:block" />
-            with IAMJOS.
+            {!! $headline !!}
         </h1>
+        @endif
 
         {{-- 3. SUBTITLE --}}
+        @if($subheadline)
         <p class="text-base md:text-lg text-slate-500 mb-6 max-w-2xl mx-auto leading-relaxed font-normal">
             {{ $subheadline }}
         </p>
+        @endif
 
         {{-- 4. SEARCH BAR (Pixel Perfect) --}}
         <form action="{{ route('portal.search') }}" method="GET" class="w-full max-w-2xl relative mx-auto mt-2">

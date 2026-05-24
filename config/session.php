@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -73,7 +73,8 @@ return [
     |
     */
 
-    'connection' => env('SESSION_CONNECTION'),
+    // Untuk Redis session, gunakan koneksi 'session' yang menggunakan DB terpisah (REDIS_SESSION_DB=2)
+    'connection' => env('SESSION_CONNECTION', 'session'),
 
     /*
     |--------------------------------------------------------------------------

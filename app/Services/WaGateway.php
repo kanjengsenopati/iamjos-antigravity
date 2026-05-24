@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendToWhatsappNotificationJob;
 use App\Models\User;
-use App\Models\SiteSetting;
+use App\Facades\Settings;
 use App\Models\NotificationTemplate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -50,12 +50,13 @@ class WaGateway
         }
 
         // 3. Check if WhatsApp credentials are configured
-        $settings = SiteSetting::first();
+        $waApiUrl  = Settings::site('wa_api_url');
+        $waDeviceId = Settings::site('wa_device_id');
 
-        if (!$settings || empty($settings->wa_api_url) || empty($settings->wa_device_id)) {
+        if (empty($waApiUrl) || empty($waDeviceId)) {
             Log::warning('WaGateway: WhatsApp credentials not configured in site_settings.', [
-                'has_api_url' => !empty($settings?->wa_api_url),
-                'has_device_id' => !empty($settings?->wa_device_id),
+                'has_api_url' => !empty($waApiUrl),
+                'has_device_id' => !empty($waDeviceId),
             ]);
             return false; // Fail silently if not configured
         }

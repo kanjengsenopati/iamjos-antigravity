@@ -157,43 +157,43 @@ class SearchController extends Controller
     {
         $defaults = [
             // Content
-            'about' => '',
+            'about'    => '',
             'masthead' => ['about' => '', 'editorial_team' => ''],
 
             // Appearance
-            'hero_image' => null,
-            'primary_color' => '#4F46E5',
+            'hero_image'      => null,
+            'primary_color'   => '#4F46E5',
             'secondary_color' => '#7C3AED',
 
-            // Hero Content
-            'hero_title' => $journal->name,
-            'hero_description' => $journal->description ?? 'A peer-reviewed scholarly journal dedicated to advancing knowledge and research.',
-            'hero_tagline' => 'Peer-Reviewed • Open Access • Indexed',
+            // Hero Content — use journal data, never fake taglines
+            'hero_title'       => $journal->name,
+            'hero_description' => $journal->description ?? '',
+            'hero_tagline'     => '',
 
-            // Stats
-            'stat_acceptance_rate' => '25%',
-            'stat_review_time' => '4 Weeks',
-            'stat_impact_factor' => 'N/A',
-            'stat_citations' => '1000+',
+            // Stats — empty by default; journal must set real values
+            'stat_acceptance_rate' => '',
+            'stat_review_time'     => '',
+            'stat_impact_factor'   => '',
+            'stat_citations'       => '',
 
             // Section Visibility
-            'show_announcements' => true,
+            'show_announcements'  => true,
             'show_editorial_team' => true,
-            'show_indexed_in' => true,
-            'show_stats' => true,
+            'show_indexed_in'     => true,
+            'show_stats'          => false,
 
             // Indexed In
             'indexed_in_images' => [],
 
             // Footer
-            'footer_description' => $journal->description ?? 'A leading academic journal.',
-            'social_facebook' => '',
-            'social_twitter' => '',
-            'social_linkedin' => '',
-            'social_instagram' => '',
-            'contact_email' => '',
-            'contact_phone' => '',
-            'contact_address' => '',
+            'footer_description' => $journal->description ?? '',
+            'social_facebook'    => '',
+            'social_twitter'     => '',
+            'social_linkedin'    => '',
+            'social_instagram'   => '',
+            'contact_email'      => '',
+            'contact_phone'      => '',
+            'contact_address'    => '',
         ];
 
         $actual = $journal->getWebsiteSettings();

@@ -3460,6 +3460,58 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         BY-NC 4.0</p>
                                 </div>
 
+                                {{-- ── FUNDING INFORMATION ─────────────────────────────────── --}}
+                                <div x-data="fundingManager(@js($publication->funding_info ?? []))" class="pt-4 border-t border-gray-100">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Funding Information</label>
+                                            <p class="text-xs text-gray-500 mt-0.5">Sumber pendanaan penelitian. Dibutuhkan untuk deposit Crossref dan compliance funder.</p>
+                                        </div>
+                                        <button type="button" @click="addFunder()"
+                                            class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                            <i class="fa-solid fa-plus"></i> Tambah Funder
+                                        </button>
+                                    </div>
+
+                                    <template x-for="(funder, index) in funders" :key="index">
+                                        <div class="bg-gray-50 rounded-lg p-4 mb-3 border border-gray-200">
+                                            <div class="flex items-start justify-between mb-3">
+                                                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider" x-text="'Funder ' + (index + 1)"></span>
+                                                <button type="button" @click="removeFunder(index)"
+                                                    class="text-red-400 hover:text-red-600 text-xs">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            <div class="grid grid-cols-1 gap-3">
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-600 mb-1">Nama Funder <span class="text-red-500">*</span></label>
+                                                    <input type="text" x-model="funder.funder_name"
+                                                        placeholder="e.g., Kementerian Pendidikan dan Kebudayaan"
+                                                        class="block w-full text-sm rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-gray-600 mb-1">Funder DOI <span class="text-gray-400">(opsional)</span></label>
+                                                        <input type="text" x-model="funder.funder_doi"
+                                                            placeholder="10.13039/501100003093"
+                                                            class="block w-full text-sm rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                        <p class="text-xs text-gray-400 mt-0.5">Dari <a href="https://www.crossref.org/services/funder-registry/" target="_blank" class="underline">Crossref Funder Registry</a></p>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-gray-600 mb-1">Nomor Hibah <span class="text-gray-400">(opsional)</span></label>
+                                                        <input type="text" x-model="funder.award_number"
+                                                            placeholder="e.g., 123/UN1/2024"
+                                                            class="block w-full text-sm rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    {{-- Hidden input untuk submit form --}}
+                                    <input type="hidden" name="funding_info" :value="JSON.stringify(funders)">
+                                </div>
+
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -7106,5 +7158,21 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
         }
     </script>
 
+    {{-- Funding Manager Alpine.js Component --}}
+    <script>
+        function fundingManager(initialFunders) {
+            return {
+                funders: Array.isArray(initialFunders) ? initialFunders : [],
+
+                addFunder() {
+                    this.funders.push({ funder_name: '', funder_doi: '', award_number: '' });
+                },
+
+                removeFunder(index) {
+                    this.funders.splice(index, 1);
+                },
+            };
+        }
+    </script>
 
 </x-app-layout>

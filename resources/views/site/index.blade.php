@@ -7,10 +7,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- SEO Meta Tags --}}
-    <title>{{ $settings['site_title'] ?? 'IAMJOS' }} - Indonesian Academic Journal System</title>
-    <meta name="description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals and research articles across multiple disciplines.' }}">
-    <meta name="keywords" content="academic journals, research, publications, open access, Indonesia, scholarly articles">
-    <meta name="generator" content="IAMJOS - Indonesian Academic Journal System">
+    @php
+        use App\Facades\Settings;
+        $siteTitle = Settings::site('site_title', config('app.name'));
+        $siteIntro = Settings::site('site_intro', '');
+        $siteDesc  = Settings::site('site_description', $siteIntro);
+    @endphp
+    <title>{{ $siteTitle }}{{ $siteIntro ? ' - ' . $siteIntro : '' }}</title>
+    <meta name="description" content="{{ $siteDesc }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ route('portal.home') }}">
 
@@ -20,18 +24,18 @@
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{{ $settings['site_title'] ?? 'IAMJOS' }}">
-    <meta property="og:description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals.' }}">
+    <meta property="og:title" content="{{ $siteTitle }}">
+    <meta property="og:description" content="{{ $siteDesc }}">
     <meta property="og:url" content="{{ route('portal.home') }}">
-    <meta property="og:site_name" content="IAMJOS">
+    <meta property="og:site_name" content="{{ $siteTitle }}">
     <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $settings['site_title'] ?? 'IAMJOS' }}">
-    <meta name="twitter:description" content="{{ $settings['site_description'] ?? 'Discover peer-reviewed academic journals.' }}">
+    <meta name="twitter:title" content="{{ $siteTitle }}">
+    <meta name="twitter:description" content="{{ $siteDesc }}">
     <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
 
     {{-- Fonts --}}

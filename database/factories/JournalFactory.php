@@ -15,12 +15,13 @@ class JournalFactory extends Factory
         $slug = $this->faker->unique()->slug;
 
         return [
-            'name' => $name,
-            'path' => $slug, // Using slug as path for consistency
-            'slug' => $slug,
+            'name'       => $name,
+            'path'       => $slug,
+            'slug'       => $slug,
             'description' => $this->faker->paragraph,
-            'enabled' => true,
-            'visible' => true,
+            'enabled'    => true,
+            'enable_oai' => true,
+            'visible'    => true,
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -53,6 +53,7 @@ class Publication extends Model
         'copyright_holder',
         'copyright_year',
         'license_url',
+        'funding_info',
         'date_published',
         'metadata',
         'cover_image_path',
@@ -67,7 +68,8 @@ class Publication extends Model
         'status' => 'integer',
         'copyright_year' => 'integer',
         'date_published' => 'date',
-        'metadata' => 'array',
+        'metadata'       => 'array',
+        'funding_info'   => 'array', // JSONB → PHP array
     ];
 
     // =====================================================

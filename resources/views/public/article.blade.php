@@ -1,96 +1,134 @@
 @php $title = $submission->title; @endphp
 
-<x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$title" :article="true">
     @push('meta_tags')
         {{-- ============================================ --}}
         {{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS --}}
         {{-- GS-01 FIX: Aligned with journal/public/article.blade.php --}}
         {{-- ============================================ --}}
         @php
-            $pub = $submission->currentPublication ?? $submission;
-            $pubDoi = $pub->doi ?? $submission->doi;
-            $pubDate = $pub->date_published ?? ($submission->issue?->published_at ?? $submission->published_at);
-            $pubPages = $pub->pages ?? $submission->pages;
-            $pubAbstract = $pub->abstract ?? $submission->abstract;
-            $pubAuthors = $pub->authors ?? $submission->authors;
+            $pub         = $submission->currentPublication ?? $submission;
+            $pubDoi      = $pub->doi ?? $submission->doi ?? null;
+            $pubDate     = $pub->date_published ?? ($submission->issue?->published_at ?? $submission->published_at);
+            $pubPages    = $pub->pages ?? $submission->pages ?? null;
+            $pubAbstract = $pub->abstract ?? $submission->abstract ?? null;
+            $pubAuthors  = $pub->authors ?? $submission->authors;
+            // BCP47 locale (id_ID → id, en_US → en)
+            $rawLocale   = $submission->locale ?? app()->getLocale() ?? 'en';
+            $bcp47Locale = preg_replace('/_[A-Z]{2}$/', '', $rawLocale);
+            $pubTitle    = $pub->title ?? $submission->title;
+            $issnValue   = $journal->issn_online ?? $journal->issn_print ?? null;
+            // Pages
+            $firstPage = $lastPage = null;
+            if ($pubPages) {
+                $pp = explode('-', $pubPages, 2);
+                $firstPage = trim($pp[0]);
+                $lastPage  = isset($pp[1]) ? trim($pp[1]) : null;
+            }
+            // Copyright
+            $copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
+            $copyrightYear   = $pub->copyright_year ?? ($submission->issue?->year ?? date('Y'));
+            $licenseUrl      = $pub->license_url ?? ($journal->license_url ?? null);
         @endphp
         <meta name="gs_meta_revision" content="1.1">
-        <meta name="citation_title" content="{{ $pub->title ?? $submission->title }}">
-        <meta name="citation_journal_title" content="{{ $journal->name }}">
+        <meta name="citation_journal_title" content="{{ htmlspecialchars($journal->name) }}">
         @if ($journal->abbreviation)
-            <meta name="citation_journal_abbrev" content="{{ $journal->abbreviation }}">
+            <meta name="citation_journal_abbrev" content="{{ htmlspecialchars($journal->abbreviation) }}">
         @endif
         @if ($journal->publisher)
-            <meta name="citation_publisher" content="{{ $journal->publisher }}">
+            <meta name="citation_publisher" content="{{ htmlspecialchars($journal->publisher) }}">
         @endif
-        <meta name="citation_language" content="{{ $submission->locale ?? app()->getLocale() }}">
+        @if ($issnValue)
+            <meta name="citation_issn" content="{{ htmlspecialchars($issnValue) }}">
+        @endif
+        <meta name="citation_title" content="{{ htmlspecialchars($pubTitle) }}">
+        <meta name="citation_language" content="{{ $bcp47Locale }}">
         @if ($pubDate)
-            <meta name="citation_publication_date" content="{{ $pubDate->format('Y/m/d') }}">
             <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
-            <meta name="citation_year" content="{{ $submission->issue?->year ?? $pubDate->format('Y') }}">
         @endif
         @if ($submission->issue)
             @if ($submission->issue->volume)
-                <meta name="citation_volume" content="{{ $submission->issue->volume }}">
+                <meta name="citation_volume" content="{{ htmlspecialchars($submission->issue->volume) }}">
             @endif
             @if ($submission->issue->number)
-                <meta name="citation_issue" content="{{ $submission->issue->number }}">
+                <meta name="citation_issue" content="{{ htmlspecialchars($submission->issue->number) }}">
             @endif
         @endif
-        @if ($pubPages)
-            @php $pages = explode('-', $pubPages); @endphp
-            <meta name="citation_firstpage" content="{{ trim($pages[0] ?? $pubPages) }}">
-            @if (isset($pages[1]))
-                <meta name="citation_lastpage" content="{{ trim($pages[1]) }}">
-            @endif
+        @if ($firstPage)
+            <meta name="citation_firstpage" content="{{ htmlspecialchars($firstPage) }}">
+        @endif
+        @if ($lastPage)
+            <meta name="citation_lastpage" content="{{ htmlspecialchars($lastPage) }}">
         @endif
         @if ($pubDoi)
-            <meta name="citation_doi" content="{{ $pubDoi }}">
+            <meta name="citation_doi" content="{{ htmlspecialchars($pubDoi) }}">
         @endif
         @if ($journal->issn_online)
-            <meta name="citation_issn" content="{{ $journal->issn_online }}">
+            <meta name="citation_issn" content="{{ htmlspecialchars($journal->issn_online) }}">
         @elseif($journal->issn_print)
-            <meta name="citation_issn" content="{{ $journal->issn_print }}">
+            <meta name="citation_issn" content="{{ htmlspecialchars($journal->issn_print) }}">
         @endif
         @foreach ($pubAuthors as $author)
-            <meta name="citation_author" content="{{ $author->first_name ?? '' }} {{ $author->last_name ?? $author->name ?? '' }}">
+            @php
+                $authorDisplayName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? $author->name ?? ''));
+                if (empty($authorDisplayName)) {
+                    $authorDisplayName = $author->preferred_public_name ?? null;
+                }
+            @endphp
+            @if ($authorDisplayName)
+            <meta name="citation_author" content="{{ htmlspecialchars($authorDisplayName) }}">
             @if ($author->affiliation)
-                <meta name="citation_author_institution" content="{{ $author->affiliation }}">
-            @endif
-            @if ($author->email ?? false)
-                <meta name="citation_author_email" content="{{ $author->email }}">
+                <meta name="citation_author_institution" content="{{ htmlspecialchars($author->affiliation) }}">
             @endif
             @if ($author->orcid ?? false)
-                <meta name="citation_author_orcid" content="{{ $author->orcid }}">
+                <meta name="citation_author_orcid" content="{{ htmlspecialchars($author->orcid) }}">
+            @endif
             @endif
         @endforeach
         <meta name="citation_abstract_html_url" content="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}">
         @foreach ($submission->files as $file)
             @if(Str::endsWith($file->file_name, '.pdf'))
                 <meta name="citation_pdf_url" content="{{ route('files.download', $file) }}">
+                @break
             @endif
         @endforeach
         @if ($pubAbstract)
-            <meta name="citation_abstract" content="{{ trim(strip_tags(html_entity_decode($pubAbstract))) }}">
+            <meta name="citation_abstract" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
         @endif
-        {{-- Dublin Core Metadata --}}
-        <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
-        <meta name="DC.Title" content="{{ $pub->title ?? $submission->title }}">
+        {{-- Dublin Core --}}
+        <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
+        <meta name="DC.Title" content="{{ htmlspecialchars($pubTitle) }}">
         @foreach ($pubAuthors as $author)
-            <meta name="DC.Creator.PersonalName" content="{{ $author->first_name ?? '' }} {{ $author->last_name ?? $author->name ?? '' }}">
+            @php
+                $dcName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? $author->name ?? ''));
+                if (empty($dcName)) $dcName = $author->preferred_public_name ?? null;
+            @endphp
+            @if ($dcName)
+                <meta name="DC.Creator.PersonalName" content="{{ htmlspecialchars($dcName) }}">
+            @endif
         @endforeach
         @if ($pubDate)
             <meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">
         @endif
+        @if ($pubAbstract)
+            <meta name="DC.Description" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
+        @endif
+        <meta name="DC.Format" scheme="IMT" content="application/pdf">
+        <meta name="DC.Language" scheme="ISO639-1" content="{{ $bcp47Locale }}">
         @if ($pubDoi)
-            <meta name="DC.Identifier.DOI" content="{{ $pubDoi }}">
+            <meta name="DC.Identifier.DOI" content="{{ htmlspecialchars($pubDoi) }}">
         @endif
         <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
-        <meta name="DC.Source" content="{{ $journal->name }}">
-        @if ($journal->issn_online)
-            <meta name="DC.Source.ISSN" content="{{ $journal->issn_online }}">
+        <meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ htmlspecialchars($copyrightHolder) }}">
+        @if ($licenseUrl)
+            <meta name="DC.Rights" content="{{ htmlspecialchars($licenseUrl) }}">
+        @endif
+        <meta name="DC.Source" content="{{ htmlspecialchars($journal->name) }}">
+        @if ($issnValue)
+            <meta name="DC.Source.ISSN" content="{{ htmlspecialchars($issnValue) }}">
         @endif
         <meta name="DC.Type" content="Text.Serial.Journal">
+        <meta name="DC.Type.articleType" content="{{ htmlspecialchars($submission->section?->title ?? 'Articles') }}">
     @endpush
 
     <article class="bg-white">

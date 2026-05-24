@@ -24,7 +24,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            \App\Services\SettingsManager::class,
+            fn () => new \App\Services\SettingsManager()
+        );
+
+        $this->app->singleton(\App\Services\LicenseService::class);
     }
 
     /**
@@ -32,6 +37,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ─── Keamanan: Peringatkan jika Redis berjalan tanpa password di production ───
+        // Redis tanpa autentikasi di production adalah risiko keamanan serius.
+        // Set REDIS_PASSWORD di .env untuk menghilangkan peringatan ini.
+        if (app()->environment('production') && empty(config('database.redis.default.password'))) {
+            \Illuminate\Support\Facades\Log::warning(
+                'SECURITY WARNING: Redis berjalan tanpa autentikasi di environment production. ' .
+                'Set REDIS_PASSWORD di file .env untuk mengamankan instance Redis Anda.'
+            );
+        }
+
         if (str_starts_with(config('app.url'), 'https://')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }

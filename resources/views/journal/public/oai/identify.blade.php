@@ -18,10 +18,11 @@
 
             $settings = is_array($settings) ? $settings : [];
 
-            // Prioritas email: principal → support → default
+            // Prioritas email: principal → support → site contact → config
             $adminEmail =
                 $settings['contact']['principal']['email'] ??
-                ($settings['contact']['support']['email'] ?? 'admin@iamjos.id');
+                ($settings['contact']['support']['email'] ??
+                (\App\Facades\Settings::site('contact_email', config('mail.from.address', ''))));
         @endphp
         <adminEmail>{{ $adminEmail }}</adminEmail>
         <earliestDatestamp>{{ $earliestDate ?? now()->setTimezone('UTC')->format('Y-m-d\TH:i:s\Z') }}</earliestDatestamp>
@@ -40,12 +41,8 @@
         <description>
             <toolkit xmlns="http://oai.dlib.vt.edu/OAI/metadata/toolkit"
                 xsi:schemaLocation="http://oai.dlib.vt.edu/OAI/metadata/toolkit http://oai.dlib.vt.edu/OAI/metadata/toolkit.xsd">
-                <title>Indonesian Academic Journal System (IAMJOS)</title>
-                <author>
-                    <name>IAMJOS Development Team</name>
-                    <email>dev@iamjos.id</email>
-                </author>
-                <version>1.0.0</version>
+                <title>{{ config('app.name') }}</title>
+                <version>{{ config('app.version', '1.0') }}</version>
                 <URL>{{ config('app.url') }}</URL>
             </toolkit>
         </description>

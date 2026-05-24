@@ -59,10 +59,31 @@ return [
             'throw' => false,
             'report' => false,
         ],
-        'phri_gallery' => [
-            'driver' => 'local',
-            'root'   => env('PHRI_GALLERY_ROOT', public_path('phri-gallery-dummy')),
-            'throw'  => false,
+
+        // ─── IAMJOS File Storage ───────────────────────────────────────────────
+        // Disk khusus untuk file submission, galley, dan avatar.
+        // Development: gunakan 'local' (default)
+        // Production:  set IAMJOS_FILES_DISK=s3 untuk S3-compatible storage
+        //              (AWS S3, MinIO, Cloudflare R2, dll.)
+        //
+        // Keuntungan S3 untuk production:
+        // - Multi-server deployment (file shared antar server)
+        // - Backup otomatis via S3 versioning
+        // - CDN delivery via CloudFront/Cloudflare
+        // - Tidak perlu storage:link
+        'iamjos-files' => [
+            'driver'                  => env('IAMJOS_FILES_DISK', 'local') === 's3' ? 's3' : 'local',
+            'root'                    => storage_path('app/private'),
+            'key'                     => env('AWS_ACCESS_KEY_ID'),
+            'secret'                  => env('AWS_SECRET_ACCESS_KEY'),
+            'region'                  => env('AWS_DEFAULT_REGION', 'ap-southeast-1'),
+            'bucket'                  => env('AWS_BUCKET'),
+            'url'                     => env('AWS_URL'),
+            'endpoint'                => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility'              => 'private', // File submission selalu private
+            'throw'                   => false,
+            'report'                  => false,
         ],
     ],
 

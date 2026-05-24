@@ -20,6 +20,15 @@ class DemoSeeder extends Seeder
      */
     public function run(): void
     {
+        // =====================================================
+        // PRODUCTION GUARD — refuse to run in production
+        // =====================================================
+        if (app()->isProduction()) {
+            $this->command->error('❌ DemoSeeder REFUSED: Cannot run in production environment.');
+            $this->command->error('   Set APP_ENV=local or APP_ENV=staging to use demo data.');
+            return;
+        }
+
         $this->command->warn('');
         $this->command->warn('⚠️  DEMO SEEDER — Hanya untuk development/testing!');
         $this->command->warn('');

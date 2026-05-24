@@ -84,48 +84,50 @@ class JournalHomepageController extends Controller
 
     /**
      * Get settings with defaults merged.
+     * Defaults are neutral/empty — no fake stats or misleading claims.
      */
     private function getSettingsWithDefaults(Journal $journal): array
     {
         $defaults = [
             // Content
-            'about' => '',
+            'about'    => '',
             'masthead' => ['about' => '', 'editorial_team' => ''],
 
-            // Appearance
-            'hero_image' => null,
-            'primary_color' => '#4F46E5',
+            // Appearance — neutral defaults, overridden by journal settings
+            'hero_image'      => null,
+            'primary_color'   => '#4F46E5',
             'secondary_color' => '#7C3AED',
 
-            // Hero Content
-            'hero_title' => $journal->name,
-            'hero_description' => $journal->description ?? 'A peer-reviewed scholarly journal dedicated to advancing knowledge and research.',
-            'hero_tagline' => 'Peer-Reviewed • Open Access • Indexed',
+            // Hero Content — use journal data, never fake taglines
+            'hero_title'       => $journal->name,
+            'hero_description' => $journal->description ?? '',
+            'hero_tagline'     => '',   // Empty — journal must configure this explicitly
 
-            // Stats
-            'stat_acceptance_rate' => '25%',
-            'stat_review_time' => '4 Weeks',
-            'stat_impact_factor' => 'N/A',
-            'stat_citations' => '1000+',
+            // Stats — empty by default; journal must set real values
+            // Never show fake numbers like "25%", "4 Weeks", "1000+"
+            'stat_acceptance_rate' => '',
+            'stat_review_time'     => '',
+            'stat_impact_factor'   => '',
+            'stat_citations'       => '',
 
             // Section Visibility
-            'show_announcements' => true,
+            'show_announcements'  => true,
             'show_editorial_team' => true,
-            'show_indexed_in' => true,
-            'show_stats' => true,
+            'show_indexed_in'     => true,
+            'show_stats'          => false, // Hidden by default until real stats are configured
 
             // Indexed In
             'indexed_in_images' => [],
 
-            // Footer
-            'footer_description' => $journal->description ?? 'A leading academic journal.',
-            'social_facebook' => '',
-            'social_twitter' => '',
-            'social_linkedin' => '',
-            'social_instagram' => '',
-            'contact_email' => '',
-            'contact_phone' => '',
-            'contact_address' => '',
+            // Footer — empty by default
+            'footer_description' => $journal->description ?? '',
+            'social_facebook'    => '',
+            'social_twitter'     => '',
+            'social_linkedin'    => '',
+            'social_instagram'   => '',
+            'contact_email'      => '',
+            'contact_phone'      => '',
+            'contact_address'    => '',
         ];
 
         $actual = $journal->getWebsiteSettings();
@@ -135,63 +137,33 @@ class JournalHomepageController extends Controller
 
     /**
      * Get announcements for the journal.
+     * Returns empty collection if none exist — never shows fake data.
      */
     private function getAnnouncements(Journal $journal)
     {
-        // Fetch the 3 latest active announcements that are published and not expired
-        $announcements = Announcement::where('journal_id', $journal->id)
+        return Announcement::where('journal_id', $journal->id)
             ->where('is_active', true)
-            // Published: published_at is null or in the past
             ->where(function ($query) {
                 $query->whereNull('published_at')
                     ->orWhere('published_at', '<=', now());
             })
-            // Not expired: expires_at is null or in the future
             ->where(function ($query) {
                 $query->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());
             })
-            ->orderBy('is_urgent', 'desc') // Show urgent first
+            ->orderBy('is_urgent', 'desc')
             ->orderBy('published_at', 'desc')
             ->take(3)
             ->get();
-
-        // If no real announcements, return placeholder data for preview
-        if ($announcements->isEmpty()) {
-            return collect([
-                (object) [
-                    'id' => 1,
-                    'title' => 'Call for Papers: Special Issue 2026',
-                    'excerpt' => 'We invite researchers to submit papers for our upcoming special issue on emerging technologies.',
-                    'created_at' => now()->subDays(2),
-                    'is_urgent' => true,
-                ],
-                (object) [
-                    'id' => 2,
-                    'title' => 'New Indexing Partnership',
-                    'excerpt' => 'We are pleased to announce our journal has been indexed in Scopus.',
-                    'created_at' => now()->subDays(5),
-                    'is_urgent' => false,
-                ],
-                (object) [
-                    'id' => 3,
-                    'title' => 'Editorial Board Update',
-                    'excerpt' => 'Welcome to our new editorial board members for 2026.',
-                    'created_at' => now()->subDays(10),
-                    'is_urgent' => false,
-                ],
-            ]);
-        }
-
-        return $announcements;
+        // No placeholder fallback — empty state is handled in the view
     }
 
     /**
      * Get editorial team for the journal.
+     * Returns real editors from DB only — never shows fake placeholder people.
      */
     private function getEditorialTeam(Journal $journal)
     {
-        // Get users with Editor roles in this journal
         $editorRoles = ['Editor', 'Editor-in-Chief', 'Section Editor', 'Journal Manager'];
 
         $editorialTeam = collect();
@@ -200,41 +172,19 @@ class JournalHomepageController extends Controller
             $users = $journal->usersWithRole($roleName);
             foreach ($users as $user) {
                 $editorialTeam->push((object) [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'role' => $roleName,
-                    'affiliation' => $user->affiliation ?? 'Institution',
-                    'email' => $user->email,
-                    'avatar' => $user->avatar_url ?? null,
-                    'orcid' => $user->orcid ?? null,
+                    'id'          => $user->id,
+                    'name'        => $user->name,
+                    'role'        => $roleName,
+                    'affiliation' => $user->affiliation ?? null, // null — not 'Institution'
+                    'email'       => $user->email,
+                    'avatar'      => $user->avatar_url ?? null,
+                    'orcid'       => $user->orcid ?? null,
                 ]);
             }
         }
 
-        // If no editors found, return placeholder data
-        if ($editorialTeam->isEmpty()) {
-            return collect([
-                (object) [
-                    'id' => 1,
-                    'name' => 'Dr. Jane Smith',
-                    'role' => 'Editor-in-Chief',
-                    'affiliation' => 'University of Technology',
-                    'email' => 'editor@journal.com',
-                    'avatar' => null,
-                    'orcid' => null,
-                ],
-                (object) [
-                    'id' => 2,
-                    'name' => 'Prof. John Doe',
-                    'role' => 'Associate Editor',
-                    'affiliation' => 'Research Institute',
-                    'email' => 'associate@journal.com',
-                    'avatar' => null,
-                    'orcid' => null,
-                ],
-            ]);
-        }
-
+        // Return real editors only — empty collection if none assigned
+        // The view handles the empty state with a proper message
         return $editorialTeam->take(6);
     }
 }

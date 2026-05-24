@@ -39,6 +39,9 @@ class DatabaseSeeder extends Seeder
             // 4. Email & Notification Templates
             EmailTemplateSeeder::class,
             NotificationTemplateSeeder::class,
+
+            // 5. System Settings (application-wide technical configuration)
+            SystemSettingsSeeder::class,
         ]);
 
         $this->command->newLine();

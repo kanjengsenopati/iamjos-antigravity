@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_STORE', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -103,6 +103,8 @@ return [
     |
     */
 
-    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
+    // Cache key prefix — menggunakan IAMJOS_INSTANCE_ID untuk isolasi antar instance
+    // yang berbagi Redis server yang sama (multi-instance deployment)
+    'prefix' => env('CACHE_PREFIX', (env('IAMJOS_INSTANCE_ID', 'iamjos') . '-cache-')),
 
 ];

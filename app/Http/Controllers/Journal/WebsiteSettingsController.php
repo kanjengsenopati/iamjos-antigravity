@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Journal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Journal;
-use App\Models\JournalSetting;
-use App\Models\SiteSetting;
+use App\Facades\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,9 +31,10 @@ class WebsiteSettingsController extends Controller
         $settings = array_merge($defaults, $settings);
 
         // Get Site Setting to access global reCAPTCHA keys
-        $siteSetting = SiteSetting::first();
+        $recaptchaSiteKey   = Settings::site('recaptcha_site_key');
+        $recaptchaSecretKey = Settings::site('recaptcha_secret_key');
 
-        return view('journal.admin.settings.website', compact('journal', 'settings', 'siteSetting'));
+        return view('journal.admin.settings.website', compact('journal', 'settings', 'recaptchaSiteKey', 'recaptchaSecretKey'));
     }
 
     /**
@@ -146,7 +146,7 @@ class WebsiteSettingsController extends Controller
 
             // Handle multi-file uploads (indexed_in_images)
             if ($config['type'] === 'json' && $name === 'indexed_in_images') {
-                $existingSetting = $journal->getWebsiteSetting('indexed_in_images', []);
+                $existingSetting = Settings::journal($journal->id, 'indexed_in_images', []);
 
                 // Handle both array (already decoded) and string (raw JSON) formats
                 if (is_array($existingSetting)) {
@@ -177,7 +177,8 @@ class WebsiteSettingsController extends Controller
                 continue;
             }
 
-            $journal->setWebsiteSetting(
+            Settings::setJournal(
+                $journal->id,
                 $name,
                 $value,
                 $config['type'],
@@ -202,7 +203,7 @@ class WebsiteSettingsController extends Controller
         }
 
         $path = $request->input('path');
-        $existingSetting = $journal->getWebsiteSetting('indexed_in_images', []);
+        $existingSetting = Settings::journal($journal->id, 'indexed_in_images', []);
 
         // Handle both array and string formats
         if (is_array($existingSetting)) {
@@ -219,7 +220,7 @@ class WebsiteSettingsController extends Controller
         // Remove from array
         $existingImages = array_filter($existingImages, fn($img) => $img !== $path);
 
-        $journal->setWebsiteSetting('indexed_in_images', json_encode(array_values($existingImages)), 'json', 'content');
+        Settings::setJournal($journal->id, 'indexed_in_images', json_encode(array_values($existingImages)), 'json', 'content');
 
         return response()->json(['success' => true]);
     }
