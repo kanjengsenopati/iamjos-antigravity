@@ -203,7 +203,7 @@ jobs:
     # Environment GitHub — 'production' memerlukan approval manual
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || github.ref_name == 'staging' && 'staging' || 'development' }}
-      url: ${{ github.ref_name == 'main' && 'https://iamjos.id' || github.ref_name == 'staging' && 'https://staging.iamjos.id' || 'https://dev.iamjos.id' }}
+      url: ${{ github.ref_name == 'main' && 'https://ejournal.apdesyi.or.id' || github.ref_name == 'staging' && 'https://staging.ejournal.apdesyi.or.id' || 'https://dev.ejournal.apdesyi.or.id' }}
 
     steps:
       - name: Tentukan variabel deployment berdasarkan branch
@@ -212,17 +212,17 @@ jobs:
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "TARGET_PATH=${{ secrets.PROD_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=main" >> $GITHUB_ENV
-            echo "APP_URL=https://iamjos.id" >> $GITHUB_ENV
+            echo "APP_URL=https://ejournal.apdesyi.or.id" >> $GITHUB_ENV
             echo "ENV_LABEL=PRODUCTION" >> $GITHUB_ENV
           elif [ "${{ github.ref_name }}" = "staging" ]; then
             echo "TARGET_PATH=${{ secrets.STAGING_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=staging" >> $GITHUB_ENV
-            echo "APP_URL=https://staging.iamjos.id" >> $GITHUB_ENV
+            echo "APP_URL=https://staging.ejournal.apdesyi.or.id" >> $GITHUB_ENV
             echo "ENV_LABEL=STAGING" >> $GITHUB_ENV
           else
             echo "TARGET_PATH=${{ secrets.DEV_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=dev" >> $GITHUB_ENV
-            echo "APP_URL=https://dev.iamjos.id" >> $GITHUB_ENV
+            echo "APP_URL=https://dev.ejournal.apdesyi.or.id" >> $GITHUB_ENV
             echo "ENV_LABEL=DEVELOPMENT" >> $GITHUB_ENV
           fi
 
