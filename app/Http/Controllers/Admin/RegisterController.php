@@ -45,7 +45,7 @@ class RegisterController extends Controller
             'family_name' => ['required', 'string', 'max:255'],
             'affiliation' => ['required', 'string', 'max:500'],
             'country' => ['required', 'string', 'max:5'],
-            'phone' => ['required', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20'],
 
             // Account Credentials
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
@@ -77,7 +77,6 @@ class RegisterController extends Controller
             'family_name.required' => 'Last name is required.',
             'affiliation.required' => 'Affiliation/Institution is required.',
             'country.required' => 'Please select your country.',
-            'phone.required' => 'Phone number is required.',
             'username.regex' => 'Username may only contain letters, numbers, and underscores.',
             'username.unique' => 'This username is already taken.',
             'email.unique' => 'An account with this email already exists.',
@@ -91,9 +90,12 @@ class RegisterController extends Controller
         $fullName = trim($validated['given_name'] . ' ' . $validated['family_name']);
 
         // Normalize phone number (Convert 08... to 628...)
-        $phone = preg_replace('/[^0-9]/', '', $validated['phone']); // Remove non-numeric characters
-        if (str_starts_with($phone, '08')) {
-            $phone = '62' . substr($phone, 1);
+        $phone = null;
+        if (!empty($validated['phone'])) {
+            $phone = preg_replace('/[^0-9]/', '', $validated['phone']); // Remove non-numeric characters
+            if (str_starts_with($phone, '08')) {
+                $phone = '62' . substr($phone, 1);
+            }
         }
 
         // Create the user with all OJS fields

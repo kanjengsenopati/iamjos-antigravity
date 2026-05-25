@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -14,15 +16,21 @@ use Illuminate\Support\Facades\Cache;
  */
 class SiteContentBlock extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'key',
         'title',
         'description',
+        'content',
         'config',
         'is_active',
         'sort_order',
         'icon',
         'category',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [
@@ -36,6 +44,30 @@ class SiteContentBlock extends Model
      */
     const CACHE_KEY = 'site_content_blocks_active';
     const CACHE_TTL = 3600; // 1 hour
+
+    /**
+     * Get the user who created this block
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the user who last updated this block
+     */
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get the user who deleted this block
+     */
+    public function deleter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
 
     /**
      * Scope: Active blocks only
@@ -124,11 +156,34 @@ class SiteContentBlock extends Model
     }
 
     /**
-     * Bootstrap: Clear cache on save/delete
+     * Bootstrap: Clear cache on save/delete and set audit fields
      */
     protected static function boot()
     {
         parent::boot();
+
+        // Automatically set created_by and updated_by on creation
+        static::creating(function ($model) {
+            if (auth()->check()) {
+                $model->created_by = $model->created_by ?? auth()->id();
+                $model->updated_by = $model->updated_by ?? auth()->id();
+            }
+        });
+
+        // Automatically set updated_by on update
+        static::updating(function ($model) {
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
+        });
+
+        // Automatically set deleted_by on soft delete
+        static::deleting(function ($model) {
+            if (auth()->check() && !$model->isForceDeleting()) {
+                $model->deleted_by = auth()->id();
+                $model->save();
+            }
+        });
 
         static::saved(function ($model) {
             self::clearCache();

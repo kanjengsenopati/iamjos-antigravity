@@ -155,15 +155,35 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 Route::get('/', 'index')->name('index');
                 Route::get('/create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
+                Route::get('/{sitePage}', 'show')->name('show');
                 Route::get('/{sitePage}/edit', 'edit')->name('edit');
                 Route::put('/{sitePage}', 'update')->name('update');
                 Route::delete('/{sitePage}', 'destroy')->name('destroy');
                 Route::post('/{sitePage}/toggle', 'toggle')->name('toggle');
+                Route::post('/{sitePage}/duplicate', 'duplicate')->name('duplicate');
+                Route::post('/reorder', 'reorder')->name('reorder');
+                Route::post('/bulk-delete', 'bulkDelete')->name('bulk-delete');
+            });
+
+            // Navigation Menu CRUD API Routes
+            Route::controller(\App\Http\Controllers\Admin\NavigationMenuController::class)->prefix('api/navigation-menus')->name('api.navigation-menus.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{navigationMenu}', 'show')->name('show');
+                Route::put('/{navigationMenu}', 'update')->name('update');
+                Route::delete('/{navigationMenu}', 'destroy')->name('destroy');
+                Route::post('/{navigationMenu}/reorder', 'reorder')->name('reorder');
+            });
+
+            // Navigation Menu Item CRUD API Routes
+            Route::controller(\App\Http\Controllers\Admin\NavigationMenuItemController::class)->prefix('api/navigation-menu-items')->name('api.navigation-menu-items.')->group(function () {
+                Route::post('/', 'store')->name('store');
+                Route::put('/{navigationMenuItem}', 'update')->name('update');
+                Route::delete('/{navigationMenuItem}', 'destroy')->name('destroy');
+            });
 
             // Unified Public Page Management
             Route::get('/public-page', [PublicPageController::class, 'index'])->name('public-page.index');
-                Route::post('/reorder', 'reorder')->name('reorder');
-            });
 
             Route::controller(\App\Http\Controllers\Admin\SiteNavigationController::class)->prefix('site-navigation')->name('site-navigation.')->group(function () {
                 Route::get('/', 'index')->name('index');

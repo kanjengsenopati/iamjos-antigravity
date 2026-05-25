@@ -216,7 +216,7 @@
                             <!-- Phone Number (Full Width) -->
                             <div class="md:col-span-2">
                                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Phone Number (WhatsApp) <span class="text-red-500">*</span>
+                                    Phone Number (WhatsApp)
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -224,8 +224,7 @@
                                     </div>
                                     <input type="tel" id="phone" name="phone" value="{{ old('phone') }}"
                                         placeholder="e.g. 6281234567890"
-                                        class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                        required>
+                                        class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                                 </div>
                                 <p class="mt-1 text-xs text-gray-500 flex items-center gap-1">
                                     <i class="fab fa-whatsapp text-green-500"></i>

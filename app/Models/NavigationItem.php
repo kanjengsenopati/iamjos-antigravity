@@ -23,25 +23,21 @@ class NavigationItem extends Model
     public const TYPE_DIVIDER = 'divider';
 
     protected $fillable = [
-        'menu_id',
-        'parent_id',
-        'label',
-        'url',
+        'journal_id',
+        'title',
         'type',
+        'url',
         'route_name',
-        'route_params',
+        'related_id',
         'icon',
         'target',
-        'order',
         'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'route_params' => 'array',
             'is_active' => 'boolean',
-            'order' => 'integer',
         ];
     }
 
