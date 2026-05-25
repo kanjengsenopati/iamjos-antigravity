@@ -49,6 +49,7 @@ class JournalController extends Controller
             'url_issn_print' => 'nullable|string|max:255',
             'url_issn_online' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048',
+            'thumbnail' => 'nullable|image|max:1024',
         ]);
 
         // Generate slug from name
@@ -83,6 +84,12 @@ class JournalController extends Controller
             if ($request->hasFile('logo')) {
                 $path = $request->file('logo')->store("journals/{$journal->id}", 'public');
                 $journal->update(['logo_path' => $path]);
+            }
+
+            // Upload thumbnail
+            if ($request->hasFile('thumbnail')) {
+                $path = $request->file('thumbnail')->store("journals/{$journal->id}", 'public');
+                $journal->update(['thumbnail_path' => $path]);
             }
 
             // Seed default roles for the newly created journal
@@ -307,6 +314,34 @@ class JournalController extends Controller
         }
 
         return back()->with('error', 'Unknown settings tab.');
+    }
+
+    /**
+     * Delete logo image (global admin).
+     */
+    public function deleteLogo(Journal $journal)
+    {
+        if ($journal->logo_path) {
+            Storage::disk('public')->delete($journal->logo_path);
+            $journal->logo_path = null;
+            $journal->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete thumbnail image (global admin).
+     */
+    public function deleteThumbnail(Journal $journal)
+    {
+        if ($journal->thumbnail_path) {
+            Storage::disk('public')->delete($journal->thumbnail_path);
+            $journal->thumbnail_path = null;
+            $journal->save();
+        }
+
+        return response()->json(['success' => true]);
     }
 
     /**

@@ -438,4 +438,20 @@ class PublicationController extends Controller
         ]);
         return back()->with('success', 'DOI suffix saved successfully.');
     }
+
+    /**
+     * Delete publication cover image.
+     */
+    public function deleteCoverImage($journal, Submission $submission)
+    {
+        $publication = $submission->getOrCreatePublication();
+
+        if ($publication->cover_image_path) {
+            Storage::disk('public')->delete($publication->cover_image_path);
+            $publication->cover_image_path = null;
+            $publication->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
 }

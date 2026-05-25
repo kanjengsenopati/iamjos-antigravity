@@ -227,17 +227,34 @@
                                 <img :src="previewUrl" class="w-full h-full object-cover">
                             </template>
                         </div>
-                        <div>
-                            <input type="file" id="logo" name="logo" accept="image/*" class="hidden"
-                                @change="previewUrl = URL.createObjectURL($event.target.files[0])">
-                            <label for="logo"
-                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-pointer transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
-                                Upload
-                            </label>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <input type="file" id="logo" name="logo" accept="image/*" class="hidden"
+                                    @change="previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''">
+                                <label for="logo"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-pointer transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    Upload
+                                </label>
+                                <template x-if="previewUrl">
+                                    <button type="button"
+                                        @click="if(confirm('Delete logo?')) {
+                                            fetch('{{ route('admin.journals.logo.delete', $journal) }}', {
+                                                method: 'DELETE',
+                                                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                            }).then(() => { previewUrl = ''; document.getElementById('logo').value = ''; });
+                                        }"
+                                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </template>
+                            </div>
                             <p class="mt-1 text-xs text-gray-500">Max 2MB</p>
                         </div>
                     </div>
@@ -263,17 +280,34 @@
                                 <img :src="previewUrl" class="w-full h-full object-cover">
                             </template>
                         </div>
-                        <div>
-                            <input type="file" id="thumbnail" name="thumbnail" accept="image/*" class="hidden"
-                                @change="previewUrl = URL.createObjectURL($event.target.files[0])">
-                            <label for="thumbnail"
-                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-pointer transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
-                                Upload
-                            </label>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <input type="file" id="thumbnail" name="thumbnail" accept="image/*" class="hidden"
+                                    @change="previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''">
+                                <label for="thumbnail"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-pointer transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    Upload
+                                </label>
+                                <template x-if="previewUrl">
+                                    <button type="button"
+                                        @click="if(confirm('Delete thumbnail?')) {
+                                            fetch('{{ route('admin.journals.thumbnail.delete', $journal) }}', {
+                                                method: 'DELETE',
+                                                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                            }).then(() => { previewUrl = ''; document.getElementById('thumbnail').value = ''; });
+                                        }"
+                                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </template>
+                            </div>
                             <p class="mt-1 text-xs text-gray-500">Max 1MB</p>
                         </div>
                     </div>
@@ -281,8 +315,6 @@
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
-            </div>
-        </div>
 
         <!-- Form Actions -->
         <div class="p-6 bg-gray-50 flex items-center justify-between">

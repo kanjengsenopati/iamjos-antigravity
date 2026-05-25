@@ -97,7 +97,7 @@
     <div class="col-lg-12">
         <div class="img-upload custom-image-upload">
             <div id="imagepreview{{ $id ?? '' }}" class="img-preview imagepreview"
-                style="background: url('{{ asset(@$value) }}');">
+                @if(!empty($value)) style="background: url('{{ asset($value) }}');" @endif>
                 <label for="imageupload{{ $id ?? '' }}" class="img-label" id="image-label"><i
                         class="fa fa-upload"></i>UPLOAD</label>
                 <input accept="image/*" type='file' name="{{ $name ?? 'image' }}" class="img-upload imgUpload"
@@ -111,17 +111,19 @@
 <script>
     if(!window.location.href.includes('shop-product')) {
             $("#imageupload{{ $id ?? '' }}").on('change', function() {
-                if (typeof(FileReader) != "undefined") {
-                    var image_holder = $("#imagepreview{{ $id ?? '' }}");
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        console.log(e.target.result);
-                        image_holder.attr('style', 'background:url(' + e.target.result + ')')
+                if ($(this)[0].files && $(this)[0].files[0]) {
+                    if (typeof(FileReader) != "undefined") {
+                        var image_holder = $("#imagepreview{{ $id ?? '' }}");
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            console.log(e.target.result);
+                            image_holder.attr('style', 'background:url(' + e.target.result + ')')
+                        }
+                        image_holder.show();
+                        reader.readAsDataURL($(this)[0].files[0]);
+                    } else {
+                        console.log("This browser does not support FileReader.");
                     }
-                    image_holder.show();
-                    reader.readAsDataURL($(this)[0].files[0]);
-                } else {
-                    console.log("This browser does not support FileReader.");
                 }
             });
         }

@@ -3176,24 +3176,35 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             of the ID.</p>
                                     </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Cover
-                                            Image</label>
+                                    <div x-data="{ coverPreview: '{{ $publication->cover_image_path ? Storage::url($publication->cover_image_path) : '' }}' }">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
 
-                                        @if ($publication->cover_image_path)
+                                        <template x-if="coverPreview">
                                             <div class="mb-3 flex items-start gap-4 p-3 bg-gray-50 border rounded-lg">
-                                                <img src="{{ Storage::url($publication->cover_image_path) }}"
+                                                <img :src="coverPreview"
                                                     alt="Cover Image"
                                                     class="h-20 w-auto rounded shadow-sm object-cover">
                                                 <div>
-                                                    <div class="text-sm font-medium text-gray-900">Current Cover</div>
-                                                    <div class="text-xs text-gray-500 mt-0.5">Upload a new image to
-                                                        replace.</div>
+                                                    <div class="text-sm font-medium text-gray-900">Cover Image Preview</div>
+                                                    @if ($publication->cover_image_path)
+                                                        <button type="button"
+                                                            @click="if(confirm('Delete cover image?')) {
+                                                                fetch('{{ route('journal.workflow.publication.cover-image.delete', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}', {
+                                                                    method: 'DELETE',
+                                                                    headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                                                }).then(() => { coverPreview = ''; document.getElementById('cover_image').value = ''; });
+                                                            }"
+                                                            class="text-red-600 text-xs mt-1 hover:underline block">Remove Cover Image</button>
+                                                    @else
+                                                        <button type="button" @click="coverPreview = ''; document.getElementById('cover_image').value = '';"
+                                                            class="text-red-600 text-xs mt-1 hover:underline block">Remove Cover Image</button>
+                                                    @endif
                                                 </div>
                                             </div>
-                                        @endif
+                                        </template>
 
-                                        <input type="file" name="cover_image" accept="image/*"
+                                        <input type="file" id="cover_image" name="cover_image" accept="image/*"
+                                            @change="coverPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''"
                                             class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-colors">
                                         <p class="mt-1 text-xs text-gray-500">Formats: JPG, PNG, WEBP.</p>
                                     </div>

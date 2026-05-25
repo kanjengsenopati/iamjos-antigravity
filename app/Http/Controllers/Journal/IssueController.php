@@ -188,6 +188,9 @@ class IssueController extends Controller
 
         // Handle cover image upload
         if ($request->hasFile('cover')) {
+            if ($issue->cover_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($issue->cover_path);
+            }
             $path = $request->file('cover')->store('issues/covers', 'public');
             $issueData['cover_path'] = $path;
         }
@@ -242,6 +245,23 @@ class IssueController extends Controller
         ]);
 
         return back()->with('success', "Issue {$issue->identifier} has been unpublished.");
+    }
+
+    /**
+     * Delete issue cover image.
+     */
+    public function deleteCover(Issue $issue)
+    {
+        $journal = current_journal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
+        if ($issue->cover_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($issue->cover_path);
+            $issue->cover_path = null;
+            $issue->save();
+        }
+
+        return response()->json(['success' => true]);
     }
 
     /**

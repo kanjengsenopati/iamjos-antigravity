@@ -236,10 +236,22 @@
                                     <label for="cover" class="block text-sm font-medium text-gray-700 mb-1">
                                         Upload New Cover <span class="text-gray-400">(Optional)</span>
                                     </label>
-                                    <div class="relative">
+                                    <div class="flex items-center gap-2">
                                         <input type="file" id="cover" name="cover" accept="image/*"
-                                            @change="previewUrl = URL.createObjectURL($event.target.files[0])"
+                                            @change="previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''"
                                             class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer">
+                                        <template x-if="previewUrl">
+                                            <button type="button"
+                                                @click="if(confirm('Delete cover image?')) {
+                                                    fetch('{{ route('journal.issues.cover.delete', ['journal' => $journal->slug, 'issue' => $issue]) }}', {
+                                                        method: 'DELETE',
+                                                        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                                    }).then(() => { previewUrl = ''; document.getElementById('cover').value = ''; });
+                                                }"
+                                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">
+                                                Remove
+                                            </button>
+                                        </template>
                                     </div>
                                     <p class="mt-2 text-sm text-gray-500">
                                         Recommended size: 300x400 pixels. Max file size: 2MB. Leave empty to keep current

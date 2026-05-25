@@ -128,7 +128,8 @@
                 {{-- Sub-tab: SETUP (Old Setup Content) --}}
                 <div x-show="appearanceTab === 'setup'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Logo Upload --}}
-                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
+                        x-data="{ logoPreview: '{{ $journal->logo_path ? Storage::url($journal->logo_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Logo</h3>
@@ -137,18 +138,31 @@
                                 </p>
 
                                 {{-- Current Logo Preview --}}
-                                @if ($journal->logo_path)
+                                <template x-if="logoPreview">
                                     <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                        <img src="{{ Storage::url($journal->logo_path) }}" alt="Current Logo"
-                                            class="max-h-20 w-auto">
-                                        <p class="text-xs text-gray-500 mt-2">Current Logo</p>
+                                        <img :src="logoPreview" alt="Logo Preview" class="max-h-20 w-auto">
+                                        <p class="text-xs text-gray-500 mt-2">Logo Preview</p>
+                                        @if ($journal->logo_path)
+                                            <button type="button"
+                                                @click="if(confirm('Delete logo?')) { 
+                                                    fetch('{{ route('journal.settings.website.logo.delete', $journalSlug) }}', {
+                                                        method: 'DELETE',
+                                                        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                                    }).then(() => { logoPreview = ''; $refs.logoInput.value = ''; });
+                                                }"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove Logo</button>
+                                        @else
+                                            <button type="button" @click="logoPreview = ''; $refs.logoInput.value = '';"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove Logo</button>
+                                        @endif
                                     </div>
-                                @endif
+                                </template>
 
                                 {{-- File Input --}}
                                 <div class="relative">
-                                    <input type="file" name="logo" id="logo_input"
+                                    <input type="file" name="logo" id="logo_input" x-ref="logoInput"
                                         accept="image/jpeg,image/png,image/webp"
+                                        @change="logoPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''"
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                                 </div>
                                 <p class="mt-2 text-xs text-gray-500">
@@ -159,7 +173,8 @@
                     </div>
 
                     {{-- Journal Thumbnail --}}
-                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
+                        x-data="{ thumbnailPreview: '{{ $journal->thumbnail_path ? Storage::url($journal->thumbnail_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Journal Thumbnail</h3>
@@ -169,16 +184,29 @@
                                 </p>
 
                                 {{-- Current Thumbnail Preview --}}
-                                @if ($journal->thumbnail_path)
+                                <template x-if="thumbnailPreview">
                                     <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                        <img src="{{ Storage::url($journal->thumbnail_path) }}" alt="Current Thumbnail"
-                                            class="max-h-24 w-auto rounded">
-                                        <p class="text-xs text-gray-500 mt-2">Current Thumbnail</p>
+                                        <img :src="thumbnailPreview" alt="Thumbnail Preview" class="max-h-24 w-auto rounded">
+                                        <p class="text-xs text-gray-500 mt-2">Thumbnail Preview</p>
+                                        @if ($journal->thumbnail_path)
+                                            <button type="button"
+                                                @click="if(confirm('Delete thumbnail?')) { 
+                                                    fetch('{{ route('journal.settings.website.thumbnail.delete', $journalSlug) }}', {
+                                                        method: 'DELETE',
+                                                        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                                    }).then(() => { thumbnailPreview = ''; $refs.thumbnailInput.value = ''; });
+                                                }"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove Thumbnail</button>
+                                        @else
+                                            <button type="button" @click="thumbnailPreview = ''; $refs.thumbnailInput.value = '';"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove Thumbnail</button>
+                                        @endif
                                     </div>
-                                @endif
+                                </template>
 
                                 {{-- File Input --}}
-                                <input type="file" name="thumbnail" accept="image/jpeg,image/png,image/webp"
+                                <input type="file" name="thumbnail" x-ref="thumbnailInput" accept="image/jpeg,image/png,image/webp"
+                                    @change="thumbnailPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''"
                                     class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                                 <p class="mt-2 text-xs text-gray-500">
                                     Recommended: 150x150px square image. Max size: 2MB.
@@ -188,7 +216,8 @@
                     </div>
 
                     {{-- Homepage Image --}}
-                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
+                        x-data="{ homepagePreview: '{{ $journal->homepage_image_path ? Storage::url($journal->homepage_image_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Homepage Image</h3>
@@ -197,16 +226,29 @@
                                 </p>
 
                                 {{-- Current Homepage Image Preview --}}
-                                @if ($journal->homepage_image_path)
+                                <template x-if="homepagePreview">
                                     <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                        <img src="{{ Storage::url($journal->homepage_image_path) }}"
-                                            alt="Homepage Image" class="max-h-40 w-auto rounded-lg shadow-sm">
-                                        <p class="text-xs text-gray-500 mt-2">Current Homepage Image</p>
+                                        <img :src="homepagePreview" alt="Homepage Image Preview" class="max-h-40 w-auto rounded-lg shadow-sm">
+                                        <p class="text-xs text-gray-500 mt-2">Homepage Image Preview</p>
+                                        @if ($journal->homepage_image_path)
+                                            <button type="button"
+                                                @click="if(confirm('Delete homepage image?')) { 
+                                                    fetch('{{ route('journal.settings.website.homepage-image.delete', $journalSlug) }}', {
+                                                        method: 'DELETE',
+                                                        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                                    }).then(() => { homepagePreview = ''; $refs.homepageInput.value = ''; });
+                                                }"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove Image</button>
+                                        @else
+                                            <button type="button" @click="homepagePreview = ''; $refs.homepageInput.value = '';"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove Image</button>
+                                        @endif
                                     </div>
-                                @endif
+                                </template>
 
                                 {{-- File Input --}}
-                                <input type="file" name="homepage_image" accept="image/jpeg,image/png,image/webp"
+                                <input type="file" name="homepage_image" x-ref="homepageInput" accept="image/jpeg,image/png,image/webp"
+                                    @change="homepagePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''"
                                     class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                                 <p class="mt-2 text-xs text-gray-500">
                                     Recommended: 1200x400px or wider. Max size: 2MB.
@@ -345,7 +387,8 @@
                 {{-- Sub-tab: ADVANCED (Old Appearance Content) --}}
                 <div x-show="appearanceTab === 'advanced'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Favicon Upload --}}
-                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit">
+                    <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
+                        x-data="{ faviconPreview: '{{ $journal->favicon_path ? Storage::url($journal->favicon_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Favicon</h3>
@@ -354,25 +397,31 @@
                                 </p>
 
                                 {{-- Current Favicon Preview --}}
-                                @if ($journal->favicon_path)
+                                <template x-if="faviconPreview">
                                     <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
-                                        <img src="{{ Storage::url($journal->favicon_path) }}" alt="Current Favicon"
+                                        <img :src="faviconPreview" alt="Current Favicon"
                                             class="h-8 w-8">
-                                        <p class="text-xs text-gray-500 mt-2">Current Favicon</p>
-                                        <button type="button"
-                                            onclick="if(confirm('Delete favicon?')) { 
-                                                fetch('{{ route('journal.settings.website.favicon.delete', $journalSlug) }}', {
-                                                    method: 'DELETE',
-                                                    headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
-                                                }).then(() => location.reload());
-                                            }"
-                                            class="text-red-600 text-xs mt-1 hover:underline">Remove</button>
+                                        <p class="text-xs text-gray-500 mt-2">Favicon Preview</p>
+                                        @if ($journal->favicon_path)
+                                            <button type="button"
+                                                @click="if(confirm('Delete favicon?')) { 
+                                                    fetch('{{ route('journal.settings.website.favicon.delete', $journalSlug) }}', {
+                                                        method: 'DELETE',
+                                                        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
+                                                    }).then(() => { faviconPreview = ''; $refs.faviconInput.value = ''; });
+                                                }"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove</button>
+                                        @else
+                                            <button type="button" @click="faviconPreview = ''; $refs.faviconInput.value = '';"
+                                                class="text-red-600 text-xs mt-1 hover:underline block">Remove</button>
+                                        @endif
                                     </div>
-                                @endif
+                                </template>
 
                                 {{-- File Input --}}
                                 <div class="relative">
-                                    <input type="file" name="favicon" accept=".ico,.png,.jpg,.svg,.webp"
+                                    <input type="file" name="favicon" x-ref="faviconInput" accept=".ico,.png,.jpg,.svg,.webp"
+                                        @change="faviconPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''"
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                                 </div>
                                 <p class="mt-2 text-xs text-gray-500">

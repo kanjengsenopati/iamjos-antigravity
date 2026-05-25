@@ -138,6 +138,8 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::get('/journals/{journal}/edit', [JournalController::class, 'edit'])->name('journals.edit');
             Route::put('/journals/{journal}', [JournalController::class, 'update'])->name('journals.update');
             Route::delete('/journals/{journal}', [JournalController::class, 'destroy'])->name('journals.destroy');
+            Route::delete('/journals/{journal}/logo', [JournalController::class, 'deleteLogo'])->name('journals.logo.delete');
+            Route::delete('/journals/{journal}/thumbnail', [JournalController::class, 'deleteThumbnail'])->name('journals.thumbnail.delete');
 
             Route::controller(\App\Http\Controllers\Admin\SiteAppearanceController::class)->prefix('site-appearance')->name('site.appearance.')->group(function () {
                 Route::get('/', 'index')->name('index');
@@ -395,6 +397,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::post('/references', [PublicationController::class, 'updateReferences'])->name('references.update');
                         Route::post('/license', [PublicationController::class, 'updateLicense'])->name('license.update');
                         Route::post('/issue', [PublicationController::class, 'assignIssue'])->name('issue.assign');
+                        Route::delete('/cover-image', [PublicationController::class, 'deleteCoverImage'])->name('cover-image.delete');
                         Route::post('/unschedule', [PublicationController::class, 'unschedule'])->name('unschedule');
                         Route::post('/publish', [PublicationController::class, 'publish'])->name('publish');
                         Route::post('/unpublish', [PublicationController::class, 'unpublish'])->name('unpublish');
@@ -433,6 +436,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::post('/issues/{issue}/unpublish', [IssueController::class, 'unpublish'])->name('journal.issues.unpublish');
                     Route::post('/issues/{issue}/add-articles', [IssueController::class, 'addArticles'])->name('journal.issues.add-articles');
                     Route::delete('/issues/{issue}/remove-article/{submission}', [IssueController::class, 'removeArticle'])->name('journal.issues.remove-article');
+                    Route::delete('/issues/{issue}/cover', [IssueController::class, 'deleteCover'])->name('journal.issues.cover.delete');
                 });
 
                 Route::prefix('reviewer')->name('journal.reviewer.')->middleware('role:Reviewer|Editor|Admin|Super Admin')->group(function () {
@@ -496,8 +500,11 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::controller(WebsiteSettingsController::class)->prefix('website')->name('website.')->group(function () {
                         Route::get('/', 'edit')->name('edit');
                         Route::put('/', 'update')->name('update');
-                        Route::delete('/indexed-image', 'deleteIndexedImage')->name('indexed-image.delete');
+                        Route::delete('/logo', 'deleteLogo')->name('logo.delete');
                         Route::delete('/favicon', 'deleteFavicon')->name('favicon.delete');
+                        Route::delete('/thumbnail', 'deleteThumbnail')->name('thumbnail.delete');
+                        Route::delete('/homepage-image', 'deleteHomepageImage')->name('homepage-image.delete');
+                        Route::delete('/indexed-image', 'deleteIndexedImage')->name('indexed-image.delete');
                     });
                     Route::controller(\App\Http\Controllers\Journal\DoiSettingsController::class)->prefix('doi')->name('doi.')->group(function () {
                         Route::get('/', 'edit')->name('edit');

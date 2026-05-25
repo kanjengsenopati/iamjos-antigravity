@@ -144,7 +144,7 @@
                             <!-- Upload Input -->
                             <div class="flex-1">
                                 <input type="file" id="logo" name="logo" accept="image/*" class="hidden"
-                                    @change="previewUrl = URL.createObjectURL($event.target.files[0])">
+                                    @change="previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''">
                                 <label for="logo"
                                     class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 cursor-pointer transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,6 +158,50 @@
                         </div>
                     </label>
                     @error('logo')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Journal Thumbnail -->
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-lg font-bold text-gray-900 mb-6">Journal Thumbnail</h2>
+
+                <div x-data="{ previewUrl: null }">
+                    <label class="block">
+                        <div class="flex items-center gap-6">
+                            <!-- Preview -->
+                            <div class="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300"
+                                :class="{ 'border-solid border-indigo-300': previewUrl }">
+                                <template x-if="!previewUrl">
+                                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </template>
+                                <template x-if="previewUrl">
+                                    <img :src="previewUrl" class="w-full h-full object-cover">
+                                </template>
+                            </div>
+
+                            <!-- Upload Input -->
+                            <div class="flex-1">
+                                <input type="file" id="thumbnail" name="thumbnail" accept="image/*" class="hidden"
+                                    @change="previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''">
+                                <label for="thumbnail"
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 cursor-pointer transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    Choose Thumbnail
+                                </label>
+                                <p class="mt-2 text-xs text-gray-500">PNG, JPG up to 1MB. Recommended size: 150x150px</p>
+                            </div>
+                        </div>
+                    </label>
+                    @error('thumbnail')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>

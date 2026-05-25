@@ -266,6 +266,26 @@ class WebsiteSettingsController extends Controller
     }
 
     /**
+     * Delete thumbnail image.
+     */
+    public function deleteThumbnail()
+    {
+        $journal = current_journal();
+
+        if (!$journal) {
+            abort(404, 'Journal not found');
+        }
+
+        if ($journal->thumbnail_path) {
+            Storage::disk('public')->delete($journal->thumbnail_path);
+            $journal->thumbnail_path = null;
+            $journal->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Delete homepage image.
      */
     public function deleteHomepageImage()
