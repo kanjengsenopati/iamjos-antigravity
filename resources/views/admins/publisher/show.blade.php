@@ -63,7 +63,7 @@
                                 <div class="row mb-5">
                                     <div class="col-md-3 text-center mb-4">
                                         @if ($publisher->admin->avatar)
-                                            <img src="{{ $publisher->admin->avatar }}" alt="Avatar"
+                                            <img src="{{ asset($publisher->admin->avatar) }}" alt="Avatar"
                                                 class="img-fluid rounded object-fit-cover"
                                                 style="max-height: 200px; max-width: 200px;" />
                                         @else

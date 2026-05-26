@@ -91,7 +91,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                             <div
                                 class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
                                 @if (auth()->user()->avatar)
-                                    <img src="{{ Storage::disk('public')->url(auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}"
+                                    <img src="{{ asset(auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}"
                                         class="w-8 h-8 rounded-full object-cover">
                                 @else
                                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}

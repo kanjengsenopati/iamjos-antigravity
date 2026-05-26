@@ -261,7 +261,7 @@ $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex items-center gap-4 card-hover">
                         {{-- Avatar --}}
                         @if($editor->avatar ?? false)
-                            <img src="{{ $editor->avatar }}" 
+                            <img src="{{ asset($editor->avatar) }}" 
                                  alt="{{ $editor->name }}"
                                  class="w-14 h-14 rounded-full object-cover flex-shrink-0">
                         @else
