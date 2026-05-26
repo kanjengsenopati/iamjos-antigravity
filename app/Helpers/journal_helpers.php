@@ -64,3 +64,21 @@ if (!function_exists('user_journals')) {
         return all_journals();
     }
 }
+
+if (!function_exists('redirect_legacy_ojs_about')) {
+    /**
+     * Legacy redirect helper for OJS URLs.
+     * Prevents undefined function errors in old cached routes.
+     *
+     * @param string $targetPage
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    function redirect_legacy_ojs_about(string $targetPage): \Illuminate\Http\RedirectResponse
+    {
+        return (new \App\Http\Controllers\PublicController())->redirectLegacyOjsAbout(
+            request(),
+            $targetPage
+        );
+    }
+}
+

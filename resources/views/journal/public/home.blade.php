@@ -51,7 +51,7 @@
                                 Welcome to {{ $journal->name }}
                             </h2>
                         </div>
-                        <div class="text-[14px] font-medium text-slate-600 leading-relaxed text-justify prose prose-slate max-w-none">
+                        <div class="text-[14px] font-medium text-slate-600 leading-relaxed text-justify prose prose-slate max-w-none [&_p]:text-justify">
                             {!! clean($journal->summary) !!}
                         </div>
                     </div>
@@ -99,7 +99,7 @@
 
                             {{-- Description (HTML Rendered) --}}
                             @if ($currentIssue->description)
-                                <div class="prose prose-sm prose-slate max-w-none mb-4">
+                                <div class="prose prose-sm prose-slate max-w-none mb-4 text-justify [&_p]:text-justify">
                                     {!! clean($currentIssue->description) !!}
                                 </div>
                             @endif
@@ -239,7 +239,7 @@
                                 <h3 class="text-base font-semibold text-slate-900 mb-2 line-clamp-2">
                                     {{ $announcement->title }}
                                 </h3>
-                                <p class="text-sm text-slate-600 line-clamp-3">
+                                <p class="text-sm text-slate-600 line-clamp-3 text-justify">
                                     {{ Str::limit($announcement->excerpt ?? strip_tags($announcement->content ?? ''), 120) }}
                                 </p>
                             </div>
