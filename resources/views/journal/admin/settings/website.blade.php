@@ -442,7 +442,7 @@
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                                 </div>
                                 <p class="mt-2 text-xs text-gray-500">
-                                    Recommended: ICO, PNG or SVG. Max size: 1MB.
+                                    Recommended: ICO, PNG or SVG. Max size: 2MB.
                                 </p>
                             </div>
                         </div>

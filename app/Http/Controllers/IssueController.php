@@ -151,6 +151,8 @@ class IssueController extends Controller
             $path = $request->file('cover')->store("issues/{$issue->id}", 'public');
             $issue->update(['cover_path' => $path]);
         }
+        // Refresh to get auto-generated seq_id for route model binding
+        $issue->refresh();
 
         return redirect()->route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue])
             ->with('success', 'Issue created successfully.');
