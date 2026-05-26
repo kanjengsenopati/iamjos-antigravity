@@ -46,7 +46,7 @@
 
 
                     @if ($issue->description)
-                        <div class="prose max-w-none text-gray-700 mb-6">
+                        <div class="prose max-w-none text-gray-700 mb-6 [&_p]:text-justify">
                             {!! clean($issue->description) !!}
                         </div>
                     @endif
