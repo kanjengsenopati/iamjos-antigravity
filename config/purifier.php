@@ -9,7 +9,7 @@ return [
     'settings'      => [
         'default' => [
             'HTML.Doctype'             => 'HTML 4.01 Transitional',
-            'HTML.Allowed'             => 'h1,h2,h3,h4,h5,h6,p,br,strong,b,em,i,u,ul,ol,li,a[href|target|rel],table[class],thead,tbody,tfoot,tr,th[scope],td,caption,blockquote,sup,sub,span[style],div,img[src|alt|width|height|style],hr,pre,code,dl,dt,dd',
+            'HTML.Allowed'             => 'h1[style],h2[style],h3[style],h4[style],h5[style],h6[style],p[style],br,strong,b,em,i,u,ul,ol,li,a[href|target|rel],table[class],thead,tbody,tfoot,tr,th[scope],td,caption,blockquote,sup,sub,span[style],div[style],img[src|alt|width|height|style],hr,pre,code,dl,dt,dd',
             'CSS.AllowedProperties'    => 'font-weight,font-style,text-decoration,text-align,margin,padding,color,background-color,width,height,max-width',
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty'   => false,

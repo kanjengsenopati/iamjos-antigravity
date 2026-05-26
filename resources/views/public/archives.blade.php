@@ -61,26 +61,7 @@
                                 Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
                             </div>
 
-                            {{-- JOURNAL + ISSN --}}
-                            <div class="text-slate-700 mb-5 leading-relaxed">
-                                <strong>{{ $journal->name }}</strong>
-                                @if($journal->print_issn || $journal->online_issn)
-                                    :
-                                @endif
 
-                                @if($journal->print_issn)
-                                    ISSN
-                                    <span class="text-primary-600">{{ $journal->print_issn }}</span>
-                                    (CETAK)
-                                @endif
-
-                                @if($journal->online_issn)
-                                    ,
-                                    ISSN
-                                    <span class="text-primary-600">{{ $journal->online_issn }}</span>
-                                    (ONLINE)
-                                @endif
-                            </div>
 
                             {{-- DESCRIPTION --}}
                             @if($issue->description)
