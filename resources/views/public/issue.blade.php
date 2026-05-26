@@ -17,19 +17,21 @@
             <div class="grid lg:grid-cols-4 gap-8">
                 <!-- Issue Cover -->
                 <div class="lg:col-span-1">
-                    <div
-                        class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center sticky top-24">
-                        @if ($issue->cover_path)
+                    @if ($issue->cover_path)
+                        <div class="sticky top-24">
                             <img src="{{ Storage::disk('public')->url($issue->cover_path) }}" alt="Issue Cover"
-                                class="w-full h-full object-cover rounded-xl">
-                        @else
+                                class="w-full h-auto rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                        </div>
+                    @else
+                        <div
+                            class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 rounded-[24px] flex items-center justify-center sticky top-24 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                             <div class="text-center text-white p-6">
                                 <p class="text-lg font-bold">Vol. {{ $issue->volume }}</p>
                                 <p class="text-4xl font-bold">No. {{ $issue->number }}</p>
                                 <p class="text-lg mt-2">{{ $issue->year }}</p>
                             </div>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Issue Info -->

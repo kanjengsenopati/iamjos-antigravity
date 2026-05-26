@@ -35,10 +35,10 @@
                                     <img
                                         src="{{ Storage::disk('public')->url($issue->cover_path) }}"
                                         alt="Cover Vol {{ $issue->volume }}"
-                                        class="w-full h-auto aspect-[3/4] object-cover border border-slate-200 shadow-sm"
+                                        class="w-full h-auto border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-xl"
                                     >
                                 @else
-                                    <div class="w-full aspect-[3/4] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs font-semibold uppercase">
+                                    <div class="w-full aspect-[3/4] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs font-semibold uppercase rounded-xl">
                                         No Cover
                                     </div>
                                 @endif

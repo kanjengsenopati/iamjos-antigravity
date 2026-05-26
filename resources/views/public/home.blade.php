@@ -179,19 +179,19 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="grid lg:grid-cols-3 gap-8 p-8">
                         <div class="lg:col-span-1">
-                            <div
-                                class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
-                                @if ($latestIssue->cover_path)
-                                    <img src="{{ Storage::disk('public')->url($latestIssue->cover_path) }}" alt="Issue Cover"
-                                        class="w-full h-full object-cover rounded-xl">
-                                @else
+                            @if ($latestIssue->cover_path)
+                                <img src="{{ Storage::disk('public')->url($latestIssue->cover_path) }}" alt="Issue Cover"
+                                    class="w-full h-auto rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                            @else
+                                <div
+                                    class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 rounded-[24px] flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                                     <div class="text-center text-white p-6">
                                         <p class="text-lg font-bold">Vol. {{ $latestIssue->volume }}</p>
                                         <p class="text-3xl font-bold">No. {{ $latestIssue->number }}</p>
                                         <p class="text-lg mt-2">{{ $latestIssue->year }}</p>
                                     </div>
-                                @endif
-                            </div>
+                                </div>
+                            @endif
                         </div>
                         <div class="lg:col-span-2">
                             <span
