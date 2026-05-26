@@ -267,7 +267,7 @@ jobs:
             mkdir -p storage/framework/views
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
-            chmod -R 775 storage bootstrap/cache
+            chmod -R 777 storage bootstrap/cache
 
             # ─── 2. Backup database SEBELUM migration ──────────────────
             # Hanya untuk production dan staging (bukan dev)
@@ -341,6 +341,12 @@ jobs:
             
             # Livewire assets (skip jika error)
             php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
+
+            # ─── 6.5 Set permissions for storage & bootstrap/cache after cache rebuild ───
+            echo "🔑 Menyesuaikan permission storage dan bootstrap/cache..."
+            chmod -R 777 storage bootstrap/cache
+            sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
+              sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
             # ─── 7. Restart services ───────────────────────────────────
             echo "🔄 Merestart services..."
