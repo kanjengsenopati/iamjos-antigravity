@@ -43,9 +43,7 @@
 
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $issue->display_title }}</h1>
 
-                    @if ($issue->title)
-                        <p class="text-xl text-gray-600 mb-4">{{ $issue->title }}</p>
-                    @endif
+
 
                     @if ($issue->description)
                         <div class="prose max-w-none text-gray-700 mb-6">
