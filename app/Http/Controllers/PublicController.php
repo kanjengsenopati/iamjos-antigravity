@@ -505,6 +505,52 @@ class PublicController extends Controller
     }
 
     /**
+     * Redirect OJS legacy and relative links.
+     */
+    public function redirectLegacyOjsAbout(Request $request, string $target, ?string $journal = null): RedirectResponse
+    {
+        $journalSlug = $journal;
+        if (!$journalSlug) {
+            $referer = $request->headers->get('referer');
+            if ($referer) {
+                $path = parse_url($referer, PHP_URL_PATH);
+                $segments = explode('/', trim($path, '/'));
+                if (!empty($segments[0]) && $segments[0] !== 'index.php') {
+                    $journalSlug = $segments[0];
+                } elseif (count($segments) > 1 && $segments[0] === 'index.php') {
+                    $journalSlug = $segments[1];
+                }
+            }
+
+            if (!$journalSlug) {
+                $journalSlug = session('login_journal_slug');
+            }
+
+            if (!$journalSlug || !Journal::where('slug', $journalSlug)->exists()) {
+                $journalModel = Journal::where('enabled', true)->first();
+                $journalSlug = $journalModel ? $journalModel->slug : null;
+            }
+        }
+
+        if (!$journalSlug) {
+            return redirect()->route('portal.home');
+        }
+
+        switch ($target) {
+            case 'editorial-team':
+                return redirect()->route('journal.public.editorial-team', ['journal' => $journalSlug]);
+            case 'contact':
+                return redirect()->route('journal.public.contact', ['journal' => $journalSlug]);
+            case 'login':
+                return redirect()->route('journal.login', ['journal' => $journalSlug]);
+            case 'author-guidelines':
+                return redirect()->route('journal.public.author-guidelines', ['journal' => $journalSlug]);
+            default:
+                return redirect()->route('journal.public.home', ['journal' => $journalSlug]);
+        }
+    }
+
+    /**
      * Information for Readers.
      */
     public function infoReaders(string $journalSlug): View

@@ -48,48 +48,6 @@ try {
     }
 } catch (\Exception $e) {}
 
-if (!function_exists('redirect_legacy_ojs_about')) {
-    function redirect_legacy_ojs_about($targetPage) {
-        $referer = request()->headers->get('referer');
-        $journalSlug = null;
-        if ($referer) {
-            $path = parse_url($referer, PHP_URL_PATH);
-            $segments = explode('/', trim($path, '/'));
-            if (!empty($segments[0]) && $segments[0] !== 'index.php') {
-                $journalSlug = $segments[0];
-            } elseif (count($segments) > 1 && $segments[0] === 'index.php') {
-                $journalSlug = $segments[1];
-            }
-        }
-
-        if (!$journalSlug) {
-            $journalSlug = session('login_journal_slug');
-        }
-
-        if (!$journalSlug || !\App\Models\Journal::where('slug', $journalSlug)->exists()) {
-            $journal = \App\Models\Journal::where('enabled', true)->first();
-            $journalSlug = $journal ? $journal->slug : null;
-        }
-
-        if (!$journalSlug) {
-            return redirect()->route('portal.home');
-        }
-
-        switch ($targetPage) {
-            case 'editorial-team':
-                return redirect()->route('journal.public.editorial-team', ['journal' => $journalSlug]);
-            case 'contact':
-                return redirect()->route('journal.public.contact', ['journal' => $journalSlug]);
-            case 'login':
-                return redirect()->route('journal.login', ['journal' => $journalSlug]);
-            case 'author-guidelines':
-                return redirect()->route('journal.public.author-guidelines', ['journal' => $journalSlug]);
-            default:
-                return redirect()->route('journal.public.home', ['journal' => $journalSlug]);
-        }
-    }
-}
-
 // =====================================================
 // ROUTE DEFINITIONS
 // =====================================================
@@ -281,18 +239,10 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
         });
 
         // Root-level relative link legacy redirects (when journal slug is missing due to relative URL resolution)
-        Route::get('/about/editorialTeam', function () {
-            return redirect_legacy_ojs_about('editorial-team');
-        });
-        Route::get('/about/contact', function () {
-            return redirect_legacy_ojs_about('contact');
-        });
-        Route::get('/about/submissions', function () {
-            return redirect_legacy_ojs_about('author-guidelines');
-        });
-        Route::get('/about/login', function () {
-            return redirect_legacy_ojs_about('login');
-        });
+        Route::get('/about/editorialTeam', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'editorial-team');
+        Route::get('/about/contact', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'contact');
+        Route::get('/about/submissions', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'author-guidelines');
+        Route::get('/about/login', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'login');
 
         // 7. JOURNAL PUBLIC ROUTES
         Route::prefix('{journal}')->group(function () {
@@ -329,18 +279,10 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::get('/article/{article}/jats', [JatsXmlController::class, 'article'])->name('journal.article.jats');
 
             // Legacy OJS URLs (with journal slug prefix)
-            Route::get('/about/editorialTeam', function ($journal) {
-                return redirect()->route('journal.public.editorial-team', ['journal' => $journal]);
-            });
-            Route::get('/about/contact', function ($journal) {
-                return redirect()->route('journal.public.contact', ['journal' => $journal]);
-            });
-            Route::get('/about/submissions', function ($journal) {
-                return redirect()->route('journal.public.author-guidelines', ['journal' => $journal]);
-            });
-            Route::get('/about/login', function ($journal) {
-                return redirect()->route('journal.login', ['journal' => $journal]);
-            });
+            Route::get('/about/editorialTeam', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'editorial-team');
+            Route::get('/about/contact', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'contact');
+            Route::get('/about/submissions', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'author-guidelines');
+            Route::get('/about/login', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'login');
 
             Route::middleware('guest')->group(function () {
                 Route::get('/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])->name('journal.register');
