@@ -152,7 +152,7 @@
                                     <div
                                         class="aspect-[3/4] bg-gradient-to-br from-indigo-100 to-indigo-200 relative overflow-hidden">
                                         @if ($issue->cover_path)
-                                            <img src="{{ Storage::url($issue->cover_path) }}"
+                                            <img src="{{ Storage::disk('public')->url($issue->cover_path) }}"
                                                 alt="{{ $issue->display_title }}"
                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                         @else
@@ -251,7 +251,7 @@
                                     <div
                                         class="aspect-[3/4] bg-gradient-to-br from-emerald-50 to-emerald-100 relative overflow-hidden">
                                         @if ($issue->cover_path)
-                                            <img src="{{ Storage::url($issue->cover_path) }}"
+                                            <img src="{{ Storage::disk('public')->url($issue->cover_path) }}"
                                                 alt="{{ $issue->display_title }}"
                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                         @else

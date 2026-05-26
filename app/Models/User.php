@@ -421,7 +421,7 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): ?string
     {
         if ($this->avatar) {
-            return \Illuminate\Support\Facades\Storage::url($this->avatar);
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
         }
         return null;
     }

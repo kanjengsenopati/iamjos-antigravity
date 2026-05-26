@@ -170,6 +170,12 @@
         @endforeach
     </div>
 
+    @if ($otherJournals->hasPages())
+        <div class="mt-6">
+            {{ $otherJournals->links() }}
+        </div>
+    @endif
+
     <!-- Enrollment Modal -->
     <div x-show="isOpen"
         class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm" x-cloak

@@ -203,7 +203,7 @@
                         </div>
 
                         <!-- Cover Image -->
-                        <div x-data="{ previewUrl: '{{ $issue->cover_path ? Storage::url($issue->cover_path) : '' }}' }">
+                        <div x-data="{ previewUrl: '{{ $issue->cover_path ? Storage::disk('public')->url($issue->cover_path) : '' }}' }">
                             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">

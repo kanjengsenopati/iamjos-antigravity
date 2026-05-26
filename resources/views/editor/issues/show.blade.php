@@ -39,7 +39,7 @@
                         <div
                             class="w-32 h-44 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
                             @if ($issue->cover_path)
-                                <img src="{{ Storage::url($issue->cover_path) }}" alt="{{ $issue->display_title }}"
+                                <img src="{{ Storage::disk('public')->url($issue->cover_path) }}" alt="{{ $issue->display_title }}"
                                     class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full flex items-center justify-center text-indigo-600">

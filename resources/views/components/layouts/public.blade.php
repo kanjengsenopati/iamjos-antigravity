@@ -22,7 +22,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @if($journal->favicon_path ?? false)
-<link rel="icon" href="{{ Storage::url($journal->favicon_path) }}">
+<link rel="icon" href="{{ Storage::disk('public')->url($journal->favicon_path) }}">
 @else
 <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
 <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
@@ -45,7 +45,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
 @if($journal->logo_path ?? false)
-<meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
+<meta property="og:image" content="{{ Storage::disk('public')->url($journal->logo_path) }}">
 @else
 <meta property="og:image" content="{{ asset('assets/media/logos/logo.webp') }}">
 <meta property="og:image:width" content="512">
@@ -55,7 +55,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 <meta name="twitter:title" content="{{ $title ?? $journal->name }}">
 <meta name="twitter:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
 @if($journal->logo_path ?? false)
-<meta name="twitter:image" content="{{ Storage::url($journal->logo_path) }}">
+<meta name="twitter:image" content="{{ Storage::disk('public')->url($journal->logo_path) }}">
 @else
 <meta name="twitter:image" content="{{ asset('assets/media/logos/logo.webp') }}">
 @endif
@@ -206,7 +206,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
     @if($showImageInHeader)
     {{-- CASE 1: Homepage Image as Header Background --}}
     <header class="relative min-h-[200px] md:min-h-[280px] flex items-center"
-        style="background-image: url('{{ Storage::url($journal->homepage_image_path) }}'); background-size: cover; background-position: center;">
+        style="background-image: url('{{ Storage::disk('public')->url($journal->homepage_image_path) }}'); background-size: cover; background-position: center;">
         {{-- Dark Overlay for readability --}}
         <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/40"></div>
 
@@ -215,7 +215,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
             <div class="flex items-center space-x-6">
                 {{-- Logo --}}
                 @if($journal->logo_path)
-                <img src="{{ Storage::url($journal->logo_path) }}"
+                <img src="{{ Storage::disk('public')->url($journal->logo_path) }}"
                     alt="{{ $journal->name }}"
                     class="h-20 md:h-24 w-auto drop-shadow-lg">
                 @else
@@ -266,7 +266,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
                 {{-- Row 1: Logo --}}
                 <div class="flex-shrink-0">
                     @if($journal->logo_path)
-                    <img src="{{ Storage::url($journal->logo_path) }}"
+                    <img src="{{ Storage::disk('public')->url($journal->logo_path) }}"
                         alt="{{ $journal->name }}"
                         class="h-20 md:h-24 w-auto object-contain">
                     @else

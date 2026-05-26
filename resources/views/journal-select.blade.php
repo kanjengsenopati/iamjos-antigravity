@@ -223,7 +223,7 @@
                             <div class="flex items-start justify-between mb-5 relative z-10">
                                 <div class="w-16 h-16 shrink-0 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-primary-200 transition-colors">
                                     @if ($journal->logo_path)
-                                        <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}" class="w-full h-full object-contain p-2">
+                                        <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" alt="{{ $journal->name }}" class="w-full h-full object-contain p-2">
                                     @else
                                         <div class="w-full h-full bg-primary-50 flex items-center justify-center">
                                             <span class="text-2xl font-bold text-primary-600">{{ strtoupper(substr($journal->abbreviation ?? $journal->name, 0, 2)) }}</span>

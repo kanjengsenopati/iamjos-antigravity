@@ -158,12 +158,20 @@
             </div>
 
             <!-- Tabbed Interface -->
-            <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] p-8" x-data="{ activeTab: 'identity' }">
+            <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] p-8" x-data="{ 
+                activeTab: '{{ $activeTab }}',
+                setActiveTab(tab) {
+                    this.activeTab = tab;
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', tab);
+                    window.history.replaceState(null, '', url.toString());
+                }
+            }">
                 <!-- Tabs Navigation (Seamless Door Style) -->
                 <div class="relative mb-8">
                     <div class="absolute inset-x-0 bottom-0 border-b-2 border-[#DAD8F4]"></div>
                     <nav class="relative flex overflow-x-auto no-scrollbar">
-                        <button @click="activeTab = 'identity'" type="button"
+                        <button @click="setActiveTab('identity')" type="button"
                             :class="activeTab === 'identity' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
                                 'border-transparent text-slate-400 hover:text-slate-600'"
@@ -172,7 +180,7 @@
                             Identity
                             <div x-show="activeTab === 'identity'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
-                        <button @click="activeTab = 'contact'" type="button"
+                        <button @click="setActiveTab('contact')" type="button"
                             :class="activeTab === 'contact' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
                                 'border-transparent text-slate-400 hover:text-slate-600'"
@@ -181,7 +189,7 @@
                             Contact
                             <div x-show="activeTab === 'contact'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
-                        <button @click="activeTab = 'public'" type="button"
+                        <button @click="setActiveTab('public')" type="button"
                             :class="activeTab === 'public' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
                                 'border-transparent text-slate-400 hover:text-slate-600'"
@@ -190,7 +198,7 @@
                             Public
                             <div x-show="activeTab === 'public'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
-                        <button @click="activeTab = 'password'" type="button"
+                        <button @click="setActiveTab('password')" type="button"
                             :class="activeTab === 'password' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
                                 'border-transparent text-slate-400 hover:text-slate-600'"
@@ -199,7 +207,7 @@
                             Password
                             <div x-show="activeTab === 'password'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
-                        <button @click="activeTab = 'roles'" type="button"
+                        <button @click="setActiveTab('roles')" type="button"
                             :class="activeTab === 'roles' ?
                                 'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
                                 'border-transparent text-slate-400 hover:text-slate-600'"

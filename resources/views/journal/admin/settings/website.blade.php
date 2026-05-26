@@ -129,7 +129,7 @@
                 <div x-show="appearanceTab === 'setup'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Logo Upload --}}
                     <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
-                        x-data="{ logoPreview: '{{ $journal->logo_path ? Storage::url($journal->logo_path) : '' }}' }">
+                        x-data="{ logoPreview: '{{ $journal->logo_path ? Storage::disk('public')->url($journal->logo_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Logo</h3>
@@ -174,7 +174,7 @@
 
                     {{-- Journal Thumbnail --}}
                     <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
-                        x-data="{ thumbnailPreview: '{{ $journal->thumbnail_path ? Storage::url($journal->thumbnail_path) : '' }}' }">
+                        x-data="{ thumbnailPreview: '{{ $journal->thumbnail_path ? Storage::disk('public')->url($journal->thumbnail_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Journal Thumbnail</h3>
@@ -217,7 +217,7 @@
 
                     {{-- Homepage Image --}}
                     <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
-                        x-data="{ homepagePreview: '{{ $journal->homepage_image_path ? Storage::url($journal->homepage_image_path) : '' }}' }">
+                        x-data="{ homepagePreview: '{{ $journal->homepage_image_path ? Storage::disk('public')->url($journal->homepage_image_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Homepage Image</h3>
@@ -388,7 +388,7 @@
                 <div x-show="appearanceTab === 'advanced'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Favicon Upload --}}
                     <div class="bg-gray-50/50 rounded-2xl border-2 border-[#DAD8F4]/50 p-6 h-fit"
-                        x-data="{ faviconPreview: '{{ $journal->favicon_path ? Storage::url($journal->favicon_path) : '' }}' }">
+                        x-data="{ faviconPreview: '{{ $journal->favicon_path ? Storage::disk('public')->url($journal->favicon_path) : '' }}' }">
                         <div class="flex items-start gap-6">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Favicon</h3>
@@ -649,7 +649,7 @@
                         <div class="flex flex-wrap gap-4 mb-4">
                             @foreach ($indexedImages as $image)
                                 <div class="relative group">
-                                    <img src="{{ Storage::url($image) }}" alt="Indexer"
+                                    <img src="{{ Storage::disk('public')->url($image) }}" alt="Indexer"
                                         class="h-16 w-auto object-contain bg-gray-50 rounded-lg border border-gray-200 p-2">
                                     <button type="button"
                                         onclick="if(confirm('Remove this logo?')) { 

@@ -29,7 +29,7 @@
     {{-- Homepage Image (OJS 3.3: Show in body when NOT used as header background) --}}
     @if ($showHomepageImageInBody)
         <div class="mb-8">
-            <img src="{{ Storage::url($journal->homepage_image_path) }}" alt="{{ $journal->name }}"
+            <img src="{{ Storage::disk('public')->url($journal->homepage_image_path) }}" alt="{{ $journal->name }}"
                 class="w-full h-auto rounded-lg shadow-md">
         </div>
     @endif
@@ -76,7 +76,7 @@
                         <div class="flex-shrink-0">
                             @if ($currentIssue->cover_path)
                                 <a href="{{ route('journal.public.current', $journal->slug) }}">
-                                    <img src="{{ Storage::url($currentIssue->cover_path) }}"
+                                    <img src="{{ Storage::disk('public')->url($currentIssue->cover_path) }}"
                                         alt="Cover Vol {{ $currentIssue->volume }}"
                                         class="w-48 h-auto rounded shadow-lg border border-slate-200 hover:shadow-xl transition-shadow mx-auto md:mx-0">
                                 </a>

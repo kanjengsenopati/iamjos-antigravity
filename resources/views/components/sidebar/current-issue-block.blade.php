@@ -9,7 +9,7 @@ $currentIssue = $journal->issues()->where('is_published', true)->latest('publish
 @if($currentIssue)
 <div>
     @if($currentIssue->cover_image_path)
-    <img src="{{ Storage::url($currentIssue->cover_image_path) }}"
+    <img src="{{ Storage::disk('public')->url($currentIssue->cover_image_path) }}"
         alt="{{ $currentIssue->title }}"
         class="w-full rounded-lg mb-3 shadow-sm">
     @endif

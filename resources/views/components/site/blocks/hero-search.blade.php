@@ -41,7 +41,7 @@
                     <div class="flex -space-x-3 overflow-hidden">
                         @foreach (array_slice($config['logos'], 0, 4) as $logo)
                             <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-contain bg-white shadow-sm"
-                                src="{{ Storage::url($logo) }}" alt="Institution Logo" />
+                                src="{{ Storage::disk('public')->url($logo) }}" alt="Institution Logo" />
                         @endforeach
 
                         @if ($journalsCount > 4)

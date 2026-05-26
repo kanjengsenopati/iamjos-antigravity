@@ -4,7 +4,7 @@
     {{-- Card Header: Cover Image --}}
     <div class="relative aspect-[16/10] overflow-hidden bg-slate-50">
         @if($journal->thumbnail_path)
-            <img src="{{ Storage::url($journal->thumbnail_path) }}" 
+            <img src="{{ Storage::disk('public')->url($journal->thumbnail_path) }}" 
                  alt="{{ $journal->name }}" 
                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                  loading="lazy">

@@ -44,7 +44,7 @@ $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
                     @if($currentIssue->cover_path)
                         <div class="flex-shrink-0">
                             <a href="{{ route('journal.public.current', $journal->slug) }}" class="block">
-                                <img src="{{ Storage::url($currentIssue->cover_path) }}" 
+                                <img src="{{ Storage::disk('public')->url($currentIssue->cover_path) }}" 
                                      alt="{{ $currentIssue->display_title }}"
                                      class="w-48 h-auto rounded-lg shadow-lg hover:shadow-xl transition-shadow">
                             </a>
@@ -261,7 +261,7 @@ $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex items-center gap-4 card-hover">
                         {{-- Avatar --}}
                         @if($editor->avatar ?? false)
-                            <img src="{{ Storage::url($editor->avatar) }}" 
+                            <img src="{{ $editor->avatar }}" 
                                  alt="{{ $editor->name }}"
                                  class="w-14 h-14 rounded-full object-cover flex-shrink-0">
                         @else
@@ -295,7 +295,7 @@ $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
                 </h3>
                 <div class="flex flex-wrap justify-center items-center gap-6 md:gap-10">
                     @foreach($indexedInImages as $image)
-                        <img src="{{ Storage::url($image) }}" 
+                        <img src="{{ Storage::disk('public')->url($image) }}" 
                              alt="Indexer Logo"
                              class="h-10 md:h-12 w-auto grayscale hover:grayscale-0 opacity-60 hover:opacity-100 transition-all">
                     @endforeach

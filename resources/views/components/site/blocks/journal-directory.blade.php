@@ -86,7 +86,7 @@ $journals = $data['journals'] ?? collect();
                             {{-- Logo --}}
                             <div class="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                                 @if($journal->logo_path)
-                                    <img src="{{ Storage::url($journal->logo_path) }}" 
+                                    <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" 
                                          alt="{{ $journal->name }}"
                                          class="w-full h-full object-contain p-2">
                                 @else

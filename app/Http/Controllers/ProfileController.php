@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Intervention\Image\Laravel\Facades\Image;
 use App\Models\Role;
 use App\Models\Journal;
+use Illuminate\Support\Facades\Cache;
 
 class ProfileController extends Controller
 {
@@ -20,37 +21,53 @@ class ProfileController extends Controller
      * Display user profile edit form.
      * Journal parameter is injected via route model binding.
      */
-    public function edit(Journal $journal): View
+    public function edit(Request $request, Journal $journal): View
     {
         $user = Auth::user();
 
         // Fetch roles available for self-registration in current journal
-        $availableRoles = Role::where('allow_registration', true)
-            ->where('journal_id', $journal->id)
-            ->get();
+        // Cache self‑registerable roles per journal to avoid repeated queries
+        $availableRoles = Cache::remember(
+            'available_roles_journal_' . $journal->id,
+            now()->addMinutes(30),
+            function () use ($journal) {
+                return Role::where('allow_registration', true)
+                    ->where('journal_id', $journal->id)
+                    ->get();
+            }
+        );
 
         // Get current user's role IDs for this journal using JournalUserRole
+        // Eager load user‑journal roles once and extract IDs
         $userRolesIds = $user->journalRoles()
             ->where('journal_id', $journal->id)
             ->pluck('role_id')
             ->toArray();
 
-        // Fetch other enabled journals for enrollment section
-        $otherJournals = Journal::where('id', '!=', $journal->id)
-            ->where('enabled', true)
-            ->with(['roles' => function($query) {
-                $query->where('allow_registration', true);
-            }])
-            ->get();
-
-        // Optimize enrollment check: Get all journal IDs where user has a role via JournalUserRole
+        // Get all journal IDs where user has a role via JournalUserRole
+        // Journals where the user already has a role (for enrollment exclusion)
         $enrolledJournalIds = $user->journalRoles()
             ->pluck('journal_id')
             ->unique()
             ->toArray();
 
-        return view('profile.edit', compact('user', 'journal', 'availableRoles', 'userRolesIds', 'otherJournals', 'enrolledJournalIds'));
+        // Fetch other enabled journals for enrollment (excluding those already enrolled)
+        $query = Journal::where('id', '!=', $journal->id)
+            ->where('enabled', true);
 
+        if (!empty($enrolledJournalIds)) {
+            $query->whereNotIn('id', $enrolledJournalIds);
+        }
+
+        $otherJournals = $query->with(['roles' => function($q) {
+                $q->where('allow_registration', true);
+            }])
+            ->paginate(5)
+            ->appends($request->query());
+
+        $activeTab = $request->query('tab', 'identity');
+
+        return view('profile.edit', compact('user', 'journal', 'availableRoles', 'userRolesIds', 'otherJournals', 'enrolledJournalIds', 'activeTab'));
     }
 
     /**

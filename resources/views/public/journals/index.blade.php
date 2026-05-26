@@ -169,7 +169,7 @@
                                     <!-- Cover Image / Placeholder -->
                                     <div class="sm:w-48 lg:w-56 flex-shrink-0">
                                         @if($journal->thumbnail_path)
-                                            <img src="{{ Storage::url($journal->thumbnail_path) }}" 
+                                            <img src="{{ Storage::disk('public')->url($journal->thumbnail_path) }}" 
                                                  alt="{{ $journal->name }}"
                                                  class="w-full h-48 sm:h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                         @else

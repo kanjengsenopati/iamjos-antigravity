@@ -89,7 +89,7 @@
                                                 <div class="grid grid-cols-4 gap-4 mb-4">
                                                     @foreach ($logos as $index => $logo)
                                                         <div class="relative group bg-gray-100 rounded-lg p-4">
-                                                            <img src="{{ Storage::url($logo) }}" alt="Logo"
+                                                            <img src="{{ Storage::disk('public')->url($logo) }}" alt="Logo"
                                                                 class="h-12 w-full object-contain">
                                                             <button type="button" onclick="deleteLogo('{{ $logo }}')"
                                                                 class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
@@ -207,7 +207,7 @@
                                             <div class="grid grid-cols-4 gap-4 mb-4">
                                                 @foreach ($logos as $index => $logo)
                                                     <div class="relative group bg-gray-100 rounded-lg p-4">
-                                                        <img src="{{ Storage::url($logo) }}" alt="Logo"
+                                                        <img src="{{ Storage::disk('public')->url($logo) }}" alt="Logo"
                                                             class="h-12 w-full object-contain">
                                                         <button type="button" onclick="deleteLogo('{{ $logo }}')"
                                                             class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">

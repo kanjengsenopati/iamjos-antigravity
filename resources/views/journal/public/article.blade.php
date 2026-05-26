@@ -677,7 +677,7 @@
                 @if ($issue->cover_path)
                     <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id]) }}"
                         class="block hover:opacity-90 transition group">
-                        <img src="{{ Storage::url($issue->cover_path) }}" alt="{{ $issue->title }}"
+                        <img src="{{ Storage::disk('public')->url($issue->cover_path) }}" alt="{{ $issue->title }}"
                             class="w-full rounded shadow-md border border-slate-200">
                     </a>
                 @endif

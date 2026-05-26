@@ -46,7 +46,7 @@ $enableMarquee = ($layout === 'marquee') || ($layout === 'auto' && $logoCount > 
                 <ul class="flex items-center justify-start animate-marquee-scroll shrink-0">
                     @foreach($logos as $logo)
                         <li class="mx-6 md:mx-10 flex items-center justify-center">
-                            <img src="{{ Storage::url($logo) }}" 
+                            <img src="{{ Storage::disk('public')->url($logo) }}" 
                                  alt="Indexing Partner"
                                  class="h-10 md:h-12 w-auto max-w-[120px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
                         </li>
@@ -57,7 +57,7 @@ $enableMarquee = ($layout === 'marquee') || ($layout === 'auto' && $logoCount > 
                 <ul class="flex items-center justify-start animate-marquee-scroll shrink-0" aria-hidden="true">
                     @foreach($logos as $logo)
                         <li class="mx-6 md:mx-10 flex items-center justify-center">
-                            <img src="{{ Storage::url($logo) }}" 
+                            <img src="{{ Storage::disk('public')->url($logo) }}" 
                                  alt=""
                                  class="h-10 md:h-12 w-auto max-w-[120px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
                         </li>
@@ -73,7 +73,7 @@ $enableMarquee = ($layout === 'marquee') || ($layout === 'auto' && $logoCount > 
             <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12 lg:gap-16">
                 @foreach($logos as $logo)
                     <div class="flex items-center justify-center">
-                        <img src="{{ Storage::url($logo) }}" 
+                        <img src="{{ Storage::disk('public')->url($logo) }}" 
                              alt="Indexing Partner"
                              class="h-10 md:h-12 w-auto max-w-[140px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer">
                     </div>

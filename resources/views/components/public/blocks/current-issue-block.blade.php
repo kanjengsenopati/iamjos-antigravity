@@ -8,7 +8,7 @@
 <div class="px-4 pb-1">
     @if($currentIssue->cover_path)
         <a href="{{ route('journal.public.current', $journal->slug) }}" class="block mb-4">
-            <img src="{{ Storage::url($currentIssue->cover_path) }}" 
+            <img src="{{ Storage::disk('public')->url($currentIssue->cover_path) }}" 
                     alt="{{ $currentIssue->display_title }}"
                     class="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow">
         </a>

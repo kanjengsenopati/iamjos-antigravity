@@ -134,7 +134,7 @@
                             <div
                                 class="h-32 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden p-6">
                                 @if ($journal->logo_path)
-                                    <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}"
+                                    <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" alt="{{ $journal->name }}"
                                         class="h-full w-auto object-contain bg-white rounded-lg p-2">
                                 @else
                                     <span

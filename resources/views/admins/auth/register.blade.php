@@ -426,7 +426,7 @@
                                                     :class="selectedJournals.includes('{{ $journal->id }}') ?
                                                         'bg-indigo-200 text-indigo-700' : 'bg-gray-100 text-gray-500'">
                                                     @if ($journal->logo_path)
-                                                        <img src="{{ Storage::url($journal->logo_path) }}"
+                                                        <img src="{{ Storage::disk('public')->url($journal->logo_path) }}"
                                                             alt="{{ $journal->name }}"
                                                             class="w-10 h-10 object-contain rounded">
                                                     @else

@@ -242,7 +242,7 @@ class SubmissionController extends Controller
             $path = $file->store("journals/{$journal->id}/images", 'public');
 
             return response()->json([
-                'location' => Storage::url($path),
+                'location' => Storage::disk('public')->url($path),
             ]);
         }
 

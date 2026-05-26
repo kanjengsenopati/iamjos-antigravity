@@ -94,7 +94,7 @@
                 {{-- Logo --}}
                 <a href="{{ route('journal.public.home', $journal->slug) }}" class="flex items-center space-x-3">
                     @if ($journal->logo_path)
-                        <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}"
+                        <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" alt="{{ $journal->name }}"
                             class="h-10 w-auto">
                     @else
                         <div class="w-10 h-10 rounded-lg bg-primary-custom flex items-center justify-center"
@@ -190,7 +190,7 @@
                 <div class="md:col-span-1">
                     <div class="flex items-center space-x-3 mb-4">
                         @if ($journal->logo_path)
-                            <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}"
+                            <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" alt="{{ $journal->name }}"
                                 class="h-10 w-auto">
                         @else
                             <div class="w-10 h-10 rounded-lg flex items-center justify-center"

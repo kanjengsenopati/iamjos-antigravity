@@ -4,7 +4,7 @@
     {{-- Thumbnail / Cover --}}
     <div class="flex-shrink-0 mx-auto md:mx-0">
         @if($journal->thumbnail_path)
-            <img src="{{ Storage::url($journal->thumbnail_path) }}" 
+            <img src="{{ Storage::disk('public')->url($journal->thumbnail_path) }}" 
                  alt="{{ $journal->name }}" 
                  class="w-32 h-44 object-cover rounded-lg shadow-sm border border-gray-100 group-hover:opacity-90 transition-opacity">
         @else

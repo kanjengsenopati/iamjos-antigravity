@@ -16,7 +16,7 @@
 <div class="flex items-start justify-between mb-8">
     <div class="flex items-center gap-4">
         @if ($journal->logo_path)
-        <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}"
+        <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" alt="{{ $journal->name }}"
             class="w-16 h-16 rounded-xl object-cover border border-gray-200">
         @else
         <div
@@ -211,7 +211,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <!-- Logo -->
-                <div x-data="{ previewUrl: '{{ $journal->logo_path ? Storage::url($journal->logo_path) : '' }}' }">
+                <div x-data="{ previewUrl: '{{ $journal->logo_path ? Storage::disk('public')->url($journal->logo_path) : '' }}' }">
                     <label class="block text-sm font-medium text-gray-700 mb-3">Journal Logo</label>
                     <div class="flex items-center gap-4">
                         <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300"
@@ -264,7 +264,7 @@
                 </div>
 
                 <!-- Thumbnail -->
-                <div x-data="{ previewUrl: '{{ $journal->thumbnail_path ? Storage::url($journal->thumbnail_path) : '' }}' }">
+                <div x-data="{ previewUrl: '{{ $journal->thumbnail_path ? Storage::disk('public')->url($journal->thumbnail_path) : '' }}' }">
                     <label class="block text-sm font-medium text-gray-700 mb-3">Thumbnail</label>
                     <div class="flex items-center gap-4">
                         <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300"

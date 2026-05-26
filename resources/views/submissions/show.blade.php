@@ -3176,7 +3176,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             of the ID.</p>
                                     </div>
 
-                                    <div x-data="{ coverPreview: '{{ $publication->cover_image_path ? Storage::url($publication->cover_image_path) : '' }}' }">
+                                    <div x-data="{ coverPreview: '{{ $publication->cover_image_path ? Storage::disk('public')->url($publication->cover_image_path) : '' }}' }">
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
 
                                         <template x-if="coverPreview">

@@ -20,7 +20,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
             {{-- LOGO --}}
             <a href="{{ route('portal.home') }}" class="flex items-center gap-2">
                 @if (!empty($navSiteLogo))
-                    <img src="{{ Storage::url($navSiteLogo) }}" class="h-8" alt="{{ $navSiteTitle }}">
+                    <img src="{{ Storage::disk('public')->url($navSiteLogo) }}" class="h-8" alt="{{ $navSiteTitle }}">
                 @elseif($navSiteTitle)
                     <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
                         {{ strtoupper(substr($navSiteTitle, 0, 2)) }}
@@ -91,7 +91,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                             <div
                                 class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
                                 @if (auth()->user()->avatar)
-                                    <img src="{{ Storage::url(auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}"
+                                    <img src="{{ Storage::disk('public')->url(auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}"
                                         class="w-8 h-8 rounded-full object-cover">
                                 @else
                                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}

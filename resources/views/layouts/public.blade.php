@@ -58,7 +58,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
     @if($journal->logo_path ?? false)
-        <meta property="og:image" content="{{ Storage::url($journal->logo_path) }}">
+        <meta property="og:image" content="{{ Storage::disk('public')->url($journal->logo_path) }}">
     @endif
 
     {{-- Twitter Card Tags --}}
@@ -163,7 +163,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
     @if($showImageInHeader)
         {{-- CASE 1: Homepage Image as Header Background --}}
         <header class="relative min-h-[200px] md:min-h-[280px] flex items-center"
-                style="background-image: url('{{ Storage::url($journal->homepage_image_path) }}'); background-size: cover; background-position: center;">
+                style="background-image: url('{{ Storage::disk('public')->url($journal->homepage_image_path) }}'); background-size: cover; background-position: center;">
             {{-- Dark Overlay for readability --}}
             <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/40"></div>
             
@@ -172,7 +172,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
                 <div class="flex items-center space-x-6">
                     {{-- Logo --}}
                     @if($journal->logo_path)
-                        <img src="{{ Storage::url($journal->logo_path) }}" 
+                        <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" 
                              alt="{{ $journal->name }}" 
                              class="h-20 md:h-24 w-auto drop-shadow-lg">
                     @else
@@ -218,7 +218,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
                 <div class="flex items-center space-x-4">
                     {{-- Logo --}}
                     @if($journal->logo_path)
-                        <img src="{{ Storage::url($journal->logo_path) }}" 
+                        <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" 
                              alt="{{ $journal->name }}" 
                              class="h-16 w-auto">
                     @else
@@ -291,7 +291,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
                 <div class="md:col-span-2">
                     <div class="flex items-center space-x-3 mb-4">
                         @if($journal->logo_path)
-                            <img src="{{ Storage::url($journal->logo_path) }}" 
+                            <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" 
                                  alt="{{ $journal->name }}" 
                                  class="h-12 w-auto brightness-0 invert opacity-80">
                         @else

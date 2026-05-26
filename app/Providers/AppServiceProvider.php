@@ -77,13 +77,13 @@ class AppServiceProvider extends ServiceProvider
             if ($journalParam instanceof \App\Models\Journal) {
                 $journalId = $journalParam->id;
             } elseif (is_string($journalParam)) {
-                // Cek apakah ini ID/UUID atau Slug
-                // Supaya aman dan cepat, kita query jika bukan UUID (asumsi slug)
-                // Atau query saja by slug/id
-                $journal = \App\Models\Journal::where('slug', $journalParam)
-                            ->orWhere('id', $journalParam)
-                            ->first(['id']);
-                $journalId = $journal ? $journal->id : null;
+                if (\Illuminate\Support\Str::isUuid($journalParam)) {
+                    $journalId = $journalParam;
+                } else {
+                    $journal = \App\Models\Journal::where('slug', $journalParam)
+                                ->first(['id']);
+                    $journalId = $journal ? $journal->id : null;
+                }
             } elseif (is_numeric($journalParam)) {
                  $journalId = $journalParam;
             }
@@ -117,10 +117,13 @@ class AppServiceProvider extends ServiceProvider
             if ($journalParam instanceof \App\Models\Journal) {
                 $journalId = $journalParam->id;
             } elseif (is_string($journalParam)) {
-                 $journal = \App\Models\Journal::where('slug', $journalParam)
-                            ->orWhere('id', $journalParam)
-                            ->first(['id']);
-                $journalId = $journal ? $journal->id : null;
+                if (\Illuminate\Support\Str::isUuid($journalParam)) {
+                    $journalId = $journalParam;
+                } else {
+                    $journal = \App\Models\Journal::where('slug', $journalParam)
+                                ->first(['id']);
+                    $journalId = $journal ? $journal->id : null;
+                }
             } elseif (is_numeric($journalParam)) {
                  $journalId = $journalParam;
             }

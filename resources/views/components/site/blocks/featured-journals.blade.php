@@ -43,7 +43,7 @@ $journals = $data['journals'] ?? collect();
                         {{-- Cover Image --}}
                         <div class="p-4 flex items-center justify-center border-b border-slate-50 bg-slate-50 relative">
                             @if($journal->thumbnail_path)
-                                <img src="{{ Storage::url($journal->thumbnail_path) }}"
+                                <img src="{{ Storage::disk('public')->url($journal->thumbnail_path) }}"
                                      alt="{{ $journal->name }} Cover"
                                      class="max-h-48 object-contain border border-indigo-100 p-0.5 bg-white shadow-sm transition-transform duration-300 group-hover:scale-[1.02]">
                             @else

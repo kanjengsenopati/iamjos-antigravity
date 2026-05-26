@@ -162,9 +162,9 @@ class MetadataManager
         ];
 
         if ($article->cover_image_path) {
-            $metadata['opengraph']['og:image'] = \Storage::url($article->cover_image_path);
+            $metadata['opengraph']['og:image'] = \Storage::disk('public')->url($article->cover_image_path);
         } elseif ($journal->logo_path) {
-            $metadata['opengraph']['og:image'] = \Storage::url($journal->logo_path);
+            $metadata['opengraph']['og:image'] = \Storage::disk('public')->url($journal->logo_path);
         }
 
         foreach ($authorNames as $author) {
@@ -229,7 +229,7 @@ class MetadataManager
         }
 
         if ($article->cover_image_path) {
-            $metadata['schema']['image'] = \Storage::url($article->cover_image_path);
+            $metadata['schema']['image'] = \Storage::disk('public')->url($article->cover_image_path);
         }
 
         return $metadata;
@@ -274,8 +274,8 @@ class MetadataManager
         ];
 
         if ($journal->logo_path) {
-            $metadata['opengraph']['og:image'] = \Storage::url($journal->logo_path);
-            $metadata['schema']['image'] = \Storage::url($journal->logo_path);
+            $metadata['opengraph']['og:image'] = \Storage::disk('public')->url($journal->logo_path);
+            $metadata['schema']['image'] = \Storage::disk('public')->url($journal->logo_path);
         }
 
         return $metadata;

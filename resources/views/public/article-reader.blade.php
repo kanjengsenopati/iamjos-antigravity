@@ -296,7 +296,7 @@
                 <div class="flex items-center space-x-2">
                     @if ($galleyFile)
                         <!-- Open in New Tab -->
-                        <a href="{{ Storage::url($galleyFile->file_path) }}" target="_blank"
+                        <a href="{{ Storage::disk('public')->url($galleyFile->file_path) }}" target="_blank"
                             class="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
                             title="Open in New Tab">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,7 +332,7 @@
             <div class="flex-1 relative">
                 @if ($galleyFile)
                     @php
-                        $fileUrl = Storage::url($galleyFile->file_path);
+                        $fileUrl = Storage::disk('public')->url($galleyFile->file_path);
                         $isPdf = Str::endsWith(strtolower($galleyFile->file_name), '.pdf');
                     @endphp
 

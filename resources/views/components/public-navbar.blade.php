@@ -13,7 +13,7 @@ $secondaryColor = $settings['secondary_color'] ?? '#7C3AED';
             <div class="flex items-center">
                 <a href="{{ route('journal.public.home', $journal->slug) }}" class="flex items-center gap-3">
                     @if($journal->logo_path)
-                    <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}" class="h-10">
+                    <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" alt="{{ $journal->name }}" class="h-10">
                     @else
                     <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
                         style="background: linear-gradient(135deg, {{ $primaryColor }}, {{ $secondaryColor }});">

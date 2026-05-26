@@ -908,7 +908,7 @@
                                     <div
                                         class="absolute bottom-0 right-0 w-7 h-7 rounded-full overflow-hidden border-2 border-white shadow-md z-20">
                                         @if (Auth::user()->profile_photo_path)
-                                            <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                            <img src="{{ Storage::disk('public')->url(Auth::user()->profile_photo_path) }}"
                                                 alt="{{ Auth::user()->name }}"
                                                 class="w-full h-full object-cover bg-gray-100"
                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -929,7 +929,7 @@
                                 <div
                                     class="relative w-9 h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-white group-hover:ring-gray-200 transition-all">
                                     @if (Auth::user()->profile_photo_path)
-                                        <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                                        <img src="{{ Storage::disk('public')->url(Auth::user()->profile_photo_path) }}"
                                             alt="{{ Auth::user()->name }}"
                                             class="w-full h-full object-cover bg-gray-100"
                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

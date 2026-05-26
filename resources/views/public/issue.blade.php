@@ -20,7 +20,7 @@
                     <div
                         class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center sticky top-24">
                         @if ($issue->cover_path)
-                            <img src="{{ Storage::url($issue->cover_path) }}" alt="Issue Cover"
+                            <img src="{{ Storage::disk('public')->url($issue->cover_path) }}" alt="Issue Cover"
                                 class="w-full h-full object-cover rounded-xl">
                         @else
                             <div class="text-center text-white p-6">

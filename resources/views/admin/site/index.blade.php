@@ -113,7 +113,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     @if ($journal->logo_path)
-                                        <img src="{{ Storage::url($journal->logo_path) }}" alt="{{ $journal->name }}"
+                                        <img src="{{ Storage::disk('public')->url($journal->logo_path) }}" alt="{{ $journal->name }}"
                                             class="w-10 h-10 rounded-lg object-cover border border-gray-200">
                                     @else
                                         <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">

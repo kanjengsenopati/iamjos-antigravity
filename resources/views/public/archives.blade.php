@@ -33,7 +33,7 @@
                                class="block">
                                 @if($issue->cover_path)
                                     <img
-                                        src="{{ Storage::url($issue->cover_path) }}"
+                                        src="{{ Storage::disk('public')->url($issue->cover_path) }}"
                                         alt="Cover Vol {{ $issue->volume }}"
                                         class="w-full h-auto aspect-[3/4] object-cover border border-slate-200 shadow-sm"
                                     >
