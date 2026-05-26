@@ -322,6 +322,10 @@ jobs:
             echo "🗄️ Menjalankan database migration..."
             php artisan migrate --force --ansi
 
+            # Ensure storage symlink is active
+            echo "🔗 Menghubungkan storage link..."
+            php artisan storage:link --ansi || true
+
             # ─── 6. Rebuild cache aplikasi ─────────────────────────────
             echo "⚡ Membangun ulang cache aplikasi..."
             # Clear cache dulu sebelum rebuild
