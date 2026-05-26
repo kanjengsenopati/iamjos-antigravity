@@ -16,7 +16,11 @@
     <meta name="robots" content="noindex, nofollow">
 
     {{-- Favicon --}}
-    <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
+    @if(function_exists('current_journal') && current_journal() && current_journal()->favicon_path)
+        <link rel="icon" href="{{ Storage::disk('public')->url(current_journal()->favicon_path) }}">
+    @else
+        <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
+    @endif
     <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
 
     {{-- Open Graph --}}

@@ -51,7 +51,7 @@ class WebsiteSettingsController extends Controller
         // Validate file uploads
         $request->validate([
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'favicon' => 'nullable|mimes:ico,png,jpg,svg,webp|max:1024',
+            'favicon' => 'nullable|file|max:1024',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'homepage_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'indexed_in_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif,svg|max:2048',

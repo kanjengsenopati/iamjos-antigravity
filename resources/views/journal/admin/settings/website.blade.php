@@ -37,6 +37,23 @@
             </div>
         @endif
 
+        {{-- Validation Errors --}}
+        @if ($errors->any())
+            <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <i class="fa-solid fa-exclamation-circle text-red-500 mr-3 mt-0.5"></i>
+                    <div>
+                        <h4 class="text-red-800 font-bold mb-1">Periksa kembali isian Anda:</h4>
+                        <ul class="list-disc list-inside text-sm text-red-700">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Tabs Navigation (Seamless Door Style) --}}
         <div class="relative mb-8">
             <div class="absolute inset-x-0 bottom-0 border-b-2 border-[#DAD8F4]"></div>
