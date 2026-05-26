@@ -260,7 +260,7 @@ class NavigationController extends Controller
             'path' => 'nullable|string|max:255|unique:navigation_menu_items,path,NULL,id,journal_id,' . $journal->id,
             'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
-            'target' => 'in:_self,_blank',
+            'target' => 'nullable|in:_self,_blank',
         ]);
 
         NavigationMenuItem::create([
@@ -300,7 +300,7 @@ class NavigationController extends Controller
             'path' => 'nullable|string|max:255|unique:navigation_menu_items,path,' . $item->id . ',id,journal_id,' . $item->journal_id,
             'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
-            'target' => 'in:_self,_blank',
+            'target' => 'nullable|in:_self,_blank',
         ]);
 
         $item->update([
