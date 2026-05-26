@@ -48,6 +48,48 @@ try {
     }
 } catch (\Exception $e) {}
 
+if (!function_exists('redirect_legacy_ojs_about')) {
+    function redirect_legacy_ojs_about($targetPage) {
+        $referer = request()->headers->get('referer');
+        $journalSlug = null;
+        if ($referer) {
+            $path = parse_url($referer, PHP_URL_PATH);
+            $segments = explode('/', trim($path, '/'));
+            if (!empty($segments[0]) && $segments[0] !== 'index.php') {
+                $journalSlug = $segments[0];
+            } elseif (count($segments) > 1 && $segments[0] === 'index.php') {
+                $journalSlug = $segments[1];
+            }
+        }
+
+        if (!$journalSlug) {
+            $journalSlug = session('login_journal_slug');
+        }
+
+        if (!$journalSlug || !\App\Models\Journal::where('slug', $journalSlug)->exists()) {
+            $journal = \App\Models\Journal::where('enabled', true)->first();
+            $journalSlug = $journal ? $journal->slug : null;
+        }
+
+        if (!$journalSlug) {
+            return redirect()->route('portal.home');
+        }
+
+        switch ($targetPage) {
+            case 'editorial-team':
+                return redirect()->route('journal.public.editorial-team', ['journal' => $journalSlug]);
+            case 'contact':
+                return redirect()->route('journal.public.contact', ['journal' => $journalSlug]);
+            case 'login':
+                return redirect()->route('journal.login', ['journal' => $journalSlug]);
+            case 'author-guidelines':
+                return redirect()->route('journal.public.author-guidelines', ['journal' => $journalSlug]);
+            default:
+                return redirect()->route('journal.public.home', ['journal' => $journalSlug]);
+        }
+    }
+}
+
 // =====================================================
 // ROUTE DEFINITIONS
 // =====================================================
@@ -238,6 +280,20 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             return response()->file(public_path('oai.xsl'), ['Content-Type' => 'text/xsl']);
         });
 
+        // Root-level relative link legacy redirects (when journal slug is missing due to relative URL resolution)
+        Route::get('/about/editorialTeam', function () {
+            return redirect_legacy_ojs_about('editorial-team');
+        });
+        Route::get('/about/contact', function () {
+            return redirect_legacy_ojs_about('contact');
+        });
+        Route::get('/about/submissions', function () {
+            return redirect_legacy_ojs_about('author-guidelines');
+        });
+        Route::get('/about/login', function () {
+            return redirect_legacy_ojs_about('login');
+        });
+
         // 7. JOURNAL PUBLIC ROUTES
         Route::prefix('{journal}')->group(function () {
             Route::any('oai', [\App\Http\Controllers\Public\OaiController::class, 'handle'])->middleware('throttle:60,1')->name('journal.oai');
@@ -255,6 +311,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::get('/information/librarians', [\App\Http\Controllers\PublicController::class, 'infoLibrarians'])->name('journal.info.librarians');
             Route::get('/author-guidelines', [\App\Http\Controllers\PublicController::class, 'authorGuidelines'])->name('journal.public.author-guidelines');
             Route::get('/editorial-team', [\App\Http\Controllers\PublicController::class, 'editorialTeam'])->name('journal.public.editorial-team');
+            Route::get('/contact', [\App\Http\Controllers\PublicController::class, 'contact'])->name('journal.public.contact');
             Route::get('/search', [\App\Http\Controllers\SearchController::class, 'index'])->name('journal.public.search');
             Route::get('/search/quick', [\App\Http\Controllers\SearchController::class, 'quickSearch'])->name('journal.public.search.quick');
             Route::get('/issue/view/{issue}', [\App\Http\Controllers\PublicController::class, 'issue'])->name('journal.public.issue');
@@ -270,6 +327,20 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::get('/article/{article}/citation/ris', [\App\Http\Controllers\PublicController::class, 'exportCitationRIS'])->name('citation.ris');
             Route::get('/article/{article}/citation/bibtex', [\App\Http\Controllers\PublicController::class, 'exportCitationBibTeX'])->name('citation.bibtex');
             Route::get('/article/{article}/jats', [JatsXmlController::class, 'article'])->name('journal.article.jats');
+
+            // Legacy OJS URLs (with journal slug prefix)
+            Route::get('/about/editorialTeam', function ($journal) {
+                return redirect()->route('journal.public.editorial-team', ['journal' => $journal]);
+            });
+            Route::get('/about/contact', function ($journal) {
+                return redirect()->route('journal.public.contact', ['journal' => $journal]);
+            });
+            Route::get('/about/submissions', function ($journal) {
+                return redirect()->route('journal.public.author-guidelines', ['journal' => $journal]);
+            });
+            Route::get('/about/login', function ($journal) {
+                return redirect()->route('journal.login', ['journal' => $journal]);
+            });
 
             Route::middleware('guest')->group(function () {
                 Route::get('/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])->name('journal.register');

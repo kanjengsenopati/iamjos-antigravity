@@ -490,6 +490,21 @@ class PublicController extends Controller
     }
 
     /**
+     * Contact page.
+     */
+    public function contact(string $journalSlug): View
+    {
+        $journal = $this->resolveJournal($journalSlug);
+
+        // Get settings with defaults
+        $settings = $this->getSettingsWithDefaults($journal);
+        
+        $contactSettings = $journal->settings['contact'] ?? [];
+
+        return view('public.contact', compact('journal', 'settings', 'contactSettings'));
+    }
+
+    /**
      * Information for Readers.
      */
     public function infoReaders(string $journalSlug): View
