@@ -326,26 +326,39 @@ jobs:
             echo "🔗 Menghubungkan storage link..."
             php artisan storage:link --ansi || true
 
-            # ─── 6. Rebuild cache aplikasi ─────────────────────────────
+            # ─── 6. Set permissions SEBELUM cache rebuild ─────────────
+            echo "🔑 Menyesuaikan permission storage dan bootstrap/cache..."
+            chmod -R 775 storage bootstrap/cache
+            
+            # Deteksi PHP-FPM user dan set ownership
+            PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
+            echo "   PHP-FPM user terdeteksi: $PHP_FPM_USER"
+            sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
+              sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+
+            # ─── 6.5 Rebuild cache aplikasi ───────────────────────────────
             echo "⚡ Membangun ulang cache aplikasi..."
-            # Clear cache dulu sebelum rebuild
+            # Clear semua cache
             php artisan cache:clear --ansi || true
             php artisan config:clear --ansi || true
             php artisan route:clear --ansi || true
             php artisan view:clear --ansi || true
             
-            # Rebuild cache
+            # Rebuild config dan route cache saja
+            # PENTING: TIDAK menjalankan view:cache agar Blade compile
+            # views on-demand sebagai PHP-FPM user (menghindari permission denied)
             php artisan config:cache --ansi
             php artisan route:cache --ansi
-            php artisan view:cache --ansi
             
             # Livewire assets (skip jika error)
             php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
 
-            # ─── 6.5 Set permissions for storage & bootstrap/cache after cache rebuild ───
-            echo "🔑 Menyesuaikan permission storage dan bootstrap/cache..."
-            chmod -R 777 storage bootstrap/cache
-            sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
+            # ─── 6.6 Final permission fix setelah cache rebuild ───────────
+            echo "🔑 Final permission fix..."
+            chmod -R 775 storage bootstrap/cache
+            sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
             # ─── 7. Restart services ───────────────────────────────────
