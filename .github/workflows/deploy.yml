@@ -123,7 +123,7 @@ jobs:
           SESSION_DRIVER: array
 
       - name: Jalankan test suite (Pest) - Non-blocking
-        run: php artisan test --parallel --ansi
+        run: php artisan test --ansi
         # OPSI B: Test tetap jalan tapi tidak blocking deployment
         # Deployment akan tetap lanjut meski test fail
         continue-on-error: true
