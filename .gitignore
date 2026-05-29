@@ -63,3 +63,6 @@ health-check-probe.tmp
 # Dev scratch/test scripts (root-level)
 test_*.php
 scratch_*.php
+
+# Server configurations
+public/.user.ini
