@@ -232,4 +232,112 @@ class SidebarBlock extends Model
             ]));
         }
     }
+
+    /**
+     * Get parsed content with correctly resolved relative links.
+     */
+    public function getParsedContentAttribute(): string
+    {
+        return $this->parseHtmlLinks($this->content);
+    }
+
+    /**
+     * Get parsed sidebar teaser content with correctly resolved relative links.
+     */
+    public function getParsedSidebarContentAttribute(): string
+    {
+        return $this->parseHtmlLinks($this->sidebar_content);
+    }
+
+    /**
+     * Scans HTML content for relative links and converts them into proper absolute/resolved URLs.
+     */
+    private function parseHtmlLinks(?string $html): string
+    {
+        if (empty($html)) {
+            return '';
+        }
+
+        $journal = $this->journal;
+        if (!$journal) {
+            return $html;
+        }
+
+        return preg_replace_callback('/<a\s+([^>]*?)href=["\']([^"\']*)["\']([^>]*?)>/i', function ($matches) use ($journal) {
+            $attrsBefore = $matches[1];
+            $href = trim($matches[2]);
+            $attrsAfter = $matches[3];
+
+            // Ignore empty, anchor hashes, full protocols, mailto, tel, javascript, or protocol-relative
+            if (empty($href) || 
+                str_starts_with($href, '#') || 
+                str_starts_with($href, 'http://') || 
+                str_starts_with($href, 'https://') || 
+                str_starts_with($href, 'mailto:') || 
+                str_starts_with($href, 'tel:') || 
+                str_starts_with($href, 'javascript:') ||
+                str_starts_with($href, '//')) {
+                return $matches[0];
+            }
+
+            // Clean leading slashes/spaces for matching
+            $cleanPath = ltrim($href, '/');
+
+            // 1. Resolve Custom Pages (Sidebar custom page or Navigation custom page)
+            $customPageSlugs = \Cache::remember("journal_{$journal->id}_custom_pages", 60, function () use ($journal) {
+                $sidebarPages = \App\Models\SidebarBlock::where('journal_id', $journal->id)
+                    ->where('type', 'page')
+                    ->whereNotNull('slug')
+                    ->pluck('slug')
+                    ->toArray();
+
+                $menuPages = \App\Models\NavigationMenuItem::where('journal_id', $journal->id)
+                    ->where('type', 'page')
+                    ->whereNotNull('path')
+                    ->pluck('path')
+                    ->toArray();
+
+                return array_unique(array_merge($sidebarPages, $menuPages));
+            });
+
+            $pageSlug = null;
+            if (in_array($cleanPath, $customPageSlugs)) {
+                $pageSlug = $cleanPath;
+            } elseif (str_starts_with($cleanPath, 'page/')) {
+                $possibleSlug = substr($cleanPath, 5);
+                if (in_array($possibleSlug, $customPageSlugs)) {
+                    $pageSlug = $possibleSlug;
+                }
+            }
+
+            if ($pageSlug) {
+                $newHref = route('journal.custom-page', ['journal' => $journal->slug, 'path' => $pageSlug]);
+                return "<a {$attrsBefore}href=\"{$newHref}\"{$attrsAfter}>";
+            }
+
+            // 2. Resolve Built-in Routes
+            $builtInRoutes = [
+                'home' => 'journal.public.home',
+                'about' => 'journal.public.about',
+                'contact' => 'journal.public.contact',
+                'editorial-team' => 'journal.public.editorial-team',
+                'author-guidelines' => 'journal.public.author-guidelines',
+                'archives' => 'journal.public.archives',
+                'current' => 'journal.public.current',
+                'announcement' => 'journal.announcement.index',
+                'information/readers' => 'journal.info.readers',
+                'information/authors' => 'journal.info.authors',
+                'information/librarians' => 'journal.info.librarians',
+            ];
+
+            if (isset($builtInRoutes[$cleanPath])) {
+                $newHref = route($builtInRoutes[$cleanPath], ['journal' => $journal->slug]);
+                return "<a {$attrsBefore}href=\"{$newHref}\"{$attrsAfter}>";
+            }
+
+            // 3. Fallback: Prepend the absolute journal base URL
+            $newHref = url('/' . $journal->slug . '/' . $cleanPath);
+            return "<a {$attrsBefore}href=\"{$newHref}\"{$attrsAfter}>";
+        }, $html);
+    }
 }

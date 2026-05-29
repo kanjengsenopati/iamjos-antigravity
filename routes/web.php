@@ -288,6 +288,11 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 Route::get('/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])->name('journal.register');
                 Route::post('/register', [\App\Http\Controllers\JournalRegisterController::class, 'register'])->name('journal.register.store');
             });
+
+            // Dynamic fallback for custom pages / custom URLs (excludes built-in OJS route segments)
+            Route::get('/{path}', [\App\Http\Controllers\PublicController::class, 'customPage'])
+                ->name('journal.custom-page-direct')
+                ->where('path', '^(?!login|register|logout|dashboard|profile|enroll|oai|lockss|clockss|current|archives|about|announcement|information|author-guidelines|editorial-team|contact|search|issue|page|article|settings|users|submissions|files|workflow|editorial|issues|reviewer|editor|announcements)[a-zA-Z0-9_-]+$');
         });
 
         // 8. JOURNAL DASHBOARD & AUTH

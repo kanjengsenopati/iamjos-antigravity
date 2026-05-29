@@ -32,7 +32,7 @@
 
                 {{-- Render Sidebar Content (Teaser) --}}
                 <div class="p-4 prose prose-sm max-w-none text-slate-600 group-hover:text-slate-800 transition-colors">
-                    {!! $block->sidebar_content !!}
+                    {!! $block->parsed_sidebar_content !!}
                 </div>
             </a>
         @elseif ($type === 'block')
@@ -45,7 +45,7 @@
 
                 {{-- Render Content RAW --}}
                 <div class="prose prose-sm max-w-none">
-                    {!! $block->content !!}
+                    {!! $block->parsed_content !!}
                 </div>
             </div>
         @elseif ($type === 'system')

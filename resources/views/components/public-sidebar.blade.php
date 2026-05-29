@@ -30,7 +30,7 @@ $primaryColor = $settings['primary_color'] ?? '#4F46E5';
             @else
             {{-- Render Custom HTML Content --}}
             <div class="prose prose-sm max-w-none">
-                {!! $block->content !!}
+                {!! $block->parsed_content !!}
             </div>
             @endif
         </div>
