@@ -287,7 +287,8 @@
             branding: false,
             plugins: 'lists link image table code help wordcount',
             toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code',
-            content_css: '//www.tiny.cloud/css/codepen.min.css'
+            body_class: 'prose prose-slate max-w-none text-slate-700 leading-relaxed text-justify p-4',
+            content_css: '{{ Vite::asset("resources/css/app.css") }}'
         });
         @endforeach
     </script>

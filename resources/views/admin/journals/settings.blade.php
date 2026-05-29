@@ -845,7 +845,8 @@
                     toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
                     branding: false,
                     license_key: 'gpl',
-                    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.6; }',
+                    body_class: 'prose prose-slate max-w-none text-slate-700 leading-relaxed text-justify p-4',
+                    content_css: '{{ Vite::asset("resources/css/app.css") }}',
                     images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
                         const xhr = new XMLHttpRequest();
                         xhr.withCredentials = false;

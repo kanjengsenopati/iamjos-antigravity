@@ -448,7 +448,9 @@
             "undo redo | cut copy paste | bold italic | link image | alignleft aligncenter alignright alignjustify",
             "bullist numlist | outdent indent | blockquote subscript superscript | advlist | autolink | lists charmap | print preview |  code"
         ],
-        plugins: "advlist autolink link image lists charmap print preview code"
+        plugins: "advlist autolink link image lists charmap print preview code",
+        body_class: 'prose prose-slate max-w-none text-slate-700 leading-relaxed text-justify p-4',
+        content_css: '{{ Vite::asset("resources/css/app.css") }}',
     });
 
     function translateDescriptionEnglish() {

@@ -259,6 +259,7 @@ jobs:
 
             # ─── 1. Pull kode terbaru ───────────────────────────────────
             echo "📥 Mengambil kode terbaru dari branch ${{ env.BRANCH_NAME }}..."
+            git checkout -- package-lock.json composer.lock 2>/dev/null || true
             git pull origin ${{ env.BRANCH_NAME }}
 
             # ─── 1.5 Pastikan direktori storage ada dan writable ───────

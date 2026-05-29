@@ -456,7 +456,8 @@
                         license_key: 'gpl',
                         plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
                         toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | image link code',
-                        content_style: 'body { font-family:Inter,sans-serif; font-size:14px }',
+                        body_class: 'prose prose-slate max-w-none text-slate-700 leading-relaxed text-justify p-4',
+                        content_css: '{{ Vite::asset("resources/css/app.css") }}',
                         setup: function(editor) {
                             editor.on('init', function() {
                                 editor.setContent(initialContent);

@@ -152,7 +152,8 @@
             'alignright alignjustify | bullist numlist outdent indent | ' +
             'link image media table | code fullscreen | removeformat help',
         menubar: 'file edit view insert format tools table help',
-        content_style: 'body { font-family: Inter, sans-serif; font-size: 14px; }',
+        body_class: 'prose prose-slate max-w-none text-slate-700 leading-relaxed text-justify p-4',
+        content_css: '{{ Vite::asset("resources/css/app.css") }}',
         
         // Allow all HTML elements and attributes (for Tailwind CSS)
         valid_elements: '*[*]',
