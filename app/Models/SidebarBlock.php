@@ -250,7 +250,7 @@ class SidebarBlock extends Model
     }
 
     /**
-     * Scans HTML content for relative links and converts them into proper absolute/resolved URLs.
+     * Scans HTML content for relative or internal links and converts them into proper absolute/resolved URLs.
      */
     private function parseHtmlLinks(?string $html): string
     {
@@ -268,22 +268,48 @@ class SidebarBlock extends Model
             $href = trim($matches[2]);
             $attrsAfter = $matches[3];
 
-            // Ignore empty, anchor hashes, full protocols, mailto, tel, javascript, or protocol-relative
+            // 1. Ignore empty, anchor hashes, mailto, tel, javascript
             if (empty($href) || 
                 str_starts_with($href, '#') || 
-                str_starts_with($href, 'http://') || 
-                str_starts_with($href, 'https://') || 
                 str_starts_with($href, 'mailto:') || 
                 str_starts_with($href, 'tel:') || 
-                str_starts_with($href, 'javascript:') ||
-                str_starts_with($href, '//')) {
+                str_starts_with($href, 'javascript:')) {
                 return $matches[0];
             }
 
-            // Clean leading slashes/spaces for matching
-            $cleanPath = ltrim($href, '/');
+            // 2. Parse URL to see if it is internal or relative
+            $parsed = parse_url($href);
+            $host = $parsed['host'] ?? '';
+            $path = $parsed['path'] ?? '';
+            $query = $parsed['query'] ?? '';
+            $fragment = $parsed['fragment'] ?? '';
 
-            // 1. Resolve Custom Pages (Sidebar custom page or Navigation custom page)
+            $requestHost = request()->getHost();
+            $appHost = parse_url(config('app.url'), PHP_URL_HOST) ?? '';
+
+            $isInternal = empty($host) || 
+                          (strcasecmp($host, $requestHost) === 0) || 
+                          (strcasecmp($host, $appHost) === 0);
+
+            if (!$isInternal) {
+                // External link, leave untouched
+                return $matches[0];
+            }
+
+            // 3. Clean and isolate the internal path segment
+            $cleanPath = ltrim($path, '/');
+
+            // Strip journal slug if present at the start of the path
+            if (str_starts_with($cleanPath, $journal->slug . '/')) {
+                $cleanPath = substr($cleanPath, strlen($journal->slug . '/'));
+            } elseif ($cleanPath === $journal->slug) {
+                $cleanPath = '';
+            }
+
+            // 4. Resolve the clean path
+            $newHref = null;
+
+            // Check if cleanPath points to a custom page slug of this journal
             $customPageSlugs = \Cache::remember("journal_{$journal->id}_custom_pages", 60, function () use ($journal) {
                 $sidebarPages = \App\Models\SidebarBlock::where('journal_id', $journal->id)
                     ->where('type', 'page')
@@ -312,32 +338,47 @@ class SidebarBlock extends Model
 
             if ($pageSlug) {
                 $newHref = route('journal.custom-page', ['journal' => $journal->slug, 'path' => $pageSlug]);
-                return "<a {$attrsBefore}href=\"{$newHref}\"{$attrsAfter}>";
+            } else {
+                // Check if it is a built-in route (with hyphen and underscore support)
+                $builtInRoutes = [
+                    'home' => 'journal.public.home',
+                    
+                    'about' => 'journal.public.about',
+                    'about-journal' => 'journal.public.about',
+                    'about_journal' => 'journal.public.about',
+                    
+                    'contact' => 'journal.public.contact',
+                    
+                    'editorial-team' => 'journal.public.editorial-team',
+                    'editorial_team' => 'journal.public.editorial-team',
+                    
+                    'author-guidelines' => 'journal.public.author-guidelines',
+                    'author_guidelines' => 'journal.public.author-guidelines',
+                    
+                    'archives' => 'journal.public.archives',
+                    'current' => 'journal.public.current',
+                    'announcement' => 'journal.announcement.index',
+                    'information/readers' => 'journal.info.readers',
+                    'information/authors' => 'journal.info.authors',
+                    'information/librarians' => 'journal.info.librarians',
+                ];
+
+                if (isset($builtInRoutes[$cleanPath])) {
+                    $newHref = route($builtInRoutes[$cleanPath], ['journal' => $journal->slug]);
+                }
             }
 
-            // 2. Resolve Built-in Routes
-            $builtInRoutes = [
-                'home' => 'journal.public.home',
-                'about' => 'journal.public.about',
-                'contact' => 'journal.public.contact',
-                'editorial-team' => 'journal.public.editorial-team',
-                'author-guidelines' => 'journal.public.author-guidelines',
-                'archives' => 'journal.public.archives',
-                'current' => 'journal.public.current',
-                'announcement' => 'journal.announcement.index',
-                'information/readers' => 'journal.info.readers',
-                'information/authors' => 'journal.info.authors',
-                'information/librarians' => 'journal.info.librarians',
-            ];
-
-            if (isset($builtInRoutes[$cleanPath])) {
-                $newHref = route($builtInRoutes[$cleanPath], ['journal' => $journal->slug]);
-                return "<a {$attrsBefore}href=\"{$newHref}\"{$attrsAfter}>";
+            // Fallback: If not resolved, prepend the journal base URL
+            if (!$newHref) {
+                $newHref = url('/' . $journal->slug . '/' . $cleanPath);
             }
 
-            // 3. Fallback: Prepend the absolute journal base URL
-            $newHref = url('/' . $journal->slug . '/' . $cleanPath);
-            return "<a {$attrsBefore}href=\"{$newHref}\"{$attrsAfter}>";
+            // Append back any query strings or fragments
+            $queryString = $query ? '?' . $query : '';
+            $fragmentString = $fragment ? '#' . $fragment : '';
+            $finalHref = $newHref . $queryString . $fragmentString;
+
+            return "<a {$attrsBefore}href=\"{$finalHref}\"{$attrsAfter}>";
         }, $html);
     }
 }
