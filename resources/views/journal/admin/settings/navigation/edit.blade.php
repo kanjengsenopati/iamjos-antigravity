@@ -94,7 +94,7 @@
                     <label class="block text-sm font-medium text-slate-700 mb-1">Page Path *</label>
                     <div class="flex items-center">
                         <span class="text-sm text-slate-500 mr-2">{{ url('/') }}/{{ $journal->slug }}/</span>
-                        <input type="text" name="path" required value="{{ old('path', $item->path) }}"
+                        <input type="text" name="path" :required="itemType === 'page'" value="{{ old('path', $item->path) }}"
                             class="flex-1 rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
                             placeholder="about-us">
                     </div>
@@ -109,7 +109,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Content *</label>
-                    <textarea id="page_content" name="content" required
+                    <textarea id="page_content" name="content" :required="itemType === 'page'"
                         class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
                         rows="15" placeholder="Enter your page content here...">{{ old('content', $item->content) }}</textarea>
                     @error('content')

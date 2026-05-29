@@ -34,48 +34,77 @@ function navigationManager(initialData) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
 
-            // Add visual feedback to drop zone
             if (zoneType === 'assigned') {
-                event.currentTarget.classList.add('ring-2', 'ring-indigo-400', 'ring-opacity-50');
+                // Clean all previous indicators first
+                this.clearDropIndicators(event.currentTarget);
 
-                // Check if hovering over a specific menu item
                 const menuItem = event.target.closest('.menu-item');
                 if (menuItem) {
                     const rect = menuItem.getBoundingClientRect();
                     const y = event.clientY - rect.top;
-                    const threshold = rect.height * 0.7;
+                    const height = rect.height;
 
-                    if (y > threshold) {
-                        // Show child indicator
-                        menuItem.classList.add('bg-indigo-50', 'border-indigo-300');
-                        menuItem.classList.remove('bg-white');
+                    // 3-zone detection: top 25% / middle 50% / bottom 25%
+                    if (y < height * 0.25) {
+                        // TOP ZONE — insert before (sibling)
+                        menuItem.dataset.dropZone = 'before';
+                        menuItem.style.boxShadow = '0 -3px 0 0 #3B82F6';
+                        menuItem.style.borderRadius = '8px';
+                    } else if (y > height * 0.75) {
+                        // BOTTOM ZONE — insert after (sibling)
+                        menuItem.dataset.dropZone = 'after';
+                        menuItem.style.boxShadow = '0 3px 0 0 #3B82F6';
+                        menuItem.style.borderRadius = '8px';
                     } else {
-                        // Show sibling indicator
-                        menuItem.classList.add('border-t-2', 'border-t-indigo-400');
+                        // MIDDLE ZONE — make submenu (child)
+                        menuItem.dataset.dropZone = 'child';
+                        menuItem.classList.add('bg-indigo-50', 'border-indigo-400');
+                        menuItem.classList.remove('bg-white');
+                        // Add submenu indicator text
+                        let indicator = menuItem.querySelector('.drop-submenu-hint');
+                        if (!indicator) {
+                            indicator = document.createElement('div');
+                            indicator.className = 'drop-submenu-hint text-[10px] font-bold text-indigo-600 mt-1 text-center';
+                            indicator.textContent = '↳ Drop sebagai submenu';
+                            menuItem.appendChild(indicator);
+                        }
                     }
+                } else {
+                    // Hovering over the empty area — show zone ring
+                    event.currentTarget.classList.add('ring-2', 'ring-indigo-400', 'ring-opacity-50');
                 }
             }
         },
 
-        handleDragLeave(event, zoneType) {
-            // Remove visual feedback from drop zone
-            if (zoneType === 'assigned') {
-                event.currentTarget.classList.remove('ring-2', 'ring-indigo-400', 'ring-opacity-50');
+        clearDropIndicators(container) {
+            const allItems = container.querySelectorAll('.menu-item');
+            allItems.forEach(item => {
+                item.style.boxShadow = '';
+                item.style.borderRadius = '';
+                item.classList.remove('bg-indigo-50', 'border-indigo-400');
+                item.classList.add('bg-white');
+                delete item.dataset.dropZone;
+                const hint = item.querySelector('.drop-submenu-hint');
+                if (hint) hint.remove();
+            });
+            container.classList.remove('ring-2', 'ring-indigo-400', 'ring-opacity-50');
+        },
 
-                // Remove item-specific feedback
-                const menuItems = event.currentTarget.querySelectorAll('.menu-item');
-                menuItems.forEach(item => {
-                    item.classList.remove('bg-indigo-50', 'border-indigo-300', 'border-t-2', 'border-t-indigo-400');
-                    item.classList.add('bg-white');
-                });
+        handleDragLeave(event, zoneType) {
+            if (zoneType === 'assigned') {
+                // Only clear if we're leaving the container entirely
+                const relatedTarget = event.relatedTarget;
+                if (!relatedTarget || !event.currentTarget.contains(relatedTarget)) {
+                    this.clearDropIndicators(event.currentTarget);
+                }
             }
         },
 
         handleDrop(event, zoneType) {
             event.preventDefault();
 
-            // Remove visual feedback
-            event.currentTarget.classList.remove('ring-2', 'ring-indigo-400', 'ring-opacity-50');
+            // Clean indicators
+            this.clearDropIndicators(event.currentTarget);
 
             try {
                 const data = JSON.parse(event.dataTransfer.getData('text/plain'));
@@ -83,104 +112,71 @@ function navigationManager(initialData) {
 
                 if (!draggedElement) return;
 
-                // Check if dropping onto another menu item (for nesting)
                 const dropTarget = event.target.closest('.menu-item');
-                let parentId = null;
 
+                // Determine drop zone
+                let dropZone = 'after'; // default: append to end
                 if (dropTarget && dropTarget !== draggedElement && zoneType === 'assigned') {
-                    // Dropping onto another item - make it a child
-                    parentId = dropTarget.dataset.itemId;
+                    const rect = dropTarget.getBoundingClientRect();
+                    const y = event.clientY - rect.top;
+                    const height = rect.height;
 
-                    // Add the item as a child of the drop target
-                    this.addAsChild(draggedElement, dropTarget, data.itemId);
-                    return;
+                    if (y < height * 0.25) {
+                        dropZone = 'before';
+                    } else if (y > height * 0.75) {
+                        dropZone = 'after';
+                    } else {
+                        dropZone = 'child';
+                    }
                 }
 
-                // Handle different drop scenarios
                 if (zoneType === 'assigned' && data.itemType === 'available') {
-                    // Dropping from available to assigned - assign the item
+                    // Dropping from available → assigned
                     const menuId = this.selectedMenuId;
                     const routeName = draggedElement.dataset.routeName || '';
+                    const parentId = dropZone === 'child' && dropTarget ? dropTarget.dataset.itemId : null;
                     this.assignItem(menuId, data.itemId, routeName, parentId);
                 } else if (zoneType === 'assigned' && data.itemType === 'assigned') {
-                    // Reordering within assigned items
-                    this.reorderItems(event, data.itemId);
+                    // Reordering within assigned
+                    if (dropTarget && dropTarget !== draggedElement) {
+                        if (dropZone === 'child') {
+                            this.addAsChild(draggedElement, dropTarget, data.itemId);
+                        } else {
+                            this.reorderAsSibling(draggedElement, dropTarget, dropZone, event.currentTarget);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error handling drop:', error);
             }
         },
 
-        reorderItems(event, draggedItemId) {
-            const draggedElement = document.querySelector(`[data-item-id="${draggedItemId}"]`);
-            const dropTarget = event.target.closest('.menu-item') || event.currentTarget;
-
-            // Determine if dropping as child or sibling
-            let newParentId = null;
-            let targetContainer = event.currentTarget; // Default to root container
-
-            if (dropTarget.classList.contains('menu-item') && dropTarget !== draggedElement) {
-                // Check if dropping near the bottom of the item (to make it a child)
-                const rect = dropTarget.getBoundingClientRect();
-                const y = event.clientY - rect.top;
-                const threshold = rect.height * 0.7; // Bottom 30% makes it a child
-
-                if (y > threshold) {
-                    // Make it a child
-                    newParentId = dropTarget.dataset.itemId;
-                    targetContainer = dropTarget.querySelector('ul') || this.createChildrenContainer(dropTarget);
-                } else {
-                    // Make it a sibling at the same level
-                    targetContainer = dropTarget.parentElement;
-                    newParentId = dropTarget.dataset.parentId || null;
-                }
-            }
-
+        reorderAsSibling(draggedElement, dropTarget, position, rootContainer) {
             // Remove from current location
             draggedElement.remove();
 
-            // Update parent ID in dataset
-            draggedElement.dataset.parentId = newParentId || '';
+            // Reset submenu styling — item becomes a root-level sibling
+            draggedElement.classList.remove('ml-6', 'border-l-4', 'border-l-indigo-200');
+            draggedElement.dataset.parentId = dropTarget.dataset.parentId || '';
+            const submenuHint = draggedElement.querySelector('.text-indigo-600');
+            if (submenuHint) submenuHint.remove();
 
-            // Add visual indicator for submenu
-            const submenuIndicator = draggedElement.querySelector('.text-indigo-600');
-            if (newParentId) {
-                if (!submenuIndicator) {
-                    const typeSpan = draggedElement.querySelector('.text-slate-400');
-                    if (typeSpan) {
-                        typeSpan.innerHTML += ' <span class="text-indigo-600 font-medium">(submenu)</span>';
-                    }
-                }
-                draggedElement.classList.add('ml-6', 'border-l-4', 'border-l-indigo-200');
+            // Insert before or after the drop target
+            const parent = dropTarget.parentElement;
+            if (position === 'before') {
+                parent.insertBefore(draggedElement, dropTarget);
             } else {
-                if (submenuIndicator) submenuIndicator.remove();
-                draggedElement.classList.remove('ml-6', 'border-l-4', 'border-l-indigo-200');
-            }
-
-            // Insert at the correct position
-            const siblings = Array.from(targetContainer.children).filter(el => el.classList.contains('menu-item'));
-            let insertBeforeElement = null;
-            const rect = targetContainer.getBoundingClientRect();
-            const y = event.clientY - rect.top;
-
-            for (let sibling of siblings) {
-                const siblingRect = sibling.getBoundingClientRect();
-                const siblingY = siblingRect.top - rect.top + siblingRect.height / 2;
-
-                if (y < siblingY) {
-                    insertBeforeElement = sibling;
-                    break;
+                // Insert after
+                const next = dropTarget.nextElementSibling;
+                if (next) {
+                    parent.insertBefore(draggedElement, next);
+                } else {
+                    parent.appendChild(draggedElement);
                 }
-            }
-
-            if (insertBeforeElement) {
-                targetContainer.insertBefore(draggedElement, insertBeforeElement);
-            } else {
-                targetContainer.appendChild(draggedElement);
             }
 
             // Update order on server
-            this.updateOrder(event.currentTarget);
+            this.updateOrder(rootContainer);
         },
 
         createChildrenContainer(parentElement) {
@@ -995,14 +991,18 @@ function navigationManager(initialData) {
             </div>
 
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                <div class="text-xs text-slate-500 flex items-center gap-4">
+                <div class="text-xs text-slate-500 flex items-center gap-5">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-lightbulb text-amber-500"></i>
-                        <span>Drag items to reorder or drop on others to create submenus</span>
+                        <span class="inline-block w-6 h-[3px] bg-blue-500 rounded"></span>
+                        <span>Garis biru = pindah posisi</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-level-up-alt fa-rotate-90 text-indigo-500"></i>
-                        <span>Submenu items</span>
+                        <span class="inline-block w-4 h-4 bg-indigo-100 border border-indigo-400 rounded"></span>
+                        <span>Highlight = jadikan submenu</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                        <span>Drag ke tepi atas/bawah item untuk reorder</span>
                     </div>
                 </div>
                 <button type="button" @click="showAssignModal = false"
