@@ -1198,7 +1198,7 @@ class PublicController extends Controller
     /**
      * Display a custom page created via Navigation Menu Items or Sidebar Blocks (Custom Pages).
      */
-    public function customPage(string $journalSlug, string $path): View
+    public function customPage(string $journalSlug, string $path): View|\Illuminate\Http\RedirectResponse
     {
         $journal = $this->resolveJournal($journalSlug);
 
