@@ -301,8 +301,7 @@ function navigationManager(initialData) {
             .then(data => {
                 if (data.success) {
                     this.showToast('Item assigned successfully', 'success');
-                    // Refresh the modal content
-                    this.refreshModal();
+                    this.refreshModalContent();
                 } else {
                     this.showToast(data.message || 'Failed to assign item', 'error');
                 }
@@ -316,8 +315,62 @@ function navigationManager(initialData) {
             });
         },
 
+        bulkAssignItems(menuId) {
+            if (this.selectedItems.length === 0) {
+                this.showToast('Pilih minimal satu item terlebih dahulu', 'error');
+                return;
+            }
+
+            this.isLoading = true;
+
+            const items = this.selectedItems.map(sel => ({
+                menu_item_id: sel.id,
+                route_name: sel.routeName || null
+            }));
+
+            fetch('{{ route("journal.settings.navigation.bulk-assign", $journal->slug) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ menu_id: menuId, items: items })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.showToast(data.message, 'success');
+                    this.selectedItems = [];
+                    this.refreshModalContent();
+                } else {
+                    this.showToast(data.message || 'Gagal menambahkan items', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error bulk assigning items:', error);
+                this.showToast('Gagal menambahkan items', 'error');
+            })
+            .finally(() => {
+                this.isLoading = false;
+            });
+        },
+
+        toggleSelectItem(itemId, routeName) {
+            const idx = this.selectedItems.findIndex(s => s.id === itemId);
+            if (idx > -1) {
+                this.selectedItems.splice(idx, 1);
+            } else {
+                this.selectedItems.push({ id: itemId, routeName: routeName || '' });
+            }
+        },
+
+        isItemSelected(itemId) {
+            return this.selectedItems.some(s => s.id === itemId);
+        },
+
         unassignItem(assignmentId) {
-            if (!confirm('Are you sure you want to remove this item from the menu?')) {
+            if (!confirm('Apakah Anda yakin ingin menghapus item ini dari menu?')) {
                 return;
             }
 
@@ -333,25 +386,50 @@ function navigationManager(initialData) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    this.showToast('Item removed successfully', 'success');
-                    this.refreshModal();
+                    this.showToast('Item berhasil dihapus dari menu', 'success');
+                    this.refreshModalContent();
                 } else {
-                    this.showToast(data.message || 'Failed to remove item', 'error');
+                    this.showToast(data.message || 'Gagal menghapus item', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error removing item:', error);
-                this.showToast('Failed to remove item', 'error');
+                this.showToast('Gagal menghapus item', 'error');
             })
             .finally(() => {
                 this.isLoading = false;
             });
         },
 
-        refreshModal() {
-            // Simple page refresh for now - in a more advanced implementation,
-            // you could fetch just the modal content via AJAX
-            window.location.reload();
+        refreshModalContent() {
+            // Fetch the current page and extract updated modal content
+            fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Find the modal content in the fetched page
+                const currentMenuId = this.selectedMenuId;
+                const newModalBody = doc.querySelector('[x-show="showAssignModal"] .p-6.overflow-y-auto');
+
+                if (newModalBody) {
+                    const modalBody = document.querySelector('[x-show="showAssignModal"] .p-6.overflow-y-auto');
+                    if (modalBody) {
+                        modalBody.innerHTML = newModalBody.innerHTML;
+                    }
+                }
+
+                // Reset selection state
+                this.selectedItems = [];
+            })
+            .catch(error => {
+                console.error('Error refreshing modal:', error);
+                // Fallback: reload page
+                window.location.reload();
+            });
         },
 
         submitMenu(form) {
@@ -503,7 +581,8 @@ function navigationManager(initialData) {
     itemType: 'custom',
     draggedItem: null,
     draggedOverItem: null,
-    isLoading: false
+    isLoading: false,
+    selectedItems: [],
 })">
 
     {{-- Page Header --}}
@@ -812,7 +891,7 @@ function navigationManager(initialData) {
                         </ul>
                     </div>
 
-                    {{-- Right Column: Available Items (Drag Source) --}}
+                    {{-- Right Column: Available Items (Multi-Select) --}}
                     <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 bg-gradient-to-br from-slate-50 to-gray-50 min-h-[400px]">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-bold text-sm text-slate-700 flex items-center gap-2">
@@ -831,13 +910,23 @@ function navigationManager(initialData) {
                                     @endphp items
                                 </span>
                             </h4>
-                            <div class="text-xs text-slate-500 flex items-center gap-1">
-                                <i class="fa-solid fa-mouse-pointer"></i>
-                                Click to add
+                            <div class="flex items-center gap-2">
+                                <template x-if="selectedItems.length > 0">
+                                    <button @click="bulkAssignItems('{{ $menu->id }}')"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
+                                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                                        <span>Add Selected</span>
+                                        <span class="bg-white/20 px-1.5 py-0.5 rounded text-[10px]" x-text="selectedItems.length"></span>
+                                    </button>
+                                </template>
+                                <div class="text-xs text-slate-500 flex items-center gap-1">
+                                    <i class="fa-solid fa-check-square"></i>
+                                    Multi-select
+                                </div>
                             </div>
                         </div>
 
-                        <ul class="space-y-3 min-h-[300px] overflow-y-auto max-h-[350px]">
+                        <ul class="space-y-2 min-h-[300px] overflow-y-auto max-h-[350px] pr-1">
                             @php
                                 $unassignedItems = $items->filter(function($item) use ($assignedItemIds, $assignedRouteNames) {
                                     $itemId = (string) $item->id;
@@ -853,8 +942,12 @@ function navigationManager(initialData) {
                                 $isSystemItem = !empty($item->is_system);
                                 $isVirtualItem = str_starts_with((string)$item->id, 'system_');
                             @endphp
-                            <li class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 group"
-                                :class="{ 'ring-2 ring-indigo-400 ring-opacity-50': draggedOverItem === '{{ $item->id }}' }"
+                            <li class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                :class="{
+                                    'ring-2 ring-indigo-400 bg-indigo-50 border-indigo-300': isItemSelected('{{ $item->id }}'),
+                                    'hover:bg-slate-50': !isItemSelected('{{ $item->id }}')
+                                }"
+                                @click="toggleSelectItem('{{ $item->id }}', '{{ $isVirtualItem ? $item->route_name : '' }}')"
                                 draggable="true"
                                 data-item-id="{{ $item->id }}"
                                 data-item-type="available"
@@ -864,21 +957,26 @@ function navigationManager(initialData) {
 
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3 flex-1">
-                                        <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-slate-400 group-hover:text-slate-600 transition-colors">
-                                            <i class="fa-solid fa-grip-vertical"></i>
+                                        {{-- Checkbox --}}
+                                        <div class="flex-shrink-0">
+                                            <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-150"
+                                                :class="isItemSelected('{{ $item->id }}') ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 bg-white group-hover:border-indigo-400'">
+                                                <i class="fa-solid fa-check text-white text-[10px]" x-show="isItemSelected('{{ $item->id }}')"></i>
+                                            </div>
                                         </div>
                                         @if($item->icon)
                                             <i class="{{ $item->icon }} {{ $isSystemItem ? 'text-blue-500' : 'text-slate-400' }} text-sm"></i>
                                         @endif
-                                        <div class="flex-1">
-                                            <span class="text-sm font-medium text-slate-700 block">{{ $item->title }}</span>
+                                        <div class="flex-1 min-w-0">
+                                            <span class="text-sm font-medium text-slate-700 block truncate">{{ $item->title }}</span>
                                             <span class="text-xs {{ $isSystemItem ? 'text-blue-500' : 'text-slate-400' }}">
                                                 {{ $isSystemItem ? 'System' : ucfirst($item->type) }}
                                             </span>
                                         </div>
                                     </div>
-                                    <button @click="assignItem('{{ $menu->id }}', '{{ $item->id }}', '{{ $isVirtualItem ? $item->route_name : '' }}')"
-                                        class="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                                    <button @click.stop="assignItem('{{ $menu->id }}', '{{ $item->id }}', '{{ $isVirtualItem ? $item->route_name : '' }}')"
+                                        class="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                                        title="Add single item">
                                         <i class="fa-solid fa-plus text-sm"></i>
                                     </button>
                                 </div>
@@ -886,8 +984,8 @@ function navigationManager(initialData) {
                             @empty
                             <li class="text-center py-12 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-white/50">
                                 <i class="fa-solid fa-check-double text-3xl mb-3 text-green-300"></i>
-                                <p class="font-medium text-green-600">All items assigned!</p>
-                                <p class="text-xs text-slate-400 mt-1">Great job organizing your menu</p>
+                                <p class="font-medium text-green-600">Semua item sudah di-assign!</p>
+                                <p class="text-xs text-slate-400 mt-1">Menu Anda sudah lengkap</p>
                             </li>
                             @endforelse
                         </ul>

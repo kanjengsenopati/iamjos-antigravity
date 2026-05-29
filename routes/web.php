@@ -536,6 +536,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::put('/items/{item}', 'updateItem')->name('items.update');
                         Route::delete('/items/{item}', 'destroyItem')->name('items.destroy');
                         Route::post('/assign', 'assignItem')->name('assign');
+                        Route::post('/bulk-assign', 'bulkAssignItems')->name('bulk-assign');
                         Route::delete('/unassign/{assignment}', 'unassignItem')->name('unassign');
                         Route::post('/move-up/{assignment}', 'moveUp')->name('move-up');
                         Route::post('/move-down/{assignment}', 'moveDown')->name('move-down');

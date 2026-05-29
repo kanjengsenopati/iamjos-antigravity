@@ -422,6 +422,67 @@ class NavigationController extends Controller
     }
 
     /**
+     * Bulk assign multiple items to a menu
+     */
+    public function bulkAssignItems(Request $request)
+    {
+        $journal = current_journal();
+
+        $validated = $request->validate([
+            'menu_id' => 'required|uuid|exists:navigation_menus,id',
+            'items' => 'required|array|min:1',
+            'items.*.menu_item_id' => 'required|string',
+            'items.*.route_name' => 'nullable|string',
+        ]);
+
+        $assigned = 0;
+        $skipped = 0;
+
+        foreach ($validated['items'] as $itemData) {
+            $menuItemId = $itemData['menu_item_id'];
+
+            // Handle system items (virtual items not yet in DB)
+            if (str_starts_with($menuItemId, 'system_') && !empty($itemData['route_name'])) {
+                $systemItem = $this->createSystemItemInDb($journal, $itemData['route_name']);
+                $menuItemId = $systemItem->id;
+            }
+
+            // Check if already assigned
+            $exists = NavigationMenuItemAssignment::where('menu_id', $validated['menu_id'])
+                ->where('menu_item_id', $menuItemId)
+                ->exists();
+
+            if (!$exists) {
+                $maxOrder = NavigationMenuItemAssignment::where('menu_id', $validated['menu_id'])
+                    ->whereNull('parent_id')
+                    ->max('order') ?? 0;
+
+                NavigationMenuItemAssignment::create([
+                    'menu_id' => $validated['menu_id'],
+                    'menu_item_id' => $menuItemId,
+                    'parent_id' => null,
+                    'order' => $maxOrder + 1,
+                ]);
+
+                $assigned++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "$assigned item(s) assigned successfully" . ($skipped > 0 ? ", $skipped already assigned" : ''),
+                'assigned' => $assigned,
+                'skipped' => $skipped,
+            ]);
+        }
+
+        return back()->with('success', "$assigned item(s) assigned to menu.");
+    }
+
+    /**
      * Create a system item in database when first assigned
      */
     private function createSystemItemInDb($journal, string $routeName): NavigationMenuItem
