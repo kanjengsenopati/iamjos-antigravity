@@ -1,11 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
 parameters:
     level: 5
+    reportUnmatchedIgnoredErrors: false
     paths:
         - app
 
     # Abaikan path yang tidak perlu dianalisis
     excludePaths:
-        - app/Http/Middleware/TrustProxies.php
+        - app/Http/Middleware/TrustProxies.php (?)
 
     # Abaikan error yang umum di Laravel karena magic methods
     ignoreErrors:
@@ -18,6 +22,4 @@ parameters:
     # Aktifkan fitur bleeding edge untuk deteksi error yang lebih baik
     # phpVersion: 80400
 
-    # Nonaktifkan beberapa check yang terlalu strict untuk codebase Laravel
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
+
