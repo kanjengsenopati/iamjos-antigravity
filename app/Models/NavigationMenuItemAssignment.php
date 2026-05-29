@@ -26,6 +26,15 @@ class NavigationMenuItemAssignment extends Model
         ];
     }
 
+    protected static function booted()
+    {
+        static::deleting(function ($assignment) {
+            $assignment->children->each(function ($child) {
+                $child->delete();
+            });
+        });
+    }
+
     // =====================================================
     // RELATIONSHIPS
     // =====================================================

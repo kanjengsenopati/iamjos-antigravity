@@ -331,7 +331,9 @@ class NavigationController extends Controller
     public function destroyItem(Request $request, string $journal, NavigationMenuItem $item)
     {
         // Delete all assignments first
-        $item->assignments()->delete();
+        $item->assignments->each(function ($assignment) {
+            $assignment->delete();
+        });
         $item->delete();
 
         // Check if request is AJAX

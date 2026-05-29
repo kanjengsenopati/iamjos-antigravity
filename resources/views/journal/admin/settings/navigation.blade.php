@@ -100,7 +100,7 @@ function navigationManager(initialData) {
                 if (zoneType === 'assigned' && data.itemType === 'available') {
                     // Dropping from available to assigned - assign the item
                     const menuId = this.selectedMenuId;
-                    const routeName = draggedElement.querySelector('input[name="route_name"]')?.value || '';
+                    const routeName = draggedElement.dataset.routeName || '';
                     this.assignItem(menuId, data.itemId, routeName, parentId);
                 } else if (zoneType === 'assigned' && data.itemType === 'assigned') {
                     // Reordering within assigned items
@@ -769,6 +769,16 @@ function navigationManager(initialData) {
             <div class="p-6 overflow-y-auto flex-1">
                 @foreach($menus as $menu)
                 <div x-show="selectedMenuId === '{{ $menu->id }}'" class="grid grid-cols-2 gap-6">
+                    @php
+                        // Muat semua assignment tanpa membatasi hanya di tingkat root agar sinkronisasi list item tersedia tepat
+                        $allAssignments = $menu->assignments()->with('item')->get();
+                        $assignedItemIds = $allAssignments->pluck('menu_item_id')->toArray();
+                        $assignedRouteNames = $allAssignments->pluck('item.route_name')->filter()->toArray();
+
+                        // Query terpisah khusus untuk merender struktur pohon menu di sisi kiri
+                        $rootAssignments = $menu->assignments()->with('item', 'children')->rootLevel()->ordered()->get();
+                    @endphp
+
                     {{-- Left Column: Assigned Items (Drag & Drop Zone) --}}
                     <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 bg-gradient-to-br from-green-50 to-emerald-50 min-h-[400px]">
                         <div class="flex items-center justify-between mb-4">
@@ -776,7 +786,7 @@ function navigationManager(initialData) {
                                 <i class="fa-solid fa-check-circle text-green-600"></i>
                                 Assigned Menu Items
                                 <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                                    @php echo $menu->assignments()->count(); @endphp items
+                                    @php echo $allAssignments->count(); @endphp items
                                 </span>
                             </h4>
                             <div class="text-xs text-slate-500 flex items-center gap-1">
@@ -790,13 +800,9 @@ function navigationManager(initialData) {
                             @dragover.prevent="handleDragOver($event, 'assigned')"
                             @dragleave.prevent="handleDragLeave($event, 'assigned')">
 
-                            @php
-                                $assignments = $menu->assignments()->with('item', 'children')->rootLevel()->ordered()->get();
-                            @endphp
+                            @include('journal.admin.settings.navigation._nested_assignments', ['assignments' => $rootAssignments, 'level' => 0])
 
-                            @include('journal.admin.settings.navigation._nested_assignments', ['assignments' => $assignments, 'level' => 0])
-
-                            @if($assignments->isEmpty())
+                            @if($rootAssignments->isEmpty())
                             <li class="text-center py-12 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-white/50">
                                 <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300"></i>
                                 <p class="font-medium text-slate-500">No items assigned</p>
@@ -814,8 +820,6 @@ function navigationManager(initialData) {
                                 Available Menu Items
                                 <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-medium">
                                     @php
-                                        $assignedItemIds = $assignments->pluck('menu_item_id')->toArray();
-                                        $assignedRouteNames = $assignments->pluck('item.route_name')->filter()->toArray();
                                         $unassignedCount = $items->filter(function($item) use ($assignedItemIds, $assignedRouteNames) {
                                             $itemId = (string) $item->id;
                                             if (!str_starts_with($itemId, 'system_')) {
@@ -854,6 +858,7 @@ function navigationManager(initialData) {
                                 draggable="true"
                                 data-item-id="{{ $item->id }}"
                                 data-item-type="available"
+                                data-route-name="{{ $isVirtualItem ? $item->route_name : '' }}"
                                 @dragstart="handleDragStart($event, '{{ $item->id }}', 'available')"
                                 @dragend="handleDragEnd($event)">
 

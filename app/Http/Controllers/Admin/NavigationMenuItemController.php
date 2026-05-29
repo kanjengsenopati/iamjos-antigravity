@@ -153,8 +153,10 @@ class NavigationMenuItemController extends Controller
 
         $itemTitle = $navigationMenuItem->title;
         
-        // Delete all assignments first (cascade will handle this, but being explicit)
-        NavigationMenuItemAssignment::where('menu_item_id', $navigationMenuItem->id)->delete();
+        // Delete all assignments first
+        $navigationMenuItem->assignments->each(function ($assignment) {
+            $assignment->delete();
+        });
         
         // Delete the menu item
         $navigationMenuItem->delete();
