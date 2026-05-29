@@ -109,7 +109,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Content *</label>
-                    <textarea id="page_content" name="content" :required="itemType === 'page'"
+                    <textarea id="page_content" name="content"
                         class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
                         rows="15" placeholder="Enter your page content here...">{{ old('content', $item->content) }}</textarea>
                     @error('content')
