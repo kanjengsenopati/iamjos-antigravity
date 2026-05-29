@@ -84,8 +84,10 @@ class NavigationController extends Controller
         // Get all DB items for this journal
         $dbItems = NavigationMenuItem::where('journal_id', $journal->id)
             ->orderBy('title')
-            ->get()
-            ->keyBy('route_name'); // Key by route_name for easy lookup
+            ->get();
+
+        // Build a lookup map: route_name => item (only for items that HAVE a route_name)
+        $dbItemsByRoute = $dbItems->filter(fn($item) => !empty($item->route_name))->keyBy('route_name');
 
         // Build the items list
         $items = collect();
@@ -114,9 +116,9 @@ class NavigationController extends Controller
         ];
 
         foreach ($systemConfigs as $routeName => $config) {
-            if ($dbItems->has($routeName)) {
+            if ($dbItemsByRoute->has($routeName)) {
                 // Use DB version but mark as system
-                $item = $dbItems->get($routeName);
+                $item = $dbItemsByRoute->get($routeName);
                 $item->is_system = true;
                 $items->push($item);
             } else {
@@ -136,9 +138,10 @@ class NavigationController extends Controller
             }
         }
 
-        // 2. Add custom items (items not in system routes)
-        foreach ($dbItems as $routeName => $item) {
-            if (!in_array($routeName, $systemRouteNames)) {
+        // 2. Add custom items (all DB items whose route_name is NOT a system route)
+        //    Use the original collection (not keyed) so no items are lost
+        foreach ($dbItems as $item) {
+            if (empty($item->route_name) || !in_array($item->route_name, $systemRouteNames)) {
                 $item->is_system = false;
                 $items->push($item);
             }
@@ -284,7 +287,8 @@ class NavigationController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Menu item created successfully.');
+        return redirect()->route('journal.settings.navigation.index', $journal->slug)
+            ->with('success', 'Menu item created successfully.');
     }
 
     /**
@@ -322,7 +326,9 @@ class NavigationController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Menu item updated successfully.');
+        $journalModel = current_journal();
+        return redirect()->route('journal.settings.navigation.index', $journalModel->slug)
+            ->with('success', 'Menu item updated successfully.');
     }
 
     /**
