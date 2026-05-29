@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@import "./custom.css";
 @plugin "@tailwindcss/typography";
+@import "./custom.css";
 
 @source "../views/**/*.blade.php";
 @source "../js/**/*.js";
