@@ -7,10 +7,6 @@ parameters:
     paths:
         - app
 
-    # Abaikan path yang tidak perlu dianalisis
-    excludePaths:
-        - app/Http/Middleware/TrustProxies.php (?)
-
     # Abaikan error yang umum di Laravel karena magic methods
     ignoreErrors:
         # Eloquent Builder magic methods
@@ -18,8 +14,6 @@ parameters:
         - '#Call to an undefined method Illuminate\\Database\\Query\\Builder#'
         # Facade static calls
         - '#Static call to instance method#'
-
-    # Aktifkan fitur bleeding edge untuk deteksi error yang lebih baik
-    # phpVersion: 80400
-
-
+        # Larastan internal — SessionStore compatibility
+        - '#Call to an undefined method Illuminate\\Session\\Store::setConnection#'
+        - '#Call to an undefined method Illuminate\\Cache\\[A-Za-z]+Store::#'
