@@ -1223,14 +1223,19 @@ class PublicController extends Controller
             ->where('type', 'page')
             ->where('slug', $path)
             ->where('is_active', true)
-            ->firstOrFail();
+            ->first();
 
-        return view('journal.public.custom-page', [
-            'journal' => $journal,
-            'page' => $blockPage, // Duck typing or separate variable
-            'content' => $blockPage->content,
-            'title' => $blockPage->show_title ? $blockPage->title : null,
-        ]);
+        if ($blockPage) {
+            return view('journal.public.custom-page', [
+                'journal' => $journal,
+                'page' => $blockPage,
+                'content' => $blockPage->content,
+                'title' => $blockPage->show_title ? $blockPage->title : null,
+            ]);
+        }
+        // Fallback: redirect to journal home with a flash message
+        return redirect()->route('journal.public.home', $journal->slug)
+            ->with('warning', 'Halaman khusus tidak ditemukan.');
     }
 }
 
