@@ -259,7 +259,8 @@ jobs:
 
             # ─── 1. Pull kode terbaru ───────────────────────────────────
             echo "📥 Mengambil kode terbaru dari branch ${{ env.BRANCH_NAME }}..."
-            git checkout -- package-lock.json composer.lock 2>/dev/null || true
+            git reset --hard
+            git clean -fd
             git pull origin ${{ env.BRANCH_NAME }}
 
             # ─── 1.5 Pastikan direktori storage ada dan writable ───────
@@ -278,12 +279,16 @@ jobs:
               mkdir -p $BACKUP_DIR
               BACKUP_FILE="$BACKUP_DIR/backup-${{ env.BRANCH_NAME }}-$(date +%Y%m%d-%H%M%S).sql.gz"
 
-              # Ambil kredensial DB dari .env
-              DB_HOST=$(grep '^DB_HOST=' .env | cut -d '=' -f2)
-              DB_PORT=$(grep '^DB_PORT=' .env | cut -d '=' -f2 || echo "5432")
-              DB_DATABASE=$(grep '^DB_DATABASE=' .env | cut -d '=' -f2)
-              DB_USERNAME=$(grep '^DB_USERNAME=' .env | cut -d '=' -f2)
-              DB_PASSWORD=$(grep '^DB_PASSWORD=' .env | cut -d '=' -f2)
+              # Ambil kredensial DB dari .env dengan aman dari CRLF (\r) dan tanda kutip
+              get_env_val() {
+                grep "^$1=" .env | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
+              }
+              DB_HOST=$(get_env_val DB_HOST)
+              DB_PORT=$(get_env_val DB_PORT)
+              [ -z "$DB_PORT" ] && DB_PORT="5432"
+              DB_DATABASE=$(get_env_val DB_DATABASE)
+              DB_USERNAME=$(get_env_val DB_USERNAME)
+              DB_PASSWORD=$(get_env_val DB_PASSWORD)
 
               PGPASSWORD="$DB_PASSWORD" pg_dump \
                 -h "$DB_HOST" \
@@ -313,7 +318,7 @@ jobs:
             # ─── 4. Build assets frontend ──────────────────────────────
             echo "🔨 Membangun assets frontend..."
             npm ci --silent
-            npm run build
+            NODE_OPTIONS="--max-old-space-size=512" npm run build
 
             # Salin manifest Vite jika diperlukan
             [ -f public/build/.vite/manifest.json ] && \
