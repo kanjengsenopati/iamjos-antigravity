@@ -259,6 +259,13 @@ jobs:
 
             # ─── 1. Pull kode terbaru ───────────────────────────────────
             echo "📥 Mengambil kode terbaru dari branch ${{ env.BRANCH_NAME }}..."
+            # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel) agar tidak menyebabkan konflik git
+            if [ -f public/.user.ini ]; then
+              echo "🔓 Melepas atribut immutable pada public/.user.ini..."
+              sudo chattr -i public/.user.ini 2>/dev/null || true
+              chmod 777 public/.user.ini 2>/dev/null || true
+              rm -f public/.user.ini 2>/dev/null || true
+            fi
             git reset --hard
             git clean -fd
             git pull origin ${{ env.BRANCH_NAME }}
