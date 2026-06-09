@@ -284,7 +284,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::get('/about/submissions', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'author-guidelines');
             Route::get('/about/login', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'login');
 
-            Route::middleware('guest')->group(function () {
+            Route::middleware(['guest', 'journal.detect'])->group(function () {
                 Route::get('/register', [\App\Http\Controllers\JournalRegisterController::class, 'showRegistrationForm'])->name('journal.register');
                 Route::post('/register', [\App\Http\Controllers\JournalRegisterController::class, 'register'])->name('journal.register.store');
             });

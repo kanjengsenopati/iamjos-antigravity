@@ -27,6 +27,7 @@ class JournalRegisterController extends Controller
      */
     public function showRegistrationForm(Journal $journal): View
     {
+        app()->instance('currentJournal', $journal);
         return view('journal.auth.register', compact('journal'));
     }
 
@@ -42,6 +43,9 @@ class JournalRegisterController extends Controller
      */
     public function register(Request $request, Journal $journal): RedirectResponse
     {
+        // Bind the current journal to the service container so that global scopes on Spatie Roles resolve correctly
+        app()->instance('currentJournal', $journal);
+
         // 1. Initial Validation
         $request->validate([
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255'],
