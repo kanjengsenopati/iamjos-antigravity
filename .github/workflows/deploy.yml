@@ -290,6 +290,12 @@ jobs:
             mkdir -p bootstrap/cache
             chmod -R 777 storage bootstrap/cache
 
+            # ─── 1.6 Pastikan file storage/installed terbuat jika hilang ───
+            if [ ! -f storage/installed ]; then
+              echo "installed_at: $(date)" > storage/installed
+              echo "✅ Recreated missing storage/installed file"
+            fi
+
             # ─── 2. Backup database SEBELUM migration ──────────────────
             # Hanya untuk production dan staging (bukan dev)
             if [ "${{ env.BRANCH_NAME }}" = "main" ] || [ "${{ env.BRANCH_NAME }}" = "staging" ]; then
