@@ -32,6 +32,7 @@ class JournalUserManagementController extends Controller
     public function index(Request $request)
     {
         $journal = current_journal();
+        $modelMorphKey = config('permission.column_names.model_morph_key', 'model_id');
 
         // 1. Query for users with roles in this journal (fully indexed inner join)
         $journalUsersQuery = User::query()
@@ -39,10 +40,10 @@ class JournalUserManagementController extends Controller
             ->join('journal_user_roles', 'journal_user_roles.user_id', '=', 'users.id')
             ->where('journal_user_roles.journal_id', $journal->id);
 
-        // 2. Query for Super Admins (fully indexed inner join)
+        // 2. Query for Super Admins (fully indexed inner join using dynamic morph key)
         $superAdminsQuery = User::query()
             ->select('users.*')
-            ->join('model_has_roles', 'model_has_roles.model_id', '=', 'users.id')
+            ->join('model_has_roles', 'model_has_roles.' . $modelMorphKey, '=', 'users.id')
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', 'Super Admin')
             ->where('model_has_roles.model_type', User::class);
@@ -66,12 +67,12 @@ class JournalUserManagementController extends Controller
         // Filter by role in this journal
         if ($request->has('role') && $request->role != '') {
             if ($request->role === 'Super Admin') {
-                // Filter to only Super Admins
-                $query->whereExists(function ($sub) {
+                // Filter to only Super Admins (using dynamic morph key)
+                $query->whereExists(function ($sub) use ($modelMorphKey) {
                     $sub->select(DB::raw(1))
                         ->from('model_has_roles')
                         ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                        ->whereColumn('model_has_roles.model_id', 'users.id')
+                        ->whereColumn('model_has_roles.' . $modelMorphKey, 'users.id')
                         ->where('roles.name', 'Super Admin')
                         ->where('model_has_roles.model_type', User::class);
                 });
