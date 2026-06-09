@@ -66,3 +66,7 @@ scratch_*.php
 
 # Server configurations
 public/.user.ini
+
+# Installation files
+/storage/installed
+/storage/install.log
