@@ -33,27 +33,33 @@ class JournalUserManagementController extends Controller
     {
         $journal = current_journal();
 
-        // Use SQL EXISTS and subqueries to filter users at the database level.
-        // This avoids plucking lists of IDs into PHP memory.
-        $query = User::query()->where(function ($q) use ($journal) {
-            $q->whereExists(function ($sub) use ($journal) {
-                $sub->select(DB::raw(1))
-                    ->from('journal_user_roles')
-                    ->whereColumn('journal_user_roles.user_id', 'users.id')
-                    ->where('journal_user_roles.journal_id', $journal->id);
-            })->orWhereHas('roles', function ($sub) {
-                $sub->where('name', 'Super Admin')
-                    ->where('guard_name', 'web');
-            });
-        });
+        // 1. Query for users with roles in this journal (fully indexed inner join)
+        $journalUsersQuery = User::query()
+            ->select('users.*')
+            ->join('journal_user_roles', 'journal_user_roles.user_id', '=', 'users.id')
+            ->where('journal_user_roles.journal_id', $journal->id);
+
+        // 2. Query for Super Admins (fully indexed inner join)
+        $superAdminsQuery = User::query()
+            ->select('users.*')
+            ->join('model_has_roles', 'model_has_roles.model_id', '=', 'users.id')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', 'Super Admin')
+            ->where('model_has_roles.model_type', User::class);
+
+        // Combine both using UNION to avoid OR-based slow subqueries.
+        $unionQuery = $journalUsersQuery->union($superAdminsQuery);
+
+        // Wrap the union in an outer query builder so we can apply filters/pagination cleanly.
+        $query = User::query()->fromSub($unionQuery, 'users');
 
         // Search filter
         if ($request->has('search') && $request->search != '') {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%");
+                $q->where('users.name', 'like', "%{$search}%")
+                    ->orWhere('users.email', 'like', "%{$search}%")
+                    ->orWhere('users.username', 'like', "%{$search}%");
             });
         }
 
@@ -61,7 +67,14 @@ class JournalUserManagementController extends Controller
         if ($request->has('role') && $request->role != '') {
             if ($request->role === 'Super Admin') {
                 // Filter to only Super Admins
-                $query->role('Super Admin');
+                $query->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('model_has_roles')
+                        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                        ->whereColumn('model_has_roles.model_id', 'users.id')
+                        ->where('roles.name', 'Super Admin')
+                        ->where('model_has_roles.model_type', User::class);
+                });
             } else {
                 $roleName = $request->role;
                 $query->whereExists(function ($sub) use ($journal, $roleName) {
