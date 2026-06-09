@@ -30,8 +30,16 @@ class ArticleStatsController extends Controller
         $journalId = $journal?->id;
 
         $start = $request->get('start', now()->subDays(30)->toDateString());
-        $end = $request->get('end', now()->toDateString());
         $granularity = $request->get('granularity', 'daily');
+
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            $dateFormatDaily = "TO_CHAR(date, 'YYYY-MM-DD')";
+        } elseif ($driver === 'sqlite') {
+            $dateFormatDaily = "strftime('%Y-%m-%d', date)";
+        } else {
+            $dateFormatDaily = "DATE_FORMAT(date, '%Y-%m-%d')";
+        }
 
         // 1. KPI DATA
         $kpiViews = ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)
@@ -95,14 +103,14 @@ class ArticleStatsController extends Controller
             ->orderByDesc('views_count')
             ->take(20)
             ->get()
-            ->map(function ($submission) use ($start, $end) {
+            ->map(function ($submission) use ($start, $end, $dateFormatDaily) {
                 // Get sparkline data (daily views)
-                $sparklineData = ArticleMetric::selectRaw(self::DATE_FORMAT_DAILY . " as day, count(*) as count")
+                $sparklineData = ArticleMetric::selectRaw($dateFormatDaily . " as day, count(*) as count")
                     ->where('submission_id', $submission->id)
                     ->where('type', ArticleMetric::TYPE_VIEW)
                     ->whereBetween('date', [$start, $end])
-                    ->groupByRaw(self::DATE_FORMAT_DAILY)
-                    ->orderByRaw(self::DATE_FORMAT_DAILY)
+                    ->groupByRaw($dateFormatDaily)
+                    ->orderByRaw($dateFormatDaily)
                     ->pluck('count', 'day')
                     ->toArray();
 
@@ -160,11 +168,26 @@ class ArticleStatsController extends Controller
      */
     protected function getChartData($journalId, $start, $end, $granularity = 'daily')
     {
-        $dateFormat = match ($granularity) {
-            'weekly' => "DATE_FORMAT(date, '%Y-%u')", // ISO week
-            'monthly' => "DATE_FORMAT(date, '%Y-%m')",
-            default => self::DATE_FORMAT_DAILY,
-        };
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            $dateFormat = match ($granularity) {
+                'weekly' => "TO_CHAR(date, 'IYYY-IW')",
+                'monthly' => "TO_CHAR(date, 'YYYY-MM')",
+                default => "TO_CHAR(date, 'YYYY-MM-DD')",
+            };
+        } elseif ($driver === 'sqlite') {
+            $dateFormat = match ($granularity) {
+                'weekly' => "strftime('%Y-%W', date)",
+                'monthly' => "strftime('%Y-%m', date)",
+                default => "strftime('%Y-%m-%d', date)",
+            };
+        } else {
+            $dateFormat = match ($granularity) {
+                'weekly' => "DATE_FORMAT(date, '%Y-%u')",
+                'monthly' => "DATE_FORMAT(date, '%Y-%m')",
+                default => "DATE_FORMAT(date, '%Y-%m-%d')",
+            };
+        }
 
         $rawData = ArticleMetric::selectRaw("{$dateFormat} as period, type, count(*) as count")
             ->when($journalId, fn($q) => $q->whereHas('submission', fn($s) => $s->where('journal_id', $journalId)))

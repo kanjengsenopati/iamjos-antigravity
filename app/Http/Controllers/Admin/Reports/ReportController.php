@@ -129,6 +129,21 @@ class ReportController extends Controller
      */
     private function buildArticlesQuery($journal, $start, $end)
     {
+        $driver = DB::connection()->getDriverName();
+        $submittedAtExpr = "DATE_FORMAT(submissions.submitted_at, '%Y-%m-%d')";
+        $acceptedAtExpr = "DATE_FORMAT(submissions.accepted_at, '%Y-%m-%d')";
+        $publishedAtExpr = "DATE_FORMAT(submissions.published_at, '%Y-%m-%d')";
+        
+        if ($driver === 'pgsql') {
+            $submittedAtExpr = "TO_CHAR(submissions.submitted_at, 'YYYY-MM-DD')";
+            $acceptedAtExpr = "TO_CHAR(submissions.accepted_at, 'YYYY-MM-DD')";
+            $publishedAtExpr = "TO_CHAR(submissions.published_at, 'YYYY-MM-DD')";
+        } elseif ($driver === 'sqlite') {
+            $submittedAtExpr = "strftime('%Y-%m-%d', submissions.submitted_at)";
+            $acceptedAtExpr = "strftime('%Y-%m-%d', submissions.accepted_at)";
+            $publishedAtExpr = "strftime('%Y-%m-%d', submissions.published_at)";
+        }
+
         return Submission::query()
             ->where('journal_id', $journal->id)
             ->whereBetween('submitted_at', [$start, $end])
@@ -144,9 +159,9 @@ class ReportController extends Controller
                 'submissions.status',
                 'submissions.stage',
                 'issues.title as issue',
-                DB::raw("DATE_FORMAT(submissions.submitted_at, '%Y-%m-%d') as submitted_at"),
-                DB::raw("DATE_FORMAT(submissions.accepted_at, '%Y-%m-%d') as accepted_at"),
-                DB::raw("DATE_FORMAT(submissions.published_at, '%Y-%m-%d') as published_at"),
+                DB::raw("{$submittedAtExpr} as submitted_at"),
+                DB::raw("{$acceptedAtExpr} as accepted_at"),
+                DB::raw("{$publishedAtExpr} as published_at"),
             ])
             ->orderBy('submissions.submitted_at', 'desc');
     }
@@ -156,6 +171,27 @@ class ReportController extends Controller
      */
     private function buildReviewsQuery($journal, $start, $end)
     {
+        $driver = DB::connection()->getDriverName();
+        $assignedAtExpr = "DATE_FORMAT(review_assignments.assigned_at, '%Y-%m-%d')";
+        $dueDateExpr = "DATE_FORMAT(review_assignments.due_date, '%Y-%m-%d')";
+        $respondedAtExpr = "DATE_FORMAT(review_assignments.responded_at, '%Y-%m-%d')";
+        $completedAtExpr = "DATE_FORMAT(review_assignments.completed_at, '%Y-%m-%d')";
+        $daysTakenExpr = "DATEDIFF(review_assignments.completed_at, review_assignments.assigned_at)";
+
+        if ($driver === 'pgsql') {
+            $assignedAtExpr = "TO_CHAR(review_assignments.assigned_at, 'YYYY-MM-DD')";
+            $dueDateExpr = "TO_CHAR(review_assignments.due_date, 'YYYY-MM-DD')";
+            $respondedAtExpr = "TO_CHAR(review_assignments.responded_at, 'YYYY-MM-DD')";
+            $completedAtExpr = "TO_CHAR(review_assignments.completed_at, 'YYYY-MM-DD')";
+            $daysTakenExpr = "review_assignments.completed_at::date - review_assignments.assigned_at::date";
+        } elseif ($driver === 'sqlite') {
+            $assignedAtExpr = "strftime('%Y-%m-%d', review_assignments.assigned_at)";
+            $dueDateExpr = "strftime('%Y-%m-%d', review_assignments.due_date)";
+            $respondedAtExpr = "strftime('%Y-%m-%d', review_assignments.responded_at)";
+            $completedAtExpr = "strftime('%Y-%m-%d', review_assignments.completed_at)";
+            $daysTakenExpr = "julianday(review_assignments.completed_at) - julianday(review_assignments.assigned_at)";
+        }
+
         return ReviewAssignment::query()
             ->join('submissions', 'review_assignments.submission_id', '=', 'submissions.id')
             ->join('users', 'review_assignments.reviewer_id', '=', 'users.id')
@@ -169,12 +205,12 @@ class ReportController extends Controller
                 'review_assignments.round',
                 'review_assignments.status',
                 'review_assignments.recommendation',
-                DB::raw("DATE_FORMAT(review_assignments.assigned_at, '%Y-%m-%d') as assigned_at"),
-                DB::raw("DATE_FORMAT(review_assignments.due_date, '%Y-%m-%d') as due_date"),
-                DB::raw("DATE_FORMAT(review_assignments.responded_at, '%Y-%m-%d') as responded_at"),
-                DB::raw("DATE_FORMAT(review_assignments.completed_at, '%Y-%m-%d') as completed_at"),
+                DB::raw("{$assignedAtExpr} as assigned_at"),
+                DB::raw("{$dueDateExpr} as due_date"),
+                DB::raw("{$respondedAtExpr} as responded_at"),
+                DB::raw("{$completedAtExpr} as completed_at"),
                 DB::raw("CASE WHEN review_assignments.completed_at IS NOT NULL AND review_assignments.assigned_at IS NOT NULL 
-                         THEN DATEDIFF(review_assignments.completed_at, review_assignments.assigned_at) 
+                         THEN {$daysTakenExpr}
                          ELSE NULL END as days_taken"),
             ])
             ->orderBy('review_assignments.created_at', 'desc');
@@ -185,6 +221,15 @@ class ReportController extends Controller
      */
     private function buildUsageQuery($journal, $start, $end)
     {
+        $driver = DB::connection()->getDriverName();
+        $monthExpr = "DATE_FORMAT(article_metrics.date, '%Y-%m')";
+
+        if ($driver === 'pgsql') {
+            $monthExpr = "TO_CHAR(article_metrics.date, 'YYYY-MM')";
+        } elseif ($driver === 'sqlite') {
+            $monthExpr = "strftime('%Y-%m', article_metrics.date)";
+        }
+
         return ArticleMetric::query()
             ->join('submissions', 'article_metrics.submission_id', '=', 'submissions.id')
             ->where('submissions.journal_id', $journal->id)
@@ -193,16 +238,16 @@ class ReportController extends Controller
                 'submissions.submission_code as article_code',
                 'submissions.title as article_title',
                 'article_metrics.type as metric_type',
-                DB::raw("DATE_FORMAT(article_metrics.date, '%Y-%m') as month"),
+                DB::raw("{$monthExpr} as month"),
                 DB::raw('COUNT(*) as count'),
             ])
             ->groupBy(
                 'submissions.submission_code',
                 'submissions.title',
                 'article_metrics.type',
-                DB::raw("DATE_FORMAT(article_metrics.date, '%Y-%m')")
+                DB::raw($monthExpr)
             )
-            ->orderBy(DB::raw("DATE_FORMAT(article_metrics.date, '%Y-%m')"), 'desc')
+            ->orderBy(DB::raw($monthExpr), 'desc')
             ->orderBy('count', 'desc');
     }
 }

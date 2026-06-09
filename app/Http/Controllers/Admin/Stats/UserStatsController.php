@@ -82,13 +82,21 @@ class UserStatsController extends Controller
             ->get();
 
         // =====================================================
-        // GROWTH CHART (MariaDB: DATE_FORMAT for date grouping)
+        // GROWTH CHART (Driver-sensitive date grouping)
         // =====================================================
+
+        $driver = DB::connection()->getDriverName();
+        $monthExpr = "DATE_FORMAT(users.created_at, '%Y-%m')";
+        if ($driver === 'pgsql') {
+            $monthExpr = "TO_CHAR(users.created_at, 'YYYY-MM')";
+        } elseif ($driver === 'sqlite') {
+            $monthExpr = "strftime('%Y-%m', users.created_at)";
+        }
 
         $growth = $userQuery->clone()
             ->where('users.created_at', '>=', now()->subYear())
-            ->selectRaw("DATE_FORMAT(users.created_at, '%Y-%m') as month, count(*) as count")
-            ->groupBy('month')
+            ->selectRaw("{$monthExpr} as month, count(*) as count")
+            ->groupBy(DB::raw($monthExpr))
             ->orderBy('month')
             ->get();
 
