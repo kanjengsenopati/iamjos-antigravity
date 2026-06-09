@@ -33,22 +33,19 @@ class JournalUserManagementController extends Controller
     {
         $journal = current_journal();
 
-        // Get user IDs that are registered in this journal
-        $journalUserIds = JournalUserRole::where('journal_id', $journal->id)
-            ->distinct()
-            ->pluck('user_id')
-            ->toArray();
-
-        // Also include all Super Admins (they have access to all journals)
-        $superAdminIds = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Super Admin')
-                ->where('guard_name', 'web');
-        })->pluck('id')->toArray();
-
-        // Merge and get unique user IDs
-        $allUserIds = array_unique(array_merge($journalUserIds, $superAdminIds));
-
-        $query = User::whereIn('id', $allUserIds);
+        // Use SQL EXISTS and subqueries to filter users at the database level.
+        // This avoids plucking lists of IDs into PHP memory.
+        $query = User::query()->where(function ($q) use ($journal) {
+            $q->whereExists(function ($sub) use ($journal) {
+                $sub->select(DB::raw(1))
+                    ->from('journal_user_roles')
+                    ->whereColumn('journal_user_roles.user_id', 'users.id')
+                    ->where('journal_user_roles.journal_id', $journal->id);
+            })->orWhereHas('roles', function ($sub) {
+                $sub->where('name', 'Super Admin')
+                    ->where('guard_name', 'web');
+            });
+        });
 
         // Search filter
         if ($request->has('search') && $request->search != '') {
@@ -66,24 +63,41 @@ class JournalUserManagementController extends Controller
                 // Filter to only Super Admins
                 $query->role('Super Admin');
             } else {
-                $roleId = Role::where('name', $request->role)->value('id');
-                if ($roleId) {
-                    $userIdsWithRole = JournalUserRole::where('journal_id', $journal->id)
-                        ->where('role_id', $roleId)
-                        ->pluck('user_id');
-                    $query->whereIn('id', $userIdsWithRole);
-                }
+                $roleName = $request->role;
+                $query->whereExists(function ($sub) use ($journal, $roleName) {
+                    $sub->select(DB::raw(1))
+                        ->from('journal_user_roles')
+                        ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+                        ->whereColumn('journal_user_roles.user_id', 'users.id')
+                        ->where('journal_user_roles.journal_id', $journal->id)
+                        ->where('roles.name', $roleName);
+                });
             }
         }
 
-        $users = $query->paginate(10);
+        // Eager load spatie roles and journal-specific roles for the paginated subset (constant 5 queries total)
+        $users = $query->with([
+            'roles', // Spatie global roles
+            'journalRoles' => function ($q) use ($journal) {
+                $q->where('journal_id', $journal->id)->with('role');
+            }
+        ])->paginate(10);
 
         // Get roles for filtering dropdown
         $roles = Role::where('journal_id', $journal->id)->pluck('name')->toArray() ?? [];
 
-        // Load each user's roles in this journal (includes Super Admin check)
-        $users->getCollection()->transform(function ($user) use ($journal) {
-            $user->journal_roles = JournalUserRole::getUserRolesInJournal($user, $journal);
+        // Map roles in-memory using eager loaded relations to avoid N+1 queries
+        $superAdminRole = Role::where('name', 'Super Admin')->first();
+        $users->getCollection()->transform(function ($user) use ($superAdminRole) {
+            $explicitRoles = $user->journalRoles->map(fn($jr) => $jr->role);
+            
+            // Super Admins automatically have Super Admin access
+            $isSuperAdmin = $user->roles->contains('name', 'Super Admin');
+            if ($isSuperAdmin && $superAdminRole && !$explicitRoles->contains('id', $superAdminRole->id)) {
+                $explicitRoles->push($superAdminRole);
+            }
+            
+            $user->journal_roles = $explicitRoles;
             return $user;
         });
 

@@ -43,26 +43,30 @@ class UserStatsController extends Controller
         // BASE QUERY: Users belonging to this journal
         // =====================================================
 
-        // Get user IDs that have a role in this journal
-        $journalUserIds = JournalUserRole::where('journal_id', $journal->id)
-            ->distinct()
-            ->pluck('user_id');
+        // Use a database-level EXISTS subquery to identify journal users.
+        // This avoids memory exhaustion and heavy whereIn array parameters.
+        $userQuery = User::whereExists(function ($sub) use ($journal) {
+            $sub->select(DB::raw(1))
+                ->from('journal_user_roles')
+                ->whereColumn('journal_user_roles.user_id', 'users.id')
+                ->where('journal_user_roles.journal_id', $journal->id);
+        });
 
         // =====================================================
         // KPI CALCULATIONS
         // =====================================================
 
         // 1. Total Users in this journal
-        $totalUsers = User::whereIn('id', $journalUserIds)->count();
+        $totalUsers = $userQuery->clone()->count();
 
         // 2. New Users (registered in last 30 days)
-        $newUsers = User::whereIn('id', $journalUserIds)
-            ->where('created_at', '>=', now()->subDays(30))
+        $newUsers = $userQuery->clone()
+            ->where('users.created_at', '>=', now()->subDays(30))
             ->count();
 
         // 3. Active Users (logged in within last 90 days)
-        $activeUsers = User::whereIn('id', $journalUserIds)
-            ->where('date_last_login', '>=', now()->subDays(90))
+        $activeUsers = $userQuery->clone()
+            ->where('users.date_last_login', '>=', now()->subDays(90))
             ->count();
 
         // =====================================================
@@ -81,9 +85,9 @@ class UserStatsController extends Controller
         // GROWTH CHART (MariaDB: DATE_FORMAT for date grouping)
         // =====================================================
 
-        $growth = User::whereIn('id', $journalUserIds)
-            ->where('created_at', '>=', now()->subYear())
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, count(*) as count")
+        $growth = $userQuery->clone()
+            ->where('users.created_at', '>=', now()->subYear())
+            ->selectRaw("DATE_FORMAT(users.created_at, '%Y-%m') as month, count(*) as count")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -92,7 +96,7 @@ class UserStatsController extends Controller
         // TOP REVIEWERS LEADERBOARD
         // =====================================================
 
-        $topReviewers = User::whereIn('users.id', $journalUserIds)
+        $topReviewers = $userQuery->clone()
             ->select('users.id', 'users.name', 'users.given_name', 'users.family_name', 'users.avatar')
             ->withCount(['reviewAssignments as completed_reviews' => function ($query) use ($journal) {
                 $query->where('review_assignments.status', ReviewAssignment::STATUS_COMPLETED)
@@ -122,7 +126,7 @@ class UserStatsController extends Controller
         // TOP AUTHORS (by submission count)
         // =====================================================
 
-        $topAuthors = User::whereIn('users.id', $journalUserIds)
+        $topAuthors = $userQuery->clone()
             ->select('users.id', 'users.name', 'users.given_name', 'users.family_name', 'users.avatar')
             ->withCount(['submissions' => function ($query) use ($journal) {
                 $query->where('journal_id', $journal->id)
@@ -149,14 +153,14 @@ class UserStatsController extends Controller
         // =====================================================
 
         // Users who registered this year and belong to this journal
-        $registrationsThisYear = User::whereIn('id', $journalUserIds)
-            ->whereYear('created_at', now()->year)
+        $registrationsThisYear = $userQuery->clone()
+            ->whereYear('users.created_at', now()->year)
             ->count();
 
         // Users who logged in this month
-        $activeThisMonth = User::whereIn('id', $journalUserIds)
-            ->whereMonth('date_last_login', now()->month)
-            ->whereYear('date_last_login', now()->year)
+        $activeThisMonth = $userQuery->clone()
+            ->whereMonth('users.date_last_login', now()->month)
+            ->whereYear('users.date_last_login', now()->year)
             ->count();
 
         return response()->json([
