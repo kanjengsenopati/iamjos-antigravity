@@ -3,7 +3,7 @@
 namespace App\View\Composers;
 
 use App\Models\NavigationMenu;
-use App\Models\NavigationItem;
+use App\Models\NavigationMenuItem;
 use App\Models\SidebarBlock;
 use Illuminate\View\View;
 
@@ -20,19 +20,19 @@ class PublicLayoutComposer
             return;
         }
 
-        // Fetch Primary Menu Items (location = 'primary')
-        $primaryMenu = $this->getMenuItems($journal->id, NavigationMenu::LOCATION_PRIMARY);
+        // Fetch Primary Menu Items (area_name = 'primary')
+        $primaryMenu = $this->getMenuItems($journal->id, NavigationMenu::AREA_PRIMARY);
 
         // FALLBACK: If no custom primary menu exists, use OJS 3.3 defaults
         if ($primaryMenu->isEmpty()) {
             $primaryMenu = $this->getDefaultOJSMenu($journal);
         }
 
-        // Fetch User Menu Items (location = 'user_top')
-        $userMenu = $this->getMenuItems($journal->id, NavigationMenu::LOCATION_USER_TOP);
+        // Fetch User Menu Items (area_name = 'user')
+        $userMenu = $this->getMenuItems($journal->id, NavigationMenu::AREA_USER);
 
-        // Fetch Footer Menu Items (location = 'footer')
-        $footerMenu = $this->getMenuItems($journal->id, NavigationMenu::LOCATION_FOOTER);
+        // Fetch Footer Menu Items (area_name = 'footer')
+        $footerMenu = $this->getMenuItems($journal->id, 'footer');
 
         // Fetch Active Sidebar Blocks
         $sidebarBlocks = SidebarBlock::where('journal_id', $journal->id)
@@ -51,13 +51,13 @@ class PublicLayoutComposer
     }
 
     /**
-     * Get menu items for a specific location as a tree structure.
+     * Get menu items for a specific area as a tree structure.
      */
-    protected function getMenuItems(string $journalId, string $location): \Illuminate\Support\Collection
+    protected function getMenuItems(string $journalId, string $area): \Illuminate\Support\Collection
     {
-        // First, get or create the menu for this location
+        // First, get the active menu for this area and journal
         $menu = NavigationMenu::where('journal_id', $journalId)
-            ->where('location', $location)
+            ->where('area_name', $area)
             ->where('is_active', true)
             ->first();
 
@@ -65,55 +65,58 @@ class PublicLayoutComposer
             return collect([]);
         }
 
-        // Get all items for this menu
-        $items = NavigationItem::where('menu_id', $menu->id)
-            ->where('is_active', true)
-            ->orderBy('order')
-            ->get();
-
-        // Build tree structure
-        return $this->buildTree($items);
+        // Return the mapped items tree structure
+        return $this->buildNavItems($menu);
     }
 
     /**
-     * Build a tree structure from flat items.
+     * Build navigation items from menu assignments
      */
-    protected function buildTree(\Illuminate\Support\Collection $items, ?string $parentId = null): \Illuminate\Support\Collection
+    protected function buildNavItems(NavigationMenu $menu): \Illuminate\Support\Collection
     {
-        $branch = collect([]);
+        $assignments = $menu->rootAssignments()
+            ->with(['item', 'children.item'])
+            ->get();
 
-        foreach ($items as $item) {
-            if ($item->parent_id === $parentId) {
-                $children = $this->buildTree($items, $item->id);
+        return $assignments->filter(fn($a) => $a->item && $a->item->is_active)
+            ->map(function ($assignment) {
+                $item = $assignment->item;
 
-                if ($children->isNotEmpty()) {
-                    $item->children = $children;
-                } else {
-                    $item->children = collect([]);
-                }
-
-                // Resolve dynamic URL for route-type items
-                $item->resolved_url = $this->resolveItemUrl($item);
-
-                $branch->push($item);
-            }
-        }
-
-        return $branch;
+                return (object) [
+                    'id' => $item->id,
+                    'label' => $item->title,
+                    'icon' => $item->icon,
+                    'target' => $item->target ?? '_self',
+                    'resolved_url' => $this->resolveItemUrl($item),
+                    'is_divider' => false,
+                    'children' => $assignment->children->filter(fn($c) => $c->item && $c->item->is_active)
+                        ->map(function ($child) {
+                            $childItem = $child->item;
+                            return (object) [
+                                'id' => $childItem->id,
+                                'label' => $childItem->title,
+                                'icon' => $childItem->icon,
+                                'target' => $childItem->target ?? '_self',
+                                'resolved_url' => $this->resolveItemUrl($childItem),
+                                'is_divider' => false,
+                            ];
+                        }),
+                ];
+            });
     }
 
     /**
      * Resolve the URL for a menu item.
      */
-    protected function resolveItemUrl(NavigationItem $item): string
+    protected function resolveItemUrl($item): string
     {
-        if ($item->type === 'divider') {
-            return '#';
+        if ($item->type === 'custom' && $item->url) {
+            return $item->url;
         }
 
         if ($item->type === 'route' && $item->route_name) {
             try {
-                $params = $item->route_params ?? [];
+                $params = [];
                 // Add journal slug if route requires it
                 if (str_contains($item->route_name, 'journal.')) {
                     $journal = current_journal();
@@ -127,7 +130,14 @@ class PublicLayoutComposer
             }
         }
 
-        return $item->url ?? '#';
+        if ($item->type === 'page' && $item->path) {
+            $journal = current_journal();
+            if ($journal) {
+                return route('journal.custom-page', ['journal' => $journal->slug, 'path' => $item->path]);
+            }
+        }
+
+        return '#';
     }
 
     /**
