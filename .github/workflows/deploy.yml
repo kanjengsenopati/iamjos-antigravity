@@ -338,7 +338,8 @@ jobs:
 
             # ─── 4. Build assets frontend ──────────────────────────────
             echo "🔨 Membangun assets frontend..."
-            npm ci --silent
+            rm -rf node_modules package-lock.json
+            npm install
             NODE_OPTIONS="--max-old-space-size=512" npm run build
 
             # Salin manifest Vite jika diperlukan
