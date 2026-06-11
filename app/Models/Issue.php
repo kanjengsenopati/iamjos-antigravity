@@ -76,7 +76,7 @@ class Issue extends Model
         if (!is_numeric($value)) {
             $issue = $this->where('id', $value)->orWhere('url_path', $value)->first();
             
-            if ($issue && $issue->seq_id) {
+            if ($issue && $issue->seq_id && request()->isMethod('GET')) {
                 // Generate the correct URL by replacing the slug/uuid with the new seq_id
                 $currentUrl = request()->url();
                 
@@ -85,7 +85,7 @@ class Issue extends Model
                 
                 // Fallback if regex didn't change anything
                 if ($newUrl === $currentUrl) {
-                     $newUrl = str_replace($value, $issue->seq_id, $currentUrl);
+                      $newUrl = str_replace($value, $issue->seq_id, $currentUrl);
                 }
                 
                 // Preserve query strings if any

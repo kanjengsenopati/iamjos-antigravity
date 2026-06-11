@@ -178,7 +178,7 @@
                                     @else
                                         <!-- Login As -->
                                         <form
-                                            action="{{ route($routePrefix . '.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            action="{{ route($routePrefix . '.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                             method="POST">
                                             @csrf
                                             <button type="submit"

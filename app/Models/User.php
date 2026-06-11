@@ -81,7 +81,7 @@ class User extends Authenticatable
         if (\Illuminate\Support\Str::isUuid($value)) {
             $user = $this->where('id', $value)->first();
             
-            if ($user && $user->username) {
+            if ($user && $user->username && request()->isMethod('GET')) {
                 $currentUrl = request()->url();
                 $newUrl = str_replace($value, $user->username, $currentUrl);
                 

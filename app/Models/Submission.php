@@ -98,7 +98,7 @@ class Submission extends Model
         if (!is_numeric($value)) {
             $submission = $this->where('id', $value)->orWhere('slug', $value)->first();
             
-            if ($submission && $submission->seq_id) {
+            if ($submission && $submission->seq_id && request()->isMethod('GET')) {
                 $currentUrl = request()->url();
                 
                 // Replace the slug/uuid with the new seq_id

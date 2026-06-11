@@ -595,7 +595,7 @@
                                                                             {{-- Login As (Super Admin Only) --}}
                                                                             @if ($userIsSuperAdmin && $user->exists)
                                                                                 <form
-                                                                                    action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                                                    action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                     method="POST" class="inline">
                                                                                     @csrf
                                                                                     <button type="submit"
@@ -942,7 +942,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <div class="px-6 py-5 bg-gray-50/80 border-t border-gray-100">
                                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                                         {{-- Primary Action: Login As --}}
-                                                        <form action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $assignment->reviewer_id]) }}" method="POST">
+                                                        <form action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $assignment->reviewer]) }}" method="POST">
                                                             @csrf
                                                             <input type="hidden" name="journal_id" value="{{ $journal->id }}">
                                                             <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
@@ -1366,7 +1366,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                             {{-- Login As (Super Admin Only) --}}
                                                                             @if ($userIsSuperAdmin && $user->exists)
                                                                                 <form
-                                                                                    action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                                                    action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                     method="POST" class="inline">
                                                                                     @csrf
                                                                                     <button type="submit"
@@ -1870,7 +1870,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         {{-- Login As (Super Admin Only) --}}
                                                                         @if ($userIsSuperAdmin && $user->exists)
                                                                             <form
-                                                                                action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                                                action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                 method="POST" class="inline">
                                                                                 @csrf
                                                                                 <button type="submit"
@@ -2297,7 +2297,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         {{-- Login As (Super Admin Only) --}}
                                                                         @if ($userIsSuperAdmin && $user->exists)
                                                                             <form
-                                                                                action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                                                                action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                 method="POST" class="inline">
                                                                                 @csrf
                                                                                 <button type="submit"

@@ -90,7 +90,7 @@ class ReviewAssignment extends Model
         if (\Illuminate\Support\Str::isUuid($value)) {
             $assignment = $this->where('id', $value)->first();
             
-            if ($assignment && $assignment->slug) {
+            if ($assignment && $assignment->slug && request()->isMethod('GET')) {
                 $currentUrl = request()->url();
                 $newUrl = str_replace($value, $assignment->slug, $currentUrl);
                 
