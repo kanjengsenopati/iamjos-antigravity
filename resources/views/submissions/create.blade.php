@@ -249,37 +249,63 @@
 
                         <div class="space-y-4">
                             <template x-for="(author, index) in authors" :key="index">
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 relative group">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 rounded-[24px] p-5 border border-gray-200 relative group shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300"
+                                    :class="draggedIndex === index ? 'opacity-40 border-indigo-300 border-dashed bg-indigo-50/30' : 'hover:shadow-md hover:border-slate-300'"
+                                    :draggable="dragEnabledIndex === index"
+                                    @dragstart="dragStart($event, index)"
+                                    @dragover.prevent
+                                    @dragenter="dragEnter(index)"
+                                    @dragend="dragEnd">
+                                    
+                                    <!-- Top-Right Action Cluster: Grip handle and Delete button -->
+                                    <div class="absolute top-5 right-5 flex items-center gap-2">
+                                        <!-- Grip Handle -->
+                                        <div class="cursor-grab active:cursor-grabbing p-1.5 hover:bg-gray-100 rounded-lg transition"
+                                            @mousedown="dragEnabledIndex = index"
+                                            @mouseup="dragEnabledIndex = null"
+                                            @mouseleave="dragEnabledIndex = null"
+                                            title="Drag to reorder">
+                                            <i class="fa-solid fa-grip-vertical text-slate-400 hover:text-indigo-600 text-[18px]"></i>
+                                        </div>
+                                        
+                                        <!-- Delete Button -->
+                                        <button type="button" @click="removeAuthor(index)" x-show="authors.length > 1"
+                                            class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                            title="Delete Contributor">
+                                            <i class="fa-solid fa-trash-can text-[18px]"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pr-16">
                                         <div>
-                                            <label class="block text-xs text-gray-500 mb-1">First Name</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">First Name</label>
                                             <input type="text" :name="'authors[' + index + '][first_name]'"
                                                 x-model="author.first_name"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                                 required>
                                         </div>
                                         <div>
-                                            <label class="block text-xs text-gray-500 mb-1">Last Name</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Last Name</label>
                                             <input type="text" :name="'authors[' + index + '][last_name]'"
                                                 x-model="author.last_name"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                                 required>
                                         </div>
                                         <div class="md:col-span-2">
-                                            <label class="block text-xs text-gray-500 mb-1">Email</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Email</label>
                                             <input type="email" :name="'authors[' + index + '][email]'"
                                                 x-model="author.email"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                                 required>
                                         </div>
                                         <div>
-                                            <label class="block text-xs text-gray-500 mb-1">Affiliation</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Affiliation</label>
                                             <input type="text" :name="'authors[' + index + '][affiliation]'"
                                                 x-model="author.affiliation"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                         </div>
                                         <div>
-                                            <label class="block text-xs text-gray-500 mb-1">Country</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Country</label>
                                             <input type="text" :name="'authors[' + index + '][country]'"
                                                 x-model="author.country"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
@@ -287,15 +313,13 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-3 flex items-center justify-between">
-                                        <label class="flex items-center">
+                                    <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
+                                        <label class="flex items-center cursor-pointer">
                                             <input type="radio" name="primary_contact" :value="index"
                                                 x-model="primaryContactIndex"
                                                 class="text-indigo-600 focus:ring-indigo-500">
                                             <span class="ml-2 text-xs font-semibold text-gray-600">Primary Contact</span>
                                         </label>
-                                        <button type="button" @click="removeAuthor(index)" x-show="authors.length > 1"
-                                            class="text-xs text-red-500 hover:text-red-700">Delete</button>
                                     </div>
                                 </div>
                             </template>
@@ -490,6 +514,8 @@
                 fileSize: '',
                 references: '{{ old('references', '') }}',
                 primaryContactIndex: 0,
+                draggedIndex: null,
+                dragEnabledIndex: null,
                 authors: [
                     @php
                         $parts = explode(' ', auth()->user()->name, 2);
@@ -503,6 +529,35 @@
                         country: '{{ old('authors.0.country', auth()->user()->country) }}'
                     }
                 ],
+
+                dragStart(event, index) {
+                    this.draggedIndex = index;
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', index);
+                },
+
+                dragEnter(index) {
+                    if (this.draggedIndex === null || this.draggedIndex === index) return;
+                    
+                    const item = this.authors.splice(this.draggedIndex, 1)[0];
+                    this.authors.splice(index, 0, item);
+                    
+                    // Update primary contact index dynamically if it is affected by the swap
+                    if (this.primaryContactIndex === this.draggedIndex) {
+                        this.primaryContactIndex = index;
+                    } else if (this.draggedIndex < this.primaryContactIndex && index >= this.primaryContactIndex) {
+                        this.primaryContactIndex--;
+                    } else if (this.draggedIndex > this.primaryContactIndex && index <= this.primaryContactIndex) {
+                        this.primaryContactIndex++;
+                    }
+                    
+                    this.draggedIndex = index;
+                },
+
+                dragEnd() {
+                    this.draggedIndex = null;
+                    this.dragEnabledIndex = null;
+                },
 
                 canProceed() {
                     if (this.step === 1) {
