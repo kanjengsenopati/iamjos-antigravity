@@ -77,17 +77,18 @@ class Role extends SpatieRole
     {
         static::addGlobalScope('journal', function (Builder $builder) {
             $journalId = \current_journal()?->id;
+            $tableName = $builder->getModel()->getTable();
             if ($journalId) {
                 // Modified: Include global roles (journal_id IS NULL)
                 // This ensures Super Admin and other global roles are always visible
-                $builder->where(function ($q) use ($journalId) {
-                    $q->where($q->from . '.journal_id', $journalId)
-                      ->orWhereNull($q->from . '.journal_id');
+                $builder->where(function ($q) use ($journalId, $tableName) {
+                    $q->where($tableName . '.journal_id', $journalId)
+                      ->orWhereNull($tableName . '.journal_id');
                 });
             } else {
                 // BUGFIX: Prevent Spatie Permission Registrar from loading all 170,000+ roles into cache
                 // When current_journal is null (e.g., CLI, Portal, or Cache builder), ONLY load global roles!
-                $builder->whereNull($builder->getQuery()->from . '.journal_id');
+                $builder->whereNull($tableName . '.journal_id');
             }
         });
     }
