@@ -6,6 +6,9 @@ if (($_GET['token'] ?? '') !== 'debug_iamjos_sec_2026') {
 
 header('Content-Type: text/plain');
 
+// Load Composer Autoloader
+require __DIR__.'/../vendor/autoload.php';
+
 // Bootstrap Laravel Application
 $app = require_once __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
