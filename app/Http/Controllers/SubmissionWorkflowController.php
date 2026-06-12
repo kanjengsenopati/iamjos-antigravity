@@ -186,7 +186,11 @@ class SubmissionWorkflowController extends Controller
 
         // Notify the assigned editor
         if ($user) {
-            $user->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
+            try {
+                $user->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send editor assignment email: ' . $e->getMessage());
+            }
 
             // Log the event
             SubmissionLog::log(

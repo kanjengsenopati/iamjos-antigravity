@@ -110,7 +110,13 @@ class EditorDecisionController extends Controller
 
         // Notify reviewer
         $reviewer = User::find($validated['reviewer_id']);
-        $reviewer->notify(new ReviewInvitation($assignment));
+        if ($reviewer) {
+            try {
+                $reviewer->notify(new ReviewInvitation($assignment));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send reviewer invitation email: ' . $e->getMessage());
+            }
+        }
 
         // Update submission stage if needed
         if ($submission->stage === Submission::STAGE_SUBMISSION) {
@@ -211,11 +217,17 @@ class EditorDecisionController extends Controller
 
         // Notify author if requested
         if ($request->boolean('notify_author', true)) {
-            $submission->author->notify(new SubmissionDecision(
-                $submission,
-                $notificationDecision,
-                $validated['comments'] ?? null
-            ));
+            try {
+                if ($submission->author) {
+                    $submission->author->notify(new SubmissionDecision(
+                        $submission,
+                        $notificationDecision,
+                        $validated['comments'] ?? null
+                    ));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send submission decision email: ' . $e->getMessage());
+            }
 
             // Send WhatsApp notification based on decision type
             try {
