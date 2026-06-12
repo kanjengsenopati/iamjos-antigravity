@@ -47,10 +47,17 @@ class PublicationGalley extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         // First try to find by url_path, then by seq_id, then by id
-        return $this->where('url_path', $value)
-            ->orWhere('seq_id', $value)
-            ->orWhere('id', $value)
-            ->firstOrFail();
+        $query = $this->where('url_path', $value);
+        
+        if (is_numeric($value)) {
+            $query->orWhere('seq_id', $value);
+        }
+        
+        if (\Illuminate\Support\Str::isUuid($value)) {
+            $query->orWhere('id', $value);
+        }
+
+        return $query->firstOrFail();
     }
 
     // =====================================================

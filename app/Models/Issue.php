@@ -74,7 +74,11 @@ class Issue extends Model
     {
         // If the value is not numeric, handle backward compatibility (301 Redirect)
         if (!is_numeric($value)) {
-            $issue = $this->where('id', $value)->orWhere('url_path', $value)->first();
+            $query = $this->where('url_path', $value);
+            if (\Illuminate\Support\Str::isUuid($value)) {
+                $query->orWhere('id', $value);
+            }
+            $issue = $query->first();
             
             if ($issue && $issue->seq_id && request()->isMethod('GET')) {
                 // Generate the correct URL by replacing the slug/uuid with the new seq_id

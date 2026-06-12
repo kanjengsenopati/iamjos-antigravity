@@ -96,7 +96,11 @@ class Submission extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         if (!is_numeric($value)) {
-            $submission = $this->where('id', $value)->orWhere('slug', $value)->first();
+            $query = $this->where('slug', $value);
+            if (\Illuminate\Support\Str::isUuid($value)) {
+                $query->orWhere('id', $value);
+            }
+            $submission = $query->first();
             
             if ($submission && $submission->seq_id && request()->isMethod('GET')) {
                 $currentUrl = request()->url();
