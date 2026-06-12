@@ -90,15 +90,19 @@ class ReviewAssignment extends Model
         if (\Illuminate\Support\Str::isUuid($value)) {
             $assignment = $this->where('id', $value)->first();
             
-            if ($assignment && $assignment->slug && request()->isMethod('GET')) {
-                $currentUrl = request()->url();
-                $newUrl = str_replace($value, $assignment->slug, $currentUrl);
-                
-                if (request()->getQueryString()) {
-                    $newUrl .= '?' . request()->getQueryString();
+            if ($assignment) {
+                if ($assignment->slug && request()->isMethod('GET')) {
+                    $currentUrl = request()->url();
+                    $newUrl = str_replace($value, $assignment->slug, $currentUrl);
+                    
+                    if (request()->getQueryString()) {
+                        $newUrl .= '?' . request()->getQueryString();
+                    }
+
+                    throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect($newUrl, 301));
                 }
 
-                throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect($newUrl, 301));
+                return $assignment;
             }
         }
 
