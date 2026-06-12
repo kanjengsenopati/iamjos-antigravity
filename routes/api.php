@@ -16,6 +16,14 @@ Route::prefix('v1/counter')->middleware('throttle:30,1')->group(function () {
         ->name('api.counter.ir');
 });
 
+// SaaS API untuk Kampus IamJOS (Control Plane) — publik sandbox
+Route::prefix('v1/saas')->group(function () {
+    Route::get('licenses', [\App\Http\Controllers\Api\SaaSApiController::class, 'getLicenses']);
+    Route::get('orders', [\App\Http\Controllers\Api\SaaSApiController::class, 'getOrders']);
+    Route::get('monitors', [\App\Http\Controllers\Api\SaaSApiController::class, 'getMonitors']);
+    Route::get('billings', [\App\Http\Controllers\Api\SaaSApiController::class, 'getBillings']);
+});
+
 Route::prefix('v1')->middleware('validate_api_key')->group(function () {});
 
 // Internal API for Reviewers & Keywords — protected by API key

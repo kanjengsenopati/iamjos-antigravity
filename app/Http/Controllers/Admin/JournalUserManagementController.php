@@ -467,7 +467,7 @@ class JournalUserManagementController extends Controller
 
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
-            'name' => 'required|string|max:255', // Preferred Public Name
+            'name' => 'nullable|string|max:255', // Preferred Public Name
             'given_name' => 'required|string|max:255',
             'family_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -496,6 +496,10 @@ class JournalUserManagementController extends Controller
             'bio'
         ]);
 
+        if (empty($userData['name'])) {
+            $userData['name'] = trim($request->given_name . ' ' . $request->family_name);
+        }
+
         $userData['password'] = bcrypt($request->password);
         $userData['email_verified_at'] = now(); // Auto-verify when created by admin
         $userData['date_registered'] = now();
@@ -518,7 +522,7 @@ class JournalUserManagementController extends Controller
 
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
-            'name' => 'required|string|max:255', // Preferred Public Name
+            'name' => 'nullable|string|max:255', // Preferred Public Name
             'given_name' => 'required|string|max:255',
             'family_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -546,6 +550,10 @@ class JournalUserManagementController extends Controller
             'orcid_id',
             'bio'
         ]);
+
+        if (empty($userData['name'])) {
+            $userData['name'] = trim($request->given_name . ' ' . $request->family_name);
+        }
 
         // Handle Password Update
         if ($request->filled('password')) {

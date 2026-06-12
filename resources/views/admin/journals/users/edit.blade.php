@@ -65,10 +65,9 @@
 
                 {{-- Preferred Public Name --}}
                 <div class="md:col-span-2">
-                    <label for="name" class="block text-sm font-medium text-gray-700">Preferred Public Name <span
-                            class="text-red-500">*</span></label>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Preferred Public Name</label>
                     <p class="text-xs text-gray-500 mb-1">How the user prefers to be addressed (e.g. "Dr. Jane Doe").</p>
-                    <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" required
+                    <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                     @error('name')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>

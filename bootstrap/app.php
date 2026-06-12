@@ -47,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append(\App\Http\Middleware\RedirectIfUninstalled::class);
+        $middleware->append(\App\Http\Middleware\LicenseMiddleware::class);
 
         // contoh jika mau auto-apply ke grup API:
         // $middleware->appendToGroup('api', [ValidateApiKey::class]);
