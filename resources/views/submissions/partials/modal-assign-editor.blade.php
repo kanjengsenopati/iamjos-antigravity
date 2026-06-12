@@ -42,6 +42,7 @@
                             <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
                             <input type="text" x-model="editorSearch" placeholder="Search by name or email..."
                                 class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                style="padding-left: 2.5rem !important;"
                                 autocomplete="off">
                         </div>
 

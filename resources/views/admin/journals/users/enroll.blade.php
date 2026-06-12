@@ -108,6 +108,7 @@
                                                 </div>
                                                 <input type="text" x-model="search"
                                                     class="block w-full rounded-md border-gray-300 pl-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-xs"
+                                                    style="padding-left: 2.5rem !important;"
                                                     placeholder="Search by name or email...">
                                             </div>
                                         </div>
