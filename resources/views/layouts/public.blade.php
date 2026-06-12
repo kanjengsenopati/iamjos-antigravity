@@ -24,6 +24,14 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 
 {{-- Basic SEO Meta Tags --}}
 <title>{{ $title ?? $journal->name ?? $siteTitle }}</title>
+
+<!-- Favicon -->
+@if(function_exists('current_journal') && current_journal() && current_journal()->favicon_path)
+    <link rel="icon" href="{{ Storage::disk('public')->url(current_journal()->favicon_path) }}">
+@else
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+@endif
+<link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
 <meta name="generator" content="{{ $siteTitle }} - {{ $siteIntro }}">
 
 {{-- ============================================ --}}

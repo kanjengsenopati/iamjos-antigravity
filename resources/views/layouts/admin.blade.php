@@ -19,9 +19,9 @@
     @if(function_exists('current_journal') && current_journal() && current_journal()->favicon_path)
         <link rel="icon" href="{{ Storage::disk('public')->url(current_journal()->favicon_path) }}">
     @else
-        <link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
+        <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     @endif
-    <link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">

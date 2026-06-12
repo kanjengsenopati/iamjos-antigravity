@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') - {{ config('app.name', 'IAMJOS') }}</title>
 
+    <!-- Favicon -->
+    @if(function_exists('current_journal') && current_journal() && current_journal()->favicon_path)
+        <link rel="icon" href="{{ Storage::disk('public')->url(current_journal()->favicon_path) }}">
+    @else
+        <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    @endif
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

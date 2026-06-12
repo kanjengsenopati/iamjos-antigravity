@@ -24,8 +24,8 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 @if($journal->favicon_path ?? false)
 <link rel="icon" href="{{ Storage::disk('public')->url($journal->favicon_path) }}">
 @else
-<link rel="icon" type="image/webp" href="{{ asset('assets/media/logos/logo.webp') }}">
-<link rel="apple-touch-icon" href="{{ asset('assets/media/logos/logo.webp') }}">
+<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
 @endif
 <title>{{ $title ?? $journal->name ?? $siteTitle }}</title>
 @stack('meta_tags')
