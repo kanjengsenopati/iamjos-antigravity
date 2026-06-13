@@ -200,12 +200,54 @@ class User extends Authenticatable
         $rolesTable = config('permission.table_names.roles', 'roles');
         $modelMorphKey = config('permission.column_names.model_morph_key', 'model_id');
 
-        return DB::table($modelHasRolesTable)
+        // 1. Check Spatie's global roles (model_has_roles table)
+        $globalExists = DB::table($modelHasRolesTable)
             ->join($rolesTable, $modelHasRolesTable.'.role_id', '=', $rolesTable.'.id')
             ->where($modelHasRolesTable.'.'.$modelMorphKey, $this->id)
             ->where($modelHasRolesTable.'.model_type', static::class)
             ->whereIn($rolesTable.'.name', $rolesArray)
             ->exists();
+
+        if ($globalExists) {
+            return true;
+        }
+
+        // 2. Check journal-scoped roles if a journal context is detected
+        $journal = current_journal();
+        if ($journal) {
+            $journalRolesCheck = [];
+            foreach ($rolesArray as $roleName) {
+                $journalRolesCheck[] = $roleName;
+                $journalRolesCheck[] = strtolower($roleName);
+                $journalRolesCheck[] = ucwords($roleName);
+
+                // Specific OJS mappings
+                if (strcasecmp($roleName, 'Editor') === 0) {
+                    $journalRolesCheck[] = 'Journal editor';
+                    $journalRolesCheck[] = 'journal editor';
+                } elseif (strcasecmp($roleName, 'Journal Manager') === 0) {
+                    $journalRolesCheck[] = 'Journal manager';
+                    $journalRolesCheck[] = 'journal manager';
+                } elseif (strcasecmp($roleName, 'Section Editor') === 0) {
+                    $journalRolesCheck[] = 'Section editor';
+                    $journalRolesCheck[] = 'section editor';
+                }
+            }
+            $journalRolesCheck = array_values(array_unique($journalRolesCheck));
+
+            $journalExists = DB::table('journal_user_roles')
+                ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+                ->where('journal_user_roles.user_id', $this->id)
+                ->where('journal_user_roles.journal_id', $journal->id)
+                ->whereIn('roles.name', $journalRolesCheck)
+                ->exists();
+
+            if ($journalExists) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
