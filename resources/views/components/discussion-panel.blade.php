@@ -20,7 +20,7 @@
     $stageLabel = $stageLabels[$stageId] ?? 'Stage ' . $stageId;
 @endphp
 
-<div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden" x-data="discussionPanel({
+<div class="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[24px] overflow-hidden" x-data="discussionPanel({
     stageId: {{ $stageId }},
     submissionId: '{{ $submission->id }}',
     journalSlug: '{{ $journal->slug }}',
@@ -32,12 +32,12 @@
 })">
 
     {{-- Panel Header --}}
-    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-        <h3 class="text-base font-bold text-gray-900">{{ $stageLabel }} Discussions</h3>
+    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <x-text.h2 class="text-gray-900">{{ $stageLabel }} Discussions</x-text.h2>
         <button @click="openAddModal()" type="button"
-            class="inline-flex items-center text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
-            <i class="fa-solid fa-plus mr-1.5"></i>
-            Add Discussion
+            class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+            <i class="fa-solid fa-plus mr-1.5 text-[14px]"></i>
+            <x-text.body class="inline font-semibold text-inherit">Add Discussion</x-text.body>
         </button>
     </div>
 
@@ -70,55 +70,65 @@
 
                 {{-- Summary Row --}}
                 <summary
-                    class="flex items-center justify-between px-6 py-4 cursor-pointer transition-colors {{ $unreadCount > 0 ? 'bg-indigo-50 font-semibold border-l-4 border-indigo-600' : 'bg-white font-normal hover:bg-gray-50' }}">
+                    class="flex items-center justify-between px-6 py-4 cursor-pointer transition-colors {{ $unreadCount > 0 ? 'bg-blue-50/50 font-semibold border-l-4 border-blue-600' : 'bg-white font-normal hover:bg-gray-50' }}">
                     <div class="flex items-center gap-4">
                         <i
-                            class="fa-regular fa-comments text-gray-400 group-open:text-indigo-500 transition-colors"></i>
+                            class="fa-regular fa-comments text-gray-400 group-open:text-blue-600 transition-colors"></i>
                         <div>
                             <div class="flex items-center gap-2">
-                                <p class="text-sm font-medium text-gray-900 group-open:text-indigo-600">
+                                <x-text.body class="text-gray-900 group-open:text-blue-600 font-semibold inline">
                                     {{ $discussion->subject }}
-                                </p>
+                                </x-text.body>
                                 @if (!$isOpen)
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                        <i class="fa-solid fa-lock text-[10px] mr-1"></i>
-                                        Closed
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                                        <x-text.caption class="not-italic text-gray-600 flex items-center">
+                                            <i class="fa-solid fa-lock mr-1 text-[10px]"></i>
+                                            Closed
+                                        </x-text.caption>
                                     </span>
                                 @endif
                                 @if ($unreadCount > 0)
-                                    <span class="unread-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 ml-2">
-                                        {{ $unreadCount }} New
+                                    <span class="unread-badge inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 ml-2 font-bold">
+                                        <x-text.caption class="not-italic text-blue-700 font-bold">
+                                            {{ $unreadCount }} New
+                                        </x-text.caption>
                                     </span>
                                 @endif
                             </div>
-                            <p class="text-xs text-gray-500">
+                            <x-text.caption class="text-gray-500 block">
                                 From {{ $discussion->user->name }} •
                                 {{ $discussion->created_at->format('M d, Y') }}
-                            </p>
+                            </x-text.caption>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
                         {{-- Participant Avatars --}}
                         <div class="flex -space-x-2">
                             @foreach ($discussionParticipants->take(3) as $participant)
-                                <div class="w-6 h-6 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-indigo-600 text-[10px] font-bold"
+                                <div class="w-6 h-6 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-blue-600 font-bold"
                                     title="{{ $participant->name }}">
-                                    {{ strtoupper(substr($participant->name, 0, 1)) }}
+                                    <x-text.caption class="not-italic font-bold text-blue-600 leading-none" style="font-size: 10px;">
+                                        {{ strtoupper(substr($participant->name, 0, 1)) }}
+                                    </x-text.caption>
                                 </div>
                             @endforeach
                             @if ($discussionParticipants->count() > 3)
                                 <div
-                                    class="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-gray-600 text-[10px] font-bold">
-                                    +{{ $discussionParticipants->count() - 3 }}
+                                    class="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-slate-600 font-bold">
+                                    <x-text.caption class="not-italic font-bold text-slate-600 leading-none" style="font-size: 10px;">
+                                        +{{ $discussionParticipants->count() - 3 }}
+                                    </x-text.caption>
                                 </div>
                             @endif
                         </div>
 
                         {{-- Reply Count Badge --}}
                         <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $replyCount > 0 ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
-                            {{ $replyCount }} {{ $replyCount === 1 ? 'reply' : 'replies' }}
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full {{ $replyCount > 0 ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600' }}">
+                            <x-text.caption class="not-italic font-semibold {{ $replyCount > 0 ? 'text-blue-700' : 'text-slate-600' }}">
+                                {{ $replyCount }} {{ $replyCount === 1 ? 'reply' : 'replies' }}
+                            </x-text.caption>
                         </span>
 
                         <i
@@ -129,18 +139,19 @@
                 {{-- Expanded Content --}}
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
                     {{-- Participants Header --}}
-                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-150">
                         <div class="flex items-center gap-2">
-                            <span
-                                class="text-xs font-medium text-gray-500 uppercase tracking-wider">Participants:</span>
+                            <x-text.label class="text-slate-400">Participants:</x-text.label>
                             <div class="flex flex-wrap gap-1.5">
                                 @foreach ($discussionParticipants as $participant)
                                     @php
                                         $role = $participant->id === $submission->user_id ? 'Author' : 'Editor';
                                     @endphp
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $role === 'Author' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
-                                        {{ $participant->name }}
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === 'Author' ? 'bg-amber-55 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === 'Author' ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === 'Author' ? '#D97706' : '' }}">
+                                        <x-text.caption class="not-italic font-medium {{ $role === 'Author' ? 'text-amber-700' : 'text-blue-700' }}">
+                                            {{ $participant->name }}
+                                        </x-text.caption>
                                     </span>
                                 @endforeach
                             </div>
@@ -155,9 +166,9 @@
                                         method="POST" class="inline">
                                         @csrf
                                         <button type="submit"
-                                            class="inline-flex items-center text-xs text-gray-500 hover:text-red-600 font-medium transition-colors">
-                                            <i class="fa-solid fa-lock mr-1"></i>
-                                            Close Discussion
+                                            class="inline-flex items-center text-slate-500 hover:text-red-600 transition-colors">
+                                            <i class="fa-solid fa-lock mr-1 text-[12px]"></i>
+                                            <x-text.caption class="not-italic font-medium text-inherit">Close Discussion</x-text.caption>
                                         </button>
                                     </form>
                                 @else
@@ -166,9 +177,9 @@
                                         method="POST" class="inline">
                                         @csrf
                                         <button type="submit"
-                                            class="inline-flex items-center text-xs text-gray-500 hover:text-green-600 font-medium transition-colors">
-                                            <i class="fa-solid fa-lock-open mr-1"></i>
-                                            Reopen
+                                            class="inline-flex items-center text-slate-500 hover:text-emerald-600 transition-colors">
+                                            <i class="fa-solid fa-lock-open mr-1 text-[12px]"></i>
+                                            <x-text.caption class="not-italic font-medium text-inherit">Reopen</x-text.caption>
                                         </button>
                                     </form>
                                 @endif
@@ -194,25 +205,25 @@
                                         {{ strtoupper(substr($message->user->name, 0, 1)) }}
                                     </div>
                                 </div>
-                                <div class="{{ $isNew ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-gray-200' }} p-4 rounded-lg shadow-sm border flex-1">
+                                <div class="{{ $isNew ? 'bg-blue-50/30 border-blue-200' : 'bg-white border-gray-200' }} p-4 rounded-lg shadow-sm border flex-1">
                                     {{-- Message Header --}}
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex items-center gap-2">
+                                            <x-text.body class="font-semibold text-slate-900 inline">{{ $message->user->name }}</x-text.body>
                                             <span
-                                                class="text-sm font-semibold text-gray-900">{{ $message->user->name }}</span>
-                                            <span
-                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium {{ $messageRole === 'Author' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
-                                                {{ $messageRole }}
+                                                class="inline-flex items-center px-1.5 py-0.5 rounded {{ $messageRole === 'Author' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $messageRole === 'Author' ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $messageRole === 'Author' ? '#D97706' : '' }}">
+                                                <x-text.caption class="not-italic font-medium text-[10px] {{ $messageRole === 'Author' ? 'text-amber-700' : 'text-blue-700' }}">
+                                                    {{ $messageRole }}
+                                                </x-text.caption>
                                             </span>
-                                            <span
-                                                class="text-xs text-gray-400">{{ $message->created_at->format('M d, Y \a\t H:i') }}</span>
+                                            <x-text.caption class="text-slate-400">{{ $message->created_at->format('M d, Y \a\t H:i') }}</x-text.caption>
                                         </div>
                                         @if ($canEdit)
                                             <button @click="editing = true; editBody = `{!! addslashes(str_replace(["\r", "\n"], '', $message->body)) !!}`"
                                                 x-show="!editing"
-                                                class="text-gray-400 hover:text-indigo-600 transition-colors"
+                                                class="text-slate-400 hover:text-blue-600 transition-colors"
                                                 title="Edit">
-                                                <i class="fa-solid fa-pencil text-xs"></i>
+                                                <i class="fa-solid fa-pencil text-[12px]"></i>
                                             </button>
                                         @endif
                                     </div>
@@ -247,16 +258,16 @@
                                     {{-- Attachments --}}
                                     @if ($message->files && $message->files->count() > 0)
                                         <div class="mt-3 pt-3 border-t border-gray-100">
-                                            <p class="text-xs font-medium text-gray-500 mb-2">
+                                            <x-text.caption class="block font-medium text-slate-500 mb-2">
                                                 <i class="fa-solid fa-paperclip mr-1"></i>
                                                 Attachments
-                                            </p>
+                                            </x-text.caption>
                                             <div class="flex flex-wrap gap-2">
                                                 @foreach ($message->files as $file)
                                                     <a href="{{ route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->id]) }}"
-                                                        class="inline-flex items-center px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-700 transition-colors">
-                                                        <i class="fa-regular fa-file mr-1.5"></i>
-                                                        {{ Str::limit($file->original_name, 20) }}
+                                                        class="inline-flex items-center px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 rounded text-slate-700 transition-colors">
+                                                        <i class="fa-regular fa-file mr-1.5 text-[12px]"></i>
+                                                        <x-text.caption class="not-italic text-slate-700">{{ Str::limit($file->original_name, 20) }}</x-text.caption>
                                                     </a>
                                                 @endforeach
                                             </div>
@@ -297,18 +308,22 @@
 
                                     {{-- Rich Text Editor --}}
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Your Reply</label>
+                                        <label class="block mb-1">
+                                            <x-text.body class="font-medium text-slate-700">Your Reply</x-text.body>
+                                        </label>
                                         <textarea name="body" :id="'reply-editor-' + discussionId" class="hidden"></textarea>
                                     </div>
 
                                     {{-- File Attachments --}}
                                     <div class="border-t border-gray-100 pt-3">
                                         <div class="flex items-center justify-between mb-2">
-                                            <span class="text-xs font-medium text-gray-700">Attachments</span>
+                                            <x-text.caption class="not-italic font-medium text-slate-700">Attachments</x-text.caption>
                                             <label
-                                                class="text-xs text-indigo-600 font-medium hover:underline cursor-pointer">
-                                                <i class="fa-solid fa-paperclip mr-1"></i>
-                                                Add File
+                                                class="cursor-pointer">
+                                                <x-text.caption class="not-italic text-blue-600 font-semibold hover:underline flex items-center">
+                                                    <i class="fa-solid fa-paperclip mr-1"></i>
+                                                    Add File
+                                                </x-text.caption>
                                                 <input type="file" class="sr-only"
                                                     @change="uploadReplyFile($event)">
                                             </label>
@@ -316,21 +331,20 @@
                                         <ul class="space-y-1">
                                             <template x-for="file in replyFiles" :key="file.id">
                                                 <li
-                                                    class="flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded text-xs border border-gray-100">
+                                                    class="flex items-center justify-between py-1.5 px-2 bg-slate-50 rounded border border-gray-100">
                                                     <div class="flex items-center gap-2">
                                                         <i class="fa-regular fa-file text-gray-400"></i>
-                                                        <span x-text="file.name"
-                                                            class="text-gray-700 truncate max-w-[200px]"></span>
+                                                        <x-text.caption class="not-italic text-slate-700 truncate max-w-[200px]" x-text="file.name"></x-text.caption>
                                                     </div>
                                                     <button type="button"
                                                         @click="replyFiles = replyFiles.filter(f => f.id !== file.id)"
-                                                        class="text-red-500 hover:text-red-700">
-                                                        <i class="fa-solid fa-times"></i>
+                                                        class="text-red-600 hover:text-red-700">
+                                                        <i class="fa-solid fa-times text-[12px]"></i>
                                                     </button>
                                                 </li>
                                             </template>
                                             <template x-if="replyFiles.length === 0">
-                                                <li class="text-xs text-gray-400 italic py-1">No files attached.</li>
+                                                <li class="py-1"><x-text.caption class="text-slate-400">No files attached.</x-text.caption></li>
                                             </template>
                                         </ul>
                                     </div>
@@ -338,13 +352,15 @@
                                     {{-- Action Buttons --}}
                                     <div class="flex justify-end gap-2 pt-2">
                                         <button type="button" @click="replyExpanded = false; resetReplyForm()"
-                                            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
-                                            Cancel
+                                            class="px-4 py-2 text-slate-600 hover:text-slate-800">
+                                            <x-text.body class="font-medium text-inherit">Cancel</x-text.body>
                                         </button>
                                         <button type="submit" :disabled="submitting"
-                                            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-                                            <i class="fa-solid fa-paper-plane mr-2"></i>
-                                            <span x-text="submitting ? 'Sending...' : 'Send Reply'"></span>
+                                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                                            <i class="fa-solid fa-paper-plane mr-2 text-[14px]"></i>
+                                            <x-text.body class="font-medium text-white inline">
+                                                <span x-text="submitting ? 'Sending...' : 'Send Reply'"></span>
+                                            </x-text.body>
                                         </button>
                                     </div>
                                 </form>
@@ -353,14 +369,14 @@
                     @else
                         {{-- Closed Notice --}}
                         <div class="mt-6 pt-4 border-t border-gray-200">
-                            <div class="bg-gray-100 border border-gray-200 rounded-lg p-4 text-center">
-                                <p class="text-sm text-gray-500">
+                            <div class="bg-slate-50 rounded-lg p-4 text-center">
+                                <x-text.body class="text-slate-500 flex items-center justify-center">
                                     <i class="fa-solid fa-lock mr-2"></i>
                                     This discussion is closed.
                                     @if ($discussion->closed_at)
                                         Closed {{ $discussion->closed_at->diffForHumans() }}.
                                     @endif
-                                </p>
+                                </x-text.body>
                             </div>
                         </div>
                     @endif
@@ -369,11 +385,11 @@
         @empty
             <div class="px-6 py-10 text-center">
                 <i class="fa-regular fa-comments text-gray-300 text-4xl mb-3"></i>
-                <p class="text-sm text-gray-500">No discussions in this stage yet.</p>
+                <x-text.body class="text-slate-500 mb-2">No discussions in this stage yet.</x-text.body>
                 <button @click="openAddModal()" type="button"
-                    class="mt-3 inline-flex items-center text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                    <i class="fa-solid fa-plus mr-1.5"></i>
-                    Start a discussion
+                    class="mt-3 inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 transition-colors">
+                    <i class="fa-solid fa-plus mr-1.5 text-[14px]"></i>
+                    <x-text.body class="font-semibold text-inherit inline">Start a discussion</x-text.body>
                 </button>
             </div>
         @endforelse
@@ -397,18 +413,18 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                class="relative inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
 
                 {{-- Modal Header --}}
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="px-6 py-4 border-b border-gray-150 bg-gray-50">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900" id="add-discussion-title">
-                            <i class="fa-regular fa-comments text-indigo-500 mr-2"></i>
+                        <x-text.h2 id="add-discussion-title" class="text-gray-900 flex items-center">
+                            <i class="fa-regular fa-comments text-blue-600 mr-2"></i>
                             Add {{ $stageLabel }} Discussion
-                        </h3>
+                        </x-text.h2>
                         <button @click="showAddModal = false" type="button"
-                            class="text-gray-400 hover:text-gray-600">
-                            <i class="fa-solid fa-times"></i>
+                            class="text-slate-400 hover:text-slate-600 transition-colors">
+                            <i class="fa-solid fa-times text-[18px]"></i>
                         </button>
                     </div>
                 </div>
@@ -430,46 +446,44 @@
                     {{-- Subject --}}
                     <div>
                         <label for="subject-{{ $stageId }}"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-                            Subject <span class="text-red-500">*</span>
+                            class="block mb-1">
+                            <x-text.body class="font-medium text-slate-700">Subject <span class="text-red-600">*</span></x-text.body>
                         </label>
                         <input type="text" name="subject" id="subject-{{ $stageId }}" required
-                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Brief description of the discussion topic">
                     </div>
 
                     {{-- Participants Selection --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Participants <span class="text-red-500">*</span>
-                            <span class="text-xs text-gray-500 ml-1">(Select who should be part of this
-                                discussion)</span>
+                        <label class="block mb-2">
+                            <x-text.body class="font-medium text-slate-700">Participants <span class="text-red-600">*</span></x-text.body>
+                            <x-text.caption class="text-slate-500 ml-1">
+                                (Select who should be part of this discussion)
+                            </x-text.caption>
                         </label>
                         <div
                             class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
                             {{-- Current User (Always included, grayed out) --}}
                             <label
-                                class="flex items-center gap-3 p-2 rounded-lg bg-indigo-50 border border-indigo-200">
+                                class="flex items-center gap-3 p-2 rounded-lg bg-blue-50/50 border border-blue-200">
                                 <input type="checkbox" name="participants[]" value="{{ $currentUser->id }}" checked
                                     disabled
-                                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded cursor-not-allowed">
+                                    class="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-not-allowed">
                                 <input type="hidden" name="participants[]" value="{{ $currentUser->id }}">
                                 <div class="flex items-center gap-2 flex-1 min-w-0">
                                     <div
-                                        class="w-8 h-8 rounded-full bg-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                        class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
                                         {{ strtoupper(substr($currentUser->name, 0, 1)) }}
                                     </div>
                                     <div class="min-w-0">
-                                        <span
-                                            class="text-sm font-medium text-gray-900 block truncate">{{ $currentUser->name }}
-                                            (You)</span>
-                                        <span
-                                            class="text-xs text-gray-500 block truncate">{{ $currentUser->email }}</span>
+                                        <x-text.body class="font-medium text-slate-900 block truncate">{{ $currentUser->name }} (You)</x-text.body>
+                                        <x-text.caption class="not-italic text-slate-500 block truncate">{{ $currentUser->email }}</x-text.caption>
                                     </div>
                                 </div>
                                 <span
-                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
-                                    Creator
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                                    <x-text.caption class="not-italic font-semibold text-blue-700">Creator</x-text.caption>
                                 </span>
                             </label>
 
@@ -485,29 +499,26 @@
                                     class="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
                                     <input type="checkbox" name="participants[]" value="{{ $participant->id }}"
                                         {{ $isOtherParty ? 'checked' : '' }}
-                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                     <div class="flex items-center gap-2 flex-1 min-w-0">
                                         <div
                                             class="w-8 h-8 rounded-full {{ $role === 'Author' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }} flex items-center justify-center font-bold text-xs flex-shrink-0">
                                             {{ strtoupper(substr($participant->name, 0, 1)) }}
                                         </div>
                                         <div class="min-w-0">
-                                            <span
-                                                class="text-sm font-medium text-gray-900 block truncate">{{ $participant->name }}</span>
-                                            <span
-                                                class="text-xs text-gray-500 block truncate">{{ $participant->email }}</span>
+                                            <x-text.body class="font-medium text-slate-900 block truncate">{{ $participant->name }}</x-text.body>
+                                            <x-text.caption class="not-italic text-slate-500 block truncate">{{ $participant->email }}</x-text.caption>
                                         </div>
                                     </div>
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $role === 'Author' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
-                                        {{ $role }}
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === 'Author' ? 'bg-amber-50 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === 'Author' ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === 'Author' ? '#D97706' : '' }}">
+                                        <x-text.caption class="not-italic font-semibold {{ $role === 'Author' ? 'text-amber-700' : 'text-blue-700' }}">{{ $role }}</x-text.caption>
                                     </span>
                                 </label>
                             @endforeach
 
                             @if ($participants->reject(fn($p) => $p->id === $currentUser->id)->isEmpty())
-                                <p class="text-sm text-gray-500 italic text-center py-2">No other participants
-                                    available.</p>
+                                <p class="text-sm text-slate-500 italic text-center py-2">No other participants available.</p>
                             @endif
                         </div>
                     </div>
@@ -515,8 +526,8 @@
                     {{-- Message --}}
                     <div>
                         <label for="new-discussion-editor-{{ $stageId }}"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-                            Message <span class="text-red-500">*</span>
+                            class="block mb-1">
+                            <x-text.body class="font-medium text-slate-700">Message <span class="text-red-600">*</span></x-text.body>
                         </label>
                         <div class="mt-1">
                             <textarea name="body" id="new-discussion-editor-{{ $stageId }}"></textarea>
@@ -526,32 +537,32 @@
                     {{-- File Attachments --}}
                     <div class="border-t border-gray-200 pt-4">
                         <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-sm font-medium text-gray-900">Attachments</h4>
+                            <x-text.h2 class="text-gray-900">Attachments</x-text.h2>
                             <label
-                                class="inline-flex items-center text-sm text-indigo-600 font-medium hover:text-indigo-800 cursor-pointer">
-                                <i class="fa-solid fa-paperclip mr-1.5"></i>
-                                Attach File
+                                class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 cursor-pointer transition-colors">
+                                <i class="fa-solid fa-paperclip mr-1.5 text-[14px]"></i>
+                                <x-text.body class="font-semibold text-inherit inline">Attach File</x-text.body>
                                 <input type="file" class="sr-only" @change="uploadNewDiscussionFile($event)">
                             </label>
                         </div>
                         <ul class="space-y-2">
                             <template x-for="file in newDiscussionFiles" :key="file.id">
                                 <li
-                                    class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg border border-gray-200">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-regular fa-file text-gray-400"></i>
-                                        <span class="text-sm text-gray-700" x-text="file.name"></span>
-                                        <span class="text-xs text-gray-500"
-                                            x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
+                                        <x-text.body class="text-slate-700 inline" x-text="file.name"></x-text.body>
+                                        <x-text.caption class="not-italic text-slate-500 ml-2 inline"
+                                            x-text="(file.size / 1024).toFixed(0) + ' KB'"></x-text.caption>
                                     </div>
-                                    <button type="button" class="text-red-500 hover:text-red-700 text-sm"
+                                    <button type="button" class="text-red-600 hover:text-red-700"
                                         @click="newDiscussionFiles = newDiscussionFiles.filter(f => f.id !== file.id)">
-                                        <i class="fa-solid fa-times"></i>
+                                        <i class="fa-solid fa-times text-[14px]"></i>
                                     </button>
                                 </li>
                             </template>
                             <template x-if="newDiscussionFiles.length === 0">
-                                <li class="text-sm text-gray-500 italic py-2">No files attached.</li>
+                                <li class="py-2"><x-text.body class="text-slate-500 italic">No files attached.</x-text.body></li>
                             </template>
                         </ul>
                     </div>
@@ -559,13 +570,15 @@
                     {{-- Modal Footer --}}
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <button type="button" @click="showAddModal = false"
-                            class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                            Cancel
+                            class="px-4 py-2.5 text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                            <x-text.body class="font-medium text-inherit">Cancel</x-text.body>
                         </button>
                         <button type="submit" :disabled="submittingNew"
-                            class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-                            <i class="fa-solid fa-paper-plane mr-2"></i>
-                            <span x-text="submittingNew ? 'Creating...' : 'Create Discussion'"></span>
+                            class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                            <i class="fa-solid fa-paper-plane mr-2 text-[14px]"></i>
+                            <x-text.body class="font-medium text-white inline">
+                                <span x-text="submittingNew ? 'Creating...' : 'Create Discussion'"></span>
+                            </x-text.body>
                         </button>
                     </div>
                 </form>
