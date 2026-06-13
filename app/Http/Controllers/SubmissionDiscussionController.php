@@ -57,16 +57,8 @@ class SubmissionDiscussionController extends Controller
      * - Participants: Users selected + current user (creator) always included
      * - Notification: All participants except creator receive notification
      */
-    public function store(Request $request, string $journalSlug, $submission)
+    public function store(Request $request, string $journalSlug, Submission $submission)
     {
-        // $submission = Submission::findOrFail($id);cari berdasarkan slug ataupun id
-       $submissionModel = Submission::where('slug', $submission);
-
-        if (Str::isUuid($submission)) {
-            $submissionModel->orWhere('id', $submission);
-        }
-
-        $submission = $submissionModel->firstOrFail();
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
@@ -487,7 +479,7 @@ class SubmissionDiscussionController extends Controller
     /**
      * Mark a discussion as read.
      */
-    public function markAsRead(Request $request, string $journalSlug, $submission, Discussion $discussion)
+    public function markAsRead(Request $request, string $journalSlug, Submission $submission, Discussion $discussion)
     {
         $currentUserId = auth()->id();
         
