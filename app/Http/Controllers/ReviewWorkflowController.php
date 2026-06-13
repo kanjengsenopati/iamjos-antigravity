@@ -470,24 +470,61 @@ class ReviewWorkflowController extends Controller
  */
 public function searchReviewers(Request $request, string $journalSlug)
 {
+    $journal = $this->getJournal();
     $query = $request->get('q', '');
-    $roleFilter = $request->get('role', 'reviewer'); // Default to reviewer
+    
+    // Strip leading '@' (common in mentions)
+    $query = ltrim($query, '@');
 
-    // Determine which roles to search for
-    $searchRoles = match ($roleFilter) {
-        'editor' => ['Editor', 'Section Editor', 'Journal Manager'],
-        default => ['Reviewer'],
-    };
+    /*
+    |--------------------------------------------------------------------------
+    | Exclude already-assigned reviewers for current submission/round
+    |--------------------------------------------------------------------------
+    */
+    $excludeIds = [];
+    $submissionId = $request->get('submission_id');
+    if ($submissionId) {
+        $submission = Submission::find($submissionId);
+        if ($submission) {
+            $currentRound = $submission->currentReviewRound();
+            $roundId = $currentRound ? $currentRound->id : null;
+            
+            if ($roundId) {
+                $excludeIds = ReviewAssignment::where('submission_id', $submission->id)
+                    ->where('review_round_id', $roundId)
+                    ->whereNotIn('status', ['cancelled', 'declined'])
+                    ->pluck('reviewer_id')
+                    ->toArray();
+            } else {
+                $excludeIds = ReviewAssignment::where('submission_id', $submission->id)
+                    ->where('round', 1)
+                    ->whereNotIn('status', ['cancelled', 'declined'])
+                    ->pluck('reviewer_id')
+                    ->toArray();
+            }
+        }
+    }
 
-    $users = User::whereHas('roles', function ($q) use ($searchRoles) {
-        $q->whereIn('name', $searchRoles);
+    /*
+    |--------------------------------------------------------------------------
+    | Query reviewers using journal-scoped roles
+    |--------------------------------------------------------------------------
+    */
+    $likeOperator = DB::connection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+
+    $users = User::whereHas('journalRoles', function ($q) use ($journal) {
+        $q->where('journal_id', $journal->id)
+          ->whereHas('role', fn ($r) => $r->whereIn(DB::raw('LOWER(name)'), ['reviewer']));
     })
-        ->where(function ($q) use ($query) {
-            $q->where('name', 'like', "%{$query}%")
-                ->orWhere('email', 'like', "%{$query}%")
-                ->orWhere('affiliation', 'like', "%{$query}%");
+        ->when(!empty($excludeIds), fn($q) => $q->whereNotIn('id', $excludeIds))
+        ->when(!empty($query), function ($q) use ($query, $likeOperator) {
+            $q->where(function ($sub) use ($query, $likeOperator) {
+                $sub->where('name', $likeOperator, "%{$query}%")
+                    ->orWhere('email', $likeOperator, "%{$query}%")
+                    ->orWhere('affiliation', $likeOperator, "%{$query}%");
+            });
         })
-        ->limit(10)
+        ->limit(50)
         ->get();
 
     // Transform users to include reviewer stats

@@ -59,17 +59,28 @@
                         submitting: false,
                     
                         async init() {
+                            this.$watch('reviewerSearch', () => this.searchReviewers());
                             await this.searchReviewers();
                         },
                     
                         async searchReviewers() {
                             this.isSearching = true;
                             try {
-                                let url = '{{ route('api.journal.reviewers', ['journal' => $journal->slug]) }}?submission_id={{ $submission->id }}';
+                                let url = '{{ route('journal.workflow.reviewers.search', ['journal' => $journal->slug]) }}?submission_id={{ $submission->id }}';
                                 if (this.reviewerSearch.length > 0) {
-                                    url += `&q=${this.reviewerSearch}`;
+                                    url += `&q=${encodeURIComponent(this.reviewerSearch)}`;
                                 }
-                                const response = await fetch(url);
+                                const response = await fetch(url, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                    },
+                                });
+                                if (!response.ok) {
+                                    console.error('Reviewer search failed:', response.status, response.statusText);
+                                    this.reviewerResults = [];
+                                    return;
+                                }
                                 this.reviewerResults = await response.json();
                             } catch (error) {
                                 console.error('Search failed:', error);
@@ -97,9 +108,10 @@
                             <div x-show="!selectedReviewer">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Select Reviewer</label>
                                 <div class="relative">
-                                    <input type="text" x-model="reviewerSearch" @input.debounce.500ms="searchReviewers()"
+                                    <input type="text" x-model.debounce.500ms="reviewerSearch"
                                         placeholder="Search by name, email, or affiliation..."
-                                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                        style="padding-left: 2.75rem;"
+                                        class="block w-full pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fa-solid fa-search text-gray-400"></i>
                                     </div>
