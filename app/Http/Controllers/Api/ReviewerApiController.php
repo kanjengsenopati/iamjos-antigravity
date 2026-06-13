@@ -16,6 +16,9 @@ class ReviewerApiController extends Controller
     public function index(Request $request, $journal)
     {
         $search = $request->get('q');
+        if ($search) {
+            $search = ltrim($search, '@');
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -77,7 +80,7 @@ class ReviewerApiController extends Controller
         $reviewers = User::query()
             ->whereHas('journalRoles', function ($q) use ($journalId) {
                 $q->where('journal_id', $journalId)
-                ->whereHas('role', fn ($r) => $r->where('name', 'Reviewer'));
+                ->whereHas('role', fn ($r) => $r->whereIn(DB::raw('LOWER(name)'), ['reviewer']));
             })
             ->when(!empty($excludeIds), fn($q) => $q->whereNotIn('id', $excludeIds))
             ->when($search, function ($q) use ($search) {
@@ -130,15 +133,22 @@ class ReviewerApiController extends Controller
             */
             ->select('users.*')
             ->selectSub(function ($q) {
-                $q->from('review_assignments')
-                ->selectRaw(
-                    'AVG(EXTRACT(EPOCH FROM (completed_at - assigned_at)) / 86400)'
-                )
-                ->whereColumn('review_assignments.reviewer_id', 'users.id')
-                ->where('status', 'completed')
-                ->whereNotNull('assigned_at')
-                ->whereNotNull('completed_at')
-                ->whereNull('review_assignments.deleted_at');
+                $driver = DB::connection()->getDriverName();
+                if ($driver === 'pgsql') {
+                    $q->from('review_assignments')
+                        ->selectRaw('AVG(EXTRACT(EPOCH FROM (completed_at - assigned_at)) / 86400)');
+                } elseif ($driver === 'mysql' || $driver === 'mariadb') {
+                    $q->from('review_assignments')
+                        ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, assigned_at, completed_at)) / 86400');
+                } else {
+                    $q->from('review_assignments')
+                        ->selectRaw('AVG(strftime(\'%s\', completed_at) - strftime(\'%s\', assigned_at)) / 86400');
+                }
+                $q->whereColumn('review_assignments.reviewer_id', 'users.id')
+                    ->where('status', 'completed')
+                    ->whereNotNull('assigned_at')
+                    ->whereNotNull('completed_at')
+                    ->whereNull('review_assignments.deleted_at');
             }, 'avg_completion_days')
 
             ->limit(50)
