@@ -1209,24 +1209,30 @@ class OjsMigrationService
             $familyName = $settings->where('setting_name', 'familyName')->first()?->setting_value ?? '';
             $affiliation = $settings->where('setting_name', 'affiliation')->first()?->setting_value ?? null;
 
-            $author = SubmissionAuthor::updateOrCreate(
-                [
-                    // Use the same unique key as defined in the database migration
-                    'submission_id' => $newSubmissionId,
-                    'email'         => $lAuthor->email ?: "author_{$lAuthor->author_id}@migrated.local",
-                ],
-                [
-                    'sort_order'       => (int)$lAuthor->seq,
+            $mappedId = LegacyMapping::getMapping('authors', $lAuthor->author_id);
+            $author = null;
+            if ($mappedId) {
+                $author = SubmissionAuthor::find($mappedId);
+            }
 
-                    'given_name'       => $givenName ?: 'Author',
-                    'family_name'      => $familyName,
-                    'name'             => trim(($givenName ?: 'Author') . ' ' . $familyName),
-                    'first_name'       => $givenName ?: 'Author',
-                    'last_name'        => $familyName,
-                    'affiliation'      => $affiliation,
-                    'is_corresponding' => (bool)$lAuthor->include_in_browse,
-                ]
-            );
+            $authorData = [
+                'submission_id'    => $newSubmissionId,
+                'email'            => $lAuthor->email ?: "author_{$lAuthor->author_id}@migrated.local",
+                'sort_order'       => (int)$lAuthor->seq,
+                'given_name'       => $givenName ?: 'Author',
+                'family_name'      => $familyName,
+                'name'             => trim(($givenName ?: 'Author') . ' ' . $familyName),
+                'first_name'       => $givenName ?: 'Author',
+                'last_name'        => $familyName,
+                'affiliation'      => $affiliation,
+                'is_corresponding' => (bool)$lAuthor->include_in_browse,
+            ];
+
+            if ($author) {
+                $author->update($authorData);
+            } else {
+                $author = SubmissionAuthor::create($authorData);
+            }
 
             LegacyMapping::setMapping('authors', $lAuthor->author_id, $author->id);
         }

@@ -123,6 +123,17 @@ class WorkflowTest extends TestCase
         $submission->update(['status' => Submission::STATUS_ACCEPTED]);
         
         // 6. Editor Promotes to Production & Publishes
+        $issue = \App\Models\Issue::create([
+            'journal_id' => $this->journal->id,
+            'title' => 'Test Issue',
+            'volume' => 1,
+            'number' => 1,
+            'year' => date('Y'),
+            'published_at' => now(),
+            'is_published' => true,
+            'seq_id' => 101,
+        ]);
+
         $publication = Publication::create([
             'submission_id' => $submission->id,
             'title' => $submission->title,
@@ -133,6 +144,7 @@ class WorkflowTest extends TestCase
         $submission->update([
             'status' => Submission::STATUS_PUBLISHED,
             'published_at' => now(),
+            'issue_id' => $issue->id,
         ]);
 
         $this->assertEquals(Submission::STATUS_PUBLISHED, $submission->fresh()->status);

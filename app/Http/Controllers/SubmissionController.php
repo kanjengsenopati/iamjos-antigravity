@@ -345,35 +345,26 @@ class SubmissionController extends Controller
                     ]);
                 }
 
-                // 3. Save Authors (Ensure no duplicate emails per submission)
-                $primaryContactEmail = strtolower(trim($validated['authors'][$validated['primary_contact']]['email'] ?? ''));
+                // 3. Save Authors
+                $primaryContactIndex = (int)($validated['primary_contact'] ?? 0);
 
-                $uniqueAuthors = collect($validated['authors'])
-                    ->unique(fn ($author) => strtolower(trim($author['email'])))
-                    ->values()
-                    ->all();
-
-                foreach ($uniqueAuthors as $index => $authorData) {
+                foreach ($validated['authors'] as $index => $authorData) {
                     $authorEmail = strtolower(trim($authorData['email']));
-                    $isPrimary = ($authorEmail === $primaryContactEmail);
+                    $isPrimary = ($index === $primaryContactIndex);
 
-                    SubmissionAuthor::updateOrCreate(
-                        [
-                            'submission_id' => $submission->id,
-                            'email' => $authorEmail,
-                        ],
-                        [
-                            'user_id' => ($authorEmail === strtolower(trim($user->email))) ? $user->id : null,
-                            'first_name' => $authorData['first_name'],
-                            'last_name' => $authorData['last_name'],
-                            'name' => $authorData['first_name'] . ' ' . $authorData['last_name'],
-                            'affiliation' => $authorData['affiliation'] ?? null,
-                            'country' => $authorData['country'] ?? null,
-                            'is_primary_contact' => $isPrimary,
-                            'is_corresponding' => $isPrimary,
-                            'sort_order' => $index,
-                        ]
-                    );
+                    SubmissionAuthor::create([
+                        'submission_id' => $submission->id,
+                        'email' => $authorEmail,
+                        'user_id' => ($authorEmail === strtolower(trim($user->email))) ? $user->id : null,
+                        'first_name' => $authorData['first_name'],
+                        'last_name' => $authorData['last_name'],
+                        'name' => $authorData['first_name'] . ' ' . $authorData['last_name'],
+                        'affiliation' => $authorData['affiliation'] ?? null,
+                        'country' => $authorData['country'] ?? null,
+                        'is_primary_contact' => $isPrimary,
+                        'is_corresponding' => $isPrimary,
+                        'sort_order' => $index,
+                    ]);
                 }
 
                 // 4. Create Discussion for "Comments for the Editor" (if provided)
