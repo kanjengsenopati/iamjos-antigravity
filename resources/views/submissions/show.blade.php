@@ -3903,7 +3903,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 <div @click="discussionModalOpen = false"
                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                 <div
-                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+                    class="relative z-50 inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
                     <div class="mb-4">
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Add Discussion</h3>
                     </div>
@@ -4036,7 +4036,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 </div>
 
                 <div
-                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                    class="relative z-50 inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
                     <div class="mb-4 border-b border-gray-200 pb-2">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="wizard-title">
                             Add File to Discussion
@@ -4063,7 +4063,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <option>Other</option>
                                 </select>
                             </div>
-                            <div
+                            <div x-show="!wizardIsUploading"
                                 class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md relative hover:bg-gray-50">
                                 <div class="space-y-1 text-center">
                                     <i class="fa-solid fa-cloud-arrow-up text-gray-400 text-3xl"></i>
@@ -4077,9 +4077,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <p class="text-xs text-gray-500">Drag and drop or select file</p>
                                 </div>
                             </div>
+                            <div x-show="wizardIsUploading" class="mt-2 p-6 border-2 border-gray-200 rounded-md bg-gray-50 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-gray-700">Uploading file...</span>
+                                    <span class="text-sm font-semibold text-indigo-600" x-text="wizardUploadProgress + '%'"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-150" :style="'width: ' + wizardUploadProgress + '%'"></div>
+                                </div>
+                            </div>
                         </div>
                         <div class="mt-5 sm:flex sm:flex-row-reverse">
-                            <button type="button" @click="fileWizardOpen = false"
+                            <button type="button" @click="fileWizardOpen = false" :disabled="wizardIsUploading"
+                                :class="wizardIsUploading ? 'opacity-50 cursor-not-allowed' : ''"
                                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
                         </div>
                     </div>
@@ -4140,7 +4150,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 <div @click="fileModalOpen = false"
                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                 <div
-                    class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                    class="relative z-50 inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
 
                     <div class="mb-5">
                         <h3 class="text-lg leading-6 font-bold text-gray-900">Upload Submission File</h3>
@@ -6210,6 +6220,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 fileModalOpen: false,
                 discussionModalOpen: false,
                 fileWizardOpen: false,
+                wizardUploadProgress: 0,
+                wizardIsUploading: false,
                 uploadStage: config.defaultStage,
                 discussionStageId: config.stageId,
 
@@ -6694,19 +6706,40 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     let formData = new FormData();
                     formData.append('file', file);
 
-                    fetch(config.uploadFileUrl, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': config.csrfToken
-                            },
-                            body: formData
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            this.tempUploadedFile = data;
-                            this.wizardStep = 2;
-                        })
-                        .catch(err => alert('Upload failed'));
+                    this.wizardIsUploading = true;
+                    this.wizardUploadProgress = 0;
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', config.uploadFileUrl);
+                    xhr.setRequestHeader('X-CSRF-TOKEN', config.csrfToken);
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            this.wizardUploadProgress = Math.round((e.loaded / e.total) * 100);
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        this.wizardIsUploading = false;
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                this.tempUploadedFile = data;
+                                this.wizardStep = 2;
+                            } catch (e) {
+                                alert('Upload failed: Invalid response');
+                            }
+                        } else {
+                            alert('Upload failed: ' + xhr.statusText);
+                        }
+                    };
+
+                    xhr.onerror = () => {
+                        this.wizardIsUploading = false;
+                        alert('Upload failed');
+                    };
+
+                    xhr.send(formData);
                 },
 
                 completeWizard() {

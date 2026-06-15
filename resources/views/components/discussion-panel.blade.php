@@ -319,14 +319,25 @@
                                         <div class="flex items-center justify-between mb-2">
                                             <x-text.caption class="not-italic font-medium text-slate-700">Attachments</x-text.caption>
                                             <label
-                                                class="cursor-pointer">
+                                                :class="replyIsUploading ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'">
                                                 <x-text.caption class="not-italic text-blue-600 font-semibold hover:underline flex items-center">
                                                     <i class="fa-solid fa-paperclip mr-1"></i>
                                                     Add File
                                                 </x-text.caption>
-                                                <input type="file" class="sr-only"
+                                                <input type="file" class="sr-only" :disabled="replyIsUploading"
                                                     @change="uploadReplyFile($event)">
                                             </label>
+                                        </div>
+
+                                        <!-- Progress Bar for uploading reply file -->
+                                        <div x-show="replyIsUploading" class="mb-2 p-3 border rounded bg-slate-50 space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <x-text.caption class="text-slate-600 font-medium">Uploading file...</x-text.caption>
+                                                <x-text.caption class="text-blue-600 font-semibold" x-text="replyUploadProgress + '%'"></x-text.caption>
+                                            </div>
+                                            <div class="w-full bg-slate-200 rounded-full h-1.5">
+                                                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-150" :style="'width: ' + replyUploadProgress + '%'"></div>
+                                            </div>
                                         </div>
                                         <ul class="space-y-1">
                                             <template x-for="file in replyFiles" :key="file.id">
@@ -539,11 +550,23 @@
                         <div class="flex items-center justify-between mb-3">
                             <x-text.h2 class="text-gray-900">Attachments</x-text.h2>
                             <label
-                                class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 cursor-pointer transition-colors">
+                                :class="newIsUploading ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'"
+                                class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 transition-colors">
                                 <i class="fa-solid fa-paperclip mr-1.5 text-[14px]"></i>
                                 <x-text.body class="font-semibold text-inherit inline">Attach File</x-text.body>
-                                <input type="file" class="sr-only" @change="uploadNewDiscussionFile($event)">
+                                <input type="file" class="sr-only" :disabled="newIsUploading" @change="uploadNewDiscussionFile($event)">
                             </label>
+                        </div>
+
+                        <!-- Progress Bar for uploading new file -->
+                        <div x-show="newIsUploading" class="mb-3 p-4 border rounded-lg bg-slate-50 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <x-text.body class="text-slate-600 font-medium">Uploading file...</x-text.body>
+                                <x-text.body class="text-blue-600 font-semibold" x-text="newUploadProgress + '%'"></x-text.body>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full transition-all duration-150" :style="'width: ' + newUploadProgress + '%'"></div>
+                            </div>
                         </div>
                         <ul class="space-y-2">
                             <template x-for="file in newDiscussionFiles" :key="file.id">
@@ -596,6 +619,8 @@
             newDiscussionFiles: [],
             newEditorInstance: null,
             submittingNew: false,
+            newUploadProgress: 0,
+            newIsUploading: false,
 
             ...config,
 
@@ -624,26 +649,46 @@
                     .catch(err => console.error(err));
             },
 
-            async uploadNewDiscussionFile(event) {
+            uploadNewDiscussionFile(event) {
                 const file = event.target.files[0];
                 if (!file) return;
 
                 let formData = new FormData();
                 formData.append('file', file);
 
-                try {
-                    const res = await fetch(this.uploadFileUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': this.csrfToken
-                        },
-                        body: formData
-                    });
-                    const data = await res.json();
-                    this.newDiscussionFiles.push(data);
-                } catch (err) {
+                this.newIsUploading = true;
+                this.newUploadProgress = 0;
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', this.uploadFileUrl);
+                xhr.setRequestHeader('X-CSRF-TOKEN', this.csrfToken);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        this.newUploadProgress = Math.round((e.loaded / e.total) * 100);
+                    }
+                };
+
+                xhr.onload = () => {
+                    this.newIsUploading = false;
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            this.newDiscussionFiles.push(data);
+                        } catch (e) {
+                            alert('Upload failed: Invalid response');
+                        }
+                    } else {
+                        alert('Upload failed: ' + xhr.statusText);
+                    }
+                };
+
+                xhr.onerror = () => {
+                    this.newIsUploading = false;
                     alert('Upload failed');
-                }
+                };
+
+                xhr.send(formData);
                 event.target.value = '';
             }
         }));
@@ -654,6 +699,8 @@
             replyFiles: [],
             replyEditorInstance: null,
             submitting: false,
+            replyUploadProgress: 0,
+            replyIsUploading: false,
 
             ...config,
 
@@ -683,26 +730,46 @@
                 }
             },
 
-            async uploadReplyFile(event) {
+            uploadReplyFile(event) {
                 const file = event.target.files[0];
                 if (!file) return;
 
                 let formData = new FormData();
                 formData.append('file', file);
 
-                try {
-                    const res = await fetch(this.uploadFileUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': this.csrfToken
-                        },
-                        body: formData
-                    });
-                    const data = await res.json();
-                    this.replyFiles.push(data);
-                } catch (err) {
+                this.replyIsUploading = true;
+                this.replyUploadProgress = 0;
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', this.uploadFileUrl);
+                xhr.setRequestHeader('X-CSRF-TOKEN', this.csrfToken);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        this.replyUploadProgress = Math.round((e.loaded / e.total) * 100);
+                    }
+                };
+
+                xhr.onload = () => {
+                    this.replyIsUploading = false;
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            this.replyFiles.push(data);
+                        } catch (e) {
+                            alert('Upload failed: Invalid response');
+                        }
+                    } else {
+                        alert('Upload failed: ' + xhr.statusText);
+                    }
+                };
+
+                xhr.onerror = () => {
+                    this.replyIsUploading = false;
                     alert('Upload failed');
-                }
+                };
+
+                xhr.send(formData);
                 event.target.value = '';
             },
 
