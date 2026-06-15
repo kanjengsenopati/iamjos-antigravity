@@ -2606,6 +2606,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
         
             init() {
                 this.loadSections();
+                this.$watch('pubTab', (value) => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', 'publication');
+                    url.searchParams.set('subtab', value);
+                    window.history.replaceState({}, document.title, url.pathname + url.search);
+                });
             },
         
             // Reordering Logic
@@ -6210,11 +6216,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 activeStage: config.defaultStage,
 
                 init() {
-                    // Check for URL parameters and clean them up after initialization
-                    const urlParams = new URLSearchParams(window.location.search);
-                    if (urlParams.has('tab') || urlParams.has('subtab')) {
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    }
+                    this.$watch('activeTab', (value) => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('tab', value);
+                        if (value !== 'publication') {
+                            url.searchParams.delete('subtab');
+                        }
+                        window.history.replaceState({}, document.title, url.pathname + url.search);
+                    });
                 },
 
                 fileModalOpen: false,
