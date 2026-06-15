@@ -243,6 +243,7 @@ class ReviewWorkflowController extends Controller
                         }
                         // Move to Copyediting stage (stage_id = 3)
                         $submission->update([
+                            'stage'       => Submission::STAGE_COPYEDITING,
                             'stage_id'    => 3, // Copyediting
                             'status'      => 'queued_for_copyediting',
                             'accepted_at' => now(),
@@ -371,7 +372,10 @@ class ReviewWorkflowController extends Controller
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
-        $submission->update(['stage_id' => 3]);
+        $submission->update([
+            'stage' => Submission::STAGE_COPYEDITING,
+            'stage_id' => 3,
+        ]);
 
         return back()->with('success', 'Submission moved to Copyediting.');
     }
@@ -393,6 +397,7 @@ class ReviewWorkflowController extends Controller
         DB::transaction(function () use ($validated, $submission) {
             // 1. Update submission stage to Production
             $submission->update([
+                'stage'    => Submission::STAGE_PRODUCTION,
                 'stage_id' => 4, // Production
                 'status'   => Submission::STATUS_IN_PRODUCTION ?? 'in_production',
             ]);

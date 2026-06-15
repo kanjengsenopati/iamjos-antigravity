@@ -4527,7 +4527,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div x-show="acceptSendEmail" class="space-y-2">
                                 <label class="block text-sm font-medium text-gray-700">Email Content</label>
                                 <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                                    <textarea name="email_body" id="accept-email-editor" rows="6" class="hidden"></textarea>
+                                    <textarea name="email_body" id="accept-email-editor" rows="6" x-model="acceptEmailBody" class="hidden"></textarea>
                                 </div>
                             </div>
 
@@ -4801,7 +4801,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     Email Content
                                 </h4>
                                 <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                                    <textarea name="email_body" id="revision-email-editor" class="hidden"></textarea>
+                                    <textarea name="email_body" id="revision-email-editor" x-model="revisionEmailBody" class="hidden"></textarea>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-2">
                                     <i class="fa-solid fa-info-circle mr-1"></i>
@@ -6430,7 +6430,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 async loadAcceptFiles() {
                     this.acceptIsLoading = true;
                     try {
-                        const res = await fetch(config.availableFilesUrl);
+                        const res = await fetch(config.promotableFilesUrl);
                         const data = await res.json();
                         this.acceptFiles = data.files || [];
                         this.acceptSelectedFiles = this.acceptFiles.map(f => f.id);

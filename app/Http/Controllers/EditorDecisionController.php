@@ -180,7 +180,8 @@ class EditorDecisionController extends Controller
             case 'accept':
                 $updates = [
                     'status' => Submission::STATUS_ACCEPTED,
-                    'stage' => Submission::STAGE_PRODUCTION,
+                    'stage' => Submission::STAGE_COPYEDITING,
+                    'stage_id' => 3,
                 ];
                 $notificationDecision = 'accepted';
                 break;
@@ -196,6 +197,7 @@ class EditorDecisionController extends Controller
                 $updates = [
                     'status' => Submission::STATUS_REVISION_REQUIRED,
                     'stage' => Submission::STAGE_REVISION,
+                    'stage_id' => 2,
                 ];
                 $notificationDecision = 'revision_required';
                 break;
