@@ -37,6 +37,7 @@ use App\Http\Controllers\InstallController;
 use App\Http\Controllers\Public\JatsXmlController;
 use App\Http\Controllers\Public\LockssController;
 use App\Http\Controllers\Admin\PublicPageController;
+use App\Http\Controllers\Admin\CorrespondenceController;
 
 // =====================================================
 // OJS PREFIX CONFIGURATION
@@ -357,6 +358,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 ]);
 
                 Route::post('/submissions/{submission}/files', [SubmissionFileController::class, 'store'])->name('journal.submissions.files.store');
+                Route::get('/submissions/{submission}/correspondence/download', [CorrespondenceController::class, 'download'])->name('journal.correspondence.download');
                 Route::delete('/files/{file}', [SubmissionFileController::class, 'destroy'])->name('journal.files.destroy');
                 Route::post('/upload/image', [SubmissionController::class, 'uploadImage'])->name('journal.upload.image');
                 Route::post('/discussion/upload-image', [SubmissionDiscussionController::class, 'uploadCkeditorImage'])->name('journal.discussion.upload-image');
