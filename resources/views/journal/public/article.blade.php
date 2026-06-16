@@ -488,13 +488,13 @@
                 <div class="flex gap-8 mb-6 text-center">
                     <div>
                         <div class="text-3xl font-bold text-blue-600">
-                            {{ number_format(array_sum(($viewsData ?? collect())->toArray())) }}
+                            {{ number_format($article->views_count) }}
                         </div>
                         <div class="text-sm text-slate-600 mt-1">Total Views</div>
                     </div>
                     <div>
                         <div class="text-3xl font-bold text-green-600">
-                            {{ number_format(array_sum(($downloadsData ?? collect())->toArray())) }}
+                            {{ number_format($article->downloads_count) }}
                         </div>
                         <div class="text-sm text-slate-600 mt-1">Total Downloads</div>
                     </div>
