@@ -220,13 +220,49 @@
                             </div>
                             <textarea name="abstract" id="abstractHidden" class="hidden">{{ old('abstract') }}</textarea>
                         </div>
-                        <div x-data="keywordInput()">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
-                            <input type="text" x-ref="keywordInput"
-                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                        <div x-data="keywordInputCustom({{ json_encode(old('keywords', [])) }})" class="relative">
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-1">
+                                Keywords
+                                <i class="fa-solid fa-circle-question text-gray-400 cursor-pointer ml-1.5" 
+                                   title="Press Enter or comma to add keywords. Start typing to see suggestions."></i>
+                            </label>
+                            <input type="text" 
+                                x-model="newTag"
+                                @keydown.enter.prevent="handleEnter()"
+                                @keydown.comma.prevent="addTag()"
+                                @input="fetchSuggestions()"
+                                @keydown.arrow-down.prevent="highlightDown()"
+                                @keydown.arrow-up.prevent="highlightUp()"
+                                @keydown.escape.prevent="showSuggestions = false"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                 placeholder="Type keyword and press Enter">
-                            <p class="text-xs text-gray-500 mt-1">Press Enter or comma to add keywords. Start typing to see
-                                suggestions.</p>
+                            
+                            <div x-show="showSuggestions && suggestions.length > 0" 
+                                 @click.away="showSuggestions = false" 
+                                 class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                 x-cloak>
+                                <template x-for="(suggestion, i) in suggestions" :key="suggestion">
+                                    <div @click="selectSuggestion(suggestion)" 
+                                         :class="{'bg-indigo-50 text-indigo-900': i === highlightedIndex, 'text-gray-700': i !== highlightedIndex}"
+                                         class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50 text-sm"
+                                         x-text="suggestion">
+                                    </div>
+                                </template>
+                            </div>
+
+                            <template x-for="(tag, index) in tags" :key="tag">
+                                <input type="hidden" :name="'keywords[' + index + ']'" :value="tag">
+                            </template>
+
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <template x-for="(tag, index) in tags" :key="tag">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-700 font-medium shadow-sm transition hover:border-gray-300">
+                                        <span x-text="tag"></span>
+                                        <button type="button" @click="removeTag(index)" 
+                                            class="ml-1 text-red-500 hover:text-red-700 font-bold focus:outline-none text-sm leading-none">&times;</button>
+                                    </span>
+                                </template>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">References</label>
@@ -686,99 +722,89 @@
             }
         }
 
-        // ========== KEYWORD INPUT (Tagify) ==========
-        function keywordInput() {
+        function keywordInputCustom(initialKeywords = []) {
             return {
-                tagify: null,
+                tags: Array.isArray(initialKeywords) ? [...initialKeywords] : [],
+                newTag: '',
+                suggestions: [],
+                showSuggestions: false,
+                highlightedIndex: -1,
+                controller: null,
 
-                init() {
-                    // Load Tagify CSS and JS
-                    if (!document.querySelector('link[href*="tagify"]')) {
-                        const link = document.createElement('link');
-                        link.rel = 'stylesheet';
-                        link.href = 'https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css';
-                        document.head.appendChild(link);
+                addTag() {
+                    let tag = this.newTag.trim();
+                    if (tag.endsWith(',')) {
+                        tag = tag.slice(0, -1).trim();
                     }
+                    if (tag && !this.tags.includes(tag)) {
+                        this.tags.push(tag);
+                    }
+                    this.newTag = '';
+                    this.suggestions = [];
+                    this.showSuggestions = false;
+                    this.highlightedIndex = -1;
+                },
 
-                    if (!window.Tagify) {
-                        const script = document.createElement('script');
-                        script.src = 'https://cdn.jsdelivr.net/npm/@yaireo/tagify';
-                        script.onload = () => this.initializeTagify();
-                        document.head.appendChild(script);
+                removeTag(index) {
+                    this.tags.splice(index, 1);
+                },
+
+                handleEnter() {
+                    if (this.showSuggestions && this.highlightedIndex >= 0 && this.highlightedIndex < this.suggestions.length) {
+                        this.selectSuggestion(this.suggestions[this.highlightedIndex]);
                     } else {
-                        this.initializeTagify();
+                        this.addTag();
                     }
                 },
 
-                initializeTagify() {
-                    const input = this.$refs.keywordInput;
+                fetchSuggestions() {
+                    const value = this.newTag.trim();
+                    if (value.length < 2) {
+                        this.suggestions = [];
+                        this.showSuggestions = false;
+                        this.highlightedIndex = -1;
+                        return;
+                    }
 
-                    this.tagify = new Tagify(input, {
-                        delimiters: ",|Enter",
-                        maxTags: 20,
-                        dropdown: {
-                            enabled: 1,
-                            maxItems: 10,
-                            classname: "tagify__dropdown",
-                            closeOnSelect: true
-                        },
-                        whitelist: [],
-                        enforceWhitelist: false,
-                        editTags: {
-                            clicks: 1,
-                            keepInvalid: false
+                    if (this.controller) {
+                        this.controller.abort();
+                    }
+                    this.controller = new AbortController();
+
+                    fetch(`/api/keywords?query=${encodeURIComponent(value)}`, {
+                        signal: this.controller.signal
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        this.suggestions = data.map(k => k.content).filter(content => !this.tags.includes(content));
+                        this.showSuggestions = this.suggestions.length > 0;
+                        this.highlightedIndex = -1;
+                    })
+                    .catch(err => {
+                        if (err.name !== 'AbortError') {
+                            console.error('Keyword fetch error:', err);
                         }
                     });
-
-                    // Fetch autocomplete suggestions
-                    let controller;
-                    this.tagify.on('input', (e) => {
-                        const value = e.detail.value;
-                        this.tagify.settings.whitelist.length = 0;
-
-                        if (value.length < 2) return;
-
-                        // Cancel previous request
-                        controller && controller.abort();
-                        controller = new AbortController();
-
-                        fetch(`/api/keywords?query=${encodeURIComponent(value)}`, {
-                                signal: controller.signal
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                this.tagify.settings.whitelist = data.map(k => k.content);
-                                this.tagify.dropdown.show(value);
-                            })
-                            .catch(err => {
-                                if (err.name !== 'AbortError') {
-                                    console.error('Keyword fetch error:', err);
-                                }
-                            });
-                    });
-
-                    // Create hidden inputs for form submission
-                    this.tagify.on('add remove', () => {
-                        this.updateHiddenInputs();
-                    });
                 },
 
-                updateHiddenInputs() {
-                    // Remove existing hidden keyword inputs
-                    const existingInputs = document.querySelectorAll('input[name^="keywords["]');
-                    existingInputs.forEach(input => input.remove());
+                selectSuggestion(suggestion) {
+                    if (!this.tags.includes(suggestion)) {
+                        this.tags.push(suggestion);
+                    }
+                    this.newTag = '';
+                    this.suggestions = [];
+                    this.showSuggestions = false;
+                    this.highlightedIndex = -1;
+                },
 
-                    // Add new hidden inputs for each tag
-                    const tags = this.tagify.value;
-                    const form = this.$refs.keywordInput.closest('form');
+                highlightDown() {
+                    if (this.suggestions.length === 0) return;
+                    this.highlightedIndex = (this.highlightedIndex + 1) % this.suggestions.length;
+                },
 
-                    tags.forEach((tag, index) => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = `keywords[${index}]`;
-                        input.value = tag.value;
-                        form.appendChild(input);
-                    });
+                highlightUp() {
+                    if (this.suggestions.length === 0) return;
+                    this.highlightedIndex = (this.highlightedIndex - 1 + this.suggestions.length) % this.suggestions.length;
                 }
             }
         }
