@@ -357,7 +357,7 @@ class PublicController extends Controller
             [$countryCode, $city] = $this->resolveGeoIp($ip);
 
             // Log the view asynchronously via queued job
-            RecordArticleMetricJob::dispatch(
+            RecordArticleMetricJob::dispatchSync(
                 $article->id,
                 'view',
                 $ip,
@@ -747,7 +747,7 @@ class PublicController extends Controller
         if (!$isBot) {
             [$countryCode, $city] = $this->resolveGeoIp($ip);
 
-            RecordArticleMetricJob::dispatch(
+            RecordArticleMetricJob::dispatchSync(
                 $submission->id,
                 'download',
                 $ip,
@@ -826,7 +826,7 @@ class PublicController extends Controller
         // Analytics
         if (!preg_match('/bot|crawler|spider/i', request()->userAgent() ?? '')) {
             [$countryCode, $city] = $this->resolveGeoIp(request()->ip());
-            RecordArticleMetricJob::dispatch(
+            RecordArticleMetricJob::dispatchSync(
                 $submission->id,
                 'download',
                 request()->ip(),
@@ -906,7 +906,7 @@ class PublicController extends Controller
                     // Analytics: Log View/Download
                     if (!preg_match('/bot|crawler|spider/i', request()->userAgent() ?? '')) {
                         [$countryCode, $city] = $this->resolveGeoIp(request()->ip());
-                        RecordArticleMetricJob::dispatch(
+                        RecordArticleMetricJob::dispatchSync(
                             $submission->id,
                             'download',
                             request()->ip(),
