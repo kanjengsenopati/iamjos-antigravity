@@ -3719,9 +3719,31 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                                    <input type="text" name="country" :value="editingContributor?.country || ''"
-                                        placeholder="e.g., United States"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <select name="country"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                                        <option value="">Select Country...</option>
+                                        @foreach (config('countries', []) as $code => $name)
+                                            <option value="{{ $code }}" :selected="editingContributor?.country === '{{ $code }}' || editingContributor?.country === '{{ $name }}'">{{ $name }}</option>
+                                        @endforeach
+                                        @if (empty(config('countries')))
+                                            @php
+                                                $fallbacks = [
+                                                    'ID' => 'Indonesia',
+                                                    'MY' => 'Malaysia',
+                                                    'SG' => 'Singapore',
+                                                    'TH' => 'Thailand',
+                                                    'VN' => 'Vietnam',
+                                                    'PH' => 'Philippines',
+                                                    'AU' => 'Australia',
+                                                    'US' => 'United States',
+                                                    'OTHER' => 'Other',
+                                                ];
+                                            @endphp
+                                            @foreach ($fallbacks as $code => $name)
+                                                <option value="{{ $code }}" :selected="editingContributor?.country === '{{ $code }}' || editingContributor?.country === '{{ $name }}'">{{ $name }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">ORCID iD</label>

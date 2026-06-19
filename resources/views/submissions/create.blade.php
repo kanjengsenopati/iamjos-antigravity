@@ -342,10 +342,32 @@
                                         </div>
                                         <div>
                                             <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Country</label>
-                                            <input type="text" :name="'authors[' + index + '][country]'"
+                                            <select :name="'authors[' + index + '][country]'"
                                                 x-model="author.country"
-                                                class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                                maxlength="100" placeholder="Indonesia">
+                                                class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                                                <option value="">Select Country...</option>
+                                                @foreach (config('countries', []) as $code => $name)
+                                                    <option value="{{ $code }}">{{ $name }}</option>
+                                                @endforeach
+                                                @if (empty(config('countries')))
+                                                    @php
+                                                        $fallbacks = [
+                                                            'ID' => 'Indonesia',
+                                                            'MY' => 'Malaysia',
+                                                            'SG' => 'Singapore',
+                                                            'TH' => 'Thailand',
+                                                            'VN' => 'Vietnam',
+                                                            'PH' => 'Philippines',
+                                                            'AU' => 'Australia',
+                                                            'US' => 'United States',
+                                                            'OTHER' => 'Other',
+                                                        ];
+                                                    @endphp
+                                                    @foreach ($fallbacks as $code => $name)
+                                                        <option value="{{ $code }}">{{ $name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
                                         </div>
                                     </div>
 
@@ -718,6 +740,40 @@
                     if (this.isSubmitting) return;
                     this.isSubmitting = true;
                     this.$refs.form.submit();
+                },
+
+                init() {
+                    const countryNamesToCodes = {};
+                    const countriesList = @json(config('countries', []));
+                    const fallbacks = {
+                        'ID': 'Indonesia',
+                        'MY': 'Malaysia',
+                        'SG': 'Singapore',
+                        'TH': 'Thailand',
+                        'VN': 'Vietnam',
+                        'PH': 'Philippines',
+                        'AU': 'Australia',
+                        'US': 'United States',
+                        'OTHER': 'Other'
+                    };
+                    const countries = Object.keys(countriesList).length > 0 ? countriesList : fallbacks;
+                    
+                    Object.entries(countries).forEach(([code, name]) => {
+                        countryNamesToCodes[name.toLowerCase()] = code;
+                    });
+
+                    // Normalize author countries to codes
+                    this.authors.forEach(author => {
+                        if (author.country) {
+                            const trimmed = author.country.trim();
+                            if (trimmed.length > 2) {
+                                const mapped = countryNamesToCodes[trimmed.toLowerCase()];
+                                if (mapped) {
+                                    author.country = mapped;
+                                }
+                            }
+                        }
+                    });
                 }
             }
         }
