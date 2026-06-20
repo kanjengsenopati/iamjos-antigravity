@@ -137,14 +137,16 @@ class MetadataManager
         ]);
 
         // PDF URL (CRITICAL - must point to actual download, not view page)
-        $pdfGalley = $article->galleys?->where('label', 'PDF')->first() 
-            ?? $article->galleys?->first();
+        $pdfGalley = $article->galleys?->first(function ($galley) {
+            return (optional($galley->file)->mime_type === 'application/pdf') || 
+                   in_array(strtolower($galley->label ?? ''), ['pdf', 'pdf galley', 'naskah pdf', 'dokumen pdf']);
+        }) ?? $article->galleys?->first();
         
         if ($pdfGalley) {
-            $metadata['highwire']['citation_pdf_url'] = route('journal.article.download', [
-                'journal' => $journal->slug,
-                'article' => $article->seq_id,
-                'galley' => $pdfGalley->id,
+            $metadata['highwire']['citation_pdf_url'] = route('journal.article.download.pdf', [
+                'journal'  => $journal->slug,
+                'seq_id'   => $article->seq_id,
+                'filename' => \Illuminate\Support\Str::slug($article->title),
             ]);
         }
 

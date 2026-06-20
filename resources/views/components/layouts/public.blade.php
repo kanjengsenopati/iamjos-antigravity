@@ -31,7 +31,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 @stack('meta_tags')
 <meta name="description" content="{{ $description ?? ($journal->description ?? 'Open-access academic journal platform') }}">
 <meta name="keywords" content="{{ $journal->keywords ?? 'academic, journal, research, publication, open access' }}">
-<meta name="generator" content="{{ $siteTitle }} - {{ $siteIntro }}">
+<meta name="generator" content="Open Journal Systems 3.3.0.14" />
 @if($journal->block_search_indexing)
 <meta name="robots" content="noindex, nofollow">
 @else

@@ -32,7 +32,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 @endif
 <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
-<meta name="generator" content="{{ $siteTitle }} - {{ $siteIntro }}">
+<meta name="generator" content="Open Journal Systems 3.3.0.14" />
 
 {{-- ============================================ --}}
 {{-- ACADEMIC METADATA (GS / OJS COMPLIANCE)      --}}

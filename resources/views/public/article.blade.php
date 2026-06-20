@@ -2,10 +2,6 @@
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$title" :article="true">
     @push('meta_tags')
-        {{-- ============================================ --}}
-        {{-- GOOGLE SCHOLAR / HIGHWIRE PRESS META TAGS --}}
-        {{-- GS-01 FIX: Aligned with journal/public/article.blade.php --}}
-        {{-- ============================================ --}}
         @php
             $pub         = $submission->currentPublication ?? $submission;
             $pubDoi      = $pub->doi ?? $submission->doi ?? null;
@@ -29,44 +25,79 @@
             $copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
             $copyrightYear   = $pub->copyright_year ?? ($submission->issue?->year ?? date('Y'));
             $licenseUrl      = $pub->license_url ?? ($journal->license_url ?? null);
+
+            // Keywords
+            $processedKeywords = [];
+            $pubKeywords = $pub->keywords ?? $submission->keywords;
+            if ($pubKeywords) {
+                $rawK = is_string($pubKeywords)
+                    ? (str_starts_with(trim($pubKeywords), '[') ? json_decode($pubKeywords, true) : explode(',', $pubKeywords))
+                    : (is_iterable($pubKeywords) ? $pubKeywords : []);
+                foreach ($rawK as $k) {
+                    $val = is_array($k)
+                        ? ($k['value'] ?? ($k['content'] ?? ($k['name'] ?? null)))
+                        : (is_object($k) ? ($k->content ?? ($k->value ?? ($k->name ?? null))) : $k);
+                    if ($val) $processedKeywords[] = trim((string) $val);
+                }
+            }
+
+            // References
+            $parsedRefs = [];
+            $rawRefs = $pub->references ?? $submission->references ?? null;
+            if ($rawRefs) {
+                $parsedRefs = array_values(array_filter(
+                    array_map('trim', explode("\n", $rawRefs)),
+                    fn($r) => strlen($r) > 5
+                ));
+            }
+
+            // PDF Galley for citation_pdf_url
+            $pdfGalley = $submission->galleys?->first(function ($galley) {
+                return (optional($galley->file)->mime_type === 'application/pdf') || 
+                       in_array(strtolower($galley->label ?? ''), ['pdf', 'pdf galley', 'naskah pdf', 'dokumen pdf']);
+            }) ?? $submission->galleys?->first();
+
+            $pdfGalleyUrl = null;
+            if ($pdfGalley) {
+                $pdfGalleyUrl = route('journal.article.download.pdf', [
+                    'journal'  => $journal->slug,
+                    'seq_id'   => $submission->seq_id,
+                    'filename' => \Illuminate\Support\Str::slug($pubTitle),
+                ]);
+            }
         @endphp
-        <meta name="gs_meta_revision" content="1.1">
-        <meta name="citation_journal_title" content="{{ htmlspecialchars($journal->name) }}">
+        <meta name="gs_meta_revision" content="1.1" />
+        <meta name="citation_journal_title" content="{{ htmlspecialchars($journal->name) }}" />
         @if ($journal->abbreviation)
-            <meta name="citation_journal_abbrev" content="{{ htmlspecialchars($journal->abbreviation) }}">
+            <meta name="citation_journal_abbrev" content="{{ htmlspecialchars($journal->abbreviation) }}" />
         @endif
         @if ($journal->publisher)
-            <meta name="citation_publisher" content="{{ htmlspecialchars($journal->publisher) }}">
+            <meta name="citation_publisher" content="{{ htmlspecialchars($journal->publisher) }}" />
         @endif
         @if ($issnValue)
-            <meta name="citation_issn" content="{{ htmlspecialchars($issnValue) }}">
+            <meta name="citation_issn" content="{{ htmlspecialchars($issnValue) }}" />
         @endif
-        <meta name="citation_title" content="{{ htmlspecialchars($pubTitle) }}">
-        <meta name="citation_language" content="{{ $bcp47Locale }}">
+        <meta name="citation_title" content="{{ htmlspecialchars($pubTitle) }}" />
+        <meta name="citation_language" content="{{ $bcp47Locale }}" />
         @if ($pubDate)
-            <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
+            <meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}" />
         @endif
         @if ($submission->issue)
             @if ($submission->issue->volume)
-                <meta name="citation_volume" content="{{ htmlspecialchars($submission->issue->volume) }}">
+                <meta name="citation_volume" content="{{ htmlspecialchars($submission->issue->volume) }}" />
             @endif
             @if ($submission->issue->number)
-                <meta name="citation_issue" content="{{ htmlspecialchars($submission->issue->number) }}">
+                <meta name="citation_issue" content="{{ htmlspecialchars($submission->issue->number) }}" />
             @endif
         @endif
         @if ($firstPage)
-            <meta name="citation_firstpage" content="{{ htmlspecialchars($firstPage) }}">
+            <meta name="citation_firstpage" content="{{ htmlspecialchars($firstPage) }}" />
         @endif
         @if ($lastPage)
-            <meta name="citation_lastpage" content="{{ htmlspecialchars($lastPage) }}">
+            <meta name="citation_lastpage" content="{{ htmlspecialchars($lastPage) }}" />
         @endif
         @if ($pubDoi)
-            <meta name="citation_doi" content="{{ htmlspecialchars($pubDoi) }}">
-        @endif
-        @if ($journal->issn_online)
-            <meta name="citation_issn" content="{{ htmlspecialchars($journal->issn_online) }}">
-        @elseif($journal->issn_print)
-            <meta name="citation_issn" content="{{ htmlspecialchars($journal->issn_print) }}">
+            <meta name="citation_doi" content="{{ htmlspecialchars($pubDoi) }}" />
         @endif
         @foreach ($pubAuthors as $author)
             @php
@@ -76,59 +107,64 @@
                 }
             @endphp
             @if ($authorDisplayName)
-            <meta name="citation_author" content="{{ htmlspecialchars($authorDisplayName) }}">
-            @if ($author->affiliation)
-                <meta name="citation_author_institution" content="{{ htmlspecialchars($author->affiliation) }}">
-            @endif
-            @if ($author->orcid ?? false)
-                <meta name="citation_author_orcid" content="{{ htmlspecialchars($author->orcid) }}">
-            @endif
-            @endif
-        @endforeach
-        <meta name="citation_abstract_html_url" content="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}">
-        @foreach ($submission->files as $file)
-            @if(Str::endsWith($file->file_name, '.pdf'))
-                <meta name="citation_pdf_url" content="{{ route('files.download', $file) }}">
-                @break
+                <meta name="citation_author" content="{{ htmlspecialchars($authorDisplayName) }}" />
+                @if ($author->affiliation)
+                    <meta name="citation_author_institution" content="{{ htmlspecialchars($author->affiliation) }}" />
+                @endif
+                @if ($author->orcid ?? false)
+                    <meta name="citation_author_orcid" content="{{ htmlspecialchars($author->orcid) }}" />
+                @endif
             @endif
         @endforeach
-        @if ($pubAbstract)
-            <meta name="citation_abstract" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
+        @foreach ($processedKeywords as $keyword)
+            <meta name="citation_keywords" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars($keyword) }}" />
+        @endforeach
+        <meta name="citation_abstract_html_url" content="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}" />
+        @if ($pdfGalleyUrl)
+            <meta name="citation_fulltext_html_url" content="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}" />
+            <meta name="citation_pdf_url" content="{{ $pdfGalleyUrl }}" />
         @endif
+        @if ($pubAbstract)
+            <meta name="citation_abstract" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}" />
+        @endif
+        @foreach (array_slice($parsedRefs, 0, 50) as $ref)
+            <meta name="citation_reference" content="{{ htmlspecialchars($ref) }}" />
+        @endforeach
+
         {{-- Dublin Core --}}
-        <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
-        <meta name="DC.Title" content="{{ htmlspecialchars($pubTitle) }}">
+        <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
+        <meta name="DC.Title" content="{{ htmlspecialchars($pubTitle) }}" />
         @foreach ($pubAuthors as $author)
             @php
                 $dcName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? $author->name ?? ''));
                 if (empty($dcName)) $dcName = $author->preferred_public_name ?? null;
             @endphp
             @if ($dcName)
-                <meta name="DC.Creator.PersonalName" content="{{ htmlspecialchars($dcName) }}">
+                <meta name="DC.Creator.PersonalName" content="{{ htmlspecialchars($dcName) }}" />
             @endif
         @endforeach
         @if ($pubDate)
-            <meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">
+            <meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}" />
         @endif
         @if ($pubAbstract)
-            <meta name="DC.Description" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
+            <meta name="DC.Description" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}" />
         @endif
-        <meta name="DC.Format" scheme="IMT" content="application/pdf">
-        <meta name="DC.Language" scheme="ISO639-1" content="{{ $bcp47Locale }}">
+        <meta name="DC.Format" scheme="IMT" content="application/pdf" />
+        <meta name="DC.Language" scheme="ISO639-1" content="{{ $bcp47Locale }}" />
         @if ($pubDoi)
-            <meta name="DC.Identifier.DOI" content="{{ htmlspecialchars($pubDoi) }}">
+            <meta name="DC.Identifier.DOI" content="{{ htmlspecialchars($pubDoi) }}" />
         @endif
-        <meta name="DC.Identifier.URI" content="{{ url()->current() }}">
-        <meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ htmlspecialchars($copyrightHolder) }}">
+        <meta name="DC.Identifier.URI" content="{{ url()->current() }}" />
+        <meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ htmlspecialchars($copyrightHolder) }}" />
         @if ($licenseUrl)
-            <meta name="DC.Rights" content="{{ htmlspecialchars($licenseUrl) }}">
+            <meta name="DC.Rights" content="{{ htmlspecialchars($licenseUrl) }}" />
         @endif
-        <meta name="DC.Source" content="{{ htmlspecialchars($journal->name) }}">
+        <meta name="DC.Source" content="{{ htmlspecialchars($journal->name) }}" />
         @if ($issnValue)
-            <meta name="DC.Source.ISSN" content="{{ htmlspecialchars($issnValue) }}">
+            <meta name="DC.Source.ISSN" content="{{ htmlspecialchars($issnValue) }}" />
         @endif
-        <meta name="DC.Type" content="Text.Serial.Journal">
-        <meta name="DC.Type.articleType" content="{{ htmlspecialchars($submission->section?->title ?? 'Articles') }}">
+        <meta name="DC.Type" content="Text.Serial.Journal" />
+        <meta name="DC.Type.articleType" content="{{ htmlspecialchars($submission->section?->title ?? 'Articles') }}" />
     @endpush
 
     <article class="bg-white">

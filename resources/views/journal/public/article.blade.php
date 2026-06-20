@@ -3,9 +3,10 @@
     $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
 
     // Get PDF Galley for citation_pdf_url (Google Scholar)
-    $pdfGalley =
-        $article->galleys?->where('file_type', 'application/pdf')->first() ??
-        ($article->galleys?->whereIn('label', ['PDF', 'pdf'])->first() ?? $article->galleys?->first());
+    $pdfGalley = $article->galleys?->first(function ($galley) {
+        return (optional($galley->file)->mime_type === 'application/pdf') || 
+               in_array(strtolower($galley->label ?? ''), ['pdf', 'pdf galley', 'naskah pdf', 'dokumen pdf']);
+    }) ?? $article->galleys?->first();
 
     // Publication date logic
     $publicationDate = $issue?->published_at ?? $article->published_at;
@@ -63,13 +64,13 @@
         ));
     }
 
-    // PDF galley URL — standard galley route (OJS-compatible path)
+    // PDF galley URL — SEO-friendly direct PDF download route
     $pdfGalleyUrl = null;
     if ($pdfGalley) {
-        $pdfGalleyUrl = route('journal.article.galley', [
-            'journal' => $journal->slug,
-            'article' => $article->seq_id,
-            'galley'  => $pdfGalley->seq_id ?? $pdfGalley->id,
+        $pdfGalleyUrl = route('journal.article.download.pdf', [
+            'journal'  => $journal->slug,
+            'seq_id'   => $article->seq_id,
+            'filename' => \Illuminate\Support\Str::slug($pubTitle),
         ]);
     }
 
@@ -106,58 +107,58 @@
 {{-- Required: gs_meta_revision, citation_title, citation_author, --}}
 {{--           citation_date, citation_journal_title              --}}
 {{-- ============================================================ --}}
-<meta name="gs_meta_revision" content="1.1">
+<meta name="gs_meta_revision" content="1.1" />
 
 {{-- Journal identification --}}
-<meta name="citation_journal_title" content="{{ htmlspecialchars($journal->name) }}">
+<meta name="citation_journal_title" content="{{ htmlspecialchars($journal->name) }}" />
 @if ($journal->abbreviation)
-<meta name="citation_journal_abbrev" content="{{ htmlspecialchars($journal->abbreviation) }}">
+<meta name="citation_journal_abbrev" content="{{ htmlspecialchars($journal->abbreviation) }}" />
 @endif
 @if ($journal->publisher)
-<meta name="citation_publisher" content="{{ htmlspecialchars($journal->publisher) }}">
+<meta name="citation_publisher" content="{{ htmlspecialchars($journal->publisher) }}" />
 @endif
 @php $issnValue = $journal->issn_online ?? $journal->issn_print ?? null; @endphp
 @if ($issnValue)
-<meta name="citation_issn" content="{{ htmlspecialchars($issnValue) }}">
+<meta name="citation_issn" content="{{ htmlspecialchars($issnValue) }}" />
 @endif
 
 {{-- Article title --}}
-<meta name="citation_title" content="{{ htmlspecialchars($pubTitle) }}">
+<meta name="citation_title" content="{{ htmlspecialchars($pubTitle) }}" />
 
 {{-- Language (BCP47 format: "id" not "id_ID") --}}
-<meta name="citation_language" content="{{ $bcp47Locale }}">
+<meta name="citation_language" content="{{ $bcp47Locale }}" />
 
 {{-- Publication date — OJS uses citation_date only (not citation_publication_date) --}}
 @if ($pubDate)
-<meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}">
+<meta name="citation_date" content="{{ $pubDate->format('Y/m/d') }}" />
 @endif
 
 {{-- Online date — only when different from publication date --}}
 @if ($article->published_at && $pubDate && $article->published_at->format('Y-m-d') !== $pubDate->format('Y-m-d'))
-<meta name="citation_online_date" content="{{ $article->published_at->format('Y/m/d') }}">
+<meta name="citation_online_date" content="{{ $article->published_at->format('Y/m/d') }}" />
 @endif
 
 {{-- Issue metadata --}}
 @if ($issue)
 @if ($issue->volume && $issue->getShowVolume ?? true)
-<meta name="citation_volume" content="{{ htmlspecialchars($issue->volume) }}">
+<meta name="citation_volume" content="{{ htmlspecialchars($issue->volume) }}" />
 @endif
 @if ($issue->number && $issue->getShowNumber ?? true)
-<meta name="citation_issue" content="{{ htmlspecialchars($issue->number) }}">
+<meta name="citation_issue" content="{{ htmlspecialchars($issue->number) }}" />
 @endif
 @endif
 
 {{-- Pages --}}
 @if ($firstPage)
-<meta name="citation_firstpage" content="{{ htmlspecialchars($firstPage) }}">
+<meta name="citation_firstpage" content="{{ htmlspecialchars($firstPage) }}" />
 @endif
 @if ($lastPage)
-<meta name="citation_lastpage" content="{{ htmlspecialchars($lastPage) }}">
+<meta name="citation_lastpage" content="{{ htmlspecialchars($lastPage) }}" />
 @endif
 
 {{-- DOI --}}
 @if ($pubDoi)
-<meta name="citation_doi" content="{{ htmlspecialchars($pubDoi) }}">
+<meta name="citation_doi" content="{{ htmlspecialchars($pubDoi) }}" />
 @endif
 
 {{-- Authors — OJS: getFullName(false, false) excludes preferred name & title/suffix --}}
@@ -171,45 +172,45 @@
     }
 @endphp
 @if ($authorName)
-<meta name="citation_author" content="{{ htmlspecialchars($authorName) }}">
+<meta name="citation_author" content="{{ htmlspecialchars($authorName) }}" />
 @if ($author->affiliation)
-<meta name="citation_author_institution" content="{{ htmlspecialchars($author->affiliation) }}">
+<meta name="citation_author_institution" content="{{ htmlspecialchars($author->affiliation) }}" />
 @endif
 @if ($author->orcid)
-<meta name="citation_author_orcid" content="{{ htmlspecialchars($author->orcid) }}">
+<meta name="citation_author_orcid" content="{{ htmlspecialchars($author->orcid) }}" />
 @endif
 @endif
 @endforeach
 
 {{-- Keywords — with xml:lang (OJS includes this) --}}
 @foreach ($processedKeywords as $keyword)
-<meta name="citation_keywords" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars($keyword) }}">
+<meta name="citation_keywords" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars($keyword) }}" />
 @endforeach
 
 {{-- Abstract URL and full text URL --}}
-<meta name="citation_abstract_html_url" content="{{ url()->current() }}">
+<meta name="citation_abstract_html_url" content="{{ url()->current() }}" />
 @if ($pdfGalleyUrl)
-<meta name="citation_fulltext_html_url" content="{{ url()->current() }}">
-<meta name="citation_pdf_url" content="{{ $pdfGalleyUrl }}">
+<meta name="citation_fulltext_html_url" content="{{ url()->current() }}" />
+<meta name="citation_pdf_url" content="{{ $pdfGalleyUrl }}" />
 @endif
 
 {{-- Abstract — with xml:lang (OJS includes this) --}}
 @if ($pubAbstract)
-<meta name="citation_abstract" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
+<meta name="citation_abstract" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}" />
 @endif
 
 {{-- References — properly escaped with htmlspecialchars (OJS: htmlspecialchars($citation->getRawCitation())) --}}
 {{-- Limit to 50 to avoid page size issues --}}
 @foreach (array_slice($parsedRefs, 0, 50) as $ref)
-<meta name="citation_reference" content="{{ htmlspecialchars($ref) }}">
+<meta name="citation_reference" content="{{ htmlspecialchars($ref) }}" />
 @endforeach
 
 {{-- ============================================================ --}}
 {{-- DUBLIN CORE METADATA                                         --}}
 {{-- Aligned with OJS DC metadata plugin                          --}}
 {{-- ============================================================ --}}
-<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
-<meta name="DC.Title" content="{{ htmlspecialchars($pubTitle) }}">
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
+<meta name="DC.Title" content="{{ htmlspecialchars($pubTitle) }}" />
 
 @foreach ($pubAuthors as $author)
 @php
@@ -217,57 +218,57 @@
     if (empty($dcName)) $dcName = $author->preferred_public_name ?? $author->name ?? null;
 @endphp
 @if ($dcName)
-<meta name="DC.Creator.PersonalName" content="{{ htmlspecialchars($dcName) }}">
+<meta name="DC.Creator.PersonalName" content="{{ htmlspecialchars($dcName) }}" />
 @endif
 @endforeach
 
 @if ($pubAbstract)
-<meta name="DC.Description" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}">
+<meta name="DC.Description" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars(trim(strip_tags($pubAbstract))) }}" />
 @endif
 
 @if ($pubDate)
-<meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}">
+<meta name="DC.Date.issued" scheme="ISO8601" content="{{ $pubDate->format('Y-m-d') }}" />
 @endif
 @if ($article->submitted_at)
-<meta name="DC.Date.dateSubmitted" scheme="ISO8601" content="{{ $article->submitted_at->format('Y-m-d') }}">
+<meta name="DC.Date.dateSubmitted" scheme="ISO8601" content="{{ $article->submitted_at->format('Y-m-d') }}" />
 @endif
 @if ($pub->updated_at ?? false)
-<meta name="DC.Date.modified" scheme="ISO8601" content="{{ $pub->updated_at->format('Y-m-d') }}">
+<meta name="DC.Date.modified" scheme="ISO8601" content="{{ $pub->updated_at->format('Y-m-d') }}" />
 @endif
 
-<meta name="DC.Format" scheme="IMT" content="application/pdf">
-<meta name="DC.Language" scheme="ISO639-1" content="{{ $bcp47Locale }}">
+<meta name="DC.Format" scheme="IMT" content="application/pdf" />
+<meta name="DC.Language" scheme="ISO639-1" content="{{ $bcp47Locale }}" />
 
 @if ($pubDoi)
-<meta name="DC.Identifier.DOI" content="{{ htmlspecialchars($pubDoi) }}">
+<meta name="DC.Identifier.DOI" content="{{ htmlspecialchars($pubDoi) }}" />
 @endif
-<meta name="DC.Identifier.URI" content="{{ url()->current() }}">
+<meta name="DC.Identifier.URI" content="{{ url()->current() }}" />
 
-<meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ htmlspecialchars($copyrightHolder) }}">
+<meta name="DC.Rights" content="Copyright (c) {{ $copyrightYear }} {{ htmlspecialchars($copyrightHolder) }}" />
 @if ($licenseUrl)
-<meta name="DC.Rights" content="{{ htmlspecialchars($licenseUrl) }}">
+<meta name="DC.Rights" content="{{ htmlspecialchars($licenseUrl) }}" />
 @endif
 
-<meta name="DC.Source" content="{{ htmlspecialchars($journal->name) }}">
+<meta name="DC.Source" content="{{ htmlspecialchars($journal->name) }}" />
 @if ($issnValue)
-<meta name="DC.Source.ISSN" content="{{ htmlspecialchars($issnValue) }}">
+<meta name="DC.Source.ISSN" content="{{ htmlspecialchars($issnValue) }}" />
 @endif
 @if ($issue)
 @if ($issue->volume)
-<meta name="DC.Source.Volume" content="{{ htmlspecialchars($issue->volume) }}">
+<meta name="DC.Source.Volume" content="{{ htmlspecialchars($issue->volume) }}" />
 @endif
 @if ($issue->number)
-<meta name="DC.Source.Issue" content="{{ htmlspecialchars($issue->number) }}">
+<meta name="DC.Source.Issue" content="{{ htmlspecialchars($issue->number) }}" />
 @endif
 @endif
-<meta name="DC.Source.URI" content="{{ route('journal.public.home', $journal->slug) }}">
+<meta name="DC.Source.URI" content="{{ route('journal.public.home', $journal->slug) }}" />
 
 @foreach ($processedKeywords as $keyword)
-<meta name="DC.Subject" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars($keyword) }}">
+<meta name="DC.Subject" xml:lang="{{ $bcp47Locale }}" content="{{ htmlspecialchars($keyword) }}" />
 @endforeach
 
-<meta name="DC.Type" content="Text.Serial.Journal">
-<meta name="DC.Type.articleType" content="{{ htmlspecialchars($article->section?->title ?? 'Articles') }}">
+<meta name="DC.Type" content="Text.Serial.Journal" />
+<meta name="DC.Type.articleType" content="{{ htmlspecialchars($article->section?->title ?? 'Articles') }}" />
 @endpush
     {{-- Schema.org JSON-LD for ScholarlyArticle --}}
     @php

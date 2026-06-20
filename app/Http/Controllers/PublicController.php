@@ -823,9 +823,11 @@ class PublicController extends Controller
         // Load galleys
         $submission->load('galleys');
 
-        // Find the PDF galley
-        $pdfGalley = $submission->galleys->firstWhere('label', 'PDF') 
-            ?? $submission->galleys->where('file_type', 'galley')->first();
+        // Find the PDF galley (Google Scholar compliant robust resolution)
+        $pdfGalley = $submission->galleys->first(function ($galley) {
+            return (optional($galley->file)->mime_type === 'application/pdf') || 
+                   in_array(strtolower($galley->label ?? ''), ['pdf', 'pdf galley', 'naskah pdf', 'dokumen pdf']);
+        }) ?? $submission->galleys->first();
 
         if (!$pdfGalley) {
             abort(404, 'PDF Galley not found');
