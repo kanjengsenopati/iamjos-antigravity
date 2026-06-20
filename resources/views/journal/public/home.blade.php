@@ -131,9 +131,23 @@
                         $issueArticles = $currentIssue
                             ->submissions()
                             ->where('status', 'published')
-                            ->with(['authors', 'galleys', 'currentPublication'])
-                            ->orderBy('created_at')
-                            ->get();
+                            ->with(['authors', 'galleys', 'currentPublication', 'section'])
+                            ->get()
+                            ->sort(function ($a, $b) {
+                                $secA = $a->section?->sort_order ?? 0;
+                                $secB = $b->section?->sort_order ?? 0;
+                                if ($secA !== $secB) {
+                                    return $secA <=> $secB;
+                                }
+                                $sortA = $a->sort_order ?? 0;
+                                $sortB = $b->sort_order ?? 0;
+                                if ($sortA !== $sortB) {
+                                    return $sortA <=> $sortB;
+                                }
+                                $timeA = $a->created_at?->timestamp ?? 0;
+                                $timeB = $b->created_at?->timestamp ?? 0;
+                                return $timeA <=> $timeB;
+                            });
                     @endphp
 
                     @if ($issueArticles->isNotEmpty())

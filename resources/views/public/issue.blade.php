@@ -18,13 +18,13 @@
                 <!-- Issue Cover -->
                 <div class="lg:col-span-1">
                     @if ($issue->cover_path)
-                        <div class="sticky top-24">
+                        <div class="sticky top-28 self-start w-full">
                             <img src="{{ Storage::disk('public')->url($issue->cover_path) }}" alt="Issue Cover"
                                 class="w-full h-auto rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
                         </div>
                     @else
                         <div
-                            class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 rounded-[24px] flex items-center justify-center sticky top-24 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                            class="aspect-[3/4] bg-gradient-to-br from-primary-400 to-primary-600 rounded-[24px] flex items-center justify-center sticky top-28 self-start shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full">
                             <div class="text-center text-white p-6">
                                 <p class="text-lg font-bold">Vol. {{ $issue->volume }}</p>
                                 <p class="text-4xl font-bold">No. {{ $issue->number }}</p>
