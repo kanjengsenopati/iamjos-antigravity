@@ -9,6 +9,48 @@
 @section('content')
     <div x-data="{
         showAddArticleModal: false,
+        showReorderModal: false,
+        modalX: 0,
+        modalY: 0,
+        isDragging: false,
+        dragStartX: 0,
+        dragStartY: 0,
+        startDrag(e) {
+            // Only start dragging if not clicking on buttons or inputs
+            if (e.target.closest('button') || e.target.closest('input')) return;
+            this.isDragging = true;
+            this.dragStartX = e.clientX - this.modalX;
+            this.dragStartY = e.clientY - this.modalY;
+        },
+        drag(e) {
+            if (!this.isDragging) return;
+            this.modalX = e.clientX - this.dragStartX;
+            this.modalY = e.clientY - this.dragStartY;
+        },
+        stopDrag() {
+            this.isDragging = false;
+        },
+        openReorderModal() {
+            this.modalX = 0;
+            this.modalY = 0;
+            this.showReorderModal = true;
+        },
+        initSortable(el) {
+            if (!el) return;
+            // Wait for Sortable to be available
+            const init = () => {
+                if (typeof Sortable !== 'undefined') {
+                    new Sortable(el, {
+                        animation: 150,
+                        handle: '.drag-handle',
+                        ghostClass: 'opacity-50'
+                    });
+                } else {
+                    setTimeout(init, 50);
+                }
+            };
+            init();
+        },
         selectedArticles: [],
         toggleArticle(id) {
             const index = this.selectedArticles.indexOf(id);
@@ -18,7 +60,10 @@
                 this.selectedArticles.splice(index, 1);
             }
         }
-    }" class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    }"
+    @mousemove.window="drag"
+    @mouseup.window="stopDrag"
+    class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
             <!-- Header -->
@@ -167,14 +212,26 @@
                                 </p>
                             </div>
                             @if (!$issue->is_published)
-                                <button @click="showAddArticleModal = true"
-                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Add Article
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    @if ($issue->submissions->count() > 0)
+                                        <button @click="openReorderModal()"
+                                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 6h16M4 12h16M4 18h16" />
+                                            </svg>
+                                            Urutkan Artikel
+                                        </button>
+                                    @endif
+                                    <button @click="showAddArticleModal = true"
+                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Article
+                                    </button>
+                                </div>
                             @endif
                         </div>
 
@@ -522,5 +579,117 @@
                 </div>
             </div>
         </div>
+
+        <!-- Reorder Articles Modal -->
+        <div x-show="showReorderModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <!-- Background overlay -->
+                <div x-show="showReorderModal" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity"
+                    @click="showReorderModal = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <!-- Modal panel -->
+                <div x-show="showReorderModal" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    :style="{ transform: 'translate(' + modalX + 'px, ' + modalY + 'px)', transition: isDragging ? 'none' : '' }"
+                    class="inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+
+                    <form
+                        action="{{ route('journal.issues.reorder-articles', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                        method="POST">
+                        @csrf
+
+                        <!-- Draggable Header -->
+                        <div @mousedown="startDrag" class="px-6 py-5 border-b border-slate-100 cursor-move select-none bg-slate-50/50 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-[22px] font-bold text-slate-900" id="modal-title">Urutkan Artikel</h3>
+                                <p class="text-sm font-medium text-slate-600 mt-1">Geser (drag) artikel untuk mengubah urutan di dalam issue ini</p>
+                            </div>
+                            <button type="button" @click="showReorderModal = false"
+                                class="text-slate-400 hover:text-slate-500 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Draggable Content -->
+                        <div class="px-6 py-4 max-h-[400px] overflow-y-auto">
+                            @if ($issue->submissions->count() > 0)
+                                <div class="space-y-6">
+                                    @foreach ($articlesBySection as $sectionName => $articles)
+                                        <div>
+                                            <h4 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">
+                                                {{ $sectionName }}
+                                            </h4>
+                                            
+                                            <!-- List for SortableJS -->
+                                            <div x-init="initSortable($el)" class="space-y-2">
+                                                @foreach ($articles as $article)
+                                                    <div data-id="{{ $article->id }}"
+                                                        class="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-indigo-200 transition-all">
+                                                        
+                                                        <!-- Drag handle -->
+                                                        <div class="drag-handle cursor-grab active:cursor-grabbing p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                    d="M4 6h16M4 12h16M4 18h16" />
+                                                            </svg>
+                                                        </div>
+
+                                                        <!-- Article info -->
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="text-sm font-semibold text-slate-800 line-clamp-1">
+                                                                {{ $article->title }}
+                                                            </p>
+                                                            <p class="text-xs text-slate-400 italic line-clamp-1 mt-0.5">
+                                                                {{ $article->authors->pluck('name')->join(', ') }}
+                                                            </p>
+                                                        </div>
+
+                                                        <!-- Input hidden to submit the order -->
+                                                        <input type="hidden" name="order[]" value="{{ $article->id }}">
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-8">
+                                    <p class="text-slate-600 font-medium text-sm">Tidak ada artikel di dalam issue ini.</p>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3">
+                            <button type="button" @click="showReorderModal = false"
+                                class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                                Simpan Urutan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+@endpush

@@ -187,8 +187,14 @@ class PublicController extends Controller
             ->with(['authors', 'section', 'galleys' => function ($q) {
                 $q->ordered();
             }])
-            ->orderBy('created_at')
-            ->get();
+            ->get()
+            ->sortBy(function ($article) {
+                return [
+                    $article->section?->sort_order ?? 0,
+                    $article->sort_order ?? 0,
+                    $article->created_at?->timestamp ?? 0
+                ];
+            });
 
         // Group by section
         $articlesBySection = $articles->groupBy(fn($article) => $article->section?->name ?? 'Uncategorized');
@@ -276,8 +282,14 @@ class PublicController extends Controller
         $articles = Submission::where('issue_id', $issue->id)
             ->published()
             ->with(['authors', 'section', 'galleys'])
-            ->orderBy('created_at')
-            ->get();
+            ->get()
+            ->sortBy(function ($article) {
+                return [
+                    $article->section?->sort_order ?? 0,
+                    $article->sort_order ?? 0,
+                    $article->created_at?->timestamp ?? 0
+                ];
+            });
 
         // Group by section
         $articlesBySection = $articles->groupBy(fn($article) => $article->section?->name ?? 'Uncategorized');

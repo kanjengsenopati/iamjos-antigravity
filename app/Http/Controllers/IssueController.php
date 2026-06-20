@@ -172,13 +172,21 @@ class IssueController extends Controller
 
         $issue->load([
             'submissions' => function ($query) {
-                $query->with(['authors', 'section'])
-                    ->orderBy('created_at');
+                $query->with(['authors', 'section']);
             }
         ]);
 
+        // Sort submissions by section sort_order, submission sort_order, then created_at
+        $submissions = $issue->submissions->sortBy(function ($submission) {
+            return [
+                $submission->section?->sort_order ?? 0,
+                $submission->sort_order ?? 0,
+                $submission->created_at?->timestamp ?? 0
+            ];
+        });
+
         // Group articles by section for table of contents
-        $articlesBySection = $issue->submissions->groupBy(
+        $articlesBySection = $submissions->groupBy(
             fn($article) => $article->section?->name ?? 'Uncategorized'
         );
 
@@ -334,6 +342,7 @@ class IssueController extends Controller
         ]);
 
         $addedCount = 0;
+        $maxSortOrder = Submission::where('issue_id', $issue->id)->max('sort_order') ?? 0;
 
         foreach ($validated['submission_ids'] as $submissionId) {
             $submission = Submission::where('id', $submissionId)
@@ -343,8 +352,10 @@ class IssueController extends Controller
                 ->first();
 
             if ($submission) {
+                $maxSortOrder++;
                 $submission->update([
                     'issue_id' => $issue->id,
+                    'sort_order' => $maxSortOrder,
                 ]);
                 $addedCount++;
             }
@@ -373,9 +384,36 @@ class IssueController extends Controller
             'issue_id' => null,
             'status' => Submission::STATUS_ACCEPTED, // Revert to accepted if it was published
             'published_at' => null,
+            'sort_order' => 0,
         ]);
 
         return back()->with('success', 'Article removed from the issue.');
+    }
+
+    /**
+     * Reorder articles in the issue.
+     */
+    public function reorderArticles(Request $request, string $journalSlug, Issue $issue): RedirectResponse
+    {
+        $journal = $this->getJournal();
+
+        // Ensure issue belongs to this journal
+        if ($issue->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'string|uuid',
+        ]);
+
+        foreach ($validated['order'] as $index => $submissionId) {
+            Submission::where('id', $submissionId)
+                ->where('issue_id', $issue->id)
+                ->update(['sort_order' => $index + 1]);
+        }
+
+        return back()->with('success', 'Urutan artikel berhasil diperbarui.');
     }
 
     /**

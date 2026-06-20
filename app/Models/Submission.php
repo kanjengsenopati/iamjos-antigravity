@@ -64,6 +64,7 @@ class Submission extends Model
         'metadata',
         'references',
         'seq_id',
+        'sort_order',
     ];
 
     /**
