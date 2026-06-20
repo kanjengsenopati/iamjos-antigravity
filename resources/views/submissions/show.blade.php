@@ -3723,7 +3723,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white">
                                         <option value="">Select Country...</option>
                                         @foreach (config('countries', []) as $code => $name)
-                                            <option value="{{ $code }}" :selected="editingContributor?.country === '{{ $code }}' || editingContributor?.country === '{{ $name }}'">{{ $name }}</option>
+                                            <option value="{{ $code }}" :selected="editingContributor?.country === '{{ addslashes($code) }}' || editingContributor?.country === '{{ addslashes($name) }}'">{{ $name }}</option>
                                         @endforeach
                                         @if (empty(config('countries')))
                                             @php
@@ -3740,7 +3740,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 ];
                                             @endphp
                                             @foreach ($fallbacks as $code => $name)
-                                                <option value="{{ $code }}" :selected="editingContributor?.country === '{{ $code }}' || editingContributor?.country === '{{ $name }}'">{{ $name }}</option>
+                                                <option value="{{ $code }}" :selected="editingContributor?.country === '{{ addslashes($code) }}' || editingContributor?.country === '{{ addslashes($name) }}'">{{ $name }}</option>
                                             @endforeach
                                         @endif
                                     </select>
