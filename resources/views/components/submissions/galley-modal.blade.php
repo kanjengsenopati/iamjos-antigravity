@@ -39,24 +39,24 @@
             x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            class="relative inline-block w-full max-w-3xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
+            class="relative inline-block w-full max-w-xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
 
             {{-- Header (Explicit gradient styling) --}}
-            <div class="relative px-6 py-5 bg-blue-600 border-b border-blue-500/30 rounded-t-[24px]">
+            <div class="relative px-6 py-4 bg-blue-600 border-b border-blue-500/30 rounded-t-[24px]">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         {{-- Icon Container --}}
-                        <div class="flex items-center justify-center w-12 h-12 rounded-[16px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
-                            <i class="text-xl text-white fa-solid fa-file-circle-plus"></i>
+                        <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
+                            <i class="text-lg text-white fa-solid fa-file-circle-plus"></i>
                         </div>
                         
                         {{-- Title & Subtitle --}}
                         <div>
-                            <x-text.h1 id="galley-modal-title" class="text-white font-bold tracking-tight"
+                            <x-text.h1 id="galley-modal-title" class="text-white font-bold tracking-tight !text-[20px]"
                                 x-text="editingGalley ? 'Edit Galley' : 'Add Publication Galley'">
                                 Add Publication Galley
                             </x-text.h1>
-                            <x-text.body class="text-blue-100/90 font-medium">
+                            <x-text.body class="!text-blue-100 font-medium">
                                 Upload a file or link to an external source
                             </x-text.body>
                         </div>
@@ -75,34 +75,34 @@
             </div>
 
             {{-- Form Body --}}
-            <div class="px-6 py-6 space-y-6 bg-white">
+            <div class="px-6 py-4 space-y-4 bg-white">
 
                 {{-- Row 1: Label & Language --}}
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {{-- Galley Label --}}
                     <div>
                         <label for="galley-label">
-                            <x-text.body class="font-semibold text-slate-800 mb-2 block">
+                            <x-text.body class="font-semibold text-slate-800 mb-1 block">
                                 Galley Label <span class="text-red-500">*</span>
                             </x-text.body>
                         </label>
                         <input type="text" id="galley-label" x-model="galleyLabel" required
                             placeholder="e.g., PDF, HTML, EPUB"
-                            class="block w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="block w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1.5 text-sm"
                             :class="{ 'border-red-500': errors.label }">
                         <template x-if="errors.label">
                             <x-text.caption class="text-red-600 block mt-1" x-text="errors.label[0]"></x-text.caption>
                         </template>
-                        <x-text.caption class="block mt-1.5">Will be displayed as the download button label</x-text.caption>
+                        <x-text.caption class="block mt-1">Will be displayed as the download button label</x-text.caption>
                     </div>
 
                     {{-- Language --}}
                     <div>
                         <label for="galley-locale">
-                            <x-text.body class="font-semibold text-slate-800 mb-2 block">Language</x-text.body>
+                            <x-text.body class="font-semibold text-slate-800 mb-1 block">Language</x-text.body>
                         </label>
                         <select id="galley-locale" x-model="galleyLocale"
-                            class="block w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            class="block w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1.5 text-sm">
                             <option value="en">English</option>
                             <option value="id">Indonesian</option>
                             <option value="ar">Arabic</option>
@@ -121,27 +121,26 @@
                 {{-- Row 2: URL Path --}}
                 <div>
                     <label for="galley-url-path">
-                        <x-text.body class="font-semibold text-slate-800 mb-2 block">
+                        <x-text.body class="font-semibold text-slate-800 mb-1 block">
                             URL Path <span class="font-normal text-slate-400">(optional)</span>
                         </x-text.body>
                     </label>
-                    <div class="flex items-center shadow-sm rounded-lg overflow-hidden group focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1">
+                    <div class="flex items-stretch shadow-sm rounded-lg overflow-hidden group focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1">
                         <span
-                            class="inline-flex items-center h-[42px] px-3 text-slate-500 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg group-focus-within:border-blue-500 group-focus-within:text-blue-600 transition-colors">
+                            class="inline-flex items-center px-3 text-slate-500 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg group-focus-within:border-blue-500 group-focus-within:text-blue-600 transition-colors text-sm">
                             /article/{{ $submission->slug }}/
                         </span>
                         <input type="text" id="galley-url-path" x-model="galleyUrlPath" placeholder="pdf"
-                            class="flex-1 border-slate-200 rounded-r-lg focus:ring-0 focus:border-blue-500 group-focus-within:border-blue-500"
-                            :class="{ 'border-red-500': errors.url_path }">
+                            class="flex-1 border-slate-200 rounded-r-lg focus:ring-0 focus:border-blue-500 group-focus-within:border-blue-500 py-1.5 text-sm">
                     </div>
                     <template x-if="errors.url_path">
                         <x-text.caption class="text-red-600 block mt-1" x-text="errors.url_path[0]"></x-text.caption>
                     </template>
-                    <x-text.caption class="block mt-1.5">Custom slug for SEO-friendly URLs. Only letters, numbers, dashes, and underscores.</x-text.caption>
+                    <x-text.caption class="block mt-1">Custom slug for SEO-friendly URLs. Only letters, numbers, dashes, and underscores.</x-text.caption>
                 </div>
 
                 {{-- Divider --}}
-                <div class="relative pt-2">
+                <div class="relative pt-1">
                     <div class="absolute inset-0 flex items-center" aria-hidden="true">
                         <div class="w-full border-t border-slate-100"></div>
                     </div>
@@ -156,7 +155,7 @@
                         <input type="checkbox" x-model="isRemote" id="is-remote-checkbox"
                             class="w-5 h-5 text-blue-600 border-slate-300 rounded cursor-pointer focus:ring-blue-500 transition-all duration-150 ease-in-out">
                     </div>
-                    <div class="ml-3">
+                    <div class="ml-2">
                         <label for="is-remote-checkbox"
                             class="cursor-pointer select-none">
                             <x-text.body class="font-semibold text-slate-850 hover:text-blue-600 transition-colors">
@@ -209,7 +208,7 @@
                         x-transition:enter-start="opacity-0 translate-y-2"
                         x-transition:enter-end="opacity-100 translate-y-0">
                         <label>
-                            <x-text.body class="font-semibold text-slate-800 mb-2 block">
+                            <x-text.body class="font-semibold text-slate-800 mb-1 block">
                                 Upload File <span class="text-red-500"
                                     x-show="!editingGalley">*</span>
                                 <span class="font-normal text-slate-400"
@@ -220,30 +219,30 @@
                         {{-- Drop Zone --}}
                         <div class="relative group">
                             <label for="galley-file-input"
-                                class="flex flex-col items-center justify-center w-full h-40 transition-all duration-200 border-2 border-dashed rounded-[20px] cursor-pointer"
+                                class="flex flex-col items-center justify-center w-full h-28 transition-all duration-200 border-2 border-dashed rounded-[20px] cursor-pointer"
                                 :class="selectedFile ? 'border-emerald-400 bg-emerald-50/50 shadow-sm' :
                                     'border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-sm'">
 
                                 <template x-if="!selectedFile">
-                                    <div class="flex flex-col items-center justify-center py-6 text-center">
-                                        <div class="flex items-center justify-center w-12 h-12 mb-3 transition-transform duration-300 bg-blue-100 rounded-full group-hover:scale-110 group-hover:bg-blue-200">
-                                            <i class="text-xl text-blue-600 fa-solid fa-cloud-arrow-up"></i>
+                                    <div class="flex flex-col items-center justify-center py-4 text-center">
+                                        <div class="flex items-center justify-center w-10 h-10 mb-2 transition-transform duration-300 bg-blue-100 rounded-full group-hover:scale-110 group-hover:bg-blue-200">
+                                            <i class="text-lg text-blue-600 fa-solid fa-cloud-arrow-up"></i>
                                         </div>
                                         <x-text.body class="font-semibold text-slate-700">
                                             <span class="text-blue-600 underline decoration-blue-300 decoration-2 underline-offset-2 group-hover:decoration-blue-500">Click to upload</span> or drag and drop
                                         </x-text.body>
-                                        <x-text.caption class="mt-1">PDF, HTML, EPUB, XML, DOC (Max 50MB)</x-text.caption>
+                                        <x-text.caption class="mt-0.5">PDF, HTML, EPUB, XML, DOC (Max 50MB)</x-text.caption>
                                     </div>
                                 </template>
 
                                 <template x-if="selectedFile">
                                     <div class="flex items-center justify-center w-full h-full p-4">
-                                        <div class="flex items-center w-full max-w-sm p-4 bg-white rounded-[16px] shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                                            <div class="flex items-center justify-center w-10 h-10 mr-4 bg-emerald-100 rounded-full shrink-0">
-                                                <i class="text-lg text-emerald-600 fa-solid fa-file-circle-check"></i>
+                                        <div class="flex items-center w-full max-w-sm p-3 bg-white rounded-[16px] shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                                            <div class="flex items-center justify-center w-8 h-8 mr-3 bg-emerald-100 rounded-full shrink-0">
+                                                <i class="text-md text-emerald-600 fa-solid fa-file-circle-check"></i>
                                             </div>
                                             <div class="flex-1 min-w-0 text-left">
-                                                <x-text.body class="font-semibold text-slate-900 truncate"
+                                                <x-text.body class="font-semibold text-slate-900 truncate text-sm"
                                                     x-text="selectedFileName"></x-text.body>
                                                 <x-text.caption class="text-emerald-600 font-semibold cursor-pointer hover:underline group-hover:text-emerald-700 block mt-0.5">Click to change file</x-text.caption>
                                             </div>
@@ -268,19 +267,19 @@
             </div>
 
             {{-- Footer --}}
-            <div class="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-[24px]">
+            <div class="flex items-center justify-between px-6 py-3 bg-slate-50 border-t border-slate-100 rounded-b-[24px]">
                 <x-text.caption class="hidden sm:block">
                     <i class="mr-1 fa-solid fa-info-circle"></i>
                     Galleys are the final published formats
                 </x-text.caption>
                 <div class="flex items-center w-full gap-3 sm:w-auto">
                     <button type="button" @click="galleyModalOpen = false"
-                        class="w-full px-5 py-2.5 transition-colors bg-white border border-slate-200 rounded-[12px] sm:w-auto hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm">
+                        class="w-full px-5 py-2 transition-colors bg-white border border-slate-200 rounded-[12px] sm:w-auto hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm">
                         <x-text.body class="font-semibold text-slate-700">Cancel</x-text.body>
                     </button>
                     <button type="button" @click="submitGalley()"
                         :disabled="isSubmitting || (!isRemote && !selectedFile && !editingGalley)"
-                        class="w-full inline-flex justify-center items-center px-5 py-2.5 transition-all bg-blue-600 border border-transparent rounded-[12px] sm:w-auto hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-md">
+                        class="w-full inline-flex justify-center items-center px-5 py-2 transition-all bg-blue-600 border border-transparent rounded-[12px] sm:w-auto hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-md">
                         <template x-if="isSubmitting">
                             <span class="flex items-center">
                                 <i class="mr-2 fa-solid fa-circle-notch fa-spin"></i>
