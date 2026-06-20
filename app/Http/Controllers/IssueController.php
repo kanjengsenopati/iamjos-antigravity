@@ -172,7 +172,7 @@ class IssueController extends Controller
 
         $issue->load([
             'submissions' => function ($query) {
-                $query->with(['authors', 'section']);
+                $query->with(['authors', 'section', 'currentPublication']);
             }
         ]);
 
