@@ -212,6 +212,17 @@ class FileUploadSecurityService
         $contentLower = strtolower($content);
 
         foreach (self::PHP_SIGNATURES as $signature) {
+            if ($signature === '<?') {
+                // Ignore <?xml and <?xpacket (common in PDF metadata and XML/SVG files)
+                if (preg_match('/<\?(?!(?:\s*xml|\s*xpacket)\b)/i', $content)) {
+                    $this->logRejection($file, "PHP code signature detected in file: '{$signature}'", $request);
+                    throw ValidationException::withMessages([
+                        'file' => 'The file contains potentially dangerous code and has been rejected.',
+                    ]);
+                }
+                continue;
+            }
+
             if (str_contains($contentLower, strtolower($signature))) {
                 $this->logRejection($file, "PHP code signature detected in file: '{$signature}'", $request);
                 throw ValidationException::withMessages([
