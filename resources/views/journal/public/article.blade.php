@@ -786,7 +786,7 @@
                     </button>
                 </div>
 
-                <div class="mt-5 grid grid-cols-2 gap-3">
+                <div class="mt-5 flex flex-col gap-2">
                     <a href="{{ route('citation.ris', [$journal->slug, $article->slug ?? $article->id]) }}" 
                         class="flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition uppercase tracking-wider">
                         <i class="fa-solid fa-file-export text-slate-400"></i>
@@ -797,13 +797,13 @@
                         <i class="fa-solid fa-code text-slate-400"></i>
                         BibTeX
                     </a>
+                    {{-- JATS XML Download --}}
+                    <a href="{{ route('journal.article.jats', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
+                       class="flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition uppercase tracking-wider">
+                        <i class="fa-solid fa-file-code text-slate-400"></i>
+                        JATS XML
+                    </a>
                 </div>
-                {{-- JATS XML Download --}}
-                <a href="{{ route('journal.article.jats', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
-                   class="flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition uppercase tracking-wider mt-3">
-                    <i class="fa-solid fa-file-code text-slate-400"></i>
-                    JATS XML
-                </a>
             </div>
 
             <script>
