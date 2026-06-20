@@ -211,18 +211,18 @@
                                 <p class="text-sm text-gray-500">{{ $issue->submissions->count() }} articles in this issue
                                 </p>
                             </div>
-                            @if (!$issue->is_published)
-                                <div class="flex items-center gap-2">
-                                    @if ($issue->submissions->count() > 0)
-                                        <button @click="openReorderModal()"
-                                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
-                                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 6h16M4 12h16M4 18h16" />
-                                            </svg>
-                                            Urutkan Artikel
-                                        </button>
-                                    @endif
+                            <div class="flex items-center gap-2">
+                                @if ($issue->submissions->count() > 0)
+                                    <button @click="openReorderModal()"
+                                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                                        <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 6h16M4 12h16M4 18h16" />
+                                        </svg>
+                                        Urutkan Artikel
+                                    </button>
+                                @endif
+                                @if (!$issue->is_published)
                                     <button @click="showAddArticleModal = true"
                                         class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,8 +231,8 @@
                                         </svg>
                                         Add Article
                                     </button>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
 
                         @if ($issue->submissions->count() > 0)

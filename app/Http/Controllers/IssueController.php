@@ -177,12 +177,20 @@ class IssueController extends Controller
         ]);
 
         // Sort submissions by section sort_order, submission sort_order, then created_at
-        $submissions = $issue->submissions->sortBy(function ($submission) {
-            return [
-                $submission->section?->sort_order ?? 0,
-                $submission->sort_order ?? 0,
-                $submission->created_at?->timestamp ?? 0
-            ];
+        $submissions = $issue->submissions->sort(function ($a, $b) {
+            $secA = $a->section?->sort_order ?? 0;
+            $secB = $b->section?->sort_order ?? 0;
+            if ($secA !== $secB) {
+                return $secA <=> $secB;
+            }
+            $sortA = $a->sort_order ?? 0;
+            $sortB = $b->sort_order ?? 0;
+            if ($sortA !== $sortB) {
+                return $sortA <=> $sortB;
+            }
+            $timeA = $a->created_at?->timestamp ?? 0;
+            $timeB = $b->created_at?->timestamp ?? 0;
+            return $timeA <=> $timeB;
         });
 
         // Group articles by section for table of contents

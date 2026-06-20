@@ -188,12 +188,20 @@ class PublicController extends Controller
                 $q->ordered();
             }])
             ->get()
-            ->sortBy(function ($article) {
-                return [
-                    $article->section?->sort_order ?? 0,
-                    $article->sort_order ?? 0,
-                    $article->created_at?->timestamp ?? 0
-                ];
+            ->sort(function ($a, $b) {
+                $secA = $a->section?->sort_order ?? 0;
+                $secB = $b->section?->sort_order ?? 0;
+                if ($secA !== $secB) {
+                    return $secA <=> $secB;
+                }
+                $sortA = $a->sort_order ?? 0;
+                $sortB = $b->sort_order ?? 0;
+                if ($sortA !== $sortB) {
+                    return $sortA <=> $sortB;
+                }
+                $timeA = $a->created_at?->timestamp ?? 0;
+                $timeB = $b->created_at?->timestamp ?? 0;
+                return $timeA <=> $timeB;
             });
 
         // Group by section
@@ -283,12 +291,20 @@ class PublicController extends Controller
             ->published()
             ->with(['authors', 'section', 'galleys'])
             ->get()
-            ->sortBy(function ($article) {
-                return [
-                    $article->section?->sort_order ?? 0,
-                    $article->sort_order ?? 0,
-                    $article->created_at?->timestamp ?? 0
-                ];
+            ->sort(function ($a, $b) {
+                $secA = $a->section?->sort_order ?? 0;
+                $secB = $b->section?->sort_order ?? 0;
+                if ($secA !== $secB) {
+                    return $secA <=> $secB;
+                }
+                $sortA = $a->sort_order ?? 0;
+                $sortB = $b->sort_order ?? 0;
+                if ($sortA !== $sortB) {
+                    return $sortA <=> $sortB;
+                }
+                $timeA = $a->created_at?->timestamp ?? 0;
+                $timeB = $b->created_at?->timestamp ?? 0;
+                return $timeA <=> $timeB;
             });
 
         // Group by section
