@@ -211,7 +211,13 @@ class FileUploadSecurityService
         $content = file_get_contents($file->getRealPath(), false, null, 0, 8192); // First 8KB
         $contentLower = strtolower($content);
 
-        foreach (self::PHP_SIGNATURES as $signature) {
+        // Determine which signatures to scan based on file type (binary vs text-based)
+        $isBinary = in_array($extension, ['pdf', 'doc', 'docx', 'rtf', 'odt']);
+        $signatures = $isBinary 
+            ? ['<?php', '<?=', '<script language="php">'] 
+            : self::PHP_SIGNATURES;
+
+        foreach ($signatures as $signature) {
             if ($signature === '<?') {
                 // Ignore <?xml and <?xpacket (common in PDF metadata and XML/SVG files)
                 if (preg_match('/<\?(?!(?:\s*xml|\s*xpacket)\b)/i', $content)) {
