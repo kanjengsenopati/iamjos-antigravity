@@ -315,6 +315,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 Route::put('/profile/roles', [\App\Http\Controllers\ProfileController::class, 'updateRoles'])->name('journal.profile.roles.update');
                 Route::post('/profile/upload-image', [\App\Http\Controllers\ProfileController::class, 'uploadImage'])->name('journal.profile.upload.image');
                 Route::post('/enroll', [\App\Http\Controllers\ProfileController::class, 'enroll'])->name('journal.enroll');
+                Route::post('/profile/sync-roles', [\App\Http\Controllers\ProfileController::class, 'syncRolesAjax'])->name('journal.profile.sync-roles');
                 
                 Route::post('/users/stop-impersonating', [JournalUserManagementController::class, 'stopImpersonating'])->name('journal.users.stop-impersonating');
                 

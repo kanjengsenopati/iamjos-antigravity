@@ -3,8 +3,8 @@
     @method('PUT')
 
     <div class="border-b-2 border-[#DAD8F4] pb-6 mb-8">
-        <h3 class="text-xl font-bold text-slate-800">Journal Roles</h3>
-        <p class="mt-1 text-sm text-slate-500 font-medium">Select the roles you wish to assume in this journal.</p>
+        <x-text.h1>Journal Roles</x-text.h1>
+        <x-text.body class="mt-1 text-slate-500">Select the roles you wish to assume in this journal.</x-text.body>
     </div>
 
     @if ($availableRoles->isEmpty())
@@ -66,12 +66,10 @@
                         </div>
 
                         <div class="flex flex-col">
-                            <span class="text-base font-bold"
-                                :class="selected.includes('{{ $role->id }}') ? 'text-emerald-900' : 'text-slate-800'">
+                            <x-text.h2 :class="selected.includes('{{ $role->id }}') ? 'text-emerald-900' : 'text-slate-800'">
                                 {{ $role->name }}
-                            </span>
-                            <span class="mt-1 text-sm leading-snug font-medium"
-                                :class="selected.includes('{{ $role->id }}') ? 'text-emerald-700' : 'text-slate-500'">
+                            </x-text.h2>
+                            <x-text.body class="mt-1" :class="selected.includes('{{ $role->id }}') ? 'text-emerald-700' : 'text-slate-500'">
                                 @if ($role->name === 'Author')
                                     Submit manuscripts and track your work.
                                 @elseif($role->name === 'Reviewer')
@@ -79,7 +77,7 @@
                                 @else
                                     Read content and receive notifications.
                                 @endif
-                            </span>
+                            </x-text.body>
                         </div>
                     </div>
 
@@ -107,130 +105,205 @@
         <div class="w-full border-t-2 border-slate-100"></div>
     </div>
     <div class="relative flex justify-center">
-        <span class="bg-white px-6 text-lg font-bold text-slate-800">Enroll in Other Journals</span>
+        <x-text.h1 class="bg-white px-6">Enroll in Other Journals</x-text.h1>
     </div>
 </div>
 
-<div x-data="{
-    isOpen: false,
-    journalName: '',
-    formAction: '',
-    selectedRoles: [],
-    availableRoles: []
-}">
-    <div class="grid grid-cols-1 gap-4">
-        @foreach ($otherJournals as $otherJournal)
-            @php
-                // Check if user has ANY role in this other journal
-                $isEnrolled = in_array($otherJournal->id, $enrolledJournalIds);
-            @endphp
-            <div
-                class="rounded-[24px] border-2 border-slate-50 bg-white p-5 shadow-sm flex items-center justify-between hover:border-indigo-300 hover:shadow-md transition-all group">
+<div class="grid grid-cols-1 gap-4">
+    @foreach ($otherJournals as $otherJournal)
+        <div x-data="journalRolesHandler({
+            journalId: '{{ $otherJournal->id }}',
+            syncUrl: '{{ route('journal.profile.sync-roles', $otherJournal->slug) }}',
+            initialRoles: @js($userJournalRoles[$otherJournal->id] ?? []),
+            availableRoles: @js($otherJournal->roles->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values())
+        })" class="rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-200 group mb-4">
+            
+            <!-- Row Header -->
+            <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-6">
-                    <div
-                        class="flex-shrink-0 h-14 w-14 bg-slate-50 rounded-[18px] flex items-center justify-center text-indigo-600 font-bold text-2xl uppercase border-2 border-white shadow-sm group-hover:bg-indigo-50 transition-colors">
+                    <div class="flex-shrink-0 h-14 w-14 bg-slate-50 rounded-[18px] flex items-center justify-center text-indigo-600 font-bold text-2xl uppercase border-2 border-white shadow-sm group-hover:bg-indigo-50 transition-colors">
                         {{ substr($otherJournal->name, 0, 1) }}
                     </div>
 
                     <div>
-                        <h4 class="text-lg font-bold text-slate-800">{{ $otherJournal->name }}</h4>
-                        <p class="text-sm text-slate-500 font-medium truncate max-w-md">
-                            {{ $otherJournal->description ?? 'Open Access Journal' }}</p>
+                        <x-text.h2>{{ $otherJournal->name }}</x-text.h2>
+                        <x-text.body class="text-slate-500 truncate max-w-md mt-1">
+                            {{ $otherJournal->description ?? 'Open Access Journal' }}
+                        </x-text.body>
                     </div>
                 </div>
 
-                <div class="flex items-center">
-                    @if ($isEnrolled)
-                        <span
-                            class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 mr-4">
-                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                                <circle cx="4" cy="4" r="3" />
-                            </svg>
-                            Enrolled
-                        </span>
-                        <a href="{{ route('journal.profile.edit', $otherJournal->slug) }}"
-                            class="text-sm font-medium text-blue-600 hover:text-blue-500 hover:underline">
-                            Manage Roles
-                        </a>
-                    @else
-                        <button type="button"
-                            @click="
-                            isOpen = true; 
-                            journalName = '{{ addslashes($otherJournal->name) }}'; 
-                            formAction = '{{ route('journal.enroll', $otherJournal->slug) }}';
-                            selectedRoles = [];
-                            availableRoles = {{ $otherJournal->roles->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values()->toJson() }};
-                        "
-                            class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium text-blue-600 shadow-sm ring-1 ring-inset ring-blue-300 hover:bg-blue-50">
-                            Enroll
-                        </button>
-                    @endif
-                </div>
-            </div>
-        @endforeach
-    </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Dynamic Status Badge -->
+                    <span x-show="isEnrolled"
+                        class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800" x-cloak>
+                        <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-emerald-500" fill="currentColor" viewBox="0 0 8 8">
+                            <circle cx="4" cy="4" r="3" />
+                        </svg>
+                        Enrolled
+                    </span>
+                    <span x-show="!isEnrolled"
+                        class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600" x-cloak>
+                        Not Enrolled
+                    </span>
 
-    @if ($otherJournals->hasPages())
-        <div class="mt-6">
-            {{ $otherJournals->links() }}
-        </div>
-    @endif
-
-    <!-- Enrollment Modal -->
-    <div x-show="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm" x-cloak
-        style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative mx-4" @click.away="isOpen = false">
-
-            <button type="button" @click="isOpen = false"
-                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg>
-            </button>
-
-            <h2 class="text-xl font-bold mb-2 text-gray-900">Join <span x-text="journalName"></span></h2>
-            <p class="text-gray-500 mb-6">Select the roles you wish to assume in this journal.</p>
-
-            <form :action="formAction" method="POST">
-                @csrf
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    <template x-for="role in availableRoles" :key="role.id">
-                        <label class="cursor-pointer border rounded-lg p-4 hover:bg-blue-50 transition-colors"
-                            :class="selectedRoles.includes(role.name) ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' :
-                                'border-gray-200'">
-                            {{-- Note: Controller expects Role Names (strings) for 'roles' array --}}
-                            <input type="checkbox" name="roles[]" :value="role.name" x-model="selectedRoles"
-                                class="sr-only">
-                            <div class="text-center">
-                                <span class="block font-bold text-gray-900" x-text="role.name"></span>
-                                <span class="text-xs text-gray-500"
-                                    x-text="
-                                    role.name === 'Author' ? 'Submit articles' :
-                                    (role.name === 'Reviewer' ? 'Review submissions' : 
-                                    (role.name === 'Reader' ? 'Get notifications' : 'Member'))
-                                "></span>
-                            </div>
-                        </label>
-                    </template>
-
-                    {{-- Empty state if no roles available --}}
-                    <div x-show="availableRoles.length === 0" class="col-span-full text-center py-4 text-gray-500">
-                        No self-registerable roles available for this journal.
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3">
-                    <button type="button" @click="isOpen = false"
-                        class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
-                    <button type="submit" :disabled="selectedRoles.length === 0"
-                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Confirm Join
+                    <!-- Toggle Button -->
+                    <button type="button" @click="isExpanded = !isExpanded"
+                        class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-semibold text-blue-600 shadow-sm ring-1 ring-inset ring-blue-300 hover:bg-blue-50 transition-colors">
+                        <span x-text="isExpanded ? 'Hide Roles' : 'Manage Roles'"></span>
+                        <svg class="ml-1.5 h-4 w-4 transform transition-transform duration-200" :class="isExpanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
                     </button>
                 </div>
-            </form>
+            </div>
+
+            <!-- Expandable Panel -->
+            <div x-show="isExpanded" x-collapse x-cloak class="mt-5 pt-5 border-t border-slate-100">
+                <div class="relative">
+                    <!-- Loading overlay -->
+                    <div x-show="isLoading" class="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10" x-cloak>
+                        <div class="flex items-center space-x-2 text-blue-600">
+                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <x-text.body class="text-blue-600 font-semibold">Mengubah peran...</x-text.body>
+                        </div>
+                    </div>
+
+                    <!-- Role Checkboxes -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <template x-for="role in availableRoles" :key="role.id">
+                            <label class="relative flex cursor-pointer rounded-[24px] p-4 shadow-sm transition-all duration-200 border-2"
+                                :class="selectedRoles.includes(role.id) ?
+                                    'border-emerald-600 ring-1 ring-emerald-600 bg-emerald-50/30' :
+                                    'border-slate-50 bg-white hover:border-indigo-300 hover:shadow-md'">
+                                
+                                <input type="checkbox" :value="role.id" class="sr-only"
+                                    :checked="selectedRoles.includes(role.id)"
+                                    @change="toggleRole(role.id)">
+
+                                <div class="flex flex-1 gap-3 items-center">
+                                    <div class="flex-shrink-0">
+                                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full"
+                                            :class="selectedRoles.includes(role.id) ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'">
+                                            <!-- Icons -->
+                                            <template x-if="role.name === 'Author'">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                                    </path>
+                                                </svg>
+                                            </template>
+                                            <template x-if="role.name === 'Reviewer'">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                    </path>
+                                                </svg>
+                                            </template>
+                                            <template x-if="role.name !== 'Author' && role.name !== 'Reviewer'">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                                                    </path>
+                                                </svg>
+                                            </template>
+                                        </span>
+                                    </div>
+
+                                    <div class="flex flex-col">
+                                        <x-text.h2 :class="selectedRoles.includes(role.id) ? 'text-emerald-900' : 'text-slate-800'" x-text="role.name"></x-text.h2>
+                                        <x-text.caption x-text="role.name === 'Author' ? 'Submit manuscripts' : (role.name === 'Reviewer' ? 'Review submissions' : 'Read content')"></x-text.caption>
+                                    </div>
+                                </div>
+
+                                <div x-show="selectedRoles.includes(role.id)" x-cloak
+                                    class="absolute top-3 right-3 bg-emerald-600 text-white rounded-full p-0.5 shadow-sm">
+                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </label>
+                        </template>
+                    </div>
+
+                    <!-- Dynamic Notification / Status Message -->
+                    <div x-show="statusMessage" x-transition class="mt-4 text-xs font-semibold text-center"
+                        :class="statusType === 'success' ? 'text-emerald-600' : 'text-red-600'" x-text="statusMessage" x-cloak>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    @endforeach
 </div>
+
+@if ($otherJournals->hasPages())
+    <div class="mt-6">
+        {{ $otherJournals->links() }}
+    </div>
+@endif
+
+<script>
+    window.journalRolesHandler = function(config) {
+        return {
+            journalId: config.journalId,
+            syncUrl: config.syncUrl,
+            availableRoles: config.availableRoles,
+            selectedRoles: config.initialRoles,
+            isExpanded: false,
+            isLoading: false,
+            statusMessage: '',
+            statusType: '',
+
+            get isEnrolled() {
+                return this.selectedRoles.length > 0;
+            },
+
+            async toggleRole(roleId) {
+                if (this.isLoading) return;
+
+                // Optimistic UI update
+                let newRoles = [...this.selectedRoles];
+                const index = newRoles.indexOf(roleId);
+                if (index > -1) {
+                    newRoles.splice(index, 1);
+                } else {
+                    newRoles.push(roleId);
+                }
+
+                this.isLoading = true;
+                this.statusMessage = '';
+
+                try {
+                    const response = await axios.post(this.syncUrl, {
+                        role_ids: newRoles
+                    });
+
+                    if (response.data.success) {
+                        this.selectedRoles = response.data.roles;
+                        this.statusType = 'success';
+                        this.statusMessage = 'Peran berhasil diperbarui!';
+                        
+                        setTimeout(() => {
+                            if (this.statusMessage === 'Peran berhasil diperbarui!') {
+                                this.statusMessage = '';
+                            }
+                        }, 3000);
+                    } else {
+                        throw new Error(response.data.message || 'Gagal memperbarui peran.');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    this.statusType = 'error';
+                    this.statusMessage = error.response?.data?.message || 'Terjadi kesalahan saat memperbarui peran.';
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        };
+    };
+</script>

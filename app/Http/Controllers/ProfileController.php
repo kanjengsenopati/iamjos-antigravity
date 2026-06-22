@@ -10,6 +10,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use App\Models\Role;
 use App\Models\Journal;
@@ -51,6 +55,15 @@ class ProfileController extends Controller
             ->unique()
             ->toArray();
 
+        // Get user's detailed roles in all journals
+        $userJournalRoles = $user->journalRoles()
+            ->get()
+            ->groupBy('journal_id')
+            ->map(function ($items) {
+                return $items->pluck('role_id')->toArray();
+            })
+            ->toArray();
+
         // Fetch other enabled journals for enrollment
         $query = Journal::where('id', '!=', $journal->id)
             ->where('enabled', true);
@@ -63,7 +76,7 @@ class ProfileController extends Controller
 
         $activeTab = $request->query('tab', 'identity');
 
-        return view('profile.edit', compact('user', 'journal', 'availableRoles', 'userRolesIds', 'otherJournals', 'enrolledJournalIds', 'activeTab'));
+        return view('profile.edit', compact('user', 'journal', 'availableRoles', 'userRolesIds', 'otherJournals', 'enrolledJournalIds', 'userJournalRoles', 'activeTab'));
     }
 
     /**
@@ -328,4 +341,67 @@ class ProfileController extends Controller
 
         return redirect()->back()->with('success', 'You have successfully joined ' . $journal->name);
     }
+
+    /**
+     * Sync user's roles dynamically via AJAX.
+     */
+    public function syncRolesAjax(Request $request, Journal $journal): JsonResponse
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'role_ids' => 'nullable|array',
+            'role_ids.*' => 'exists:roles,id',
+        ]);
+
+        // Get user's current roles that are NOT allowed for self-registration
+        // These are administrative roles (Editor, Journal Manager, etc.) that must be preserved
+        $keptRoles = $user->journalRoles()
+            ->where('journal_id', $journal->id)
+            ->with(['role' => function($query) {
+                $query->where('allow_registration', false);
+            }])
+            ->whereHas('role', function($query) {
+                $query->where('allow_registration', false);
+            })
+            ->pluck('role_id')
+            ->toArray();
+
+        // Get the selected self-registerable roles from the request
+        $selectedRoles = $request->input('role_ids', []);
+
+        // Validate that selected roles are actually self-registerable for this journal
+        $validSelfRegisterableRoles = Role::where('journal_id', $journal->id)
+            ->where('allow_registration', true)
+            ->pluck('id')
+            ->toArray();
+
+        $validSelectedRoles = array_intersect($selectedRoles, $validSelfRegisterableRoles);
+
+        // Merge kept administrative roles with valid selected roles
+        $finalRoles = array_unique(array_merge($keptRoles, $validSelectedRoles));
+
+        // Sync only this journal's roles using JournalUserRole logic
+        // Remove all roles for this user in this journal first
+        \App\Models\JournalUserRole::where('journal_id', $journal->id)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        // Re-assign the final roles
+        foreach ($finalRoles as $roleId) {
+            \App\Models\JournalUserRole::create([
+                'journal_id' => $journal->id,
+                'user_id' => $user->id,
+                'role_id' => $roleId,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Roles updated successfully.',
+            'enrolled' => count($finalRoles) > 0,
+            'roles' => $finalRoles
+        ]);
+    }
 }
+
