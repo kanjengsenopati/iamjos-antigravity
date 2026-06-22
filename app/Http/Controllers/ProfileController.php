@@ -51,16 +51,12 @@ class ProfileController extends Controller
             ->unique()
             ->toArray();
 
-        // Fetch other enabled journals for enrollment (excluding those already enrolled)
+        // Fetch other enabled journals for enrollment
         $query = Journal::where('id', '!=', $journal->id)
             ->where('enabled', true);
 
-        if (!empty($enrolledJournalIds)) {
-            $query->whereNotIn('id', $enrolledJournalIds);
-        }
-
         $otherJournals = $query->with(['roles' => function($q) {
-                $q->where('allow_registration', true);
+                $q->withoutGlobalScope('journal')->where('allow_registration', true);
             }])
             ->paginate(5)
             ->appends($request->query());

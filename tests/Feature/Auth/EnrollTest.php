@@ -15,32 +15,50 @@ class EnrollTest extends TestCase
 
     public function test_user_can_view_other_journals_to_enroll_in_profile_roles_tab(): void
     {
-        // 1. Create two journals
+        // 1. Create three journals
         $journalA = Journal::factory()->create(['enabled' => true, 'slug' => 'journal-a']);
         $journalB = Journal::factory()->create(['enabled' => true, 'slug' => 'journal-b']);
+        $journalC = Journal::factory()->create(['enabled' => true, 'slug' => 'journal-c']);
 
-        // Seed default roles for both journals
+        // Seed default roles for all journals
         Role::seedDefaultRolesForJournal($journalA);
         Role::seedDefaultRolesForJournal($journalB);
+        Role::seedDefaultRolesForJournal($journalC);
 
-        // 2. Create a user and enroll in Journal A
+        // 2. Create a user
         $user = User::factory()->create();
-        $authorRoleA = Role::where('journal_id', $journalA->id)->where('name', 'Author')->first();
         
+        // Enroll user in Journal A (current journal context)
+        $authorRoleA = Role::where('journal_id', $journalA->id)->where('name', 'Author')->first();
         JournalUserRole::create([
             'journal_id' => $journalA->id,
             'user_id' => $user->id,
             'role_id' => $authorRoleA->id,
         ]);
 
-        // 3. Act as the user
+        // Enroll user in Journal C (already enrolled other journal)
+        $authorRoleC = Role::where('journal_id', $journalC->id)->where('name', 'Author')->first();
+        JournalUserRole::create([
+            'journal_id' => $journalC->id,
+            'user_id' => $user->id,
+            'role_id' => $authorRoleC->id,
+        ]);
+
+        // 3. Act as the user on Journal A profile
         $response = $this->actingAs($user)
             ->get(route('journal.profile.edit', ['journal' => $journalA->slug, 'tab' => 'roles']));
 
-        // 4. Assert response is success and contains Journal B info
+        // 4. Assert response is success
         $response->assertStatus(200);
+
+        // Assert Journal B (not enrolled) is visible with "Enroll" button
         $response->assertSee($journalB->name);
         $response->assertSee('Enroll');
+
+        // Assert Journal C (already enrolled) is visible with "Enrolled" badge and "Manage Roles" link
+        $response->assertSee($journalC->name);
+        $response->assertSee('Enrolled');
+        $response->assertSee('Manage Roles');
     }
 
     public function test_user_can_enroll_in_other_journal(): void
