@@ -1,7 +1,10 @@
 <header>
-    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->seq_id }}</identifier>
+    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:{{ $journal->slug }}/article/{{ $record->seq_id }}</identifier>
     <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}</datestamp>
-    <setSpec>{{ $journal->path }}</setSpec>
+    <setSpec>{{ $journal->slug }}</setSpec>
+    @if ($record->section)
+        <setSpec>{{ $journal->slug }}:{{ strtoupper($record->section->abbreviation ?? \Illuminate\Support\Str::slug($record->section->name)) }}</setSpec>
+    @endif
 </header>
 <metadata>
     <rfc1807 xmlns="http://info.internet.isi.edu:80/in-notes/rfc/files/rfc1807.txt"

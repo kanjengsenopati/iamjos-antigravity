@@ -146,10 +146,28 @@ class OaiController extends Controller
                     ->header('Content-Type', 'text/xml');
 
             case 'ListSets':
-                 $sets = [
-                    (object)['spec' => strtoupper($journal->abbreviation ?? 'JRN'), 'name' => $journal->name],
-                    (object)['spec' => strtoupper($journal->abbreviation ?? 'JRN') . ':ART', 'name' => 'Articles']
+                $sections = \App\Models\Section::where('journal_id', $journal->id)
+                    ->where('is_active', true)
+                    ->get();
+
+                $sets = [];
+                // 1. Set tingkat jurnal
+                $sets[] = (object)[
+                    'spec' => $journal->slug,
+                    'name' => $journal->name
                 ];
+                
+                // 2. Set tingkat section
+                foreach ($sections as $section) {
+                    $abbr = strtoupper($section->abbreviation ?? \Illuminate\Support\Str::slug($section->name));
+                    if (!empty($abbr)) {
+                        $sets[] = (object)[
+                            'spec' => $journal->slug . ':' . $abbr,
+                            'name' => $section->title ?? $section->name
+                        ];
+                    }
+                }
+                
                 return response()->view('journal.public.oai.list_sets', compact('journal', 'sets'))
                     ->header('Content-Type', 'text/xml');
 
@@ -170,14 +188,10 @@ class OaiController extends Controller
 
                 // Set filtering
                 if ($request->has('set')) {
-                    $set = $request->input('set');
-                    $journalAbbr = strtoupper($journal->abbreviation ?? 'JRN');
-                    if ($set !== $journalAbbr && $set !== $journalAbbr . ':ART') {
-                        $query->whereRaw('1 = 0');
-                    }
+                    $this->applySetFilter($query, $journal, $request->input('set'));
                 }
 
-                $query->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
+                $query->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys', 'section']);
 
                 // Pagination with resumption tokens (OAI-PMH 2.0 compliance)
                 $pageSize    = 100;
@@ -300,14 +314,10 @@ class OaiController extends Controller
             $query->where('updated_at', '<=', Carbon::parse($tokenData['until'])->utc()->endOfSecond());
         }
         if (!empty($tokenData['set'])) {
-            $journalAbbr = strtoupper($journal->abbreviation ?? 'JRN');
-            $set = $tokenData['set'];
-            if ($set !== $journalAbbr && $set !== $journalAbbr . ':ART') {
-                $query->whereRaw('1 = 0');
-            }
+            $this->applySetFilter($query, $journal, $tokenData['set']);
         }
 
-        $query->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys']);
+        $query->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys', 'section']);
 
         $pageSize     = 100;
         $totalRecords = $query->count();
@@ -341,6 +351,54 @@ class OaiController extends Controller
             }
         }
         return $requestAttributes;
+    }
+
+    private function applySetFilter($query, $journal, $set)
+    {
+        if (empty($set)) {
+            return;
+        }
+
+        $journalSlug = $journal->slug;
+        $journalAbbr = strtoupper($journal->abbreviation ?? '');
+
+        // Harvester requests whole journal
+        if ($set === $journalSlug || ($journalAbbr && $set === $journalAbbr)) {
+            return;
+        }
+
+        // Section-specific harvesting
+        $sectionAbbrev = null;
+        if (str_contains($set, ':')) {
+            $parts = explode(':', $set);
+            $prefix = $parts[0];
+            $sectionAbbrev = $parts[1];
+            
+            // Verify prefix matches journal slug or abbreviation
+            if ($prefix !== $journalSlug && ($journalAbbr && $prefix !== $journalAbbr)) {
+                $query->whereRaw('1 = 0');
+                return;
+            }
+        } else {
+            $sectionAbbrev = $set;
+        }
+
+        if ($sectionAbbrev) {
+            $lowerAbbrev = strtolower($sectionAbbrev);
+            $section = \App\Models\Section::where('journal_id', $journal->id)
+                ->where(function($q) use ($sectionAbbrev, $lowerAbbrev) {
+                    $q->whereRaw('LOWER(abbreviation) = ?', [$lowerAbbrev])
+                      ->orWhereRaw('LOWER(name) = ?', [$lowerAbbrev])
+                      ->orWhere('abbreviation', $sectionAbbrev)
+                      ->orWhere('name', $sectionAbbrev);
+                })->first();
+
+            if ($section) {
+                $query->where('section_id', $section->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
     }
 
    private function oaiError($code, $message)

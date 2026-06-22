@@ -7,9 +7,12 @@
     <ListIdentifiers>
         @foreach ($records as $record)
             <header>
-                <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->seq_id }}</identifier>
+                <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:{{ $record->journal->slug }}/article/{{ $record->seq_id }}</identifier>
                 <datestamp>{{ $record->updated_at->utc()->format('Y-m-d\TH:i:s\Z') }}</datestamp>
-                <setSpec>{{ strtoupper($record->journal->abbreviation ?? 'JRN') }}:ART</setSpec>
+                <setSpec>{{ $record->journal->slug }}</setSpec>
+                @if ($record->section)
+                    <setSpec>{{ $record->journal->slug }}:{{ strtoupper($record->section->abbreviation ?? \Illuminate\Support\Str::slug($record->section->name)) }}</setSpec>
+                @endif
             </header>
         @endforeach
     </ListIdentifiers>

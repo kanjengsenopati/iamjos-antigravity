@@ -9,11 +9,12 @@
         @foreach ($records as $record)
             <record>
                 <header>
-                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:article/{{ $record->seq_id }}
-                    </identifier>
-                    <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}
-                    </datestamp>
-                    <setSpec>{{ $journal->path }}</setSpec>
+                    <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:{{ $journal->slug }}/article/{{ $record->seq_id }}</identifier>
+                    <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}</datestamp>
+                    <setSpec>{{ $journal->slug }}</setSpec>
+                    @if ($record->section)
+                        <setSpec>{{ $journal->slug }}:{{ strtoupper($record->section->abbreviation ?? \Illuminate\Support\Str::slug($record->section->name)) }}</setSpec>
+                    @endif
                 </header>
                 <metadata>
                     <record xmlns="http://www.loc.gov/MARC21/slim" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
