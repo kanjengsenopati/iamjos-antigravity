@@ -350,6 +350,7 @@ class OaiController extends Controller
 
         // XML String Manual
         $xml = '<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="' . url('oai/stylesheet') . '" ?>
         <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
