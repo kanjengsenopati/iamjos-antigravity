@@ -1,11 +1,17 @@
-<header>
+@php
+    $isDeleted = $record->trashed() || ($record->status !== \App\Models\Submission::STATUS_PUBLISHED);
+    $datestamp = ($record->published_at ?? $record->updated_at)->utc()->format('Y-m-d\TH:i:s\Z');
+@endphp
+<header{{ $isDeleted ? ' status="deleted"' : '' }}>
     <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:{{ $journal->slug }}/article/{{ $record->seq_id }}</identifier>
-    <datestamp>{{ \Carbon\Carbon::parse($record->publication->date_published)->format('Y-m-d') }}</datestamp>
+    <datestamp>{{ $datestamp }}</datestamp>
     <setSpec>{{ $journal->slug }}</setSpec>
     @if ($record->section)
         <setSpec>{{ $journal->slug }}:{{ strtoupper($record->section->abbreviation ?? \Illuminate\Support\Str::slug($record->section->name)) }}</setSpec>
     @endif
+    <setSpec>driver</setSpec>
 </header>
+@if (!$isDeleted)
 <metadata>
     <rfc1807 xmlns="http://info.internet.isi.edu:80/in-notes/rfc/files/rfc1807.txt"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -31,3 +37,4 @@
 
     </rfc1807>
 </metadata>
+@endif

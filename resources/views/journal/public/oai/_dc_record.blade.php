@@ -51,14 +51,19 @@
     $abstractClean = trim(preg_replace('/\s+/', ' ', strip_tags($decoded)));
   }
 @endphp
-<header>
+@php
+  $isDeleted = $record->trashed() || ($record->status !== \App\Models\Submission::STATUS_PUBLISHED);
+@endphp
+<header{{ $isDeleted ? ' status="deleted"' : '' }}>
   <identifier>{{ $oaiIdentifier }}</identifier>
   <datestamp>{{ $datestamp }}</datestamp>
   <setSpec>{{ $journal->slug }}</setSpec>
   @if ($record->section)
     <setSpec>{{ $journal->slug }}:{{ strtoupper($record->section->abbreviation ?? \Illuminate\Support\Str::slug($record->section->name)) }}</setSpec>
   @endif
+  <setSpec>driver</setSpec>
 </header>
+@if (!$isDeleted)
 <metadata>
   <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -138,3 +143,4 @@
 
   </oai_dc:dc>
 </metadata>
+@endif

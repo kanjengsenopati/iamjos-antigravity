@@ -167,14 +167,24 @@ class OaiController extends Controller
                         ];
                     }
                 }
+
+                // 3. Set DRIVER (DRIVER Open Access compliance)
+                $sets[] = (object)[
+                    'spec' => 'driver',
+                    'name' => 'Open Access DRIVER-compliant publications'
+                ];
                 
                 return response()->view('journal.public.oai.list_sets', compact('journal', 'sets'))
                     ->header('Content-Type', 'text/xml');
 
             case 'ListIdentifiers':
             case 'ListRecords':
-                $query = Submission::where('journal_id', $journal->id)
-                    ->where('status', Submission::STATUS_PUBLISHED);
+                $query = Submission::withTrashed()
+                    ->where('journal_id', $journal->id)
+                    ->where(function($q) {
+                        $q->where('status', Submission::STATUS_PUBLISHED)
+                          ->orWhereNotNull('published_at');
+                    });
                 
                 // Date range filtering (OAI-PMH 2.0 inclusive)
                 if ($request->has('from')) {
@@ -234,7 +244,8 @@ class OaiController extends Controller
                      return $this->oaiError('idDoesNotExist', 'Invalid identifier format');
                 }
 
-                $recordRaw = Submission::where('journal_id', $journal->id)
+                $recordRaw = Submission::withTrashed()
+                    ->where('journal_id', $journal->id)
                     ->where(function($q) use ($id) {
                         if (is_numeric($id)) {
                             $q->where('seq_id', $id);
@@ -244,8 +255,11 @@ class OaiController extends Controller
                             $q->where('slug', $id);
                         }
                     })
-                    ->where('status', Submission::STATUS_PUBLISHED)
-                    ->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys'])
+                    ->where(function($q) {
+                        $q->where('status', Submission::STATUS_PUBLISHED)
+                          ->orWhereNotNull('published_at');
+                    })
+                    ->with(['currentPublication', 'authors', 'keywords', 'issue', 'journal', 'galleys', 'section'])
                     ->first();
 
                 if (!$recordRaw) {
@@ -304,8 +318,12 @@ class OaiController extends Controller
         $verb   = $tokenData['verb'] ?? 'ListRecords';
         $cursor = (int) ($tokenData['cursor'] ?? 0);
 
-        $query = Submission::where('journal_id', $journal->id)
-            ->where('status', Submission::STATUS_PUBLISHED);
+        $query = Submission::withTrashed()
+            ->where('journal_id', $journal->id)
+            ->where(function($q) {
+                $q->where('status', Submission::STATUS_PUBLISHED)
+                  ->orWhereNotNull('published_at');
+            });
 
         if (!empty($tokenData['from'])) {
             $query->where('updated_at', '>=', Carbon::parse($tokenData['from'])->utc());
@@ -362,8 +380,8 @@ class OaiController extends Controller
         $journalSlug = $journal->slug;
         $journalAbbr = strtoupper($journal->abbreviation ?? '');
 
-        // Harvester requests whole journal
-        if ($set === $journalSlug || ($journalAbbr && $set === $journalAbbr)) {
+        // Harvester requests whole journal or driver set
+        if ($set === $journalSlug || ($journalAbbr && $set === $journalAbbr) || $set === 'driver') {
             return;
         }
 

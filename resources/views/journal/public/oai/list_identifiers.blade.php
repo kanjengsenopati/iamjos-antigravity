@@ -6,13 +6,17 @@
     <request{!! \App\Http\Controllers\Public\OaiController::getRequestAttributes() !!}>{{ url()->current() }}</request>
     <ListIdentifiers>
         @foreach ($records as $record)
-            <header>
+            @php
+                $isDeleted = $record->trashed() || ($record->status !== \App\Models\Submission::STATUS_PUBLISHED);
+            @endphp
+            <header{{ $isDeleted ? ' status="deleted"' : '' }}>
                 <identifier>oai:{{ parse_url(config('app.url'), PHP_URL_HOST) }}:{{ $record->journal->slug }}/article/{{ $record->seq_id }}</identifier>
-                <datestamp>{{ $record->updated_at->utc()->format('Y-m-d\TH:i:s\Z') }}</datestamp>
+                <datestamp>{{ ($record->published_at ?? $record->updated_at)->utc()->format('Y-m-d\TH:i:s\Z') }}</datestamp>
                 <setSpec>{{ $record->journal->slug }}</setSpec>
                 @if ($record->section)
                     <setSpec>{{ $record->journal->slug }}:{{ strtoupper($record->section->abbreviation ?? \Illuminate\Support\Str::slug($record->section->name)) }}</setSpec>
                 @endif
+                <setSpec>driver</setSpec>
             </header>
         @endforeach
     </ListIdentifiers>
