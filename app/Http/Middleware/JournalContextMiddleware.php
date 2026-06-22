@@ -38,7 +38,7 @@ class JournalContextMiddleware
 
         // Global Cross-Journal Authorization for Authenticated Users
         $user = $request->user();
-        if ($user && !$user->hasRole('Super Admin')) {
+        if ($user && !$user->hasRole('Super Admin') && !$request->routeIs('journal.enroll')) {
             $userJournals = $user->registeredJournals();
             if (!$userJournals->contains('id', $journal->id)) {
                 // User does not have access to this journal context
