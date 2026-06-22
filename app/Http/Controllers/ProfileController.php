@@ -35,17 +35,35 @@ class ProfileController extends Controller
             'available_roles_journal_' . $journal->id,
             now()->addMinutes(30),
             function () use ($journal) {
-                return Role::where('allow_registration', true)
-                    ->where('journal_id', $journal->id)
+                return Role::withoutGlobalScope('journal')
+                    ->where('allow_registration', true)
+                    ->where(function($query) use ($journal) {
+                        $query->where('journal_id', $journal->id)
+                              ->orWhereNull('journal_id');
+                    })
                     ->get();
             }
         );
 
-        // Get current user's role IDs for this journal using JournalUserRole
-        // Eager load user‑journal roles once and extract IDs
-        $userRolesIds = $user->journalRoles()
+        // Get current user's role names for this journal
+        $userRolesNames = $user->journalRoles()
             ->where('journal_id', $journal->id)
-            ->pluck('role_id')
+            ->with(['role' => function($q) {
+                $q->withoutGlobalScope('journal');
+            }])
+            ->get()
+            ->filter(fn($item) => $item->role)
+            ->map(fn($item) => $item->role->name)
+            ->toArray();
+
+        // Map names to active journal role IDs (whether journal-specific or global)
+        $userRolesIds = Role::withoutGlobalScope('journal')
+            ->whereIn('name', $userRolesNames)
+            ->where(function($query) use ($journal) {
+                $query->where('journal_id', $journal->id)
+                      ->orWhereNull('journal_id');
+            })
+            ->pluck('id')
             ->toArray();
 
         // Get all journal IDs where user has a role via JournalUserRole
@@ -55,14 +73,43 @@ class ProfileController extends Controller
             ->unique()
             ->toArray();
 
-        // Get user's detailed roles in all journals
+        // Get user's detailed roles in all journals, mapped to correct matching role IDs by name
         $userJournalRoles = $user->journalRoles()
+            ->with(['role' => function($q) {
+                $q->withoutGlobalScope('journal');
+            }])
             ->get()
             ->groupBy('journal_id')
-            ->map(function ($items) {
-                return $items->pluck('role_id')->toArray();
+            ->map(function ($items, $journalId) {
+                $roleNames = $items->filter(fn($item) => $item->role)->map(fn($item) => $item->role->name)->toArray();
+                return Role::withoutGlobalScope('journal')
+                    ->whereIn('name', $roleNames)
+                    ->where(function($query) use ($journalId) {
+                        $query->where('journal_id', $journalId)
+                              ->orWhereNull('journal_id');
+                    })
+                    ->pluck('id')
+                    ->toArray();
             })
             ->toArray();
+
+        // Get user's administrative (staff) roles in all journals
+        $userJournalAdminRoles = [];
+        if ($user) {
+            $userJournalAdminRoles = $user->journalRoles()
+                ->with(['role' => function($q) {
+                    $q->withoutGlobalScope('journal');
+                }])
+                ->get()
+                ->filter(function ($jur) {
+                    return $jur->role && !$jur->role->allow_registration;
+                })
+                ->groupBy('journal_id')
+                ->map(function ($items) {
+                    return $items->map(fn($item) => $item->role->name)->unique()->toArray();
+                })
+                ->toArray();
+        }
 
         // Fetch other enabled journals for enrollment
         $query = Journal::where('id', '!=', $journal->id)
@@ -76,7 +123,7 @@ class ProfileController extends Controller
 
         $activeTab = $request->query('tab', 'identity');
 
-        return view('profile.edit', compact('user', 'journal', 'availableRoles', 'userRolesIds', 'otherJournals', 'enrolledJournalIds', 'userJournalRoles', 'activeTab'));
+        return view('profile.edit', compact('user', 'journal', 'availableRoles', 'userRolesIds', 'otherJournals', 'enrolledJournalIds', 'userJournalRoles', 'activeTab', 'userJournalAdminRoles'));
     }
 
     /**
@@ -262,11 +309,8 @@ class ProfileController extends Controller
         // Use JournalUserRole to fetch these accurately
         $keptRoles = $user->journalRoles()
             ->where('journal_id', $journal->id)
-            ->with(['role' => function($query) {
-                $query->where('allow_registration', false);
-            }])
             ->whereHas('role', function($query) {
-                $query->where('allow_registration', false);
+                $query->withoutGlobalScope('journal')->where('allow_registration', false);
             })
             ->pluck('role_id')
             ->toArray();
@@ -274,9 +318,13 @@ class ProfileController extends Controller
         // Step 2: Get the selected self-registerable roles from the request
         $selectedRoles = $request->input('selected_roles', []);
 
-        // Step 3: Validate that selected roles are actually self-registerable for this journal
-        $validSelfRegisterableRoles = Role::where('journal_id', $journal->id)
+        // Step 3: Validate that selected roles are actually self-registerable for this journal (specific or global)
+        $validSelfRegisterableRoles = Role::withoutGlobalScope('journal')
             ->where('allow_registration', true)
+            ->where(function($query) use ($journal) {
+                $query->where('journal_id', $journal->id)
+                      ->orWhereNull('journal_id');
+            })
             ->pluck('id')
             ->toArray();
 
@@ -286,9 +334,7 @@ class ProfileController extends Controller
         $finalRoles = array_unique(array_merge($keptRoles, $validSelectedRoles));
 
         // Step 5: Sync only this journal's roles using JournalUserRole logic
-        // We delete all existing roles for this journal, then re-insert the final list
-        
-        // Remove all roles for this user in this journal first
+        // We delete all existing roles for this user in this journal first
         \App\Models\JournalUserRole::where('journal_id', $journal->id)
             ->where('user_id', $user->id)
             ->delete();
@@ -317,11 +363,15 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
-        // Get Role IDs for selected role names in THIS journal
+        // Get Role IDs for selected role names in THIS journal (specific or global)
         // Ensure they are allowed for self-registration
-        $rolesToAssign = Role::where('journal_id', $journal->id)
+        $rolesToAssign = Role::withoutGlobalScope('journal')
             ->whereIn('name', $request->roles)
             ->where('allow_registration', true)
+            ->where(function($query) use ($journal) {
+                $query->where('journal_id', $journal->id)
+                      ->orWhereNull('journal_id');
+            })
             ->pluck('id')
             ->toArray();
 
@@ -358,11 +408,8 @@ class ProfileController extends Controller
         // These are administrative roles (Editor, Journal Manager, etc.) that must be preserved
         $keptRoles = $user->journalRoles()
             ->where('journal_id', $journal->id)
-            ->with(['role' => function($query) {
-                $query->where('allow_registration', false);
-            }])
             ->whereHas('role', function($query) {
-                $query->where('allow_registration', false);
+                $query->withoutGlobalScope('journal')->where('allow_registration', false);
             })
             ->pluck('role_id')
             ->toArray();
@@ -370,9 +417,13 @@ class ProfileController extends Controller
         // Get the selected self-registerable roles from the request
         $selectedRoles = $request->input('role_ids', []);
 
-        // Validate that selected roles are actually self-registerable for this journal
-        $validSelfRegisterableRoles = Role::where('journal_id', $journal->id)
+        // Validate that selected roles are actually self-registerable for this journal (specific or global)
+        $validSelfRegisterableRoles = Role::withoutGlobalScope('journal')
             ->where('allow_registration', true)
+            ->where(function($query) use ($journal) {
+                $query->where('journal_id', $journal->id)
+                      ->orWhereNull('journal_id');
+            })
             ->pluck('id')
             ->toArray();
 

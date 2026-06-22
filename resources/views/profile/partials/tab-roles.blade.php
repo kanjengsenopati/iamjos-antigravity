@@ -13,6 +13,22 @@
         <x-text.body class="mt-1 text-slate-500">Select the roles you wish to assume in this journal.</x-text.body>
     </div>
 
+    @if (!empty($userJournalAdminRoles[$journal->id]))
+        <div class="mb-6 p-5 bg-indigo-50/30 rounded-[24px] border border-indigo-100/50 flex items-start gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+            <div class="p-2 bg-indigo-100/80 text-indigo-700 rounded-full shrink-0 flex items-center justify-center">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+            <div>
+                <x-text.h2 class="text-indigo-900 font-semibold">Active Administrative Roles</x-text.h2>
+                <x-text.body class="text-indigo-700 mt-1">
+                    You are registered with the following staff role(s): <strong class="font-bold text-indigo-900">{{ implode(', ', $userJournalAdminRoles[$journal->id]) }}</strong>. Administrative roles cannot be self-modified.
+                </x-text.body>
+            </div>
+        </div>
+    @endif
+
     @if ($availableRoles->isEmpty())
         <div class="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
             <div class="flex">
@@ -144,6 +160,18 @@
                         <x-text.body class="text-slate-500 truncate max-w-md mt-1">
                             {{ $otherJournal->description ?? 'Open Access Journal' }}
                         </x-text.body>
+                        @if (!empty($userJournalAdminRoles[$otherJournal->id]))
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                @foreach ($userJournalAdminRoles[$otherJournal->id] as $adminRole)
+                                    <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-100/50">
+                                        <svg class="mr-1 h-3 w-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                        {{ $adminRole }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
 
