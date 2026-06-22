@@ -184,6 +184,12 @@
         // Helper specifically for this view to avoid clutter
         $isAdminContext = request()->routeIs('journal.admin.*');
         $usersRoutePrefix = $isAdminContext ? 'journal.admin.users' : 'journal.users';
+
+        $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
+        // Fallback: if user has no registered journals but is viewing a journal, show current
+        if ($userJournals->isEmpty() && $journal) {
+            $userJournals = collect([$journal]);
+        }
     @endphp
 
     <!-- Mobile Sidebar Overlay -->
@@ -205,7 +211,26 @@
         }">
 
         <!-- 1. Journal Context Switcher -->
-        <div class="h-16 px-4 flex items-center border-b border-gray-100 relative" x-data="{ open: false }">
+        <div class="h-16 px-4 flex items-center border-b border-gray-100 relative" 
+            x-data="{ 
+                open: false,
+                userJournals: @js($userJournals->map(fn($j) => ['id' => $j->id, 'name' => $j->name, 'slug' => $j->slug, 'abbreviation' => $j->abbreviation])->values())
+            }"
+            @journal-enrollment-updated.window="
+                const detail = $event.detail;
+                if (detail.enrolled) {
+                    if (!userJournals.some(j => j.id === detail.journalId)) {
+                        userJournals.push({
+                            id: detail.journalId,
+                            name: detail.journalName,
+                            slug: detail.journalSlug,
+                            abbreviation: detail.journalAbbreviation
+                        });
+                    }
+                } else {
+                    userJournals = userJournals.filter(j => j.id !== detail.journalId);
+                }
+            ">
             <button @click="open = !open"
                 class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left group">
                 <!-- Logo -->
@@ -239,34 +264,29 @@
                     <span class="text-xs font-semibold text-gray-500 uppercase">My Journals</span>
                 </div>
 
-                @php
-                    $userJournals = \App\Models\JournalUserRole::getUserJournals(auth()->user());
-                    // Fallback: if user has no registered journals but is viewing a journal, show current
-                    if ($userJournals->isEmpty() && $journal) {
-                        $userJournals = collect([$journal]);
-                    }
-                @endphp
-
                 <div class="max-h-60 overflow-y-auto">
-                    @forelse ($userJournals as $j)
-                        <a href="{{ route('journal.dashboard', ['journal' => $j->slug]) }}"
-                            class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 {{ $journal && $journal->id == $j->id ? 'bg-indigo-50/50' : '' }}">
+                    <template x-for="j in userJournals" :key="j.id">
+                        <a :href="`/${j.slug}/dashboard`"
+                            class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"
+                            :class="'{{ $journal?->id }}' == j.id ? 'bg-indigo-50/50' : ''">
                             <div
-                                class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-bold {{ $journal && $journal->id == $j->id ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600' }}">
-                                {{ strtoupper(substr($j->abbreviation ?? $j->name, 0, 2)) }}
+                                class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-bold"
+                                :class="'{{ $journal?->id }}' == j.id ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'">
+                                <span x-text="(j.abbreviation || j.name).substring(0, 2).toUpperCase()"></span>
                             </div>
                             <span
-                                class="text-sm text-gray-700 truncate {{ $journal && $journal->id == $j->id ? 'font-medium text-indigo-900' : '' }}">{{ $j->name }}</span>
-                            @if ($journal && $journal->id == $j->id)
+                                class="text-sm text-gray-700 truncate"
+                                :class="'{{ $journal?->id }}' == j.id ? 'font-medium text-indigo-900' : ''"
+                                x-text="j.name"></span>
+                            <template x-if="'{{ $journal?->id }}' == j.id">
                                 <i class="fa-solid fa-check text-indigo-600 text-xs ml-auto"></i>
-                            @endif
+                            </template>
                         </a>
-                    @empty
-                        <div class="px-4 py-3 text-center">
-                            <p class="text-xs text-gray-500">No journals yet</p>
-                            <a href="{{ route('register') }}" class="text-xs text-indigo-600 hover:underline">Join a journal</a>
-                        </div>
-                    @endforelse
+                    </template>
+                    <!-- Fallback empty state if userJournals is empty -->
+                    <div x-show="userJournals.length === 0" class="px-4 py-3 text-center text-gray-500 text-xs" x-cloak>
+                        No journals yet
+                    </div>
                 </div>
 
                 <div class="border-t border-gray-100 pt-1 mt-1">

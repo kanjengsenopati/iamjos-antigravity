@@ -1,3 +1,9 @@
+@php
+    $roleOrder = ['Author' => 1, 'Reader' => 2, 'Reviewer' => 3, 'Translator' => 4];
+    $sortedAvailableRoles = $availableRoles->sortBy(function($role) use ($roleOrder) {
+        return $roleOrder[$role->name] ?? 99;
+    });
+@endphp
 <form action="{{ route('journal.profile.roles.update', $journal->slug) }}" method="POST" class="space-y-6">
     @csrf
     @method('PUT')
@@ -27,7 +33,7 @@
     @else
         <div x-data="{ selected: @js($userRolesIds) }" class="grid grid-cols-1 md:grid-cols-2 gap-2">
 
-            @foreach ($availableRoles as $role)
+            @foreach ($sortedAvailableRoles as $role)
                 <label class="relative flex cursor-pointer rounded-[24px] border-2 p-5 shadow-sm transition-all duration-200"
                     :class="selected.includes('{{ $role->id }}') ?
                         'border-emerald-600 ring-1 ring-emerald-600 bg-emerald-50/30' :
@@ -111,11 +117,19 @@
 
 <div class="grid grid-cols-1 gap-4">
     @foreach ($otherJournals as $otherJournal)
+        @php
+            $sortedOtherRoles = $otherJournal->roles->sortBy(function($role) use ($roleOrder) {
+                return $roleOrder[$role->name] ?? 99;
+            })->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values();
+        @endphp
         <div x-data="journalRolesHandler({
             journalId: '{{ $otherJournal->id }}',
+            journalName: '{{ addslashes($otherJournal->name) }}',
+            journalSlug: '{{ $otherJournal->slug }}',
+            journalAbbreviation: '{{ addslashes($otherJournal->abbreviation ?? $otherJournal->name) }}',
             syncUrl: '{{ route('journal.profile.sync-roles', $otherJournal->slug) }}',
             initialRoles: @js($userJournalRoles[$otherJournal->id] ?? []),
-            availableRoles: @js($otherJournal->roles->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values())
+            availableRoles: @js($sortedOtherRoles)
         })" class="rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-200 group mb-4">
             
             <!-- Row Header -->
@@ -251,6 +265,9 @@
     window.journalRolesHandler = function(config) {
         return {
             journalId: config.journalId,
+            journalName: config.journalName,
+            journalSlug: config.journalSlug,
+            journalAbbreviation: config.journalAbbreviation,
             syncUrl: config.syncUrl,
             availableRoles: config.availableRoles,
             selectedRoles: config.initialRoles,
@@ -287,6 +304,17 @@
                         this.selectedRoles = response.data.roles;
                         this.statusType = 'success';
                         this.statusMessage = 'Peran berhasil diperbarui!';
+                        
+                        // Dispatch custom event to dynamically update layouts' switchers
+                        window.dispatchEvent(new CustomEvent('journal-enrollment-updated', {
+                            detail: {
+                                journalId: this.journalId,
+                                journalName: this.journalName,
+                                journalSlug: this.journalSlug,
+                                journalAbbreviation: this.journalAbbreviation,
+                                enrolled: response.data.enrolled
+                            }
+                        }));
                         
                         setTimeout(() => {
                             if (this.statusMessage === 'Peran berhasil diperbarui!') {

@@ -295,7 +295,26 @@
         }">
 
         <!-- 1. Journal Context Switcher -->
-        <div class="relative border-b border-gray-100" @click.outside="openJournalSwitcher = false" x-data="{ openJournalSwitcher: false }">
+        <div class="relative border-b border-gray-100" @click.outside="openJournalSwitcher = false" 
+            x-data="{ 
+                openJournalSwitcher: false,
+                userJournals: @js($userJournals->map(fn($j) => ['id' => $j->id, 'name' => $j->name, 'slug' => $j->slug, 'abbreviation' => $j->abbreviation])->values())
+            }"
+            @journal-enrollment-updated.window="
+                const detail = $event.detail;
+                if (detail.enrolled) {
+                    if (!userJournals.some(j => j.id === detail.journalId)) {
+                        userJournals.push({
+                            id: detail.journalId,
+                            name: detail.journalName,
+                            slug: detail.journalSlug,
+                            abbreviation: detail.journalAbbreviation
+                        });
+                    }
+                } else {
+                    userJournals = userJournals.filter(j => j.id !== detail.journalId);
+                }
+            ">
             @php
                 $user = auth()->user();
                 if ($user->hasRole(\App\Models\Role::ROLE_SUPERADMIN)) {
@@ -369,17 +388,21 @@
                         Switch Journal
                     </p>
                     <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
-                        @foreach ($userJournals as $j)
-                            <a href="{{ route('journal.submissions.index', $j->slug) }}"
+                        <template x-for="j in userJournals" :key="j.id">
+                            <a :href="`/${j.slug}/submissions`"
                                 class="block px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center justify-between group gap-6">
-                                <span class="whitespace-nowrap font-medium">{{ $j->name }}</span>
-                                @if ($journal && $j->id === $journal->id)
+                                <span class="whitespace-nowrap font-medium" x-text="j.name"></span>
+                                <template x-if="'{{ $journal?->id }}' === j.id">
                                     <div class="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 shrink-0">
                                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                                     </div>
-                                @endif
+                                </template>
                             </a>
-                        @endforeach
+                        </template>
+                        <!-- Fallback empty state if userJournals is empty -->
+                        <div x-show="userJournals.length === 0" class="px-4 py-3 text-center text-gray-500 text-xs" x-cloak>
+                            No journals yet
+                        </div>
                     </div>
 
                     <div class="border-t border-gray-100 mt-1 pt-1">
