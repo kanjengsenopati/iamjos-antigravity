@@ -66,10 +66,10 @@
                         </div>
 
                         <div class="flex flex-col">
-                            <x-text.h2 :class="selected.includes('{{ $role->id }}') ? 'text-emerald-900' : 'text-slate-800'">
+                            <x-text.h2 x-bind:class="selected.includes('{{ $role->id }}') ? 'text-emerald-900' : 'text-slate-800'">
                                 {{ $role->name }}
                             </x-text.h2>
-                            <x-text.body class="mt-1" :class="selected.includes('{{ $role->id }}') ? 'text-emerald-700' : 'text-slate-500'">
+                            <x-text.body class="mt-1" x-bind:class="selected.includes('{{ $role->id }}') ? 'text-emerald-700' : 'text-slate-500'">
                                 @if ($role->name === 'Author')
                                     Submit manuscripts and track your work.
                                 @elseif($role->name === 'Reviewer')
@@ -216,7 +216,7 @@
                                     </div>
 
                                     <div class="flex flex-col">
-                                        <x-text.h2 :class="selectedRoles.includes(role.id) ? 'text-emerald-900' : 'text-slate-800'" x-text="role.name"></x-text.h2>
+                                        <x-text.h2 x-bind:class="selectedRoles.includes(role.id) ? 'text-emerald-900' : 'text-slate-800'" x-text="role.name"></x-text.h2>
                                         <x-text.caption x-text="role.name === 'Author' ? 'Submit manuscripts' : (role.name === 'Reviewer' ? 'Review submissions' : 'Read content')"></x-text.caption>
                                     </div>
                                 </div>
