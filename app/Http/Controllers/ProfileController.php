@@ -56,15 +56,14 @@ class ProfileController extends Controller
             ->map(fn($item) => $item->role->name)
             ->toArray();
 
-        // Map names to active journal role IDs (whether journal-specific or global)
-        $userRolesIds = Role::withoutGlobalScope('journal')
-            ->whereIn('name', $userRolesNames)
-            ->where(function($query) use ($journal) {
-                $query->where('journal_id', $journal->id)
-                      ->orWhereNull('journal_id');
-            })
-            ->pluck('id')
-            ->toArray();
+        // Map names to the rendered available roles IDs for this journal
+        $availableRoleIdsByName = $availableRoles->pluck('id', 'name')->toArray();
+        $userRolesIds = [];
+        foreach ($userRolesNames as $name) {
+            if (isset($availableRoleIdsByName[$name])) {
+                $userRolesIds[] = $availableRoleIdsByName[$name];
+            }
+        }
 
         // Get all journal IDs where user has a role via JournalUserRole
         // Journals where the user already has a role (for enrollment exclusion)
@@ -73,25 +72,40 @@ class ProfileController extends Controller
             ->unique()
             ->toArray();
 
-        // Get user's detailed roles in all journals, mapped to correct matching role IDs by name
-        $userJournalRoles = $user->journalRoles()
+        // Get user's detailed roles in all journals, mapped to correct matching self-registerable role IDs by name
+        $userJournalRolesRaw = $user->journalRoles()
             ->with(['role' => function($q) {
                 $q->withoutGlobalScope('journal');
             }])
             ->get()
-            ->groupBy('journal_id')
-            ->map(function ($items, $journalId) {
-                $roleNames = $items->filter(fn($item) => $item->role)->map(fn($item) => $item->role->name)->toArray();
-                return Role::withoutGlobalScope('journal')
-                    ->whereIn('name', $roleNames)
-                    ->where(function($query) use ($journalId) {
-                        $query->where('journal_id', $journalId)
-                              ->orWhereNull('journal_id');
-                    })
-                    ->pluck('id')
-                    ->toArray();
-            })
-            ->toArray();
+            ->groupBy('journal_id');
+
+        $userJournalRoles = [];
+        foreach ($userJournalRolesRaw as $jId => $items) {
+            $roleNames = $items->filter(fn($item) => $item->role)->map(fn($item) => $item->role->name)->toArray();
+            
+            // Get all self-registerable roles for this journal (specific or global)
+            $jrRoles = Role::withoutGlobalScope('journal')
+                ->where('journal_id', $jId)
+                ->where('allow_registration', true)
+                ->get();
+                
+            if ($jrRoles->isEmpty()) {
+                $jrRoles = Role::withoutGlobalScope('journal')
+                    ->whereNull('journal_id')
+                    ->where('allow_registration', true)
+                    ->get();
+            }
+            
+            $mappedIds = [];
+            foreach ($roleNames as $name) {
+                $matchedRole = $jrRoles->firstWhere('name', $name);
+                if ($matchedRole) {
+                    $mappedIds[] = $matchedRole->id;
+                }
+            }
+            $userJournalRoles[$jId] = $mappedIds;
+        }
 
         // Get user's administrative (staff) roles in all journals
         $userJournalAdminRoles = [];
@@ -102,7 +116,7 @@ class ProfileController extends Controller
                 }])
                 ->get()
                 ->filter(function ($jur) {
-                    return $jur->role && !$jur->role->allow_registration;
+                    return $jur->role && !in_array($jur->role->name, ['Author', 'Reader', 'Reviewer', 'Translator']);
                 })
                 ->groupBy('journal_id')
                 ->map(function ($items) {
@@ -310,7 +324,8 @@ class ProfileController extends Controller
         $keptRoles = $user->journalRoles()
             ->where('journal_id', $journal->id)
             ->whereHas('role', function($query) {
-                $query->withoutGlobalScope('journal')->where('allow_registration', false);
+                $query->withoutGlobalScope('journal')
+                      ->whereNotIn('name', ['Author', 'Reader', 'Reviewer', 'Translator']);
             })
             ->pluck('role_id')
             ->toArray();
@@ -409,7 +424,8 @@ class ProfileController extends Controller
         $keptRoles = $user->journalRoles()
             ->where('journal_id', $journal->id)
             ->whereHas('role', function($query) {
-                $query->withoutGlobalScope('journal')->where('allow_registration', false);
+                $query->withoutGlobalScope('journal')
+                      ->whereNotIn('name', ['Author', 'Reader', 'Reviewer', 'Translator']);
             })
             ->pluck('role_id')
             ->toArray();
