@@ -274,6 +274,21 @@
         $journalSlug = $journal ? $journal->slug : request()->route('journal');
         $isAdminContext = request()->routeIs('journal.admin.*');
         $usersRoutePrefix = $isAdminContext ? 'journal.admin.users' : 'journal.users';
+
+        $user = auth()->user();
+        if ($user) {
+            if ($user->hasRole(\App\Models\Role::ROLE_SUPERADMIN)) {
+                $userJournals = \App\Models\Journal::all();
+            } else {
+                $userJournals = \App\Models\JournalUserRole::getUserJournals($user);
+            }
+
+            if ($userJournals->isEmpty() && $journal) {
+                $userJournals = collect([$journal]);
+            }
+        } else {
+            $userJournals = collect();
+        }
     @endphp
 
     <!-- Mobile Sidebar Overlay -->
@@ -315,18 +330,7 @@
                     userJournals = userJournals.filter(j => j.id !== detail.journalId);
                 }
             ">
-            @php
-                $user = auth()->user();
-                if ($user->hasRole(\App\Models\Role::ROLE_SUPERADMIN)) {
-                    $userJournals = \App\Models\Journal::all();
-                } else {
-                    $userJournals = \App\Models\JournalUserRole::getUserJournals($user);
-                }
 
-                if ($userJournals->isEmpty() && $journal) {
-                    $userJournals = collect([$journal]);
-                }
-            @endphp
 
             <div class="flex items-center justify-between px-4 py-4 bg-white relative z-10 w-full">
                 <!-- Left Action: Visit Site -->
