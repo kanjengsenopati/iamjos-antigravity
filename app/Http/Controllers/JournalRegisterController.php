@@ -28,7 +28,14 @@ class JournalRegisterController extends Controller
     public function showRegistrationForm(Journal $journal): View
     {
         app()->instance('currentJournal', $journal);
-        return view('journal.auth.register', compact('journal'));
+
+        $reviewerRole = Role::where('name', 'Reviewer')
+            ->where('journal_id', $journal->id)
+            ->first();
+
+        $allowReviewerRegistration = $reviewerRole ? (bool)$reviewerRole->allow_registration : false;
+
+        return view('journal.auth.register', compact('journal', 'allowReviewerRegistration'));
     }
 
     /**
@@ -230,25 +237,30 @@ class JournalRegisterController extends Controller
                 ->where('journal_id', $journal->id)
                 ->first();
 
-            if (!$reviewerRole) {
-                $reviewerRole = Role::query()->create([
-                    'name'             => 'Reviewer',
-                    'guard_name'       => 'web',
-                    'permission_level' => Role::LEVEL_REVIEWER,
-                    'journal_id'       => $journal->id,
-                    'permit_review'    => true,
+            $allowReviewerRegistration = $reviewerRole ? (bool)$reviewerRole->allow_registration : false;
+
+            if ($allowReviewerRegistration) {
+                if (!$reviewerRole) {
+                    $reviewerRole = Role::query()->create([
+                        'name'             => 'Reviewer',
+                        'guard_name'       => 'web',
+                        'permission_level' => Role::LEVEL_REVIEWER,
+                        'journal_id'       => $journal->id,
+                        'permit_review'    => true,
+                        'allow_registration' => true,
+                    ]);
+                }
+
+                JournalUserRole::firstOrCreate([
+                    'journal_id' => $journal->id,
+                    'user_id'    => $user->id,
+                    'role_id'    => $reviewerRole->id,
                 ]);
-            }
 
-            JournalUserRole::firstOrCreate([
-                'journal_id' => $journal->id,
-                'user_id'    => $user->id,
-                'role_id'    => $reviewerRole->id,
-            ]);
-
-            // Also assign global Reviewer role if not already assigned
-            if (!$user->hasRole('Reviewer')) {
-                $user->assignRole('Reviewer');
+                // Also assign global Reviewer role if not already assigned
+                if (!$user->hasRole('Reviewer')) {
+                    $user->assignRole('Reviewer');
+                }
             }
         }
     }

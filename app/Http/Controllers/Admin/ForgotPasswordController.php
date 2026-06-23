@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ResetPasswordRequest;
-use App\Models\Admin;
-use App\Models\PersonalTrainer;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ForgotPasswordController extends Controller
@@ -17,65 +18,84 @@ class ForgotPasswordController extends Controller
     {
         return view('admins.auth.forgot-password');
     }
+
     public function post(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ], [
+            'email.exists' => 'Email tidak terdaftar di sistem.',
+        ]);
 
-        if ($request->type == 'ADMIN') {
-            $admin = Admin::whereEmail($request->email)->first();
-            $admin?->update([
-                'token' => Str::random(50)
-            ]);
-            $admin?->refresh();
-            $user = $admin;
-        } else {
-            $personalTrainer = PersonalTrainer::whereEmail($request->email)->first();
-            $personalTrainer?->update([
-                'token' => Str::random(50)
-            ]);
-            $personalTrainer?->refresh();
-            $user = $personalTrainer;
-        }
-
+        $user = User::where('email', $request->email)->first();
+        
         if ($user) {
-            Mail::send('emails.forgot_password', [
-                'admin' => $user
-            ], function ($message) use ($user) {
-                $message->to($user->email);
-                $message->subject('Lupa Password');
-            });
+            $token = Str::random(60);
+            
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                [
+                    'token' => $token,
+                    'created_at' => now()
+                ]
+            );
+
+            // Pass token dynamically to user object for email template compatibility ($admin->token)
+            $user->token = $token;
+
+            try {
+                Mail::send('emails.forgot_password', [
+                    'admin' => $user
+                ], function ($message) use ($user) {
+                    $message->to($user->email);
+                    $message->subject('Lupa Password - ' . config('app.name', 'IAMJOS'));
+                });
+            } catch (\Exception $e) {
+                Log::error('Gagal mengirim email lupa password: ' . $e->getMessage());
+                return back()->withErrors(['email' => 'Gagal mengirim email pemulihan. Silakan coba lagi.']);
+            }
         }
+
         return view('admins.auth.success');
     }
+
     public function changePassword()
     {
-        $tokenCheck = Admin::whereToken(request()->token)->whereNotNull('token')->exists();
-        $type = 'ADMIN';
-        if (!$tokenCheck) {
-            $tokenCheck = PersonalTrainer::whereToken(request()->token)->whereNotNull('token')->exists();
-            $type = 'PT';
+        $token = request()->token;
+        if (!$token) {
+            return redirect(route('forgot-password'))->with('error', 'Tautan tidak valid atau token expired');
         }
+
+        $tokenCheck = DB::table('password_reset_tokens')->where('token', $token)->first();
+
         if (!$tokenCheck) {
             return redirect(route('forgot-password'))->with('error', 'Tautan tidak valid atau token expired');
         }
+
+        // Set type 'ADMIN' to preserve compatibility with standard view hidden inputs
+        $type = 'ADMIN';
         return view('admins.auth.change-password', compact('type'));
     }
 
     public function resetPassword(ResetPasswordRequest $request)
     {
-        if ($request->type == 'ADMIN') {
-            $admin = Admin::whereToken($request->token)->first();
-            $admin->update([
-                'password' => Hash::make($request->password),
-                'token' => null
-            ]);
-            return back()->with(['success', 'Password berhasil direset, silakan login menggunakan password baru']);
-        } else {
-            $personalTrainer = PersonalTrainer::whereToken($request->token)->first();
-            $personalTrainer->update([
-                'password' => Hash::make($request->password),
-                'token' => null
-            ]);
-            return back()->with(['success', 'Password berhasil direset, silakan login menggunakan password baru']);
+        $reset = DB::table('password_reset_tokens')->where('token', $request->token)->first();
+        
+        if (!$reset) {
+            return back()->withErrors(['token' => 'Tautan reset password tidak valid atau kedaluwarsa.']);
         }
+
+        $user = User::where('email', $reset->email)->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'User tidak ditemukan.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+
+        return back()->with('success', 'Password berhasil direset, silakan login menggunakan password baru');
     }
 }

@@ -63,7 +63,7 @@ class JournalEmailService
             // Convert newline to br for HTML emails if needed, or send raw text
             // Laravel Mail uses Markdown or View. Simple text sending:
             
-            Mail::queue([], [], function (Message $message) use ($recipient, $subject, $body, $journal, $templateData) {
+            Mail::send([], [], function (Message $message) use ($recipient, $subject, $body, $journal, $templateData) {
                 $message->to($recipient->email, $recipient->full_name)
                     ->subject($subject);
                 

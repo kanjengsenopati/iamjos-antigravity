@@ -271,6 +271,7 @@
                                 </label>
                             </div>
 
+                            @if($allowReviewerRegistration)
                             <!-- Reviewer Role Request -->
                             <div class="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-100">
                                 <input type="checkbox" id="reviewer_interest" name="reviewer_interest"
@@ -286,6 +287,7 @@
                                         {{ $journal->name }}.</p>
                                 </div>
                             </div>
+                            @endif
                         </div>
                     </div>
 
