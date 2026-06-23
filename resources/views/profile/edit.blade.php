@@ -220,7 +220,7 @@
                 </div>
 
                 <!-- Tab Content -->
-                <form action="{{ route('journal.profile.update', $journal->slug) }}" method="POST" class="p-6">
+                <form action="{{ route('journal.profile.update', $journal->slug) }}" method="POST" class="p-6" x-show="['identity', 'contact', 'public'].includes(activeTab)" x-cloak>
                     @csrf
                     @method('PATCH')
 
