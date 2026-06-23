@@ -77,7 +77,7 @@
         $issueDate2 = $article->issue->published_at->format('Y-m-d');
       }
     @endphp
-    <issue number="{{ $issueNumber }}" volume="{{ $issueVolume }}" year="{{ $issueYear }}" publicationDate="{{ $issueDate2 }}" numberOfArticles="{{ $totalArticles }}" />
+    <issue number="{{ $issueNumber }}" volume="{{ $issueVolume }}" year="{{ $issueYear }}" publicationDate="{{ $issueDate2 }}" numberOfArticles="{{ $totalArticles }}">
     <article>
       <type>ORIGINAL_ARTICLE</type>
       <languageVersion language="{{ $lang }}">
@@ -123,5 +123,6 @@
         @endforeach
       </references>
     </article>
+    </issue>
   @endforeach
 </ici-import>

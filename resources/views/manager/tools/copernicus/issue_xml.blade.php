@@ -30,7 +30,7 @@
       volume="{{ $issue->volume }}"
       year="{{ $issue->year }}"
       publicationDate="{{ $issueDate }}"
-      numberOfArticles="{{ $totalArticles }}" />
+      numberOfArticles="{{ $totalArticles }}">
     @foreach($issue->submissions as $article)
       @php
         $pub         = $article->currentPublication;
@@ -110,5 +110,6 @@
         </references>
       </article>
     @endforeach
+    </issue>
   @endforeach
 </ici-import>
