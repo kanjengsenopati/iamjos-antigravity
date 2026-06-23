@@ -55,35 +55,67 @@
         $urlKeys = ['crossref_deposit_url_live', 'crossref_deposit_url_test', 'crossref_api_base_url', 'recaptcha_verify_url', 'google_scholar_search_url'];
     @endphp
 
-    <div class="space-y-8 max-w-5xl">
-        @forelse ($settings as $group => $groupSettings)
-            @php
-                $label = $groupLabels[$group] ?? ucfirst($group);
-                $icon  = $groupIcons[$group] ?? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 4a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />';
-            @endphp
-
-            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-                <!-- Card Header -->
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                    <div class="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {!! $icon !!}
+    <div x-data="{ activeTab: localStorage.getItem('system_settings_active_tab') || 'email' }">
+        @if ($settings->isNotEmpty())
+            <div class="flex flex-wrap gap-2.5 mb-8 pb-4 border-b border-gray-100">
+                @foreach ($settings as $group => $groupSettings)
+                    @php
+                        $tabLabel = $groupLabels[$group] ?? ucfirst($group);
+                        $tabIcon  = $groupIcons[$group] ?? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4" />';
+                    @endphp
+                    <button
+                        type="button"
+                        @click="activeTab = '{{ $group }}'; localStorage.setItem('system_settings_active_tab', '{{ $group }}')"
+                        class="px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer inline-flex items-center gap-2 border"
+                        :class="activeTab === '{{ $group }}' 
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20' 
+                            : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-800 shadow-sm'"
+                    >
+                        <svg class="w-4 h-4 flex-shrink-0" :class="activeTab === '{{ $group }}' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2px;">
+                            {!! $tabIcon !!}
                         </svg>
-                    </div>
-                    <div>
-                        <h2 class="text-[16px] font-semibold text-slate-800">{{ $label }}</h2>
-                        <p class="text-xs text-gray-500 mt-0.5">{{ $groupSettings->count() }} setting{{ $groupSettings->count() !== 1 ? 's' : '' }}</p>
-                    </div>
-                </div>
+                        <span>{{ $tabLabel }}</span>
+                    </button>
+                @endforeach
+            </div>
+        @endif
 
-                <!-- Form -->
-                <form action="{{ route('admin.system-settings.update') }}" method="POST">
-                    @csrf
+        <div class="space-y-8 max-w-5xl">
+            @forelse ($settings as $group => $groupSettings)
+                @php
+                    $label = $groupLabels[$group] ?? ucfirst($group);
+                    $icon  = $groupIcons[$group] ?? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 4a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />';
+                    $isTwoCol = in_array($group, ['email', 'integrations', 'pagination', 'reviewer', 'uploads']);
+                @endphp
 
-                    <div class="divide-y divide-gray-50">
-                        @foreach ($groupSettings as $setting)
-                            <div class="px-6 py-5">
-                                @if ($setting->key === 'mail_mailer')
+                <div 
+                    x-show="activeTab === '{{ $group }}'"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
+                >
+                    <!-- Card Header -->
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+                        <div class="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {!! $icon !!}
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-[16px] font-semibold text-slate-800">{{ $label }}</h2>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $groupSettings->count() }} setting{{ $groupSettings->count() !== 1 ? 's' : '' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <form action="{{ route('admin.system-settings.update') }}" method="POST">
+                        @csrf
+
+                        <div class="{{ $isTwoCol ? 'p-6 grid grid-cols-1 md:grid-cols-2 gap-6' : 'divide-y divide-gray-50' }}">
+                            @foreach ($groupSettings as $setting)
+                                <div class="{{ $isTwoCol ? ($setting->type === 'json' ? 'md:col-span-2 space-y-1.5' : 'space-y-1.5') : 'px-6 py-5' }}">
+                                    @if ($setting->key === 'mail_mailer')
                                     {{-- Custom Mailer Dropdown --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
                                         {{ ucwords(str_replace('_', ' ', $setting->key)) }}
@@ -92,7 +124,7 @@
                                     <select
                                         id="{{ $setting->key }}"
                                         name="{{ $setting->key }}"
-                                        class="w-full sm:w-64 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                                     >
                                         <option value="smtp" {{ old($setting->key, $setting->value) === 'smtp' ? 'selected' : '' }}>SMTP Server (Recommended)</option>
                                         <option value="phpmail" {{ old($setting->key, $setting->value) === 'phpmail' ? 'selected' : '' }}>PHP mail() Function</option>
@@ -111,7 +143,7 @@
                                     <select
                                         id="{{ $setting->key }}"
                                         name="{{ $setting->key }}"
-                                        class="w-full sm:w-64 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                                     >
                                         <option value="none" {{ old($setting->key, $setting->value) === 'none' ? 'selected' : '' }}>None (Plain text)</option>
                                         <option value="tls" {{ old($setting->key, $setting->value) === 'tls' ? 'selected' : '' }}>TLS (STARTTLS - port 587)</option>
@@ -127,7 +159,7 @@
                                         {{ ucwords(str_replace('_', ' ', $setting->key)) }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
-                                    <div class="relative w-full sm:w-80" x-data="{ show: false }">
+                                    <div class="relative w-full {{ $isTwoCol ? '' : 'sm:w-80' }}" x-data="{ show: false }">
                                         <input
                                             :type="show ? 'text' : 'password'"
                                             id="{{ $setting->key }}"
@@ -182,7 +214,7 @@
                                         id="{{ $setting->key }}"
                                         name="{{ $setting->key }}"
                                         value="{{ old($setting->key, $setting->value) }}"
-                                        class="w-full sm:w-64 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     >
                                     @if ($setting->description)
                                         <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
@@ -315,6 +347,7 @@
             </div>
         @endforelse
     </div>
+</div>
 @endsection
 
 @push('scripts')
