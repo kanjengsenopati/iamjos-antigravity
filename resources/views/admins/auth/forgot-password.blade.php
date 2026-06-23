@@ -1,322 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--begin::Head-->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Forgot Password | {{ env('APP_NAME') }}</title>
-<meta charset="utf-8" />
-<meta name="description" content="{{ env('APP_NAME') }}">
-<meta name="author" content="{{ env('APP_NAME') }}">
-<meta name="robots" content="noindex, nofollow">
 
-<!-- Open Graph Meta -->
-<meta property="og:title" content="{{ env('APP_NAME') }}">
-<meta property="og:site_name" content="{{ env('APP_NAME') }}">
-<meta property="og:description" content="{{ env('APP_NAME') }}">
-<meta property="og:type" content="website">
-<meta property="og:url" content="">
-<meta property="og:image" content="">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password | {{ config('app.name', 'IAMJOS') }}</title>
+    <meta name="description" content="Reset password for your IAMJOS account">
+    <meta name="robots" content="noindex, nofollow">
 
-<link rel="canonical" href="KSP" />
-<link rel="shortcut icon" href="{{ asset('favicon.png') }}" />
-<!--begin::Fonts-->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
-<link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
-<style>
-    .h-logo {
-        height: 4.5rem !important;
-        margin-bottom: 4rem;
-    }
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700|eb-garamond:400,500,600,700,800&display=swap" rel="stylesheet" />
 
-    #kt_app_root {
-        min-height: 100% !important;
-        max-height: 64rem !important;
-    }
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    h1.title {
-        font-size: 2.4375rem;
-        line-height: 3.125rem;
-        /* 128.205% */
-        letter-spacing: -0.00056rem;
-    }
-
-    p,
-    input,
-    a {
-        font-size: 14px !important;
-    }
-
-    #kt_forgot_password.btn-primary {
-        font-size: 16px !important;
-        font-weight: 500;
-        width: 8rem;
-        border-radius: 1.5rem;
-        padding: .5rem 1rem !important;
-    }
-
-    .btn-primary {
-        border-radius: var(--radius-xl, 1.25rem);
-        padding: .5rem 1rem !important;
-    }
-
-    .btn-password {
-        right: .5rem !important;
-        top: .875rem !important;
-    }
-
-    #password.form-control.is-valid,
-    #password.was-validated .form-control:valid,
-    #password.form-control.is-invalid,
-    #password.was-validated .form-control:invalid {
-        background-position: right calc(2.25em + 0.3875rem) center !important;
-    }
-
-    .input_form {
-        max-width: 28.125rem;
-    }
-
-    /* responsive */
-    @media only screen and (max-width: 767.98px) {
-        h1.title {
-            font-size: 2rem;
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['EB Garamond', 'serif'],
+                    },
+                }
+            }
         }
-    }
+    </script>
 
-    @media only screen and (max-width: 991.98px) {
-        .h-logo {
-            margin-bottom: 0;
+    <style>
+        .academic-overlay {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
+            backdrop-blur: 2px;
         }
-
-        .input_form {
-            max-width: 24rem;
+        .paper-texture {
+            background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            opacity: 0.05;
         }
-    }
-
-    @media only screen and (max-width: 1199.98px) {
-        h1.title {
-            font-size: 2.25rem;
-        }
-    }
-</style>
+    </style>
 </head>
-<!--end::Head-->
-<!--begin::Body-->
 
-<body id="kt_body" class="app-blank bgi-size-cover bgi-attachment-fixed bgi-position-center overflow-x-hidden">
-    <!--begin::Theme mode setup on page load-->
-    <script>
-        var defaultThemeMode = "light";
-        var themeMode;
-        if (document.documentElement) {
-            if (document.documentElement.hasAttribute("data-bs-theme-mode")) {
-                themeMode = document.documentElement.getAttribute("data-bs-theme-mode");
-            } else {
-                if (localStorage.getItem("data-bs-theme") !== null) {
-                    themeMode = localStorage.getItem("data-bs-theme");
-                } else {
-                    themeMode = defaultThemeMode;
-                }
-            }
-            if (themeMode === "system") {
-                themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-            }
-            document.documentElement.setAttribute("data-bs-theme", themeMode);
-        }
-    </script>
-    <!--end::Theme mode setup on page load-->
-    <!--begin::Root-->
-    <div id="kt_app_root">
-        <!--begin::Page bg image-->
-        <style>
-            body {
-                background-image: url('assets/media/auth/bg10.jpeg');
-            }
+<body class="font-sans antialiased bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Left Side - Brand Panel -->
+        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-900"
+            style="background-image: url('{{ asset('assets/images/academic-bg.png') }}'); background-size: cover; background-position: center;">
+            
+            <!-- Background Gradient Overlay -->
+            <div class="absolute inset-0 academic-overlay"></div>
+            
+            <!-- Paper Texture Overlay -->
+            <div class="absolute inset-0 paper-texture"></div>
 
-            [data-bs-theme="dark"] body {
-                background-image: url('assets/media/auth/bg10-dark.jpeg');
-            }
-        </style>
-        <!--end::Page bg image-->
-        <div class="py-20 position-absolute w-100 mx-auto d-flex justify-content-center d-lg-none">
-            <img src="{{ asset('assets/media/logos/logo.svg') }}" class="h-logo" alt="" />
-        </div>
+            <!-- Legacy Borders -->
+            <div class="absolute inset-12 border border-white/10 pointer-events-none"></div>
+            <div class="absolute inset-14 border border-white/5 pointer-events-none"></div>
 
-        <!--begin::Authentication - Sign-in -->
-        <div class="row align-items-center h-100 px-0">
-            <!--begin::Aside-->
-            <div class="col-lg-6 px-0 d-flex justify-content-center">
-                <!--begin::Aside-->
-                <!--begin::Body-->
-                <!--begin::Wrapper-->
-                <div class="d-flex flex-column flex-center rounded-4">
-                    <!--begin::Content-->
-                    <div class="d-flex flex-center flex-column align-items-stretch h-lg-100 w-md-400px">
-                        <!--begin::Wrapper-->
-                        <div class="d-flex flex-center flex-column flex-column-fluid pb-15 pb-lg-20">
-                            <!--begin::Form-->
-                            <form class="form input_form" novalidate="novalidate" id="kt_sign_in_form" action="{{ route('success-forgot-password') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
-                                <!--begin::Heading-->
-                                <div class="mb-8">
-                                    <img src="{{ asset('assets/media/logos/logo.svg') }}" class="h-logo d-none d-lg-block" alt="" />
-                                    <!--begin::Title-->
-                                    <h1 class="text-dark title fw-bold mb-2">Lupa Password</h1>
-                                    <!--end::Title-->
-                                    <!--begin::Subtitle-->
-                                    <p class="text-gray-500 fw-semibold ">Masukkan email kamu yang terdaftar ya buat verifikasi</p>
-                                    <!--end::Subtitle=-->
-                                </div>
-                                <!--begin::Heading-->
-                                <input type="text" name="type" hidden value="{{request()->type}}" required>
-                                <!--begin::Input group=-->
-                                <div class="fv-row mb-6">
-                                    <!--begin::Email-->
-                                    <input type="email" placeholder="name@mail.com" name="email" autocomplete="off" class="form-control bg-transparent" value="{{ old('email') }}">
-                                    <!--end::Email-->
-                                </div>
-                                <!--end::Input group=-->
-                                <!--begin::Wrapper-->
-                                <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-6">
-                                    <div></div>
-                                </div>
-                                <!--end::Wrapper-->
-                                <!--begin::Submit button-->
-                                <div class="d-grid">
-                                    <button type="submit" id="kt_forgot_password" class="btn btn-primary max-w-max">
-                                        <!--begin::Indicator label-->
-                                        <span class="indicator-label">Kirim</span>
-                                        <!--end::Indicator label-->
-                                        <!--begin::Indicator progress-->
-                                        <span class="indicator-progress">Memuat...
-                                            <!--end::Indicator progress-->
-                                    </button>
-                                </div>
-                                <!--end::Submit button-->
-                                <div class="w-100 mt-6">
-                                    <a class="text-start text-primary" href="{{route('login')}}">Kembali ke halaman Log In</a>
-                                </div>
-                            </form>
-                            <!--end::Form-->
+            <!-- Content -->
+            <div class="relative z-10 flex flex-col justify-center px-16 xl:px-24 w-full">
+                <!-- Logo -->
+                <div class="mb-12">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
+                            <i class="fas fa-book-open text-2xl text-white"></i>
                         </div>
-                        <!--end::Wrapper-->
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-bold text-white tracking-widest uppercase">
+                                {{ $branding['acronym'] ?? 'IAMJOS' }}
+                            </span>
+                            <span class="text-[10px] text-indigo-300 font-bold tracking-[0.3em] uppercase">Academic Publishing</span>
+                        </div>
                     </div>
-                    <!--end::Content-->
                 </div>
-                <!--end::Wrapper-->
-                <!--end::Body-->
+
+                <!-- Heading -->
+                <h1 class="text-4xl xl:text-6xl font-serif font-bold text-white leading-[1.1] mb-8">
+                    Advance Your<br>
+                    <span class="text-indigo-300 italic">Academic Research</span>
+                </h1>
+
+                <!-- Tagline -->
+                <div class="relative mb-12">
+                    <div class="absolute -left-6 top-0 bottom-0 w-1 bg-indigo-500/50"></div>
+                    <p class="text-xl font-medium text-gray-300 leading-relaxed max-w-md italic font-serif opacity-90">
+                        "{{ $branding['tagline'] ?? 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.' }}"
+                    </p>
+                </div>
+
+                <!-- Features -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </div>
+                        <span class="text-sm">Streamlined Submission Process</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-sm"></i>
+                        </div>
+                        <span class="text-sm">Collaborative Peer Review</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-sm"></i>
+                        </div>
+                        <span class="text-sm">Editorial Workflow Management</span>
+                    </div>
+                </div>
             </div>
-            <!--begin::Content-->
-            <div class="col-6 h-100 px-0 d-none d-lg-block">
-                <img src="{{ asset('assets/media/login_bg.svg') }}" class="w-100 h-100 object-fit-cover" alt="" />
-            </div>
-            <!--end::Content-->
         </div>
-        <!--end::Authentication - Sign-in-->
+
+        <!-- Right Side - Form -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white">
+            <div class="w-full max-w-md">
+                <!-- Mobile Logo -->
+                <div class="lg:hidden mb-10 text-center">
+                    <div class="inline-flex items-center gap-3 justify-center mb-2">
+                        <div class="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-lg"></i>
+                        </div>
+                        <span class="text-xl font-bold tracking-wider text-slate-900 uppercase">IAMJOS</span>
+                    </div>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest font-bold">Academic Publishing</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-2">Lupa Password</h2>
+                    <p class="text-slate-600 text-sm">Masukkan email kamu yang terdaftar ya buat verifikasi</p>
+                </div>
+
+                <!-- Alert Messages -->
+                @if ($errors->any())
+                    <div class="mb-6 p-4 bg-red-50 border border-red-100 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+                            <div>
+                                <ul class="list-disc list-inside text-sm text-red-600">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="mb-6 p-4 bg-red-50 border border-red-100 rounded-lg flex gap-3 text-sm text-red-800">
+                        <i class="fas fa-exclamation-circle mt-0.5 text-red-500"></i>
+                        <p class="text-sm text-red-700">{{ session('error') }}</p>
+                    </div>
+                @endif
+
+                <form action="{{ route('success-forgot-password') }}" method="POST" class="space-y-6">
+                    @csrf
+                    <input type="text" name="type" hidden value="{{ request()->type ?? 'ADMIN' }}" required>
+
+                    <!-- Email Field -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-slate-700 mb-1.5">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-slate-400 text-sm"></i>
+                            </div>
+                            <input type="email" id="email" name="email" value="{{ old('email') }}"
+                                placeholder="name@mail.com"
+                                class="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                required autofocus>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div>
+                        <button type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2">
+                            Kirim
+                        </button>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        <a href="{{ route('login') }}"
+                            class="font-semibold text-blue-600 hover:text-blue-500 text-sm flex items-center justify-center gap-2">
+                            <i class="fas fa-arrow-left text-xs"></i> Kembali ke halaman Log In
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <!--end::Root-->
-    <!--begin::Javascript-->
-    <script>
-        var hostUrl = "assets/";
-    </script>
-    <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="assets/plugins/global/plugins.bundle.js"></script>
-    <script src="assets/js/scripts.bundle.js"></script>
-    <!--end::Javascript-->
-    @foreach (['success', 'error', 'warning', 'info'] as $message)
-    @if (session($message))
-    <script>
-        Swal.fire({
-            title: '{{ ucfirst($message) }}',
-            text: "<?= session($message) ?>",
-            icon: '{{ $message }}',
-            confirmButtonText: 'Ok'
-        })
-    </script>
-    @endif
-    @endforeach
-    <script>
-        "use strict";
-
-        // Class definition
-        var KTSigninGeneral = function() {
-            // Elements
-            var form;
-            var submitButton;
-            var validator;
-
-            // Handle form
-            var handleForm = function(e) {
-                validator = FormValidation.formValidation(
-                    form, {
-                        fields: {
-                            'email': {
-                                validators: {
-                                    notEmpty: {
-                                        message: 'Email harus diisi'
-                                    },
-                                    emailAddress: {
-                                        message: 'Format email tidak sesuai'
-                                    },
-
-                                }
-                            },
-                        },
-                        plugins: {
-                            trigger: new FormValidation.plugins.Trigger(),
-                            bootstrap: new FormValidation.plugins.Bootstrap5({
-                                rowSelector: '.fv-row'
-                            })
-                        }
-                    }
-                );
-
-                // Handle form submit
-                submitButton.addEventListener('click', function(e) {
-                    // Prevent button default action
-                    e.preventDefault();
-
-                    // Validate form
-                    validator.validate().then(function(status) {
-                        if (status == 'Valid') {
-                            // Show loading indication
-                            submitButton.setAttribute('data-kt-indicator', 'on');
-
-                            // Disable button to avoid multiple click
-                            submitButton.disabled = true;
-                            form.submit();
-                        } else {
-                            Swal.fire({
-                                text: "Maaf, Inputan anda tidak valid, silahkan cek kembali",
-                                icon: "error",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok",
-                                customClass: {
-                                    confirmButton: "btn btn-primary"
-                                }
-                            });
-                        }
-                    });
-                });
-            }
-
-            // Public functions
-            return {
-                // Initialization
-                init: function() {
-                    form = document.querySelector('#kt_sign_in_form');
-                    submitButton = document.querySelector('#kt_forgot_password');
-
-                    handleForm();
-                }
-            };
-        }();
-
-        // On document ready
-        KTUtil.onDOMContentLoaded(function() {
-            KTSigninGeneral.init();
-        });
-    </script>
 </body>
 
 </html>

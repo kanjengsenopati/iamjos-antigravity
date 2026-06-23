@@ -16,7 +16,8 @@ class ForgotPasswordController extends Controller
 {
     public function index()
     {
-        return view('admins.auth.forgot-password');
+        $branding = $this->getBrandingData();
+        return view('admins.auth.forgot-password', compact('branding'));
     }
 
     public function post(Request $request)
@@ -56,7 +57,8 @@ class ForgotPasswordController extends Controller
             }
         }
 
-        return view('admins.auth.success');
+        $branding = $this->getBrandingData();
+        return view('admins.auth.success', compact('branding'));
     }
 
     public function changePassword()
@@ -74,7 +76,8 @@ class ForgotPasswordController extends Controller
 
         // Set type 'ADMIN' to preserve compatibility with standard view hidden inputs
         $type = 'ADMIN';
-        return view('admins.auth.change-password', compact('type'));
+        $branding = $this->getBrandingData();
+        return view('admins.auth.change-password', compact('type', 'branding'));
     }
 
     public function resetPassword(ResetPasswordRequest $request)
@@ -97,5 +100,21 @@ class ForgotPasswordController extends Controller
         DB::table('password_reset_tokens')->where('email', $user->email)->delete();
 
         return back()->with('success', 'Password berhasil direset, silakan login menggunakan password baru');
+    }
+
+    /**
+     * Get default portal branding data.
+     */
+    protected function getBrandingData(): array
+    {
+        return [
+            'name' => config('app.name', 'IAMJOS'),
+            'acronym' => 'IAMJOS',
+            'description' => 'Indonesian Academic Journal System',
+            'logo_url' => null,
+            'cover_url' => null,
+            'headline' => 'Advance Your Academic Research',
+            'tagline' => 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.',
+        ];
     }
 }

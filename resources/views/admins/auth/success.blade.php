@@ -1,239 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--begin::Head-->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Email Terkirim! | {{ env('APP_NAME') }}</title>
-<meta charset="utf-8" />
-<meta name="description" content="{{ env('APP_NAME') }}">
-<meta name="author" content="{{ env('APP_NAME') }}">
-<meta name="robots" content="noindex, nofollow">
 
-<!-- Open Graph Meta -->
-<meta property="og:title" content="{{ env('APP_NAME') }}">
-<meta property="og:site_name" content="{{ env('APP_NAME') }}">
-<meta property="og:description" content="{{ env('APP_NAME') }}">
-<meta property="og:type" content="website">
-<meta property="og:url" content="">
-<meta property="og:image" content="">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Terkirim! | {{ config('app.name', 'IAMJOS') }}</title>
+    <meta name="description" content="Verification email has been sent successfully">
+    <meta name="robots" content="noindex, nofollow">
 
-<link rel="canonical" href="KSP" />
-<link rel="shortcut icon" href="{{ asset('favicon.png') }}" />
-<!--begin::Fonts-->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
-<link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
-<style>
-    .h-logo {
-        height: 4.5rem !important;
-        margin-bottom: 4rem;
-        position: absolute;
-        top: 3.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-    #kt_app_root {
-        min-height: 45rem !important;
-        height: 100vh !important;
-        max-height: 64rem !important;
-    }
-    .ilustration {
-        width: 13rem;
-        height: 13rem;
-        margin-bottom: 1.5rem;
-    }
-    h1.title {
-        font-size: 2rem;
-        line-height: 3.125rem; /* 128.205% */
-        letter-spacing: -0.00056rem;
-        margin-bottom: 0.5rem;
-    }
-    p {
-        font-size: 14px !important;
-        font-weight: 500;
-        line-height: 1.375rem; /* 157.143% */
-        letter-spacing: -0.00006rem;
-        color: #8C8C8C;
-    }
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700|eb-garamond:400,500,600,700,800&display=swap" rel="stylesheet" />
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    /* responsive */
-    @media only screen and (max-width: 1199.98px) {
-        h1.title {
-            font-size: 2.125rem;
-        }
-        .ilustration {
-            width: 12rem;
-            height: 12rem;
-        }
-    }
-    @media only screen and (max-width: 991.98px) {
-        .h-logo {
-            margin-bottom: 0;
-        }
-        .ilustration {
-            width: 11rem;
-            height: 11rem;
-        }
-        h1.title {
-            font-size: 2rem;
-            line-height: 3rem;
-        }
-        .input_form {
-            max-width: 24rem;
-        }
-    }
-    @media only screen and (max-width: 767.98px) {
-        h1.title {
-            font-size: 1.5rem;
-            line-height: 2.5rem;
-        }
-        .ilustration {
-            width: 10rem;
-            height: 10rem;
-        }
-    }
-
-</style>
-</head>
-<!--end::Head-->
-<!--begin::Body-->
-<body id="kt_body" class="container app-blank bgi-size-cover bgi-attachment-fixed bgi-position-center overflow-x-hidden">
-    <!--begin::Theme mode setup on page load-->
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        var defaultThemeMode = "light"; 
-        var themeMode; 
-        if ( document.documentElement ) { 
-            if ( document.documentElement.hasAttribute("data-bs-theme-mode")) { 
-                themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); 
-            } else { 
-                if ( localStorage.getItem("data-bs-theme") !== null ) { 
-                    themeMode = localStorage.getItem("data-bs-theme"); 
-                } else { themeMode = defaultThemeMode; } 
-            } if (themeMode === "system") { 
-                    themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; 
-                } document.documentElement.setAttribute("data-bs-theme", themeMode); 
-        }
-    </script>
-    <!--end::Theme mode setup on page load-->
-    <!--begin::Root-->
-    <img src="{{ asset('assets/media/logos/logo.svg') }}" class="h-logo" alt="">
-    <div id="kt_app_root" class="container d-flex justify-content-center align-items-center flex-column">
-        <!--begin::Page bg image-->
-        <style>body { background-image: url('assets/media/auth/bg10.jpeg'); } [data-bs-theme="dark"] body { background-image: url('assets/media/auth/bg10-dark.jpeg'); }</style>
-        <!--end::Page bg image-->
-        <img src="{{ asset('assets/media/success_password.svg') }}" class="ilustration" alt="">
-        <h1 class="title">Email Terkirim</h1>
-        <p class="text-center">Silahkan cek emailmu untuk melakukan verifikasi</p>
-    </div>
-    <!--end::Root-->
-    <!--begin::Javascript-->
-    <script>var hostUrl = "assets/";</script>
-    <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="assets/plugins/global/plugins.bundle.js"></script>
-    <script src="assets/js/scripts.bundle.js"></script>
-    <!--end::Javascript-->
-    @foreach (['success', 'error', 'warning', 'info'] as $message)
-    @if (session($message))
-        <script>
-            Swal.fire({
-                title: '{{ ucfirst($message) }}',
-                text: "<?= session($message) ?>",
-                icon: '{{ $message }}',
-                confirmButtonText: 'Ok'
-            })
-        </script>
-    @endif
-    @endforeach
-    <script>
-        "use strict";
-
-        // Class definition
-        var KTSigninGeneral = function() {
-            // Elements
-            var form;
-            var submitButton;
-            var validator;
-
-            // Handle form
-            var handleForm = function(e) {
-                validator = FormValidation.formValidation(
-                    form, {
-                        fields: {
-                            'email': {
-                                validators: {
-                                    notEmpty: {
-                                        message: 'Email harus diisi'
-                                    },
-                                    emailAddress: {
-                                        message: 'Format email tidak sesuai'
-                                    },
-
-                                }
-                            },
-                            'password': {
-                                validators: {
-                                    notEmpty: {
-                                        message: 'Password harus diisi'
-                                    }
-                                }
-                            }
-                        },
-                        plugins: {
-                            trigger: new FormValidation.plugins.Trigger(),
-                            bootstrap: new FormValidation.plugins.Bootstrap5({
-                                rowSelector: '.fv-row'
-                            })
-                        }
-                    }
-                );
-
-                // Handle form submit
-                submitButton.addEventListener('click', function(e) {
-                    // Prevent button default action
-                    e.preventDefault();
-
-                    // Validate form
-                    validator.validate().then(function(status) {
-                        if (status == 'Valid') {
-                            // Show loading indication
-                            submitButton.setAttribute('data-kt-indicator', 'on');
-
-                            // Disable button to avoid multiple click
-                            submitButton.disabled = true;
-                            form.submit();
-                        } else {
-                            Swal.fire({
-                                text: "Maaf, Inputan anda tidak valid, silahkan cek kembali",
-                                icon: "error",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok",
-                                customClass: {
-                                    confirmButton: "btn btn-primary"
-                                }
-                            });
-                        }
-                    });
-                });
-            }
-
-            // Public functions
-            return {
-                // Initialization
-                init: function() {
-                    form = document.querySelector('#kt_sign_in_form');
-                    submitButton = document.querySelector('#kt_sign_in_submit');
-
-                    handleForm();
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['EB Garamond', 'serif'],
+                    },
                 }
-            };
-        }();
-
-        // On document ready
-        KTUtil.onDOMContentLoaded(function() {
-            KTSigninGeneral.init();
-        });
+            }
+        }
     </script>
+
+    <style>
+        .academic-overlay {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
+            backdrop-blur: 2px;
+        }
+        .paper-texture {
+            background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            opacity: 0.05;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Left Side - Brand Panel -->
+        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-900"
+            style="background-image: url('{{ asset('assets/images/academic-bg.png') }}'); background-size: cover; background-position: center;">
+            
+            <!-- Background Gradient Overlay -->
+            <div class="absolute inset-0 academic-overlay"></div>
+            
+            <!-- Paper Texture Overlay -->
+            <div class="absolute inset-0 paper-texture"></div>
+
+            <!-- Legacy Borders -->
+            <div class="absolute inset-12 border border-white/10 pointer-events-none"></div>
+            <div class="absolute inset-14 border border-white/5 pointer-events-none"></div>
+
+            <!-- Content -->
+            <div class="relative z-10 flex flex-col justify-center px-16 xl:px-24 w-full">
+                <!-- Logo -->
+                <div class="mb-12">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
+                            <i class="fas fa-book-open text-2xl text-white"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-bold text-white tracking-widest uppercase">
+                                {{ $branding['acronym'] ?? 'IAMJOS' }}
+                            </span>
+                            <span class="text-[10px] text-indigo-300 font-bold tracking-[0.3em] uppercase">Academic Publishing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heading -->
+                <h1 class="text-4xl xl:text-6xl font-serif font-bold text-white leading-[1.1] mb-8">
+                    Advance Your<br>
+                    <span class="text-indigo-300 italic">Academic Research</span>
+                </h1>
+
+                <!-- Tagline -->
+                <div class="relative mb-12">
+                    <div class="absolute -left-6 top-0 bottom-0 w-1 bg-indigo-500/50"></div>
+                    <p class="text-xl font-medium text-gray-300 leading-relaxed max-w-md italic font-serif opacity-90">
+                        "{{ $branding['tagline'] ?? 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.' }}"
+                    </p>
+                </div>
+
+                <!-- Features -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </div>
+                        <span class="text-sm">Streamlined Submission Process</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-sm"></i>
+                        </div>
+                        <span class="text-sm">Collaborative Peer Review</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-sm"></i>
+                        </div>
+                        <span class="text-sm">Editorial Workflow Management</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Content -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white">
+            <div class="w-full max-w-md text-center">
+                <!-- Mobile Logo -->
+                <div class="lg:hidden mb-10 text-center">
+                    <div class="inline-flex items-center gap-3 justify-center mb-2">
+                        <div class="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-lg"></i>
+                        </div>
+                        <span class="text-xl font-bold tracking-wider text-slate-900 uppercase">IAMJOS</span>
+                    </div>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest font-bold">Academic Publishing</p>
+                </div>
+
+                <div class="flex flex-col items-center justify-center">
+                    <!-- Check Illustration -->
+                    <div class="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6 border border-emerald-100 shadow-sm animate-pulse">
+                        <i class="fas fa-circle-check text-5xl"></i>
+                    </div>
+
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-3">Email Terkirim</h2>
+                    <p class="text-slate-600 text-sm max-w-sm mb-8 leading-relaxed">
+                        Silahkan cek emailmu untuk melakukan verifikasi dan mengikuti tautan reset password.
+                    </p>
+
+                    <a href="{{ route('login') }}"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2">
+                        Kembali ke Halaman Log In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
