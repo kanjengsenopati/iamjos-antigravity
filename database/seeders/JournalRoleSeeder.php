@@ -57,7 +57,7 @@ class JournalRoleSeeder extends Seeder
                 'permit_review' => true,
                 'permit_copyediting' => false,
                 'permit_production' => false,
-                'allow_registration' => true, // Users can often self-register as reviewers
+                'allow_registration' => false, // Users can often self-register as reviewers
                 'show_contributor' => false,
                 'allow_submission' => false,
             ],

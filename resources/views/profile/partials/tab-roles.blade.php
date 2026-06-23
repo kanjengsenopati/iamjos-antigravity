@@ -47,7 +47,7 @@
             </div>
         </div>
     @else
-        <div x-data="{ selected: @js($userRolesIds) }" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div x-data="{ selected: @js($userRolesIds) }" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
             @foreach ($sortedAvailableRoles as $role)
                 <label class="relative flex cursor-pointer rounded-[24px] border-2 p-5 shadow-sm transition-all duration-200"
@@ -215,7 +215,7 @@
                     </div>
 
                     <!-- Role Checkboxes -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <template x-for="role in availableRoles" :key="role.id">
                             <label class="relative flex cursor-pointer rounded-[24px] p-4 shadow-sm transition-all duration-200 border-2"
                                 :class="selectedRoles.includes(role.id) ?

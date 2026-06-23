@@ -185,7 +185,7 @@ class Role extends SpatieRole
             // --- Level 4 & 5: Authors & Reviewers ---
             ['name' => 'Author', 'level' => self::LEVEL_AUTHOR, 'permit_submission' => true, 'permit_review' => true, 'permit_copyediting' => true, 'permit_production' => true, 'allow_registration' => true, 'show_contributor' => true, 'allow_submission' => true],
             ['name' => 'Translator', 'level' => self::LEVEL_AUTHOR, 'permit_submission' => true, 'permit_review' => true, 'permit_copyediting' => true, 'permit_production' => true, 'allow_registration' => true, 'show_contributor' => true, 'allow_submission' => true],
-            ['name' => 'Reviewer', 'level' => self::LEVEL_REVIEWER, 'permit_submission' => false, 'permit_review' => true, 'permit_copyediting' => false, 'permit_production' => false, 'allow_registration' => true, 'show_contributor' => false, 'allow_submission' => false],
+            ['name' => 'Reviewer', 'level' => self::LEVEL_REVIEWER, 'permit_submission' => false, 'permit_review' => true, 'permit_copyediting' => false, 'permit_production' => false, 'allow_registration' => false, 'show_contributor' => false, 'allow_submission' => false],
 
             // --- Level 6: Readers & Specialized ---
             ['name' => 'Reader', 'level' => self::LEVEL_READER, 'permit_submission' => false, 'permit_review' => false, 'permit_copyediting' => false, 'permit_production' => false, 'allow_registration' => true, 'show_contributor' => false, 'allow_submission' => false],

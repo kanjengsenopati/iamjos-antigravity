@@ -73,7 +73,7 @@ class JournalRolesSeeder extends Seeder
                 'permit_review' => true,
                 'permit_copyediting' => false,
                 'permit_production' => false,
-                'allow_registration' => true,
+                'allow_registration' => false,
                 'show_contributor' => false,
                 'allow_submission' => false,
                 'description' => 'Reviews submissions.'
