@@ -310,7 +310,7 @@ class JournalUserManagementController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Email successfully queued for ' . $user->name . '.',
+                    'message' => 'Email successfully sent to ' . $user->name . '.',
                 ]);
             } catch (\Exception $e) {
                 return response()->json([

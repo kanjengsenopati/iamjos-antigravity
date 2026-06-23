@@ -63,7 +63,7 @@ class UserEmailTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'message' => 'Email successfully queued for ' . $this->recipient->name . '.'
+            'message' => 'Email successfully sent to ' . $this->recipient->name . '.'
         ]);
 
         Mail::assertQueued(GeneralNotificationMail::class, function ($mail) {

@@ -54,6 +54,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule) {
         $schedule->job(new \App\Jobs\ReviewerReminderJob)->dailyAt('08:00');
+        
+        // Auto-run queue worker once a minute if database queue is active
+        if (config('queue.default') === 'database') {
+            $schedule->command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

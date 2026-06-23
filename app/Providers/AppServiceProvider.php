@@ -188,6 +188,12 @@ class AppServiceProvider extends ServiceProvider
                 config(['mail.from.address' => \App\Facades\Settings::system('mail_from_address', config('mail.from.address'))]);
                 config(['mail.from.name' => \App\Facades\Settings::system('mail_from_name', config('mail.from.name'))]);
             }
+
+            // Override dynamic queue connection from database
+            $queueConnection = \App\Facades\Settings::system('mail_queue_connection');
+            if ($queueConnection) {
+                config(['queue.default' => $queueConnection]);
+            }
         } catch (\Throwable $e) {
             // Silence database/connection errors during early boot (e.g. migrations, install, seeds)
         }

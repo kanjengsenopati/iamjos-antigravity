@@ -299,6 +299,13 @@ class SystemSettingsSeeder extends Seeder
                 'group'       => 'email',
                 'description' => 'Name displayed as the sender (From Name).',
             ],
+            [
+                'key'         => 'mail_queue_connection',
+                'value'       => 'sync',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'Mail queue driver to use (sync = send immediately/cPanel, database = queue in database, redis = queue in Redis).',
+            ],
         ];
 
         foreach ($settings as $setting) {
