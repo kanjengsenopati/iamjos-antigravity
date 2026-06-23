@@ -78,4 +78,18 @@ class SystemSettingController extends Controller
             ], 500);
         }
     }
+
+    public function seedDefaults()
+    {
+        try {
+            if (SystemSetting::exists()) {
+                return redirect()->route('admin.system-settings.index')->with('success', 'System settings are already initialized.');
+            }
+
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'SystemSettingsSeeder']);
+            return redirect()->route('admin.system-settings.index')->with('success', 'Default system settings initialized successfully.');
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.system-settings.index')->withErrors(['error' => 'Failed to initialize settings: ' . $e->getMessage()]);
+        }
+    }
 }

@@ -132,4 +132,50 @@ class SystemSettingControllerTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['email']);
     }
+
+    /** @test */
+    public function regular_user_cannot_seed_system_settings()
+    {
+        $response = $this->actingAs($this->regularUser)
+            ->post('/admin/system-settings/seed');
+
+        $response->assertStatus(403);
+    }
+
+    /** @test */
+    public function super_admin_can_seed_system_settings_when_empty()
+    {
+        // Truncate the table first
+        SystemSetting::query()->delete();
+        $this->assertEquals(0, SystemSetting::count());
+
+        $response = $this->actingAs($this->admin)
+            ->post('/admin/system-settings/seed');
+
+        $response->assertRedirect('/admin/system-settings');
+        $response->assertSessionHas('success', 'Default system settings initialized successfully.');
+
+        // Verify settings were populated
+        $this->assertGreaterThan(0, SystemSetting::count());
+        $this->assertDatabaseHas('system_settings', [
+            'key' => 'mail_mailer',
+            'value' => 'smtp'
+        ]);
+    }
+
+    /** @test */
+    public function super_admin_cannot_seed_system_settings_if_already_populated()
+    {
+        $initialCount = SystemSetting::count();
+        $this->assertGreaterThan(0, $initialCount);
+
+        $response = $this->actingAs($this->admin)
+            ->post('/admin/system-settings/seed');
+
+        $response->assertRedirect('/admin/system-settings');
+        $response->assertSessionHas('success', 'System settings are already initialized.');
+
+        // Count should not change
+        $this->assertEquals($initialCount, SystemSetting::count());
+    }
 }
