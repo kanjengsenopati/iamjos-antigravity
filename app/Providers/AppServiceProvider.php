@@ -16,6 +16,7 @@ use App\View\Composers\PublicLayoutComposer;
 use App\View\Composers\SiteLayoutComposer;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -159,5 +160,10 @@ class AppServiceProvider extends ServiceProvider
             'components.site.navbar',
             'components.site.footer',
         ], SiteLayoutComposer::class);
+
+        // Register custom phpmail mail driver
+        Mail::extend('phpmail', function (array $config) {
+            return new \App\Mail\Transport\PhpMailTransport();
+        });
     }
 }
