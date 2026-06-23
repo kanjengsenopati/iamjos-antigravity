@@ -160,6 +160,9 @@
             <!-- Tabbed Interface -->
             <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] p-8" x-data="{ 
                 activeTab: '{{ $activeTab }}',
+                showCurrentPassword: false,
+                showNewPassword: false,
+                showConfirmPassword: false,
                 setActiveTab(tab) {
                     this.activeTab = tab;
                     const url = new URL(window.location.href);
@@ -480,9 +483,15 @@
                                 <label for="current_password" class="block text-sm font-medium text-gray-700 mb-2">
                                     Current Password <span class="text-red-500">*</span>
                                 </label>
-                                <input type="password" name="current_password" id="current_password" required
-                                    autocomplete="current-password"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('current_password') border-red-500 @enderror">
+                                <div class="relative">
+                                    <input :type="showCurrentPassword ? 'text' : 'password'" name="current_password" id="current_password" required
+                                        autocomplete="current-password"
+                                        class="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('current_password') border-red-500 @enderror">
+                                    <button type="button" @click="showCurrentPassword = !showCurrentPassword"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                                        <i class="fa-solid" :class="showCurrentPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
                                 @error('current_password')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -493,9 +502,15 @@
                                 <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
                                     New Password <span class="text-red-500">*</span>
                                 </label>
-                                <input type="password" name="password" id="password" required
-                                    autocomplete="new-password"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('password') border-red-500 @enderror">
+                                <div class="relative">
+                                    <input :type="showNewPassword ? 'text' : 'password'" name="password" id="password" required
+                                        autocomplete="new-password"
+                                        class="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('password') border-red-500 @enderror">
+                                    <button type="button" @click="showNewPassword = !showNewPassword"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                                        <i class="fa-solid" :class="showNewPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
                                 @error('password')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -508,9 +523,15 @@
                                     class="block text-sm font-medium text-gray-700 mb-2">
                                     Confirm Password <span class="text-red-500">*</span>
                                 </label>
-                                <input type="password" name="password_confirmation" id="password_confirmation"
-                                    required autocomplete="new-password"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <div class="relative">
+                                    <input :type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation" id="password_confirmation"
+                                        required autocomplete="new-password"
+                                        class="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                    <button type="button" @click="showConfirmPassword = !showConfirmPassword"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                                        <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

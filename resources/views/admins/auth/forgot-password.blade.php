@@ -128,8 +128,8 @@
                 </div>
 
                 <div class="mb-8">
-                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-2">Lupa Password</h2>
-                    <p class="text-slate-600 text-sm">Masukkan email kamu yang terdaftar ya buat verifikasi</p>
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-2">Forgot Password</h2>
+                    <p class="text-slate-600 text-sm">Enter your registered email address to verify your account</p>
                 </div>
 
                 <!-- Alert Messages -->
@@ -179,14 +179,14 @@
                     <div>
                         <button type="submit"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2">
-                            Kirim
+                            Send Link
                         </button>
                     </div>
 
                     <div class="mt-6 text-center">
                         <a href="{{ route('login') }}"
                             class="font-semibold text-blue-600 hover:text-blue-500 text-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-arrow-left text-xs"></i> Kembali ke halaman Log In
+                            <i class="fas fa-arrow-left text-xs"></i> Back to Login
                         </a>
                     </div>
                 </form>

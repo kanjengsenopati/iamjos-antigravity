@@ -25,7 +25,7 @@ class ForgotPasswordController extends Controller
         $request->validate([
             'email' => 'required|email|exists:users,email',
         ], [
-            'email.exists' => 'Email tidak terdaftar di sistem.',
+            'email.exists' => 'The email address is not registered in our system.',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -49,11 +49,11 @@ class ForgotPasswordController extends Controller
                     'admin' => $user
                 ], function ($message) use ($user) {
                     $message->to($user->email);
-                    $message->subject('Lupa Password - ' . config('app.name', 'IAMJOS'));
+                    $message->subject('Reset Password - ' . config('app.name', 'IAMJOS'));
                 });
             } catch (\Exception $e) {
                 Log::error('Gagal mengirim email lupa password: ' . $e->getMessage());
-                return back()->withErrors(['email' => 'Gagal mengirim email pemulihan. Silakan coba lagi.']);
+                return back()->withErrors(['email' => 'Failed to send recovery email. Please try again.']);
             }
         }
 
@@ -65,13 +65,13 @@ class ForgotPasswordController extends Controller
     {
         $token = request()->token;
         if (!$token) {
-            return redirect(route('forgot-password'))->with('error', 'Tautan tidak valid atau token expired');
+            return redirect(route('forgot-password'))->with('error', 'Invalid or expired password reset token.');
         }
 
         $tokenCheck = DB::table('password_reset_tokens')->where('token', $token)->first();
 
         if (!$tokenCheck) {
-            return redirect(route('forgot-password'))->with('error', 'Tautan tidak valid atau token expired');
+            return redirect(route('forgot-password'))->with('error', 'Invalid or expired password reset token.');
         }
 
         // Set type 'ADMIN' to preserve compatibility with standard view hidden inputs
@@ -85,12 +85,12 @@ class ForgotPasswordController extends Controller
         $reset = DB::table('password_reset_tokens')->where('token', $request->token)->first();
         
         if (!$reset) {
-            return back()->withErrors(['token' => 'Tautan reset password tidak valid atau kedaluwarsa.']);
+            return back()->withErrors(['token' => 'Invalid or expired password reset link.']);
         }
 
         $user = User::where('email', $reset->email)->first();
         if (!$user) {
-            return back()->withErrors(['email' => 'User tidak ditemukan.']);
+            return back()->withErrors(['email' => 'User not found.']);
         }
 
         $user->update([
@@ -99,7 +99,7 @@ class ForgotPasswordController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $user->email)->delete();
 
-        return back()->with('success', 'Password berhasil direset, silakan login menggunakan password baru');
+        return back()->with('success', 'Password has been successfully reset. Please login with your new password.');
     }
 
     /**

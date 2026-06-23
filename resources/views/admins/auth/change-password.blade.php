@@ -131,8 +131,8 @@
                 </div>
 
                 <div class="mb-8">
-                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-2">Buat Password Baru</h2>
-                    <p class="text-slate-600 text-sm">Buat password baru kamu ya</p>
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-2">Reset Password</h2>
+                    <p class="text-slate-600 text-sm">Please enter your new password below</p>
                 </div>
 
                 <!-- Alert Messages -->
@@ -166,14 +166,14 @@
                     <!-- New Password Field -->
                     <div>
                         <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">
-                            Password Baru
+                            New Password
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-slate-400 text-sm"></i>
                             </div>
                             <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
-                                placeholder="Masukkan password baru"
+                                placeholder="Enter your new password"
                                 class="block w-full pl-10 pr-12 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 required>
                             <button type="button" @click="showPassword = !showPassword"
@@ -186,14 +186,14 @@
                     <!-- Confirm Password Field -->
                     <div>
                         <label for="password_confirmation" class="block text-sm font-medium text-slate-700 mb-1.5">
-                            Konfirmasi Password Baru
+                            Confirm New Password
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-slate-400 text-sm"></i>
                             </div>
                             <input :type="showConfirmPassword ? 'text' : 'password'" id="password_confirmation" name="password_confirmation"
-                                placeholder="Ulangi password baru"
+                                placeholder="Confirm your new password"
                                 class="block w-full pl-10 pr-12 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 required>
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
@@ -207,14 +207,14 @@
                     <div>
                         <button type="submit"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2">
-                            Ubah Password
+                            Reset Password
                         </button>
                     </div>
 
                     <div class="mt-6 text-center">
                         <a href="{{ route('login') }}"
                             class="font-semibold text-blue-600 hover:text-blue-500 text-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-arrow-left text-xs"></i> Kembali ke halaman Log In
+                            <i class="fas fa-arrow-left text-xs"></i> Back to Login
                         </a>
                     </div>
                 </form>
@@ -227,7 +227,7 @@
     @if (session('success'))
     <script>
         Swal.fire({
-            title: "Berhasil Buat Password",
+            title: "Password Reset Successfully",
             text: "{{ session('success') }}",
             icon: "success",
             buttonsStyling: false,

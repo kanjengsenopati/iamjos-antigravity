@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Terkirim! | {{ config('app.name', 'IAMJOS') }}</title>
+    <title>Email Sent | {{ config('app.name', 'IAMJOS') }}</title>
     <meta name="description" content="Verification email has been sent successfully">
     <meta name="robots" content="noindex, nofollow">
 
@@ -133,14 +133,14 @@
                         <i class="fas fa-circle-check text-5xl"></i>
                     </div>
 
-                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-3">Email Terkirim</h2>
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-3">Email Sent</h2>
                     <p class="text-slate-600 text-sm max-w-sm mb-8 leading-relaxed">
-                        Silahkan cek emailmu untuk melakukan verifikasi dan mengikuti tautan reset password.
+                        Please check your email inbox for a link to reset your password.
                     </p>
 
                     <a href="{{ route('login') }}"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2">
-                        Kembali ke Halaman Log In
+                        Back to Login
                     </a>
                 </div>
             </div>
