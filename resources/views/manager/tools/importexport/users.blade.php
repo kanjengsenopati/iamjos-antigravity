@@ -55,7 +55,7 @@
             {{-- TABS NAVIGATION (Seamless Door Style) --}}
             <div class="relative">
                 <div class="absolute inset-x-0 bottom-0 border-b-2 border-[#DAD8F4]"></div>
-                <nav class="relative flex overflow-x-auto no-scrollbar">
+                <nav class="relative flex overflow-x-auto overflow-y-hidden no-scrollbar">
                     <button @click="tab = 'import'"
                         :class="tab === 'import' ?
                             'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-[20px] border-t-2 border-l-2 border-r-2 z-30' :
