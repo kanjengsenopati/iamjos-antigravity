@@ -241,6 +241,64 @@ class SystemSettingsSeeder extends Seeder
                 'group'       => 'app',
                 'description' => 'Current application version string.',
             ],
+
+            // ─── SMTP / Email Configuration ───────────────────────────────
+            [
+                'key'         => 'mail_mailer',
+                'value'       => 'smtp',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'Mail driver to use (smtp, phpmail, log).',
+            ],
+            [
+                'key'         => 'mail_host',
+                'value'         => '127.0.0.1',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'SMTP server host address.',
+            ],
+            [
+                'key'         => 'mail_port',
+                'value'       => '1025',
+                'type'        => 'integer',
+                'group'       => 'email',
+                'description' => 'SMTP server port (e.g., 25, 465, 587, 1025, 2525).',
+            ],
+            [
+                'key'         => 'mail_username',
+                'value'       => '',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'SMTP username (leave empty if not required).',
+            ],
+            [
+                'key'         => 'mail_password',
+                'value'       => '',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'SMTP password (leave empty if not required).',
+            ],
+            [
+                'key'         => 'mail_encryption',
+                'value'       => 'tls',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'SMTP encryption protocol (none, tls, ssl).',
+            ],
+            [
+                'key'         => 'mail_from_address',
+                'value'       => 'noreply@example.com',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'Email address used as the sender (From).',
+            ],
+            [
+                'key'         => 'mail_from_name',
+                'value'       => 'IAMJOS System',
+                'type'        => 'string',
+                'group'       => 'email',
+                'description' => 'Name displayed as the sender (From Name).',
+            ],
         ];
 
         foreach ($settings as $setting) {

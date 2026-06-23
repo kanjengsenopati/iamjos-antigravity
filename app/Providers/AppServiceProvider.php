@@ -165,5 +165,31 @@ class AppServiceProvider extends ServiceProvider
         Mail::extend('phpmail', function (array $config) {
             return new \App\Mail\Transport\PhpMailTransport();
         });
+
+        // Override Laravel mail configuration dynamically from database SystemSettings
+        try {
+            $mailer = \App\Facades\Settings::system('mail_mailer');
+            if ($mailer) {
+                config(['mail.default' => $mailer]);
+                config(['mail.mailers.smtp.host' => \App\Facades\Settings::system('mail_host', config('mail.mailers.smtp.host'))]);
+                config(['mail.mailers.smtp.port' => (int) \App\Facades\Settings::system('mail_port', config('mail.mailers.smtp.port'))]);
+                config(['mail.mailers.smtp.username' => \App\Facades\Settings::system('mail_username', config('mail.mailers.smtp.username'))]);
+                config(['mail.mailers.smtp.password' => \App\Facades\Settings::system('mail_password', config('mail.mailers.smtp.password'))]);
+                
+                $encryption = \App\Facades\Settings::system('mail_encryption');
+                if ($encryption === 'ssl') {
+                    config(['mail.mailers.smtp.scheme' => 'smtps']);
+                } elseif ($encryption === 'tls') {
+                    config(['mail.mailers.smtp.scheme' => null]);
+                } else {
+                    config(['mail.mailers.smtp.scheme' => null]);
+                }
+                
+                config(['mail.from.address' => \App\Facades\Settings::system('mail_from_address', config('mail.from.address'))]);
+                config(['mail.from.name' => \App\Facades\Settings::system('mail_from_name', config('mail.from.name'))]);
+            }
+        } catch (\Throwable $e) {
+            // Silence database/connection errors during early boot (e.g. migrations, install, seeds)
+        }
     }
 }

@@ -131,6 +131,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
 
             Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('system-settings.index');
             Route::post('/system-settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])->name('system-settings.update');
+            Route::post('/system-settings/test-email', [\App\Http\Controllers\Admin\SystemSettingController::class, 'sendTestEmail'])->name('system-settings.test-email');
 
 
             Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
