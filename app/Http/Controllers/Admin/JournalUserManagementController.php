@@ -280,9 +280,47 @@ class JournalUserManagementController extends Controller
         return back()->with('success', 'User enabled.');
     }
 
-    public function email($journal, User $user)
+    public function email(Request $request, $journal, User $user)
     {
-        // Mock email functionality layout
+        if ($request->wantsJson() || $request->isJson()) {
+            $request->validate([
+                'subject' => 'required|string|max:255',
+                'body' => 'required|string',
+            ]);
+
+            try {
+                $journalModel = current_journal();
+                
+                // Validate recipient email exists
+                if (empty($user->email)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'User does not have a valid email address.',
+                    ], 422);
+                }
+
+                \Illuminate\Support\Facades\Mail::to($user->email)->queue(
+                    new \App\Mail\GeneralNotificationMail(
+                        $request->subject,
+                        $request->body,
+                        $user->name,
+                        $journalModel->name
+                    )
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Email successfully queued for ' . $user->name . '.',
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send email: ' . $e->getMessage(),
+                ], 500);
+            }
+        }
+
+        // Fallback for non-ajax
         return back()->with('success', 'Email compose window opened (mock).');
     }
 

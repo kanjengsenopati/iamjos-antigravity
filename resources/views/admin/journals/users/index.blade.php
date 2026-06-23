@@ -3,7 +3,72 @@
 @section('title', 'User Management')
 
 @section('content')
-    <!-- Header -->
+    <div x-data="{
+        emailModalOpen: false,
+        recipientId: '',
+        recipientName: '',
+        recipientEmail: '',
+        subject: '',
+        body: '',
+        isSubmitting: false,
+        errorMessage: '',
+        successMessage: '',
+        openEmailModal(user) {
+            this.recipientId = user.id;
+            this.recipientName = user.name;
+            this.recipientEmail = user.email;
+            this.subject = '[{{ $journal->name }}] ';
+            this.body = 'Dear ' + user.name + ',\n\n';
+            this.emailModalOpen = true;
+            this.errorMessage = '';
+            this.successMessage = '';
+        },
+        sendEmail() {
+            if (!this.subject.trim() || !this.body.trim()) {
+                this.errorMessage = 'Subject and message body are required.';
+                return;
+            }
+            this.isSubmitting = true;
+            this.errorMessage = '';
+            this.successMessage = '';
+            
+            fetch('{{ route($routePrefix . '.email', ['journal' => $journal->slug, 'user' => '__USER_ID__']) }}'.replace('__USER_ID__', this.recipientId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    subject: this.subject,
+                    body: this.body
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.isSubmitting = false;
+                if (data.success) {
+                    this.successMessage = data.message;
+                    setTimeout(() => {
+                        this.emailModalOpen = false;
+                        this.successMessage = '';
+                    }, 2000);
+                } else {
+                    this.errorMessage = data.message || 'Failed to send email.';
+                }
+            })
+            .catch(error => {
+                this.isSubmitting = false;
+                this.errorMessage = error.message || 'An error occurred while sending the email.';
+            });
+        }
+    }" class="relative">
+        <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
             <nav class="flex mb-2" aria-label="Breadcrumb">
@@ -189,16 +254,12 @@
                                         </form>
 
                                         <!-- Email -->
-                                        <form
-                                            action="{{ route($routePrefix . '.email', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                            method="POST">
-                                            @csrf
-                                            <button type="submit"
-                                                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Email User">
-                                                <i class="fa-solid fa-envelope"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button"
+                                            @click="openEmailModal({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }})"
+                                            class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Email User">
+                                            <i class="fa-solid fa-envelope"></i>
+                                        </button>
 
                                         <!-- Edit -->
                                         <a href="{{ route($routePrefix . '.edit', ['journal' => $journal->slug, 'user' => $user->id]) }}"
@@ -262,4 +323,109 @@
             </div>
         @endif
     </div>
+
+    <!-- Email Modal -->
+    <div x-show="emailModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+        role="dialog" aria-modal="true" aria-labelledby="email-modal-title" @keydown.escape.window="emailModalOpen = false">
+        
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Backdrop -->
+            <div x-show="emailModalOpen"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 transition-opacity bg-gray-900/75 backdrop-blur-sm"
+                @click="emailModalOpen = false"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- Modal Panel -->
+            <div x-show="emailModalOpen"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="relative inline-block w-full max-w-lg overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
+
+                <!-- Header -->
+                <div class="relative px-6 py-4 bg-blue-600 border-b border-blue-500/30 rounded-t-[24px]">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
+                                <i class="text-lg text-white fa-solid fa-paper-plane"></i>
+                            </div>
+                            <div>
+                                <x-text.h1 id="email-modal-title" class="text-white font-bold tracking-tight !text-[18px]">
+                                    Send Email
+                                </x-text.h1>
+                                <p class="text-xs text-blue-100 font-medium">Compose an email to user</p>
+                            </div>
+                        </div>
+                        <button @click="emailModalOpen = false"
+                            class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 focus:outline-none">
+                            <i class="text-lg fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="px-6 py-5 bg-white space-y-4">
+                    <!-- Success/Error Banner -->
+                    <div x-show="successMessage" x-cloak class="p-3 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-800 text-sm flex items-start gap-2">
+                        <i class="fa-solid fa-circle-check mt-0.5 text-emerald-600"></i>
+                        <span x-text="successMessage"></span>
+                    </div>
+
+                    <div x-show="errorMessage" x-cloak class="p-3 bg-red-50 border border-red-100 rounded-lg text-red-800 text-sm flex items-start gap-2">
+                        <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-600"></i>
+                        <span x-text="errorMessage"></span>
+                    </div>
+
+                    <!-- To Recipient -->
+                    <div>
+                        <x-text.label class="block mb-1">To Recipient</x-text.label>
+                        <div class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 flex items-center justify-between">
+                            <span x-text="recipientName + ' <' + recipientEmail + '>'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Subject -->
+                    <div>
+                        <x-text.label class="block mb-1">Subject</x-text.label>
+                        <input type="text" x-model="subject" 
+                            class="w-full px-3 py-2 border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm text-slate-800"
+                            placeholder="Enter email subject...">
+                    </div>
+
+                    <!-- Body -->
+                    <div>
+                        <x-text.label class="block mb-1">Message Body</x-text.label>
+                        <textarea x-model="body" rows="6"
+                            class="w-full px-3 py-2 border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm text-slate-800 resize-y"
+                            placeholder="Type your message here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[24px]">
+                    <button type="button" @click="emailModalOpen = false"
+                        class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" @click="sendEmail()" :disabled="isSubmitting"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm disabled:opacity-55">
+                        <i class="fa-solid fa-paper-plane" x-show="!isSubmitting"></i>
+                        <i class="fa-solid fa-spinner animate-spin" x-show="isSubmitting" x-cloak></i>
+                        <span x-text="isSubmitting ? 'Sending...' : 'Send Email'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
