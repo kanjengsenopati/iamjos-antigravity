@@ -69,43 +69,7 @@
         }
     }" class="relative">
         <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-            <nav class="flex mb-2" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <span class="text-gray-400 text-sm font-medium">Journal Manager</span>
-                    </li>
-                    <li aria-current="page">
-                        <div class="flex items-center">
-                            <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
-                            <span class="text-sm font-medium text-gray-500">Users & Roles</span>
-                        </div>
-                    </li>
-                    <li aria-current="page">
-                        <div class="flex items-center">
-                            <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
-                            <span class="text-sm font-medium text-indigo-600">Users</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
-            <h1 class="text-2xl font-bold text-gray-900">Users</h1>
-            <p class="text-sm text-gray-500 mt-1">Manage users enrolled in <strong>{{ $journal->name }}</strong>.</p>
-        </div>
-        <div class="flex gap-3">
-            <a href="{{ route($routePrefix . '.enroll', ['journal' => $journal->slug]) }}"
-                class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors shadow-sm">
-                <i class="fa-solid fa-user-plus"></i>
-                Enroll Existing User
-            </a>
-            <a href="{{ route($routePrefix . '.create', ['journal' => $journal->slug]) }}"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors shadow-sm shadow-indigo-200">
-                <i class="fa-solid fa-plus"></i>
-                Create New User
-            </a>
-        </div>
-    </div>
+        @include('admin.journals.users._header', ['activeTab' => 'users'])
 
     <!-- Filters -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">

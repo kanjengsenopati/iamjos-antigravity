@@ -4,29 +4,7 @@
 
 @section('content')
     <!-- Header -->
-    <div class="mb-8">
-        <nav class="flex mb-2" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <span class="text-gray-400 text-sm font-medium">Journal Manager</span>
-                </li>
-                <li aria-current="page">
-                    <div class="flex items-center">
-                        <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
-                        <span class="text-sm font-medium text-gray-500">Users & Roles</span>
-                    </div>
-                </li>
-                <li aria-current="page">
-                    <div class="flex items-center">
-                        <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
-                        <span class="text-sm font-medium text-indigo-600">Access</span>
-                    </div>
-                </li>
-            </ol>
-        </nav>
-        <h1 class="text-2xl font-bold text-gray-900">Site Access & Registration</h1>
-        <p class="text-sm text-gray-500 mt-1">Configure who can register and access this journal.</p>
-    </div>
+    @include('admin.journals.users._header', ['activeTab' => 'access'])
 
     <!-- Configuration Form -->
     <form action="{{ route($routePrefix . '.access.update', ['journal' => $journal->slug]) }}" method="POST"

@@ -28,39 +28,7 @@
 
 @section('content')
 <!-- Header -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-    <div>
-        <nav class="flex mb-2" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <span class="text-gray-400 text-sm font-medium">Journal Manager</span>
-                </li>
-                <li aria-current="page">
-                    <div class="flex items-center">
-                        <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
-                        <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
-                            class="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">Users & Roles</a>
-                    </div>
-                </li>
-                <li aria-current="page">
-                    <div class="flex items-center">
-                        <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
-                        <span class="text-sm font-medium text-indigo-600">Notify Users</span>
-                    </div>
-                </li>
-            </ol>
-        </nav>
-        <h1 class="text-2xl font-bold text-gray-900">Notify Users</h1>
-        <p class="text-sm text-gray-500 mt-1">Send a bulk email notification to users in <strong>{{ $journal->name }}</strong>.</p>
-    </div>
-    <div>
-        <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
-            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors shadow-sm">
-            <i class="fa-solid fa-arrow-left"></i>
-            Back to Users
-        </a>
-    </div>
-</div>
+@include('admin.journals.users._header', ['activeTab' => 'notify'])
 
 <!-- Flash Messages -->
 @if (session('success'))

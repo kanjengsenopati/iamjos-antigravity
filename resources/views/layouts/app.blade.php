@@ -547,44 +547,13 @@
                         </a>
 
                         <!-- Users & Roles -->
-                        <div x-data="{ expanded: {{ request()->routeIs($usersRoutePrefix . '.*') ? 'true' : 'false' }} }">
-                            <button @click="expanded = !expanded"
-                                class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs($usersRoutePrefix . '.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                                :title="sidebarCollapsed ? 'Users & Roles' : ''">
-                                <div class="flex items-center gap-3">
-                                    <i
-                                        class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs($usersRoutePrefix . '.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Users & Roles</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
-                                    :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
-                            </button>
-
-                            <div x-show="expanded && !sidebarCollapsed" x-collapse>
-                                <div class="pl-10 pr-2 py-1 space-y-1">
-                                    <a href="{{ route($usersRoutePrefix . '.index', ['journal' => $journalSlug]) }}"
-                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.index') || request()->routeIs($usersRoutePrefix . '.create') || request()->routeIs($usersRoutePrefix . '.edit') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                        <i class="fa-solid fa-user-group w-4 text-center"></i>
-                                        Users
-                                    </a>
-                                    <a href="{{ route($usersRoutePrefix . '.roles', ['journal' => $journalSlug]) }}"
-                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.roles*') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                        <i class="fa-solid fa-user-tag w-4 text-center"></i>
-                                        Roles
-                                    </a>
-                                    <a href="{{ route($usersRoutePrefix . '.access', ['journal' => $journalSlug]) }}"
-                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.access') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                        <i class="fa-solid fa-lock w-4 text-center"></i>
-                                        Site Access
-                                    </a>
-                                    <a href="{{ route($usersRoutePrefix . '.notify', ['journal' => $journalSlug]) }}"
-                                        class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs($usersRoutePrefix . '.notify') ? 'text-primary-700 bg-primary-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">
-                                        <i class="fa-solid fa-envelope w-4 text-center"></i>
-                                        Notify Users
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        <a href="{{ route($usersRoutePrefix . '.index', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs($usersRoutePrefix . '.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            :title="sidebarCollapsed ? 'Users & Roles' : ''">
+                            <i
+                                class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs($usersRoutePrefix . '.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Users & Roles</span>
+                        </a>
 
                         <!-- Statistics -->
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
