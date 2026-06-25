@@ -280,22 +280,22 @@
 
                         @if ($group === 'email')
                             {{-- Test Connection Section --}}
-                            <div class="px-6 py-6 bg-slate-50 border-t border-gray-100">
-                                <h3 class="text-sm font-semibold text-slate-800 mb-1">Test SMTP Configuration</h3>
-                                <p class="text-xs text-slate-500 mb-4">Send a test email to verify that your SMTP server is configured correctly. Save your settings before testing.</p>
+                            <div class="px-6 py-6 bg-slate-50 border-t border-gray-100" x-data="testEmailHandler()">
+                                <x-text.h2 class="mb-1 text-slate-800">Test SMTP Configuration</x-text.h2>
+                                <p class="text-[13px] text-slate-500 mb-4 font-normal">Send a test email to verify that your SMTP server is configured correctly. Save your settings before testing.</p>
                                 
-                                <div class="flex flex-col sm:flex-row gap-3" x-data="testEmailHandler()">
+                                <div class="flex flex-col sm:flex-row gap-3">
                                     <input 
                                         type="email" 
                                         x-model="email" 
                                         placeholder="recipient@example.com" 
-                                        class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm w-full sm:w-80 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm w-full sm:w-80 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
                                     >
                                     <button 
                                         type="button" 
                                         @click="sendTestEmail()"
                                         :disabled="loading || !email"
-                                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-400 text-white text-sm font-medium rounded-xl shadow-sm transition-all cursor-pointer"
+                                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/10 hover:shadow-blue-500/20 transition-all cursor-pointer"
                                     >
                                         <svg x-show="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -305,12 +305,24 @@
                                     </button>
                                 </div>
                                 
-                                <div x-show="statusMessage" class="mt-4 p-4 rounded-xl text-sm" :class="statusType === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-800 border border-red-100'" style="display: none;">
-                                    <div class="flex items-start gap-2.5">
+                                <div x-show="statusMessage" class="mt-4 p-4 rounded-[16px] text-sm" :class="statusType === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100/60' : 'bg-red-50 text-red-800 border border-red-100/60'" style="display: none;">
+                                    <div class="flex items-start gap-3">
                                         <div class="flex-shrink-0 mt-0.5">
-                                            <i class="fa-solid" :class="statusType === 'success' ? 'fa-circle-check text-emerald-500' : 'fa-circle-exclamation text-red-500'"></i>
+                                            <template x-if="statusType === 'success'">
+                                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2.5px;">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </template>
+                                            <template x-if="statusType !== 'success'">
+                                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2.5px;">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                            </template>
                                         </div>
-                                        <div class="flex-1" x-text="statusMessage"></div>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-[14px]" :class="statusType === 'success' ? 'text-emerald-900' : 'text-red-900'" x-text="statusType === 'success' ? 'Pengiriman Berhasil' : 'Pengiriman Gagal'"></p>
+                                            <p class="mt-0.5 text-xs opacity-90 leading-relaxed" x-text="statusMessage"></p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -393,20 +405,35 @@
                     },
                     body: JSON.stringify({ email: this.email })
                 })
-                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(async response => {
+                    const isJson = response.headers.get('content-type')?.includes('application/json');
+                    const data = isJson ? await response.json() : null;
+                    return {
+                        status: response.status,
+                        body: data,
+                        text: !isJson ? await response.text() : null
+                    };
+                })
                 .then(res => {
                     this.loading = false;
-                    this.statusMessage = res.body.message || (res.status === 200 ? 'Test email sent successfully!' : 'Failed to send test email.');
-                    if (res.status === 200 && res.body.success) {
+                    if (res.status === 200 && res.body && res.body.success) {
                         this.statusType = 'success';
+                        this.statusMessage = res.body.message || 'Test email sent successfully!';
                     } else {
                         this.statusType = 'error';
+                        if (res.body && res.body.message) {
+                            this.statusMessage = res.body.message;
+                        } else if (res.status === 500) {
+                            this.statusMessage = 'SMTP Test Failed: Kesalahan Internal Server (Status 500). Silakan periksa konfigurasi SMTP Anda.';
+                        } else {
+                            this.statusMessage = 'Gagal mengirim email tes. Status kode: ' + res.status;
+                        }
                     }
                 })
                 .catch(error => {
                     this.loading = false;
                     this.statusType = 'error';
-                    this.statusMessage = 'An unexpected error occurred: ' + error.message;
+                    this.statusMessage = 'Terjadi kesalahan jaringan atau koneksi terputus: ' + error.message;
                 });
             }
         };
