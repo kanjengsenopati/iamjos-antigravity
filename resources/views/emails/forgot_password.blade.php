@@ -25,21 +25,23 @@
                 Halo, {{$admin->name}}!
             </h1>
             <p style="font-size: 0.75rem; color: black; text-align:center">
-                Kami menerima permintaan untuk mereset password akun Anda pada tanggal {{date('d/m/Y H:i')}}
-                WIB. Untuk melanjutkan proses reset password, silakan klik tombol di bawah ini. Jika Anda tidak
-                melakukan permintaan ini, Anda dapat mengabaikan email ini. Akun Anda tetap aman dan password
-                tidak akan berubah.
+                Kami menerima permintaan untuk mereset password akun Anda pada tanggal {{date('d/m/Y H:i')}} WIB.
+                Password Anda telah di-reset secara otomatis menjadi password baru yang dibuat secara acak di bawah ini.
+                Silakan gunakan password baru ini untuk masuk ke akun Anda. Demi keamanan, harap segera ubah password Anda setelah berhasil masuk.
             </p>
-            <div style="text-align: center; margin-top: 1.75rem;">
-                <a class="reset_btn" style="
-                        text-decoration: none !important;
+            <div style="text-align: center; margin-top: 1.75rem; margin-bottom: 1.75rem;">
+                <div style="
+                        display: inline-block;
                         padding: 0.75rem 2rem;
-                        background-color: #514eff;
-                        font-size: 0.75rem;
-                        color: white;
-                        border-radius: 2rem;
-                        font-weight: 500;
-                    " href="{{ env('APP_URL').'/change-password?'.'token='.$admin->token }}">Reset Password</a>
+                        background-color: #f3f4f6;
+                        border: 1px dashed #d1d5db;
+                        font-family: monospace;
+                        font-size: 1.125rem;
+                        color: #1f2937;
+                        border-radius: 0.5rem;
+                        font-weight: 700;
+                        letter-spacing: 0.05em;
+                    ">{{ $new_password }}</div>
             </div>
         </div>
         <div>

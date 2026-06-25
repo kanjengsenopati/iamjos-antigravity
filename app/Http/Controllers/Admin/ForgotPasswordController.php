@@ -31,28 +31,59 @@ class ForgotPasswordController extends Controller
         $user = User::where('email', $request->email)->first();
         
         if ($user) {
-            $token = Str::random(60);
+            // Get custom characters configuration from system settings
+            $allowedChars = \App\Facades\Settings::system('password_reset_characters', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%');
             
-            DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $user->email],
-                [
-                    'token' => $token,
-                    'created_at' => now()
-                ]
-            );
+            // Generate a random 12-character password
+            $newPassword = '';
+            $maxIndex = strlen($allowedChars) - 1;
+            for ($i = 0; $i < 12; $i++) {
+                $newPassword .= $allowedChars[random_int(0, $maxIndex)];
+            }
+            
+            // Hash and update the user's password in the global database (shared across all journals)
+            $user->update([
+                'password' => Hash::make($newPassword),
+            ]);
 
-            // Pass token dynamically to user object for email template compatibility ($admin->token)
-            $user->token = $token;
+            // Determine active journal context for custom Mail From Name and Email
+            $journal = current_journal();
+            $fromName = $journal ? $journal->name : \App\Facades\Settings::system('mail_from_name', config('mail.from.name', 'IAMJOS System'));
+            $fromEmail = \App\Facades\Settings::system('mail_from_address', config('mail.from.address', 'noreply@example.com'));
 
             try {
+                // Dynamically override mailer settings from system settings database
+                $mailer = \App\Facades\Settings::system('mail_mailer');
+                if ($mailer) {
+                    config(['mail.default' => $mailer]);
+                    config(['mail.mailers.smtp.host' => \App\Facades\Settings::system('mail_host', config('mail.mailers.smtp.host'))]);
+                    config(['mail.mailers.smtp.port' => (int) \App\Facades\Settings::system('mail_port', config('mail.mailers.smtp.port'))]);
+                    config(['mail.mailers.smtp.username' => \App\Facades\Settings::system('mail_username', config('mail.mailers.smtp.username'))]);
+                    config(['mail.mailers.smtp.password' => \App\Facades\Settings::system('mail_password', config('mail.mailers.smtp.password'))]);
+                    
+                    $encryption = \App\Facades\Settings::system('mail_encryption');
+                    if ($encryption === 'ssl') {
+                        config(['mail.mailers.smtp.scheme' => 'smtps']);
+                    } else {
+                        config(['mail.mailers.smtp.scheme' => null]);
+                    }
+                }
+
+                // Invalidate cache for mailer instance to apply new configurations
+                if (!app()->runningUnitTests() && app()->resolved('mail.manager')) {
+                    app()->make('mail.manager')->forgetMailers();
+                }
+
                 Mail::send('emails.forgot_password', [
-                    'admin' => $user
-                ], function ($message) use ($user) {
+                    'admin' => $user,
+                    'new_password' => $newPassword
+                ], function ($message) use ($user, $fromEmail, $fromName, $journal) {
                     $message->to($user->email);
-                    $message->subject('Reset Password - ' . config('app.name', 'IAMJOS'));
+                    $message->from($fromEmail, $fromName);
+                    $message->subject('Reset Password - ' . ($journal ? $journal->name : config('app.name', 'IAMJOS')));
                 });
             } catch (\Exception $e) {
-                Log::error('Gagal mengirim email lupa password: ' . $e->getMessage());
+                Log::error('Gagal mengirim email reset password acak: ' . $e->getMessage());
                 return back()->withErrors(['email' => 'Failed to send recovery email. Please try again.']);
             }
         }

@@ -162,18 +162,13 @@
                         </p>
                         
                         <div class="mt-4 max-w-md">
-                            <div class="relative">
                                 <input type="text" 
                                        name="doi_prefix" 
                                        id="doi_prefix"
                                        x-model="doiPrefix"
                                        value="{{ old('doi_prefix', $journal->doi_prefix) }}"
                                        placeholder="10.12345"
-                                       class="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 {{ $errors->has('doi_prefix') ? 'border-red-300 bg-red-50' : 'border-gray-300' }}">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <i class="fa-solid fa-fingerprint"></i>
-                                </span>
-                            </div>
+                                       class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 {{ $errors->has('doi_prefix') ? 'border-red-300 bg-red-50' : 'border-gray-300' }}">
                             @error('doi_prefix')
                                 <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
                                     <i class="fa-solid fa-circle-exclamation"></i>
