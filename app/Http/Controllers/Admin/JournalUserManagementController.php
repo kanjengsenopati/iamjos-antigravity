@@ -731,8 +731,22 @@ class JournalUserManagementController extends Controller
     // Access Management
     public function updateAccess(Request $request)
     {
-        // Logic to update journal settings regarding access
-        return back()->with('success', 'Access settings updated.');
+        $journal = current_journal();
+        
+        // Load existing settings
+        $settings = $journal->settings ?? [];
+        
+        // Save access configuration parameters
+        $settings['restrict_site_access'] = $request->boolean('restrict_site_access');
+        $settings['restrict_article_access'] = $request->boolean('restrict_article_access');
+        $settings['require_validation'] = $request->boolean('require_validation');
+        $settings['registration_mode'] = $request->input('registration_mode', 'open');
+        $settings['allow_roles'] = $request->input('allow_roles', ['reader']);
+        
+        // Update journal table
+        $journal->update(['settings' => $settings]);
+        
+        return back()->with('success', 'Access settings updated successfully.');
     }
 
     /**
