@@ -5,7 +5,10 @@
     'downloadUrl' => null,
 ])
 
-<div class="pdf-viewer-container" style="height: {{ $height }}; display: flex; flex-direction: column; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden;">
+<!-- docx-preview CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.css" />
+
+<div class="pdf-viewer-container" style="height: {{ $height }}; display: flex; flex-direction: column; overflow: hidden;">
     {{-- Toolbar --}}
     <div id="pdf-toolbar" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
         <button id="pdf-prev-page" onclick="pdfViewerPrevPage()" style="padding: 0.25rem 0.75rem; background: white; border: 1px solid #d1d5db; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem;">
@@ -45,6 +48,17 @@
         <canvas id="pdf-canvas" style="display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></canvas>
     </div>
 
+    {{-- DOCX Container --}}
+    <div id="docx-container" style="display: none; flex: 1; overflow: auto; background: #f1f5f9; position: relative;">
+        <div id="docx-loading" style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; color: #475569; font-size: 1rem; padding: 2rem 0;">
+            <svg style="animation: spin 1s linear infinite; width: 1.5rem; height: 1.5rem; margin-right: 0.5rem;" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="#475569" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+            </svg>
+            Loading Document...
+        </div>
+        <div id="docx-preview-body" style="display: none; margin: 0 auto;"></div>
+    </div>
+
     {{-- Non-PDF fallback --}}
     <div id="pdf-fallback" style="display: none; flex: 1; padding: 2rem; text-align: center; background: #f9fafb;">
         <p style="color: #6b7280; margin-bottom: 1rem;">This file type cannot be previewed in the browser.</p>
@@ -58,21 +72,114 @@
 
 <style>
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Google Docs Style for docx-preview */
+    #docx-container .docx-wrapper {
+        background-color: #f1f5f9 !important; /* Light gray background like Google Docs */
+        padding: 3rem 1rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 2rem !important;
+        min-height: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #docx-container .docx {
+        background-color: #ffffff !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03) !important; /* Google Docs page shadow */
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 4px !important;
+        margin-bottom: 0 !important;
+        padding: 3.5rem 3rem !important; /* Document page padding */
+        box-sizing: border-box !important;
+        transition: box-shadow 0.2s ease-in-out !important;
+        max-width: 850px !important;
+    }
+
+    #docx-container .docx:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    /* Responsive table inside docx */
+    #docx-container .docx table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin: 1rem 0 !important;
+    }
+
+    /* Responsive images */
+    #docx-container .docx img {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
 </style>
 
+<!-- Dependencies for docx-preview -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <script>
 (function() {
     const fileUrl = @json($fileUrl);
     const fileName = @json($fileName);
     const ext = fileName.split('.').pop().toLowerCase();
 
-    // Only render PDF files with PDF.js
-    if (ext !== 'pdf') {
+    function showFallback() {
         document.getElementById('pdf-toolbar').style.display = 'none';
         document.getElementById('pdf-canvas-container').style.display = 'none';
         document.getElementById('pdf-loading').style.display = 'none';
+        document.getElementById('docx-container').style.display = 'none';
         document.getElementById('pdf-fallback').style.display = 'flex';
+    }
+
+    // DOCX Render Logic
+    if (ext === 'docx') {
+        // Hide PDF elements
+        document.getElementById('pdf-toolbar').style.display = 'none';
+        document.getElementById('pdf-canvas-container').style.display = 'none';
+        document.getElementById('pdf-fallback').style.display = 'none';
+
+        // Show DOCX container
+        const docxContainer = document.getElementById('docx-container');
+        docxContainer.style.display = 'block';
+
+        // Fetch the signed docx URL as arrayBuffer
+        fetch(fileUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch the document.');
+                return response.arrayBuffer();
+            })
+            .then(arrayBuffer => {
+                const docxPreviewBody = document.getElementById('docx-preview-body');
+                docxPreviewBody.style.display = 'block';
+
+                // Render using docx-preview
+                docx.renderAsync(arrayBuffer, docxPreviewBody, null, {
+                    className: "docx",
+                    inWrapper: true,
+                    ignoreWidth: false,
+                    ignoreHeight: false,
+                    experimental: true
+                }).then(() => {
+                    document.getElementById('docx-loading').style.display = 'none';
+                }).catch(err => {
+                    console.error('Error rendering DOCX:', err);
+                    showFallback();
+                });
+            })
+            .catch(error => {
+                console.error('Error loading DOCX:', error);
+                showFallback();
+            });
+        return;
+    }
+
+    // PDF Render Logic
+    if (ext !== 'pdf') {
+        showFallback();
         return;
     }
 
