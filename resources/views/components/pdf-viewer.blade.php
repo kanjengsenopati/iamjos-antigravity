@@ -6,7 +6,7 @@
 ])
 
 <!-- docx-preview CSS (Primary: jsDelivr, Fallback: unpkg) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.css" onerror="this.onerror=null; this.href='https://unpkg.com/docx-preview@0.4.1/dist/docx-preview.css';" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.css" onerror="this.onerror=null; this.href='https://unpkg.com/docx-preview@0.3.7/dist/docx-preview.css';" />
 
 <div class="pdf-viewer-container" style="height: {{ $height }}; display: flex; flex-direction: column; overflow: hidden;">
     {{-- Toolbar --}}
@@ -197,8 +197,8 @@
         )
         .then(() => {
             return loadScript(
-                'https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js',
-                'https://unpkg.com/docx-preview@0.4.1/dist/docx-preview.min.js',
+                'https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js',
+                'https://unpkg.com/docx-preview@0.3.7/dist/docx-preview.min.js',
                 'docx'
             );
         })
