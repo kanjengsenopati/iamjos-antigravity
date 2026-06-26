@@ -277,7 +277,7 @@
                                                             <i class="fa-solid {{ $iconClass }} text-lg"></i>
                                                         </div>
                                                         <div class="ml-4 min-w-0 flex-1">
-                                                            <div class="text-sm font-medium text-gray-900 truncate"
+                                                            <div class="text-sm font-medium text-gray-900 break-all whitespace-normal"
                                                                 title="{{ $file->file_name }}">
                                                                 {{ $file->file_name }}
                                                             </div>
@@ -1491,7 +1491,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 <i class="fa-solid {{ $iconClass }} text-lg"></i>
                                                             </div>
                                                             <div class="min-w-0 flex-1">
-                                                                <div class="text-sm font-medium text-gray-900 truncate">
+                                                                <div class="text-sm font-medium text-gray-900 break-all whitespace-normal">
                                                                     {{ $file->file_name }}
                                                                 </div>
                                                                 <div class="text-xs text-gray-500">
@@ -1620,7 +1620,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <i class="fa-solid {{ $iconClass }} text-lg"></i>
                                                         </div>
                                                         <div class="min-w-0 flex-1">
-                                                            <div class="text-sm font-medium text-gray-900 truncate">
+                                                            <div class="text-sm font-medium text-gray-900 break-all whitespace-normal">
                                                                 {{ $file->file_name }}
                                                             </div>
                                                             <div class="text-xs text-gray-500">
@@ -5599,7 +5599,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <div class="flex items-center px-4 py-3 border-b border-teal-100 last:border-b-0 bg-white">
                                                     <i class="fa-regular fa-file-lines text-teal-500 flex-shrink-0 mr-3"></i>
                                                     <div class="flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $file->file_name }}</p>
+                                                        <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
                                                             {{ $file->created_at->format('M d, Y') }} •
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
@@ -5626,7 +5626,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <div class="flex items-center px-4 py-3 border-b border-blue-100 last:border-b-0 bg-white">
                                                     <i class="fa-regular fa-file text-blue-500 flex-shrink-0 mr-3"></i>
                                                     <div class="flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $file->file_name }}</p>
+                                                        <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
                                                             {{ $file->created_at->format('M d, Y') }} •
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
