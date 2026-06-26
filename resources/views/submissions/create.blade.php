@@ -432,11 +432,6 @@
                     <div x-show="step === 1"></div> <!-- Spacer -->
 
                     <div class="flex items-center">
-                        <button type="button" @click="saveDraft()"
-                            class="border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-6 py-2 rounded-lg text-sm font-medium transition mr-2">
-                            Save
-                        </button>
-
                         <button type="button" x-show="step < 4" @click="nextStep()"
                             class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition">
                             Next <i class="fa-solid fa-arrow-right ml-1"></i>
@@ -723,7 +718,7 @@
                             behavior: 'smooth'
                         });
                     } else {
-                        this.step++;
+                        this.saveDraft(this.step + 1);
                     }
                 },
 
@@ -765,7 +760,7 @@
                     this.$refs.form.submit();
                 },
 
-                saveDraft() {
+                saveDraft(targetStep = null) {
                     if (commentsEditorInstance) {
                         document.querySelector('#commentsHidden').value = commentsEditorInstance.getData();
                     }
@@ -783,7 +778,7 @@
                         stepInput.name = 'current_step';
                         form.appendChild(stepInput);
                     }
-                    stepInput.value = this.step;
+                    stepInput.value = targetStep !== null ? targetStep : this.step;
 
                     form.submit();
                 },

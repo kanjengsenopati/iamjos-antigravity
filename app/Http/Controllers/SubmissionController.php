@@ -208,10 +208,45 @@ class SubmissionController extends Controller
     /**
      * Show the form for creating a new submission.
      */
-    public function create(Request $request): View
+    public function create(Request $request): View|\Illuminate\Http\RedirectResponse
     {
         $journal = $this->getJournal();
         $user = auth()->user();
+
+        // Auto direct to last draft if no draft_id is specified
+        $draftId = $request->query('draft_id');
+        if (!$draftId) {
+            $existingDraft = Submission::where('journal_id', $journal->id)
+                ->where('user_id', $user->id)
+                ->where('status', Submission::STATUS_DRAFT)
+                ->latest()
+                ->first();
+
+            if ($existingDraft) {
+                $currentStep = $existingDraft->metadata['current_step'] ?? 1;
+                return redirect()->route('journal.submissions.create', [
+                    'journal' => $journal->slug,
+                    'draft_id' => $existingDraft->id,
+                    'step' => $currentStep
+                ]);
+            }
+        } else {
+            // Jika ada draft_id tetapi tidak ada parameter step di query, redirect dengan menyertakan step
+            if (!$request->has('step')) {
+                $existingDraft = Submission::where('id', $draftId)
+                    ->where('user_id', $user->id)
+                    ->where('status', Submission::STATUS_DRAFT)
+                    ->first();
+                if ($existingDraft) {
+                    $currentStep = $existingDraft->metadata['current_step'] ?? 1;
+                    return redirect()->route('journal.submissions.create', [
+                        'journal' => $journal->slug,
+                        'draft_id' => $existingDraft->id,
+                        'step' => $currentStep
+                    ]);
+                }
+            }
+        }
 
         // Get active sections
         $sections = Section::where('journal_id', $journal->id)
@@ -225,7 +260,6 @@ class SubmissionController extends Controller
             ->get();
 
         $draft = null;
-        $draftId = $request->query('draft_id');
         if ($draftId) {
             $draft = Submission::where('id', $draftId)
                 ->where('user_id', $user->id)
