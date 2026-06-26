@@ -150,6 +150,7 @@ class ProfileController extends Controller
         $validated = $request->validate([
             // Identity
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('users')->ignore($user->id)],
             'given_name' => ['nullable', 'string', 'max:255'],
             'family_name' => ['nullable', 'string', 'max:255'],
             'affiliation' => ['nullable', 'string', 'max:500'],

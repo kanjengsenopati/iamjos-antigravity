@@ -235,16 +235,29 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                             <!-- Public Name -->
-                            <div class="md:col-span-2">
+                            <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
                                     Public Name <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="name" id="name"
                                     value="{{ old('name', $user->name) }}" required
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('name') border-red-500 @enderror">
-                                <p class="mt-1 text-xs text-gray-500">Your public display name (how you want to be
-                                    known)</p>
+                                <p class="mt-1 text-xs text-gray-500">Your public display name (how you want to be known)</p>
                                 @error('name')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Username -->
+                            <div>
+                                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Username <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="username" id="username"
+                                    value="{{ old('username', $user->username) }}" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('username') border-red-500 @enderror">
+                                <p class="mt-1 text-xs text-gray-500">Your unique, updatable username identifier</p>
+                                @error('username')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
