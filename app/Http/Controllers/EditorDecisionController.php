@@ -116,6 +116,26 @@ class EditorDecisionController extends Controller
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send reviewer invitation email: ' . $e->getMessage());
             }
+
+            // Notify other assigned editors
+            try {
+                $otherEditors = $submission->activeEditors()
+                    ->where('user_id', '!=', auth()->id())
+                    ->with('user')->get()
+                    ->map(fn($a) => $a->user)
+                    ->filter();
+
+                foreach ($otherEditors as $otherEditor) {
+                    $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                        $submission,
+                        'Reviewer Assigned',
+                        "Reviewer {$reviewer->name} has been assigned to review the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
+                        url("/{$journal->slug}/submissions/{$submission->slug}")
+                    ));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to notify other editors of reviewer assignment: ' . $e->getMessage());
+            }
         }
 
         // Update submission stage if needed
@@ -146,9 +166,45 @@ class EditorDecisionController extends Controller
             return back()->with('error', 'Cannot remove a completed review.');
         }
 
+        $reviewer = $assignment->reviewer;
+        $submission = $assignment->submission;
         $assignment->update([
             'status' => ReviewAssignment::STATUS_CANCELLED,
         ]);
+
+        if ($reviewer) {
+            try {
+                // Notify reviewer
+                $reviewer->notify(new \App\Notifications\WorkflowEventNotification(
+                    $submission,
+                    'Review Invitation Cancelled',
+                    "The review invitation for \"{$submission->title}\" has been cancelled.",
+                    url("/")
+                ));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send reviewer cancellation email: ' . $e->getMessage());
+            }
+        }
+
+        try {
+            // Notify other assigned editors
+            $otherEditors = $submission->activeEditors()
+                ->where('user_id', '!=', auth()->id())
+                ->with('user')->get()
+                ->map(fn($a) => $a->user)
+                ->filter();
+
+            foreach ($otherEditors as $otherEditor) {
+                $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                    $submission,
+                    'Reviewer Assignment Cancelled',
+                    "The review assignment for {$reviewer->name} on \"{$submission->title}\" has been cancelled by " . auth()->user()->name . ".",
+                    url("/{$journal->slug}/submissions/{$submission->slug}")
+                ));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to notify other editors of reviewer cancellation: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Reviewer assignment cancelled.');
     }
@@ -231,6 +287,33 @@ class EditorDecisionController extends Controller
                 \Illuminate\Support\Facades\Log::error('Failed to send submission decision email: ' . $e->getMessage());
             }
 
+            // Notify other assigned editors
+            try {
+                $otherEditors = $submission->activeEditors()
+                    ->where('user_id', '!=', auth()->id())
+                    ->with('user')->get()
+                    ->map(fn($a) => $a->user)
+                    ->filter();
+
+                $decisionLabels = [
+                    'accept' => 'Accept Submission',
+                    'reject' => 'Decline Submission',
+                    'revision' => 'Request Revisions',
+                ];
+                $decisionLabel = $decisionLabels[$validated['decision']] ?? $validated['decision'];
+
+                foreach ($otherEditors as $otherEditor) {
+                    $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                        $submission,
+                        'Editorial Decision Recorded',
+                        "An editorial decision of \"{$decisionLabel}\" has been recorded for the submission \"{$submission->title}\" by " . auth()->user()->name . ".",
+                        url("/{$journal->slug}/submissions/{$submission->slug}")
+                    ));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to notify other editors of editorial decision: ' . $e->getMessage());
+            }
+
             // Send WhatsApp notification based on decision type
             try {
                 $waTemplate = match ($validated['decision']) {
@@ -287,6 +370,35 @@ class EditorDecisionController extends Controller
             'status' => Submission::STATUS_UNDER_REVIEW,
             'stage' => Submission::STAGE_REVIEW,
         ]);
+
+        // Notify author
+        if ($submission->author) {
+            try {
+                $submission->author->notify(new \App\Notifications\SubmissionDecision($submission, 'under_review'));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to notify author on send to review: ' . $e->getMessage());
+            }
+        }
+
+        // Notify other assigned editors
+        try {
+            $otherEditors = $submission->activeEditors()
+                ->where('user_id', '!=', auth()->id())
+                ->with('user')->get()
+                ->map(fn($a) => $a->user)
+                ->filter();
+
+            foreach ($otherEditors as $otherEditor) {
+                $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                    $submission,
+                    'Submission Sent to Review',
+                    "Submission \"{$submission->title}\" has been sent to the Review stage by " . auth()->user()->name . ".",
+                    url("/{$journal->slug}/submissions/{$submission->slug}")
+                ));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to notify other editors on send to review: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Submission sent back to review.');
     }

@@ -337,8 +337,33 @@ class ProductionWorkflowController extends Controller
             'published_at' => now(),
         ]);
 
-        // TODO: Trigger SubmissionPublished event to notify author
-        // event(new SubmissionPublished($submission));
+        // Notify author via email
+        if ($submission->author) {
+            try {
+                $submission->author->notify(new \App\Notifications\ArticlePublished($submission, $submission->issue));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send article published email to author from production: ' . $e->getMessage());
+            }
+        }
+
+        // Notify assigned editors via email
+        try {
+            $assignedEditors = $submission->activeEditors()
+                ->with('user')->get()
+                ->map(fn($a) => $a->user)
+                ->filter();
+
+            foreach ($assignedEditors as $assignedEditor) {
+                $assignedEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                    $submission,
+                    'Submission Published',
+                    "The submission \"{$submission->title}\" has been published in " . ($submission->issue?->identifier ?? 'the journal') . ".",
+                    url("/{$journalModel->slug}/submissions/{$submission->slug}")
+                ));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to notify editors of publication from production: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Submission has been published successfully!');
     }

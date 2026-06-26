@@ -314,6 +314,35 @@ class PublicationController extends Controller
             'status' => Submission::STATUS_PUBLISHED,
             'published_at' => $publication->date_published ?? now(),
         ]);
+
+        // Notify author via email
+        if ($submission->author) {
+            try {
+                $submission->author->notify(new \App\Notifications\ArticlePublished($submission, $publication->issue));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send article published email to author: ' . $e->getMessage());
+            }
+        }
+
+        // Notify assigned editors via email
+        try {
+            $assignedEditors = $submission->activeEditors()
+                ->with('user')->get()
+                ->map(fn($a) => $a->user)
+                ->filter();
+
+            foreach ($assignedEditors as $assignedEditor) {
+                $assignedEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                    $submission,
+                    'Submission Published',
+                    "The submission \"{$submission->title}\" has been published in " . ($publication->issue?->identifier ?? 'the journal') . ".",
+                    url("/{$journal}/submissions/{$submission->slug}")
+                ));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to notify editors of publication: ' . $e->getMessage());
+        }
+
         return back()->with('success', 'Publication is now live!');
     }
     /**

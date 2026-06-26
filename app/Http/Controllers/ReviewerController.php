@@ -148,6 +148,25 @@ class ReviewerController extends Controller
             Log::error('Failed to send WhatsApp notification for reviewer acceptance: ' . $e->getMessage());
         }
 
+        // Notify assigned editors via email
+        try {
+            $assignedEditors = $assignment->submission->activeEditors()
+                ->with('user')->get()
+                ->map(fn($a) => $a->user)
+                ->filter();
+
+            foreach ($assignedEditors as $assignedEditor) {
+                $assignedEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                    $assignment->submission,
+                    'Review Invitation Accepted',
+                    "Reviewer {$assignment->reviewer->name} has accepted the invitation to review the submission: \"{$assignment->submission->title}\".",
+                    url("/{$journal->slug}/submissions/{$assignment->submission->slug}?tab=review")
+                ));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to notify editors of reviewer acceptance: ' . $e->getMessage());
+        }
+
         return redirect()->route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->slug])
             ->with('success', 'Review invitation accepted. You can now submit your review.');
     }
@@ -190,6 +209,27 @@ class ReviewerController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Failed to send WhatsApp notification for reviewer decline: ' . $e->getMessage());
+        }
+
+        // Notify assigned editors via email
+        try {
+            $assignedEditors = $assignment->submission->activeEditors()
+                ->with('user')->get()
+                ->map(fn($a) => $a->user)
+                ->filter();
+
+            $declineReason = $request->input('reason') ? "Reason: " . $request->input('reason') : "No reason provided.";
+
+            foreach ($assignedEditors as $assignedEditor) {
+                $assignedEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                    $assignment->submission,
+                    'Review Invitation Declined',
+                    "Reviewer {$assignment->reviewer->name} has declined the invitation to review the submission: \"{$assignment->submission->title}\".\n\n{$declineReason}",
+                    url("/{$journal->slug}/submissions/{$assignment->submission->slug}?tab=review")
+                ));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to notify editors of reviewer decline: ' . $e->getMessage());
         }
 
         return redirect()->route('journal.reviewer.index', ['journal' => $journal->slug])

@@ -192,6 +192,27 @@ class SubmissionWorkflowController extends Controller
                 \Illuminate\Support\Facades\Log::error('Failed to send editor assignment email: ' . $e->getMessage());
             }
 
+            // Notify other assigned editors
+            try {
+                $otherEditors = $submission->activeEditors()
+                    ->where('user_id', '!=', $user->id)
+                    ->where('user_id', '!=', auth()->id())
+                    ->with('user')->get()
+                    ->map(fn($a) => $a->user)
+                    ->filter();
+
+                foreach ($otherEditors as $otherEditor) {
+                    $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                        $submission,
+                        'New Editor Assigned',
+                        "{$user->name} has been assigned as an editor to the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
+                        url("/{$journal->slug}/submissions/{$submission->slug}")
+                    ));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send editor assignment notification to other editors: ' . $e->getMessage());
+            }
+
             // Log the event
             SubmissionLog::log(
                 submission:  $submission,
@@ -224,7 +245,39 @@ class SubmissionWorkflowController extends Controller
             abort(404);
         }
 
+        $removedUser = $assignment->user;
         $assignment->update(['is_active' => false]);
+
+        if ($removedUser) {
+            try {
+                // Notify the removed editor
+                $removedUser->notify(new \App\Notifications\WorkflowEventNotification(
+                    $submission,
+                    'Editor Unassigned',
+                    "You have been unassigned from the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
+                    url("/{$journal->slug}/submissions/{$submission->slug}")
+                ));
+
+                // Notify other assigned editors
+                $otherEditors = $submission->activeEditors()
+                    ->where('user_id', '!=', $removedUser->id)
+                    ->where('user_id', '!=', auth()->id())
+                    ->with('user')->get()
+                    ->map(fn($a) => $a->user)
+                    ->filter();
+
+                foreach ($otherEditors as $otherEditor) {
+                    $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                        $submission,
+                        'Editor Unassigned',
+                        "{$removedUser->name} has been unassigned from the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
+                        url("/{$journal->slug}/submissions/{$submission->slug}")
+                    ));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send editor unassignment notification: ' . $e->getMessage());
+            }
+        }
 
         return back()->with('success', 'Editor assignment removed.');
     }
@@ -279,6 +332,55 @@ class SubmissionWorkflowController extends Controller
                 case 'decline':
                     $submission->update(['status' => Submission::STATUS_REJECTED]);
                     break;
+            }
+
+            // Notify author and other assigned editors if action is performed
+            if ($action) {
+                // Notify author
+                if ($submission->author) {
+                    try {
+                        $notificationDecision = match ($action) {
+                            'send_to_review' => 'under_review',
+                            'accept' => 'accepted',
+                            'request_revisions' => 'revision_required',
+                            'decline' => 'rejected',
+                            default => null,
+                        };
+                        if ($notificationDecision) {
+                            $submission->author->notify(new \App\Notifications\SubmissionDecision($submission, $notificationDecision));
+                        }
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Failed to notify author on stage action: ' . $e->getMessage());
+                    }
+                }
+
+                // Notify other assigned editors
+                try {
+                    $otherEditors = $submission->activeEditors()
+                        ->where('user_id', '!=', auth()->id())
+                        ->with('user')->get()
+                        ->map(fn($a) => $a->user)
+                        ->filter();
+
+                    $actionLabels = [
+                        'send_to_review' => 'Sent to Review stage',
+                        'accept' => 'Accepted',
+                        'request_revisions' => 'Revisions Requested',
+                        'decline' => 'Declined',
+                    ];
+                    $actionLabel = $actionLabels[$action] ?? 'updated';
+
+                    foreach ($otherEditors as $otherEditor) {
+                        $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+                            $submission,
+                            'Submission Stage Updated',
+                            "Submission \"{$submission->title}\" has been {$actionLabel} by " . auth()->user()->name . ".",
+                            url("/{$journal->slug}/submissions/{$submission->slug}")
+                        ));
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to notify other editors on stage action: ' . $e->getMessage());
+                }
             }
 
             DB::commit();
