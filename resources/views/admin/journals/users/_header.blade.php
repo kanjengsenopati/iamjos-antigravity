@@ -56,18 +56,18 @@
     <div class="flex items-center gap-3">
         @if($activeTab === 'users')
             <a href="{{ route($routePrefix . '.enroll', ['journal' => $journal->slug]) }}"
-                class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 bg-white rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 bg-white rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors shadow-[0_2px_4px_rgba(0,0,0,0.02)] whitespace-nowrap">
                 <i class="fa-solid fa-user-plus text-slate-400"></i>
                 Enroll Existing User
             </a>
             <a href="{{ route($routePrefix . '.create', ['journal' => $journal->slug]) }}"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors shadow-sm shadow-blue-100">
+                class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors shadow-sm shadow-blue-100 whitespace-nowrap">
                 <i class="fa-solid fa-plus text-white"></i>
                 Create New User
             </a>
         @elseif($activeTab === 'roles')
             <a href="{{ route($routePrefix . '.roles.create', ['journal' => $journal->slug]) }}"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors shadow-sm shadow-blue-100">
+                class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors shadow-sm shadow-blue-100 whitespace-nowrap">
                 <i class="fa-solid fa-plus text-white"></i>
                 Create New Role
             </a>

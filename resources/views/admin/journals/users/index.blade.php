@@ -81,7 +81,8 @@
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
                     class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white transition-colors"
-                    placeholder="Search by name, username, or email...">
+                    placeholder="Search by name, username, or email..."
+                    style="padding-left: 2.5rem;">
             </div>
 
             <div class="relative min-w-[200px]">
@@ -90,7 +91,8 @@
                 </div>
                 <select name="role"
                     class="block w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white appearance-none cursor-pointer"
-                    onchange="this.form.submit()">
+                    onchange="this.form.submit()"
+                    style="padding-left: 2.5rem; padding-right: 2.5rem;">
                     <option value="">All Roles</option>
                     @foreach ($roles as $roleName)
                         <option value="{{ $roleName }}" {{ request('role') == $roleName ? 'selected' : '' }}>
