@@ -340,38 +340,40 @@
                             <h3 class="text-lg font-bold text-slate-800">Contact Information</h3>
                         </div>
                         <div class="grid grid-cols-1 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
-                            <!-- Email (Read-only) -->
+                            <!-- Email Address -->
                             <div>
                                 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
                                     Email Address <span class="text-red-500">*</span>
                                 </label>
                                 <input type="email" name="email" id="email"
-                                    value="{{ old('email', $user->email) }}" required disabled
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed">
-                                <p class="mt-1 text-xs text-gray-500">Email cannot be changed directly. Contact admin
-                                    if needed.</p>
+                                    value="{{ old('email', $user->email) }}" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <p class="mt-1 text-xs text-gray-500">Your primary email address for communication and notifications.</p>
                             </div>
 
-                            <!-- Phone Number with WhatsApp -->
-                            <div>
-                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Phone / WhatsApp Number
-                                </label>
-                                <div class="relative">
-                                    <input type="tel" name="phone" id="phone"
-                                        value="{{ old('phone', $user->phone) }}" placeholder="628123456789"
-                                        class="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                </div>
-                                <div class="mt-2 flex items-start">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fa-brands fa-whatsapp mr-1"></i>
-                                        WhatsApp Active
-                                    </span>
-                                    <p class="ml-2 text-xs text-gray-500">Ensure this number is active on WhatsApp for
-                                        notifications. Format: 628...</p>
-                                </div>
-                            </div>
+                             <!-- Phone Number with WhatsApp -->
+                             <div>
+                                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                     Phone / WhatsApp Number
+                                 </label>
+                                 <div class="relative">
+                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                         <i class="fa-solid fa-phone text-slate-400"></i>
+                                     </div>
+                                     <input type="tel" name="phone" id="phone"
+                                         value="{{ old('phone', $user->phone) }}" placeholder="+628123456789 atau +15551234567"
+                                         class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                         style="padding-left: 2.5rem !important;">
+                                 </div>
+                                 <div class="mt-2 flex items-start">
+                                     <span
+                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                         <i class="fa-brands fa-whatsapp mr-1"></i>
+                                         WhatsApp Active
+                                     </span>
+                                     <p class="ml-2 text-xs text-gray-500">Ensure this number is active on WhatsApp with country code (e.g. +628... or +1...) for notifications.</p>
+                                 </div>
+                             </div>
 
                             <!-- Mailing Address -->
                             <div>

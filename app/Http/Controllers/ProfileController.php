@@ -156,7 +156,7 @@ class ProfileController extends Controller
             'country' => ['nullable', 'string', 'max:100'],
             
             // Contact
-            // 'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s()]*$/'],
             'mailing_address' => ['nullable', 'string', 'max:1000'],
             
