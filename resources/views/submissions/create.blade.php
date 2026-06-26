@@ -582,31 +582,33 @@
                 draggedIndex: null,
                 dragEnabledIndex: null,
                 authors: 
-                    @if($draft && $draft->authors->isNotEmpty())
-                        @json($draft->authors->map(function($author) {
-                            return [
-                                'first_name' => $author->first_name,
-                                'last_name' => $author->last_name,
-                                'email' => $author->email,
-                                'affiliation' => $author->affiliation,
-                                'country' => $author->country,
+                    @php
+                        if ($draft && $draft->authors->isNotEmpty()) {
+                            $authorsData = $draft->authors->map(function($author) {
+                                return [
+                                    'first_name' => $author->first_name,
+                                    'last_name' => $author->last_name,
+                                    'email' => $author->email,
+                                    'affiliation' => $author->affiliation,
+                                    'country' => $author->country,
+                                ];
+                            })->toArray();
+                        } else {
+                            $parts = explode(' ', auth()->user()->name, 2);
+                            $first = old('authors.0.first_name', $parts[0]);
+                            $last = old('authors.0.last_name', $parts[1] ?? '');
+                            $authorsData = [
+                                [
+                                    'first_name' => $first,
+                                    'last_name' => $last,
+                                    'email' => old('authors.0.email', auth()->user()->email),
+                                    'affiliation' => old('authors.0.affiliation', auth()->user()->affiliation),
+                                    'country' => old('authors.0.country', auth()->user()->country),
+                                ]
                             ];
-                        }))
-                    @else
-                        [
-                            @php
-                                $parts = explode(' ', auth()->user()->name, 2);
-                                $first = old('authors.0.first_name', $parts[0]);
-                                $last = old('authors.0.last_name', $parts[1] ?? '');
-                            @endphp {
-                                first_name: {!! json_encode($first) !!},
-                                last_name: {!! json_encode($last) !!},
-                                email: {!! json_encode(old('authors.0.email', auth()->user()->email)) !!},
-                                affiliation: {!! json_encode(old('authors.0.affiliation', auth()->user()->affiliation)) !!},
-                                country: {!! json_encode(old('authors.0.country', auth()->user()->country)) !!}
-                            }
-                        ]
-                    @endif
+                        }
+                    @endphp
+                    @json($authorsData)
                 ,
 
                 dragStart(event, index) {
