@@ -254,7 +254,7 @@
                                     Username <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="username" id="username"
-                                    value="{{ old('username', $user->username) }}" required
+                                    value="{{ old('username', $user->username ?? strstr($user->email, '@', true)) }}" required
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('username') border-red-500 @enderror">
                                 <p class="mt-1 text-xs text-gray-500">Your unique, updatable username identifier</p>
                                 @error('username')

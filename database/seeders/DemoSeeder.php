@@ -179,6 +179,7 @@ class DemoSeeder extends Seeder
                 ['email' => $userData['email']],
                 [
                     'name'              => $userData['name'],
+                    'username'          => strstr($userData['email'], '@', true),
                     'password'          => Hash::make($demoPassword),
                     'email_verified_at' => now(),
                     'affiliation'       => $userData['affiliation'],

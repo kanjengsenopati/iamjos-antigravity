@@ -40,6 +40,7 @@ class SuperAdminSeeder extends Seeder
             ['email' => $email],
             [
                 'name'              => $name,
+                'username'          => strstr($email, '@', true) ?: 'superadmin',
                 'password'          => Hash::make($password),
                 'email_verified_at' => now(),
             ]
