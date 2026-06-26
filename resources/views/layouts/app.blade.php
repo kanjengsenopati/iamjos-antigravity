@@ -386,20 +386,25 @@
                 x-transition:leave="transition ease-in duration-100"
                 x-transition:leave-start="opacity-100 translate-y-0"
                 x-transition:leave-end="opacity-0 translate-y-[-10px]"
-                class="absolute left-2 top-[calc(100%-0.5rem)] min-w-[calc(100%-1rem)] w-max max-w-[90vw] bg-white border border-gray-200 shadow-xl rounded-xl z-[100] overflow-hidden">
+                class="absolute left-2 top-[calc(100%-0.5rem)] min-w-[calc(100%-1rem)] w-max max-w-[90vw] bg-white border border-gray-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[24px] z-[100] overflow-hidden">
                 <div class="py-2">
-                    <p class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50 border-b border-gray-100">
+                    <p class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/50 border-b border-slate-100">
                         Switch Journal
                     </p>
                     <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
                         <template x-for="j in userJournals" :key="j.id">
                             <a :href="`/${j.slug}/submissions`"
-                                class="block px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center justify-between group gap-6">
-                                <span class="whitespace-nowrap font-medium" x-text="j.name"></span>
+                                class="px-5 py-3 text-sm transition flex items-center justify-between group gap-6 border-b border-slate-50 last:border-0"
+                                :class="'{{ $journal?->id }}' === j.id ? 'bg-emerald-50/50 text-slate-900 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'">
+                                <span class="whitespace-nowrap" x-text="j.name"></span>
                                 <template x-if="'{{ $journal?->id }}' === j.id">
-                                    <div class="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 shrink-0">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                                    </div>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200/50 shrink-0">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 relative flex">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                        </span>
+                                        Active
+                                    </span>
                                 </template>
                             </a>
                         </template>
@@ -409,10 +414,10 @@
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-100 mt-1 pt-1">
+                    <div class="border-t border-slate-100 mt-1">
                         <a href="{{ route('journal.select') }}"
-                            class="block px-4 py-3 text-sm font-medium text-gray-500 hover:text-indigo-600 hover:bg-gray-50 transition-colors">
-                            <i class="fa-solid fa-grid-2 mr-2"></i> View All Journals
+                            class="block px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
+                            <i class="fa-solid fa-list-check mr-2"></i> View All Journals
                         </a>
                     </div>
                 </div>

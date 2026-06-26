@@ -257,29 +257,34 @@
                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
-                class="absolute top-14 left-4 right-4 z-50 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1"
+                class="absolute top-14 left-4 right-4 z-50 w-64 bg-white border border-gray-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[24px] py-1"
                 :class="sidebarCollapsed ? 'left-16 top-2' : 'left-4 right-4 top-14'">
 
-                <div class="px-3 py-2 border-b border-gray-50 bg-gray-50/50">
-                    <span class="text-xs font-semibold text-gray-500 uppercase">My Journals</span>
+                <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">My Journals</span>
                 </div>
 
                 <div class="max-h-60 overflow-y-auto">
                     <template x-for="j in userJournals" :key="j.id">
                         <a :href="`/${j.slug}/dashboard`"
-                            class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"
-                            :class="'{{ $journal?->id }}' == j.id ? 'bg-indigo-50/50' : ''">
+                            class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"
+                            :class="'{{ $journal?->id }}' == j.id ? 'bg-emerald-50/50 text-slate-900 font-semibold' : 'text-slate-700'">
                             <div
-                                class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-bold"
-                                :class="'{{ $journal?->id }}' == j.id ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'">
+                                class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-bold transition-colors"
+                                :class="'{{ $journal?->id }}' == j.id ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'">
                                 <span x-text="(j.abbreviation || j.name).substring(0, 2).toUpperCase()"></span>
                             </div>
                             <span
-                                class="text-sm text-gray-700 truncate"
-                                :class="'{{ $journal?->id }}' == j.id ? 'font-medium text-indigo-900' : ''"
+                                class="text-sm truncate"
                                 x-text="j.name"></span>
                             <template x-if="'{{ $journal?->id }}' == j.id">
-                                <i class="fa-solid fa-check text-indigo-600 text-xs ml-auto"></i>
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200/50 shrink-0 ml-auto">
+                                    <span class="w-1 h-1 rounded-full bg-emerald-500 relative flex">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
+                                    </span>
+                                    Active
+                                </span>
                             </template>
                         </a>
                     </template>
@@ -289,10 +294,10 @@
                     </div>
                 </div>
 
-                <div class="border-t border-gray-100 pt-1 mt-1">
+                <div class="border-t border-slate-100 pt-1 mt-1">
                     <a href="{{ route('journal.select') }}"
-                        class="block px-4 py-2 text-xs text-gray-500 hover:text-indigo-600 hover:bg-gray-50">
-                        <i class="fa-solid fa-grid-2 text-gray-400 mr-2"></i> View All Journals
+                        class="block px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
+                        <i class="fa-solid fa-list-check mr-2"></i> View All Journals
                     </a>
                 </div>
             </div>

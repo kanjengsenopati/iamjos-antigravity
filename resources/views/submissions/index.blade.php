@@ -174,7 +174,8 @@
                         <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                         <input type="text" name="search" x-model="search" @keydown.enter.prevent="submitFilter()" 
                             placeholder="Search"
-                            class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-48">
+                            class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-48"
+                            style="padding-left: 2.25rem !important;">
                     </div>
                 </form>
 

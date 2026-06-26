@@ -28,7 +28,8 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="relative flex-1 max-w-md">
                 <input type="text" placeholder="Search users..."
-                    class="pl-10 pr-4 py-2 w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+                    class="pl-10 pr-4 py-2 w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500"
+                    style="padding-left: 2.5rem !important;">
                 <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

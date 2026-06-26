@@ -19,7 +19,8 @@
             <div x-show="activeTab === 'import'" x-transition class="w-full md:w-auto">
                 <div class="relative">
                     <input type="text" x-model="search" placeholder="Search tools..."
-                        class="w-full md:w-72 pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-400 focus:ring focus:ring-indigo-100 transition-all text-sm">
+                        class="w-full md:w-72 pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-400 focus:ring focus:ring-indigo-100 transition-all text-sm"
+                        style="padding-left: 2.5rem !important;">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

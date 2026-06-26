@@ -147,7 +147,8 @@
                     <div class="relative flex-1 sm:w-72">
                         <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input type="text" x-model="search" placeholder="Search journals by name or abbr..." 
-                            class="w-full pl-11 pr-4 py-2 bg-white border border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded-lg text-slate-800 placeholder-gray-400 transition-all shadow-sm">
+                            class="w-full pl-11 pr-4 py-2 bg-white border border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded-lg text-slate-800 placeholder-gray-400 transition-all shadow-sm"
+                            style="padding-left: 2.75rem !important;">
                     </div>
                     
                     <!-- Filter -->

@@ -75,7 +75,8 @@ $journal = current_journal();
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm transition-colors group-focus-within:text-indigo-500"></i>
                 <input type="text" name="search" x-model="search" @keydown.enter.prevent="submitSearch()"
                     placeholder="Search by title or ID..."
-                    class="pl-9 pr-4 py-2 text-sm border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 w-48 lg:w-64 transition-all">
+                    class="pl-9 pr-4 py-2 text-sm border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 w-48 lg:w-64 transition-all"
+                    style="padding-left: 2.25rem !important;">
             </form>
 
             <!-- Filters Toggle -->
