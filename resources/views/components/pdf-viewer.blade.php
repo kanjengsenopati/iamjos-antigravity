@@ -5,6 +5,9 @@
     'downloadUrl' => null,
 ])
 
+<!-- docx-preview CSS (Primary: jsDelivr, Fallback: unpkg) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.css" onerror="this.onerror=null; this.href='https://unpkg.com/docx-preview@0.4.1/dist/docx-preview.css';" />
+
 <div class="pdf-viewer-container" style="height: {{ $height }}; display: flex; flex-direction: column; overflow: hidden;">
     {{-- Toolbar --}}
     <div id="pdf-toolbar" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
@@ -146,12 +149,12 @@
         }
     }
 
-    // Dynamic script loading helper with deduplication
-    function loadScript(src, checkGlobal) {
+    // Dynamic script loading helper with failover redundancy and deduplication
+    function loadScript(src, fallbackSrc, checkGlobal) {
         if (checkGlobal && window[checkGlobal]) {
             return Promise.resolve();
         }
-        const existing = document.querySelector(`script[src="${src}"]`);
+        const existing = document.querySelector(`script[src="${src}"], script[src="${fallbackSrc}"]`);
         if (existing) {
             if (checkGlobal && window[checkGlobal]) return Promise.resolve();
             return new Promise((resolve) => {
@@ -162,25 +165,16 @@
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = src;
-            script.crossOrigin = 'anonymous';
             script.onload = resolve;
-            script.onerror = () => reject(new Error('Failed to load script: ' + src));
+            script.onerror = () => {
+                console.warn('Primary script failed to load from ' + src + ', trying fallback: ' + fallbackSrc);
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = fallbackSrc;
+                fallbackScript.onload = resolve;
+                fallbackScript.onerror = () => reject(new Error('Failed to load script: ' + src + ' and fallback: ' + fallbackSrc));
+                document.head.appendChild(fallbackScript);
+            };
             document.head.appendChild(script);
-        });
-    }
-
-    // Dynamic style loading helper
-    function loadStyle(href) {
-        const existing = document.querySelector(`link[href="${href}"]`);
-        if (existing) return Promise.resolve();
-        return new Promise((resolve, reject) => {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = href;
-            link.crossOrigin = 'anonymous';
-            link.onload = resolve;
-            link.onerror = () => reject(new Error('Failed to load style: ' + href));
-            document.head.appendChild(link);
         });
     }
 
@@ -195,46 +189,51 @@
         const docxContainer = document.getElementById('docx-container');
         docxContainer.style.display = 'block';
 
-        // Load dependencies sequentially using Promise chain
-        loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', 'JSZip')
-            .then(() => {
-                return loadStyle('https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.css');
-            })
-            .then(() => {
-                return loadScript('https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js', 'docx');
-            })
-            .then(() => {
-                if (typeof window.docx === 'undefined') {
-                    throw new Error('docx-preview library failed to initialize.');
-                }
-                // Fetch the signed docx URL as arrayBuffer
-                return fetch(targetUrl);
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Server returned HTTP status ' + response.status + ' for document download.');
-                }
-                return response.arrayBuffer();
-            })
-            .then(arrayBuffer => {
-                const docxPreviewBody = document.getElementById('docx-preview-body');
-                docxPreviewBody.style.display = 'block';
+        // Load dependencies sequentially using Promise chain with failovers
+        loadScript(
+            'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+            'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js',
+            'JSZip'
+        )
+        .then(() => {
+            return loadScript(
+                'https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js',
+                'https://unpkg.com/docx-preview@0.4.1/dist/docx-preview.min.js',
+                'docx'
+            );
+        })
+        .then(() => {
+            if (typeof window.docx === 'undefined') {
+                throw new Error('docx-preview library failed to initialize.');
+            }
+            // Fetch the signed docx URL as arrayBuffer
+            return fetch(targetUrl);
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server returned HTTP status ' + response.status + ' for document download.');
+            }
+            return response.arrayBuffer();
+        })
+        .then(arrayBuffer => {
+            const docxPreviewBody = document.getElementById('docx-preview-body');
+            docxPreviewBody.style.display = 'block';
 
-                // Render using docx-preview
-                return window.docx.renderAsync(arrayBuffer, docxPreviewBody, null, {
-                    className: "docx",
-                    inWrapper: true,
-                    ignoreWidth: false,
-                    ignoreHeight: false,
-                    experimental: true
-                });
-            })
-            .then(() => {
-                document.getElementById('docx-loading').style.display = 'none';
-            })
-            .catch(error => {
-                showFallback(error);
+            // Render using docx-preview
+            return window.docx.renderAsync(arrayBuffer, docxPreviewBody, null, {
+                className: "docx",
+                inWrapper: true,
+                ignoreWidth: false,
+                ignoreHeight: false,
+                experimental: true
             });
+        })
+        .then(() => {
+            document.getElementById('docx-loading').style.display = 'none';
+        })
+        .catch(error => {
+            showFallback(error);
+        });
         return;
     }
 
