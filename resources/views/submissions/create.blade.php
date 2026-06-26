@@ -414,9 +414,9 @@
                             <dt class="text-sm font-medium text-gray-500">Contributors</dt>
                             <dd class="mt-1 text-sm text-gray-900" x-text="authors.length + ' author(s)'"></dd>
                         </div>
-                        <div x-show="references">
+                        <div x-show="references" class="sm:col-span-2">
                             <dt class="text-sm font-medium text-gray-500">References</dt>
-                            <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line truncate max-w-xs"
+                            <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line break-words"
                                 x-text="references"></dd>
                         </div>
                     </dl>
