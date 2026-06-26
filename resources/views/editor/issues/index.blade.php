@@ -13,16 +13,12 @@
             <!-- Header -->
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
                 <div>
-                    <h1 class="text-3xl font-bold text-indigo-700">
-                        Issue Management
-                    </h1>
-                    <p class="mt-1 text-gray-500">
-                        Manage journal issues and publication schedule
-                    </p>
+                    <x-text.h1>Issue Management</x-text.h1>
+                    <x-text.body class="text-slate-500 mt-1">Manage journal issues and publication schedule</x-text.body>
                 </div>
                 <div class="mt-4 md:mt-0">
                     <a href="{{ route('journal.issues.create', ['journal' => $journal->slug]) }}"
-                        class="inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:bg-indigo-700 transition-all duration-200">
+                        class="inline-flex items-center px-5 py-2.5 bg-primary-600 text-white rounded-xl font-medium shadow-sm hover:bg-primary-700 transition-all duration-200">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -101,42 +97,32 @@
             <!-- Tabs -->
             <div x-data="{ activeTab: 'future' }" class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
                 <!-- Tab Headers -->
-                <div class="bg-slate-50/50 border-b border-slate-200 px-2 pt-2">
-                    <nav class="flex gap-2">
-                        <button @click="activeTab = 'future'"
+                <div class="border-b border-slate-200 px-6">
+                    <nav class="-mb-px flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
+                        <button type="button" @click="activeTab = 'future'"
                             :class="activeTab === 'future'
-                                ? 'bg-white text-indigo-600 border-x border-t border-indigo-500 border-b-0 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
-                                : 'text-slate-500 hover:text-slate-700 border-transparent'"
-                            class="flex-1 py-4 px-6 text-center border-b-4 font-bold text-sm transition-all duration-300 -mb-[4px] relative">
-                            <div class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span>Future Issues</span>
-                                <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors"
-                                    :class="activeTab === 'future' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'">
-                                    {{ $upcomingCount }}
-                                </span>
-                            </div>
+                                ? 'border-primary-600 text-primary-600 font-semibold' 
+                                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                            class="flex-shrink-0 border-b-2 py-4 px-1 text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2">
+                            <i class="fa-solid fa-calendar text-base transition-colors" :class="activeTab === 'future' ? 'text-primary-600' : 'text-slate-400'"></i>
+                            <span>Future Issues</span>
+                            <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                :class="activeTab === 'future' ? 'bg-primary-600/10 text-primary-600' : 'bg-slate-100 text-slate-500'">
+                                {{ $upcomingCount }}
+                            </span>
                         </button>
 
-                        <button @click="activeTab = 'back'"
+                        <button type="button" @click="activeTab = 'back'"
                             :class="activeTab === 'back'
-                                ? 'bg-white text-indigo-600 border-x border-t border-indigo-500 border-b-0 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]' 
-                                : 'text-slate-500 hover:text-slate-700 border-transparent'"
-                            class="flex-1 py-4 px-6 text-center border-b-4 font-bold text-sm transition-all duration-300 -mb-[4px] relative">
-                            <div class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                </svg>
-                                <span>Back Issues</span>
-                                <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors"
-                                    :class="activeTab === 'back' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'">
-                                    {{ $publishedCount }}
-                                </span>
-                            </div>
+                                ? 'border-primary-600 text-primary-600 font-semibold' 
+                                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                            class="flex-shrink-0 border-b-2 py-4 px-1 text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2">
+                            <i class="fa-solid fa-box-archive text-base transition-colors" :class="activeTab === 'back' ? 'text-primary-600' : 'text-slate-400'"></i>
+                            <span>Back Issues</span>
+                            <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                :class="activeTab === 'back' ? 'bg-primary-600/10 text-primary-600' : 'bg-slate-100 text-slate-500'">
+                                {{ $publishedCount }}
+                            </span>
                         </button>
                     </nav>
                 </div>
@@ -147,17 +133,17 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach ($futureIssues as $issue)
                                 <div
-                                    class="group bg-gradient-to-br from-white to-gray-50 rounded-[24px] border border-gray-200 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
+                                    class="group bg-gradient-to-br from-white to-gray-50 rounded-[24px] border border-gray-200 overflow-hidden hover:shadow-lg hover:border-primary-200 transition-all duration-300">
                                     <!-- Cover Image -->
                                     <div
-                                        class="aspect-[3/4] bg-gradient-to-br from-indigo-100 to-indigo-200 relative overflow-hidden">
+                                        class="aspect-[3/4] bg-gradient-to-br from-blue-50 to-blue-100 relative overflow-hidden">
                                         @if ($issue->cover_path)
                                             <img src="{{ Storage::disk('public')->url($issue->cover_path) }}"
                                                 alt="{{ $issue->display_title }}"
                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                         @else
                                             <div
-                                                class="w-full h-full flex flex-col items-center justify-center text-indigo-600">
+                                                class="w-full h-full flex flex-col items-center justify-center text-primary-600">
                                                 <svg class="w-16 h-16 opacity-50" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -229,7 +215,7 @@
                             <p class="text-gray-500 mb-6">Create a new issue to start scheduling articles for publication.
                             </p>
                             <a href="{{ route('journal.issues.create', ['journal' => $journal->slug]) }}"
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 4v16m8-8H4" />
