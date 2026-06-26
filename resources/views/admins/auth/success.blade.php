@@ -133,9 +133,9 @@
                         <i class="fas fa-circle-check text-5xl"></i>
                     </div>
 
-                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-3">Password Telah Dikirim</h2>
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-3">Password Sent</h2>
                     <p class="text-slate-600 text-sm max-w-sm mb-8 leading-relaxed">
-                        Silakan periksa kotak masuk email Anda untuk mendapatkan password acak baru Anda.
+                        Please check your email inbox to get your new randomly generated password.
                     </p>
 
                     <a href="{{ route('login') }}"

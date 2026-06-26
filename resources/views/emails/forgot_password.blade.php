@@ -22,12 +22,12 @@
                     text-align: center;
                     margin-top: 1.25rem;
                 ">
-                Halo, {{$admin->name}}!
+                Hello, {{$admin->name}}!
             </h1>
             <p style="font-size: 0.75rem; color: black; text-align:center">
-                Kami menerima permintaan untuk mereset password akun Anda pada tanggal {{date('d/m/Y H:i')}} WIB.
-                Password Anda telah di-reset secara otomatis menjadi password baru yang dibuat secara acak di bawah ini.
-                Silakan gunakan password baru ini untuk masuk ke akun Anda. Demi keamanan, harap segera ubah password Anda setelah berhasil masuk.
+                We received a request to reset the password for your account on {{date('d/m/Y H:i')}}.
+                Your password has been automatically reset to a new randomly generated password below.
+                Please use this new password to log in to your account. For security reasons, please change your password immediately after logging in.
             </p>
             <div style="text-align: center; margin-top: 1.75rem; margin-bottom: 1.75rem;">
                 <div style="
