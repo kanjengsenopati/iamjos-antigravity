@@ -208,9 +208,10 @@ class SubmissionController extends Controller
     /**
      * Show the form for creating a new submission.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $journal = $this->getJournal();
+        $user = auth()->user();
 
         // Get active sections
         $sections = Section::where('journal_id', $journal->id)
@@ -223,7 +224,17 @@ class SubmissionController extends Controller
             ->ordered()
             ->get();
 
-        return view('submissions.create', compact('journal', 'sections', 'submissionChecklists'));
+        $draft = null;
+        $draftId = $request->query('draft_id');
+        if ($draftId) {
+            $draft = Submission::where('id', $draftId)
+                ->where('user_id', $user->id)
+                ->where('status', Submission::STATUS_DRAFT)
+                ->with(['authors', 'files'])
+                ->first();
+        }
+
+        return view('submissions.create', compact('journal', 'sections', 'submissionChecklists', 'draft'));
     }
 
     /**
@@ -269,11 +280,22 @@ class SubmissionController extends Controller
             // Count required checklists to validate all are checked
             $requiredChecklistCount = SubmissionChecklist::where('journal_id', $journal->id)->count();
 
+            $manuscriptRule = 'required|file|mimes:doc,docx,pdf|max:10240';
+            $draftId = $request->input('draft_id');
+            if ($draftId) {
+                $hasManuscript = SubmissionFile::where('submission_id', $draftId)
+                    ->where('file_type', SubmissionFile::TYPE_MANUSCRIPT)
+                    ->exists();
+                if ($hasManuscript) {
+                    $manuscriptRule = 'nullable|file|mimes:doc,docx,pdf|max:10240';
+                }
+            }
+
             $validated = $request->validate([
                 'section_id' => 'required|uuid|exists:sections,id',
                 'requirements' => $requiredChecklistCount > 0 ? ['required', 'array', "size:$requiredChecklistCount"] : 'nullable',
                 'requirements.*' => 'required',
-                'manuscript' => 'required|file|mimes:doc,docx,pdf|max:10240',
+                'manuscript' => $manuscriptRule,
                 'title' => 'required|string|max:500',
                 'subtitle' => 'nullable|string|max:500',
                 'abstract' => 'required|string',
@@ -296,20 +318,42 @@ class SubmissionController extends Controller
             DB::beginTransaction();
 
             try {
-                // 1. Create Submission
-                $submission = Submission::create([
-                    'journal_id' => $journal->id,
-                    'user_id' => $user->id,
-                    'section_id' => $validated['section_id'],
-                    'title' => $validated['title'],
-                    'subtitle' => $validated['subtitle'] ?? null,
-                    'abstract' => $validated['abstract'],
-                    'references' => $validated['references'] ?? null,
-                    'status' => Submission::STATUS_SUBMITTED,
-                    'stage' => Submission::STAGE_SUBMISSION,
-                    'stage_id' => 1,
-                    'submitted_at' => now(),
-                ]);
+                // 1. Create or Update Submission
+                if ($draftId) {
+                    $submission = Submission::where('id', $draftId)
+                        ->where('user_id', $user->id)
+                        ->first();
+
+                    if (!$submission) {
+                        throw new \Exception('Draft submission not found.');
+                    }
+
+                    $submission->update([
+                        'section_id' => $validated['section_id'],
+                        'title' => $validated['title'],
+                        'subtitle' => $validated['subtitle'] ?? null,
+                        'abstract' => $validated['abstract'],
+                        'references' => $validated['references'] ?? null,
+                        'status' => Submission::STATUS_SUBMITTED,
+                        'stage' => Submission::STAGE_SUBMISSION,
+                        'stage_id' => 1,
+                        'submitted_at' => now(),
+                    ]);
+                } else {
+                    $submission = Submission::create([
+                        'journal_id' => $journal->id,
+                        'user_id' => $user->id,
+                        'section_id' => $validated['section_id'],
+                        'title' => $validated['title'],
+                        'subtitle' => $validated['subtitle'] ?? null,
+                        'abstract' => $validated['abstract'],
+                        'references' => $validated['references'] ?? null,
+                        'status' => Submission::STATUS_SUBMITTED,
+                        'stage' => Submission::STAGE_SUBMISSION,
+                        'stage_id' => 1,
+                        'submitted_at' => now(),
+                    ]);
+                }
 
                 // 1.5 Sync Keywords (Many-to-Many)
                 if (!empty($validated['keywords'])) {
@@ -330,6 +374,17 @@ class SubmissionController extends Controller
                     $file = $request->file('manuscript');
                     $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", 'local');
 
+                    if ($draftId) {
+                        // Hapus manuskrip lama dari storage dan database
+                        $oldFiles = SubmissionFile::where('submission_id', $submission->id)
+                            ->where('file_type', SubmissionFile::TYPE_MANUSCRIPT)
+                            ->get();
+                        foreach ($oldFiles as $oldFile) {
+                            Storage::disk('local')->delete($oldFile->file_path);
+                            $oldFile->delete();
+                        }
+                    }
+
                     $submission->update(['submission_file_path' => $path]);
 
                     SubmissionFile::create([
@@ -347,6 +402,10 @@ class SubmissionController extends Controller
 
                 // 3. Save Authors
                 $primaryContactIndex = (int)($validated['primary_contact'] ?? 0);
+
+                if ($draftId) {
+                    SubmissionAuthor::where('submission_id', $submission->id)->delete();
+                }
 
                 foreach ($validated['authors'] as $index => $authorData) {
                     $authorEmail = strtolower(trim($authorData['email']));
@@ -422,6 +481,157 @@ class SubmissionController extends Controller
             }
         } finally {
             $lock->release();
+        }
+    }
+
+    /**
+     * Save the submission draft.
+     */
+    public function saveDraft(Request $request): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        $user = auth()->user();
+
+        // Validasi minimal (hanya section_id yang wajib)
+        $validated = $request->validate([
+            'section_id' => 'required|uuid|exists:sections,id',
+            'title' => 'nullable|string|max:500',
+            'subtitle' => 'nullable|string|max:500',
+            'abstract' => 'nullable|string',
+            'references' => 'nullable|string',
+            'comments_for_editor' => 'nullable|string|max:5000',
+            'current_step' => 'nullable|integer|min:1|max:4',
+            'requirements' => 'nullable|array',
+            
+            'authors' => 'nullable|array',
+            'authors.*.first_name' => 'nullable|string|max:255',
+            'authors.*.last_name' => 'nullable|string|max:255',
+            'authors.*.email' => 'nullable|string|max:255',
+            'authors.*.affiliation' => 'nullable|string|max:255',
+            'authors.*.country' => 'nullable|string|max:100',
+            'primary_contact' => 'nullable|integer|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $draftId = $request->input('draft_id');
+            $submission = null;
+
+            if ($draftId) {
+                $submission = Submission::where('id', $draftId)
+                    ->where('user_id', $user->id)
+                    ->first();
+            }
+
+            // Jika judul kosong/belum diisi, beri judul sementara agar tidak melanggar constraint database
+            $title = !empty($validated['title']) ? $validated['title'] : ('Untitled Draft - ' . now()->format('Y-m-d H:i'));
+
+            if ($submission) {
+                $submission->update([
+                    'section_id' => $validated['section_id'],
+                    'title' => $title,
+                    'subtitle' => $validated['subtitle'] ?? null,
+                    'abstract' => $validated['abstract'] ?? null,
+                    'references' => $validated['references'] ?? null,
+                ]);
+            } else {
+                $submission = Submission::create([
+                    'journal_id' => $journal->id,
+                    'user_id' => $user->id,
+                    'section_id' => $validated['section_id'],
+                    'title' => $title,
+                    'subtitle' => $validated['subtitle'] ?? null,
+                    'abstract' => $validated['abstract'] ?? null,
+                    'references' => $validated['references'] ?? null,
+                    'status' => Submission::STATUS_DRAFT,
+                    'stage' => Submission::STAGE_SUBMISSION,
+                    'stage_id' => 1,
+                ]);
+            }
+
+            // Simpan metadata draf (step aktif, checklist yang dicentang, komentar editor)
+            $metadata = $submission->metadata ?? [];
+            $metadata['current_step'] = (int) ($validated['current_step'] ?? 1);
+            $metadata['requirements'] = $validated['requirements'] ?? [];
+            $metadata['comments_for_editor'] = $validated['comments_for_editor'] ?? '';
+            $submission->update(['metadata' => $metadata]);
+
+            // Simpan manuskrip (jika diunggah di Step 2)
+            if ($request->hasFile('manuscript')) {
+                $file = $request->file('manuscript');
+                $path = $file->store("journals/{$journal->id}/submissions/{$submission->id}", 'local');
+
+                // Hapus manuskrip lama
+                $oldFiles = SubmissionFile::where('submission_id', $submission->id)
+                    ->where('file_type', SubmissionFile::TYPE_MANUSCRIPT)
+                    ->get();
+                foreach ($oldFiles as $oldFile) {
+                    Storage::disk('local')->delete($oldFile->file_path);
+                    $oldFile->delete();
+                }
+
+                $submission->update(['submission_file_path' => $path]);
+
+                SubmissionFile::create([
+                    'submission_id' => $submission->id,
+                    'uploaded_by' => $user->id,
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_type' => SubmissionFile::TYPE_MANUSCRIPT,
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'version' => 1,
+                    'stage' => Submission::STAGE_SUBMISSION,
+                ]);
+            }
+
+            // Simpan / update Authors jika dikirim
+            if (!empty($validated['authors'])) {
+                SubmissionAuthor::where('submission_id', $submission->id)->delete();
+                $primaryContactIndex = (int) ($validated['primary_contact'] ?? 0);
+
+                foreach ($validated['authors'] as $index => $authorData) {
+                    // Hanya simpan kontributor jika minimal nama depannya diisi
+                    if (empty($authorData['first_name'])) {
+                        continue;
+                    }
+                    $authorEmail = strtolower(trim($authorData['email'] ?? ''));
+                    $isPrimary = ($index === $primaryContactIndex);
+
+                    SubmissionAuthor::create([
+                        'submission_id' => $submission->id,
+                        'email' => $authorEmail ?: null,
+                        'user_id' => ($authorEmail && $authorEmail === strtolower(trim($user->email))) ? $user->id : null,
+                        'first_name' => $authorData['first_name'],
+                        'last_name' => $authorData['last_name'] ?? '',
+                        'name' => $authorData['first_name'] . ' ' . ($authorData['last_name'] ?? ''),
+                        'affiliation' => $authorData['affiliation'] ?? null,
+                        'country' => $authorData['country'] ?? null,
+                        'is_primary_contact' => $isPrimary,
+                        'is_corresponding' => $isPrimary,
+                        'sort_order' => $index,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('journal.submissions.create', [
+                'journal' => $journal->slug,
+                'draft_id' => $submission->id,
+                'step' => $metadata['current_step']
+            ])->with('success', 'Draft saved successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Draft save failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->withInput()->with('error', 'Failed to save draft. Please try again.');
         }
     }
 

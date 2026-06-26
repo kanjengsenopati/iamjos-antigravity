@@ -324,7 +324,7 @@
                                 <!-- Author & Title Stack -->
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $authorName }}</p>
-                                    <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
+                                    <a href="{{ $submission->status === 'draft' ? route('journal.submissions.create', ['journal' => $journal->slug, 'draft_id' => $submission->id]) : route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
                                         class="text-sm text-gray-600 hover:text-indigo-600 hover:underline line-clamp-1">
                                         {{ $submission->title }}
                                     </a>
@@ -384,7 +384,7 @@
                                     <!-- Action Button Group -->
                                     <div class="inline-flex shadow-sm rounded-md">
                                         <!-- View Button -->
-                                        <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
+                                        <a href="{{ $submission->status === 'draft' ? route('journal.submissions.create', ['journal' => $journal->slug, 'draft_id' => $submission->id]) : route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 focus:z-10 focus:ring-1 focus:ring-indigo-500 focus:text-indigo-600 transition-colors">
                                             View
                                         </a>

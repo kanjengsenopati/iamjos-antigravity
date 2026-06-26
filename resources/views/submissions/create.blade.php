@@ -47,8 +47,9 @@
             </div>
 
             <form action="{{ route('journal.submissions.store', ['journal' => $journal->slug]) }}" method="POST"
-                enctype="multipart/form-data" id="submissionForm" x-ref="form">
+                enctype="multipart/form-data" id="submissionForm" x-ref="form" novalidate>
                 @csrf
+                <input type="hidden" name="draft_id" value="{{ $draft->id ?? '' }}">
 
                 <!-- Hidden File Input (ALWAYS in DOM for form submission) -->
                 <input type="file" name="manuscript" x-ref="fileInput" class="hidden" accept=".doc,.docx,.pdf"
@@ -94,7 +95,7 @@
                     <div class="mb-8 max-w-md">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Section <span
                                 class="text-red-500">*</span></label>
-                        <select name="section_id"
+                        <select name="section_id" x-model="section_id"
                             class="block w-full rounded-md border border-gray-300 bg-white text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
                             style="appearance: auto; -webkit-appearance: listbox; color: black !important;" required>
                             <option value="" class="text-gray-500">Select a section...</option>
@@ -150,9 +151,8 @@
                     <div class="border-t border-gray-200 pt-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Comments for the Editor
                             (Optional)</label>
-                        <div id="commentsEditor" class="rounded-lg border border-gray-300">{{ old('comments_for_editor') }}
-                        </div>
-                        <textarea name="comments_for_editor" id="commentsHidden" class="hidden">{{ old('comments_for_editor') }}</textarea>
+                        <div id="commentsEditor" class="rounded-lg border border-gray-300">{!! old('comments_for_editor', ($draft && isset($draft->metadata['comments_for_editor'])) ? $draft->metadata['comments_for_editor'] : '') !!}</div>
+                        <textarea name="comments_for_editor" id="commentsHidden" class="hidden" style="display: none;">{{ old('comments_for_editor', ($draft && isset($draft->metadata['comments_for_editor'])) ? $draft->metadata['comments_for_editor'] : '') }}</textarea>
                         <p class="text-xs text-gray-500 mt-2">These comments will be visible only to the editorial team and
                             will be added as a discussion.</p>
                     </div>
@@ -216,9 +216,8 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Abstract <span
                                     class="text-red-500">*</span></label>
-                            <div id="abstractEditor" class="rounded-lg border border-gray-300">{{ old('abstract') }}
-                            </div>
-                            <textarea name="abstract" id="abstractHidden" class="hidden">{{ old('abstract') }}</textarea>
+                            <div id="abstractEditor" class="rounded-lg border border-gray-300">{!! old('abstract', $draft->abstract ?? '') !!}</div>
+                            <textarea name="abstract" id="abstractHidden" class="hidden" style="display: none;">{{ old('abstract', $draft->abstract ?? '') }}</textarea>
                         </div>
                         <div x-data="keywordInputCustom({{ json_encode(old('keywords', [])) }})" class="relative">
                             <label class="flex items-center text-sm font-medium text-gray-700 mb-1">
@@ -432,16 +431,23 @@
                     </button>
                     <div x-show="step === 1"></div> <!-- Spacer -->
 
-                    <button type="button" x-show="step < 4" @click="nextStep()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                        Next <i class="fa-solid fa-arrow-right ml-1"></i>
-                    </button>
+                    <div class="flex items-center">
+                        <button type="button" @click="saveDraft()"
+                            class="border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-6 py-2 rounded-lg text-sm font-medium transition mr-2">
+                            Save
+                        </button>
 
-                    <button type="button" x-show="step === 4" @click="submitForm()" :disabled="isSubmitting"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span x-show="!isSubmitting">Finish Submission <i class="fa-solid fa-check ml-1"></i></span>
-                        <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...</span>
-                    </button>
+                        <button type="button" x-show="step < 4" @click="nextStep()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition">
+                            Next <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+
+                        <button type="button" x-show="step === 4" @click="submitForm()" :disabled="isSubmitting"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span x-show="!isSubmitting">Finish Submission <i class="fa-solid fa-check ml-1"></i></span>
+                            <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...</span>
+                        </button>
+                    </div>
                 </div>
 
             </form>
@@ -560,33 +566,48 @@
 
         function submissionWizard() {
             return {
-                step: {{ $errors->any() ? 1 : 1 }},
-                requirements: [],
+                step: {{ request('step', ($draft && isset($draft->metadata['current_step'])) ? $draft->metadata['current_step'] : 1) }},
+                section_id: {!! json_encode(old('section_id', $draft ? $draft->section_id : '')) !!},
+                requirements: @json(($draft && isset($draft->metadata['requirements'])) ? $draft->metadata['requirements'] : []),
                 totalRequirements: {{ $submissionChecklists->count() }},
                 validationErrors: [],
-                title: {!! json_encode(old('title', '')) !!},
-                subtitle: {!! json_encode(old('subtitle', '')) !!},
-                abstract: '',
-                abstractHtml: '',
-                fileName: '',
-                fileSize: '',
-                references: {!! json_encode(old('references', '')) !!},
-                primaryContactIndex: 0,
+                title: {!! json_encode(old('title', ($draft && !str_starts_with($draft->title, 'Untitled Draft -')) ? $draft->title : '')) !!},
+                subtitle: {!! json_encode(old('subtitle', $draft->subtitle ?? '')) !!},
+                abstract: {!! json_encode(old('abstract', $draft->abstract ?? '')) !!},
+                abstractHtml: {!! json_encode(old('abstract', $draft->abstract ?? '')) !!},
+                fileName: {!! json_encode($draft ? ($draft->files->where('file_type', \App\Models\SubmissionFile::TYPE_MANUSCRIPT)->first()?->file_name ?? '') : '') !!},
+                fileSize: {!! json_encode($draft ? (round(($draft->files->where('file_type', \App\Models\SubmissionFile::TYPE_MANUSCRIPT)->first()?->file_size ?? 0) / 1024 / 1024, 2) . ' MB') : '') !!},
+                references: {!! json_encode(old('references', $draft->references ?? '')) !!},
+                primaryContactIndex: {{ $draft ? ($draft->authors->search(fn($a) => $a->is_primary_contact) !== false ? $draft->authors->search(fn($a) => $a->is_primary_contact) : 0) : 0 }},
                 draggedIndex: null,
                 dragEnabledIndex: null,
-                authors: [
-                    @php
-                        $parts = explode(' ', auth()->user()->name, 2);
-                        $first = old('authors.0.first_name', $parts[0]);
-                        $last = old('authors.0.last_name', $parts[1] ?? '');
-                    @endphp {
-                        first_name: {!! json_encode($first) !!},
-                        last_name: {!! json_encode($last) !!},
-                        email: {!! json_encode(old('authors.0.email', auth()->user()->email)) !!},
-                        affiliation: {!! json_encode(old('authors.0.affiliation', auth()->user()->affiliation)) !!},
-                        country: {!! json_encode(old('authors.0.country', auth()->user()->country)) !!}
-                    }
-                ],
+                authors: 
+                    @if($draft && $draft->authors->isNotEmpty())
+                        @json($draft->authors->map(function($author) {
+                            return [
+                                'first_name' => $author->first_name,
+                                'last_name' => $author->last_name,
+                                'email' => $author->email,
+                                'affiliation' => $author->affiliation,
+                                'country' => $author->country,
+                            ];
+                        }))
+                    @else
+                        [
+                            @php
+                                $parts = explode(' ', auth()->user()->name, 2);
+                                $first = old('authors.0.first_name', $parts[0]);
+                                $last = old('authors.0.last_name', $parts[1] ?? '');
+                            @endphp {
+                                first_name: {!! json_encode($first) !!},
+                                last_name: {!! json_encode($last) !!},
+                                email: {!! json_encode(old('authors.0.email', auth()->user()->email)) !!},
+                                affiliation: {!! json_encode(old('authors.0.affiliation', auth()->user()->affiliation)) !!},
+                                country: {!! json_encode(old('authors.0.country', auth()->user()->country)) !!}
+                            }
+                        ]
+                    @endif
+                ,
 
                 dragStart(event, index) {
                     this.draggedIndex = index;
@@ -740,6 +761,29 @@
                     if (this.isSubmitting) return;
                     this.isSubmitting = true;
                     this.$refs.form.submit();
+                },
+
+                saveDraft() {
+                    if (commentsEditorInstance) {
+                        document.querySelector('#commentsHidden').value = commentsEditorInstance.getData();
+                    }
+                    if (editorInstance) {
+                        document.querySelector('#abstractHidden').value = editorInstance.getData();
+                    }
+
+                    const form = this.$refs.form;
+                    form.action = "{{ route('journal.submissions.save-draft', ['journal' => $journal->slug]) }}";
+
+                    let stepInput = form.querySelector('input[name="current_step"]');
+                    if (!stepInput) {
+                        stepInput = document.createElement('input');
+                        stepInput.type = 'hidden';
+                        stepInput.name = 'current_step';
+                        form.appendChild(stepInput);
+                    }
+                    stepInput.value = this.step;
+
+                    form.submit();
                 },
 
                 init() {

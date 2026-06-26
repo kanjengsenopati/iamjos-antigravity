@@ -350,6 +350,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::post('/notify', 'sendNotification')->name('notify.send');
                 });
 
+                Route::post('/submissions/save-draft', [SubmissionController::class, 'saveDraft'])->name('journal.submissions.save-draft');
                 Route::resource('submissions', SubmissionController::class)->names([
                     'index' => 'journal.submissions.index',
                     'create' => 'journal.submissions.create',
