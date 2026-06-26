@@ -5,9 +5,6 @@
     'downloadUrl' => null,
 ])
 
-<!-- docx-preview CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.css" />
-
 <div class="pdf-viewer-container" style="height: {{ $height }}; display: flex; flex-direction: column; overflow: hidden;">
     {{-- Toolbar --}}
     <div id="pdf-toolbar" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
@@ -56,14 +53,15 @@
             </svg>
             Loading Document...
         </div>
-        <div id="docx-preview-body" style="display: none; margin: 0 auto;"></div>
+        <div id="docx-preview-body" style="display: none; margin: 0 auto; width: 100%; height: 100%;"></div>
     </div>
 
     {{-- Non-PDF fallback --}}
-    <div id="pdf-fallback" style="display: none; flex: 1; padding: 2rem; text-align: center; background: #f9fafb;">
-        <p style="color: #6b7280; margin-bottom: 1rem;">This file type cannot be previewed in the browser.</p>
+    <div id="pdf-fallback" style="display: none; flex: 1; padding: 2rem; text-align: center; background: #f9fafb; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
+        <p style="color: #475569; font-weight: 500; margin-bottom: 0.25rem;">This file type cannot be previewed in the browser.</p>
+        <p id="pdf-error-details" style="color: #dc2626; font-size: 0.8125rem; background: #fef2f2; border: 1px solid #fee2e2; padding: 0.5rem 1.25rem; border-radius: 8px; max-width: 500px; display: none; word-break: break-word;"></p>
         @if($downloadUrl)
-            <a href="{{ $downloadUrl }}" download style="padding: 0.5rem 1.5rem; background: #2563eb; color: white; border-radius: 0.375rem; text-decoration: none;">
+            <a href="{{ $downloadUrl }}" download style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1.5rem; background: #2563eb; color: white; border-radius: 0.375rem; text-decoration: none; max-width: max-content; font-size: 0.875rem;">
                 Download File
             </a>
         @endif
@@ -95,6 +93,7 @@
         box-sizing: border-box !important;
         transition: box-shadow 0.2s ease-in-out !important;
         max-width: 850px !important;
+        width: 100% !important;
     }
 
     #docx-container .docx:hover {
@@ -116,9 +115,6 @@
     }
 </style>
 
-<!-- Dependencies for docx-preview -->
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
@@ -127,12 +123,65 @@
     const fileName = @json($fileName);
     const ext = fileName.split('.').pop().toLowerCase();
 
-    function showFallback() {
+    // Protocol sync helper to prevent Mixed Content Block on HTTPS
+    let targetUrl = fileUrl;
+    if (window.location.protocol === 'https:' && targetUrl.startsWith('http:')) {
+        targetUrl = 'https:' + targetUrl.substring(5);
+    }
+
+    function showFallback(err) {
         document.getElementById('pdf-toolbar').style.display = 'none';
         document.getElementById('pdf-canvas-container').style.display = 'none';
         document.getElementById('pdf-loading').style.display = 'none';
         document.getElementById('docx-container').style.display = 'none';
-        document.getElementById('pdf-fallback').style.display = 'flex';
+        
+        const fallback = document.getElementById('pdf-fallback');
+        fallback.style.display = 'flex';
+        
+        if (err) {
+            const errDetails = document.getElementById('pdf-error-details');
+            errDetails.textContent = "Error: " + (err.message || String(err));
+            errDetails.style.display = 'block';
+            console.error('Document preview error:', err);
+        }
+    }
+
+    // Dynamic script loading helper with deduplication
+    function loadScript(src, checkGlobal) {
+        if (checkGlobal && window[checkGlobal]) {
+            return Promise.resolve();
+        }
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+            if (checkGlobal && window[checkGlobal]) return Promise.resolve();
+            return new Promise((resolve) => {
+                existing.addEventListener('load', resolve);
+                existing.addEventListener('error', resolve);
+            });
+        }
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.crossOrigin = 'anonymous';
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('Failed to load script: ' + src));
+            document.head.appendChild(script);
+        });
+    }
+
+    // Dynamic style loading helper
+    function loadStyle(href) {
+        const existing = document.querySelector(`link[href="${href}"]`);
+        if (existing) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            link.crossOrigin = 'anonymous';
+            link.onload = resolve;
+            link.onerror = () => reject(new Error('Failed to load style: ' + href));
+            document.head.appendChild(link);
+        });
     }
 
     // DOCX Render Logic
@@ -146,10 +195,25 @@
         const docxContainer = document.getElementById('docx-container');
         docxContainer.style.display = 'block';
 
-        // Fetch the signed docx URL as arrayBuffer
-        fetch(fileUrl)
+        // Load dependencies sequentially using Promise chain
+        loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', 'JSZip')
+            .then(() => {
+                return loadStyle('https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.css');
+            })
+            .then(() => {
+                return loadScript('https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js', 'docx');
+            })
+            .then(() => {
+                if (typeof window.docx === 'undefined') {
+                    throw new Error('docx-preview library failed to initialize.');
+                }
+                // Fetch the signed docx URL as arrayBuffer
+                return fetch(targetUrl);
+            })
             .then(response => {
-                if (!response.ok) throw new Error('Failed to fetch the document.');
+                if (!response.ok) {
+                    throw new Error('Server returned HTTP status ' + response.status + ' for document download.');
+                }
                 return response.arrayBuffer();
             })
             .then(arrayBuffer => {
@@ -157,29 +221,26 @@
                 docxPreviewBody.style.display = 'block';
 
                 // Render using docx-preview
-                docx.renderAsync(arrayBuffer, docxPreviewBody, null, {
+                return window.docx.renderAsync(arrayBuffer, docxPreviewBody, null, {
                     className: "docx",
                     inWrapper: true,
                     ignoreWidth: false,
                     ignoreHeight: false,
                     experimental: true
-                }).then(() => {
-                    document.getElementById('docx-loading').style.display = 'none';
-                }).catch(err => {
-                    console.error('Error rendering DOCX:', err);
-                    showFallback();
                 });
             })
+            .then(() => {
+                document.getElementById('docx-loading').style.display = 'none';
+            })
             .catch(error => {
-                console.error('Error loading DOCX:', error);
-                showFallback();
+                showFallback(error);
             });
         return;
     }
 
     // PDF Render Logic
     if (ext !== 'pdf') {
-        showFallback();
+        showFallback(new Error('Unsupported file extension: ' + ext));
         return;
     }
 
@@ -209,7 +270,7 @@
     }
 
     // Load the PDF
-    pdfjsLib.getDocument(fileUrl).promise.then(function(pdf) {
+    pdfjsLib.getDocument(targetUrl).promise.then(function(pdf) {
         pdfDoc = pdf;
         document.getElementById('pdf-total-pages').textContent = pdf.numPages;
         document.getElementById('pdf-loading').style.display = 'none';
@@ -217,7 +278,7 @@
         renderPage(1);
     }).catch(function(error) {
         console.error('Error loading PDF:', error);
-        document.getElementById('pdf-loading').innerHTML = '<span style="color: #fca5a5;">Failed to load PDF. Please try downloading instead.</span>';
+        showFallback(error);
     });
 
     // Expose navigation functions globally
