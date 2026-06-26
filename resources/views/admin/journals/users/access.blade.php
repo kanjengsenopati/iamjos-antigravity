@@ -26,10 +26,10 @@
             <div class="space-y-6">
                 <!-- Site Access Options -->
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
-                    <h2 class="text-base font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <div class="mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-lock text-primary-600"></i>
                         <x-text.h2 class="text-gray-900 font-semibold">Site Access</x-text.h2>
-                    </h2>
+                    </div>
                     
                     <div class="space-y-5">
                         <div class="flex items-start">
@@ -62,10 +62,10 @@
 
                 <!-- Validation Options -->
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
-                    <h2 class="text-base font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <div class="mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-check-double text-primary-600"></i>
                         <x-text.h2 class="text-gray-900 font-semibold">Validation</x-text.h2>
-                    </h2>
+                    </div>
                     
                     <div class="flex items-start">
                         <div class="flex items-center h-5">
@@ -87,10 +87,10 @@
             <div class="space-y-6">
                 <!-- User Registration Options -->
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
-                    <h2 class="text-base font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <div class="mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-primary-600"></i>
                         <x-text.h2 class="text-gray-900 font-semibold">User Registration</x-text.h2>
-                    </h2>
+                    </div>
                     
                     <div class="space-y-5">
                         <div class="flex items-start">
@@ -123,10 +123,10 @@
 
                 <!-- Role Registration Options -->
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
-                    <h2 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div class="mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-id-badge text-primary-600"></i>
                         <x-text.h2 class="text-gray-900 font-semibold">Role Registration</x-text.h2>
-                    </h2>
+                    </div>
                     <x-text.body class="text-slate-400 mb-6 block">Select which roles users can self-register for (if registration is open).</x-text.body>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
