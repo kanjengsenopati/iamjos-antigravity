@@ -270,8 +270,8 @@
 }">
 
     @php
-        $journal = current_journal();
-        $journalSlug = $journal ? $journal->slug : request()->route('journal');
+        $journal = $journal ?? current_journal();
+        $journalSlug = $journalSlug ?? ($journal ? $journal->slug : (is_object(request()->route('journal')) ? request()->route('journal')->slug : request()->route('journal')));
         $isAdminContext = request()->routeIs('journal.admin.*');
         $usersRoutePrefix = $isAdminContext ? 'journal.admin.users' : 'journal.users';
 
