@@ -2767,7 +2767,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Abstract</label>
                                     <textarea name="abstract" id="publicationAbstract" rows="8"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('abstract', $publication->abstract ?? $submission->abstract) }}</textarea>
+                                        class="hidden w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('abstract', $publication->abstract ?? $submission->abstract) }}</textarea>
                                     <p class="mt-1 text-xs text-gray-500">HTML formatting is allowed.</p>
                                 </div>
 
