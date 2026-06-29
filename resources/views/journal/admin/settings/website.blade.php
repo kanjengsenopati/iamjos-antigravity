@@ -557,7 +557,7 @@
                         <h3 class="text-xl font-bold text-gray-900 mb-1">Static Pages Management</h3>
                         <p class="text-sm text-slate-500">Create and publish custom standalone pages for your journal.</p>
                     </div>
-                    <a href="{{ route('admin.site-pages.create') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
+                    <a href="{{ Route::has('admin.site-pages.create') ? route('admin.site-pages.create') : (Route::has('site-pages.create') ? route('site-pages.create') : '#') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
                         <i class="fa-solid fa-plus mr-2"></i> Add Static Page
                     </a>
                 </div>
@@ -578,7 +578,7 @@
                                 @foreach ($staticPages as $page)
                                     <tr class="hover:bg-slate-50/60 transition-colors">
                                         <td class="px-6 py-4 font-semibold text-slate-900">
-                                            <a href="{{ route('site.page', $page->slug) }}" target="_blank" class="hover:text-primary-600 flex items-center gap-1.5">
+                                            <a href="{{ Route::has('site.page') ? route('site.page', $page->slug) : '#' }}" target="_blank" class="hover:text-primary-600 flex items-center gap-1.5">
                                                 <span>{{ $page->title }}</span>
                                                 <i class="fa-solid fa-external-link-alt text-[10px] text-slate-400"></i>
                                             </a>
@@ -591,7 +591,7 @@
                                         </td>
                                         <td class="px-4 py-4 text-xs text-slate-500">{{ $page->created_at?->format('M j, Y') ?? '-' }}</td>
                                         <td class="px-6 py-4 text-right">
-                                            <a href="{{ route('admin.site-pages.edit', $page->id) }}" class="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                                            <a href="{{ Route::has('admin.site-pages.edit') ? route('admin.site-pages.edit', $page->id) : (Route::has('site-pages.edit') ? route('site-pages.edit', $page->id) : '#') }}" class="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-200 transition-colors">
                                                 <i class="fa-solid fa-pen-to-square mr-1.5 text-slate-500"></i> Edit
                                             </a>
                                         </td>
@@ -605,7 +605,7 @@
                         <i class="fa-solid fa-file-signature text-slate-400 text-4xl mb-3"></i>
                         <h4 class="text-base font-bold text-slate-700 mb-1">No Custom Static Pages Found</h4>
                         <p class="text-xs text-slate-500 mb-4 max-w-md mx-auto">Static pages allow you to add custom content pages such as Code of Ethics, Peer Review Process, or Peer Reviewers List.</p>
-                        <a href="{{ route('admin.site-pages.create') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
+                        <a href="{{ Route::has('admin.site-pages.create') ? route('admin.site-pages.create') : (Route::has('site-pages.create') ? route('site-pages.create') : '#') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
                             <i class="fa-solid fa-plus mr-2"></i> Add Static Page
                         </a>
                     </div>
