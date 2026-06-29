@@ -47,16 +47,26 @@ class DetectJournalContext
             session()->put('login_journal_slug', $journal->slug);
         } else {
             // No journal context - portal level (or invalid slug if param was provided)
-            
-            // If we are strictly under a journal prefix but failed to resolve, we should probably 404
-            // But this middleware is "Detect", implying optional? 
-            // The original code aborted 404 if slug provided but not found.
             if ($journalParam && !$journal) {
                  abort(404, 'Journal not found.');
             }
             
             app()->instance('currentJournal', null);
             view()->share('currentJournal', null);
+        }
+
+        // Set application locale based on session or journal primary locale
+        if (session()->has('app_locale')) {
+            $locale = session('app_locale');
+        } elseif ($journal) {
+            $journalSettings = $journal->getWebsiteSettings();
+            $locale = $journalSettings['primary_locale'] ?? 'en';
+        } else {
+            $locale = config('app.locale', 'en');
+        }
+        app()->setLocale($locale);
+        if (class_exists(\Carbon\Carbon::class)) {
+            \Carbon\Carbon::setLocale(in_array($locale, ['id', 'id_ID']) ? 'id' : $locale);
         }
 
         return $next($request);

@@ -67,6 +67,18 @@ class JournalContextMiddleware
         // Store in session for convenience
         session()->flash('current_journal_id', $journal->id);
 
+        // Set application locale based on session or journal primary locale
+        if (session()->has('app_locale')) {
+            $locale = session('app_locale');
+        } else {
+            $journalSettings = $journal->getWebsiteSettings();
+            $locale = $journalSettings['primary_locale'] ?? 'en';
+        }
+        app()->setLocale($locale);
+        if (class_exists(\Carbon\Carbon::class)) {
+            \Carbon\Carbon::setLocale(in_array($locale, ['id', 'id_ID']) ? 'id' : $locale);
+        }
+
         return $next($request);
     }
 }

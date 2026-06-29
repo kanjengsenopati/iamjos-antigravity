@@ -204,6 +204,12 @@ class WebsiteSettingsController extends Controller
             );
         }
 
+        if ($request->has('primary_locale')) {
+            $prim = $request->input('primary_locale');
+            session(['app_locale' => $prim]);
+            app()->setLocale($prim);
+        }
+
         return redirect()
             ->route('journal.settings.website.edit', ['journal' => $journal->slug])
             ->with('success', 'Website settings updated successfully.');
