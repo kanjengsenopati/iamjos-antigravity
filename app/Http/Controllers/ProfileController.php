@@ -149,9 +149,8 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             // Identity
-            'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('users')->ignore($user->id)],
-            'given_name' => ['nullable', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'given_name' => ['required', 'string', 'max:255'],
             'family_name' => ['nullable', 'string', 'max:255'],
             'affiliation' => ['nullable', 'string', 'max:500'],
             'country' => ['nullable', 'string', 'max:100'],
@@ -170,6 +169,9 @@ class ProfileController extends Controller
             'homepage.url' => 'The homepage must be a valid URL (e.g., https://example.com)',
             'phone.regex' => 'The phone number may only contain numbers, spaces, and the + - ( ) characters.',
         ]);
+
+        // Unset username so it cannot be altered
+        unset($validated['username']);
 
         // Sanitize Bio HTML (allow basic formatting tags only)
         if (isset($validated['bio'])) {
