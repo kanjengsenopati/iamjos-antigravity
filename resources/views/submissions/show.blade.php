@@ -2945,6 +2945,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         Keywords
                                         <i class="fa-solid fa-circle-question text-gray-400 cursor-pointer ml-1.5" 
                                            title="Press Enter or comma to add keywords. Start typing to see suggestions."></i>
+                                        <span class="text-xs text-gray-500 font-normal ml-2">(Untuk pemisah keyword adalah koma)</span>
                                     </label>
                                     <input type="text" 
                                         x-model="newTag"
