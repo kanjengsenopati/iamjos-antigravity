@@ -285,18 +285,19 @@
                             </div>
 
                             <!-- Affiliation -->
-                            <div class="md:col-span-2">
+                            <div>
                                 <label for="affiliation" class="block text-sm font-medium text-gray-700 mb-2">
                                     Affiliation / Institution
                                 </label>
-                                <textarea name="affiliation" id="affiliation" rows="3"
+                                <input type="text" name="affiliation" id="affiliation"
+                                    value="{{ old('affiliation', $user->affiliation) }}"
                                     placeholder="e.g., Department of Computer Science, University of Indonesia"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('affiliation', $user->affiliation) }}</textarea>
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 <p class="mt-1 text-xs text-gray-500">Your current institution or organization</p>
                             </div>
 
                             <!-- Country -->
-                            <div class="md:col-span-2">
+                            <div>
                                 <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
                                     Country
                                 </label>
