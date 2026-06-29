@@ -19,11 +19,28 @@
                     <x-text.h1>Website Settings</x-text.h1>
                     <x-text.body class="text-slate-500 mt-1">Configure your journal's public website setup and appearance</x-text.body>
                 </div>
-                <a href="{{ route('journal.public.home', $journalSlug) }}" target="_blank"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm">
-                    <i class="fa-solid fa-external-link-alt mr-2 text-slate-400"></i>
-                    Preview Website
-                </a>
+                <div class="flex items-center gap-3">
+                    {{-- OJS Language Switcher Dropdown --}}
+                    @if (!empty($settings['supported_locales']) && is_array($settings['supported_locales']) && count($settings['supported_locales']) > 1)
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" @click="open = !open" class="inline-flex items-center px-3 py-2 border border-gray-300 text-xs font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm">
+                                <i class="fa-solid fa-globe text-slate-400 mr-1.5"></i>
+                                <span>{{ session('app_locale') === 'id' || session('app_locale') === 'id_ID' ? 'Bahasa Indonesia' : 'English' }}</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] ml-1.5 text-slate-400"></i>
+                            </button>
+                            <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-slate-150 py-1 z-50">
+                                <a href="{{ route('locale.switch', 'en') }}" class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 {{ session('app_locale') === 'en' ? 'font-bold text-primary-600' : '' }}">English</a>
+                                <a href="{{ route('locale.switch', 'id') }}" class="block px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 {{ session('app_locale') === 'id' ? 'font-bold text-primary-600' : '' }}">Bahasa Indonesia</a>
+                            </div>
+                        </div>
+                    @endif
+
+                    <a href="{{ route('journal.public.home', $journalSlug) }}" target="_blank"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm">
+                        <i class="fa-solid fa-external-link-alt mr-2 text-slate-400"></i>
+                        Preview Website
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -305,12 +322,19 @@
                             </div>
                         </div>
 
-                        {{-- 2. LANGUAGES MODULE (Exact OJS Table UI!) --}}
+                        {{-- 2. LANGUAGES MODULE (100% Database Driven OJS Table UI!) --}}
                         <div x-show="setupSubTab === 'languages'" class="space-y-6">
                             <div>
                                 <h3 class="text-xl font-bold text-gray-900 mb-1">Languages</h3>
                                 <p class="text-sm text-slate-500 mb-6">Configure the primary locale and available languages for your journal site, forms, and submissions.</p>
                             </div>
+
+                            @php
+                                $primaryLoc = $settings['primary_locale'] ?? 'en';
+                                $suppUi = is_array($settings['supported_locales'] ?? null) ? $settings['supported_locales'] : ['en', 'id'];
+                                $suppForm = is_array($settings['supported_form_locales'] ?? null) ? $settings['supported_form_locales'] : ['en', 'id'];
+                                $suppSub = is_array($settings['supported_submission_locales'] ?? null) ? $settings['supported_submission_locales'] : ['en', 'id'];
+                            @endphp
 
                             <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
                                 <table class="w-full text-left text-sm text-slate-700">
@@ -325,33 +349,39 @@
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
                                         <tr class="hover:bg-slate-50/60 transition-colors">
-                                            <td class="px-6 py-4 font-semibold text-slate-900">English</td>
-                                            <td class="px-4 py-4 text-center">
-                                                <input type="radio" name="primary_locale" value="en" checked class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                                            <td class="px-6 py-4 font-semibold text-slate-900 flex items-center gap-2">
+                                                <span>English</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">en_US</span>
                                             </td>
                                             <td class="px-4 py-4 text-center">
-                                                <input type="checkbox" name="locales_ui[]" value="en" checked class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                <input type="radio" name="primary_locale" value="en" {{ $primaryLoc === 'en' ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
                                             </td>
                                             <td class="px-4 py-4 text-center">
-                                                <input type="checkbox" name="locales_forms[]" value="en" checked class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                <input type="checkbox" name="supported_locales[]" value="en" {{ in_array('en', $suppUi) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                                             </td>
                                             <td class="px-4 py-4 text-center">
-                                                <input type="checkbox" name="locales_submissions[]" value="en" checked class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                <input type="checkbox" name="supported_form_locales[]" value="en" {{ in_array('en', $suppForm) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                            </td>
+                                            <td class="px-4 py-4 text-center">
+                                                <input type="checkbox" name="supported_submission_locales[]" value="en" {{ in_array('en', $suppSub) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                                             </td>
                                         </tr>
                                         <tr class="hover:bg-slate-50/60 transition-colors">
-                                            <td class="px-6 py-4 font-semibold text-slate-900">Bahasa Indonesia</td>
-                                            <td class="px-4 py-4 text-center">
-                                                <input type="radio" name="primary_locale" value="id" class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                                            <td class="px-6 py-4 font-semibold text-slate-900 flex items-center gap-2">
+                                                <span>Bahasa Indonesia</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">id_ID</span>
                                             </td>
                                             <td class="px-4 py-4 text-center">
-                                                <input type="checkbox" name="locales_ui[]" value="id" checked class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                <input type="radio" name="primary_locale" value="id" {{ $primaryLoc === 'id' ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
                                             </td>
                                             <td class="px-4 py-4 text-center">
-                                                <input type="checkbox" name="locales_forms[]" value="id" checked class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                <input type="checkbox" name="supported_locales[]" value="id" {{ in_array('id', $suppUi) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                                             </td>
                                             <td class="px-4 py-4 text-center">
-                                                <input type="checkbox" name="locales_submissions[]" value="id" checked class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                                <input type="checkbox" name="supported_form_locales[]" value="id" {{ in_array('id', $suppForm) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                            </td>
+                                            <td class="px-4 py-4 text-center">
+                                                <input type="checkbox" name="supported_submission_locales[]" value="id" {{ in_array('id', $suppSub) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -488,51 +518,98 @@
             </div>
 
             {{-- ============================================ --}}
-            {{-- TAB 3: PLUGINS --}}
+            {{-- TAB 3: PLUGINS (100% Dynamic Database Driven) --}}
             {{-- ============================================ --}}
             <div x-show="activeTab === 'plugins'" x-cloak class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 mb-1">Plugin Gallery & Integrations</h3>
                     <p class="text-sm text-slate-500 mb-6">Manage system extensions, indexing plugins, and external tools.</p>
                 </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50">
-                        <i class="fa-solid fa-puzzle-piece text-primary-600 text-2xl mb-3"></i>
-                        <h4 class="font-bold text-gray-900 mb-1">Crossref Export Plugin</h4>
-                        <p class="text-xs text-slate-500 mb-4">Export article metadata in Crossref XML format for DOI registration.</p>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Active</span>
-                    </div>
-                    <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50">
-                        <i class="fa-solid fa-robot text-emerald-600 text-2xl mb-3"></i>
-                        <h4 class="font-bold text-gray-900 mb-1">reCAPTCHA Protection</h4>
-                        <p class="text-xs text-slate-500 mb-4">Bot protection plugin for user authentication pages.</p>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Installed</span>
-                    </div>
-                    <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50">
-                        <i class="fa-solid fa-code text-indigo-600 text-2xl mb-3"></i>
-                        <h4 class="font-bold text-gray-900 mb-1">JATS XML Converter</h4>
-                        <p class="text-xs text-slate-500 mb-4">Automated NLM/JATS XML parser and article generator.</p>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Active</span>
-                    </div>
+                    @foreach ($plugins as $plugin)
+                        <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 flex flex-col justify-between hover:border-slate-300 transition-colors shadow-sm">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <i class="{{ $plugin['icon'] }} {{ $plugin['color'] }} text-2xl"></i>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $plugin['status'] === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800' }}">
+                                        {{ $plugin['status'] }}
+                                    </span>
+                                </div>
+                                <h4 class="font-bold text-gray-900 mb-1 text-base">{{ $plugin['name'] }}</h4>
+                                <p class="text-xs text-slate-500 mb-5 leading-relaxed">{{ $plugin['description'] }}</p>
+                            </div>
+                            <a href="{{ $plugin['route'] }}" class="inline-flex items-center justify-center w-full px-4 py-2.5 bg-white border border-gray-300 text-xs font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors shadow-sm gap-2">
+                                <i class="fa-solid fa-gear text-slate-400"></i>
+                                Configure Plugin
+                            </a>
+                        </div>
+                    @endforeach
                 </div>
             </div>
 
             {{-- ============================================ --}}
-            {{-- TAB 4: STATIC PAGES --}}
+            {{-- TAB 4: STATIC PAGES (100% Dynamic Database Driven) --}}
             {{-- ============================================ --}}
             <div x-show="activeTab === 'static_pages'" x-cloak class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">Static Pages Management</h3>
-                    <p class="text-sm text-slate-500 mb-6">Create and publish custom standalone pages for your journal.</p>
-                </div>
-                <div class="border border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50">
-                    <i class="fa-solid fa-file-signature text-slate-400 text-4xl mb-3"></i>
-                    <h4 class="text-base font-bold text-slate-700 mb-1">No Custom Static Pages</h4>
-                    <p class="text-xs text-slate-500 mb-4 max-w-md mx-auto">Static pages allow you to add custom content pages such as Code of Ethics, Peer Review Process, or Peer Reviewers List.</p>
-                    <button type="button" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-1">Static Pages Management</h3>
+                        <p class="text-sm text-slate-500">Create and publish custom standalone pages for your journal.</p>
+                    </div>
+                    <a href="{{ route('site-pages.create') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
                         <i class="fa-solid fa-plus mr-2"></i> Add Static Page
-                    </button>
+                    </a>
                 </div>
+
+                @if ($staticPages->count() > 0)
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                        <table class="w-full text-left text-sm text-slate-700">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3.5">Page Title</th>
+                                    <th scope="col" class="px-4 py-3.5">URL Slug</th>
+                                    <th scope="col" class="px-4 py-3.5 text-center">Status</th>
+                                    <th scope="col" class="px-4 py-3.5">Date Created</th>
+                                    <th scope="col" class="px-6 py-3.5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @foreach ($staticPages as $page)
+                                    <tr class="hover:bg-slate-50/60 transition-colors">
+                                        <td class="px-6 py-4 font-semibold text-slate-900">
+                                            <a href="{{ route('site.page', $page->slug) }}" target="_blank" class="hover:text-primary-600 flex items-center gap-1.5">
+                                                <span>{{ $page->title }}</span>
+                                                <i class="fa-solid fa-external-link-alt text-[10px] text-slate-400"></i>
+                                            </a>
+                                        </td>
+                                        <td class="px-4 py-4 font-mono text-xs text-slate-500">/page/{{ $page->slug }}</td>
+                                        <td class="px-4 py-4 text-center">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $page->is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                                                {{ $page->is_published ? 'Published' : 'Draft' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-4 text-xs text-slate-500">{{ $page->created_at?->format('M j, Y') ?? '-' }}</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <a href="{{ route('site-pages.edit', $page->id) }}" class="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                                                <i class="fa-solid fa-pen-to-square mr-1.5 text-slate-500"></i> Edit
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="border border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50">
+                        <i class="fa-solid fa-file-signature text-slate-400 text-4xl mb-3"></i>
+                        <h4 class="text-base font-bold text-slate-700 mb-1">No Custom Static Pages Found</h4>
+                        <p class="text-xs text-slate-500 mb-4 max-w-md mx-auto">Static pages allow you to add custom content pages such as Code of Ethics, Peer Review Process, or Peer Reviewers List.</p>
+                        <a href="{{ route('site-pages.create') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
+                            <i class="fa-solid fa-plus mr-2"></i> Add Static Page
+                        </a>
+                    </div>
+                @endif
             </div>
 
             {{-- Submit Button --}}

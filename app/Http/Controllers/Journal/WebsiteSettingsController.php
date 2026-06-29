@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Journal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Journal;
+use App\Models\SitePage;
 use App\Facades\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -30,11 +31,31 @@ class WebsiteSettingsController extends Controller
         // Merge with actual settings (actual takes precedence)
         $settings = array_merge($defaults, $settings);
 
+        // Parse json settings if they come as strings
+        foreach (['supported_locales', 'supported_form_locales', 'supported_submission_locales'] as $jsonKey) {
+            if (isset($settings[$jsonKey]) && is_string($settings[$jsonKey])) {
+                $settings[$jsonKey] = json_decode($settings[$jsonKey], true) ?? ['en', 'id'];
+            }
+        }
+
+        // Fetch dynamic static pages from database
+        $staticPages = SitePage::ordered()->get();
+
+        // Build dynamic plugins list with active statuses and routes
+        $plugins = $this->getPluginsData($journal);
+
         // Get Site Setting to access global reCAPTCHA keys
         $recaptchaSiteKey   = Settings::site('recaptcha_site_key');
         $recaptchaSecretKey = Settings::site('recaptcha_secret_key');
 
-        return view('journal.admin.settings.website', compact('journal', 'settings', 'recaptchaSiteKey', 'recaptchaSecretKey'));
+        return view('journal.admin.settings.website', compact(
+            'journal',
+            'settings',
+            'staticPages',
+            'plugins',
+            'recaptchaSiteKey',
+            'recaptchaSecretKey'
+        ));
     }
 
     /**
@@ -59,7 +80,6 @@ class WebsiteSettingsController extends Controller
 
         // Handle Logo Upload (stored in journals table)
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
             if ($journal->logo_path) {
                 Storage::disk('public')->delete($journal->logo_path);
             }
@@ -126,7 +146,6 @@ class WebsiteSettingsController extends Controller
 
         // Handle Security/Recaptcha Toggle
         if ($request->input('tab') === 'security' || $request->has('is_recaptcha_enabled')) {
-             // We only toggle the enablement here, keys are global
              $journal->is_recaptcha_enabled = $request->boolean('is_recaptcha_enabled');
         }
 
@@ -139,7 +158,6 @@ class WebsiteSettingsController extends Controller
         foreach ($settingsConfig as $name => $config) {
             $value = $request->input($name);
 
-            // Skip file types handled above
             if ($config['type'] === 'file') {
                 continue;
             }
@@ -147,8 +165,6 @@ class WebsiteSettingsController extends Controller
             // Handle multi-file uploads (indexed_in_images)
             if ($config['type'] === 'json' && $name === 'indexed_in_images') {
                 $existingSetting = Settings::journal($journal->id, 'indexed_in_images', []);
-
-                // Handle both array (already decoded) and string (raw JSON) formats
                 if (is_array($existingSetting)) {
                     $existingImages = $existingSetting;
                 } elseif (is_string($existingSetting)) {
@@ -165,6 +181,8 @@ class WebsiteSettingsController extends Controller
                 }
 
                 $value = json_encode(array_values($existingImages));
+            } elseif ($config['type'] === 'json' && is_array($value)) {
+                $value = json_encode(array_values($value));
             }
 
             // Handle boolean toggles
@@ -199,89 +217,63 @@ class WebsiteSettingsController extends Controller
         $journal = current_journal();
 
         if (!$journal) {
-            abort(404, 'Journal not found');
+            return response()->json(['error' => 'Journal not found'], 404);
         }
 
         $path = $request->input('path');
-        $existingSetting = Settings::journal($journal->id, 'indexed_in_images', []);
+        if ($path) {
+            Storage::disk('public')->delete($path);
 
-        // Handle both array and string formats
-        if (is_array($existingSetting)) {
-            $existingImages = $existingSetting;
-        } elseif (is_string($existingSetting)) {
-            $existingImages = json_decode($existingSetting, true) ?? [];
-        } else {
-            $existingImages = [];
+            $existingSetting = Settings::journal($journal->id, 'indexed_in_images', []);
+            $images = is_array($existingSetting) ? $existingSetting : (json_decode($existingSetting, true) ?? []);
+
+            $images = array_filter($images, fn($img) => $img !== $path);
+
+            Settings::setJournal($journal->id, 'indexed_in_images', json_encode(array_values($images)), 'json', 'content');
         }
-
-        // Remove from storage
-        Storage::disk('public')->delete($path);
-
-        // Remove from array
-        $existingImages = array_filter($existingImages, fn($img) => $img !== $path);
-
-        Settings::setJournal($journal->id, 'indexed_in_images', json_encode(array_values($existingImages)), 'json', 'content');
 
         return response()->json(['success' => true]);
     }
 
     /**
-     * Delete logo image.
+     * Delete logo.
      */
     public function deleteLogo()
     {
         $journal = current_journal();
-
-        if (!$journal) {
-            abort(404, 'Journal not found');
-        }
-
-        if ($journal->logo_path) {
+        if ($journal && $journal->logo_path) {
             Storage::disk('public')->delete($journal->logo_path);
             $journal->logo_path = null;
             $journal->save();
         }
-
         return response()->json(['success' => true]);
     }
 
     /**
-     * Delete favicon image.
+     * Delete favicon.
      */
     public function deleteFavicon()
     {
         $journal = current_journal();
-
-        if (!$journal) {
-            abort(404, 'Journal not found');
-        }
-
-        if ($journal->favicon_path) {
+        if ($journal && $journal->favicon_path) {
             Storage::disk('public')->delete($journal->favicon_path);
             $journal->favicon_path = null;
             $journal->save();
         }
-
         return response()->json(['success' => true]);
     }
 
     /**
-     * Delete thumbnail image.
+     * Delete thumbnail.
      */
     public function deleteThumbnail()
     {
         $journal = current_journal();
-
-        if (!$journal) {
-            abort(404, 'Journal not found');
-        }
-
-        if ($journal->thumbnail_path) {
+        if ($journal && $journal->thumbnail_path) {
             Storage::disk('public')->delete($journal->thumbnail_path);
             $journal->thumbnail_path = null;
             $journal->save();
         }
-
         return response()->json(['success' => true]);
     }
 
@@ -291,19 +283,76 @@ class WebsiteSettingsController extends Controller
     public function deleteHomepageImage()
     {
         $journal = current_journal();
-
-        if (!$journal) {
-            abort(404, 'Journal not found');
-        }
-
-        if ($journal->homepage_image_path) {
+        if ($journal && $journal->homepage_image_path) {
             Storage::disk('public')->delete($journal->homepage_image_path);
             $journal->homepage_image_path = null;
             $journal->show_homepage_image_in_header = false;
             $journal->save();
         }
-
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Get dynamic list of plugins.
+     */
+    private function getPluginsData(Journal $journal): array
+    {
+        return [
+            [
+                'key' => 'quicksubmit',
+                'name' => 'Quick Submit Plugin',
+                'description' => 'Quickly add published articles directly to issues without going through editorial workflows.',
+                'icon' => 'fa-solid fa-bolt',
+                'color' => 'text-amber-500',
+                'status' => 'Active',
+                'route' => route('journal.settings.tools.quicksubmit.index', $journal->slug),
+            ],
+            [
+                'key' => 'crossref',
+                'name' => 'CrossRef XML Export & DOI Plugin',
+                'description' => 'Export article metadata in CrossRef XML format and configure DOI registration settings.',
+                'icon' => 'fa-solid fa-link',
+                'color' => 'text-blue-500',
+                'status' => 'Active',
+                'route' => route('journal.settings.tools.crossref.index', $journal->slug),
+            ],
+            [
+                'key' => 'native',
+                'name' => 'Native XML Plugin',
+                'description' => 'Import and export articles and issues in IAMJOS native XML format for backup or migration.',
+                'icon' => 'fa-solid fa-code-bracket',
+                'color' => 'text-indigo-500',
+                'status' => 'Active',
+                'route' => route('journal.settings.tools.native.index', $journal->slug),
+            ],
+            [
+                'key' => 'users',
+                'name' => 'Users XML Plugin',
+                'description' => 'Import and export user accounts and roles in XML format for bulk management.',
+                'icon' => 'fa-solid fa-users',
+                'color' => 'text-purple-500',
+                'status' => 'Active',
+                'route' => route('journal.settings.tools.users.index', $journal->slug),
+            ],
+            [
+                'key' => 'doaj',
+                'name' => 'DOAJ Export Plugin',
+                'description' => 'Export journal metadata for the Directory of Open Access Journals (DOAJ) indexing.',
+                'icon' => 'fa-solid fa-globe',
+                'color' => 'text-emerald-500',
+                'status' => 'Active',
+                'route' => route('journal.settings.tools.doaj.index', $journal->slug),
+            ],
+            [
+                'key' => 'recaptcha',
+                'name' => 'reCAPTCHA Protection',
+                'description' => 'Bot protection plugin for user login and registration pages.',
+                'icon' => 'fa-solid fa-robot',
+                'color' => 'text-cyan-500',
+                'status' => $journal->is_recaptcha_enabled ? 'Active' : 'Installed',
+                'route' => route('journal.settings.website.edit', $journal->slug) . '?tab=security',
+            ],
+        ];
     }
 
     /**
@@ -338,7 +387,11 @@ class WebsiteSettingsController extends Controller
             'contact_phone' => '',
             'contact_address' => '',
 
-            // Setup
+            // Setup & Locales
+            'primary_locale' => 'en',
+            'supported_locales' => ['en', 'id'],
+            'supported_form_locales' => ['en', 'id'],
+            'supported_submission_locales' => ['en', 'id'],
             'items_per_page' => 25,
             'privacy_statement' => 'The names and email addresses entered in this journal site will be used exclusively for the stated purposes of this journal and will not be made available for any other purpose or to any other party.',
             'date_format' => 'F j, Y',
@@ -378,7 +431,11 @@ class WebsiteSettingsController extends Controller
             'contact_phone' => ['type' => 'string', 'group' => 'footer'],
             'contact_address' => ['type' => 'string', 'group' => 'footer'],
 
-            // Setup
+            // Setup & Locales
+            'primary_locale' => ['type' => 'string', 'group' => 'setup'],
+            'supported_locales' => ['type' => 'json', 'group' => 'setup'],
+            'supported_form_locales' => ['type' => 'json', 'group' => 'setup'],
+            'supported_submission_locales' => ['type' => 'json', 'group' => 'setup'],
             'items_per_page' => ['type' => 'integer', 'group' => 'setup'],
             'privacy_statement' => ['type' => 'string', 'group' => 'setup'],
             'date_format' => ['type' => 'string', 'group' => 'setup'],

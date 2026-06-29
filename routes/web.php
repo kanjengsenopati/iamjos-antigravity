@@ -68,6 +68,13 @@ $registerAllRoutes = function ($prefix = '') {
 
         // 2. PORTAL HOME
 Route::get('/', [PortalController::class, 'index'])->name('portal.home');
+        Route::get('/set-locale/{locale}', function ($locale) {
+            if (in_array($locale, ['en', 'id', 'en_US', 'id_ID'])) {
+                session(['app_locale' => $locale]);
+                app()->setLocale($locale);
+            }
+            return redirect()->back();
+        })->name('locale.switch');
         Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
         Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
         Route::get('/about', [PortalController::class, 'about'])->name('portal.about');
