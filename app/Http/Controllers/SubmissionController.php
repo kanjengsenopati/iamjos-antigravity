@@ -498,7 +498,7 @@ class SubmissionController extends Controller
                 SendSubmissionNotifications::dispatch($submission, $user);
 
                 return redirect()->route('journal.submissions.index', ['journal' => $journal->slug])
-                    ->with('success', 'Submission created successfully! Your article is now under review.');
+                    ->with('success', 'Submission created successfully!');
             } catch (\Exception $e) {
                 DB::rollBack();
 

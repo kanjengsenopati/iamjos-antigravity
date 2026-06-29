@@ -136,7 +136,7 @@ class ReviewerController extends Controller
 
         // Notify editors via WhatsApp
         try {
-            $editors = User::whereHas('journalRoles', fn($q) => $q->where('journal_id', $journal->id)->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER]))->get();
+            $editors = User::whereHas('journalRoles', fn($q) => $q->where('journal_id', $journal->id)->whereHas('role', fn($rq) => $rq->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER])))->get();
             foreach ($editors as $editor) {
                 WaGateway::sendTemplate($editor, 'reviewer_accepted', [
                     'name' => $editor->name,
@@ -198,7 +198,7 @@ class ReviewerController extends Controller
             // Use same journal-scoped query as accept() for consistency
             $editors = \App\Models\User::whereHas('journalRoles', fn($q) =>
                 $q->where('journal_id', $assignment->submission->journal_id)
-                  ->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER])
+                  ->whereHas('role', fn($rq) => $rq->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER]))
             )->get();
             foreach ($editors as $editor) {
                 WaGateway::sendTemplate($editor, 'reviewer_declined', [
@@ -340,7 +340,7 @@ class ReviewerController extends Controller
         // Get editors scoped to the submission's journal
         $editors = \App\Models\User::whereHas('journalRoles', fn($q) =>
             $q->where('journal_id', $assignment->submission->journal_id)
-              ->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER])
+              ->whereHas('role', fn($rq) => $rq->whereIn('permission_level', [Role::LEVEL_SUPER_ADMIN, Role::LEVEL_EDITOR, Role::LEVEL_MANAGER]))
         )->get();
 
         foreach ($editors as $editor) {

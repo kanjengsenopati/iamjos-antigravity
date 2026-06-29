@@ -15,7 +15,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewSubmissionNotification;
 
-class SendSubmissionNotifications implements ShouldQueue
+class SendSubmissionNotifications
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -47,7 +47,9 @@ class SendSubmissionNotifications implements ShouldQueue
             // Scoped specifically to this journal
             $editorsAndManagers = User::whereHas('journalRoles', function ($q) {
                 $q->where('journal_id', $this->submission->journal_id)
-                  ->whereIn('permission_level', [\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_EDITOR, \App\Models\Role::LEVEL_MANAGER]);
+                  ->whereHas('role', function ($rq) {
+                      $rq->whereIn('permission_level', [\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_EDITOR, \App\Models\Role::LEVEL_MANAGER]);
+                  });
             })->get();
 
             Notification::send($editorsAndManagers, new NewSubmissionNotification($this->submission));
