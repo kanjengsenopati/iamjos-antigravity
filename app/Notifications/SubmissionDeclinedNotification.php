@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notification;
 /**
  * Notification sent to author when their submission is declined.
  */
-class SubmissionDeclinedNotification extends Notification implements ShouldQueue
+class SubmissionDeclinedNotification extends Notification
 {
     use Queueable;
 
@@ -44,19 +44,18 @@ class SubmissionDeclinedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = url("/{$journal->slug}/submissions/{$this->submission->slug}");
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
 
         return (new MailMessage)
-            ->subject('Submission Declined: ' . $this->submission->title)
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line('We regret to inform you that your submission has been declined by the editorial team.')
-            ->line('**Submission Title:** ' . $this->submission->title)
-            ->line('**Journal:** ' . $journal->name)
+            ->line('You have a new notification from ' . $journal->name . ':')
+            ->line('We regret to inform you that your submission "' . $this->submission->title . '" has been declined by the editorial team.')
             ->line('**Reason for Declining:**')
             ->line($this->reason)
-            ->line('Thank you for considering our journal for your work. We encourage you to submit your manuscript to another appropriate venue.')
             ->action('View Submission', $url)
-            ->salutation('Best regards, ' . $journal->name . ' Editorial Team');
+            ->line('Link: ' . $url)
+            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
     }
 
     /**
@@ -75,7 +74,7 @@ class SubmissionDeclinedNotification extends Notification implements ShouldQueue
             'declined_by_name' => $this->declinedBy->name,
             'title' => $this->submission->title,
             'message' => 'Your submission "' . $this->submission->title . '" has been declined.',
-            'url' => "/{$journal->slug}/submissions/{$this->submission->slug}",
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
         ];
     }
 }

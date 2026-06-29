@@ -43,20 +43,20 @@ class EditorAssignmentNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = url("/{$journal->slug}/submissions/{$this->submission->slug}");
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
 
         return (new MailMessage)
-            ->subject('Editor Assignment - ' . $this->submission->title)
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line('You have been assigned as editor for the following submission:')
+            ->line('You have a new notification from ' . $journal->name . ':')
+            ->line('You have been assigned as editor for the submission "' . $this->submission->title . '" by ' . $this->assignedBy->name . '.')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Author:** ' . ($this->submission->authors->first()->name ?? 'Unknown'))
-            ->line('- **Section:** ' . ($this->submission->section->title ?? 'Not specified'))
-            ->line('- **Assigned by:** ' . $this->assignedBy->name)
+            ->line('- **Section:** ' . ($this->submission->section->title ?? $this->submission->section->name ?? 'Not specified'))
             ->action('View Submission', $url)
-            ->line('Please review the submission and begin the editorial process.')
-            ->salutation('Best regards, ' . $journal->name);
+            ->line('Link: ' . $url)
+            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
     }
 
     /**
@@ -70,7 +70,7 @@ class EditorAssignmentNotification extends Notification
             'type' => 'editor_assignment',
             'title' => 'Editor Assignment',
             'message' => "You have been assigned as editor for \"{$this->submission->title}\".",
-            'url' => "/{$journal->slug}/submissions/{$this->submission->slug}",
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
             'notification_type' => 'info',
             'icon' => 'fa-user-tie',
             'submission_id' => $this->submission->id,

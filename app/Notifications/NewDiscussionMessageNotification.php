@@ -56,20 +56,21 @@ class NewDiscussionMessageNotification extends Notification
             $assignment = ReviewAssignment::where('submission_id', $submission->id)
                 ->where('reviewer_id', $notifiable->id)
                 ->first();
-            $url = $assignment ? route('journal.reviewer.show', ['journal' => $journal->slug, 'assignment' => $assignment->id]) : url("/{$journal->slug}/submissions/{$submission->slug}");
+            $url = $assignment ? route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->id]) : route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]);
         } else {
-            $url = url("/{$journal->slug}/submissions/{$submission->slug}");
+            $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]);
         }
 
         return (new MailMessage)
-            ->subject('New Message in Discussion: ' . $this->discussion->subject)
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line($this->sender->name . ' posted a message in the discussion "' . $this->discussion->subject . '".')
-            ->line('**Submission:** ' . $submission->title)
+            ->line('You have a new notification from ' . $journal->name . ':')
+            ->line('You have a new message in a discussion titled "' . $this->discussion->subject . '" regarding the submission "' . $submission->title . '".')
             ->line('**Message Preview:**')
-            ->line(strip_tags(substr($this->message->body, 0, 200)) . '...')
+            ->line('"' . strip_tags(substr($this->message->body, 0, 200)) . '..."')
             ->action('View Discussion', $url)
-            ->salutation('Best regards, ' . $journal->name);
+            ->line('Link: ' . $url)
+            ->salutation("Best regards,\n" . $this->sender->name . "\n________________________________\n" . $journal->name);
     }
 
     /**

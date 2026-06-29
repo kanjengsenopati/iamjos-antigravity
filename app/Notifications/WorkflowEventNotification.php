@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class WorkflowEventNotification extends Notification implements ShouldQueue
+class WorkflowEventNotification extends Notification
 {
     use Queueable;
 
@@ -64,16 +64,20 @@ class WorkflowEventNotification extends Notification implements ShouldQueue
         $bodyLines = explode("\n", $this->messageBody);
 
         $mailMessage = (new MailMessage)
-            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] ' . $this->subject)
-            ->greeting('Dear ' . $notifiable->name . ',');
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . ($journal->name ?? 'Journal'))
+            ->greeting('Dear ' . $notifiable->name . ',')
+            ->line('You have a new notification from ' . ($journal->name ?? 'Journal') . ':');
 
         foreach ($bodyLines as $line) {
-            $mailMessage->line($line);
+            if (trim($line) !== '') {
+                $mailMessage->line($line);
+            }
         }
 
         return $mailMessage
             ->action($this->actionText, $this->actionUrl)
-            ->salutation("Best regards,\nEditorial Team\n" . ($journal->name ?? 'IAMJOS'));
+            ->line('Link: ' . $this->actionUrl)
+            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . ($journal->name ?? 'IAMJOS'));
     }
 
     /**

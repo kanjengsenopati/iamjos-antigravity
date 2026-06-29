@@ -39,32 +39,32 @@ class SubmissionDecision extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $journal = $this->submission->journal;
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+
         $mail = (new MailMessage)
-            ->greeting('Dear ' . $notifiable->name . ',');
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
+            ->greeting('Dear ' . $notifiable->name . ',')
+            ->line('You have a new notification from ' . $journal->name . ':');
 
         switch ($this->decision) {
             case 'accepted':
-                $mail->subject('Congratulations! Your Submission Has Been Accepted')
-                    ->line('We are pleased to inform you that your submission has been accepted for publication.')
+                $mail->line('We are pleased to inform you that your submission "' . $this->submission->title . '" has been accepted for publication.')
                     ->line('**Title:** ' . $this->submission->title);
                 break;
 
             case 'rejected':
-                $mail->subject('Decision on Your Submission')
-                    ->line('Thank you for submitting your manuscript to our journal.')
-                    ->line('After careful review, we regret to inform you that your submission has not been accepted for publication.')
+                $mail->line('After careful review, we regret to inform you that your submission "' . $this->submission->title . '" has not been accepted for publication.')
                     ->line('**Title:** ' . $this->submission->title);
                 break;
 
             case 'revision_required':
-                $mail->subject('Revision Required for Your Submission')
-                    ->line('Your submission has been reviewed and requires revision before we can make a final decision.')
+                $mail->line('Your submission "' . $this->submission->title . '" has been reviewed and requires revisions.')
                     ->line('**Title:** ' . $this->submission->title);
                 break;
 
             default:
-                $mail->subject('Update on Your Submission')
-                    ->line('There is an update on your submission.')
+                $mail->line('There is an update on your submission "' . $this->submission->title . '".')
                     ->line('**Title:** ' . $this->submission->title)
                     ->line('**Status:** ' . ucfirst($this->decision));
         }
@@ -76,8 +76,9 @@ class SubmissionDecision extends Notification
         }
 
         return $mail
-            ->action('View Submission', route('journal.submissions.workflow', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
-            ->salutation('Best regards, Editorial Team');
+            ->action('View Submission', $url)
+            ->line('Link: ' . $url)
+            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
     }
 
     /**
@@ -115,7 +116,7 @@ class SubmissionDecision extends Notification
             'type' => 'submission_decision',
             'title' => $titles[$this->decision] ?? 'Submission Update',
             'message' => $messages[$this->decision] ?? 'There is an update on your submission.',
-            'url' => route('journal.submissions.workflow', ['journal' => $journal->slug, 'submission' => $this->submission], false),
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
             'notification_type' => $types[$this->decision] ?? 'info',
             'icon' => $icons[$this->decision] ?? 'fa-gavel',
             'submission_id' => $this->submission->id,

@@ -35,24 +35,26 @@ class SubmissionReceived extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        // Get the author list nicely formatted
+        $journal = $this->submission->journal;
         $authorList = $this->submission->authors->map(function ($author) {
             return $author->first_name . ' ' . $author->last_name;
         })->implode(', ');
 
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+
         return (new MailMessage)
-            ->subject('[' . ($this->submission->journal->abbreviation ?? 'JOURNAL') . '] Submission Acknowledgement')
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line('Thank you for submitting the manuscript, "' . $this->submission->title . '" to ' . $this->submission->journal->name . '.')
-            ->line('With the online journal management system that we are using, you will be able to track its progress through the editorial process by logging in to the journal web site:')
+            ->line('You have a new notification from ' . $journal->name . ':')
+            ->line('Thank you for submitting the manuscript, "' . $this->submission->title . '".')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Authors:** ' . ($authorList ?: $notifiable->name))
             ->line('- **Submission ID:** ' . ($this->submission->seq_id ?? 'Pending'))
-            ->line('- **Submitted:** ' . $this->submission->submitted_at?->format('F j, Y'))
-            ->action('Track Submission Progress', route('journal.submissions.workflow', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
-            ->line('If you have any questions, please contact me. Thank you for considering this journal as a venue for your work.')
-            ->salutation('Best regards,' . "\n" . 'Editorial Team' . "\n" . $this->submission->journal->name);
+            ->line('- **Submitted:** ' . ($this->submission->submitted_at?->format('F j, Y') ?? date('F j, Y')))
+            ->action('View Submission', $url)
+            ->line('Link: ' . $url)
+            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
     }
 
     /**
@@ -65,8 +67,8 @@ class SubmissionReceived extends Notification
         return [
             'type' => 'submission_received',
             'title' => 'Submission Received',
-            'message' => "Your submission \"{$this->submission->title}\" has been received and is under review.",
-            'url' => route('journal.submissions.workflow', ['journal' => $journal->slug, 'submission' => $this->submission], false),
+            'message' => "Your submission \"{$this->submission->title}\" has been received.",
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
             'notification_type' => 'success',
             'icon' => 'fa-check-circle',
             'submission_id' => $this->submission->id,

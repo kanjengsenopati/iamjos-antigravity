@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ArticlePublished extends Notification implements ShouldQueue
+class ArticlePublished extends Notification
 {
     use Queueable;
 
@@ -38,18 +38,21 @@ class ArticlePublished extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $journal = $this->submission->journal;
+        $url = route('journal.public.article', ['journal' => $journal->slug, 'submission' => $this->submission]);
+
         return (new MailMessage)
-            ->subject('Your Article Has Been Published!')
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line('Congratulations! Your article has been published in our journal.')
+            ->line('You have a new notification from ' . $journal->name . ':')
+            ->line('Congratulations! Your article "' . $this->submission->title . '" has been published in ' . $this->issue->identifier . '.')
             ->line('**Article Details:**')
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Issue:** ' . $this->issue->identifier)
-            ->line('- **Published:** ' . $this->submission->published_at?->format('F j, Y'))
-            ->action('View Published Article', route('journal.public.article', ['journal' => $this->submission->journal->slug, 'submission' => $this->submission]))
-            ->line('Thank you for your contribution to our journal.')
-            ->line('You can now share this publication with your colleagues and on social media.')
-            ->salutation('Best regards, Editorial Team');
+            ->line('- **Published:** ' . ($this->submission->published_at?->format('F j, Y') ?? date('F j, Y')))
+            ->action('View Published Article', $url)
+            ->line('Link: ' . $url)
+            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
     }
 
     /**
