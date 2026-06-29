@@ -173,6 +173,11 @@ class ProfileController extends Controller
         // Unset username so it cannot be altered
         unset($validated['username']);
 
+        // Fallback name (Public Name) to Given Name + Family Name if left empty to avoid NOT NULL DB constraint violation
+        if (empty(trim($validated['name'] ?? ''))) {
+            $validated['name'] = trim($validated['given_name'] . ' ' . ($validated['family_name'] ?? ''));
+        }
+
         // Sanitize Bio HTML (allow basic formatting tags only)
         if (isset($validated['bio'])) {
             $validated['bio'] = $this->sanitizeBio($validated['bio']);
