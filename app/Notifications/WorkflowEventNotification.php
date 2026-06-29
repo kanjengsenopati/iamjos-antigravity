@@ -75,6 +75,7 @@ class WorkflowEventNotification extends Notification
         }
 
         return $mailMessage
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action($this->actionText, $this->actionUrl)
             ->line('Link: ' . $this->actionUrl)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . ($journal->name ?? 'IAMJOS'));

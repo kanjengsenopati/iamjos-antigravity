@@ -62,6 +62,7 @@ class ReviewerReminder extends Notification implements ShouldQueue
         }
 
         return $message
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Submission', route('journal.reviewer.show', ['journal' => $submission->journal->slug, 'identifier' => $this->review->slug]))
             ->line('Thank you for your contribution to the peer review process.')
             ->salutation('Best regards, Editorial Team');

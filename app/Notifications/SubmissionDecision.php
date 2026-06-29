@@ -76,6 +76,7 @@ class SubmissionDecision extends Notification
         }
 
         return $mail
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Submission', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);

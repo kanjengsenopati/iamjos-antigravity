@@ -54,6 +54,7 @@ class EditorAssignmentNotification extends Notification
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Author:** ' . ($this->submission->authors->first()->name ?? 'Unknown'))
             ->line('- **Section:** ' . ($this->submission->section->title ?? $this->submission->section->name ?? 'Not specified'))
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Submission', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);

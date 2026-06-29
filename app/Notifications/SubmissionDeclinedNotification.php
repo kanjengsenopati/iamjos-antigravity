@@ -53,6 +53,7 @@ class SubmissionDeclinedNotification extends Notification
             ->line('We regret to inform you that your submission "' . $this->submission->title . '" has been declined by the editorial team.')
             ->line('**Reason for Declining:**')
             ->line($this->reason)
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Submission', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);

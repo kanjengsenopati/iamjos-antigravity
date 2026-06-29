@@ -68,6 +68,7 @@ class NewDiscussionMessageNotification extends Notification
             ->line('You have a new message in a discussion titled "' . $this->discussion->subject . '" regarding the submission "' . $submission->title . '".')
             ->line('**Message Preview:**')
             ->line('"' . strip_tags(substr($this->message->body, 0, 200)) . '..."')
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Discussion', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\n" . $this->sender->name . "\n________________________________\n" . $journal->name);

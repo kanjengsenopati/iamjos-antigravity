@@ -52,6 +52,7 @@ class SubmissionReceived extends Notification
             ->line('- **Authors:** ' . ($authorList ?: $notifiable->name))
             ->line('- **Submission ID:** ' . ($this->submission->seq_id ?? 'Pending'))
             ->line('- **Submitted:** ' . ($this->submission->submitted_at?->format('F j, Y') ?? date('F j, Y')))
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Submission', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);

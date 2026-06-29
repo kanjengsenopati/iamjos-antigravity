@@ -46,6 +46,7 @@ class ReviewInvitation extends Notification
             ->line('- **Title:** ' . $submission->title)
             ->line('- **Abstract:** ' . \Str::limit($submission->abstract, 200))
             ->line('- **Due Date:** ' . $dueDate)
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->line('')
             ->line('Please log in to accept or decline this invitation.')
             ->action('View Invitation', route('journal.reviewer.show', ['journal' => $submission->journal->slug, 'identifier' => $this->review]))

@@ -50,6 +50,7 @@ class ArticlePublished extends Notification
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Issue:** ' . $this->issue->identifier)
             ->line('- **Published:** ' . ($this->submission->published_at?->format('F j, Y') ?? date('F j, Y')))
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Published Article', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);

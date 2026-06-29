@@ -46,6 +46,7 @@ class ReviewCompleted extends Notification
             ->line('**Reviewer:** ' . $this->review->reviewer->name)
             ->line('**Recommendation:** ' . $recommendation)
             ->line('**Round:** ' . $this->review->round)
+            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Review', url('/editorial/queue'))
             ->line('Please log in to view the complete review and make an editorial decision.')
             ->salutation('Best regards, IAMJOS System');
