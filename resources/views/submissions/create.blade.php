@@ -96,8 +96,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Section <span
                                 class="text-red-500">*</span></label>
                         <select name="section_id" x-model="section_id"
-                            class="block w-full rounded-md border border-gray-300 bg-white text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
-                            style="appearance: auto; -webkit-appearance: listbox; color: black !important;" required>
+                            class="block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3" required>
                             <option value="" class="text-gray-500">Select a section...</option>
                             @if ($sections->count() > 0)
                                 @foreach ($sections as $section)
