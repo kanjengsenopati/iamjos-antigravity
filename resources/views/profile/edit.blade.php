@@ -366,18 +366,48 @@
                             </div>
 
                              <!-- Phone Number with WhatsApp -->
-                             <div>
-                                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                             <div x-data="phoneInputComponent('{{ old('phone', $user->phone) }}')">
+                                 <label for="phone_display" class="block text-sm font-medium text-gray-700 mb-2">
                                      Phone / WhatsApp Number
                                  </label>
-                                 <div class="relative">
-                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                         <i class="fa-solid fa-phone text-slate-400"></i>
+
+                                 <input type="hidden" name="phone" :value="fullPhone">
+
+                                 <div class="relative flex rounded-lg border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500 bg-white">
+                                     <!-- Custom Country Dropdown Trigger Button -->
+                                     <div class="relative" @click.away="open = false">
+                                         <button type="button" @click="open = !open"
+                                             class="h-full flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 rounded-l-lg hover:bg-gray-100 focus:outline-none transition-colors py-2.5">
+                                             <span class="text-lg leading-none" x-text="selectedCountry.flag"></span>
+                                             <span class="text-sm font-semibold text-gray-700" x-text="selectedCountry.dial"></span>
+                                             <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 ml-0.5"></i>
+                                         </button>
+
+                                         <!-- Dropdown Menu -->
+                                         <div x-show="open" x-cloak
+                                             class="absolute left-0 z-50 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto py-1">
+                                             <div class="px-2 py-1.5 sticky top-0 bg-white border-b border-gray-100">
+                                                 <input type="text" x-model="search" placeholder="Search country..." @click.stop
+                                                     class="w-full px-2.5 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                             </div>
+                                             <template x-for="c in filteredCountries" :key="c.code + c.dial">
+                                                 <button type="button" @click="selectCountry(c)"
+                                                     class="w-full flex items-center justify-between px-3 py-2 text-left text-xs hover:bg-indigo-50 transition-colors"
+                                                     :class="{'bg-indigo-50/70 font-bold text-indigo-900': c.dial === selectedCountry.dial && c.code === selectedCountry.code}">
+                                                     <div class="flex items-center gap-2">
+                                                         <span class="text-base leading-none" x-text="c.flag"></span>
+                                                         <span class="text-gray-700 font-medium" x-text="c.name"></span>
+                                                     </div>
+                                                     <span class="text-gray-400 font-semibold" x-text="c.dial"></span>
+                                                 </button>
+                                             </template>
+                                         </div>
                                      </div>
-                                     <input type="tel" name="phone" id="phone"
-                                         value="{{ old('phone', $user->phone) }}" placeholder="+628123456789 atau +15551234567"
-                                         class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                         style="padding-left: 2.5rem !important;">
+
+                                     <!-- Phone Number Input -->
+                                     <input type="tel" id="phone_display" x-model="phoneNumber" @input="updateFullPhone()"
+                                         placeholder="8123456789"
+                                         class="w-full py-2.5 px-4 text-sm text-gray-900 rounded-r-lg border-none focus:outline-none focus:ring-0">
                                  </div>
                                  <div class="mt-2 flex items-start">
                                      <span
@@ -385,7 +415,7 @@
                                          <i class="fa-brands fa-whatsapp mr-1"></i>
                                          WhatsApp Active
                                      </span>
-                                     <p class="ml-2 text-xs text-gray-500">Ensure this number is active on WhatsApp with country code (e.g. +628... or +1...) for notifications.</p>
+                                     <p class="ml-2 text-xs text-gray-500">Select country code with flag and enter your mobile number for WhatsApp notifications.</p>
                                  </div>
                              </div>
 
@@ -659,6 +689,87 @@
                     xhr.send(formData);
                 })
             });
+
+            function phoneInputComponent(initialValue) {
+                const countries = [
+                    { name: 'Indonesia', dial: '+62', flag: '🇮🇩', code: 'ID' },
+                    { name: 'Malaysia', dial: '+60', flag: '🇲🇾', code: 'MY' },
+                    { name: 'Singapore', dial: '+65', flag: '🇸🇬', code: 'SG' },
+                    { name: 'United States', dial: '+1', flag: '🇺🇸', code: 'US' },
+                    { name: 'United Kingdom', dial: '+44', flag: '🇬🇧', code: 'GB' },
+                    { name: 'Australia', dial: '+61', flag: '🇦🇺', code: 'AU' },
+                    { name: 'Japan', dial: '+81', flag: '🇯🇵', code: 'JP' },
+                    { name: 'Saudi Arabia', dial: '+966', flag: '🇸🇦', code: 'SA' },
+                    { name: 'United Arab Emirates', dial: '+971', flag: '🇦🇪', code: 'AE' },
+                    { name: 'Thailand', dial: '+66', flag: '🇹🇭', code: 'TH' },
+                    { name: 'Vietnam', dial: '+84', flag: '🇻🇳', code: 'VN' },
+                    { name: 'Philippines', dial: '+63', flag: '🇵🇭', code: 'PH' },
+                    { name: 'India', dial: '+91', flag: '🇮🇳', code: 'IN' },
+                    { name: 'Pakistan', dial: '+92', flag: '🇵🇰', code: 'PK' },
+                    { name: 'China', dial: '+86', flag: '🇨🇳', code: 'CN' },
+                    { name: 'South Korea', dial: '+82', flag: '🇰🇷', code: 'KR' },
+                    { name: 'Germany', dial: '+49', flag: '🇩🇪', code: 'DE' },
+                    { name: 'France', dial: '+33', flag: '🇫🇷', code: 'FR' },
+                    { name: 'Netherlands', dial: '+31', flag: '🇳🇱', code: 'NL' },
+                    { name: 'Turkey', dial: '+90', flag: '🇹🇷', code: 'TR' },
+                    { name: 'Egypt', dial: '+20', flag: '🇪🇬', code: 'EG' },
+                    { name: 'Nigeria', dial: '+234', flag: '🇳🇬', code: 'NG' },
+                    { name: 'Brazil', dial: '+55', flag: '🇧🇷', code: 'BR' },
+                    { name: 'Canada', dial: '+1', flag: '🇨🇦', code: 'CA' },
+                ];
+
+                let selected = countries[0];
+                let number = '';
+                let val = (initialValue || '').trim();
+
+                if (val) {
+                    const sorted = [...countries].sort((a, b) => b.dial.length - a.dial.length);
+                    let matched = false;
+                    for (let c of sorted) {
+                        if (val.startsWith(c.dial)) {
+                            selected = c;
+                            number = val.substring(c.dial.length).replace(/^0+/, '');
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) {
+                        if (val.startsWith('0')) {
+                            number = val.substring(1);
+                        } else if (val.startsWith('+')) {
+                            number = val.substring(1);
+                        } else {
+                            number = val;
+                        }
+                    }
+                }
+
+                return {
+                    open: false,
+                    search: '',
+                    countriesList: countries,
+                    selectedCountry: selected,
+                    phoneNumber: number,
+                    fullPhone: '',
+                    get filteredCountries() {
+                        if (!this.search) return this.countriesList;
+                        let s = this.search.toLowerCase();
+                        return this.countriesList.filter(c => c.name.toLowerCase().includes(s) || c.dial.includes(s));
+                    },
+                    init() {
+                        this.updateFullPhone();
+                    },
+                    selectCountry(c) {
+                        this.selectedCountry = c;
+                        this.open = false;
+                        this.updateFullPhone();
+                    },
+                    updateFullPhone() {
+                        let cleanNum = (this.phoneNumber || '').trim().replace(/^0+/, '');
+                        this.fullPhone = cleanNum ? (this.selectedCountry.dial + cleanNum) : '';
+                    }
+                };
+            }
         </script>
     @endpush
 </x-app-layout>
