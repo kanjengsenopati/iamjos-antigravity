@@ -337,6 +337,12 @@ class WebsiteSettingsController extends Controller
             'contact_email' => '',
             'contact_phone' => '',
             'contact_address' => '',
+
+            // Setup
+            'items_per_page' => 25,
+            'privacy_statement' => 'The names and email addresses entered in this journal site will be used exclusively for the stated purposes of this journal and will not be made available for any other purpose or to any other party.',
+            'date_format' => 'F j, Y',
+            'time_zone' => 'Asia/Jakarta',
         ];
     }
 
@@ -371,6 +377,12 @@ class WebsiteSettingsController extends Controller
             'contact_email' => ['type' => 'string', 'group' => 'footer'],
             'contact_phone' => ['type' => 'string', 'group' => 'footer'],
             'contact_address' => ['type' => 'string', 'group' => 'footer'],
+
+            // Setup
+            'items_per_page' => ['type' => 'integer', 'group' => 'setup'],
+            'privacy_statement' => ['type' => 'string', 'group' => 'setup'],
+            'date_format' => ['type' => 'string', 'group' => 'setup'],
+            'time_zone' => ['type' => 'string', 'group' => 'setup'],
         ];
     }
 }
