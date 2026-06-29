@@ -210,8 +210,17 @@ class WebsiteSettingsController extends Controller
             app()->setLocale($prim);
         }
 
+        $tab = $request->input('tab', 'setup');
+        $setupTab = $request->input('setup_tab', 'languages');
+        $appearanceTab = $request->input('appearance_tab', 'theme');
+
         return redirect()
-            ->route('journal.settings.website.edit', ['journal' => $journal->slug])
+            ->route('journal.settings.website.edit', [
+                'journal' => $journal->slug,
+                'tab' => $tab,
+                'setup_tab' => $setupTab,
+                'appearance_tab' => $appearanceTab
+            ])
             ->with('success', 'Website settings updated successfully.');
     }
 

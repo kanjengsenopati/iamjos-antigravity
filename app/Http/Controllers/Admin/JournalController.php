@@ -276,7 +276,7 @@ class JournalController extends Controller
             ];
             $journal->update(['settings' => $settings]);
 
-            return back()->with('success', 'Masthead settings saved successfully.');
+            return redirect()->route('journal.settings.index', ['journal' => $journal->slug, 'tab' => 'masthead'])->with('success', 'Masthead settings saved successfully.');
         }
 
         if ($tab === 'contact') {
@@ -310,10 +310,10 @@ class JournalController extends Controller
             ];
             $journal->update(['settings' => $settings]);
 
-            return back()->with('success', 'Contact settings saved successfully.');
+            return redirect()->route('journal.settings.index', ['journal' => $journal->slug, 'tab' => 'contact'])->with('success', 'Contact settings saved successfully.');
         }
 
-        return back()->with('error', 'Unknown settings tab.');
+        return redirect()->route('journal.settings.index', ['journal' => $journal->slug, 'tab' => $tab])->with('error', 'Unknown settings tab.');
     }
 
     /**

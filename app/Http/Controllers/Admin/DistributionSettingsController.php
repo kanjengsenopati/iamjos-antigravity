@@ -80,6 +80,7 @@ class DistributionSettingsController extends Controller
             'archiving_policy' => $validated['archiving']['policy'] ?? null,
         ]);
 
-        return back()->with('success', 'Distribution settings updated.');
+        $tab = $request->input('tab', 'license');
+        return redirect()->route('journal.settings.distribution.edit', ['journal' => $journal->slug, 'tab' => $tab])->with('success', 'Distribution settings updated.');
     }
 }

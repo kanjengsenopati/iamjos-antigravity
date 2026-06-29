@@ -142,7 +142,7 @@ class WorkflowSettingsController extends Controller
                 ],
             ]);
 
-            return back()->with('success', 'Submission settings saved successfully.');
+            return redirect()->route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'submissions'])->with('success', 'Submission settings saved successfully.');
         }
 
         if ($tab === 'review') {
@@ -162,7 +162,7 @@ class WorkflowSettingsController extends Controller
                 'require_competing_interests' => $request->boolean('require_competing_interests'),
             ]);
 
-            return back()->with('success', 'Review settings saved successfully.');
+            return redirect()->route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'review'])->with('success', 'Review settings saved successfully.');
         }
 
         if ($tab === 'emails') {
@@ -178,10 +178,10 @@ class WorkflowSettingsController extends Controller
                 'email_reply_to' => $validated['email_reply_to'] ?? null,
             ]);
 
-            return back()->with('success', 'Email settings saved successfully.');
+            return redirect()->route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'emails'])->with('success', 'Email settings saved successfully.');
         }
 
-        return back()->with('error', 'Unknown settings tab.');
+        return redirect()->route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => $tab])->with('error', 'Unknown settings tab.');
     }
 
     // =====================================================

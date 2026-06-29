@@ -4,7 +4,7 @@
 
 @section('content')
     <div x-data="{
-        activeTab: '{{ request('tab', 'submissions') }}',
+        activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'submissions') }}',
         showChecklistModal: false,
         showReviewFormModal: false,
         newChecklist: { content: '', is_required: true },
@@ -59,38 +59,38 @@
             <!-- Tab Navigation -->
             <div class="border-b border-gray-200">
                 <nav class="flex overflow-x-auto" aria-label="Tabs">
-                    <button @click="activeTab = 'submissions'"
+                    <button type="button" @click="activeTab = 'submissions'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'submissions' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-file-arrow-up mr-2"></i>
                         Submissions
                     </button>
-                    <button @click="activeTab = 'review'"
+                    <button type="button" @click="activeTab = 'review'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'review' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-clipboard-check mr-2"></i>
                         Review
                     </button>
-                    <button @click="activeTab = 'library'"
+                    <button type="button" @click="activeTab = 'library'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'library' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-folder-open mr-2"></i>
                         Publisher Library
                     </button>
-                    <button @click="activeTab = 'emails'"
+                    <button type="button" @click="activeTab = 'emails'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'emails' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-envelope mr-2"></i>
                         Emails
                     </button>
-                    <button @click="activeTab = 'notifications'"
+                    <button type="button" @click="activeTab = 'notifications'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'notifications' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-brands fa-whatsapp mr-2"></i>
                         WhatsApp
                     </button>

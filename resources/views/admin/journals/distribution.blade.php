@@ -4,7 +4,7 @@
 
 @section('content')
     <div x-data="{
-        activeTab: 'license'
+        activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'license') }}'
     }">
 
         <!-- Flash Messages -->
@@ -43,31 +43,31 @@
             <!-- Tab Navigation -->
             <div class="border-b border-gray-200">
                 <nav class="flex overflow-x-auto" aria-label="Tabs">
-                    <button @click="activeTab = 'license'"
+                    <button type="button" @click="activeTab = 'license'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'license' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-scale-balanced mr-2"></i>
                         License
                     </button>
-                    <button @click="activeTab = 'indexing'"
+                    <button type="button" @click="activeTab = 'indexing'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'indexing' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-magnifying-glass mr-2"></i>
                         Search Indexing
                     </button>
-                    <button @click="activeTab = 'access'"
+                    <button type="button" @click="activeTab = 'access'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'access' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-lock-open mr-2"></i>
                         Access
                     </button>
-                    <button @click="activeTab = 'archiving'"
+                    <button type="button" @click="activeTab = 'archiving'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'archiving' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-box-archive mr-2"></i>
                         Archiving
                     </button>
@@ -79,6 +79,7 @@
                 class="p-6 lg:p-8 relative">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="tab" :value="activeTab">
 
                 <!-- TAB 1: LICENSE -->
                 <div x-show="activeTab === 'license'" x-cloak x-transition:enter="transition ease-out duration-200"

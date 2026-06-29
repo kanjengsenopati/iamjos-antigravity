@@ -8,7 +8,7 @@
 <x-app-layout :journal="$journal" :journalSlug="$journalSlug">
     <x-slot name="title">{{ $isId ? 'Pengaturan Website' : 'Website Settings' }} - {{ $journal->name }}</x-slot>
 
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: 'setup' }">
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'setup') }}', setupSubTab: new URLSearchParams(window.location.search).get('setup_tab') || '{{ request('setup_tab', 'languages') }}', appearanceSubTab: new URLSearchParams(window.location.search).get('appearance_tab') || '{{ request('appearance_tab', 'theme') }}' }">
         {{-- Page Header --}}
         <div class="mb-8">
             <nav class="text-sm text-gray-500 mb-2">
@@ -82,27 +82,27 @@
         {{-- Primary Top Tabs Navigation (OJS Standard) --}}
         <div class="border-b border-slate-200 mb-8">
             <nav class="flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
-                <button type="button" @click="activeTab = 'appearance'"
+                <button type="button" @click="activeTab = 'appearance'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
                     :class="activeTab === 'appearance' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-palette text-base transition-colors" :class="activeTab === 'appearance' ? 'text-primary-600' : 'text-slate-400'"></i>
                     {{ $isId ? 'Tampilan (Appearance)' : 'Appearance' }}
                 </button>
-                <button type="button" @click="activeTab = 'setup'"
+                <button type="button" @click="activeTab = 'setup'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
                     :class="activeTab === 'setup' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-sliders text-base transition-colors" :class="activeTab === 'setup' ? 'text-primary-600' : 'text-slate-400'"></i>
                     {{ $isId ? 'Pengaturan (Setup)' : 'Setup' }}
                 </button>
-                <button type="button" @click="activeTab = 'plugins'"
+                <button type="button" @click="activeTab = 'plugins'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
                     :class="activeTab === 'plugins' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plug text-base transition-colors" :class="activeTab === 'plugins' ? 'text-primary-600' : 'text-slate-400'"></i>
                     Plugins
                 </button>
-                <button type="button" @click="activeTab = 'static_pages'"
+                <button type="button" @click="activeTab = 'static_pages'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
                     :class="activeTab === 'static_pages' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2">
+                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-file-code text-base transition-colors" :class="activeTab === 'static_pages' ? 'text-primary-600' : 'text-slate-400'"></i>
                     {{ $isId ? 'Halaman Statis' : 'Static Pages' }}
                 </button>
@@ -113,11 +113,14 @@
         <form action="{{ route('journal.settings.website.update', $journalSlug) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <input type="hidden" name="tab" :value="activeTab">
+            <input type="hidden" name="setup_tab" :value="setupSubTab">
+            <input type="hidden" name="appearance_tab" :value="appearanceSubTab">
 
             {{-- ============================================ --}}
             {{-- TAB 1: APPEARANCE --}}
             {{-- ============================================ --}}
-            <div x-show="activeTab === 'appearance'" x-cloak class="space-y-6" x-data="{ appearanceSubTab: 'theme' }">
+            <div x-show="activeTab === 'appearance'" x-cloak class="space-y-6">
                 {{-- Sub Tabs --}}
                 <div class="border-b border-slate-100 mb-6">
                     <nav class="flex space-x-6">
@@ -216,7 +219,7 @@
             {{-- ============================================ --}}
             {{-- TAB 2: SETUP (OJS 3.3 Redesigned Section!) --}}
             {{-- ============================================ --}}
-            <div x-show="activeTab === 'setup'" x-cloak class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8" x-data="{ setupSubTab: 'languages' }">
+            <div x-show="activeTab === 'setup'" x-cloak class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
                 
                 {{-- Two-Column Layout: Left Inner Sidebar & Right Content Panel --}}
                 <div class="flex flex-col lg:flex-row gap-8">

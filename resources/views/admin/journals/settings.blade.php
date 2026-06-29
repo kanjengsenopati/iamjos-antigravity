@@ -9,7 +9,7 @@
 @section('title', 'Journal Settings - ' . ($journal->abbreviation ?? 'IAMJOS'))
 
 @section('content')
-    <div x-data="{ activeTab: 'masthead' }">
+    <div x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'masthead') }}' }">
 
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
@@ -35,31 +35,31 @@
             <!-- Tab Navigation -->
             <div class="border-b border-gray-200">
                 <nav class="flex overflow-x-auto" aria-label="Tabs">
-                    <button @click="activeTab = 'masthead'"
+                    <button @click="activeTab = 'masthead'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'masthead' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-building-columns mr-2"></i>
                         Masthead
                     </button>
-                    <button @click="activeTab = 'contact'"
+                    <button @click="activeTab = 'contact'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'contact' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-address-book mr-2"></i>
                         Contact
                     </button>
-                    <button @click="activeTab = 'sections'"
+                    <button @click="activeTab = 'sections'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'sections' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-layer-group mr-2"></i>
                         Sections
                     </button>
-                    <button @click="activeTab = 'categories'"
+                    <button @click="activeTab = 'categories'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'categories' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap">
+                        class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-tags mr-2"></i>
                         Categories
                     </button>
