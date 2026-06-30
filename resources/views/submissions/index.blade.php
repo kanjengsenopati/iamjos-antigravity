@@ -449,31 +449,33 @@
                                         {{ $submission->updated_at->format('l, F j, Y') }}.</span>
                                 </p>
 
-                                <!-- Activity Log & Notes (Expanded View) -->
-                                <div class="flex justify-between items-center mt-4 border-t border-gray-100 pt-3">
-                                    <div>
-                                        @can('delete', $submission)
-                                            <form action="{{ route('journal.submissions.destroy', ['journal' => $journal->slug, 'submission' => $submission->id]) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus naskah ini? Tindakan ini tidak dapat dibatalkan.')"
-                                                  class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                        class="inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 hover:text-red-800 hover:underline transition">
-                                                    <i class="fa-solid fa-trash-can"></i>
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        @endcan
-                                    </div>
-                                    <button type="button" 
-                                             onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
-                                             class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition">
-                                        <i class="fa-solid fa-clock-rotate-left"></i>
-                                        Activity Log & Notes
-                                    </button>
-                                </div>
+                                 <!-- Activity Log & Notes (Expanded View) -->
+                                 <div class="flex justify-between items-start mt-4 border-t border-gray-100 pt-3">
+                                     <div></div>
+                                     <div class="flex flex-col items-end gap-2">
+                                         @can('delete', $submission)
+                                             <form action="{{ route('journal.submissions.destroy', ['journal' => $journal->slug, 'submission' => $submission->id]) }}" 
+                                                   method="POST" 
+                                                   onsubmit="return confirm('Apakah Anda yakin ingin menghapus naskah ini? Tindakan ini tidak dapat dibatalkan.')"
+                                                   class="inline">
+                                                 @csrf
+                                                 @method('DELETE')
+                                                 <button type="submit" 
+                                                         class="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg text-sm font-semibold transition shadow-sm">
+                                                     <i class="fa-solid fa-trash-can"></i>
+                                                     Delete
+                                                 </button>
+                                             </form>
+                                         @endcan
+
+                                         <button type="button" 
+                                                  onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
+                                                  class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition mt-1">
+                                             <i class="fa-solid fa-clock-rotate-left"></i>
+                                             Activity Log & Notes
+                                         </button>
+                                     </div>
+                                 </div>
                             </div>
                         </div>
                     </li>
