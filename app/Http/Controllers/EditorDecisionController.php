@@ -273,46 +273,47 @@ class EditorDecisionController extends Controller
 
         $submission->update($updates);
 
-        // Notify author if requested
-        if ($request->boolean('notify_author', true)) {
-            try {
-                if ($submission->author) {
-                    $submission->author->notify(new SubmissionDecision(
-                        $submission,
-                        $notificationDecision,
-                        $validated['comments'] ?? null
-                    ));
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send submission decision email: ' . $e->getMessage());
-            }
+        // Notify author if requested (Now handled globally by SubmissionLog::log)
+        // if ($request->boolean('notify_author', true)) {
+        //     try {
+        //         if ($submission->author) {
+        //             $submission->author->notify(new SubmissionDecision(
+        //                 $submission,
+        //                 $notificationDecision,
+        //                 $validated['comments'] ?? null
+        //             ));
+        //         }
+        //     } catch (\Exception $e) {
+        //         \Illuminate\Support\Facades\Log::error('Failed to send submission decision email: ' . $e->getMessage());
+        //     }
 
-            // Notify other assigned editors
-            try {
-                $otherEditors = $submission->activeEditors()
-                    ->where('user_id', '!=', auth()->id())
-                    ->with('user')->get()
-                    ->map(fn($a) => $a->user)
-                    ->filter();
+        //     // Notify other assigned editors
+        //     try {
+        //         $otherEditors = $submission->activeEditors()
+        //             ->where('user_id', '!=', auth()->id())
+        //             ->with('user')->get()
+        //             ->map(fn($a) => $a->user)
+        //             ->filter();
 
-                $decisionLabels = [
-                    'accept' => 'Accept Submission',
-                    'reject' => 'Decline Submission',
-                    'revision' => 'Request Revisions',
-                ];
-                $decisionLabel = $decisionLabels[$validated['decision']] ?? $validated['decision'];
+        //         $decisionLabels = [
+        //             'accept' => 'Accept Submission',
+        //             'reject' => 'Decline Submission',
+        //             'revision' => 'Request Revisions',
+        //         ];
+        //         $decisionLabel = $decisionLabels[$validated['decision']] ?? $validated['decision'];
 
-                foreach ($otherEditors as $otherEditor) {
-                    $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
-                        $submission,
-                        'Editorial Decision Recorded',
-                        "An editorial decision of \"{$decisionLabel}\" has been recorded for the submission \"{$submission->title}\" by " . auth()->user()->name . ".",
-                        url("/{$journal->slug}/submissions/{$submission->slug}")
-                    ));
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to notify other editors of editorial decision: ' . $e->getMessage());
-            }
+        //         foreach ($otherEditors as $otherEditor) {
+        //             $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
+        //                 $submission,
+        //                 'Editorial Decision Recorded',
+        //                 "An editorial decision of \"{$decisionLabel}\" has been recorded for the submission \"{$submission->title}\" by " . auth()->user()->name . ".",
+        //                 url("/{$journal->slug}/submissions/{$submission->slug}")
+        //             ));
+        //         }
+        //     } catch (\Exception $e) {
+        //         \Illuminate\Support\Facades\Log::error('Failed to notify other editors of editorial decision: ' . $e->getMessage());
+        //     }
+        // }
 
             // Send WhatsApp notification based on decision type
             try {
@@ -338,7 +339,7 @@ class EditorDecisionController extends Controller
             } catch (\Exception $e) {
                 Log::error('Failed to send WhatsApp notification for decision: ' . $e->getMessage());
             }
-        }
+        // }
 
         $messages = [
             'accept' => 'Submission accepted. Author has been notified.',

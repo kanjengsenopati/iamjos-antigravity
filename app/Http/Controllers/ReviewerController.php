@@ -344,12 +344,12 @@ class ReviewerController extends Controller
         )->get();
 
         foreach ($editors as $editor) {
-            // Send email notification
-            try {
-                $editor->notify(new ReviewCompleted($assignment));
-            } catch (\Throwable $e) {
-                Log::error('ReviewCompleted email failed for editor ' . $editor->id . ': ' . $e->getMessage());
-            }
+            // Send email notification (Now handled globally by SubmissionLog::log)
+            // try {
+            //     $editor->notify(new ReviewCompleted($assignment));
+            // } catch (\Throwable $e) {
+            //     Log::error('ReviewCompleted email failed for editor ' . $editor->id . ': ' . $e->getMessage());
+            // }
 
             // Send WhatsApp notification
             try {

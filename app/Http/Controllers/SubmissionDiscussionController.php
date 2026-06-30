@@ -361,8 +361,8 @@ class SubmissionDiscussionController extends Controller
 
         foreach ($participantsToNotify as $participant) {
             try {
-                // Send email notification
-                $participant->notify(new NewDiscussionMessageNotification($discussion, $message, $sender));
+                // Send email notification (Now handled globally by SubmissionLog::log)
+                // $participant->notify(new NewDiscussionMessageNotification($discussion, $message, $sender));
 
                 // Send WhatsApp notification
                 WaGateway::sendTemplate($participant, 'discussion_message', [
