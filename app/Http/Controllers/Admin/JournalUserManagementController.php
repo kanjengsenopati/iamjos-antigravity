@@ -269,14 +269,19 @@ class JournalUserManagementController extends Controller
 
     public function disable($journal, User $user)
     {
-        // Logic to disable user
-        $user->update(['status' => 'inactive']); // Assuming status column exists or similar logic
+        $user->update([
+            'disabled' => true,
+            'disabled_reason' => 'Disabled by administrator'
+        ]);
         return back()->with('success', 'User disabled.');
     }
 
     public function enable($journal, User $user)
     {
-        $user->update(['status' => 'active']);
+        $user->update([
+            'disabled' => false,
+            'disabled_reason' => null
+        ]);
         return back()->with('success', 'User enabled.');
     }
 

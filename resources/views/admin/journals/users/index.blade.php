@@ -107,66 +107,74 @@
     </div>
 
     <!-- Data Table -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" x-data="{ expandedUser: null }">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name /
-                            Username</th>
+                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Given Name</th>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email
-                        </th>
+                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Family Name</th>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Roles
-                        </th>
+                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Username</th>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status
-                        </th>
-                        <th scope="col" class="relative px-6 py-3">
-                            <span class="sr-only">Actions</span>
-                        </th>
+                            class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($users as $user)
-                        <tr class="hover:bg-gray-50 transition-colors group">
+                        @php
+                            // Extract Given Name & Family Name fallbacks
+                            $givenName = $user->given_name ?? strtok($user->name, ' ');
+                            $familyName = $user->family_name ?? (substr(strstr($user->name, ' '), 1) ?: '');
+                            
+                            $userRoles = $user->journal_roles->pluck('name')->toArray();
+                            $isSuperAdmin = in_array('Super Admin', $userRoles);
+                            if (empty($userRoles)) {
+                                $userRoles = ['Reader'];
+                            }
+                        @endphp
+                        <tr class="hover:bg-gray-50/70 transition-colors cursor-pointer"
+                            @click="expandedUser = (expandedUser === '{{ $user->id }}' ? null : '{{ $user->id }}')">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div
-                                        class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
-                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    <!-- Toggle Arrow -->
+                                    <span class="mr-3 text-gray-400 transition-transform duration-200"
+                                        :class="expandedUser === '{{ $user->id }}' ? 'rotate-90' : ''">
+                                        <i class="fa-solid fa-caret-right text-[14px]"></i>
+                                    </span>
+                                    <div class="text-sm font-medium {{ $user->disabled ? 'text-gray-400 line-through' : 'text-gray-900' }}">
+                                        {{ $givenName }}
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
-                                        <div class="text-xs text-gray-500">@
-                                            {{ $user->username ?? Str::slug($user->name) }}
-                                        </div>
-                                    </div>
+                                    @if($user->disabled)
+                                        <span class="ml-2 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-red-100 text-red-700 rounded-md">Disabled</span>
+                                    @endif
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-500">{{ $user->email }}</div>
-                                @if ($user->email_verified_at)
-                                    <span
-                                        class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">Verified</span>
-                                @else
-                                    <span
-                                        class="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">Unverified</span>
-                                @endif
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {{ $user->disabled ? 'text-gray-400 line-through' : 'text-gray-500' }}">
+                                {{ $familyName }}
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-wrap gap-1.5 max-w-xs">
-                                    @php
-                                        // Use per-journal roles from controller (journal_roles attribute)
-                                        $userRoles = $user->journal_roles->pluck('name')->toArray();
-                                        $isSuperAdmin = in_array('Super Admin', $userRoles);
-                                        if (empty($userRoles)) {
-                                            $userRoles = ['Reader'];
-                                        }
-                                    @endphp
-
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {{ $user->disabled ? 'text-gray-400' : 'text-gray-500' }}">
+                                {{ $user->username ?? Str::slug($user->name) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {{ $user->disabled ? 'text-gray-400' : 'text-gray-500' }}">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <span>{{ $user->email }}</span>
+                                    @if ($user->email_verified_at)
+                                        <span class="text-[9px] text-emerald-600 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100 font-semibold">Verified</span>
+                                    @else
+                                        <span class="text-[9px] text-amber-600 bg-amber-50 px-1 py-0.2 rounded border border-amber-100 font-semibold">Unverified</span>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Expandable Actions Row -->
+                        <tr x-show="expandedUser === '{{ $user->id }}'" x-cloak class="bg-slate-50/50">
+                            <td colspan="4" class="px-12 py-3 border-t border-slate-100">
+                                <!-- Roles Display -->
+                                <div class="flex flex-wrap gap-1.5 items-center mb-2.5">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1.5">Roles:</span>
                                     @foreach ($userRoles as $role)
                                         @php
                                             $badgeClass = match ($role) {
@@ -182,92 +190,85 @@
                                                 default => 'bg-gray-50 text-gray-600 border-gray-100',
                                             };
                                         @endphp
-                                        <span
-                                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border {{ $badgeClass }}">
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border {{ $badgeClass }}">
                                             @if ($role === 'Super Admin')
-                                                <i class="fa-solid fa-shield-halved mr-1 text-[10px]"></i>
+                                                <i class="fa-solid fa-shield-halved mr-1 text-[8px]"></i>
                                             @endif
                                             {{ $role }}
                                         </span>
                                     @endforeach
                                 </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Active
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center justify-end gap-2">
+
+                                <!-- Text Link Actions -->
+                                <div class="flex flex-wrap gap-4 text-xs font-semibold items-center">
                                     @if ($isSuperAdmin)
-                                        {{-- Super Admin indicator --}}
-                                        <span class="text-xs text-purple-600 font-medium px-2 py-1 bg-purple-50 rounded-lg">
-                                            <i class="fa-solid fa-shield-halved mr-1"></i>
-                                            Full Access
+                                        <span class="text-xs text-purple-600 font-medium px-2 py-0.5 bg-purple-50 rounded-lg border border-purple-200/50">
+                                            <i class="fa-solid fa-shield-halved mr-1"></i> Full Access
                                         </span>
                                     @else
-                                        <!-- Login As -->
-                                        <form
-                                            action="{{ route($routePrefix . '.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
-                                            method="POST">
-                                            @csrf
-                                            <button type="submit"
-                                                class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                title="Login As User">
-                                                <i class="fa-solid fa-right-to-bracket"></i>
-                                            </button>
-                                        </form>
-
                                         <!-- Email -->
                                         <button type="button"
-                                            @click="openEmailModal({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }})"
-                                            class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                            title="Email User">
-                                            <i class="fa-solid fa-envelope"></i>
+                                            @click.stop="openEmailModal({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }})"
+                                            class="text-blue-600 hover:text-blue-800 hover:underline">
+                                            Email
                                         </button>
 
-                                        <!-- Edit -->
+                                        <!-- Edit User -->
                                         <a href="{{ route($routePrefix . '.edit', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                            class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                                            title="Edit User Roles">
-                                            <i class="fa-solid fa-pen-to-square"></i>
+                                            class="text-blue-600 hover:text-blue-800 hover:underline" @click.stop>
+                                            Edit User
                                         </a>
 
-                                        <!-- Merge User -->
-                                        <a href="{{ route($routePrefix . '.merge', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                            class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                            title="Merge This User">
-                                            <i class="fa-solid fa-code-merge"></i>
-                                        </a>
+                                        <!-- Disable/Enable -->
+                                        <form
+                                            action="{{ route($routePrefix . ($user->disabled ? '.enable' : '.disable'), ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            method="POST" class="inline" @click.stop>
+                                            @csrf
+                                            <button type="submit" class="text-pink-600 hover:text-pink-800 hover:underline">
+                                                {{ $user->disabled ? 'Enable' : 'Disable' }}
+                                            </button>
+                                        </form>
 
                                         <!-- Remove from Journal -->
                                         <form
                                             action="{{ route($routePrefix . '.destroy', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                            method="POST"
+                                            method="POST" class="inline" @click.stop
                                             onsubmit="return confirm('Remove this user from {{ $journal->name }}? They will no longer have access to this journal.')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"
-                                                class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Remove from Journal">
-                                                <i class="fa-solid fa-user-minus"></i>
+                                            <button type="submit" class="text-red-600 hover:text-red-800 hover:underline">
+                                                Remove
                                             </button>
                                         </form>
+
+                                        <!-- Login As -->
+                                        <form
+                                            action="{{ route($routePrefix . '.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
+                                            method="POST" class="inline" @click.stop>
+                                            @csrf
+                                            <button type="submit" class="text-blue-600 hover:text-blue-800 hover:underline">
+                                                Login As
+                                            </button>
+                                        </form>
+
+                                        <!-- Merge User -->
+                                        <a href="{{ route($routePrefix . '.merge', ['journal' => $journal->slug, 'user' => $user->id]) }}"
+                                            class="text-blue-600 hover:text-blue-800 hover:underline" @click.stop>
+                                            Merge User
+                                        </a>
                                     @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                                         <i class="fa-solid fa-users-slash text-gray-400"></i>
                                     </div>
                                     <p class="text-sm font-medium text-gray-900">No users enrolled in this journal</p>
-                                    <p class="text-xs text-gray-500 mt-1">Enroll existing users or create new ones to get
-                                        started.</p>
+                                    <p class="text-xs text-gray-500 mt-1">Enroll existing users or create new ones to get started.</p>
                                     <div class="mt-4 flex gap-3">
                                         <a href="{{ route($routePrefix . '.enroll', ['journal' => $journal->slug]) }}"
                                             class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
