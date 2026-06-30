@@ -461,7 +461,7 @@
                                                  @csrf
                                                  @method('DELETE')
                                                  <button type="submit" 
-                                                         class="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg text-sm font-semibold transition shadow-sm">
+                                                         class="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
                                                      <i class="fa-solid fa-trash-can"></i>
                                                      Delete
                                                  </button>
