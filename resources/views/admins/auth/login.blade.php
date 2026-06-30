@@ -301,13 +301,15 @@
                 </form>
 
                 <!-- Register Link -->
-                <p class="mt-8 text-center text-sm text-gray-500">
-                    Don't have an account?
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-gray-500 mb-3">
+                        Don't have an account?
+                    </p>
                     <a href="{{ $journal ? route('journal.register', $journal->slug) : route('register') }}"
-                        class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
-                        Create account
+                        class="inline-block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Register
                     </a>
-                </p>
+                </div>
 
                 <!-- Back to Journal/Portal Link -->
                 @if ($journal)

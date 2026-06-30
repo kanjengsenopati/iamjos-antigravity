@@ -450,10 +450,26 @@
                                 </p>
 
                                 <!-- Activity Log & Notes (Expanded View) -->
-                                <div class="flex justify-end mt-4 border-t border-gray-100 pt-3">
+                                <div class="flex justify-between items-center mt-4 border-t border-gray-100 pt-3">
+                                    <div>
+                                        @can('delete', $submission)
+                                            <form action="{{ route('journal.submissions.destroy', ['journal' => $journal->slug, 'submission' => $submission->id]) }}" 
+                                                  method="POST" 
+                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus naskah ini? Tindakan ini tidak dapat dibatalkan.')"
+                                                  class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                        class="inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 hover:text-red-800 hover:underline transition">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    </div>
                                     <button type="button" 
-                                            onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
-                                            class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition">
+                                             onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
+                                             class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition">
                                         <i class="fa-solid fa-clock-rotate-left"></i>
                                         Activity Log & Notes
                                     </button>
