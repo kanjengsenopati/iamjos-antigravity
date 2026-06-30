@@ -564,7 +564,7 @@
                 step: {{ request('step', ($draft && isset($draft->metadata['current_step'])) ? $draft->metadata['current_step'] : 1) }},
                 section_id: {!! json_encode(old('section_id', $draft ? $draft->section_id : '')) !!},
                 requirements: @json(($draft && isset($draft->metadata['requirements'])) ? $draft->metadata['requirements'] : []),
-                totalRequirements: {{ $submissionChecklists->count() }},
+                requiredRequirements: {!! json_encode($submissionChecklists->where('is_required', true)->pluck('id')->map(fn($id) => (string)$id)->toArray()) !!},
                 validationErrors: [],
                 title: {!! json_encode(old('title', ($draft && !str_starts_with($draft->title, 'Untitled Draft -')) ? $draft->title : '')) !!},
                 subtitle: {!! json_encode(old('subtitle', $draft->subtitle ?? '')) !!},
@@ -637,8 +637,7 @@
 
                 canProceed() {
                     if (this.step === 1) {
-                        if (this.totalRequirements === 0) return true;
-                        return this.requirements.length >= this.totalRequirements;
+                        return this.requiredRequirements.every(id => this.requirements.includes(id));
                     }
                     if (this.step === 2) {
                         return this.fileName !== '';
@@ -672,7 +671,8 @@
                     this.validationErrors = [];
 
                     if (this.step === 1) {
-                        if (this.totalRequirements > 0 && this.requirements.length < this.totalRequirements) {
+                        const allRequiredChecked = this.requiredRequirements.every(id => this.requirements.includes(id));
+                        if (!allRequiredChecked) {
                             this.validationErrors.push('Please check all required submission checklist items.');
                         }
                     } else if (this.step === 2) {

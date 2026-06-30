@@ -311,8 +311,12 @@ class SubmissionController extends Controller
         }
 
         try {
-            // Count required checklists to validate all are checked
-            $requiredChecklistCount = SubmissionChecklist::where('journal_id', $journal->id)->count();
+            // Get IDs of required checklists
+            $requiredChecklistIds = SubmissionChecklist::where('journal_id', $journal->id)
+                ->where('is_required', true)
+                ->pluck('id')
+                ->toArray();
+            $requiredChecklistCount = count($requiredChecklistIds);
 
             $manuscriptRule = 'required|file|mimes:doc,docx,pdf|max:10240';
             $draftId = $request->input('draft_id');
@@ -327,7 +331,20 @@ class SubmissionController extends Controller
 
             $validated = $request->validate([
                 'section_id' => 'required|uuid|exists:sections,id',
-                'requirements' => $requiredChecklistCount > 0 ? ['required', 'array', "size:$requiredChecklistCount"] : 'nullable',
+                'requirements' => [
+                    $requiredChecklistCount > 0 ? 'required' : 'nullable',
+                    'array',
+                    function ($attribute, $value, $fail) use ($requiredChecklistIds) {
+                        if (is_array($value)) {
+                            foreach ($requiredChecklistIds as $id) {
+                                if (!in_array((string)$id, array_map('strval', $value))) {
+                                    $fail('Please check all required submission checklist items.');
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                ],
                 'requirements.*' => 'required',
                 'manuscript' => $manuscriptRule,
                 'title' => 'required|string|max:500',
