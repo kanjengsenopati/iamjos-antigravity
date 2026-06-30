@@ -271,10 +271,19 @@
                                                         class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs font-medium rounded">Optional</span>
                                                 @endif
 
+                                                <!-- Edit Button -->
+                                                <button type="button"
+                                                    @click="isEditMode = true; editingItem = { id: '{{ $checklist->id }}', content: '{{ addslashes($checklist->content) }}', is_required: {{ $checklist->is_required ? 'true' : 'false' }} }; newChecklist = { content: editingItem.content, is_required: editingItem.is_required }; showChecklistModal = true;"
+                                                    class="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                                                    title="Edit Item">
+                                                    <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                                </button>
+
                                                 <!-- Helper JS used for Delete -->
                                                 <button type="button"
                                                     onclick="submitForm('{{ route('journal.settings.workflow.checklists.destroy', ['journal' => $journal->slug, 'checklist' => $checklist->id]) }}', 'DELETE', 'Delete this checklist item?')"
-                                                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-all">
+                                                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                    title="Delete Item">
                                                     <i class="fa-solid fa-trash text-sm"></i>
                                                 </button>
                                             </div>
@@ -829,11 +838,14 @@
                 <div class="fixed inset-0 bg-black/50" @click="showChecklistModal = false"></div>
                 <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
                     <form
-                        action="{{ route('journal.settings.workflow.checklists.store', ['journal' => $journal->slug]) }}"
+                        :action="isEditMode ? '{{ route('journal.settings.workflow.checklists.update', ['journal' => $journal->slug, 'checklist' => '__CHECKLIST_ID__']) }}'.replace('__CHECKLIST_ID__', editingItem.id) : '{{ route('journal.settings.workflow.checklists.store', ['journal' => $journal->slug]) }}'"
                         method="POST">
                         @csrf
+                        <template x-if="isEditMode">
+                            <input type="hidden" name="_method" value="PUT">
+                        </template>
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900">Add Checklist Item</h3>
+                            <h3 class="text-lg font-semibold text-gray-900" x-text="isEditMode ? 'Edit Checklist Item' : 'Add Checklist Item'"></h3>
                             <button type="button" @click="showChecklistModal = false"
                                 class="text-gray-400 hover:text-gray-600">
                                 <i class="fa-solid fa-xmark text-lg"></i>
@@ -856,8 +868,8 @@
                             <button type="button" @click="showChecklistModal = false"
                                 class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
                             <button type="submit"
-                                class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700">Add
-                                Item</button>
+                                class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                                x-text="isEditMode ? 'Save Changes' : 'Add Item'"></button>
                         </div>
                     </form>
                 </div>
