@@ -143,7 +143,7 @@
                         </a>
                     @else
                         <a href="{{ route('login', ['intended_journal' => $journal->slug]) }}" class="text-sm font-medium text-gray-600 hover:text-gray-900">
-                            Sign In
+                            Login
                         </a>
                     @endauth
 

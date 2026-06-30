@@ -304,7 +304,7 @@
                         <p class="text-sm text-slate-600">
                             Already have an account?
                             <a href="{{ route('journal.login', $journal->slug) }}"
-                                class="font-semibold text-blue-600 hover:text-blue-500">Sign in</a>
+                                class="font-semibold text-blue-600 hover:text-blue-500">Login</a>
                         </p>
                     </div>
                 </form>

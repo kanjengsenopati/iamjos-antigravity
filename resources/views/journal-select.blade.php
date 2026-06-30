@@ -118,7 +118,7 @@
                     @csrf
                     <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-primary-800 hover:bg-primary-900 border border-primary-600 rounded-lg text-sm font-medium transition-all shadow-sm text-white">
                         <i class="fa-solid fa-right-from-bracket"></i>
-                        <span class="hidden sm:inline">Sign Out</span>
+                        <span class="hidden sm:inline">Logout</span>
                     </button>
                 </form>
             </div>

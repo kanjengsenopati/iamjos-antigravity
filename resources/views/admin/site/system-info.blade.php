@@ -65,7 +65,7 @@
                         <div class="flex-1 min-w-0">
                             <h3 class="font-bold text-gray-900 truncate">Expire Sessions</h3>
                             <p class="text-sm text-gray-500 mt-1 line-clamp-2">Log out all users immediately. They will need
-                                to sign in again.</p>
+                                to login again.</p>
                             <form action="{{ route('admin.site.expire-sessions') }}" method="POST" class="mt-4">
                                 @csrf
                                 <button type="submit"

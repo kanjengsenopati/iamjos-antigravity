@@ -459,7 +459,7 @@
                 <form action="{{ route('logout') }}" method="POST" x-show="!sidebarCollapsed">
                     @csrf
                     <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors p-1"
-                        title="Sign Out">
+                        title="Logout">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     </button>
                 </form>

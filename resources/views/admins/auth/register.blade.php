@@ -551,7 +551,7 @@
                         Already have an account?
                         <a href="{{ route('login') }}"
                             class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
-                            Sign in
+                            Login
                         </a>
                     </p>
                 </div>

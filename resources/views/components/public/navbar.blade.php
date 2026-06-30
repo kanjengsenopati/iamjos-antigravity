@@ -197,7 +197,7 @@
 
                             {{-- Header --}}
                             <div class="px-4 py-3 border-b border-gray-100">
-                                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Signed in as</p>
+                                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Logged in as</p>
                                 <p class="text-sm font-medium text-slate-900 truncate">{{ Auth::user()->name }}</p>
                             </div>
 

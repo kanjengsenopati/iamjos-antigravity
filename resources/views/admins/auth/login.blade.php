@@ -197,7 +197,7 @@
                 <div class="mb-8">
                     <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
                     <p class="text-gray-500">
-                        Sign in to {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                        Login to {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
                     </p>
                 </div>
 
@@ -278,10 +278,10 @@
 
                     <!-- Remember Me -->
                     <div class="flex items-center">
-                        <input type="checkbox" id="remember" name="remember"
+                        <input type="checkbox" id="remember" name="remember" value="1"
                             class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                         <label for="remember" class="ml-2 text-sm text-gray-600">
-                            Remember for 30 days
+                            Remember me
                         </label>
                     </div>
 
@@ -296,7 +296,7 @@
                     <!-- Submit Button -->
                     <button type="submit"
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Sign in
+                        Login
                     </button>
                 </form>
 
@@ -306,7 +306,7 @@
                         Don't have an account?
                     </p>
                     <a href="{{ $journal ? route('journal.register', $journal->slug) : route('register') }}"
-                        class="inline-block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="inline-block w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
                         Register
                     </a>
                 </div>
