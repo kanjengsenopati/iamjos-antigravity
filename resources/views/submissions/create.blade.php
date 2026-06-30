@@ -429,12 +429,21 @@
                         class="text-gray-600 hover:text-gray-900 font-medium text-sm">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Back
                     </button>
-                    <div x-show="step === 1"></div> <!-- Spacer -->
+                    <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}" 
+                       x-show="step === 1"
+                       class="text-gray-600 hover:text-gray-900 font-medium text-sm flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Back To Submission
+                    </a>
 
-                    <div class="flex items-center">
+                    <div class="flex items-center gap-3">
+                        <button type="button" @click="cancelSubmission()"
+                            class="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+
                         <button type="button" x-show="step < 4" @click="nextStep()"
                             class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                            Next <i class="fa-solid fa-arrow-right ml-1"></i>
+                            Save & Continue <i class="fa-solid fa-arrow-right ml-1"></i>
                         </button>
 
                         <button type="button" x-show="step === 4" @click="submitForm()" :disabled="isSubmitting"
@@ -445,6 +454,11 @@
                     </div>
                 </div>
 
+            </form>
+
+            <form id="cancelSubmissionForm" action="{{ $draft ? route('journal.submissions.destroy', ['journal' => $journal->slug, 'submission' => $draft->id]) : '#' }}" method="POST" class="hidden">
+                @csrf
+                @method('DELETE')
             </form>
         </div>
     </div>
@@ -781,6 +795,17 @@
                     stepInput.value = targetStep !== null ? targetStep : this.step;
 
                     form.submit();
+                },
+
+                cancelSubmission() {
+                    if (confirm('Are you sure you want to cancel this submission? This will delete the draft submission.')) {
+                        const draftId = '{{ $draft->id ?? '' }}';
+                        if (draftId) {
+                            document.getElementById('cancelSubmissionForm').submit();
+                        } else {
+                            window.location.href = "{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}";
+                        }
+                    }
                 },
 
                 init() {
