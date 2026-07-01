@@ -287,7 +287,7 @@
                             </div>
 
                             <!-- Password -->
-                            <div x-data="{ show: false }">
+                            <div>
                                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Password <span class="text-red-500">*</span>
                                 </label>
@@ -295,14 +295,14 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-lock text-gray-400 text-sm"></i>
                                     </div>
-                                    <input :type="show ? 'text' : 'password'" id="password" name="password"
+                                    <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
                                         x-model="password" placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                         required minlength="8">
                                     <i class="fa-solid fa-circle-check text-emerald-500 text-lg absolute right-10 inset-y-0 my-auto h-fit pointer-events-none" x-show="passwordStrength.isStrong" x-cloak></i>
-                                    <button type="button" @click="show = !show"
+                                    <button type="button" @click="showPassword = !showPassword"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
-                                        <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
                                 <div class="mt-1.5 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden" x-show="password.length > 0" x-cloak>
@@ -318,7 +318,7 @@
                             </div>
 
                             <!-- Confirm Password -->
-                            <div x-data="{ show: false }">
+                            <div>
                                 <label for="password_confirmation"
                                     class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Confirm Password <span class="text-red-500">*</span>
@@ -327,13 +327,13 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-lock text-gray-400 text-sm"></i>
                                     </div>
-                                    <input :type="show ? 'text' : 'password'" id="password_confirmation"
+                                    <input :type="showConfirmPassword ? 'text' : 'password'" id="password_confirmation"
                                         name="password_confirmation" placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                         required>
-                                    <button type="button" @click="show = !show"
+                                    <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
-                                        <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        <i class="fas" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
                                 @error('password_confirmation')
@@ -578,6 +578,8 @@
             return {
                 username: '{{ old('username', '') }}',
                 password: '',
+                showPassword: false,
+                showConfirmPassword: false,
                 get passwordStrength() {
                     if (this.password.length === 0) {
                         return { score: 0, color: 'bg-gray-200 w-0', text: '', isStrong: false };
