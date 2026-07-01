@@ -430,7 +430,7 @@ class JournalUserManagementController extends Controller
         DB::beginTransaction();
 
         try {
-            $role->query()->where('id', $role->id)->update([
+            $role->update([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'permission_level' => $request->permission_level,
