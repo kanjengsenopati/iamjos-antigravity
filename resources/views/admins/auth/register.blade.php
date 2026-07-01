@@ -408,8 +408,9 @@
                                     <input :type="showConfirmPassword ? 'text' : 'password'" id="password_confirmation"
                                         name="password_confirmation" x-model="passwordConfirmation" placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 transition-colors"
-                                        :class="isPasswordMismatch ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'"
+                                        :class="isPasswordMismatch ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : (isPasswordMatched ? 'border-emerald-500 focus:ring-emerald-500 focus:border-emerald-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500')"
                                         required>
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-lg absolute right-10 inset-y-0 my-auto h-fit pointer-events-none" x-show="isPasswordMatched" x-cloak></i>
                                     <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                                         <i class="fas" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
@@ -417,6 +418,9 @@
                                 </div>
                                 <p class="mt-1 text-xs text-red-600 font-medium flex items-center gap-1" x-show="isPasswordMismatch" x-cloak>
                                     <i class="fas fa-exclamation-circle"></i> Passwords do not match.
+                                </p>
+                                <p class="mt-1 text-xs text-emerald-600 font-semibold flex items-center gap-1" x-show="isPasswordMatched" x-cloak>
+                                    <i class="fas fa-check-circle"></i> Passwords match.
                                 </p>
                                 @error('password_confirmation')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -704,6 +708,10 @@
                 get isPasswordMismatch() {
                     if (this.passwordConfirmation.length === 0) return false;
                     return this.password !== this.passwordConfirmation;
+                },
+                get isPasswordMatched() {
+                    if (this.passwordConfirmation.length === 0) return false;
+                    return this.password === this.passwordConfirmation;
                 }
             }
         }
