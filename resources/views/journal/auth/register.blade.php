@@ -189,11 +189,14 @@
                                     </div>
                                     <input type="text" id="username" name="username"
                                         x-model="username" @input="username = username.toLowerCase()" placeholder="johndoe"
-                                        class="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        class="block w-full pl-10 pr-4 py-2.5 border rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 transition-colors"
+                                        :class="isUsernameInvalid ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'"
                                         required>
                                 </div>
-                                <p class="mt-1 text-xs text-slate-500">Alphanumeric only (letters, numbers,
-                                    underscores).</p>
+                                <p class="mt-1 text-xs text-slate-500" x-show="!isUsernameInvalid">Alphanumeric only (letters, numbers, underscores, and hyphens).</p>
+                                <p class="mt-1 text-xs text-red-600 font-medium flex items-center gap-1" x-show="isUsernameInvalid" x-cloak>
+                                    <i class="fas fa-exclamation-circle"></i> Only letters, numbers, hyphens (-), and underscores (_) are allowed.
+                                </p>
                             </div>
 
                             <!-- Password -->
@@ -235,14 +238,18 @@
                                         <i class="fas fa-key text-slate-400 text-sm"></i>
                                     </div>
                                     <input :type="showConfirmPassword ? 'text' : 'password'" id="password_confirmation"
-                                        name="password_confirmation" placeholder="••••••••"
-                                        class="block w-full pl-10 pr-12 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        name="password_confirmation" x-model="passwordConfirmation" placeholder="••••••••"
+                                        class="block w-full pl-10 pr-12 py-2.5 border rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 transition-colors"
+                                        :class="isPasswordMismatch ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'"
                                         required>
                                     <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
                                         <i class="fas" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
+                                <p class="mt-1 text-xs text-red-600 font-medium flex items-center gap-1" x-show="isPasswordMismatch" x-cloak>
+                                    <i class="fas fa-exclamation-circle"></i> Passwords do not match.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -324,6 +331,7 @@
             return {
                 username: '{{ old('username', '') }}',
                 password: '',
+                passwordConfirmation: '',
                 showPassword: false,
                 showConfirmPassword: false,
                 get passwordStrength() {
@@ -352,6 +360,14 @@
                     } else {
                         return { score: 3, color: 'bg-emerald-500 w-full', text: 'Strong', isStrong: true };
                     }
+                },
+                get isUsernameInvalid() {
+                    if (this.username.length === 0) return false;
+                    return !/^[a-zA-Z0-9_-]+$/.test(this.username);
+                },
+                get isPasswordMismatch() {
+                    if (this.passwordConfirmation.length === 0) return false;
+                    return this.password !== this.passwordConfirmation;
                 }
             }
         }

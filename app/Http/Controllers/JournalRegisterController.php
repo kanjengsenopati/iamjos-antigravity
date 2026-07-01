@@ -109,7 +109,7 @@ class JournalRegisterController extends Controller
             'country' => ['required', 'string', 'max:5'],
             'phone' => ['nullable', 'string', 'max:20'],
             'username' => [
-                'required', 'string', 'max:50', 'unique:users,username', 'regex:/^[a-zA-Z0-9_]+$/'
+                'required', 'string', 'max:50', 'unique:users,username', 'regex:/^[a-zA-Z0-9_-]+$/'
             ],
             'password' => ['required', 'confirmed', Password::min(8)],
             'privacy_consent' => ['required', 'accepted'],
@@ -120,7 +120,7 @@ class JournalRegisterController extends Controller
             'family_name.required' => 'Last name is required.',
             'affiliation.required' => 'Affiliation/Institution is required.',
             'country.required' => 'Please select your country.',
-            'username.regex' => 'Username may only contain letters, numbers, and underscores.',
+            'username.regex' => 'Username may only contain letters, numbers, underscores, and hyphens.',
             'username.unique' => 'This username is already taken.',
             'privacy_consent.required' => 'You must agree to the privacy policy.',
         ]);

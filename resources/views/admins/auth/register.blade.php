@@ -277,10 +277,14 @@
                                     </div>
                                     <input type="text" id="username" name="username"
                                         x-model="username" @input="username = username.toLowerCase()" placeholder="johndoe"
-                                        class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                        class="block w-full pl-10 pr-4 py-2.5 border rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 transition-colors"
+                                        :class="isUsernameInvalid ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'"
                                         required>
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500">Alphanumeric characters only, no spaces</p>
+                                <p class="mt-1 text-xs text-gray-500" x-show="!isUsernameInvalid">Alphanumeric characters only, no spaces (underscores and hyphens allowed).</p>
+                                <p class="mt-1 text-xs text-red-600 font-medium flex items-center gap-1" x-show="isUsernameInvalid" x-cloak>
+                                    <i class="fas fa-exclamation-circle"></i> Only letters, numbers, hyphens (-), and underscores (_) are allowed.
+                                </p>
                                 @error('username')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -328,14 +332,18 @@
                                         <i class="fas fa-lock text-gray-400 text-sm"></i>
                                     </div>
                                     <input :type="showConfirmPassword ? 'text' : 'password'" id="password_confirmation"
-                                        name="password_confirmation" placeholder="••••••••"
-                                        class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                        name="password_confirmation" x-model="passwordConfirmation" placeholder="••••••••"
+                                        class="block w-full pl-10 pr-12 py-2.5 border rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 transition-colors"
+                                        :class="isPasswordMismatch ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'"
                                         required>
                                     <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                                         <i class="fas" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
+                                <p class="mt-1 text-xs text-red-600 font-medium flex items-center gap-1" x-show="isPasswordMismatch" x-cloak>
+                                    <i class="fas fa-exclamation-circle"></i> Passwords do not match.
+                                </p>
                                 @error('password_confirmation')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -578,6 +586,7 @@
             return {
                 username: '{{ old('username', '') }}',
                 password: '',
+                passwordConfirmation: '',
                 showPassword: false,
                 showConfirmPassword: false,
                 get passwordStrength() {
@@ -606,6 +615,14 @@
                     } else {
                         return { score: 3, color: 'bg-emerald-500 w-full', text: 'Strong', isStrong: true };
                     }
+                },
+                get isUsernameInvalid() {
+                    if (this.username.length === 0) return false;
+                    return !/^[a-zA-Z0-9_-]+$/.test(this.username);
+                },
+                get isPasswordMismatch() {
+                    if (this.passwordConfirmation.length === 0) return false;
+                    return this.password !== this.passwordConfirmation;
                 }
             }
         }
