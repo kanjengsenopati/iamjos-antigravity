@@ -48,9 +48,9 @@
 </head>
 
 <body class="font-sans antialiased bg-gray-50">
-    <div class="min-h-screen flex" x-data="registerForm()">
+    <div class="min-h-screen flex lg:h-screen lg:overflow-hidden" x-data="registerForm()">
         <!-- Left Side - Brand Panel (Dynamic based on Journal Context) -->
-        <div class="hidden lg:flex lg:w-[35%] xl:w-[40%] relative overflow-hidden bg-slate-900"
+        <div class="hidden lg:flex lg:w-[35%] xl:w-[40%] relative overflow-hidden bg-slate-900 h-full"
             style="background-image: url('{{ asset('assets/images/academic-bg.png') }}'); background-size: cover; background-position: center;">
             
             <!-- Background Gradient Overlay -->
@@ -119,7 +119,7 @@
         </div>
 
         <!-- Right Side - Registration Form -->
-        <div class="w-full lg:w-[65%] xl:w-[60%] flex flex-col justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto min-h-screen">
+        <div class="w-full lg:w-[65%] xl:w-[60%] flex flex-col justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto lg:h-full">
             <div class="w-full max-w-3xl mx-auto">
                 <!-- Mobile Logo -->
                 <div class="lg:hidden mb-10 text-center">
