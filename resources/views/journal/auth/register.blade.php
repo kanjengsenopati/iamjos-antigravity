@@ -188,7 +188,7 @@
                                         <i class="fas fa-at text-slate-400 text-sm"></i>
                                     </div>
                                     <input type="text" id="username" name="username"
-                                        value="{{ old('username') }}" placeholder="johndoe"
+                                        x-model="username" @input="username = username.toLowerCase()" placeholder="johndoe"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                         required>
                                 </div>
@@ -197,7 +197,7 @@
                             </div>
 
                             <!-- Password -->
-                            <div x-data="{ show: false }">
+                            <div>
                                 <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">
                                     Password <span class="text-red-500">*</span>
                                 </label>
@@ -205,20 +205,27 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-key text-slate-400 text-sm"></i>
                                     </div>
-                                    <input :type="show ? 'text' : 'password'" id="password" name="password"
-                                        placeholder="••••••••"
+                                    <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
+                                        x-model="password" placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                         required minlength="8">
-                                    <button type="button" @click="show = !show"
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-lg absolute right-10 inset-y-0 my-auto h-fit pointer-events-none" x-show="passwordStrength.isStrong" x-cloak></i>
+                                    <button type="button" @click="showPassword = !showPassword"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
-                                        <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
-                                <p class="mt-1 text-xs text-slate-500">Min. 8 characters.</p>
+                                <div class="mt-1.5 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden" x-show="password.length > 0" x-cloak>
+                                    <div class="h-full transition-all duration-300 rounded-full" :class="passwordStrength.color"></div>
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-1 gap-1">
+                                    <span class="text-xs font-semibold" :class="{'text-red-500': passwordStrength.score === 1, 'text-yellow-500': passwordStrength.score === 2, 'text-emerald-500': passwordStrength.score === 3}" x-text="passwordStrength.text" x-show="password.length > 0" x-cloak></span>
+                                </div>
+                                <span class="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-circle-info text-slate-400"></i> Combination of lowercase, uppercase, numbers, and special characters.</span>
                             </div>
 
                             <!-- Confirm Password -->
-                            <div x-data="{ show: false }">
+                            <div>
                                 <label for="password_confirmation"
                                     class="block text-sm font-medium text-slate-700 mb-1.5">
                                     Confirm Password <span class="text-red-500">*</span>
@@ -227,13 +234,13 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-key text-slate-400 text-sm"></i>
                                     </div>
-                                    <input :type="show ? 'text' : 'password'" id="password_confirmation"
+                                    <input :type="showConfirmPassword ? 'text' : 'password'" id="password_confirmation"
                                         name="password_confirmation" placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                         required>
-                                    <button type="button" @click="show = !show"
+                                    <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
-                                        <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        <i class="fas" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
                             </div>
@@ -315,7 +322,37 @@
     <script>
         function registerForm() {
             return {
-                // Form interactions if needed
+                username: '{{ old('username', '') }}',
+                password: '',
+                showPassword: false,
+                showConfirmPassword: false,
+                get passwordStrength() {
+                    if (this.password.length === 0) {
+                        return { score: 0, color: 'bg-gray-200 w-0', text: '', isStrong: false };
+                    }
+                    let score = 0;
+                    let hasLower = /[a-z]/.test(this.password);
+                    let hasUpper = /[A-Z]/.test(this.password);
+                    let hasNumber = /[0-9]/.test(this.password);
+                    let hasSpecial = /[^A-Za-z0-9]/.test(this.password);
+                    
+                    if (hasLower) score++;
+                    if (hasUpper) score++;
+                    if (hasNumber) score++;
+                    if (hasSpecial) score++;
+                    
+                    if (this.password.length < 8) {
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                    }
+                    
+                    if (score <= 2) {
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                    } else if (score === 3) {
+                        return { score: 2, color: 'bg-yellow-500 w-2/3', text: 'Medium', isStrong: false };
+                    } else {
+                        return { score: 3, color: 'bg-emerald-500 w-full', text: 'Strong', isStrong: true };
+                    }
+                }
             }
         }
     </script>
