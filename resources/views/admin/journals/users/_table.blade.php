@@ -50,14 +50,7 @@
                             {{ $user->username ?? Str::slug($user->name) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm {{ $user->disabled ? 'text-gray-400' : 'text-gray-500' }}">
-                            <div class="inline-flex items-center gap-1.5">
-                                <span>{{ $user->email }}</span>
-                                @if ($user->email_verified_at)
-                                    <span class="text-[9px] text-emerald-600 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100 font-semibold">Verified</span>
-                                @else
-                                    <span class="text-[9px] text-amber-600 bg-amber-50 px-1 py-0.2 rounded border border-amber-100 font-semibold">Unverified</span>
-                                @endif
-                            </div>
+                            <span>{{ $user->email }}</span>
                         </td>
                     </tr>
                     <!-- Expandable Actions Row -->
