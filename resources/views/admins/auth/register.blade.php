@@ -36,34 +36,108 @@
         [x-cloak] {
             display: none !important;
         }
+        .academic-overlay {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
+            backdrop-blur: 2px;
+        }
+        .paper-texture {
+            background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            opacity: 0.05;
+        }
     </style>
 </head>
 
-<body class="font-sans antialiased bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen">
-    <!-- Background Pattern -->
-    <div class="fixed inset-0 -z-10 overflow-hidden">
-        <div
-            class="absolute -top-40 -right-40 w-80 h-80 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70">
-        </div>
-        <div
-            class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70">
-        </div>
-    </div>
+<body class="font-sans antialiased bg-gray-50">
+    <div class="min-h-screen flex" x-data="registerForm()">
+        <!-- Left Side - Brand Panel (Dynamic based on Journal Context) -->
+        <div class="hidden lg:flex lg:w-[35%] xl:w-[40%] relative overflow-hidden bg-slate-900"
+            style="background-image: url('{{ asset('assets/images/academic-bg.png') }}'); background-size: cover; background-position: center;">
+            
+            <!-- Background Gradient Overlay -->
+            <div class="absolute inset-0 academic-overlay"></div>
+            
+            <!-- Paper Texture Overlay -->
+            <div class="absolute inset-0 paper-texture"></div>
 
-    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center" x-data="registerForm()">
-        <div class="w-full max-w-3xl mx-auto">
-            <!-- Logo & Header -->
-            <div class="text-center mb-8">
-                <a href="/" class="inline-flex items-center gap-3 mb-6">
-                    <div
-                        class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-                        <i class="fas fa-book-open text-xl text-white"></i>
+            <!-- Legacy Borders -->
+            <div class="absolute inset-12 border border-white/10 pointer-events-none"></div>
+            <div class="absolute inset-14 border border-white/5 pointer-events-none"></div>
+
+            <!-- Content -->
+            <div class="relative z-10 flex flex-col justify-center px-12 xl:px-16 w-full">
+                <!-- Logo -->
+                <div class="mb-12">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
+                            <i class="fas fa-book-open text-2xl text-white"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-bold text-white tracking-widest uppercase">
+                                {{ $branding['acronym'] ?? 'IAMJOS' }}
+                            </span>
+                            <span class="text-[10px] text-indigo-300 font-bold tracking-[0.3em] uppercase">Academic Publishing</span>
+                        </div>
                     </div>
-                    <span class="text-2xl font-bold text-gray-900">{{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}</span>
-                </a>
-                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Create your account</h1>
-                <p class="text-gray-500">Join the {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }} community</p>
+                </div>
+
+                <!-- Heading -->
+                <h1 class="text-4xl xl:text-5xl font-serif font-bold text-white leading-[1.1] mb-8">
+                    Advance Your<br>
+                    <span class="text-indigo-300 italic">Academic Research</span>
+                </h1>
+
+                <!-- Tagline -->
+                <div class="relative mb-12">
+                    <div class="absolute -left-6 top-0 bottom-0 w-1 bg-indigo-500/50"></div>
+                    <p class="text-lg font-medium text-gray-300 leading-relaxed max-w-md italic font-serif opacity-90">
+                        "{{ $branding['tagline'] ?? 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.' }}"
+                    </p>
+                </div>
+
+                <!-- Features -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </div>
+                        <span class="text-sm">Streamlined Submission Process</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-sm"></i>
+                        </div>
+                        <span class="text-sm">Collaborative Peer Review</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-indigo-100">
+                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-sm"></i>
+                        </div>
+                        <span class="text-sm">Editorial Workflow Management</span>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- Right Side - Registration Form -->
+        <div class="w-full lg:w-[65%] xl:w-[60%] flex flex-col justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto min-h-screen">
+            <div class="w-full max-w-3xl mx-auto">
+                <!-- Mobile Logo -->
+                <div class="lg:hidden mb-10 text-center">
+                    <div class="inline-flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-book-open text-xl text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold text-gray-900">
+                            {{ $branding['acronym'] ?? 'IAMJOS' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Header -->
+                <div class="mb-8 lg:mb-10">
+                    <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Create your account</h1>
+                    <p class="text-gray-500 text-sm">Join the {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }} community</p>
+                </div>
 
             <!-- Registration Card -->
             <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
@@ -570,13 +644,20 @@
                         </a>
                     </p>
                 </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="mt-8 text-center">
-                <p class="text-xs text-gray-400">
-                    © {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
+                <!-- Back to Home Link -->
+                <p class="mt-6 text-center text-sm text-gray-500">
+                    <a href="{{ route('portal.home') }}"
+                        class="text-gray-600 hover:text-indigo-600 transition-colors font-medium">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                    </a>
                 </p>
+
+                <!-- Footer -->
+                <div class="mt-8 text-center">
+                    <p class="text-xs text-gray-400">
+                        © {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
+                    </p>
+                </div>
             </div>
         </div>
     </div>

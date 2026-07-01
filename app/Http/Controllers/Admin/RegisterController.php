@@ -28,7 +28,17 @@ class RegisterController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admins.auth.register', compact('journals'));
+        $branding = [
+            'name' => config('app.name', 'IAMJOS'),
+            'acronym' => 'IAMJOS',
+            'description' => 'Indonesian Academic Journal System',
+            'logo_url' => null,
+            'cover_url' => null,
+            'headline' => 'Advance Your Academic Research',
+            'tagline' => 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.',
+        ];
+
+        return view('admins.auth.register', compact('journals', 'branding'));
     }
 
     /**
