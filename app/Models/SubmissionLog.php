@@ -198,9 +198,9 @@ class SubmissionLog extends Model
                 'submission' => $submission->seq_id
             ]);
 
-            // 1. Ambil Editor & Manager Jurnal (Aktif & Global)
+            // 1. Ambil Editor & Manager Jurnal (Aktif & Global) dengan nama role yang benar (case-sensitive)
             $editorRoles = Role::withoutGlobalScope('journal')
-                ->whereIn('name', ['Journal manager', 'Journal editor', 'Section editor', 'Guest editor'])
+                ->whereIn('name', ['Journal Manager', 'Editor', 'Section Editor', 'Guest Editor'])
                 ->where('journal_id', $journal->id)
                 ->pluck('id');
 
@@ -209,18 +209,13 @@ class SubmissionLog extends Model
                   ->whereIn('role_id', $editorRoles);
             })->get();
 
-            // 2. Ambil Editor Aktif yang ditugaskan ke artikel ini
-            $assignedEditors = $submission->activeEditors()
-                ->with('user')->get()
-                ->map(fn($a) => $a->user)
-                ->filter()
-                ->reject(fn($u) => $u->id === $triggerUserId);
+            $globalEmailsSent = [];
 
             // Logika Distribusi Berdasarkan Tipe Event
             switch ($log->event_type) {
                 case self::EVENT_SUBMITTED:
                     // Notify Author
-                    if ($submission->author && $submission->author->id !== $triggerUserId) {
+                    if ($submission->author) {
                         try {
                             $submission->author->notify(new \App\Notifications\SubmissionReceived($submission));
                         } catch (\Exception $e) {
@@ -232,6 +227,7 @@ class SubmissionLog extends Model
                         if ($editor->id !== $triggerUserId) {
                             try {
                                 $editor->notify(new \App\Notifications\NewSubmissionNotification($submission));
+                                $globalEmailsSent[] = strtolower($editor->email);
                             } catch (\Exception $e) {
                                 \Illuminate\Support\Facades\Log::error("Failed to notify editor on submission: " . $e->getMessage());
                             }
@@ -265,6 +261,7 @@ class SubmissionLog extends Model
                                                 $actionUrl . '?tab=discussion'
                                             ));
                                         }
+                                        $globalEmailsSent[] = strtolower($participant->email);
                                     } catch (\Exception $e) {
                                         \Illuminate\Support\Facades\Log::error("Failed to notify participant on discussion event: " . $e->getMessage());
                                     }
@@ -282,6 +279,7 @@ class SubmissionLog extends Model
                                 $assignment = $submission->reviewAssignments()->latest()->first();
                                 if ($assignment) {
                                     $editor->notify(new \App\Notifications\ReviewCompleted($assignment));
+                                    $globalEmailsSent[] = strtolower($editor->email);
                                 }
                             } catch (\Exception $e) {
                                 \Illuminate\Support\Facades\Log::error("Failed to notify editor on review submit: " . $e->getMessage());
@@ -294,26 +292,30 @@ class SubmissionLog extends Model
                     // Notify Author
                     if ($submission->author && $submission->author->id !== $triggerUserId) {
                         try {
+                            $log->load('files');
+                            $attachments = [];
+                            foreach ($log->files as $file) {
+                                $attachments[] = [
+                                    'path' => $file->file_path,
+                                    'name' => $file->file_name,
+                                    'mime' => $file->mime_type,
+                                ];
+                            }
+
                             $decisionInfo = $submission->metadata['decisions'] ?? [];
                             $lastDecision = end($decisionInfo);
-                            $decision = $lastDecision['decision'] ?? 'accept';
+                            $decision = $lastDecision['decision'] ?? $lastDecision['type'] ?? 'accept';
+                            if ($decision === 'revision_request') {
+                                $decision = 'revision_required';
+                            }
                             $comments = $lastDecision['comments'] ?? '';
-                            $submission->author->notify(new \App\Notifications\SubmissionDecision($submission, $decision, $comments));
+
+                            $notifyAuthor = $lastDecision['notify_author'] ?? $log->metadata['notify_author'] ?? true;
+                            if ($notifyAuthor) {
+                                $submission->author->notify(new \App\Notifications\SubmissionDecision($submission, $decision, $comments, $attachments));
+                            }
                         } catch (\Exception $e) {
                             \Illuminate\Support\Facades\Log::error("Failed to notify author on decision: " . $e->getMessage());
-                        }
-                    }
-                    // Notify Assigned Editors
-                    foreach ($assignedEditors as $editor) {
-                        try {
-                            $editor->notify(new \App\Notifications\WorkflowEventNotification(
-                                $submission,
-                                'Editorial Decision Recorded',
-                                $log->description ?? $log->title,
-                                $actionUrl
-                            ));
-                        } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Failed to notify editor on decision: " . $e->getMessage());
                         }
                     }
                     break;
@@ -327,55 +329,83 @@ class SubmissionLog extends Model
                             \Illuminate\Support\Facades\Log::error("Failed to notify author on publish: " . $e->getMessage());
                         }
                     }
-                    // Notify Assigned Editors
-                    foreach ($assignedEditors as $editor) {
-                        try {
-                            $editor->notify(new \App\Notifications\WorkflowEventNotification(
-                                $submission,
-                                'Submission Published',
-                                $log->description ?? $log->title,
-                                $actionUrl
-                            ));
-                        } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Failed to notify editor on publish: " . $e->getMessage());
-                        }
-                    }
-                    break;
-
-                case self::EVENT_EDITOR_ASSIGNED:
-                case self::EVENT_EDITOR_UNASSIGNED:
-                case self::EVENT_REVIEWER_ASSIGNED:
-                    // Event-event ini memiliki notifikasi bawaan di controller mereka, tetapi mari kirim notifikasi generik ke editor lain jika dipicu
-                    foreach ($assignedEditors as $editor) {
-                        try {
-                            $editor->notify(new \App\Notifications\WorkflowEventNotification(
-                                $submission,
-                                $log->title,
-                                $log->description ?? $log->title,
-                                $actionUrl
-                            ));
-                        } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Failed to notify editor on workflow event: " . $e->getMessage());
-                        }
-                    }
                     break;
 
                 default:
-                    // Event lainnya (Stage Changed, File Uploaded, Metadata Updated, dll.)
-                    // Kirim ke semua Assigned Editors
-                    foreach ($assignedEditors as $editor) {
-                        try {
-                            $editor->notify(new \App\Notifications\WorkflowEventNotification(
+                    break;
+            }
+
+            // Kirim notifikasi generik ke semua Journal Editor, Journal Manager, dan Principal Contact
+            // untuk SETIAP log workflow naskah (kecuali yang sudah dikirimi notifikasi spesifik di atas)
+            foreach ($allJournalEditors as $editor) {
+                if ($editor->id === $triggerUserId) {
+                    continue;
+                }
+
+                $editorEmailLower = strtolower($editor->email);
+                if (!in_array($editorEmailLower, $globalEmailsSent)) {
+                    try {
+                        $editor->notify(new \App\Notifications\WorkflowEventNotification(
+                            $submission,
+                            $log->title,
+                            $log->description ?? $log->title,
+                            $actionUrl
+                        ));
+                        $globalEmailsSent[] = $editorEmailLower;
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to notify global editor on workflow event: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // Kirim ke Principal Contact (jika ada, dan emailnya belum dikirimi notifikasi)
+            $principalEmail = $journal->settings['contact']['principal']['email'] ?? null;
+            if ($principalEmail && filter_var($principalEmail, FILTER_VALIDATE_EMAIL)) {
+                $principalEmailLower = strtolower($principalEmail);
+                
+                // Cari apakah ada user dengan email ini agar bisa dikirimi notifikasi lewat DB + Mail
+                $principalUser = User::where('email', $principalEmail)->first();
+                
+                $isTrigger = false;
+                if ($triggerUser && strtolower($triggerUser->email) === $principalEmailLower) {
+                    $isTrigger = true;
+                } elseif (auth()->check() && strtolower(auth()->user()->email) === $principalEmailLower) {
+                    $isTrigger = true;
+                }
+
+                if (!$isTrigger && !in_array($principalEmailLower, $globalEmailsSent)) {
+                    try {
+                        $notification = null;
+                        if ($log->event_type === self::EVENT_SUBMITTED) {
+                            $notification = new \App\Notifications\NewSubmissionNotification($submission);
+                        } elseif ($log->event_type === self::EVENT_DECISION_MADE) {
+                            $decisionInfo = $submission->metadata['decisions'] ?? [];
+                            $lastDecision = end($decisionInfo);
+                            $decision = $lastDecision['decision'] ?? $lastDecision['type'] ?? 'accept';
+                            if ($decision === 'revision_request') {
+                                $decision = 'revision_required';
+                            }
+                            $comments = $lastDecision['comments'] ?? '';
+                            $notification = new \App\Notifications\SubmissionDecision($submission, $decision, $comments);
+                        } else {
+                            $notification = new \App\Notifications\WorkflowEventNotification(
                                 $submission,
                                 $log->title,
                                 $log->description ?? $log->title,
                                 $actionUrl
-                            ));
-                        } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Failed to notify editor on general workflow event: " . $e->getMessage());
+                            );
                         }
+
+                        if ($principalUser) {
+                            $principalUser->notify($notification);
+                        } else {
+                            \Illuminate\Support\Facades\Notification::route('mail', $principalEmail)
+                                ->notify($notification);
+                        }
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to notify principal contact on workflow event: " . $e->getMessage());
                     }
-                    break;
+                }
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Gagal mengirimkan notifikasi alur kerja terpusat: " . $e->getMessage());

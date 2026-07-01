@@ -40,10 +40,6 @@ class SendSubmissionNotifications
     public function handle(): void
     {
         try {
-            // 1. Notify the author that submission was received
-            $this->author->notify(new SubmissionReceived($this->submission));
-
-            // 2. Notify Journal Managers and Editors about the new submission
             // Scoped specifically to this journal
             $editorsAndManagers = User::whereHas('journalRoles', function ($q) {
                 $q->where('journal_id', $this->submission->journal_id)
@@ -52,15 +48,13 @@ class SendSubmissionNotifications
                   });
             })->get();
 
-            Notification::send($editorsAndManagers, new NewSubmissionNotification($this->submission));
-
-            // 3. Send WhatsApp notification to author
+            // 1. Send WhatsApp notification to author
             WaGateway::sendTemplate($this->author, 'submission_received', [
                 'name' => $this->author->name,
                 'title' => $this->submission->title,
             ], $this->submission->journal_id);
 
-            // 4. Send WhatsApp notification to Journal Managers and Editors
+            // 2. Send WhatsApp notification to Journal Managers and Editors
             foreach ($editorsAndManagers as $editor) {
                 WaGateway::sendTemplate($editor, 'new_submission_notification', [
                     'name' => $editor->name,

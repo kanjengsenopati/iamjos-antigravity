@@ -273,47 +273,20 @@ class EditorDecisionController extends Controller
 
         $submission->update($updates);
 
-        // Notify author if requested (Now handled globally by SubmissionLog::log)
-        // if ($request->boolean('notify_author', true)) {
-        //     try {
-        //         if ($submission->author) {
-        //             $submission->author->notify(new SubmissionDecision(
-        //                 $submission,
-        //                 $notificationDecision,
-        //                 $validated['comments'] ?? null
-        //             ));
-        //         }
-        //     } catch (\Exception $e) {
-        //         \Illuminate\Support\Facades\Log::error('Failed to send submission decision email: ' . $e->getMessage());
-        //     }
-
-        //     // Notify other assigned editors
-        //     try {
-        //         $otherEditors = $submission->activeEditors()
-        //             ->where('user_id', '!=', auth()->id())
-        //             ->with('user')->get()
-        //             ->map(fn($a) => $a->user)
-        //             ->filter();
-
-        //         $decisionLabels = [
-        //             'accept' => 'Accept Submission',
-        //             'reject' => 'Decline Submission',
-        //             'revision' => 'Request Revisions',
-        //         ];
-        //         $decisionLabel = $decisionLabels[$validated['decision']] ?? $validated['decision'];
-
-        //         foreach ($otherEditors as $otherEditor) {
-        //             $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
-        //                 $submission,
-        //                 'Editorial Decision Recorded',
-        //                 "An editorial decision of \"{$decisionLabel}\" has been recorded for the submission \"{$submission->title}\" by " . auth()->user()->name . ".",
-        //                 url("/{$journal->slug}/submissions/{$submission->slug}")
-        //             ));
-        //         }
-        //     } catch (\Exception $e) {
-        //         \Illuminate\Support\Facades\Log::error('Failed to notify other editors of editorial decision: ' . $e->getMessage());
-        //     }
-        // }
+        // Log the decision and trigger centralized notifications
+        \App\Models\SubmissionLog::log(
+            submission:   $submission,
+            eventType:    \App\Models\SubmissionLog::EVENT_DECISION_MADE,
+            title:        'Editorial Decision: ' . ucfirst($validated['decision']),
+            description:  auth()->user()->name . ' recorded a decision: ' . ($validated['decision'] === 'revision' ? 'revisions requested' : $validated['decision']) . '.',
+            metadata:     [
+                'decision' => $notificationDecision,
+                'comments' => $validated['comments'] ?? null
+            ],
+            user:         auth()->user(),
+            fileIds:      [],
+            stage:        $submission->stage,
+        );
 
             // Send WhatsApp notification based on decision type
             try {

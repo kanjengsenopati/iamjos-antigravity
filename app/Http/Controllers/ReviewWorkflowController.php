@@ -290,6 +290,38 @@ class ReviewWorkflowController extends Controller
                             \App\Models\ReviewRound::where('id', $reviewRound->id)->update(['status' => \App\Models\ReviewRound::STATUS_DECLINED]);
                         }
                         $submission->update(['status' => Submission::STATUS_REJECTED]);
+
+                        // Store decision metadata
+                        $metadata = $submission->metadata ?? [];
+                        $metadata['decisions'] = $metadata['decisions'] ?? [];
+                        $metadata['decisions'][] = [
+                            'decision' => 'decline',
+                            'comments' => $request->comments ?? null,
+                            'made_by' => auth()->id(),
+                            'made_at' => now()->toISOString(),
+                        ];
+                        $submission->update(['metadata' => $metadata]);
+
+                        // Log the decline decision
+                        SubmissionLog::log(
+                            submission:   $submission,
+                            eventType:    SubmissionLog::EVENT_DECISION_MADE,
+                            title:        'Submission Declined',
+                            description:  auth()->user()->name . ' declined the submission.',
+                            metadata:     [
+                                'decision' => 'rejected',
+                                'comments' => $request->comments ?? null
+                            ],
+                            fileIds:      [],
+                            stage:        $submission->stage,
+                            emailSubject: $request->boolean('send_email', true) ? 'Submission Declined' : null,
+                            emailBody:    $request->boolean('send_email', true) ? $request->email_body : null
+                        );
+
+                        // Email Handling via background job
+                        if ($request->boolean('send_email', true)) {
+                            SendDecisionEmailJob::dispatch($submission, $request->email_body, 'declined', auth()->user());
+                        }
                         break;
                 }
             });
@@ -686,48 +718,9 @@ public function searchReviewers(Request $request, string $journalSlug)
             );
         });
 
-        // 7. Send email notification (outside transaction for better error handling)
+        // 7. Send email notification (outside transaction for better error handling) - Now handled centrally by SubmissionLog::log
         // Resolve $author early so it is available for both email and WhatsApp blocks
         $author = $submission->author ?? $submission->authors->first()?->user;
-
-        if ($validated['send_email'] && !empty($validated['email_body'])) {
-            if ($author && $author->email) {
-                // Prepare attachments info for the email
-                $attachmentFiles = [];
-                if (!empty($validated['selected_files'])) {
-                    $files = SubmissionFile::whereIn('id', $validated['selected_files'])->get();
-                    foreach ($files as $file) {
-                        $attachmentFiles[] = [
-                            'path' => $file->file_path,
-                            'name' => $file->file_name,
-                            'mime' => $file->mime_type,
-                        ];
-                    }
-                }
-
-                try {
-                    Mail::to($author->email)
-                        ->send(new RevisionRequestMail(
-                            $submission,
-                            $validated['email_body'],
-                            $attachmentFiles,
-                            $validated['new_review_round']
-                        ));
-
-                    // Log email sent
-                    SubmissionLog::log(
-                        $submission,
-                        'notification_sent',
-                        'Email Sent',
-                        "Revision request email sent to {$author->email}.",
-                        ['recipient' => $author->email, 'type' => 'revision_request']
-                    );
-                } catch (\Exception $e) {
-                    \Log::error('Failed to send revision request email: ' . $e->getMessage());
-                    // Continue even if email fails
-                }
-            }
-        }
 
         // Send WhatsApp notification to author
         if ($author && $author->phone) {

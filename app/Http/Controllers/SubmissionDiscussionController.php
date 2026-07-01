@@ -149,7 +149,7 @@ class SubmissionDiscussionController extends Controller
                 eventType:   \App\Models\SubmissionLog::EVENT_DISCUSSION_CREATED,
                 title:       'Discussion Created',
                 description: auth()->user()->name . ' started a new discussion: "' . $discussion->subject . '"',
-                metadata:    ['discussion_id' => $discussion->id],
+                metadata:    ['discussion_id' => $discussion->id, 'message_id' => $firstMessage->id],
                 user:        auth()->user(),
                 fileIds:     $submissionFileIds,
                 stage:       $submission->stage,

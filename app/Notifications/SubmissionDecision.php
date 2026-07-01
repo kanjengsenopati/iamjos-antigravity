@@ -15,15 +15,17 @@ class SubmissionDecision extends Notification
     protected Submission $submission;
     protected string $decision;
     protected ?string $comments;
+    protected array $attachments;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Submission $submission, string $decision, ?string $comments = null)
+    public function __construct(Submission $submission, string $decision, ?string $comments = null, array $attachments = [])
     {
         $this->submission = $submission;
         $this->decision = $decision;
         $this->comments = $comments;
+        $this->attachments = $attachments;
     }
 
     /**
@@ -46,6 +48,20 @@ class SubmissionDecision extends Notification
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
             ->line('You have a new notification from ' . $journal->name . ':');
+
+        foreach ($this->attachments as $file) {
+            $filePath = storage_path('app/' . $file['path']);
+            if (!file_exists($filePath)) {
+                // Fallback jika path absolut
+                $filePath = $file['path'];
+            }
+            if (file_exists($filePath)) {
+                $mail->attach($filePath, [
+                    'as' => $file['name'] ?? null,
+                    'mime' => $file['mime'] ?? null,
+                ]);
+            }
+        }
 
         switch ($this->decision) {
             case 'accepted':

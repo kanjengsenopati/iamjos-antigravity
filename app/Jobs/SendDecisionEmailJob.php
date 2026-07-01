@@ -17,15 +17,17 @@ class SendDecisionEmailJob implements ShouldQueue
     public $submission;
     public $emailBody;
     public $decisionType;
+    public $madeBy;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($submission, $emailBody, $decisionType)
+    public function __construct($submission, $emailBody, $decisionType, $madeBy = null)
     {
         $this->submission = $submission;
         $this->emailBody = $emailBody;
         $this->decisionType = $decisionType;
+        $this->madeBy = $madeBy;
     }
 
     /**
@@ -49,8 +51,8 @@ class SendDecisionEmailJob implements ShouldQueue
             if ($this->decisionType === 'accepted') {
                 Mail::to($recipient->email)->send(new \App\Mail\SubmissionAcceptedMail($this->submission, $this->emailBody));
             } elseif ($this->decisionType === 'declined') {
-                // Future implementation for declined email
-                // Mail::to($recipient->email)->send(new \App\Mail\SubmissionDeclinedMail($this->submission, $this->emailBody));
+                $editor = $this->madeBy ?? $recipient;
+                $recipient->notify(new \App\Notifications\SubmissionDeclinedNotification($this->submission, $editor, $this->emailBody));
             } elseif ($this->decisionType === 'revisions') {
                 // Mail::to($recipient->email)->send(new \App\Mail\RevisionRequestMail($this->submission, $this->emailBody));
             } elseif ($this->decisionType === 'send_to_production') {

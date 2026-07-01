@@ -354,33 +354,7 @@ class SubmissionWorkflowController extends Controller
                     }
                 }
 
-                // Notify other assigned editors
-                try {
-                    $otherEditors = $submission->activeEditors()
-                        ->where('user_id', '!=', auth()->id())
-                        ->with('user')->get()
-                        ->map(fn($a) => $a->user)
-                        ->filter();
-
-                    $actionLabels = [
-                        'send_to_review' => 'Sent to Review stage',
-                        'accept' => 'Accepted',
-                        'request_revisions' => 'Revisions Requested',
-                        'decline' => 'Declined',
-                    ];
-                    $actionLabel = $actionLabels[$action] ?? 'updated';
-
-                    foreach ($otherEditors as $otherEditor) {
-                        $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
-                            $submission,
-                            'Submission Stage Updated',
-                            "Submission \"{$submission->title}\" has been {$actionLabel} by " . auth()->user()->name . ".",
-                            url("/{$journal->slug}/submissions/{$submission->slug}")
-                        ));
-                    }
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Failed to notify other editors on stage action: ' . $e->getMessage());
-                }
+                // Stage transition notifications now handled centrally by SubmissionLog::log
             }
 
             DB::commit();
@@ -732,12 +706,22 @@ class SubmissionWorkflowController extends Controller
         DB::beginTransaction();
 
         try {
+            $metadata = $submission->metadata ?? [];
+            $metadata['decisions'] = $metadata['decisions'] ?? [];
+            $metadata['decisions'][] = [
+                'decision' => 'accept',
+                'made_by' => auth()->id(),
+                'made_at' => now()->toISOString(),
+                'notes' => $validated['notes'] ?? null,
+            ];
+
             // Update submission stage directly to Copyediting (3)
             $submission->update([
                 'stage_id' => 3,
                 'stage' => Submission::STAGE_COPYEDITING,
                 'status' => Submission::STATUS_ACCEPTED,
                 'accepted_at' => now(),
+                'metadata' => $metadata,
             ]);
 
             // Copy selected files to copyediting stage
@@ -808,9 +792,10 @@ class SubmissionWorkflowController extends Controller
             // Audit log the skip-review stage transition
             SubmissionLog::log(
                 submission:  $submission,
-                eventType:   SubmissionLog::EVENT_STAGE_CHANGED,
+                eventType:   SubmissionLog::EVENT_DECISION_MADE,
                 title:       'Skip Review – Sent to Copyediting',
                 description: auth()->user()->name . ' accepted the submission and skipped review, moving it directly to Copyediting.',
+                metadata:    ['decision' => 'accepted'],
                 fileIds:     $submissionFileIds,
                 stage:       Submission::STAGE_COPYEDITING,
             );
@@ -868,21 +853,21 @@ class SubmissionWorkflowController extends Controller
                 'body' => '<p><strong>Reason for Declining:</strong></p>' . nl2br(e($validated['reason'])),
             ]);
 
-            // Notify the author about the decline
-            if (!empty($validated['notify_author'])) {
-                try {
-                    $author = $submission->author;
-                    if ($author) {
-                        $author->notify(new \App\Notifications\SubmissionDeclinedNotification(
-                            $submission,
-                            auth()->user(),
-                            $validated['reason']
-                        ));
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Failed to send decline notification: ' . $e->getMessage());
-                }
-            }
+            // Log the decline decision and trigger centralized notifications
+            SubmissionLog::log(
+                submission:   $submission,
+                eventType:    SubmissionLog::EVENT_DECISION_MADE,
+                title:        'Submission Declined',
+                description:  auth()->user()->name . ' declined the submission.',
+                metadata:     [
+                    'decision' => 'rejected',
+                    'comments' => $validated['reason'],
+                    'notify_author' => !empty($validated['notify_author'])
+                ],
+                user:         auth()->user(),
+                fileIds:      [],
+                stage:        $submission->stage,
+            );
 
             DB::commit();
 

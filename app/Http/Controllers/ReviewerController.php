@@ -306,6 +306,21 @@ class ReviewerController extends Controller
             'completed_at' => now(),
         ]);
 
+        // Log the review submission event to trigger centralized notifications
+        \App\Models\SubmissionLog::log(
+            submission:   $assignment->submission,
+            eventType:    \App\Models\SubmissionLog::EVENT_REVIEW_SUBMITTED,
+            title:        'Review Submitted',
+            description:  'Reviewer ' . (auth()->user()?->name ?? 'Reviewer') . ' submitted review for Round ' . $assignment->round . ' with recommendation: ' . str_replace('_', ' ', $validated['recommendation']) . '.',
+            metadata:     [
+                'assignment_id' => $assignment->id,
+                'recommendation' => $validated['recommendation']
+            ],
+            user:         auth()->user(),
+            fileIds:      [],
+            stage:        'review',
+        );
+
         // Notify editors that review is completed
         try {
             $this->notifyEditorsReviewCompleted($assignment);
