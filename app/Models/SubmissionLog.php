@@ -198,9 +198,14 @@ class SubmissionLog extends Model
                 'submission' => $submission->seq_id
             ]);
 
-            // 1. Ambil Editor & Manager Jurnal (Aktif & Global) dengan nama role yang benar (case-sensitive)
+            // 1. Ambil Editor & Manager Jurnal (Aktif & Global) berdasarkan permission_level
+            // OJS 3.3 default: Super Admin (0), Admin/Manager (1), Editor/Section Editor (2)
             $editorRoles = Role::withoutGlobalScope('journal')
-                ->whereIn('name', ['Journal Manager', 'Editor', 'Section Editor', 'Guest Editor'])
+                ->whereIn('permission_level', [
+                    Role::LEVEL_SUPER_ADMIN,
+                    Role::LEVEL_ADMIN, // Level 1 (Manager/Admin)
+                    Role::LEVEL_EDITOR // Level 2 (Editor/Section Editor)
+                ])
                 ->where('journal_id', $journal->id)
                 ->pluck('id');
 
