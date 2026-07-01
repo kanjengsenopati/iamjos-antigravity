@@ -200,7 +200,7 @@
                                 </div>
 
                                 <!-- Text Link Actions -->
-                                <div class="flex flex-wrap gap-4 text-xs font-semibold items-center">
+                                <div class="flex flex-wrap gap-2.5 text-xs font-semibold items-center">
                                     @if ($isSuperAdmin)
                                         <span class="text-xs text-purple-600 font-medium px-2 py-0.5 bg-purple-50 rounded-lg border border-purple-200/50">
                                             <i class="fa-solid fa-shield-halved mr-1"></i> Full Access
@@ -209,14 +209,14 @@
                                         <!-- Email -->
                                         <button type="button"
                                             @click.stop="openEmailModal({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }})"
-                                            class="text-blue-600 hover:text-blue-800 hover:underline">
-                                            Email
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all duration-150 shadow-sm text-blue-600 bg-blue-50 border-blue-200/60 hover:bg-blue-100/80 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                            <i class="fa-solid fa-envelope text-[11px]"></i> Email
                                         </button>
 
                                         <!-- Edit User -->
                                         <a href="{{ route($routePrefix . '.edit', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                            class="text-blue-600 hover:text-blue-800 hover:underline" @click.stop>
-                                            Edit User
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all duration-150 shadow-sm text-indigo-600 bg-indigo-50 border-indigo-200/60 hover:bg-indigo-100/80 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" @click.stop>
+                                            <i class="fa-solid fa-user-pen text-[11px]"></i> Edit User
                                         </a>
 
                                         <!-- Disable/Enable -->
@@ -224,9 +224,15 @@
                                             action="{{ route($routePrefix . ($user->disabled ? '.enable' : '.disable'), ['journal' => $journal->slug, 'user' => $user->id]) }}"
                                             method="POST" class="inline" @click.stop>
                                             @csrf
-                                            <button type="submit" class="text-pink-600 hover:text-pink-800 hover:underline">
-                                                {{ $user->disabled ? 'Enable' : 'Disable' }}
-                                            </button>
+                                            @if ($user->disabled)
+                                                <button type="submit" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all duration-150 shadow-sm text-emerald-600 bg-emerald-50 border-emerald-200/60 hover:bg-emerald-100/80 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                                    <i class="fa-solid fa-circle-check text-[11px]"></i> Enable
+                                                </button>
+                                            @else
+                                                <button type="submit" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all duration-150 shadow-sm text-red-600 bg-red-50 border-red-200/60 hover:bg-red-100/80 focus:outline-none focus:ring-2 focus:ring-red-500/20">
+                                                    <i class="fa-solid fa-ban text-[11px]"></i> Disable
+                                                </button>
+                                            @endif
                                         </form>
 
                                         <!-- Remove from Journal -->
@@ -236,8 +242,8 @@
                                             onsubmit="return confirm('Remove this user from {{ $journal->name }}? They will no longer have access to this journal.')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 hover:underline">
-                                                Remove
+                                            <button type="submit" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all duration-150 shadow-sm text-red-600 bg-red-50 border-red-200/60 hover:bg-red-100/80 focus:outline-none focus:ring-2 focus:ring-red-500/20">
+                                                <i class="fa-solid fa-trash-can text-[11px]"></i> Remove
                                             </button>
                                         </form>
 
@@ -246,15 +252,15 @@
                                             action="{{ route($routePrefix . '.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                             method="POST" class="inline" @click.stop>
                                             @csrf
-                                            <button type="submit" class="text-blue-600 hover:text-blue-800 hover:underline">
-                                                Login As
+                                            <button type="submit" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all duration-150 shadow-sm text-violet-600 bg-violet-50 border-violet-200/60 hover:bg-violet-100/80 focus:outline-none focus:ring-2 focus:ring-violet-500/20">
+                                                <i class="fa-solid fa-user-secret text-[11px]"></i> Login As
                                             </button>
                                         </form>
 
                                         <!-- Merge User -->
                                         <a href="{{ route($routePrefix . '.merge', ['journal' => $journal->slug, 'user' => $user->id]) }}"
-                                            class="text-blue-600 hover:text-blue-800 hover:underline" @click.stop>
-                                            Merge User
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all duration-150 shadow-sm text-slate-600 bg-slate-50 border-slate-200/60 hover:bg-slate-100/80 focus:outline-none focus:ring-2 focus:ring-slate-500/20" @click.stop>
+                                            <i class="fa-solid fa-code-merge text-[11px]"></i> Merge User
                                         </a>
                                     @endif
                                 </div>
