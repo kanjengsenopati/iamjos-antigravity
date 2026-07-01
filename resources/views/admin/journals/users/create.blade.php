@@ -238,12 +238,42 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <i class="fa-solid fa-lock text-indigo-500 mr-2"></i> Account Access
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" x-data="{
+                username: '{{ old('username', '') }}',
+                password: '',
+                get passwordStrength() {
+                    if (this.password.length === 0) {
+                        return { score: 0, color: 'bg-gray-200 w-0', text: '', isStrong: false };
+                    }
+                    let score = 0;
+                    let hasLower = /[a-z]/.test(this.password);
+                    let hasUpper = /[A-Z]/.test(this.password);
+                    let hasNumber = /[0-9]/.test(this.password);
+                    let hasSpecial = /[^A-Za-z0-9]/.test(this.password);
+                    
+                    if (hasLower) score++;
+                    if (hasUpper) score++;
+                    if (hasNumber) score++;
+                    if (hasSpecial) score++;
+                    
+                    if (this.password.length < 8) {
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                    }
+                    
+                    if (score <= 2) {
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                    } else if (score === 3) {
+                        return { score: 2, color: 'bg-yellow-500 w-2/3', text: 'Medium', isStrong: false };
+                    } else {
+                        return { score: 3, color: 'bg-emerald-500 w-full', text: 'Strong', isStrong: true };
+                    }
+                }
+            }">
                 {{-- Username --}}
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700">Username <span
                             class="text-red-500">*</span></label>
-                    <input type="text" name="username" id="username" value="{{ old('username') }}" required
+                    <input type="text" name="username" id="username" x-model="username" @input="username = username.toLowerCase()" required
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                     @error('username')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -254,8 +284,18 @@
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Password <span
                             class="text-red-500">*</span></label>
-                    <input type="password" name="password" id="password" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    <div class="relative">
+                        <input type="password" name="password" id="password" x-model="password" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 pr-10">
+                        <i class="fa-solid fa-circle-check text-emerald-500 text-lg absolute right-3 inset-y-0 my-auto h-fit pointer-events-none" x-show="passwordStrength.isStrong" x-cloak></i>
+                    </div>
+                    <div class="mt-1.5 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden" x-show="password.length > 0" x-cloak>
+                        <div class="h-full transition-all duration-300 rounded-full" :class="passwordStrength.color"></div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-1 gap-1">
+                        <span class="text-xs font-semibold" :class="{'text-red-500': passwordStrength.score === 1, 'text-yellow-500': passwordStrength.score === 2, 'text-emerald-500': passwordStrength.score === 3}" x-text="passwordStrength.text" x-show="password.length > 0" x-cloak></span>
+                        <span class="text-xs text-gray-500">Campuran huruf kecil, huruf besar, angka, dan karakter khusus</span>
+                    </div>
                     @error('password')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror

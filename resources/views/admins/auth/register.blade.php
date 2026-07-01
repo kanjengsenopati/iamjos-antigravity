@@ -276,7 +276,7 @@
                                         <i class="fas fa-at text-gray-400 text-sm"></i>
                                     </div>
                                     <input type="text" id="username" name="username"
-                                        value="{{ old('username') }}" placeholder="johndoe"
+                                        x-model="username" @input="username = username.toLowerCase()" placeholder="johndoe"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                         required>
                                 </div>
@@ -296,15 +296,22 @@
                                         <i class="fas fa-lock text-gray-400 text-sm"></i>
                                     </div>
                                     <input :type="show ? 'text' : 'password'" id="password" name="password"
-                                        placeholder="••••••••"
+                                        x-model="password" placeholder="••••••••"
                                         class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                         required minlength="8">
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-lg absolute right-10 inset-y-0 my-auto h-fit pointer-events-none" x-show="passwordStrength.isStrong" x-cloak></i>
                                     <button type="button" @click="show = !show"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                                         <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </button>
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+                                <div class="mt-1.5 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden" x-show="password.length > 0" x-cloak>
+                                    <div class="h-full transition-all duration-300 rounded-full" :class="passwordStrength.color"></div>
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-1 gap-1">
+                                    <span class="text-xs font-semibold" :class="{'text-red-500': passwordStrength.score === 1, 'text-yellow-500': passwordStrength.score === 2, 'text-emerald-500': passwordStrength.score === 3}" x-text="passwordStrength.text" x-show="password.length > 0" x-cloak></span>
+                                    <span class="text-xs text-gray-500">Campuran huruf kecil, huruf besar, angka, dan karakter khusus</span>
+                                </div>
                                 @error('password')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -569,7 +576,35 @@
     <script>
         function registerForm() {
             return {
-                // Add any form-level state here if needed
+                username: '{{ old('username', '') }}',
+                password: '',
+                get passwordStrength() {
+                    if (this.password.length === 0) {
+                        return { score: 0, color: 'bg-gray-200 w-0', text: '', isStrong: false };
+                    }
+                    let score = 0;
+                    let hasLower = /[a-z]/.test(this.password);
+                    let hasUpper = /[A-Z]/.test(this.password);
+                    let hasNumber = /[0-9]/.test(this.password);
+                    let hasSpecial = /[^A-Za-z0-9]/.test(this.password);
+                    
+                    if (hasLower) score++;
+                    if (hasUpper) score++;
+                    if (hasNumber) score++;
+                    if (hasSpecial) score++;
+                    
+                    if (this.password.length < 8) {
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                    }
+                    
+                    if (score <= 2) {
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                    } else if (score === 3) {
+                        return { score: 2, color: 'bg-yellow-500 w-2/3', text: 'Medium', isStrong: false };
+                    } else {
+                        return { score: 3, color: 'bg-emerald-500 w-full', text: 'Strong', isStrong: true };
+                    }
+                }
             }
         }
 
