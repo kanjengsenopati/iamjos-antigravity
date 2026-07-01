@@ -119,7 +119,7 @@
         </div>
 
         <!-- Right Side - Registration Form -->
-        <div class="w-full lg:w-[65%] xl:w-[60%] flex flex-col justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto lg:h-full">
+        <div class="w-full lg:w-[65%] xl:w-[60%] flex flex-col justify-start p-6 sm:p-10 lg:p-12 py-12 overflow-y-auto lg:h-full">
             <div class="w-full max-w-3xl mx-auto">
                 <!-- Mobile Logo -->
                 <div class="lg:hidden mb-10 text-center">
