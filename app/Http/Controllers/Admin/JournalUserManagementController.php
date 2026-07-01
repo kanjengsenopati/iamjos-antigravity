@@ -57,10 +57,11 @@ class JournalUserManagementController extends Controller
         // Search filter
         if ($request->has('search') && $request->search != '') {
             $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('users.name', 'like', "%{$search}%")
-                    ->orWhere('users.email', 'like', "%{$search}%")
-                    ->orWhere('users.username', 'like', "%{$search}%");
+            $likeOperator = DB::connection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+            $query->where(function ($q) use ($search, $likeOperator) {
+                $q->where('users.name', $likeOperator, "%{$search}%")
+                    ->orWhere('users.email', $likeOperator, "%{$search}%")
+                    ->orWhere('users.username', $likeOperator, "%{$search}%");
             });
         }
 
@@ -116,6 +117,11 @@ class JournalUserManagementController extends Controller
         });
 
         $routePrefix = $this->getRoutePrefix();
+
+        if ($request->ajax()) {
+            return view('admin.journals.users._table', compact('journal', 'users', 'roles', 'routePrefix'));
+        }
+
         return view('admin.journals.users.index', compact('journal', 'users', 'roles', 'routePrefix'));
     }
 
