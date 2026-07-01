@@ -16,6 +16,7 @@
         searchQuery: '{{ request('search') }}',
         selectedRole: '{{ request('role') }}',
         isLoading: false,
+        searchError: '',
         openEmailModal(user) {
             this.recipientId = user.id;
             this.recipientName = user.name;
@@ -72,10 +73,26 @@
         },
         performSearch() {
             const url = new URL(window.location.href);
-            url.searchParams.set('search', this.searchQuery);
+            const query = this.searchQuery.trim();
+            if (query.length >= 3 || query.length === 0) {
+                url.searchParams.set('search', query);
+                this.searchError = '';
+            } else {
+                this.searchError = 'Pencarian minimal 3 karakter.';
+                url.searchParams.delete('search');
+            }
             url.searchParams.set('role', this.selectedRole);
             url.searchParams.set('page', 1);
             this.fetchTable(url.toString());
+        },
+        triggerSearch() {
+            const query = this.searchQuery.trim();
+            if (query.length > 0 && query.length < 3) {
+                this.searchError = 'Pencarian minimal 3 karakter.';
+                return;
+            }
+            this.searchError = '';
+            this.performSearch();
         },
         fetchTable(url) {
             this.isLoading = true;
@@ -103,17 +120,31 @@
     <!-- Filters -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
         <form action="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}" method="GET"
-            @submit.prevent="performSearch()"
+            @submit.prevent="triggerSearch()"
             class="flex flex-col sm:flex-row gap-4">
-            <div class="relative flex-1">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+            
+            <!-- Input & Button Search Cluster -->
+            <div class="flex flex-col flex-1">
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+                        </div>
+                        <input type="text" name="search" x-model="searchQuery"
+                            class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white transition-colors"
+                            placeholder="Search by name, username, or email..."
+                            style="padding-left: 2.5rem !important;">
+                    </div>
+                    <button type="button" @click="triggerSearch()"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all duration-155 flex items-center gap-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i> Search
+                    </button>
                 </div>
-                <input type="text" name="search" x-model="searchQuery"
-                    x-on:input.debounce.400ms="if (searchQuery.length >= 3 || searchQuery.length === 0) performSearch()"
-                    class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white transition-colors"
-                    placeholder="Search by name, username, or email..."
-                    style="padding-left: 2.5rem !important;">
+                <!-- Notifikasi Error Karakter < 3 -->
+                <div x-show="searchError" x-cloak class="text-xs text-red-500 font-semibold mt-1.5 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                    <span x-text="searchError"></span>
+                </div>
             </div>
 
             <div class="relative min-w-[200px]">
