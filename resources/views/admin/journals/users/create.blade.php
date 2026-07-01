@@ -238,7 +238,7 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <i class="fa-solid fa-lock text-indigo-500 mr-2"></i> Account Access
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" x-data="{
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" x-data="{
                 username: '{{ old('username', '') }}',
                 password: '',
                 get passwordStrength() {
@@ -294,8 +294,8 @@
                     </div>
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-1 gap-1">
                         <span class="text-xs font-semibold" :class="{'text-red-500': passwordStrength.score === 1, 'text-yellow-500': passwordStrength.score === 2, 'text-emerald-500': passwordStrength.score === 3}" x-text="passwordStrength.text" x-show="password.length > 0" x-cloak></span>
-                        <span class="text-xs text-gray-500">Campuran huruf kecil, huruf besar, angka, dan karakter khusus</span>
                     </div>
+                    <span class="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-circle-info text-slate-400"></i> Combination of lowercase, uppercase, numbers, and special characters.</span>
                     @error('password')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror

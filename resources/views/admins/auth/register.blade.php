@@ -309,9 +309,9 @@
                                     <div class="h-full transition-all duration-300 rounded-full" :class="passwordStrength.color"></div>
                                 </div>
                                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-1 gap-1">
-                                    <span class="text-xs font-semibold" :class="{'text-red-500': passwordStrength.score === 1, 'text-yellow-500': passwordStrength.score === 2, 'text-emerald-500': passwordStrength.score === 3}" x-text="passwordStrength.text" x-show="password.length > 0" x-cloak></span>
-                                    <span class="text-xs text-gray-500">Campuran huruf kecil, huruf besar, angka, dan karakter khusus</span>
-                                </div>
+                                     <span class="text-xs font-semibold" :class="{'text-red-500': passwordStrength.score === 1, 'text-yellow-500': passwordStrength.score === 2, 'text-emerald-500': passwordStrength.score === 3}" x-text="passwordStrength.text" x-show="password.length > 0" x-cloak></span>
+                                 </div>
+                                 <span class="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-circle-info text-slate-400"></i> Combination of lowercase, uppercase, numbers, and special characters.</span>
                                 @error('password')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
