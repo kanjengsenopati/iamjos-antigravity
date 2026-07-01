@@ -6230,7 +6230,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 // Assign Editor Modal State
                 assignEditorModalOpen: false,
                 editorSearch: '',
-                editorRoleFilter: '',
+                editorRoleFilter: 'Journal editor',
                 allEditors: config.potentialEditors || [],
                 selectedEditor: null,
                 editorRole: 'editor',
@@ -6250,8 +6250,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                     // Role Filter
                     if (this.editorRoleFilter) {
+                        const filterVal = this.editorRoleFilter.toLowerCase();
                         editors = editors.filter(e =>
-                            e.role_names && e.role_names.includes(this.editorRoleFilter)
+                            e.role_names && e.role_names.some(role => role.toLowerCase().includes(filterVal))
                         );
                     }
 
@@ -6271,7 +6272,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 resetEditorModal() {
                     this.selectedEditor = null;
                     this.editorSearch = '';
-                    this.editorRoleFilter = '';
+                    this.editorRoleFilter = 'Journal editor';
                 },
                 selectedReviewer: null,
                 reviewerSearch: '',

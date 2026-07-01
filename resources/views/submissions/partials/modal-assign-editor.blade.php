@@ -52,9 +52,9 @@
                             <select x-model="editorRoleFilter"
                                 class="form-select flex-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                                 <option value="">All Roles</option>
-                                <option value="Editor">Editor</option>
-                                <option value="Section Editor">Section Editor</option>
-                                <option value="Journal Manager">Journal Manager</option>
+                                <option value="Journal editor">Journal Editor</option>
+                                <option value="Section editor">Section Editor</option>
+                                <option value="Journal manager">Journal Manager</option>
                             </select>
                         </div>
                     </div>
