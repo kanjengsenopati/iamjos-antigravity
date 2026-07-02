@@ -22,10 +22,13 @@
 
     $isManagerOrAdmin = false;
     if (auth()->check() && $journal) {
-        $isManagerOrAdmin = auth()->user()->hasJournalPermission([
-            \App\Models\Role::LEVEL_SUPER_ADMIN,
-            \App\Models\Role::LEVEL_ADMIN
-        ], $journal->id);
+        $isManagerOrAdmin = auth()->user()->hasRole(\App\Models\Role::ROLE_SUPERADMIN) || 
+            \DB::table('journal_user_roles')
+                ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+                ->where('journal_user_roles.user_id', auth()->id())
+                ->where('journal_user_roles.journal_id', $journal->id)
+                ->whereIn('roles.name', ['Super Admin', 'Admin', 'Journal Manager'])
+                ->exists();
     }
 
     $hasEditor = $submission->editorialAssignments()->where('is_active', true)->exists();
