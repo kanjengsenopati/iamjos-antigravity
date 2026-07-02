@@ -22,7 +22,7 @@
                 </div>
                 <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Total hosted journals</span>
             </div>
-            <div class="pl-1">
+            <div class="text-center">
                 <p class="text-3xl font-extrabold text-indigo-600 tracking-tight leading-none mb-1">{{ $journals->count() }}</p>
                 <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Journals</p>
             </div>
@@ -39,7 +39,7 @@
                 </div>
                 <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Active journals</span>
             </div>
-            <div class="pl-1">
+            <div class="text-center">
                 <p class="text-3xl font-extrabold text-emerald-600 tracking-tight leading-none mb-1">{{ $journals->where('enabled', true)->count() }}</p>
                 <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active</p>
             </div>
@@ -56,7 +56,7 @@
                 </div>
                 <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Total submissions</span>
             </div>
-            <div class="pl-1">
+            <div class="text-center">
                 <p class="text-3xl font-extrabold text-blue-600 tracking-tight leading-none mb-1">{{ $journals->sum('submissions_count') }}</p>
                 <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Articles</p>
             </div>
@@ -73,7 +73,7 @@
                 </div>
                 <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Published issues</span>
             </div>
-            <div class="pl-1">
+            <div class="text-center">
                 <p class="text-3xl font-extrabold text-purple-600 tracking-tight leading-none mb-1">{{ $journals->sum('issues_count') }}</p>
                 <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Issues</p>
             </div>
