@@ -29,7 +29,7 @@
     }
 
     $hasEditor = $submission->editorialAssignments()->where('is_active', true)->exists();
-    $canPerformAction = $isManagerOrAdmin || !$hasEditor || $isAssignedEditor;
+    $canPerformAction = $isManagerOrAdmin || $isAssignedEditor;
 @endphp
 
 <x-app-layout>
