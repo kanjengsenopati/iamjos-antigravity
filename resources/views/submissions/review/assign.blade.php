@@ -300,14 +300,14 @@
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">
                                 <label
                                     class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none"
-                                    :class="reviewMethod === 'double_blind' ? 'border-indigo-500 ring-2 ring-indigo-500' :
+                                    :class="reviewMethod === 'open' ? 'border-indigo-500 ring-2 ring-indigo-500' :
                                         'border-gray-300'">
-                                    <input type="radio" name="review_method" value="double_blind"
-                                        x-model="reviewMethod" class="sr-only">
+                                    <input type="radio" name="review_method" value="open" x-model="reviewMethod"
+                                        class="sr-only">
                                     <div class="flex flex-1 flex-col text-center">
-                                        <i class="fa-solid fa-eye-slash text-gray-500 text-2xl mb-2"></i>
-                                        <span class="block text-sm font-medium text-gray-900">Double Blind</span>
-                                        <span class="mt-1 text-xs text-gray-500">Both reviewer and author differ</span>
+                                        <i class="fa-solid fa-eye text-gray-500 text-2xl mb-2"></i>
+                                        <span class="block text-sm font-medium text-gray-900">Open</span>
+                                        <span class="mt-1 text-xs text-gray-500">Identity is visible</span>
                                     </div>
                                 </label>
                                 <label
@@ -324,14 +324,14 @@
                                 </label>
                                 <label
                                     class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none"
-                                    :class="reviewMethod === 'open' ? 'border-indigo-500 ring-2 ring-indigo-500' :
+                                    :class="reviewMethod === 'double_blind' ? 'border-indigo-500 ring-2 ring-indigo-500' :
                                         'border-gray-300'">
-                                    <input type="radio" name="review_method" value="open" x-model="reviewMethod"
-                                        class="sr-only">
+                                    <input type="radio" name="review_method" value="double_blind"
+                                        x-model="reviewMethod" class="sr-only">
                                     <div class="flex flex-1 flex-col text-center">
-                                        <i class="fa-solid fa-eye text-gray-500 text-2xl mb-2"></i>
-                                        <span class="block text-sm font-medium text-gray-900">Open</span>
-                                        <span class="mt-1 text-xs text-gray-500">Identity is visible</span>
+                                        <i class="fa-solid fa-eye-slash text-gray-500 text-2xl mb-2"></i>
+                                        <span class="block text-sm font-medium text-gray-900">Double Blind</span>
+                                        <span class="mt-1 text-xs text-gray-500">Both reviewer and author differ</span>
                                     </div>
                                 </label>
                             </div>

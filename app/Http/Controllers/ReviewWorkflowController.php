@@ -602,7 +602,17 @@ public function searchReviewers(Request $request, string $journalSlug)
         ];
     });
 
-    return response()->json($results);
+    // Order by avg_rating descending, then name ascending
+    $sortedResults = $results->sort(function ($a, $b) {
+        $ratingA = $a['avg_rating'] ?? 0;
+        $ratingB = $b['avg_rating'] ?? 0;
+        if ($ratingA != $ratingB) {
+            return $ratingB <=> $ratingA; // Descending
+        }
+        return strcasecmp($a['name'], $b['name']); // Ascending
+    })->values();
+
+    return response()->json($sortedResults);
 }
     /**
      * Request revisions from author (OJS 3.3 style).
