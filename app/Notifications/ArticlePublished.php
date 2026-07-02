@@ -41,7 +41,10 @@ class ArticlePublished extends Notification
         $journal = $this->submission->journal;
         $url = route('journal.public.article', ['journal' => $journal->slug, 'submission' => $this->submission]);
 
-        return (new MailMessage)
+        $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
+        $principalEmail = $journal->getSetting('contact.principal.email');
+
+        $mailMessage = (new MailMessage)
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
@@ -54,6 +57,13 @@ class ArticlePublished extends Notification
             ->action('View Published Article', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
+
+        if ($principalEmail) {
+            $mailMessage->from($principalEmail, $principalName);
+            $mailMessage->replyTo($principalEmail, $principalName);
+        }
+
+        return $mailMessage;
     }
 
     /**
