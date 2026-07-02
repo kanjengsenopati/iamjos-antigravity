@@ -57,8 +57,11 @@ class ReviewInvitation extends Notification
             ->line('If you are unable to review this manuscript, please decline as soon as possible so we can invite another reviewer.')
             ->salutation('Best regards, Editorial Team');
 
+        $systemEmail = config('mail.from.address');
+        $fromName = $principalName . ' via ' . ($submission->journal->name ?? 'Journal');
+        $mailMessage->from($systemEmail, $fromName);
+
         if ($principalEmail) {
-            $mailMessage->from($principalEmail, $principalName);
             $mailMessage->replyTo($principalEmail, $principalName);
         }
 

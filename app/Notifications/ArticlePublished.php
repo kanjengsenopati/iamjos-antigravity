@@ -58,8 +58,11 @@ class ArticlePublished extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
+        $systemEmail = config('mail.from.address');
+        $fromName = $principalName . ' via ' . $journal->name;
+        $mailMessage->from($systemEmail, $fromName);
+
         if ($principalEmail) {
-            $mailMessage->from($principalEmail, $principalName);
             $mailMessage->replyTo($principalEmail, $principalName);
         }
 

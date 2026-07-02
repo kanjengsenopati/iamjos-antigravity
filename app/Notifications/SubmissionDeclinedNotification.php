@@ -59,8 +59,11 @@ class SubmissionDeclinedNotification extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
+        $systemEmail = config('mail.from.address');
+        $fromName = ($declinedBy ? $declinedBy->name : 'Editor') . ' via ' . $journal->name;
+        $mailMessage->from($systemEmail, $fromName);
+
         if ($declinedBy && $declinedBy->email) {
-            $mailMessage->from($declinedBy->email, $declinedBy->name);
             $mailMessage->replyTo($declinedBy->email, $declinedBy->name);
         }
 

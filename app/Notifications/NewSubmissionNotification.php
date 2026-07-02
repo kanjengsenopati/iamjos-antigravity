@@ -62,11 +62,13 @@ class NewSubmissionNotification extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
-        if ($submitterEmail) {
-            $mailMessage->from($submitterEmail, $submitterName);
-        }
+        $systemEmail = config('mail.from.address');
+        $fromName = $submitterName . ' via ' . $journal->name;
+        $mailMessage->from($systemEmail, $fromName);
 
-        if ($principalEmail) {
+        if ($submitterEmail) {
+            $mailMessage->replyTo($submitterEmail, $submitterName);
+        } elseif ($principalEmail) {
             $mailMessage->replyTo($principalEmail, $principalName);
         }
 

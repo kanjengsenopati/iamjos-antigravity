@@ -70,8 +70,11 @@ class ReviewerReminder extends Notification implements ShouldQueue
             ->line('Thank you for your contribution to the peer review process.')
             ->salutation('Best regards, Editorial Team');
 
+        $systemEmail = config('mail.from.address');
+        $fromName = $principalName . ' via ' . ($submission->journal->name ?? 'Journal');
+        $message->from($systemEmail, $fromName);
+
         if ($principalEmail) {
-            $message->from($principalEmail, $principalName);
             $message->replyTo($principalEmail, $principalName);
         }
 

@@ -82,8 +82,11 @@ class WorkflowEventNotification extends Notification
             ->line('Link: ' . $this->actionUrl)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . ($journal?->name ?? 'IAMJOS'));
 
+        $systemEmail = config('mail.from.address');
+        $fromName = $principalName . ' via ' . ($journal?->name ?? 'Journal');
+        $mailMessage->from($systemEmail, $fromName);
+
         if ($principalEmail) {
-            $mailMessage->from($principalEmail, $principalName);
             $mailMessage->replyTo($principalEmail, $principalName);
         }
 

@@ -52,8 +52,11 @@ class ReviewCompleted extends Notification
             ->line('Please log in to view the complete review and make an editorial decision.')
             ->salutation('Best regards, IAMJOS System');
 
+        $systemEmail = config('mail.from.address');
+        $fromName = ($reviewer ? $reviewer->name : 'Reviewer') . ' via ' . ($submission->journal->name ?? 'Journal');
+        $mailMessage->from($systemEmail, $fromName);
+
         if ($reviewer && $reviewer->email) {
-            $mailMessage->from($reviewer->email, $reviewer->name);
             $mailMessage->replyTo($reviewer->email, $reviewer->name);
         }
 

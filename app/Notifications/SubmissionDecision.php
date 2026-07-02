@@ -99,8 +99,11 @@ class SubmissionDecision extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
+        $systemEmail = config('mail.from.address');
+        $fromName = $principalName . ' via ' . $journal->name;
+        $mail->from($systemEmail, $fromName);
+
         if ($principalEmail) {
-            $mail->from($principalEmail, $principalName);
             $mail->replyTo($principalEmail, $principalName);
         }
 

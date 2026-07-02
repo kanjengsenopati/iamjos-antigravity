@@ -60,8 +60,11 @@ class EditorAssignmentNotification extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
+        $systemEmail = config('mail.from.address');
+        $fromName = ($assignedBy ? $assignedBy->name : 'Editor') . ' via ' . $journal->name;
+        $mailMessage->from($systemEmail, $fromName);
+
         if ($assignedBy && $assignedBy->email) {
-            $mailMessage->from($assignedBy->email, $assignedBy->name);
             $mailMessage->replyTo($assignedBy->email, $assignedBy->name);
         }
 

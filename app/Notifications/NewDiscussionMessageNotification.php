@@ -74,8 +74,11 @@ class NewDiscussionMessageNotification extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\n" . $sender->name . "\n________________________________\n" . $journal->name);
 
+        $systemEmail = config('mail.from.address');
+        $fromName = ($sender ? $sender->name : 'Sender') . ' via ' . $journal->name;
+        $mailMessage->from($systemEmail, $fromName);
+
         if ($sender && $sender->email) {
-            $mailMessage->from($sender->email, $sender->name);
             $mailMessage->replyTo($sender->email, $sender->name);
         }
 
