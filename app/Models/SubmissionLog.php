@@ -214,6 +214,19 @@ class SubmissionLog extends Model
                   ->whereIn('role_id', $editorRoles);
             })->get();
 
+            // Filter: Jika artikel sudah memiliki editor yang ditugaskan,
+            // maka semua notifikasi selanjutnya hanya dikirim ke editor tersebut.
+            $assignedEditorIds = $submission->editorialAssignments()
+                ->where('is_active', true)
+                ->pluck('user_id')
+                ->toArray();
+
+            if (!empty($assignedEditorIds)) {
+                $allJournalEditors = $allJournalEditors->filter(function ($editor) use ($assignedEditorIds) {
+                    return in_array($editor->id, $assignedEditorIds);
+                });
+            }
+
             $globalEmailsSent = [];
 
             // Logika Distribusi Berdasarkan Tipe Event

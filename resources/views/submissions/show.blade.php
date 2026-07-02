@@ -10,6 +10,26 @@
         4 => 'production',
     ];
     $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
+
+    // Otorisasi Workflow Editor
+    $isAssignedEditor = false;
+    if (auth()->check()) {
+        $isAssignedEditor = $submission->editorialAssignments()
+            ->where('is_active', true)
+            ->where('user_id', auth()->id())
+            ->exists();
+    }
+
+    $isManagerOrAdmin = false;
+    if (auth()->check() && $journal) {
+        $isManagerOrAdmin = auth()->user()->hasJournalPermission([
+            \App\Models\Role::LEVEL_SUPER_ADMIN,
+            \App\Models\Role::LEVEL_ADMIN
+        ], $journal->id);
+    }
+
+    $hasEditor = $submission->editorialAssignments()->where('is_active', true)->exists();
+    $canPerformAction = $isManagerOrAdmin || !$hasEditor || $isAssignedEditor;
 @endphp
 
 <x-app-layout>
@@ -422,15 +442,18 @@
                                             @else
                                                 {{-- ACTIVE STATE: Enabled workflow actions --}}
                                                 <button @click="openSendToReviewModal()"
-                                                    class="w-full mb-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors">
+                                                    {{ !$canPerformAction ? 'disabled' : '' }}
+                                                    class="w-full mb-2 px-4 py-2.5 {{ $canPerformAction ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} rounded-lg text-sm font-medium transition-colors">
                                                     <i class="fa-solid fa-arrow-right mr-2"></i>Send to Review
                                                 </button>
                                                 <button @click="openSkipReviewModal()"
-                                                    class="w-full mb-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors">
+                                                    {{ !$canPerformAction ? 'disabled' : '' }}
+                                                    class="w-full mb-2 px-4 py-2.5 {{ $canPerformAction ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} rounded-lg text-sm font-medium transition-colors">
                                                     <i class="fa-solid fa-forward mr-2"></i>Accept & Skip Review
                                                 </button>
                                                 <button @click="declineModalOpen = true; resetDeclineModal()"
-                                                    class="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors">
+                                                    {{ !$canPerformAction ? 'disabled' : '' }}
+                                                    class="w-full px-4 py-2.5 {{ $canPerformAction ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} rounded-lg text-sm font-medium transition-colors">
                                                     <i class="fa-solid fa-ban mr-2"></i>Decline Submission
                                                 </button>
                                             @endif
@@ -871,10 +894,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i>Reviewers
                                     </h3>
                                     @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
-                                        <a href="{{ route('journal.workflow.assign-reviewer-page', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                                            class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
-                                            <i class="fa-solid fa-plus mr-1"></i> Add Reviewer
-                                        </a>
+                                        @if ($canPerformAction)
+                                            <a href="{{ route('journal.workflow.assign-reviewer-page', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                                                class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
+                                                <i class="fa-solid fa-plus mr-1"></i> Add Reviewer
+                                            </a>
+                                        @else
+                                            <span class="text-sm text-gray-400 font-medium cursor-not-allowed flex items-center" title="Anda tidak ditugaskan ke naskah ini">
+                                                <i class="fa-solid fa-plus mr-1"></i> Add Reviewer
+                                            </span>
+                                        @endif
                                     @endif
                                 </div>
                                 <div class="divide-y divide-gray-200">
@@ -953,24 +982,25 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         {{-- Review Details --}}
                                                         @if ($assignment->status === 'completed' || $assignment->recommendation)
                                                             <button type="button" @click='openReviewDetailsModal({{ json_encode($assignment) }})'
-                                                                class="flex items-center justify-center px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                                                                <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> Review Details
+                                                                class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> Review Details
                                                             </button>
                                                         @endif
 
                                                         {{-- Edit Assignment --}}
-                                                        <button type="button" @click='openEditReviewModal({{ json_encode($assignment) }})'
-                                                            class="flex items-center justify-center px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                                                            <i class="fa-solid fa-calendar-check text-indigo-500 mr-2"></i> Edit Assignment
+                                                        <button type="button" @click='openEditReviewModal({{ json_encode($assignment) }})' {{ !$canPerformAction ? 'disabled' : '' }}
+                                                            class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                            <i class="fa-solid fa-calendar-check {{ $canPerformAction ? 'text-indigo-500' : 'text-gray-400' }} mr-2"></i> Edit Assignment
                                                         </button>
 
                                                         {{-- Unassign --}}
                                                         @if (!in_array($assignment->status, ['completed', 'declined', 'cancelled']))
                                                             <form action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
-                                                                method="POST" onsubmit="return confirm('Remove this reviewer?')">
+                                                                method="POST" @if($canPerformAction) onsubmit="return confirm('Remove this reviewer?')" @endif>
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-white border border-red-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors shadow-sm">
+                                                                <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
+                                                                    class="w-full flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-red-100 text-red-600 hover:bg-red-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
                                                                     <i class="fa-solid fa-user-minus mr-2"></i> Unassign
                                                                 </button>
                                                             </form>
@@ -1168,22 +1198,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         {{-- Active - Stage 2 and not declined --}}
                                         <div class="space-y-3">
                                             <button type="button" @click="openAcceptModal()"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                                {{ !$canPerformAction ? 'disabled' : '' }}
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white {{ $canPerformAction ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }}">
                                                 <i class="fa-solid fa-check mr-2"></i> Accept Submission
                                             </button>
                                             {{-- Request Revisions - Opens Modal --}}
                                             <button type="button" @click="openRevisionModal()"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-yellow-300 shadow-sm text-sm font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
+                                                {{ !$canPerformAction ? 'disabled' : '' }}
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-yellow-300 text-yellow-700 bg-yellow-50 hover:bg-yellow-100' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} shadow-sm text-sm font-medium rounded-md">
                                                 <i class="fa-solid fa-pen mr-2"></i> Request Revisions
                                             </button>
                                             <form
                                                 action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                                 method="POST"
-                                                onsubmit="return confirm('This will decline the submission. Continue?')">
+                                                @if($canPerformAction) onsubmit="return confirm('This will decline the submission. Continue?')" @endif>
                                                 @csrf
                                                 <input type="hidden" name="decision" value="decline">
-                                                <button type="submit"
-                                                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                                                <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
+                                                    class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-red-300 text-red-700 bg-white hover:bg-red-50' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} shadow-sm text-sm font-medium rounded-md">
                                                     <i class="fa-solid fa-xmark mr-2"></i> Decline
                                                 </button>
                                             </form>
@@ -1705,7 +1737,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         </div>
                                     </div>
                                     <button @click="openSendToProductionModal()"
-                                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                                        {{ !$canPerformAction ? 'disabled' : '' }}
+                                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white {{ $canPerformAction ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500 focus:ring-2 focus:ring-offset-2' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} transition-colors focus:outline-none">
                                         <i class="fa-solid fa-arrow-right mr-2"></i> Send to Production
                                     </button>
                                 @else
@@ -2087,8 +2120,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         method="POST">
                                         @csrf
                                         <button type="submit"
-                                            onclick="return confirm('Are you sure you want to unpublish this submission?')"
-                                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-red-200 text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 transition-colors">
+                                            {{ !$canPerformAction ? 'disabled' : '' }}
+                                            @if($canPerformAction) onclick="return confirm('Are you sure you want to unpublish this submission?')" @endif
+                                            class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-red-200 text-red-700 bg-white hover:bg-red-50' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} text-sm font-medium rounded-lg transition-colors">
                                             <i class="fa-solid fa-eye-slash mr-2"></i> Unpublish
                                         </button>
                                     </form>
@@ -2121,8 +2155,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             action="{{ route('journal.workflow.publish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST">
                                             @csrf
-                                            <button type="submit" {{ !$submission->hasGalleys() ? 'disabled' : '' }}
-                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white {{ $submission->hasGalleys() ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-300 cursor-not-allowed' }} transition-colors">
+                                            <button type="submit" {{ (!$canPerformAction || !$submission->hasGalleys()) ? 'disabled' : '' }}
+                                                class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white {{ ($canPerformAction && $submission->hasGalleys()) ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} transition-colors">
                                                 <i class="fa-solid fa-rocket mr-2"></i> Publish Now
                                             </button>
                                         </form>
@@ -2131,8 +2165,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             action="{{ route('journal.workflow.unschedule', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST">
                                             @csrf
-                                            <button type="submit"
-                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors">
+                                            <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} text-sm font-medium rounded-lg transition-colors">
                                                 <i class="fa-solid fa-calendar-xmark mr-2"></i> Unschedule
                                             </button>
                                         </form>

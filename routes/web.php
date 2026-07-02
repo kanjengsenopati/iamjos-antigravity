@@ -383,7 +383,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 Route::post('/{submission}/discussion/{discussion}/read', [SubmissionDiscussionController::class, 'markAsRead'])->name('journal.discussion.read');
 
                 Route::prefix('workflow')->name('journal.workflow.')
-                ->middleware('role:Editor|Section Editor|Journal Manager|Admin|Super Admin')
+                ->middleware(['role:Editor|Section Editor|Journal Manager|Admin|Super Admin', 'ensure_editor_assigned'])
                 ->group(function () {
                     Route::post('/{submission}/file', [SubmissionWorkflowController::class, 'uploadFile'])->name('file.store');
                     Route::post('/{submission}/discussion', [SubmissionWorkflowController::class, 'storeDiscussion'])->name('discussion.store');

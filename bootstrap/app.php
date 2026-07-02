@@ -44,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             // IAMJOS License middleware
             'iamjos.license' => \App\Http\Middleware\LicenseMiddleware::class,
+            'ensure_editor_assigned' => \App\Http\Middleware\EnsureEditorIsAssigned::class,
         ]);
 
         $middleware->append(\App\Http\Middleware\RedirectIfUninstalled::class);
