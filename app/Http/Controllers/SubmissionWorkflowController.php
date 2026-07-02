@@ -156,16 +156,6 @@ class SubmissionWorkflowController extends Controller
             'user_id' => 'required|uuid|exists:users,id',
         ]);
 
-        // Check if already assigned
-        $exists = EditorialAssignment::where('submission_id', $submission->id)
-            ->where('user_id', $validated['user_id'])
-            ->where('is_active', true)
-            ->exists();
-
-        if ($exists) {
-            return back()->with('error', 'This user is already assigned to this submission.');
-        }
-
         // Determine role based on user's roles in this journal
         $user = \App\Models\User::find($validated['user_id']);
         $journalRole = $user->journalRoles()->where('journal_id', $journal->id)->first();
@@ -176,13 +166,33 @@ class SubmissionWorkflowController extends Controller
             $role = 'section_editor';
         }
 
-        EditorialAssignment::create([
-            'submission_id' => $submission->id,
-            'user_id' => $validated['user_id'],
-            'assigned_by' => auth()->id(),
-            'role' => $role,
-            'date_assigned' => now(),
-        ]);
+        // Check if assignment record already exists (active or inactive)
+        $assignment = EditorialAssignment::where('submission_id', $submission->id)
+            ->where('user_id', $validated['user_id'])
+            ->first();
+
+        if ($assignment) {
+            if ($assignment->is_active) {
+                return back()->with('error', 'This user is already assigned to this submission.');
+            }
+            
+            // Reactivate and update the existing assignment record
+            $assignment->update([
+                'is_active' => true,
+                'assigned_by' => auth()->id(),
+                'role' => $role,
+                'date_assigned' => now(),
+            ]);
+        } else {
+            // Create a new assignment record
+            EditorialAssignment::create([
+                'submission_id' => $submission->id,
+                'user_id' => $validated['user_id'],
+                'assigned_by' => auth()->id(),
+                'role' => $role,
+                'date_assigned' => now(),
+            ]);
+        }
 
         // Notify the assigned editor
         if ($user) {
