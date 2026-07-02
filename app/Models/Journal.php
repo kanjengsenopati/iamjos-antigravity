@@ -80,6 +80,16 @@ class Journal extends Model
         'doi_prefix',
         'doi_suffix_type',
         'doi_custom_pattern',
+        // Workflow Settings
+        'submission_metadata_settings',
+        'review_mode',
+        'review_response_weeks',
+        'review_completion_weeks',
+        'reviewer_guidelines',
+        'require_competing_interests',
+        'email_signature',
+        'email_bounce_address',
+        'email_reply_to',
     ];
 
     /**
@@ -101,6 +111,11 @@ class Journal extends Model
             // DOI Settings
             'doi_enabled' => 'boolean',
             'doi_objects' => 'array',
+            // Workflow Settings Casts
+            'submission_metadata_settings' => 'array',
+            'require_competing_interests' => 'boolean',
+            'review_response_weeks' => 'integer',
+            'review_completion_weeks' => 'integer',
         ];
     }
 
