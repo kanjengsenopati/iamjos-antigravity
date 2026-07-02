@@ -365,20 +365,8 @@
                                     @endif
 
                                     <!-- Status Badge -->
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap
-                                        @switch($submission->status)
-                                            @case('draft') bg-gray-100 text-gray-700 @break
-                                            @case('submitted') bg-blue-50 text-blue-700 border border-blue-200 @break
-                                            @case('in_review') bg-amber-50 text-amber-700 border border-amber-200 @break
-                                            @case('revision_required') bg-orange-50 text-orange-700 border border-orange-200 @break
-                                            @case('accepted') bg-emerald-50 text-emerald-700 border border-emerald-200 @break
-                                            @case('rejected') bg-rose-600 text-white @break
-                                            @case('published') bg-emerald-600 text-white @break
-                                            @default bg-gray-100 text-gray-700
-                                        @endswitch
-                                    ">
-                                        {{ $submission->status_label }}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap {{ $submission->stage_badge_class }}">
+                                         {{ $submission->status_label }}
                                     </span>
 
                                     <!-- Action Button Group -->

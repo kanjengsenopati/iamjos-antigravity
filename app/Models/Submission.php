@@ -581,23 +581,64 @@ class Submission extends Model
     // =====================================================
 
     /**
-     * Get status label with proper formatting
+     * Get status label with proper formatting matching the OJS workflow stages
      */
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->status) {
-            self::STATUS_DRAFT => 'Draft',
-            self::STATUS_SUBMITTED => 'Submitted',
-            self::STATUS_UNDER_REVIEW => 'Under Review',
-            self::STATUS_IN_REVIEW => 'In Review',
-            self::STATUS_REVISION_REQUIRED => 'Revision Required',
-            self::STATUS_ACCEPTED => 'Accepted',
-            self::STATUS_QUEUED_FOR_COPYEDITING => 'Queued for Copyediting',
-            self::STATUS_IN_PRODUCTION => 'In Production',
-            self::STATUS_SCHEDULED => 'Scheduled',
-            self::STATUS_REJECTED => 'Rejected',
-            self::STATUS_PUBLISHED => 'Published',
-            default => ucwords(str_replace('_', ' ', $this->status)),
+        // 1. If rejected or published, show final status
+        if ($this->status === self::STATUS_REJECTED) {
+            return 'Declined';
+        }
+        if ($this->status === self::STATUS_PUBLISHED) {
+            return 'Published';
+        }
+        if ($this->status === self::STATUS_DRAFT) {
+            return 'Draft';
+        }
+
+        // 2. Otherwise, return stage-based label matching the OJS workflow stages
+        return match ((int)$this->stage_id) {
+            self::STAGE_ID_SUBMISSION => 'Submission',
+            self::STAGE_ID_REVIEW => 'Review',
+            self::STAGE_ID_COPYEDITING => 'Copyediting',
+            self::STAGE_ID_PRODUCTION => 'Production',
+            default => match ($this->status) {
+                self::STATUS_SUBMITTED => 'Submission',
+                self::STATUS_UNDER_REVIEW, self::STATUS_IN_REVIEW, self::STATUS_REVISION_REQUIRED => 'Review',
+                self::STATUS_ACCEPTED, self::STATUS_QUEUED_FOR_COPYEDITING => 'Copyediting',
+                self::STATUS_IN_PRODUCTION, self::STATUS_SCHEDULED => 'Production',
+                default => ucwords(str_replace('_', ' ', $this->status)),
+            }
+        };
+    }
+
+    /**
+     * Get Tailwind CSS classes for the stage/status badge
+     */
+    public function getStageBadgeClassAttribute(): string
+    {
+        if ($this->status === self::STATUS_REJECTED) {
+            return 'bg-rose-50 text-rose-700 border border-rose-200';
+        }
+        if ($this->status === self::STATUS_PUBLISHED) {
+            return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+        }
+        if ($this->status === self::STATUS_DRAFT) {
+            return 'bg-slate-50 text-slate-600 border border-slate-200';
+        }
+
+        return match ((int)$this->stage_id) {
+            self::STAGE_ID_SUBMISSION => 'bg-blue-50 text-blue-700 border border-blue-200',
+            self::STAGE_ID_REVIEW => 'bg-amber-50 text-amber-700 border border-amber-200',
+            self::STAGE_ID_COPYEDITING => 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+            self::STAGE_ID_PRODUCTION => 'bg-purple-50 text-purple-700 border border-purple-200',
+            default => match ($this->status) {
+                self::STATUS_SUBMITTED => 'bg-blue-50 text-blue-700 border border-blue-200',
+                self::STATUS_UNDER_REVIEW, self::STATUS_IN_REVIEW, self::STATUS_REVISION_REQUIRED => 'bg-amber-50 text-amber-700 border border-amber-200',
+                self::STATUS_ACCEPTED, self::STATUS_QUEUED_FOR_COPYEDITING => 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+                self::STATUS_IN_PRODUCTION, self::STATUS_SCHEDULED => 'bg-purple-50 text-purple-700 border border-purple-200',
+                default => 'bg-slate-50 text-slate-600 border border-slate-200',
+            }
         };
     }
 

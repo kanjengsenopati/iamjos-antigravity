@@ -32,18 +32,7 @@
                 </p>
             </div>
             <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex items-center gap-2">
-                <span
-                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                    @switch($submission->status)
-                        @case('submitted') bg-blue-100 text-blue-800 @break
-                        @case('in_review') bg-yellow-100 text-yellow-800 @break
-                        @case('revision_required') bg-orange-100 text-orange-800 @break
-                        @case('accepted') bg-green-100 text-green-800 @break
-                        @case('rejected') bg-red-100 text-red-800 @break
-                        @case('published') bg-emerald-100 text-emerald-800 @break
-                        @default bg-gray-100 text-gray-800
-                    @endswitch
-                ">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $submission->stage_badge_class }}">
                     {{ $submission->status_label }}
                 </span>
             </div>
