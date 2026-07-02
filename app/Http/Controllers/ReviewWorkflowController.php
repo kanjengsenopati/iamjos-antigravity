@@ -589,7 +589,7 @@ public function searchReviewers(Request $request, string $journalSlug)
 
         return [
             'id' => $user->id,
-            'name' => $user->name,
+            'name' => $user->full_name,
             'email' => $user->email,
             'affiliation' => $user->affiliation,
             'avg_rating' => $completed->avg('quality_rating'),

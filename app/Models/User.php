@@ -472,6 +472,15 @@ class User extends Authenticatable
         return null;
     }
 
+    /**
+     * Get the user's full name combining given_name and family_name
+     */
+    public function getFullNameAttribute(): string
+    {
+        $fullName = trim(($this->given_name ?? '') . ' ' . ($this->family_name ?? ''));
+        return $fullName ?: ($this->name ?: $this->username);
+    }
+
     public function submissionAuthors()
     {
         return $this->hasMany(SubmissionAuthor::class, 'user_id');

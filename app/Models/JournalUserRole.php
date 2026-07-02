@@ -70,8 +70,8 @@ class JournalUserRole extends Model
         $journalId = $journal instanceof Journal ? $journal->id : $journal;
         
         if (is_string($role) && !preg_match('/^[0-9a-f-]{36}$/i', $role)) {
-            // It's a role name, find the role
-            $role = Role::where('name', $role)->first();
+            // It's a role name, find the role scoped to this journal
+            $role = Role::where('name', $role)->where('journal_id', $journalId)->first();
         }
         
         $roleId = $role instanceof Role ? $role->id : $role;
@@ -111,7 +111,7 @@ class JournalUserRole extends Model
         $journalId = $journal instanceof Journal ? $journal->id : $journal;
         
         if (is_string($role) && !preg_match('/^[0-9a-f-]{36}$/i', $role)) {
-            $role = Role::where('name', $role)->first();
+            $role = Role::where('name', $role)->where('journal_id', $journalId)->first();
         }
         
         $roleId = $role instanceof Role ? $role->id : $role;
@@ -136,7 +136,7 @@ class JournalUserRole extends Model
         $journalId = $journal instanceof Journal ? $journal->id : $journal;
         
         if (is_string($role) && !preg_match('/^[0-9a-f-]{36}$/i', $role)) {
-            $role = Role::where('name', $role)->first();
+            $role = Role::where('name', $role)->where('journal_id', $journalId)->first();
             if (!$role) return false;
         }
         
