@@ -45,8 +45,9 @@ class SubmissionDeclinedNotification extends Notification
     {
         $journal = $this->submission->journal;
         $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+        $declinedBy = $this->declinedBy;
 
-        return (new MailMessage)
+        $mailMessage = (new MailMessage)
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
@@ -57,6 +58,13 @@ class SubmissionDeclinedNotification extends Notification
             ->action('View Submission', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
+
+        if ($declinedBy && $declinedBy->email) {
+            $mailMessage->from($declinedBy->email, $declinedBy->name);
+            $mailMessage->replyTo($declinedBy->email, $declinedBy->name);
+        }
+
+        return $mailMessage;
     }
 
     /**

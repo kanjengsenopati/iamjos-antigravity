@@ -63,10 +63,13 @@ class WorkflowEventNotification extends Notification
         $journal = $this->submission->journal;
         $bodyLines = explode("\n", $this->messageBody);
 
+        $principalName = $journal ? ($journal->getSetting('contact.principal.name') ?? $journal->name) : 'Journal';
+        $principalEmail = $journal ? $journal->getSetting('contact.principal.email') : null;
+
         $mailMessage = (new MailMessage)
-            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . ($journal->name ?? 'Journal'))
+            ->subject('[' . ($journal?->abbreviation ?? 'JOURNAL') . '] New notification from ' . ($journal?->name ?? 'Journal'))
             ->greeting('Dear ' . $notifiable->name . ',')
-            ->line('You have a new notification from ' . ($journal->name ?? 'Journal') . ':');
+            ->line('You have a new notification from ' . ($journal?->name ?? 'Journal') . ':');
 
         foreach ($bodyLines as $line) {
             if (trim($line) !== '') {
@@ -74,11 +77,17 @@ class WorkflowEventNotification extends Notification
             }
         }
 
-        return $mailMessage
-            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
+        $mailMessage->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action($this->actionText, $this->actionUrl)
             ->line('Link: ' . $this->actionUrl)
-            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . ($journal->name ?? 'IAMJOS'));
+            ->salutation("Best regards,\nEditorial Team\n________________________________\n" . ($journal?->name ?? 'IAMJOS'));
+
+        if ($principalEmail) {
+            $mailMessage->from($principalEmail, $principalName);
+            $mailMessage->replyTo($principalEmail, $principalName);
+        }
+
+        return $mailMessage;
     }
 
     /**

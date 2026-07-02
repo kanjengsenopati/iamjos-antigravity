@@ -47,6 +47,7 @@ class NewDiscussionMessageNotification extends Notification
     {
         $submission = $this->discussion->submission;
         $journal = $submission->journal;
+        $sender = $this->sender;
 
         // Check if user is reviewer
         $isReviewer = $notifiable->hasRole('Reviewer');
@@ -61,7 +62,7 @@ class NewDiscussionMessageNotification extends Notification
             $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]);
         }
 
-        return (new MailMessage)
+        $mailMessage = (new MailMessage)
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
@@ -71,7 +72,14 @@ class NewDiscussionMessageNotification extends Notification
             ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Discussion', $url)
             ->line('Link: ' . $url)
-            ->salutation("Best regards,\n" . $this->sender->name . "\n________________________________\n" . $journal->name);
+            ->salutation("Best regards,\n" . $sender->name . "\n________________________________\n" . $journal->name);
+
+        if ($sender && $sender->email) {
+            $mailMessage->from($sender->email, $sender->name);
+            $mailMessage->replyTo($sender->email, $sender->name);
+        }
+
+        return $mailMessage;
     }
 
     /**

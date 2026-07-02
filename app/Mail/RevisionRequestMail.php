@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
@@ -62,11 +63,13 @@ class RevisionRequestMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
-        $journalName = $this->journal?->name ?? config('app.name');
+        $principalEmail = $this->journal?->getSetting('contact.principal.email') ?? config('mail.from.address');
+        $principalName = $this->journal?->getSetting('contact.principal.name') ?? $this->journal?->name ?? config('mail.from.name');
 
         return new Envelope(
             subject: "Revisions Required: {$this->submission->title}",
-            replyTo: $this->journal?->email ? [$this->journal->email] : [],
+            from: new Address($principalEmail, $principalName),
+            replyTo: [new Address($principalEmail, $principalName)],
         );
     }
 

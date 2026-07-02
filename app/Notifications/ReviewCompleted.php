@@ -37,19 +37,27 @@ class ReviewCompleted extends Notification
     {
         $submission = $this->review->submission;
         $recommendation = $this->review->recommendation_label;
+        $reviewer = $this->review->reviewer;
 
-        return (new MailMessage)
+        $mailMessage = (new MailMessage)
             ->subject('Review Completed - ' . $submission->title)
             ->greeting('Dear Editor,')
             ->line('A review has been completed for the following submission:')
             ->line('**Title:** ' . $submission->title)
-            ->line('**Reviewer:** ' . $this->review->reviewer->name)
+            ->line('**Reviewer:** ' . ($reviewer->name ?? 'Reviewer'))
             ->line('**Recommendation:** ' . $recommendation)
             ->line('**Round:** ' . $this->review->round)
             ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Review', url('/editorial/queue'))
             ->line('Please log in to view the complete review and make an editorial decision.')
             ->salutation('Best regards, IAMJOS System');
+
+        if ($reviewer && $reviewer->email) {
+            $mailMessage->from($reviewer->email, $reviewer->name);
+            $mailMessage->replyTo($reviewer->email, $reviewer->name);
+        }
+
+        return $mailMessage;
     }
 
     /**

@@ -44,6 +44,9 @@ class SubmissionDecision extends Notification
         $journal = $this->submission->journal;
         $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
 
+        $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
+        $principalEmail = $journal->getSetting('contact.principal.email');
+
         $mail = (new MailMessage)
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
@@ -91,11 +94,17 @@ class SubmissionDecision extends Notification
                 ->line($this->comments);
         }
 
-        return $mail
-            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
+        $mail->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Submission', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
+
+        if ($principalEmail) {
+            $mail->from($principalEmail, $principalName);
+            $mail->replyTo($principalEmail, $principalName);
+        }
+
+        return $mail;
     }
 
     /**

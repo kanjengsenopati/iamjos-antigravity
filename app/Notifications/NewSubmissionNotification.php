@@ -41,11 +41,18 @@ class NewSubmissionNotification extends Notification
         $journal = $this->submission->journal;
         $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
 
-        return (new MailMessage)
+        $submitter = $this->submission->author;
+        $submitterName = $submitter ? $submitter->name : ($this->submission->authors->first()->name ?? 'Author');
+        $submitterEmail = $submitter ? $submitter->email : ($this->submission->authors->first()->email ?? null);
+
+        $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
+        $principalEmail = $journal->getSetting('contact.principal.email');
+
+        $mailMessage = (new MailMessage)
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $notifiable->name . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
-            ->line('A new submission titled "' . $this->submission->title . '" has been submitted by ' . ($this->submission->authors->first()->name ?? 'Author') . '.')
+            ->line('A new submission titled "' . $this->submission->title . '" has been submitted by ' . $submitterName . '.')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Section:** ' . ($this->submission->section->title ?? $this->submission->section->name ?? 'Not specified'))
@@ -54,6 +61,16 @@ class NewSubmissionNotification extends Notification
             ->action('View Submission', $url)
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
+
+        if ($submitterEmail) {
+            $mailMessage->from($submitterEmail, $submitterName);
+        }
+
+        if ($principalEmail) {
+            $mailMessage->replyTo($principalEmail, $principalName);
+        }
+
+        return $mailMessage;
     }
 
     /**

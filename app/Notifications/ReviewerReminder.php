@@ -46,9 +46,13 @@ class ReviewerReminder extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $submission = $this->review->submission;
+        $journal = $submission->journal;
         $dueDate = $this->review->due_date?->format('F j, Y') ?? 'Not specified';
         
         $subject = ($this->type === 'overdue' ? 'URGENT: ' : '') . 'Review Reminder - ' . $submission->title;
+
+        $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
+        $principalEmail = $journal->getSetting('contact.principal.email');
         
         $message = (new MailMessage)
             ->subject($subject)
@@ -61,11 +65,17 @@ class ReviewerReminder extends Notification implements ShouldQueue
             $message->line('This is a friendly reminder that your review for the manuscript "' . $submission->title . '" is due soon on ' . $dueDate . '.');
         }
 
-        return $message
-            ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
+        $message->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->action('View Submission', route('journal.reviewer.show', ['journal' => $submission->journal->slug, 'identifier' => $this->review->slug]))
             ->line('Thank you for your contribution to the peer review process.')
             ->salutation('Best regards, Editorial Team');
+
+        if ($principalEmail) {
+            $message->from($principalEmail, $principalName);
+            $message->replyTo($principalEmail, $principalName);
+        }
+
+        return $message;
     }
 
     /**

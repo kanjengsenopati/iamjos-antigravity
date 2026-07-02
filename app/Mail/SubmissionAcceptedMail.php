@@ -5,6 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -30,8 +31,14 @@ class SubmissionAcceptedMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $journal = $this->submission->journal;
+        $principalEmail = $journal?->getSetting('contact.principal.email') ?? config('mail.from.address');
+        $principalName = $journal?->getSetting('contact.principal.name') ?? $journal?->name ?? config('mail.from.name');
+
         return new Envelope(
             subject: 'Editor Decision: Submission Accepted',
+            from: new Address($principalEmail, $principalName),
+            replyTo: [new Address($principalEmail, $principalName)],
         );
     }
 

@@ -67,19 +67,11 @@ class JournalEmailService
                 $message->to($recipient->email, $recipient->full_name)
                     ->subject($subject);
                 
-                // Set 'From' address
-                // If template has specific from (rarely used in OJS logic, usually journal email)
-                // $fromEmail = $templateData['from_email'] ?? $journal->email ?? config('mail.from.address');
-                // $fromName = $templateData['from_name'] ?? $journal->name ?? config('mail.from.name');
-                
-                // Use Journal default email if available
-                // Assuming Journal model has 'email' or 'contact_email' field.
-                // If not, rely on .env defaults, but try to set FROM name to Journal Name
-                
-                $fromName = $journal->name;
-                $fromEmail = config('mail.from.address'); // Generally we must use a verified sender domain
+                $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
+                $principalEmail = $journal->getSetting('contact.principal.email') ?? config('mail.from.address');
 
-                $message->from($fromEmail, $fromName);
+                $message->from($principalEmail, $principalName);
+                $message->replyTo($principalEmail, $principalName);
                 
                 // Content is HTML from WYSIWYG, so render directly
                 $message->html($body);

@@ -36,9 +36,13 @@ class ReviewInvitation extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $submission = $this->review->submission;
+        $journal = $submission->journal;
         $dueDate = $this->review->due_date?->format('F j, Y') ?? 'Not specified';
 
-        return (new MailMessage)
+        $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
+        $principalEmail = $journal->getSetting('contact.principal.email');
+
+        $mailMessage = (new MailMessage)
             ->subject('Review Invitation - ' . $submission->title)
             ->greeting('Dear ' . $notifiable->name . ',')
             ->line('You have been invited to review a manuscript for our journal.')
@@ -52,6 +56,13 @@ class ReviewInvitation extends Notification
             ->action('View Invitation', route('journal.reviewer.show', ['journal' => $submission->journal->slug, 'identifier' => $this->review]))
             ->line('If you are unable to review this manuscript, please decline as soon as possible so we can invite another reviewer.')
             ->salutation('Best regards, Editorial Team');
+
+        if ($principalEmail) {
+            $mailMessage->from($principalEmail, $principalName);
+            $mailMessage->replyTo($principalEmail, $principalName);
+        }
+
+        return $mailMessage;
     }
 
     /**
