@@ -345,7 +345,7 @@
                                     </div>
                                     <div class="ml-3">
                                         <p class="text-sm text-yellow-700">
-                                            <strong>Peringatan:</strong> Dalam mode Double-blind, pastikan file naskah telah disensor dari identitas penulis sebelum dikirim ke reviewer.
+                                            <strong>Warning:</strong> In Double-blind mode, please ensure that the manuscript file has been anonymized to remove author identities before sending it to the reviewer.
                                         </p>
                                     </div>
                                 </div>

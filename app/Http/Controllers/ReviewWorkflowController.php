@@ -37,12 +37,12 @@ class ReviewWorkflowController extends Controller
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
-        // Fetch settings or default to OJS standard 3 and 4 weeks
-        $responseWeeks = (int) $journal->getWebsiteSetting('review_response_time', 3);
-        $completionWeeks = (int) $journal->getWebsiteSetting('review_completion_time', 4);
+        // Fetch settings from journal columns
+        $responseWeeks = (int) ($journal->review_response_weeks ?? 2);
+        $completionWeeks = (int) ($journal->review_completion_weeks ?? 4);
         
         // Fetch default review mode (fallback to double_blind)
-        $defaultReviewMode = $journal->getWebsiteSetting('review_mode', 'double_blind');
+        $defaultReviewMode = $journal->review_mode ?? 'double_blind';
 
         // Calculate default dates
         $defaultResponseDate = now()->addWeeks($responseWeeks)->format('Y-m-d');
