@@ -92,8 +92,8 @@ class SubmissionController extends Controller
                     break;
 
                 case 'unassigned':
-                    // Unassigned: No active editor assigned, status = submitted
-                    $query->where('status', Submission::STATUS_SUBMITTED)
+                    // Unassigned: Active submissions with no active editor assigned
+                    $query->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])
                         ->whereDoesntHave('editorialAssignments', function ($q) {
                             $q->where('is_active', true);
                         });
@@ -194,7 +194,7 @@ class SubmissionController extends Controller
                 $q->where('user_id', $user->id)->where('is_active', true)
             )->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])->count(),
 
-            'unassigned' => (clone $base)->where('status', Submission::STATUS_SUBMITTED)
+            'unassigned' => (clone $base)->whereNotIn('status', [Submission::STATUS_PUBLISHED, Submission::STATUS_REJECTED])
                 ->whereDoesntHave('editorialAssignments', fn($q) => $q->where('is_active', true))->count(),
 
             'active' => (clone $base)
