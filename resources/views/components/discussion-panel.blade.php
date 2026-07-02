@@ -185,29 +185,26 @@
                                 @endif
                             </div>
                         @endif
-                    </div>
-
-                    {{-- Messages Thread --}}
-                    <div class="space-y-4">
+                    </div>                    {{-- Messages Thread --}}
+                    <div class="space-y-3">
                         @foreach ($discussion->messages as $message)
                             @php
                                 $isOwner = $message->user_id === $currentUser->id;
-                                $canEdit = $isEditor || $isOwner;
                                 $messageRole = $message->user_id === $submission->user_id ? 'Author' : 'Editor';
                                 
                                 // Highlight if not owner and (never read OR newer than last read)
                                 $isNew = !$isOwner && (is_null($lastReadAt) || $message->created_at->gt($lastReadAt));
                             @endphp
-                            <div class="flex gap-3" x-data="{ editing: false, editBody: '' }">
-                                <div class="flex-shrink-0">
+                            <div class="flex gap-2">
+                                <div class="flex-shrink-0 mt-0.5">
                                     <div
-                                        class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-sm font-bold">
+                                        class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold">
                                         {{ strtoupper(substr($message->user->name, 0, 1)) }}
                                     </div>
                                 </div>
-                                <div class="{{ $isNew ? 'bg-blue-50/30 border-blue-200' : 'bg-white border-gray-200' }} p-4 rounded-lg shadow-sm border flex-1">
+                                <div class="{{ $isNew ? 'bg-blue-50/30 border-blue-200' : 'bg-white border-gray-200' }} py-2.5 px-3 rounded-lg shadow-sm border flex-1">
                                     {{-- Message Header --}}
-                                    <div class="flex justify-between items-start mb-2">
+                                    <div class="flex justify-between items-start mb-1.5">
                                         <div class="flex items-center gap-2">
                                             <x-text.body class="font-semibold text-slate-900 inline">{{ $message->user->name }}</x-text.body>
                                             <span
@@ -218,54 +215,24 @@
                                             </span>
                                             <x-text.caption class="text-slate-400">{{ $message->created_at->format('M d, Y \a\t H:i') }}</x-text.caption>
                                         </div>
-                                        @if ($canEdit)
-                                            <button @click="editing = true; editBody = `{!! addslashes(str_replace(["\r", "\n"], '', $message->body)) !!}`"
-                                                x-show="!editing"
-                                                class="text-slate-400 hover:text-blue-600 transition-colors"
-                                                title="Edit">
-                                                <i class="fa-solid fa-pencil text-[12px]"></i>
-                                            </button>
-                                        @endif
                                     </div>
 
-                                    {{-- Message Body (View Mode) --}}
-                                    <div x-show="!editing" class="prose prose-sm text-gray-700 max-w-none">
+                                    {{-- Message Body --}}
+                                    <div class="prose prose-sm text-gray-700 max-w-none">
                                         {!! $message->body !!}
-                                    </div>
-
-                                    {{-- Message Body (Edit Mode) --}}
-                                    <div x-show="editing" x-cloak class="space-y-3">
-                                        <form
-                                            action="{{ route('journal.discussion.message.update', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id, 'message' => $message->id]) }}"
-                                            method="POST">
-                                            @csrf
-                                            @method('PUT')
-                                            <textarea name="body" x-model="editBody" rows="4"
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"></textarea>
-                                            <div class="flex justify-end gap-2 mt-2">
-                                                <button type="button" @click="editing = false"
-                                                    class="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800">
-                                                    Cancel
-                                                </button>
-                                                <button type="submit"
-                                                    class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700">
-                                                    Save Changes
-                                                </button>
-                                            </div>
-                                        </form>
                                     </div>
 
                                     {{-- Attachments --}}
                                     @if ($message->files && $message->files->count() > 0)
-                                        <div class="mt-3 pt-3 border-t border-gray-100">
-                                            <x-text.caption class="block font-medium text-slate-500 mb-2">
+                                        <div class="mt-2.5 pt-2.5 border-t border-gray-100">
+                                            <x-text.caption class="block font-medium text-slate-500 mb-1.5">
                                                 <i class="fa-solid fa-paperclip mr-1"></i>
                                                 Attachments
                                             </x-text.caption>
                                             <div class="flex flex-wrap gap-2">
                                                 @foreach ($message->files as $file)
                                                     <a href="{{ route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->id]) }}"
-                                                        class="inline-flex items-center px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 rounded text-slate-700 transition-colors">
+                                                        class="inline-flex items-center px-2 py-1 bg-slate-50 hover:bg-slate-100 rounded text-slate-700 transition-colors">
                                                         <i class="fa-regular fa-file mr-1.5 text-[12px]"></i>
                                                         <x-text.caption class="not-italic text-slate-700">{{ Str::limit($file->original_name, 20) }}</x-text.caption>
                                                     </a>
