@@ -341,8 +341,8 @@
                             </div>
 
                             @php
-                                // Session locale is the source of truth for UI. Fall back to DB setting.
-                                $sessionLocale = session('app_locale', $settings['primary_locale'] ?? 'en');
+                                // Use $currentLoc (which is session('app_locale', app()->getLocale())) as source of truth
+                                $sessionLocale = $currentLoc;
                                 $primaryLoc = in_array($sessionLocale, ['id', 'id_ID']) ? 'id' : $sessionLocale;
                                 $primaryLoc = $primaryLoc ?: ($settings['primary_locale'] ?? 'en');
                                 $suppUi = is_array($settings['supported_locales'] ?? null) ? $settings['supported_locales'] : ['en', 'id'];

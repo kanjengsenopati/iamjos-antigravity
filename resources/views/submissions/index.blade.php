@@ -3,28 +3,28 @@
 
     // Determine tab labels based on filter
     $tabLabels = [
-        'queue' => 'My Assigned',
-        'unassigned' => 'Unassigned',
-        'active' => 'All Active',
-        'archives' => 'Archives',
+        'queue' => $isId ? 'Antrean Saya' : 'My Assigned',
+        'unassigned' => $isId ? 'Belum Ditugaskan' : 'Unassigned',
+        'active' => $isId ? 'Semua Aktif' : 'All Active',
+        'archives' => $isId ? 'Arsip' : 'Archives',
     ];
-    $currentTabLabel = $tabLabels[$filter] ?? 'Submissions';
+    $currentTabLabel = $tabLabels[$filter] ?? ($isId ? 'Naskah' : 'Submissions');
 @endphp
 
 <x-app-layout>
-    <x-slot name="title">Submissions</x-slot>
+    <x-slot name="title">{{ $isId ? 'Naskah' : 'Submissions' }}</x-slot>
 
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Submissions</h1>
-                <p class="mt-1 text-sm text-gray-500">Manage all submissions for {{ $journal->name }}.</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Naskah' : 'Submissions' }}</h1>
+                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Kelola semua naskah masuk untuk ' . $journal->name . '.' : 'Manage all submissions for ' . $journal->name . '.' }}</p>
             </div>
             <div class="mt-4 sm:mt-0">
                 <a href="{{ route('journal.submissions.create', ['journal' => $journal->slug]) }}"
                     class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                     <i class="fa-solid fa-plus mr-2"></i>
-                    New Submission
+                    {{ $isId ? 'Kirim Naskah Baru' : 'New Submission' }}
                 </a>
             </div>
         </div>
@@ -62,7 +62,7 @@
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=queue"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'queue' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
-                        My Queue
+                        {{ $isId ? 'Antrean Saya' : 'My Queue' }}
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
                             {{ $filter === 'queue' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
@@ -72,7 +72,7 @@
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=unassigned"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'unassigned' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
-                        Unassigned
+                        {{ $isId ? 'Belum Ditugaskan' : 'Unassigned' }}
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
                             {{ $filter === 'unassigned' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
@@ -82,7 +82,7 @@
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=active"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'active' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
-                        All Active
+                        {{ $isId ? 'Semua Aktif' : 'All Active' }}
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
                             {{ $filter === 'active' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
@@ -92,7 +92,7 @@
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=archives"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
-                        Archives
+                        {{ $isId ? 'Arsip' : 'Archives' }}
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
                             {{ $filter === 'archives' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
@@ -104,7 +104,7 @@
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=active"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter !== 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
-                        My Queue
+                        {{ $isId ? 'Antrean Saya' : 'My Queue' }}
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
                             {{ $filter !== 'archives' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
@@ -114,7 +114,7 @@
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=archives"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
-                        Archives
+                        {{ $isId ? 'Arsip' : 'Archives' }}
                         <span
                             class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
                             {{ $filter === 'archives' ? 'bg-white text-indigo-600 shadow-sm' : 'bg-gray-100 text-gray-600' }}">
@@ -173,7 +173,7 @@
                     <div class="relative">
                         <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                         <input type="text" name="search" x-model="search" @keydown.enter.prevent="submitFilter()" 
-                            placeholder="Search"
+                            placeholder="{{ $isId ? 'Cari...' : 'Search...' }}"
                             class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-48"
                             style="padding-left: 2.25rem !important;">
                     </div>
@@ -184,7 +184,7 @@
                     <button @click="showFilters = !showFilters"
                         class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors {{ request()->hasAny(['sections', 'stages', 'issue_ids']) ? 'ring-2 ring-indigo-500 border-transparent' : '' }}">
                         <i class="fa-solid fa-filter mr-2 {{ request()->hasAny(['sections', 'stages', 'issue_ids']) ? 'text-indigo-600' : 'text-gray-400' }}"></i>
-                        Filters
+                        {{ $isId ? 'Filter' : 'Filters' }}
                         @php
                             $activeFiltersCount = count(request('sections', [])) + count(request('stages', [])) + count(request('issue_ids', []));
                         @endphp
@@ -214,22 +214,22 @@
                             @endif
 
                             <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                                <h3 class="text-sm font-bold text-gray-900">Filters</h3>
+                                <h3 class="text-sm font-bold text-gray-900">{{ $isId ? 'Filter' : 'Filters' }}</h3>
                                 <button type="button" @click="clearFilters()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                                    Clear All
+                                    {{ $isId ? 'Bersihkan Semua' : 'Clear All' }}
                                 </button>
                             </div>
 
                             <div class="overflow-y-auto p-4 space-y-6 custom-scrollbar">
                                 {{-- Stages Section --}}
                                 <div>
-                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Workflow Stages</h4>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{{ $isId ? 'Tahap Alur Kerja' : 'Workflow Stages' }}</h4>
                                     <div class="space-y-2">
                                         @foreach([
-                                            \App\Models\Submission::STAGE_SUBMISSION => 'Submission',
-                                            \App\Models\Submission::STAGE_REVIEW => 'Review',
-                                            \App\Models\Submission::STAGE_COPYEDITING => 'Copyediting',
-                                            \App\Models\Submission::STAGE_PRODUCTION => 'Production'
+                                            \App\Models\Submission::STAGE_SUBMISSION => $isId ? 'Pengajuan' : 'Submission',
+                                            \App\Models\Submission::STAGE_REVIEW => $isId ? 'Ulasan' : 'Review',
+                                            \App\Models\Submission::STAGE_COPYEDITING => $isId ? 'Copyediting' : 'Copyediting',
+                                            \App\Models\Submission::STAGE_PRODUCTION => $isId ? 'Produksi' : 'Production'
                                         ] as $val => $label)
                                             <label class="flex items-center gap-3 cursor-pointer group">
                                                 <input type="checkbox" name="stages[]" value="{{ $val }}" 
@@ -244,7 +244,7 @@
                                 {{-- Sections Section --}}
                                 @if($sections->count() > 0)
                                 <div>
-                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Journal Sections</h4>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{{ $isId ? 'Bagian Jurnal' : 'Journal Sections' }}</h4>
                                     <div class="space-y-2">
                                         @foreach($sections as $section)
                                             <label class="flex items-center gap-3 cursor-pointer group">
@@ -261,7 +261,7 @@
                                 {{-- Issues Section (Archives Only) --}}
                                 @if($filter === 'archives' && $issues->count() > 0)
                                 <div>
-                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Issues</h4>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{{ $isId ? 'Terbitan' : 'Issues' }}</h4>
                                     <div class="space-y-2">
                                         @foreach($issues as $issue)
                                             <label class="flex items-center gap-3 cursor-pointer group">
@@ -278,7 +278,7 @@
 
                             <div class="p-4 border-t border-gray-100 bg-gray-50/50">
                                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">
-                                    Apply Filters
+                                    {{ $isId ? 'Terapkan Filter' : 'Apply Filters' }}
                                 </button>
                             </div>
                         </form>
@@ -339,14 +339,14 @@
                                         {{-- Show Reviewer Progress: X/Y --}}
                                         <span
                                             class="inline-flex items-center gap-1.5 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-md"
-                                            title="Reviewer progress: {{ $reviewerCompleted }} of {{ $reviewerTotal }} completed">
+                                            title="{{ $isId ? 'Kemajuan reviewer: ' . $reviewerCompleted . ' dari ' . $reviewerTotal . ' selesai' : 'Reviewer progress: ' . $reviewerCompleted . ' of ' . $reviewerTotal . ' completed' }}">
                                             <i class="fa-solid fa-user-check text-xs"></i>
                                             <span class="font-medium">{{ $reviewerCompleted }}/{{ $reviewerTotal }}</span>
                                         </span>
                                     @elseif ($discussionCount > 0)
                                         {{-- Show Discussion Count --}}
                                         <span class="inline-flex items-center gap-1.5 text-sm text-gray-500"
-                                            title="{{ $discussionCount }} discussion{{ $discussionCount > 1 ? 's' : '' }}">
+                                            title="{{ $discussionCount }} {{ $isId ? 'diskusi terbuka' : 'open discussion' }}{{ !$isId && $discussionCount > 1 ? 's' : '' }}">
                                             <i class="fa-regular fa-comment"></i>
                                             <span>{{ $discussionCount }}</span>
                                         </span>
@@ -358,7 +358,7 @@
                                     
                                     <!-- Galley Count -->
                                     @if($submission->status === 'published' && $submission->galleys_count > 0)
-                                        <div class="flex items-center gap-1.5 text-sm font-medium text-gray-600" title="{{ $submission->galleys_count }} Galley(s)">
+                                        <div class="flex items-center gap-1.5 text-sm font-medium text-gray-600" title="{{ $submission->galleys_count }} {{ $isId ? 'Galley' : 'Galley(s)' }}">
                                             <i class="fa-regular fa-file-lines text-gray-400"></i>
                                             <span>{{ $submission->galleys_count }}</span>
                                         </div>
@@ -374,7 +374,7 @@
                                         <!-- View Button -->
                                         <a href="{{ $submission->status === 'draft' ? route('journal.submissions.create', ['journal' => $journal->slug, 'draft_id' => $submission->id]) : route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission]) }}"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 focus:z-10 focus:ring-1 focus:ring-indigo-500 focus:text-indigo-600 transition-colors">
-                                            View
+                                            {{ $isId ? 'Lihat' : 'View' }}
                                         </a>
 
                                         <!-- Expand/Collapse Button (Dropdown Arrow Style) -->
@@ -409,8 +409,7 @@
                                 @if ($discussionCount > 0)
                                     <p class="flex items-center gap-2 text-sm text-gray-600">
                                         <i class="fa-regular fa-comment text-gray-400 w-4"></i>
-                                        <span>{{ $discussionCount }} Open
-                                            discussion{{ $discussionCount > 1 ? 's' : '' }}</span>
+                                        <span>{{ $discussionCount }} {{ $isId ? 'Diskusi Terbuka' : 'Open discussion' }}{{ !$isId && $discussionCount > 1 ? 's' : '' }}</span>
                                     </p>
                                 @endif
 
@@ -418,23 +417,22 @@
                                 @if ($isInReview && $reviewerTotal > 0)
                                     <p class="flex items-center gap-2 text-sm text-gray-600">
                                         <i class="fa-solid fa-users text-gray-400 w-4"></i>
-                                        <span>{{ $reviewerCompleted }} of {{ $reviewerTotal }} reviewers
-                                            completed</span>
+                                        <span>{{ $reviewerCompleted }} {{ $isId ? 'dari' : 'of' }} {{ $reviewerTotal }} {{ $isId ? 'peninjau selesai' : 'reviewers completed' }}</span>
                                     </p>
                                 @endif
 
                                 <!-- Submitted Date -->
                                 <p class="flex items-center gap-2 text-sm text-gray-500">
                                     <i class="fa-regular fa-calendar text-gray-400 w-4"></i>
-                                    <span>Submitted on
-                                        {{ $submission->submitted_at?->format('F j, Y') ?? $submission->created_at->format('F j, Y') }}</span>
+                                    <span>{{ $isId ? 'Dikirim pada' : 'Submitted on' }}
+                                        {{ $submission->submitted_at?->translatedFormat('F j, Y') ?? $submission->created_at->translatedFormat('F j, Y') }}</span>
                                 </p>
 
                                 <!-- Last Activity -->
                                 <p class="flex items-center gap-2 text-sm text-gray-500">
                                     <i class="fa-regular fa-clock text-gray-400 w-4"></i>
-                                    <span>Last activity recorded on
-                                        {{ $submission->updated_at->format('l, F j, Y') }}.</span>
+                                    <span>{{ $isId ? 'Aktivitas terakhir pada' : 'Last activity recorded on' }}
+                                        {{ $submission->updated_at->translatedFormat('l, F j, Y') }}.</span>
                                 </p>
 
                                  <!-- Activity Log & Notes (Expanded View) -->
@@ -451,7 +449,7 @@
                                                  <button type="submit" 
                                                          class="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
                                                      <i class="fa-solid fa-trash-can"></i>
-                                                     Delete
+                                                     {{ $isId ? 'Hapus' : 'Delete' }}
                                                  </button>
                                              </form>
                                          @endcan
@@ -460,7 +458,7 @@
                                                   onclick="openLogModal('{{ route('submission.log.history', $submission->id) }}')"
                                                   class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition mt-1">
                                              <i class="fa-solid fa-clock-rotate-left"></i>
-                                             Activity Log & Notes
+                                             {{ $isId ? 'Log Aktivitas & Catatan' : 'Activity Log & Notes' }}
                                          </button>
                                      </div>
                                  </div>
@@ -482,31 +480,31 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">
                     @if ($filter === 'unassigned')
-                        No unassigned submissions
+                        {{ $isId ? 'Tidak ada naskah yang belum ditugaskan' : 'No unassigned submissions' }}
                     @elseif ($filter === 'archives')
-                        No archived submissions
+                        {{ $isId ? 'Tidak ada naskah arsip' : 'No archived submissions' }}
                     @elseif ($filter === 'queue')
-                        No submissions in your queue
+                        {{ $isId ? 'Tidak ada naskah di antrean Anda' : 'No submissions in your queue' }}
                     @else
-                        No active submissions
+                        {{ $isId ? 'Tidak ada naskah aktif' : 'No active submissions' }}
                     @endif
                 </h3>
                 <p class="text-gray-500 mb-6 max-w-md mx-auto">
                     @if ($filter === 'unassigned')
-                        All new submissions have been assigned to editors.
+                        {{ $isId ? 'Semua naskah baru telah ditugaskan ke editor.' : 'All new submissions have been assigned to editors.' }}
                     @elseif ($filter === 'archives')
-                        Published or declined submissions will appear here.
+                        {{ $isId ? 'Naskah yang telah terbit atau ditolak akan muncul di sini.' : 'Published or declined submissions will appear here.' }}
                     @elseif ($filter === 'queue')
-                        Submissions assigned to you will appear here.
+                        {{ $isId ? 'Naskah yang ditugaskan kepada Anda akan muncul di sini.' : 'Submissions assigned to you will appear here.' }}
                     @else
-                        Get started by creating a new submission.
+                        {{ $isId ? 'Mulai dengan membuat pengajuan naskah baru.' : 'Get started by creating a new submission.' }}
                     @endif
                 </p>
                 @if (!in_array($filter, ['archives', 'unassigned']))
                     <a href="{{ route('journal.submissions.create', ['journal' => $journal->slug]) }}"
                         class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                         <i class="fa-solid fa-plus mr-2"></i>
-                        New Submission
+                        {{ $isId ? 'Kirim Naskah Baru' : 'New Submission' }}
                     </a>
                 @endif
             </div>
