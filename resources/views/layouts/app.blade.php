@@ -1099,27 +1099,24 @@
         </footer>
     </main>
 
-    <!-- Flash Messages (Modal Prominent) -->
+    <!-- Flash Messages (Modal Centered Alert) -->
     @if (session('success'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" 
              x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <!-- Backdrop -->
-            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="show = false"></div>
+            <div class="fixed inset-0 bg-slate-950/20 backdrop-blur-[2px]" @click="show = false"></div>
             
-            <!-- Modal Body -->
+            <!-- Alert Body -->
             <div x-show="show" 
                  x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                  x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                 class="relative bg-white rounded-[24px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-w-sm w-full border border-slate-100 flex flex-col items-center text-center z-10">
-                <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 text-emerald-500">
-                    <i class="fa-solid fa-circle-check text-4xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900 mb-1">Berhasil Disimpan</h3>
-                <p class="text-sm text-slate-500 leading-relaxed mb-6">{{ session('success') }}</p>
-                <button @click="show = false" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-colors duration-200">
-                    Selesai
+                 class="relative bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-xl flex items-center gap-3 max-w-md w-full z-10">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                <p class="text-sm font-medium text-emerald-800 pr-4">{{ session('success') }}</p>
+                <button @click="show = false" class="ml-auto text-emerald-500 hover:text-emerald-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
         </div>
@@ -1131,20 +1128,17 @@
              x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <!-- Backdrop -->
-            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="show = false"></div>
+            <div class="fixed inset-0 bg-slate-950/20 backdrop-blur-[2px]" @click="show = false"></div>
             
-            <!-- Modal Body -->
+            <!-- Alert Body -->
             <div x-show="show" 
                  x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                  x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                 class="relative bg-white rounded-[24px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-w-sm w-full border border-slate-100 flex flex-col items-center text-center z-10">
-                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
-                    <i class="fa-solid fa-circle-exclamation text-4xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900 mb-1">Terjadi Kesalahan</h3>
-                <p class="text-sm text-slate-500 leading-relaxed mb-6">{{ session('error') }}</p>
-                <button @click="show = false" class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition-colors duration-200">
-                    Tutup
+                 class="relative bg-red-50 border border-red-200 rounded-xl p-4 shadow-xl flex items-center gap-3 max-w-md w-full z-10">
+                <i class="fa-solid fa-circle-exclamation text-red-600 text-lg"></i>
+                <p class="text-sm font-medium text-red-800 pr-4">{{ session('error') }}</p>
+                <button @click="show = false" class="ml-auto text-red-500 hover:text-red-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
         </div>
