@@ -223,14 +223,13 @@
                                         <i class="fa-solid fa-location-dot text-primary-600"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-base font-semibold text-gray-900">Mailing Address</h3>
-                                        <p class="text-sm text-gray-500">Physical address for correspondence.</p>
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Alamat Surat-Menyurat' : 'Mailing Address' }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $isId ? 'Alamat fisik untuk korespondensi.' : 'Physical address for correspondence.' }}</p>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label for="mailing_address" class="block text-sm font-medium text-gray-700 mb-1">Full
-                                        Address</label>
+                                    <label for="mailing_address" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Alamat Lengkap' : 'Full Address' }}</label>
                                     <textarea name="mailing_address" id="mailing_address" rows="4"
                                         placeholder="Street Address&#10;City, State ZIP&#10;Country" class="w-full">{{ old('mailing_address', $contactSettings['mailing_address'] ?? '') }}</textarea>
                                 </div>
@@ -243,36 +242,36 @@
                                         <i class="fa-solid fa-user-tie text-blue-600"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-base font-semibold text-gray-900">Principal Contact</h3>
-                                        <p class="text-sm text-gray-500">Main editorial contact for author inquiries.</p>
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Kontak Utama' : 'Principal Contact' }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $isId ? 'Kontak editorial utama untuk pertanyaan penulis.' : 'Main editorial contact for author inquiries.' }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label for="contact_name"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Kontak *' : 'Contact Name *' }}</label>
                                         <input type="text" name="contact_name" id="contact_name"
                                             value="{{ old('contact_name', $contactSettings['principal']['name'] ?? '') }}"
                                             placeholder="Dr. John Smith" class="w-full" required>
                                     </div>
                                     <div>
                                         <label for="contact_email"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Alamat Email *' : 'Email Address *' }}</label>
                                         <input type="email" name="contact_email" id="contact_email"
                                             value="{{ old('contact_email', $contactSettings['principal']['email'] ?? '') }}"
                                             placeholder="editor@journal.com" class="w-full" required>
                                     </div>
                                     <div>
                                         <label for="contact_phone"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nomor Telepon' : 'Phone Number' }}</label>
                                         <input type="tel" name="contact_phone" id="contact_phone"
                                             value="{{ old('contact_phone', $contactSettings['principal']['phone'] ?? '') }}"
                                             placeholder="+62 xxx xxxx xxxx" class="w-full">
                                     </div>
                                     <div>
                                         <label for="contact_affiliation"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Affiliation</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Afiliasi' : 'Affiliation' }}</label>
                                         <input type="text" name="contact_affiliation" id="contact_affiliation"
                                             value="{{ old('contact_affiliation', $contactSettings['principal']['affiliation'] ?? '') }}"
                                             placeholder="University / Institution" class="w-full">
@@ -287,29 +286,29 @@
                                         <i class="fa-solid fa-headset text-amber-600"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-base font-semibold text-gray-900">Technical Support Contact</h3>
-                                        <p class="text-sm text-gray-500">For technical issues and website support.</p>
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Kontak Dukungan Teknis' : 'Technical Support Contact' }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $isId ? 'Untuk masalah teknis dan dukungan situs web.' : 'For technical issues and website support.' }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
                                         <label for="support_name"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Support Name</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Dukungan' : 'Support Name' }}</label>
                                         <input type="text" name="support_name" id="support_name"
                                             value="{{ old('support_name', $contactSettings['support']['name'] ?? '') }}"
                                             placeholder="Tech Support Team" class="w-full">
                                     </div>
                                     <div>
                                         <label for="support_email"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Support Email</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Email Dukungan' : 'Support Email' }}</label>
                                         <input type="email" name="support_email" id="support_email"
                                             value="{{ old('support_email', $contactSettings['support']['email'] ?? '') }}"
                                             placeholder="support@journal.com" class="w-full">
                                     </div>
                                     <div>
                                         <label for="support_phone"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Support Phone</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Telepon Dukungan' : 'Support Phone' }}</label>
                                         <input type="tel" name="support_phone" id="support_phone"
                                             value="{{ old('support_phone', $contactSettings['support']['phone'] ?? '') }}"
                                             placeholder="+62 xxx xxxx xxxx" class="w-full">
@@ -323,7 +322,7 @@
                             <button type="submit"
                                 class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-check mr-2"></i>
-                                Save Contacts
+                                {{ $isId ? 'Simpan Kontak' : 'Save Contacts' }}
                             </button>
                         </div>
                     </form>
@@ -373,14 +372,14 @@
                     <!-- Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900">Journal Sections</h3>
-                            <p class="text-sm text-gray-500">Organize articles into different sections or categories.</p>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Bagian Jurnal' : 'Journal Sections' }}</h3>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Organisasikan artikel ke dalam bagian atau kategori yang berbeda.' : 'Organize articles into different sections or categories.' }}</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <button type="button" @click="openCreateModal()"
                                 class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-plus mr-2"></i>
-                                Create Section
+                                {{ $isId ? 'Buat Bagian' : 'Create Section' }}
                             </button>
                         </div>
                     </div>
@@ -393,19 +392,19 @@
                                     <tr>
                                         <th scope="col"
                                             class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            Section Name
+                                            {{ $isId ? 'Nama Bagian' : 'Section Name' }}
                                         </th>
                                         <th scope="col"
                                             class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                            Abbrev
+                                            {{ $isId ? 'Singkatan' : 'Abbrev' }}
                                         </th>
                                         <th scope="col"
                                             class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                            Options
+                                            {{ $isId ? 'Opsi' : 'Options' }}
                                         </th>
                                         <th scope="col"
                                             class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            Actions
+                                            {{ $isId ? 'Aksi' : 'Actions' }}
                                         </th>
                                     </tr>
                                 </thead>
@@ -426,7 +425,7 @@
                                             <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                                                 <div class="flex items-center justify-center gap-3">
                                                     <div class="flex items-center gap-1.5"
-                                                        title="{{ $section->meta_indexed ? 'Indexed' : 'Not Indexed' }}">
+                                                        title="{{ $section->meta_indexed ? ($isId ? 'Terindeks' : 'Indexed') : ($isId ? 'Tidak Terindeks' : 'Not Indexed') }}">
                                                         <span
                                                             class="w-4 h-4 rounded flex items-center justify-center {{ $section->meta_indexed ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400' }}">
                                                             <i
@@ -435,7 +434,7 @@
                                                         <span class="text-[10px] text-gray-500">IDX</span>
                                                     </div>
                                                     <div class="flex items-center gap-1.5"
-                                                        title="{{ $section->meta_reviewed ? 'Peer Reviewed' : 'Not Peer Reviewed' }}">
+                                                        title="{{ $section->meta_reviewed ? ($isId ? 'Ditinjau Sejawat' : 'Peer Reviewed') : ($isId ? 'Tidak Ditinjau Sejawat' : 'Not Peer Reviewed') }}">
                                                         <span
                                                             class="w-4 h-4 rounded flex items-center justify-center {{ $section->meta_reviewed ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400' }}">
                                                             <i
@@ -457,12 +456,12 @@
                                                             meta_reviewed: {{ $section->meta_reviewed ? 'true' : 'false' }}
                                                         })"
                                                         class="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
-                                                        title="Edit">
+                                                        title="{{ $isId ? 'Ubah' : 'Edit' }}">
                                                         <i class="fa-solid fa-pen-to-square text-sm"></i>
                                                     </button>
                                                     <button type="button" @click="confirmDelete('{{ $section->id }}')"
                                                         class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                        title="Delete">
+                                                        title="{{ $isId ? 'Hapus' : 'Delete' }}">
                                                         <i class="fa-solid fa-trash text-sm"></i>
                                                     </button>
                                                 </div>
@@ -478,13 +477,13 @@
                             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i class="fa-solid fa-layer-group text-2xl text-gray-400"></i>
                             </div>
-                            <h3 class="text-base font-medium text-gray-900 mb-1">No sections yet</h3>
-                            <p class="text-sm text-gray-500 mb-4">Create your first journal section to organize articles.
+                            <h3 class="text-base font-medium text-gray-900 mb-1">{{ $isId ? 'Belum ada bagian' : 'No sections yet' }}</h3>
+                            <p class="text-sm text-gray-500 mb-4">{{ $isId ? 'Buat bagian jurnal pertama Anda untuk mengorganisasikan artikel.' : 'Create your first journal section to organize articles.' }}
                             </p>
                             <button type="button" @click="openCreateModal()"
                                 class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-plus mr-2"></i>
-                                Create Section
+                                {{ $isId ? 'Buat Bagian' : 'Create Section' }}
                             </button>
                         </div>
                     @endif
@@ -503,7 +502,7 @@
                             <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
                                 <div class="flex items-center justify-between mb-6">
                                     <h3 class="text-lg font-semibold text-gray-900"
-                                        x-text="isEditMode ? 'Edit Section' : 'Create Section'"></h3>
+                                        x-text="isEditMode ? '{{ $isId ? 'Ubah Bagian' : 'Edit Section' }}' : '{{ $isId ? 'Buat Bagian' : 'Create Section' }}'"></h3>
                                     <button type="button" @click="showSectionModal = false"
                                         class="text-gray-400 hover:text-gray-600">
                                         <i class="fa-solid fa-xmark text-lg"></i>
@@ -523,24 +522,22 @@
 
                                     <div class="space-y-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Section Name
-                                                *</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Bagian *' : 'Section Name *' }}</label>
                                             <input type="text" name="name" x-model="sectionForm.name" required
                                                 placeholder="e.g., Research Articles" class="w-full">
                                         </div>
 
                                         <div>
                                             <label
-                                                class="block text-sm font-medium text-gray-700 mb-1">Abbreviation</label>
+                                                class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Singkatan' : 'Abbreviation' }}</label>
                                             <input type="text" name="abbreviation" x-model="sectionForm.abbreviation"
                                                 placeholder="e.g., RA" class="w-full">
                                         </div>
 
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Section
-                                                Policy</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Kebijakan Bagian' : 'Section Policy' }}</label>
                                             <textarea name="policy" x-model="sectionForm.policy" rows="3"
-                                                placeholder="Describe the submission policy for this section..." class="w-full"></textarea>
+                                                placeholder="{{ $isId ? 'Jelaskan kebijakan pengajuan untuk bagian ini...' : 'Describe the submission policy for this section...' }}" class="w-full"></textarea>
                                         </div>
 
                                         <div class="flex flex-col gap-3 pt-2">
@@ -548,15 +545,13 @@
                                                 <input type="checkbox" name="meta_indexed" value="1"
                                                     x-model="sectionForm.meta_indexed"
                                                     class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                <span class="text-sm text-gray-700">Index this section in search
-                                                    engines</span>
+                                                <span class="text-sm text-gray-700">{{ $isId ? 'Indekskan bagian ini di mesin pencari' : 'Index this section in search engines' }}</span>
                                             </label>
                                             <label class="flex items-center gap-3">
                                                 <input type="checkbox" name="meta_reviewed" value="1"
                                                     x-model="sectionForm.meta_reviewed"
                                                     class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                <span class="text-sm text-gray-700">Items in this section are
-                                                    peer-reviewed</span>
+                                                <span class="text-sm text-gray-700">{{ $isId ? 'Item di bagian ini ditinjau sejawat' : 'Items in this section are peer-reviewed' }}</span>
                                             </label>
                                         </div>
                                     </div>
@@ -564,11 +559,11 @@
                                     <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                                         <button type="button" @click="showSectionModal = false"
                                             class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
-                                            Cancel
+                                            {{ $isId ? 'Batal' : 'Cancel' }}
                                         </button>
                                         <button type="submit"
                                             class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg">
-                                            <span x-text="isEditMode ? 'Update Section' : 'Create Section'"></span>
+                                            <span x-text="isEditMode ? '{{ $isId ? 'Perbarui Bagian' : 'Update Section' }}' : '{{ $isId ? 'Buat Bagian' : 'Create Section' }}'"></span>
                                         </button>
                                     </div>
                                 </form>
@@ -587,9 +582,8 @@
                                     class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <i class="fa-solid fa-trash text-red-600"></i>
                                 </div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Section?</h3>
-                                <p class="text-sm text-gray-500 mb-6">This action cannot be undone. Sections with
-                                    submissions cannot be deleted.</p>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $isId ? 'Hapus Bagian?' : 'Delete Section?' }}</h3>
+                                <p class="text-sm text-gray-500 mb-6">{{ $isId ? 'Tindakan ini tidak dapat dibatalkan. Bagian yang memiliki naskah tidak dapat dihapus.' : 'This action cannot be undone. Sections with submissions cannot be deleted.' }}</p>
                                 <form
                                     :action="'{{ route('journal.settings.sections.destroy', ['journal' => $journal->slug, 'section' => ':id']) }}'
                                     .replace(':id', deleteSectionId)"
@@ -598,11 +592,11 @@
                                     @method('DELETE')
                                     <button type="button" @click="showDeleteConfirm = false"
                                         class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
-                                        Cancel
+                                        {{ $isId ? 'Batal' : 'Cancel' }}
                                     </button>
                                     <button type="submit"
                                         class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg">
-                                        Delete
+                                        {{ $isId ? 'Hapus' : 'Delete' }}
                                     </button>
                                 </form>
                             </div>
@@ -650,14 +644,14 @@
                     <!-- Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900">Categories</h3>
-                            <p class="text-sm text-gray-500">Organize journal content by topic or research area.</p>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Kategori' : 'Categories' }}</h3>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Organisasikan konten jurnal berdasarkan topik atau bidang penelitian.' : 'Organize journal content by topic or research area.' }}</p>
                         </div>
                         <div class="mt-4 sm:mt-0">
                             <button type="button" @click="openCreateModal()"
                                 class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-plus mr-2"></i>
-                                Add Category
+                                {{ $isId ? 'Tambah Kategori' : 'Add Category' }}
                             </button>
                         </div>
                     </div>
@@ -686,12 +680,12 @@
                                                 description: {{ json_encode($category->description ?? '') }}
                                             })"
                                             class="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-white rounded transition-colors"
-                                            title="Edit">
+                                            title="{{ $isId ? 'Ubah' : 'Edit' }}">
                                             <i class="fa-solid fa-pen-to-square text-sm"></i>
                                         </button>
                                         <button type="button" @click="confirmDelete('{{ $category->id }}')"
                                             class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded transition-colors"
-                                            title="Delete">
+                                            title="{{ $isId ? 'Hapus' : 'Delete' }}">
                                             <i class="fa-solid fa-trash text-sm"></i>
                                         </button>
                                     </div>
@@ -704,13 +698,12 @@
                             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i class="fa-solid fa-tags text-2xl text-gray-400"></i>
                             </div>
-                            <h3 class="text-base font-medium text-gray-900 mb-1">No categories defined</h3>
-                            <p class="text-sm text-gray-500 mb-4 max-w-sm mx-auto">Categories help readers browse content
-                                by topic. Add categories to organize your journal articles.</p>
+                            <h3 class="text-base font-medium text-gray-900 mb-1">{{ $isId ? 'Belum ada kategori' : 'No categories defined' }}</h3>
+                            <p class="text-sm text-gray-500 mb-4 max-w-sm mx-auto">{{ $isId ? 'Kategori membantu pembaca menelusuri konten berdasarkan topik. Tambahkan kategori untuk mengorganisasikan artikel jurnal Anda.' : 'Categories help readers browse content by topic. Add categories to organize your journal articles.' }}</p>
                             <button type="button" @click="openCreateModal()"
                                 class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-plus mr-2"></i>
-                                Create Your First Category
+                                {{ $isId ? 'Buat Kategori Pertama Anda' : 'Create Your First Category' }}
                             </button>
                         </div>
                     @endif
@@ -724,7 +717,7 @@
                             <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
                                 <div class="flex items-center justify-between mb-6">
                                     <h3 class="text-lg font-semibold text-gray-900"
-                                        x-text="isEditMode ? 'Edit Category' : 'Add Category'"></h3>
+                                        x-text="isEditMode ? '{{ $isId ? 'Ubah Kategori' : 'Edit Category' }}' : '{{ $isId ? 'Tambah Kategori' : 'Add Category' }}'"></h3>
                                     <button type="button" @click="showCategoryModal = false"
                                         class="text-gray-400 hover:text-gray-600">
                                         <i class="fa-solid fa-xmark text-lg"></i>
@@ -744,39 +737,38 @@
 
                                     <div class="space-y-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Category Name
-                                                *</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Kategori *' : 'Category Name *' }}</label>
                                             <input type="text" name="name" x-model="categoryForm.name" required
                                                 placeholder="e.g., Computer Science" class="w-full">
                                         </div>
 
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Path / Slug</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Jalur / Slug' : 'Path / Slug' }}</label>
                                             <div class="flex items-center">
                                                 <span
                                                     class="px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-sm text-gray-500">/</span>
                                                 <input type="text" name="path" x-model="categoryForm.path"
                                                     placeholder="auto-generated-from-name" class="w-full rounded-l-none">
                                             </div>
-                                            <p class="mt-1 text-xs text-gray-500">Leave empty to auto-generate from name
+                                            <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Biarkan kosong untuk menghasilkan otomatis dari nama' : 'Leave empty to auto-generate from name' }}
                                             </p>
                                         </div>
 
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Deskripsi' : 'Description' }}</label>
                                             <textarea name="description" x-model="categoryForm.description" rows="3"
-                                                placeholder="Optional description of this category..." class="w-full"></textarea>
+                                                placeholder="{{ $isId ? 'Deskripsi opsional untuk kategori ini...' : 'Optional description of this category...' }}" class="w-full"></textarea>
                                         </div>
                                     </div>
 
                                     <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                                         <button type="button" @click="showCategoryModal = false"
                                             class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
-                                            Cancel
+                                            {{ $isId ? 'Batal' : 'Cancel' }}
                                         </button>
                                         <button type="submit"
                                             class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg">
-                                            <span x-text="isEditMode ? 'Update Category' : 'Add Category'"></span>
+                                            <span x-text="isEditMode ? '{{ $isId ? 'Perbarui Kategori' : 'Update Category' }}' : '{{ $isId ? 'Tambah Kategori' : 'Add Category' }}'"></span>
                                         </button>
                                     </div>
                                 </form>
@@ -795,8 +787,8 @@
                                     class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <i class="fa-solid fa-trash text-red-600"></i>
                                 </div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Category?</h3>
-                                <p class="text-sm text-gray-500 mb-6">This action cannot be undone.</p>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $isId ? 'Hapus Kategori?' : 'Delete Category?' }}</h3>
+                                <p class="text-sm text-gray-500 mb-6">{{ $isId ? 'Tindakan ini tidak dapat dibatalkan.' : 'This action cannot be undone.' }}</p>
                                 <form
                                     :action="'{{ route('journal.settings.categories.destroy', ['journal' => $journal->slug, 'category' => ':id']) }}'
                                     .replace(':id', deleteCategoryId)"
@@ -805,11 +797,11 @@
                                     @method('DELETE')
                                     <button type="button" @click="showDeleteConfirm = false"
                                         class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
-                                        Cancel
+                                        {{ $isId ? 'Batal' : 'Cancel' }}
                                     </button>
                                     <button type="submit"
                                         class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg">
-                                        Delete
+                                        {{ $isId ? 'Hapus' : 'Delete' }}
                                     </button>
                                 </form>
                             </div>
