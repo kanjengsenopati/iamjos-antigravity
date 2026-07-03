@@ -153,6 +153,16 @@ class AppServiceProvider extends ServiceProvider
             'components.public.sidebar',
         ], \App\View\Composers\PublicSidebarComposer::class);
 
+        // ─── Global Locale Sharing ────────────────────────────────────────────
+        // Share $currentLocale and $isId to ALL views so every layout/component
+        // can render translated labels without declaring @php blocks locally.
+        // Source of truth: session('app_locale') → app()->getLocale()
+        View::composer('*', function ($view) {
+            $currentLocale = session('app_locale', app()->getLocale());
+            $view->with('currentLocale', $currentLocale);
+            $view->with('isId', in_array($currentLocale, ['id', 'id_ID']));
+        });
+
         // Register View Composer for Portal/Site Layout
         View::composer([
             'layouts.portal',

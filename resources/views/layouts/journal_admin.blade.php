@@ -476,6 +476,11 @@
                 </form>
             </div>
 
+            <!-- Language Switcher (Sidebar) -->
+            <div class="mb-2">
+                <x-ui.locale-switcher variant="sidebar" />
+            </div>
+
             <!-- Sidebar Toggle -->
             <button @click="toggleSidebar()"
                 class="w-full flex items-center justify-center p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors border border-dashed border-transparent hover:border-gray-200 mt-2">

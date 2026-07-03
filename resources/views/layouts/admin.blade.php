@@ -373,6 +373,9 @@
 
             <!-- Right: Notifications + Profile -->
             <div class="flex items-center gap-4">
+                <!-- Language Switcher -->
+                <x-ui.locale-switcher />
+
                 <!-- Notifications Dropdown -->
                 <div x-data="{
                     open: false,
