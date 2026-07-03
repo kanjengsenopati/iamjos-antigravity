@@ -341,7 +341,10 @@
                             </div>
 
                             @php
-                                $primaryLoc = $settings['primary_locale'] ?? 'en';
+                                // Session locale is the source of truth for UI. Fall back to DB setting.
+                                $sessionLocale = session('app_locale', $settings['primary_locale'] ?? 'en');
+                                $primaryLoc = in_array($sessionLocale, ['id', 'id_ID']) ? 'id' : $sessionLocale;
+                                $primaryLoc = $primaryLoc ?: ($settings['primary_locale'] ?? 'en');
                                 $suppUi = is_array($settings['supported_locales'] ?? null) ? $settings['supported_locales'] : ['en', 'id'];
                                 $suppForm = is_array($settings['supported_form_locales'] ?? null) ? $settings['supported_form_locales'] : ['en', 'id'];
                                 $suppSub = is_array($settings['supported_submission_locales'] ?? null) ? $settings['supported_submission_locales'] : ['en', 'id'];
