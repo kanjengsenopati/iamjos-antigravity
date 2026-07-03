@@ -73,6 +73,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        /* Sembunyikan alert box session flash bawaan di dalam main content agar tidak duplikat dengan modal */
+        main .bg-emerald-50.border-emerald-200,
+        main .bg-green-50.border-green-200,
+        main .bg-red-50.border-red-200,
+        main .bg-red-100.border-red-200,
+        .flex-1.p-6.lg\:p-8 > div.bg-emerald-50,
+        .flex-1.p-6.lg\:p-8 > div.bg-green-50,
+        .flex-1.p-6.lg\:p-8 > div.bg-red-50 {
+            display: none !important;
+        }
+
         :root {
             --sidebar-width: 280px;
         }
@@ -576,45 +587,52 @@
         </div>
     </main>
 
-    <!-- Flash Messages -->
+    <!-- Flash Messages (Modal Prominent) -->
     @if (session('success'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
-            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2"
-            x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
-            class="fixed bottom-6 right-6 z-50">
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
-                <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" 
+             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="show = false"></div>
+            
+            <!-- Modal Body -->
+            <div x-show="show" 
+                 x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                 class="relative bg-white rounded-[24px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-w-sm w-full border border-slate-100 flex flex-col items-center text-center z-10">
+                <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 text-emerald-500">
+                    <i class="fa-solid fa-circle-check text-4xl"></i>
                 </div>
-                <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
-                <button @click="show = false" class="text-emerald-500 hover:text-emerald-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">Berhasil Disimpan</h3>
+                <p class="text-sm text-slate-500 leading-relaxed mb-6">{{ session('success') }}</p>
+                <button @click="show = false" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-colors duration-200">
+                    Selesai
                 </button>
             </div>
         </div>
     @endif
 
     @if (session('error'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed bottom-6 right-6 z-50">
-            <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg flex items-center gap-3">
-                <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
+             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="show = false"></div>
+            
+            <!-- Modal Body -->
+            <div x-show="show" 
+                 x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                 class="relative bg-white rounded-[24px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-w-sm w-full border border-slate-100 flex flex-col items-center text-center z-10">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
+                    <i class="fa-solid fa-circle-exclamation text-4xl"></i>
                 </div>
-                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
-                <button @click="show = false" class="text-red-500 hover:text-red-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">Terjadi Kesalahan</h3>
+                <p class="text-sm text-slate-500 leading-relaxed mb-6">{{ session('error') }}</p>
+                <button @click="show = false" class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition-colors duration-200">
+                    Tutup
                 </button>
             </div>
         </div>
