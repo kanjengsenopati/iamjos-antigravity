@@ -13,69 +13,69 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Total Journals -->
         <div class="bg-white rounded-[24px] border border-slate-100 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-center gap-2 mb-3">
                 <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                 </div>
-                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Total hosted journals</span>
+                <span class="text-[9px] font-bold tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Total Journals</span>
             </div>
             <div class="text-center">
                 <p class="text-3xl font-extrabold text-indigo-600 tracking-tight leading-none mb-1">{{ $journals->count() }}</p>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Journals</p>
+                <p class="text-[10px] font-bold tracking-wider text-slate-400">Journals</p>
             </div>
         </div>
 
         <!-- Active Journals -->
         <div class="bg-white rounded-[24px] border border-slate-100 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-center gap-2 mb-3">
                 <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Active journals</span>
+                <span class="text-[9px] font-bold tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Active Journals</span>
             </div>
             <div class="text-center">
                 <p class="text-3xl font-extrabold text-emerald-600 tracking-tight leading-none mb-1">{{ $journals->where('enabled', true)->count() }}</p>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active</p>
+                <p class="text-[10px] font-bold tracking-wider text-slate-400">Active</p>
             </div>
         </div>
 
         <!-- Total Submissions -->
         <div class="bg-white rounded-[24px] border border-slate-100 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-center gap-2 mb-3">
                 <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 </div>
-                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Total submissions</span>
+                <span class="text-[9px] font-bold tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Total Submissions</span>
             </div>
             <div class="text-center">
                 <p class="text-3xl font-extrabold text-blue-600 tracking-tight leading-none mb-1">{{ $journals->sum('submissions_count') }}</p>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Articles</p>
+                <p class="text-[10px] font-bold tracking-wider text-slate-400">Articles</p>
             </div>
         </div>
 
         <!-- Total Issues -->
         <div class="bg-white rounded-[24px] border border-slate-100 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-center gap-2 mb-3">
                 <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                 </div>
-                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Published issues</span>
+                <span class="text-[9px] font-bold tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">Published Issues</span>
             </div>
             <div class="text-center">
                 <p class="text-3xl font-extrabold text-purple-600 tracking-tight leading-none mb-1">{{ $journals->sum('issues_count') }}</p>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Issues</p>
+                <p class="text-[10px] font-bold tracking-wider text-slate-400">Issues</p>
             </div>
         </div>
     </div>
