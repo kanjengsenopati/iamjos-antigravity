@@ -256,7 +256,7 @@
                     x-transition:enter-end="opacity-100 scale-100">
                     <p class="text-sm font-semibold text-gray-900 truncate">
                         {{ $journal->abbreviation ?? Str::limit($journal->name ?? 'Journal', 15) }}</p>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium truncate">Switch Journal</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium truncate">{{ $isId ? 'Ganti Jurnal' : 'Switch Journal' }}</p>
                 </div>
 
                 <!-- Icon -->
@@ -272,7 +272,7 @@
                 :class="sidebarCollapsed ? 'left-16 top-2' : 'left-4 right-4 top-14'">
 
                 <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
-                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">My Journals</span>
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Jurnal Saya' : 'My Journals' }}</span>
                 </div>
 
                 <div class="max-h-60 overflow-y-auto">
@@ -294,21 +294,21 @@
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
                                     </span>
-                                    Active
+                                    {{ $isId ? 'Aktif' : 'Active' }}
                                 </span>
                             </template>
                         </a>
                     </template>
                     <!-- Fallback empty state if userJournals is empty -->
                     <div x-show="userJournals.length === 0" class="px-4 py-3 text-center text-gray-500 text-xs" x-cloak>
-                        No journals yet
+                        {{ $isId ? 'Belum ada jurnal' : 'No journals yet' }}
                     </div>
                 </div>
 
                 <div class="border-t border-slate-100 pt-1 mt-1">
                     <a href="{{ route('journal.select') }}"
                         class="block px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
-                        <i class="fa-solid fa-list-check mr-2"></i> View All Journals
+                        <i class="fa-solid fa-list-check mr-2"></i> {{ $isId ? 'Lihat Semua Jurnal' : 'View All Journals' }}
                     </a>
                 </div>
             </div>
@@ -326,7 +326,7 @@
             <!-- Group: Workflow -->
             <div class="space-y-1">
                 <div class="px-3 mb-2" x-show="!sidebarCollapsed">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Workflow</span>
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
                 </div>
 
                 <!-- Dashboard -->
@@ -349,11 +349,11 @@
                 <div x-data="{ expanded: {{ request()->routeIs('journal.submissions.*') ? 'true' : 'false' }} }">
                     <button @click="expanded = !expanded"
                         class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                        :title="sidebarCollapsed ? 'Submissions' : ''">
+                        :title="sidebarCollapsed ? ($isId ? 'Naskah' : 'Submissions') : ''">
                         <div class="flex items-center gap-3">
                             <i
                                 class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 text-gray-400 group-hover:text-gray-600"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Submissions</span>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Naskah' : 'Submissions' }}</span>
                         </div>
                         <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
                             :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
@@ -362,15 +362,13 @@
                     <div x-show="expanded && !sidebarCollapsed" x-collapse>
                         <div class="pl-10 pr-2 py-1 space-y-1">
                             <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=queue"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'queue' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">My
-                                Queue</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'queue' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">{{ $isId ? 'Antrean Saya' : 'My Queue' }}</a>
                             <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=unassigned"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'unassigned' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Unassigned</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'unassigned' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">{{ $isId ? 'Belum Ditugaskan' : 'Unassigned' }}</a>
                             <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ !request('filter') && request()->routeIs('journal.submissions.index') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">All
-                                Active</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ !request('filter') && request()->routeIs('journal.submissions.index') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">{{ $isId ? 'Semua Aktif' : 'All Active' }}</a>
                             <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}?filter=archives"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'archives' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Archives</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('filter') == 'archives' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">{{ $isId ? 'Arsip' : 'Archives' }}</a>
                         </div>
                     </div>
                 </div>
@@ -379,11 +377,11 @@
                 <div x-data="{ expanded: {{ request()->routeIs('journal.issues.*') ? 'true' : 'false' }} }">
                     <button @click="expanded = !expanded"
                         class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                        :title="sidebarCollapsed ? 'Issues' : ''">
+                        :title="sidebarCollapsed ? ($isId ? 'Terbitan' : 'Issues') : ''">
                         <div class="flex items-center gap-3">
                             <i
                                 class="fa-solid fa-layer-group w-5 text-center transition-transform group-hover:scale-110 text-gray-400 group-hover:text-gray-600"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Issues</span>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Terbitan' : 'Issues' }}</span>
                         </div>
                         <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
                             :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
@@ -392,11 +390,9 @@
                     <div x-show="expanded && !sidebarCollapsed" x-collapse>
                         <div class="pl-10 pr-2 py-1 space-y-1">
                             <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}?status=future"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('status') == 'future' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Future
-                                Issues</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('status') == 'future' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">{{ $isId ? 'Terbitan Mendatang' : 'Future Issues' }}</a>
                             <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}?status=published"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('status') == 'published' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Back
-                                Issues</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request('status') == 'published' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">{{ $isId ? 'Terbitan Sebelumnya' : 'Back Issues' }}</a>
                         </div>
                     </div>
                 </div>
@@ -405,14 +401,14 @@
             <!-- Group: Management -->
             <div class="space-y-1">
                 <div class="px-3 mb-2 mt-6" x-show="!sidebarCollapsed">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Setting</span>
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Pengaturan' : 'Setting' }}</span>
                 </div>
 
                 <!-- Users & Roles -->
                 <a href="{{ route($usersRoutePrefix . '.index', ['journal' => $journalSlug]) }}"
                     class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
                    {{ request()->routeIs($usersRoutePrefix . '.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                    :title="sidebarCollapsed ? 'Users & Roles' : ''">
+                    :title="sidebarCollapsed ? ($isId ? 'Pengguna & Peran' : 'Users & Roles') : ''">
 
                     @if (request()->routeIs($usersRoutePrefix . '.*'))
                         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
@@ -421,18 +417,18 @@
 
                     <i
                         class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs($usersRoutePrefix . '.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">Users & Roles</span>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">{{ $isId ? 'Pengguna & Peran' : 'Users & Roles' }}</span>
                 </a>
 
                 <!-- Settings -->
                 <div x-data="{ expanded: {{ request()->routeIs('journal.settings.*') ? 'true' : 'false' }} }">
                     <button @click="expanded = !expanded"
                         class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                        :title="sidebarCollapsed ? 'Settings' : ''">
+                        :title="sidebarCollapsed ? ($isId ? 'Pengaturan' : 'Settings') : ''">
                         <div class="flex items-center gap-3">
                             <i
                                 class="fa-solid fa-gear w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Settings</span>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
                         </div>
                         <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-200"
                             :class="{ 'rotate-180': expanded }" x-show="!sidebarCollapsed"></i>
@@ -441,11 +437,11 @@
                     <div x-show="expanded && !sidebarCollapsed" x-collapse>
                         <div class="pl-10 pr-2 py-1 space-y-1">
                             <a href="{{ route('journal.settings.index', ['journal' => $journalSlug]) }}"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">Journal</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md {{ request()->routeIs('journal.settings.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' }}">{{ $isId ? 'Jurnal' : 'Journal' }}</a>
                             <a href="#"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100">Website</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100">{{ $isId ? 'Situs Web' : 'Website' }}</a>
                             <a href="#"
-                                class="block px-2 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100">Workflow</a>
+                                class="block px-2 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</a>
                         </div>
                     </div>
                 </div>

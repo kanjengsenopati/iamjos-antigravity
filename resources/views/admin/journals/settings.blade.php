@@ -6,7 +6,7 @@
     $contactSettings = $journal->settings['contact'] ?? [];
 @endphp
 
-@section('title', 'Journal Settings - ' . ($journal->abbreviation ?? 'IAMJOS'))
+@section('title', ($isId ? 'Pengaturan Jurnal' : 'Journal Settings') . ' - ' . ($journal->abbreviation ?? 'IAMJOS'))
 
 @section('content')
     <div x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'masthead') }}' }">
@@ -14,8 +14,8 @@
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Journal Settings</h1>
-                <p class="mt-1 text-sm text-gray-500">Configure your journal's identity, contacts, and structure.</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Jurnal' : 'Journal Settings' }}</h1>
+                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Konfigurasikan identitas, kontak, dan struktur jurnal Anda.' : "Configure your journal's identity, contacts, and structure." }}</p>
             </div>
             <div class="mt-4 sm:mt-0">
                 <a href="/{{ $journal->slug }}" target="_blank"
@@ -24,7 +24,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    View Journal Site
+                    {{ $isId ? 'Lihat Situs Jurnal' : 'View Journal Site' }}
                 </a>
             </div>
         </div>
@@ -47,21 +47,21 @@
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-address-book mr-2"></i>
-                        Contact
+                        {{ $isId ? 'Kontak' : 'Contact' }}
                     </button>
                     <button @click="activeTab = 'sections'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'sections' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-layer-group mr-2"></i>
-                        Sections
+                        {{ $isId ? 'Bagian Jurnal' : 'Sections' }}
                     </button>
                     <button @click="activeTab = 'categories'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'categories' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-tags mr-2"></i>
-                        Categories
+                        {{ $isId ? 'Kategori' : 'Categories' }}
                     </button>
 
                 </nav>
