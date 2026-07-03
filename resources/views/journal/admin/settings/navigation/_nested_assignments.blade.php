@@ -33,11 +33,21 @@
             @endif
 
             <div class="flex-1">
-                <span class="text-sm font-medium text-slate-700 block">{{ $assignment->item?->title ?? 'Unknown' }}</span>
+                @php $title = $assignment->item?->title ?? 'Unknown'; @endphp
+                <span class="text-sm font-medium text-slate-700 block">{{ $isId && isset($systemLabels[$title]) ? $systemLabels[$title] : $title }}</span>
                 <span class="text-xs text-slate-400">
-                    {{ ucfirst($assignment->item?->type ?? 'custom') }}
+                    @php $type = $assignment->item?->type ?? 'custom'; @endphp
+                    @if($type === 'custom')
+                        {{ $isId ? 'Tautan Kustom' : 'Custom Link' }}
+                    @elseif($type === 'route')
+                        {{ $isId ? 'Rute' : 'Route' }}
+                    @elseif($type === 'page')
+                        {{ $isId ? 'Halaman' : 'Page' }}
+                    @else
+                        {{ ucfirst($type) }}
+                    @endif
                     @if($level > 0)
-                        <span class="text-indigo-600 font-medium">(submenu)</span>
+                        <span class="text-indigo-600 font-medium">({{ $isId ? 'sub-menu' : 'submenu' }})</span>
                     @endif
                 </span>
             </div>

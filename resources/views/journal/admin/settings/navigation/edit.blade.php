@@ -1,20 +1,46 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Navigation Menu Item - ' . $journal->name)
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+    $systemLabels = [
+        'Home' => 'Beranda',
+        'About' => 'Tentang',
+        'About the Journal' => 'Tentang Jurnal',
+        'Editorial Team' => 'Tim Editorial',
+        'Current' => 'Terkini',
+        'Archives' => 'Arsip',
+        'Announcements' => 'Pengumuman',
+        'Author Guidelines' => 'Panduan Penulis',
+        'Submissions' => 'Kiriman',
+        'Privacy Statement' => 'Pernyataan Privasi',
+        'Contact' => 'Kontak',
+        'Search' => 'Cari',
+        'Login' => 'Masuk',
+        'Register' => 'Daftar',
+        'Admin' => 'Admin',
+        'Administration' => 'Administrasi',
+        'Dashboard' => 'Dasbor',
+        'View Profile' => 'Lihat Profil',
+        'Logout' => 'Keluar',
+    ];
+@endphp
+
+@section('title', ($isId ? 'Ubah Butir Menu Navigasi - ' : 'Edit Navigation Menu Item - ') . $journal->name)
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Edit Navigation Menu Item</h1>
-            <p class="mt-1 text-sm text-gray-500">Edit the menu item details and content.</p>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Ubah Butir Menu Navigasi' : 'Edit Navigation Menu Item' }}</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Ubah rincian dan konten butir menu.' : 'Edit the menu item details and content.' }}</p>
         </div>
         <div class="mt-4 sm:mt-0">
             <a href="{{ route('journal.settings.navigation.index', $journal->slug) }}"
                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i>
-                Back to Navigation Manager
+                {{ $isId ? 'Kembali ke Manajemen Navigasi' : 'Back to Navigation Manager' }}
             </a>
         </div>
     </div>
@@ -37,10 +63,10 @@
 
             {{-- Title --}}
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Title *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Judul *' : 'Title *' }}</label>
                 <input type="text" name="title" required value="{{ old('title', $item->title) }}"
                     class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
-                    placeholder="e.g., About Us">
+                    placeholder="{{ $isId ? 'cth., Tentang Kami' : 'e.g., About Us' }}">
                 @error('title')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -48,12 +74,12 @@
 
             {{-- Navigation Page Type --}}
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Navigation Page Type</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Jenis Halaman Navigasi' : 'Navigation Page Type' }}</label>
                 <select name="type" x-model="itemType"
                     class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
-                    <option value="custom" {{ $item->type === 'custom' ? 'selected' : '' }}>Custom Link</option>
-                    <option value="route" {{ $item->type === 'route' ? 'selected' : '' }}>System Page</option>
-                    <option value="page" {{ $item->type === 'page' ? 'selected' : '' }}>Custom Page</option>
+                    <option value="custom" {{ $item->type === 'custom' ? 'selected' : '' }}>{{ $isId ? 'Tautan Kustom' : 'Custom Link' }}</option>
+                    <option value="route" {{ $item->type === 'route' ? 'selected' : '' }}>{{ $isId ? 'Halaman Sistem' : 'System Page' }}</option>
+                    <option value="page" {{ $item->type === 'page' ? 'selected' : '' }}>{{ $isId ? 'Halaman Kustom' : 'Custom Page' }}</option>
                 </select>
                 @error('type')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -65,8 +91,8 @@
                 <label class="block text-sm font-medium text-slate-700 mb-1">URL</label>
                 <input type="text" name="url" value="{{ old('url', $item->url) }}"
                     class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
-                    placeholder="https://example.com or /internal-path">
-                <p class="text-xs text-slate-500 mt-1">Enter a full URL (https://...) or relative path (/path)</p>
+                    placeholder="{{ $isId ? 'https://contoh.com atau /jalur-internal' : 'https://example.com or /internal-path' }}">
+                <p class="text-xs text-slate-500 mt-1">{{ $isId ? 'Masukkan URL lengkap (https://...) atau jalur relatif (/jalur)' : 'Enter a full URL (https://...) or relative path (/path)' }}</p>
                 @error('url')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -74,12 +100,12 @@
 
             {{-- System Page (for route links) --}}
             <div x-show="itemType === 'route'">
-                <label class="block text-sm font-medium text-slate-700 mb-1">System Page</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Halaman Sistem' : 'System Page' }}</label>
                 <select name="route_name" class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
-                    <option value="">-- Select a system page --</option>
+                    <option value="">{{ $isId ? '-- Pilih halaman sistem --' : '-- Select a system page --' }}</option>
                     @foreach($availableRoutes as $config)
                     <option value="{{ $config['name'] }}" {{ $item->route_name === $config['name'] ? 'selected' : '' }}>
-                        {{ $config['label'] }}
+                        {{ $isId && isset($systemLabels[$config['label']]) ? $systemLabels[$config['label']] : $config['label'] }}
                     </option>
                     @endforeach
                 </select>
@@ -91,7 +117,7 @@
             {{-- Custom Page Fields --}}
             <div x-show="itemType === 'page'" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Page Path *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Jalur Halaman *' : 'Page Path *' }}</label>
                     <div class="flex items-center">
                         <span class="text-sm text-slate-500 mr-2">{{ url('/') }}/{{ $journal->slug }}/</span>
                         <input type="text" name="path" :required="itemType === 'page'" value="{{ old('path', $item->path) }}"
@@ -99,8 +125,8 @@
                             placeholder="about-us">
                     </div>
                     <p class="text-xs text-slate-500 mt-1">
-                        This page will be accessible at: {{ url('/') }}/{{ $journal->slug }}/YOUR_PATH
-                        <br>Note: No two pages can have the same path.
+                        {{ $isId ? 'Halaman ini akan dapat diakses pada:' : 'This page will be accessible at:' }} {{ url('/') }}/{{ $journal->slug }}/YOUR_PATH
+                        <br>{{ $isId ? 'Catatan: Tidak boleh ada dua halaman yang memiliki jalur yang sama.' : 'Note: No two pages can have the same path.' }}
                     </p>
                     @error('path')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -108,10 +134,10 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Content *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Konten *' : 'Content *' }}</label>
                     <textarea id="page_content" name="content"
                         class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
-                        rows="15" placeholder="Enter your page content here...">{{ old('content', $item->content) }}</textarea>
+                        rows="15" placeholder="{{ $isId ? 'Masukkan konten halaman Anda di sini...' : 'Enter your page content here...' }}">{{ old('content', $item->content) }}</textarea>
                     @error('content')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -119,7 +145,7 @@
 
                 {{-- Preview Section --}}
                 <div class="border-t border-slate-200 pt-4">
-                    <h4 class="text-sm font-medium text-slate-700 mb-2">Preview</h4>
+                    <h4 class="text-sm font-medium text-slate-700 mb-2">{{ $isId ? 'Pratinjau' : 'Preview' }}</h4>
                     <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 min-h-[200px]">
                         <div id="preview_content" class="prose prose-sm max-w-none">
                             {!! old('content', $item->content) !!}
@@ -130,11 +156,11 @@
 
             {{-- Icon --}}
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Icon (optional)</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Ikon (opsional)' : 'Icon (optional)' }}</label>
                 <input type="text" name="icon" value="{{ old('icon', $item->icon) }}"
                     class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
                     placeholder="fa-solid fa-info-circle">
-                <p class="text-xs text-slate-500 mt-1">Font Awesome icon class (e.g., fa-solid fa-home)</p>
+                <p class="text-xs text-slate-500 mt-1">{{ $isId ? 'Kelas ikon Font Awesome (cth., fa-solid fa-home)' : 'Font Awesome icon class (e.g., fa-solid fa-home)' }}</p>
                 @error('icon')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -145,7 +171,7 @@
                 <label class="flex items-center gap-2">
                     <input type="checkbox" name="target" value="_blank" {{ old('target', $item->target) === '_blank' ? 'checked' : '' }}
                         class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                    <span class="text-sm text-slate-700">Open in new tab/window</span>
+                    <span class="text-sm text-slate-700">{{ $isId ? 'Buka di tab/jendela baru' : 'Open in new tab/window' }}</span>
                 </label>
                 @error('target')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -156,12 +182,12 @@
             <div class="flex justify-end gap-3 pt-6 border-t border-slate-200">
                 <a href="{{ route('journal.settings.navigation.index', $journal->slug) }}"
                     class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors">
-                    Cancel
+                    {{ $isId ? 'Batal' : 'Cancel' }}
                 </a>
                 <button type="submit"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
                     <i class="fa-solid fa-check mr-2"></i>
-                    Update Menu Item
+                    {{ $isId ? 'Simpan Perubahan' : 'Update Menu Item' }}
                 </button>
             </div>
         </form>
