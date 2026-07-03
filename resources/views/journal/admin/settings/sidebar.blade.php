@@ -1,26 +1,31 @@
 @extends('layouts.app')
 
-@section('title', 'Sidebar Manager - ' . $journal->name)
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', ($isId ? 'Pengelola Sidebar - ' : 'Sidebar Manager - ') . $journal->name)
 
 @section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="sidebarManager()">
         {{-- Page Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Sidebar Manager</h1>
-                <p class="mt-1 text-sm text-gray-500">Customize sidebar widgets for your journal's public pages.</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengelola Sidebar' : 'Sidebar Manager' }}</h1>
+                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Sesuaikan widget sidebar untuk halaman publik jurnal Anda.' : 'Customize sidebar widgets for your journal\'s public pages.' }}</p>
             </div>
             <div class="mt-4 sm:mt-0 flex gap-2">
                 <button @click="openAddForm()"
                     class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
                     :class="{ 'ring-2 ring-primary-300 ring-offset-2': showAddForm }">
                     <i class="fa-solid fa-plus mr-2"></i>
-                    Add Custom Block
+                    {{ $isId ? 'Tambah Blok Kustom' : 'Add Custom Block' }}
                 </button>
                 <a href="{{ route('journal.settings.website.edit', $journal->slug) }}"
                     class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
                     <i class="fa-solid fa-arrow-left mr-2"></i>
-                    Back to Settings
+                    {{ $isId ? 'Kembali ke Pengaturan' : 'Back to Settings' }}
                 </a>
             </div>
         </div>
@@ -40,9 +45,9 @@
                     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                         <h3 class="text-lg font-semibold text-gray-900">
                             <i class="fa-solid fa-puzzle-piece mr-2 text-indigo-600"></i>
-                            Available Blocks
+                            {{ $isId ? 'Blok Tersedia' : 'Available Blocks' }}
                         </h3>
-                        <p class="mt-1 text-sm text-gray-500">Click to add to sidebar</p>
+                        <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Klik untuk menambahkan ke sidebar' : 'Click to add to sidebar' }}</p>
                     </div>
                     <div class="p-4 space-y-2">
                         @forelse($availableSystemBlocks as $key => $block)
@@ -61,14 +66,14 @@
                         @empty
                             <div class="text-center py-8 text-gray-400">
                                 <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-500"></i>
-                                <p class="text-sm">All system blocks are active</p>
+                                <p class="text-sm">{{ $isId ? 'Semua blok sistem sudah aktif' : 'All system blocks are active' }}</p>
                             </div>
                         @endforelse
 
                         {{-- Inactive Custom Blocks --}}
                         @if ($inactiveBlocks->isNotEmpty())
                             <div class="pt-4 mt-4 border-t border-gray-200">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide font-medium mb-2">Inactive Blocks
+                                <p class="text-xs text-gray-500 uppercase tracking-wide font-medium mb-2">{{ $isId ? 'Blok Tidak Aktif' : 'Inactive Blocks' }}
                                 </p>
                                 @foreach ($inactiveBlocks as $block)
                                     <div class="flex items-center gap-3 p-3 bg-gray-100 rounded-lg mb-2">
@@ -97,9 +102,9 @@
                     <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
                         <h3 class="text-lg font-semibold text-gray-900">
                             <i class="fa-solid fa-columns mr-2 text-indigo-600"></i>
-                            Active Sidebar Blocks
+                            {{ $isId ? 'Blok Sidebar Aktif' : 'Active Sidebar Blocks' }}
                         </h3>
-                        <p class="mt-1 text-sm text-gray-500">Drag to reorder • Click toggle to enable/disable</p>
+                        <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Seret untuk mengurutkan • Klik toggle untuk aktifkan/nonaktifkan' : 'Drag to reorder • Click toggle to enable/disable' }}</p>
                     </div>
 
                     <div class="p-4 min-h-[400px]" x-ref="activeBlocks" x-init="initSortable($refs.activeBlocks)">
@@ -128,17 +133,17 @@
                                             <h4 class="font-semibold text-gray-900">{{ $block->title }}</h4>
                                             @if ($block->is_system)
                                                 <span
-                                                    class="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">System</span>
+                                                    class="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">{{ $isId ? 'Sistem' : 'System' }}</span>
                                             @else
                                                 <span
-                                                    class="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">Custom</span>
+                                                    class="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">{{ $isId ? 'Kustom' : 'Custom' }}</span>
                                             @endif
                                         </div>
                                         <p class="text-sm text-gray-500 mt-0.5">
                                             @if ($block->is_system)
                                                 {{ $block->component_name }}
                                             @else
-                                                HTML Block
+                                                {{ $isId ? 'Blok HTML' : 'HTML Block' }}
                                             @endif
                                         </p>
                                     </div>
@@ -165,8 +170,8 @@
                         @empty
                             <div class="text-center py-16 text-gray-400">
                                 <i class="fa-solid fa-inbox text-5xl mb-4"></i>
-                                <p class="text-lg font-medium">No active sidebar blocks</p>
-                                <p class="text-sm mt-1">Add blocks from the left panel to customize your sidebar</p>
+                                <p class="text-lg font-medium">{{ $isId ? 'Tidak ada blok sidebar aktif' : 'No active sidebar blocks' }}</p>
+                                <p class="text-sm mt-1">{{ $isId ? 'Tambahkan blok dari panel kiri untuk menyesuaikan sidebar Anda' : 'Add blocks from the left panel to customize your sidebar' }}</p>
                             </div>
                         @endforelse
                     </div>
@@ -187,7 +192,7 @@
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-gray-900">
                                 <i class="fa-solid fa-code mr-2 text-orange-600"></i>
-                                Add Custom HTML Block
+                                {{ $isId ? 'Tambah Blok HTML Kustom' : 'Add Custom HTML Block' }}
                             </h3>
                             <button type="button" @click="closeAddForm()"
                                 class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
@@ -201,45 +206,43 @@
                             <div class="space-y-4">
                                 {{-- Common: Title --}}
                                 <div>
-                                    <label for="new_block_title" class="block text-sm font-medium text-gray-700 mb-1">Block /
-                                        Page Title *</label>
+                                    <label for="new_block_title" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Judul Blok / Halaman *' : 'Block / Page Title *' }}</label>
                                     <input id="new_block_title" type="text" x-model="newBlock.title"
                                         class="w-full rounded-lg border-gray-300"
-                                        placeholder="e.g., Sponsors, Submission Fees">
+                                        placeholder="{{ $isId ? 'cth., Sponsor, Biaya Pengiriman' : 'e.g., Sponsors, Submission Fees' }}">
                                 </div>
 
                                 {{-- Common: Show Title Select --}}
                                 <div>
                                     <label for="new_block_show_title"
-                                        class="block text-sm font-medium text-gray-700 mb-1">Show Title on Page?</label>
+                                        class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tampilkan Judul di Halaman?' : 'Show Title on Page?' }}</label>
                                     <select id="new_block_show_title" x-model="newBlock.show_title"
                                         class="w-full rounded-lg border-gray-300">
-                                        <option :value="true">Yes, Show Title</option>
-                                        <option :value="false">No, Hide Title</option>
+                                        <option :value="true">{{ $isId ? 'Ya, Tampilkan Judul' : 'Yes, Show Title' }}</option>
+                                        <option :value="false">{{ $isId ? 'Tidak, Sembunyikan Judul' : 'No, Hide Title' }}</option>
                                     </select>
                                 </div>
 
                                 {{-- Type Selection --}}
                                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                    <span class="block text-xs font-bold text-slate-500 uppercase mb-2">Content Type</span>
+                                    <span class="block text-xs font-bold text-slate-500 uppercase mb-2">{{ $isId ? 'Jenis Konten' : 'Content Type' }}</span>
                                     <div class="flex gap-4">
                                         <label class="flex items-center gap-2 cursor-pointer">
                                             <input type="radio" name="new_type" value="block" x-model="newBlock.type"
                                                 class="text-primary-600 focus:ring-primary-500">
-                                            <span class="text-sm font-medium text-gray-700">Sidebar Widget (HTML)</span>
+                                            <span class="text-sm font-medium text-gray-700">{{ $isId ? 'Widget Sidebar (HTML)' : 'Sidebar Widget (HTML)' }}</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
                                             <input type="radio" name="new_type" value="page" x-model="newBlock.type"
                                                 class="text-primary-600 focus:ring-primary-500">
-                                            <span class="text-sm font-medium text-gray-700">Custom Page (Link)</span>
+                                            <span class="text-sm font-medium text-gray-700">{{ $isId ? 'Halaman Kustom (Link)' : 'Custom Page (Link)' }}</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 {{-- Conditional Slug --}}
                                 <div x-show="newBlock.type === 'page'">
-                                    <label for="new_block_slug" class="block text-sm font-medium text-gray-700 mb-1">URL Path
-                                        (Slug) *</label>
+                                    <label for="new_block_slug" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Jalur URL (Slug) *' : 'URL Path (Slug) *' }}</label>
                                     <div class="flex items-center">
                                         <span
                                             class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
@@ -249,7 +252,7 @@
                                             class="flex-1 rounded-none rounded-r-lg border-gray-300"
                                             placeholder="author-fees">
                                     </div>
-                                    <p class="mt-1 text-xs text-gray-500">The page will be accessible at this URL.</p>
+                                    <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Halaman akan dapat diakses pada URL ini.' : 'The page will be accessible at this URL.' }}</p>
                                 </div>
 
                                 {{-- EDITOR 1: SIDEBAR DISPLAY (Teaser) --}}
@@ -258,18 +261,15 @@
                                         <span
                                             x-text="newBlock.type === 'page' ? 'Sidebar Display Content (Teaser/Logo) *' : 'Sidebar Content *'"></span>
                                     </label>
-                                    <p class="text-xs text-slate-500 mb-2" x-show="newBlock.type === 'page'">This is what
-                                        visitors will see in the sidebar column.</p>
+                                    <p class="text-xs text-slate-500 mb-2" x-show="newBlock.type === 'page'">{{ $isId ? 'Ini adalah konten yang akan dilihat pengunjung di kolom sidebar.' : 'This is what visitors will see in the sidebar column.' }}</p>
                                     <textarea id="new-block-teaser" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"
                                         placeholder="Sidebar content..."></textarea>
                                 </div>
 
                                 {{-- EDITOR 2: FULL PAGE CONTENT (Only for Pages) --}}
                                 <div x-show="newBlock.type === 'page'">
-                                    <label for="new-block-content" class="block text-sm font-medium text-gray-700 mb-1">Full
-                                        Page Content *</label>
-                                    <p class="text-xs text-slate-500 mb-2">This content appears when the user clicks the title.
-                                    </p>
+                                    <label for="new-block-content" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Konten Halaman Penuh *' : 'Full Page Content *' }}</label>
+                                    <p class="text-xs text-slate-500 mb-2">{{ $isId ? 'Konten ini muncul saat pengguna mengklik judul.' : 'This content appears when the user clicks the title.' }}</p>
                                     <textarea id="new-block-content" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"
                                         placeholder="Full page content..."></textarea>
                                 </div>
@@ -278,14 +278,14 @@
                             <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                                 <button type="button" @click="closeAddForm()" :disabled="isSaving"
                                     class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50">
-                                    Cancel
+                                    {{ $isId ? 'Batal' : 'Cancel' }}
                                 </button>
                                 <button type="submit" :disabled="isSaving"
                                     class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                                     <span x-show="isSaving" class="mr-2">
                                         <i class="fa-solid fa-circle-notch fa-spin"></i>
                                     </span>
-                                    <span x-text="isSaving ? 'Saving...' : 'Add Block'"></span>
+                                    <span x-text="isSaving ? '{{ $isId ? "Menyimpan..." : "Saving..." }}' : '{{ $isId ? "Tambah Blok" : "Add Block" }}'"></span>
                                 </button>
                             </div>
                         </form>
@@ -307,14 +307,14 @@
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-gray-900">
                                 <i class="fa-solid fa-pen-to-square mr-2 text-indigo-600"></i>
-                                Edit Block
+                                {{ $isId ? 'Ubah Blok' : 'Edit Block' }}
                             </h3>
                             <button type="button" @click="closeEditForm()"
                                 class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                                 <i class="fa-solid fa-xmark text-lg"></i>
                             </button>
                         </div>
-                        <p class="mt-1 text-sm text-gray-500" x-text="'Editing: ' + editingBlock.title"></p>
+                        <p class="mt-1 text-sm text-gray-500" x-text="'{{ $isId ? "Mengedit: " : "Editing: " }}' + editingBlock.title"></p>
                     </div>
 
                     <div class="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
@@ -322,7 +322,7 @@
                             <div class="space-y-4">
                                 {{-- Common: Title --}}
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Block / Page Title</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Judul Blok / Halaman' : 'Block / Page Title' }}</label>
                                     <input type="text" x-model="editingBlock.title"
                                         class="w-full rounded-lg border-gray-300">
                                 </div>
@@ -330,34 +330,34 @@
                                 {{-- Common: Show Title Select --}}
                                 <div>
                                     <label for="edit_block_show_title"
-                                        class="block text-sm font-medium text-gray-700 mb-1">Show Title on Page?</label>
+                                        class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tampilkan Judul di Halaman?' : 'Show Title on Page?' }}</label>
                                     <select id="edit_block_show_title" x-model="editingBlock.show_title"
                                         class="w-full rounded-lg border-gray-300">
-                                        <option :value="true">Yes, Show Title</option>
-                                        <option :value="false">No, Hide Title</option>
+                                        <option :value="true">{{ $isId ? 'Ya, Tampilkan Judul' : 'Yes, Show Title' }}</option>
+                                        <option :value="false">{{ $isId ? 'Tidak, Sembunyikan Judul' : 'No, Hide Title' }}</option>
                                     </select>
                                 </div>
 
                                 {{-- Type Selection --}}
                                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Content Type</label>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">{{ $isId ? 'Jenis Konten' : 'Content Type' }}</label>
                                     <div class="flex gap-4">
                                         <label class="flex items-center gap-2 cursor-pointer">
                                             <input type="radio" name="edit_type" value="block"
                                                 x-model="editingBlock.type" class="text-primary-600 focus:ring-primary-500">
-                                            <span class="text-sm font-medium text-gray-700">Sidebar Widget</span>
+                                            <span class="text-sm font-medium text-gray-700">{{ $isId ? 'Widget Sidebar' : 'Sidebar Widget' }}</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
                                             <input type="radio" name="edit_type" value="page"
                                                 x-model="editingBlock.type" class="text-primary-600 focus:ring-primary-500">
-                                            <span class="text-sm font-medium text-gray-700">Custom Page (Link)</span>
+                                            <span class="text-sm font-medium text-gray-700">{{ $isId ? 'Halaman Kustom (Link)' : 'Custom Page (Link)' }}</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 {{-- Conditional Slug --}}
                                 <div x-show="editingBlock.type === 'page'">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">URL Slug</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Slug URL' : 'URL Slug' }}</label>
                                     <div class="flex items-center">
                                         <span
                                             class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
@@ -375,17 +375,14 @@
                                         <span
                                             x-text="editingBlock.type === 'page' ? 'Sidebar Display Content (Teaser/Logo)' : 'Sidebar Content'"></span>
                                     </label>
-                                    <p class="text-xs text-slate-500 mb-2" x-show="editingBlock.type === 'page'">This is what
-                                        visitors will see in the sidebar column.</p>
+                                    <p class="text-xs text-slate-500 mb-2" x-show="editingBlock.type === 'page'">{{ $isId ? 'Ini adalah konten yang akan dilihat pengunjung di kolom sidebar.' : 'This is what visitors will see in the sidebar column.' }}</p>
                                     <textarea id="edit-block-teaser" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"></textarea>
                                 </div>
 
                                 {{-- EDITOR 2: FULL PAGE CONTENT (Only for Pages) --}}
                                 <div x-show="editingBlock.type === 'page'">
-                                    <label for="edit-block-content" class="block text-sm font-medium text-gray-700 mb-1">Full
-                                        Page Content</label>
-                                    <p class="text-xs text-slate-500 mb-2">This content appears when the user clicks the title.
-                                    </p>
+                                    <label for="edit-block-content" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Konten Halaman Penuh' : 'Full Page Content' }}</label>
+                                    <p class="text-xs text-slate-500 mb-2">{{ $isId ? 'Konten ini muncul saat pengguna mengklik judul.' : 'This content appears when the user clicks the title.' }}</p>
                                     <textarea id="edit-block-content" rows="8" class="w-full rounded-lg border-gray-300 font-mono text-sm"></textarea>
                                 </div>
                             </div>
@@ -393,14 +390,14 @@
                             <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                                 <button type="button" @click="closeEditForm()" :disabled="isSaving"
                                     class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50">
-                                    Cancel
+                                    {{ $isId ? 'Batal' : 'Cancel' }}
                                 </button>
                                 <button type="submit" :disabled="isSaving"
                                     class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                                     <span x-show="isSaving" class="mr-2">
                                         <i class="fa-solid fa-circle-notch fa-spin"></i>
                                     </span>
-                                    <span x-text="isSaving ? 'Saving...' : 'Save Changes'"></span>
+                                    <span x-text="isSaving ? '{{ $isId ? "Menyimpan..." : "Saving..." }}' : '{{ $isId ? "Simpan Perubahan" : "Save Changes" }}'"></span>
                                 </button>
                             </div>
                         </form>

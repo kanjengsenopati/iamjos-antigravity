@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Navigation Manager - ' . $journal->name)
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', ($isId ? 'Manajemen Navigasi - ' : 'Navigation Manager - ') . $journal->name)
 
 @section('content')
 {{-- Alpine.js Drag & Drop Functionality --}}
@@ -584,14 +589,14 @@ function navigationManager(initialData) {
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Navigation Manager</h1>
-            <p class="mt-1 text-sm text-gray-500">Configure navigation menus and menu items for your journal. OJS 3.3 compatible.</p>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Manajemen Navigasi' : 'Navigation Manager' }}</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Konfigurasi menu navigasi dan butir menu untuk jurnal Anda. Kompatibel dengan OJS 3.3.' : 'Configure navigation menus and menu items for your journal. OJS 3.3 compatible.' }}</p>
         </div>
         <div class="mt-4 sm:mt-0">
             <a href="{{ route('journal.settings.website.edit', $journal->slug) }}"
                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i>
-                Back to Settings
+                {{ $isId ? 'Kembali ke Pengaturan' : 'Back to Settings' }}
             </a>
         </div>
     </div>
@@ -610,7 +615,7 @@ function navigationManager(initialData) {
     <div x-show="isLoading" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl p-6 flex items-center gap-3">
             <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
-            <span class="text-slate-700 font-medium">Updating...</span>
+            <span class="text-slate-700 font-medium">{{ $isId ? 'Memperbarui...' : 'Updating...' }}</span>
         </div>
     </div>
 
@@ -618,30 +623,30 @@ function navigationManager(initialData) {
     <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-6 mb-8">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h3 class="font-bold text-lg text-slate-800">Navigation Menus</h3>
-                <p class="text-sm text-slate-500 mt-1">Create menus and assign them to theme areas.</p>
+                <h3 class="font-bold text-lg text-slate-800">{{ $isId ? 'Menu Navigasi' : 'Navigation Menus' }}</h3>
+                <p class="text-sm text-slate-500 mt-1">{{ $isId ? 'Buat menu dan tetapkan ke area tema.' : 'Create menus and assign them to theme areas.' }}</p>
             </div>
             <button @click="showMenuModal = true; editingMenu = null"
                 class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors" type="button">
                 <i class="fa-solid fa-plus mr-2"></i>
-                Add Menu
+                {{ $isId ? 'Tambah Menu' : 'Add Menu' }}
             </button>
         </div>
 
         @if($menus->isEmpty())
         <div class="text-center py-12 text-slate-400">
             <i class="fa-solid fa-bars text-4xl mb-3"></i>
-            <p class="font-medium">No navigation menus yet</p>
-            <p class="text-sm">Create a menu to get started.</p>
+            <p class="font-medium">{{ $isId ? 'Belum ada menu navigasi' : 'No navigation menus yet' }}</p>
+            <p class="text-sm">{{ $isId ? 'Buat menu untuk memulai.' : 'Create a menu to get started.' }}</p>
         </div>
         @else
         <table class="w-full text-sm text-left">
             <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-xs rounded-lg">
                 <tr>
-                    <th class="px-4 py-3 rounded-l-lg">Title</th>
-                    <th class="px-4 py-3">Assigned Area</th>
-                    <th class="px-4 py-3">Items</th>
-                    <th class="px-4 py-3 text-right rounded-r-lg">Actions</th>
+                    <th class="px-4 py-3 rounded-l-lg">{{ $isId ? 'Judul' : 'Title' }}</th>
+                    <th class="px-4 py-3">{{ $isId ? 'Area Penugasan' : 'Assigned Area' }}</th>
+                    <th class="px-4 py-3">{{ $isId ? 'Item' : 'Items' }}</th>
+                    <th class="px-4 py-3 text-right rounded-r-lg">{{ $isId ? 'Aksi' : 'Actions' }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -656,11 +661,11 @@ function navigationManager(initialData) {
                     <td class="px-4 py-3">
                         @if($menu->area_name === 'primary')
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                                Primary Navigation
+                                {{ $isId ? 'Navigasi Utama' : 'Primary Navigation' }}
                             </span>
                         @elseif($menu->area_name === 'user')
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                                User Navigation
+                                {{ $isId ? 'Navigasi Pengguna' : 'User Navigation' }}
                             </span>
                         @elseif($menu->area_name)
                             {{-- Legacy area (footer, etc) - show as deprecated --}}
@@ -668,7 +673,7 @@ function navigationManager(initialData) {
                                 {{ ucfirst($menu->area_name) }} (deprecated)
                             </span>
                         @else
-                            <span class="text-slate-400 italic text-xs">Unassigned</span>
+                            <span class="text-slate-400 italic text-xs">{{ $isId ? 'Belum Ditugaskan' : 'Unassigned' }}</span>
                         @endif
                     </td>
                     <td class="px-4 py-3 text-slate-600 text-xs max-w-xs truncate">
@@ -678,17 +683,17 @@ function navigationManager(initialData) {
                         <div class="flex items-center justify-end gap-2">
                             <button @click="selectedMenuId = '{{ $menu->id }}'; showAssignModal = true"
                                 class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                title="Manage Items" type="button">
+                                title="{{ $isId ? 'Kelola Item' : 'Manage Items' }}" type="button">
                                 <i class="fa-solid fa-list-check"></i>
                             </button>
                             <button @click="editingMenu = {{ json_encode($menu) }}; showMenuModal = true"
                                 class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                title="Edit Menu" type="button">
+                                title="{{ $isId ? 'Ubah Menu' : 'Edit Menu' }}" type="button">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             <button @click="deleteMenu('{{ $menu->id }}')"
                                 class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Delete Menu" type="button">
+                                title="{{ $isId ? 'Hapus Menu' : 'Delete Menu' }}" type="button">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -704,21 +709,21 @@ function navigationManager(initialData) {
     <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h3 class="font-bold text-lg text-slate-800">Navigation Menu Items</h3>
-                <p class="text-sm text-slate-500 mt-1">Create reusable menu items that can be assigned to any menu.</p>
+                <h3 class="font-bold text-lg text-slate-800">{{ $isId ? 'Butir Menu Navigasi' : 'Navigation Menu Items' }}</h3>
+                <p class="text-sm text-slate-500 mt-1">{{ $isId ? 'Buat butir menu yang dapat digunakan kembali untuk dimasukkan ke menu mana saja.' : 'Create reusable menu items that can be assigned to any menu.' }}</p>
             </div>
             <button @click="window.location.href='{{ route('journal.settings.navigation.items.create', $journal->slug) }}'"
                 class="inline-flex items-center px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors" type="button">
                 <i class="fa-solid fa-plus mr-2"></i>
-                Add Item
+                {{ $isId ? 'Tambah Item' : 'Add Item' }}
             </button>
         </div>
 
         @if($items->isEmpty())
         <div class="text-center py-12 text-slate-400">
             <i class="fa-solid fa-link text-4xl mb-3"></i>
-            <p class="font-medium">No menu items yet</p>
-            <p class="text-sm">Create items to add them to your menus.</p>
+            <p class="font-medium">{{ $isId ? 'Belum ada butir menu' : 'No menu items yet' }}</p>
+            <p class="text-sm">{{ $isId ? 'Buat butir menu untuk menambahkannya ke menu Anda.' : 'Create items to add them to your menus.' }}</p>
         </div>
         @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -778,7 +783,7 @@ function navigationManager(initialData) {
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <h3 class="font-bold text-lg text-slate-800">
                     <i class="fa-solid fa-bars mr-2 text-indigo-600"></i>
-                    <span x-text="editingMenu ? 'Edit Menu' : 'Create Menu'"></span>
+                    <span x-text="editingMenu ? '{{ $isId ? "Ubah Menu" : "Edit Menu" }}' : '{{ $isId ? "Buat Menu" : "Create Menu" }}'"></span>
                 </h3>
                 <button @click="showMenuModal = false" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors" type="button">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -791,32 +796,32 @@ function navigationManager(initialData) {
                 
                 <div class="p-6 space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Menu Title *</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Judul Menu *' : 'Menu Title *' }}</label>
                         <input type="text" name="title" required
                             :value="editingMenu?.title || ''"
                             class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="e.g., Primary Navigation">
+                            placeholder="{{ $isId ? 'cth., Navigasi Utama' : 'e.g., Primary Navigation' }}">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Active Theme Area</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ $isId ? 'Area Tema Aktif' : 'Active Theme Area' }}</label>
                         <select name="area_name" class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">-- Not Assigned --</option>
-                            <option value="primary" :selected="editingMenu?.area_name === 'primary'">Primary Navigation Menu (Header)</option>
-                            <option value="user" :selected="editingMenu?.area_name === 'user'">User Navigation Menu (Top Right)</option>
+                            <option value="">{{ $isId ? '-- Belum Ditugaskan --' : '-- Not Assigned --' }}</option>
+                            <option value="primary" :selected="editingMenu?.area_name === 'primary'">{{ $isId ? 'Menu Navigasi Utama (Header)' : 'Primary Navigation Menu (Header)' }}</option>
+                            <option value="user" :selected="editingMenu?.area_name === 'user'">{{ $isId ? 'Menu Navigasi Pengguna (Kanan Atas)' : 'User Navigation Menu (Top Right)' }}</option>
                         </select>
-                        <p class="text-xs text-slate-500 mt-1">Only one menu can be assigned to each area.</p>
+                        <p class="text-xs text-slate-500 mt-1">{{ $isId ? 'Hanya satu menu yang dapat ditugaskan ke setiap area.' : 'Only one menu can be assigned to each area.' }}</p>
                     </div>
                 </div>
 
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
                     <button type="button" @click="showMenuModal = false"
                         class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors">
-                        Cancel
+                        {{ $isId ? 'Batal' : 'Cancel' }}
                     </button>
                     <button type="button" @click="submitMenu($event.target.closest('form'))"
                         class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
                         <i class="fa-solid fa-check mr-2"></i>
-                        <span x-text="editingMenu ? 'Save Changes' : 'Create Menu'"></span>
+                        <span x-text="editingMenu ? '{{ $isId ? "Simpan Perubahan" : "Save Changes" }}' : '{{ $isId ? "Buat Menu" : "Create Menu" }}'"></span>
                     </button>
                 </div>
             </form>
@@ -834,7 +839,7 @@ function navigationManager(initialData) {
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <h3 class="font-bold text-lg text-slate-800">
                     <i class="fa-solid fa-arrows-alt mr-2 text-indigo-600"></i>
-                    Manage Menu Items
+                    {{ $isId ? 'Kelola Butir Menu' : 'Manage Menu Items' }}
                 </h3>
                 <button @click="showAssignModal = false" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors" type="button">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -859,14 +864,14 @@ function navigationManager(initialData) {
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-bold text-sm text-slate-700 flex items-center gap-2">
                                 <i class="fa-solid fa-check-circle text-green-600"></i>
-                                Assigned Menu Items
+                                {{ $isId ? 'Butir Menu Ditugaskan' : 'Assigned Menu Items' }}
                                 <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
                                     @php echo $allAssignments->count(); @endphp items
                                 </span>
                             </h4>
                             <div class="text-xs text-slate-500 flex items-center gap-1">
                                 <i class="fa-solid fa-info-circle"></i>
-                                Drag to reorder
+                                {{ $isId ? 'Seret untuk mengurutkan' : 'Drag to reorder' }}
                             </div>
                         </div>
 
@@ -880,8 +885,8 @@ function navigationManager(initialData) {
                             @if($rootAssignments->isEmpty())
                             <li class="text-center py-12 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-white/50">
                                 <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300"></i>
-                                <p class="font-medium text-slate-500">No items assigned</p>
-                                <p class="text-xs text-slate-400 mt-1">Drag items from the right panel</p>
+                                <p class="font-medium text-slate-500">{{ $isId ? 'Belum ada item ditugaskan' : 'No items assigned' }}</p>
+                                <p class="text-xs text-slate-400 mt-1">{{ $isId ? 'Seret item dari panel sebelah kanan' : 'Drag items from the right panel' }}</p>
                             </li>
                             @endif
                         </ul>
@@ -892,7 +897,7 @@ function navigationManager(initialData) {
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-bold text-sm text-slate-700 flex items-center gap-2">
                                 <i class="fa-solid fa-list text-slate-500"></i>
-                                Available Menu Items
+                                {{ $isId ? 'Butir Menu Tersedia' : 'Available Menu Items' }}
                                 <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-medium">
                                     @php
                                         $unassignedCount = $items->filter(function($item) use ($assignedItemIds, $assignedRouteNames) {
@@ -911,13 +916,13 @@ function navigationManager(initialData) {
                                     <button @click="bulkAssignItems('{{ $menu->id }}')"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
                                         <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                                        <span>Add Selected</span>
+                                        <span>{{ $isId ? 'Tambah Terpilih' : 'Add Selected' }}</span>
                                         <span class="bg-white/20 px-1.5 py-0.5 rounded text-[10px]" x-text="selectedItems.length"></span>
                                     </button>
                                 </template>
                                 <div class="text-xs text-slate-500 flex items-center gap-1">
                                     <i class="fa-solid fa-check-square"></i>
-                                    Multi-select
+                                    {{ $isId ? 'Multi-pilih' : 'Multi-select' }}
                                 </div>
                             </div>
                         </div>
@@ -972,7 +977,7 @@ function navigationManager(initialData) {
                                     </div>
                                     <button @click.stop="assignItem('{{ $menu->id }}', '{{ $item->id }}', '{{ $isVirtualItem ? $item->route_name : '' }}')"
                                         class="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                        title="Add single item">
+                                        title="{{ $isId ? 'Tambah satu item' : 'Add single item' }}">
                                         <i class="fa-solid fa-plus text-sm"></i>
                                     </button>
                                 </div>
@@ -980,8 +985,8 @@ function navigationManager(initialData) {
                             @empty
                             <li class="text-center py-12 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-white/50">
                                 <i class="fa-solid fa-check-double text-3xl mb-3 text-green-300"></i>
-                                <p class="font-medium text-green-600">Semua item sudah di-assign!</p>
-                                <p class="text-xs text-slate-400 mt-1">Menu Anda sudah lengkap</p>
+                                <p class="font-medium text-green-600">{{ $isId ? 'Semua item sudah ditugaskan!' : 'All items have been assigned!' }}</p>
+                                <p class="text-xs text-slate-400 mt-1">{{ $isId ? 'Menu Anda sudah lengkap' : 'Your menu is complete' }}</p>
                             </li>
                             @endforelse
                         </ul>
@@ -994,20 +999,20 @@ function navigationManager(initialData) {
                 <div class="text-xs text-slate-500 flex items-center gap-5">
                     <div class="flex items-center gap-2">
                         <span class="inline-block w-6 h-[3px] bg-blue-500 rounded"></span>
-                        <span>Garis biru = pindah posisi</span>
+                        <span>{{ $isId ? 'Garis biru = pindah posisi' : 'Blue line = reorder position' }}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="inline-block w-4 h-4 bg-indigo-100 border border-indigo-400 rounded"></span>
-                        <span>Highlight = jadikan submenu</span>
+                        <span>{{ $isId ? 'Highlight = jadikan submenu' : 'Highlight = make submenu' }}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-lightbulb text-amber-500"></i>
-                        <span>Drag ke tepi atas/bawah item untuk reorder</span>
+                        <span>{{ $isId ? 'Seret ke tepi atas/bawah item untuk mengurutkan ulang' : 'Drag to top/bottom edge of item to reorder' }}</span>
                     </div>
                 </div>
                 <button type="button" @click="showAssignModal = false"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
-                    Done
+                    {{ $isId ? 'Selesai' : 'Done' }}
                 </button>
             </div>
         </div>
