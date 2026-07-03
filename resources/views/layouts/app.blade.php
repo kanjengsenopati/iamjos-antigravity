@@ -13,6 +13,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <script>
+        if (window.self !== window.top) {
+            document.documentElement.classList.add('is-iframe');
+            const style = document.createElement('style');
+            style.innerHTML = `
+                aside, header, footer { display: none !important; }
+                main { margin-left: 0 !important; padding-left: 0 !important; padding-top: 1rem !important; }
+                .lg\\:ml-64 { margin-left: 0 !important; }
+                /* Sembunyikan tombol kembali ke website settings di halaman manajemen */
+                a[href*="/settings/website"], a[href*="website/edit"] { display: none !important; }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
+
     <title>@yield('title', $title ?? 'Dashboard') - {{ config('app.name', 'IAMJOS') }}</title>
 
     <!-- Favicon -->

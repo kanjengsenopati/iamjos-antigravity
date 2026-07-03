@@ -8,7 +8,7 @@
 <x-app-layout :journal="$journal" :journalSlug="$journalSlug">
     <x-slot name="title">{{ $isId ? 'Pengaturan Website' : 'Website Settings' }} - {{ $journal->name }}</x-slot>
 
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'setup') }}', setupSubTab: new URLSearchParams(window.location.search).get('setup_tab') || '{{ request('setup_tab', 'languages') }}', appearanceSubTab: new URLSearchParams(window.location.search).get('appearance_tab') || '{{ request('appearance_tab', 'theme') }}' }">
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'setup') }}', setupSubTab: new URLSearchParams(window.location.search).get('setup_tab') || '{{ request('setup_tab', 'languages') }}', appearanceSubTab: new URLSearchParams(window.location.search).get('appearance_tab') || '{{ request('appearance_tab', 'theme') }}', showNavModal: false, showSidebarModal: false }">
         {{-- Page Header --}}
         <div class="mb-8">
             <nav class="text-sm text-gray-500 mb-2">
@@ -413,28 +413,32 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 flex flex-col justify-between">
                                     <div>
-                                        <div class="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center mb-3">
-                                            <i class="fa-solid fa-bars text-primary-600 text-lg"></i>
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <div class="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center shrink-0">
+                                                <i class="fa-solid fa-bars text-primary-600 text-lg"></i>
+                                            </div>
+                                            <h4 class="text-base font-bold text-gray-900">{{ $isId ? 'Menu Navigasi' : 'Navigation Menus' }}</h4>
                                         </div>
-                                        <h4 class="text-base font-bold text-gray-900 mb-1">{{ $isId ? 'Menu Navigasi' : 'Navigation Menus' }}</h4>
                                         <p class="text-xs text-slate-500 mb-4">{{ $isId ? 'Buat, edit, dan atur bilah menu untuk navigasi header dan footer.' : 'Create, edit, and arrange menu bars for your header and footer navigation.' }}</p>
                                     </div>
-                                    <a href="{{ route('journal.settings.navigation.index', $journalSlug) }}" class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm">
+                                    <button type="button" @click="showNavModal = true" class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-sm cursor-pointer">
                                         {{ $isId ? 'Kelola Menu Navigasi' : 'Manage Navigation Menus' }}
-                                    </a>
+                                    </button>
                                 </div>
 
                                 <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 flex flex-col justify-between">
                                     <div>
-                                        <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3">
-                                            <i class="fa-solid fa-columns text-emerald-600 text-lg"></i>
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+                                                <i class="fa-solid fa-columns text-emerald-600 text-lg"></i>
+                                            </div>
+                                            <h4 class="text-base font-bold text-gray-900">{{ $isId ? 'Blok Sidebar' : 'Sidebar Blocks' }}</h4>
                                         </div>
-                                        <h4 class="text-base font-bold text-gray-900 mb-1">{{ $isId ? 'Blok Sidebar' : 'Sidebar Blocks' }}</h4>
                                         <p class="text-xs text-slate-500 mb-4">{{ $isId ? 'Konfigurasi blok sidebar kustom, widget pengindeksan, dan tautan mitra.' : 'Configure custom sidebar blocks, indexing widgets, and partner links.' }}</p>
                                     </div>
-                                    <a href="{{ route('journal.settings.sidebar.index', $journalSlug) }}" class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-sm">
+                                    <button type="button" @click="showSidebarModal = true" class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer">
                                         {{ $isId ? 'Kelola Blok Sidebar' : 'Manage Sidebar Blocks' }}
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -635,6 +639,92 @@
                 </button>
             </div>
         </form>
+    </div>
+
+    <!-- MODAL: KELOLA MENU NAVIGASI (WIDE MODAL) -->
+    <div x-show="showNavModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-10"
+         x-cloak>
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showNavModal = false; window.location.reload();"></div>
+
+        <!-- Modal Card -->
+        <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-7xl h-[85vh] flex flex-col overflow-hidden border border-slate-100">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-bars text-primary-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Kelola Menu Navigasi' : 'Manage Navigation Menus' }}</h3>
+                        <p class="text-xs text-slate-500">{{ $isId ? 'Konfigurasi menu navigasi untuk situs jurnal Anda' : 'Configure navigation menus for your journal website' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="const iframe = $refs.navIframe; iframe.src = iframe.src;" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-lg transition-colors" title="Reload">
+                        <i class="fa-solid fa-rotate-right text-base"></i>
+                    </button>
+                    <button type="button" @click="showNavModal = false; window.location.reload();" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Body (Iframe) -->
+            <div class="flex-1 bg-slate-50">
+                <iframe x-ref="navIframe" :src="showNavModal ? '{{ route('journal.settings.navigation.index', $journalSlug) }}' : 'about:blank'" class="w-full h-full border-0 rounded-b-[24px]" style="min-height: 100%;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: KELOLA BLOK SIDEBAR (WIDE MODAL) -->
+    <div x-show="showSidebarModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-10"
+         x-cloak>
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showSidebarModal = false; window.location.reload();"></div>
+
+        <!-- Modal Card -->
+        <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-7xl h-[85vh] flex flex-col overflow-hidden border border-slate-100">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-columns text-emerald-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Kelola Blok Sidebar' : 'Manage Sidebar Blocks' }}</h3>
+                        <p class="text-xs text-slate-500">{{ $isId ? 'Atur widget dan blok konten di kolom sidebar situs' : 'Arrange widgets and content blocks in the website sidebar column' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="const iframe = $refs.sidebarIframe; iframe.src = iframe.src;" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-lg transition-colors" title="Reload">
+                        <i class="fa-solid fa-rotate-right text-base"></i>
+                    </button>
+                    <button type="button" @click="showSidebarModal = false; window.location.reload();" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Body (Iframe) -->
+            <div class="flex-1 bg-slate-50">
+                <iframe x-ref="sidebarIframe" :src="showSidebarModal ? '{{ route('journal.settings.sidebar.index', $journalSlug) }}' : 'about:blank'" class="w-full h-full border-0 rounded-b-[24px]" style="min-height: 100%;"></iframe>
+            </div>
+        </div>
     </div>
 
     {{-- TinyMCE Script --}}
