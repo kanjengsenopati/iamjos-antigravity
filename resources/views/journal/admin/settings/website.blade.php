@@ -638,8 +638,6 @@
                     {{ $isId ? 'Simpan Pengaturan' : 'Save Settings' }}
                 </button>
             </div>
-        </form>
-    </div>
 
     <!-- MODAL: KELOLA MENU NAVIGASI (WIDE MODAL) -->
     <div x-show="showNavModal" 
@@ -725,6 +723,8 @@
                 <iframe x-ref="sidebarIframe" :src="showSidebarModal ? '{{ route('journal.settings.sidebar.index', $journalSlug) }}' : 'about:blank'" class="w-full h-full border-0 rounded-b-[24px]" style="min-height: 100%;"></iframe>
             </div>
         </div>
+    </div>
+        </form>
     </div>
 
     {{-- TinyMCE Script --}}
