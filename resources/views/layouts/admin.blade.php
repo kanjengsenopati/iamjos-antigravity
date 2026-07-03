@@ -587,20 +587,13 @@
         </div>
     </main>
 
-    <!-- Flash Messages (Modal Centered Alert) -->
+    <!-- Flash Messages (Top Centered Alert) -->
     @if (session('success'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" 
-             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <!-- Backdrop -->
-            <div class="fixed inset-0 bg-slate-950/20 backdrop-blur-[2px]" @click="show = false"></div>
-            
-            <!-- Alert Body -->
-            <div x-show="show" 
-                 x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                 class="relative bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-xl flex items-center gap-3 max-w-md w-full z-10">
+             x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 -translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+             class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-xl flex items-center gap-3 w-full">
                 <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
                 <p class="text-sm font-medium text-emerald-800 pr-4">{{ session('success') }}</p>
                 <button @click="show = false" class="ml-auto text-emerald-500 hover:text-emerald-700">
@@ -612,17 +605,10 @@
 
     @if (session('error'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
-             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <!-- Backdrop -->
-            <div class="fixed inset-0 bg-slate-950/20 backdrop-blur-[2px]" @click="show = false"></div>
-            
-            <!-- Alert Body -->
-            <div x-show="show" 
-                 x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                 class="relative bg-red-50 border border-red-200 rounded-xl p-4 shadow-xl flex items-center gap-3 max-w-md w-full z-10">
+             x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 -translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+             class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-xl flex items-center gap-3 w-full">
                 <i class="fa-solid fa-circle-exclamation text-red-600 text-lg"></i>
                 <p class="text-sm font-medium text-red-800 pr-4">{{ session('error') }}</p>
                 <button @click="show = false" class="ml-auto text-red-500 hover:text-red-700">
