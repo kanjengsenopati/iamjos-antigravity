@@ -70,8 +70,38 @@ $registerAllRoutes = function ($prefix = '') {
 Route::get('/', [PortalController::class, 'index'])->name('portal.home');
         Route::get('/set-locale/{locale}', function ($locale) {
             if (in_array($locale, ['en', 'id', 'en_US', 'id_ID'])) {
-                session(['app_locale' => $locale]);
-                app()->setLocale($locale);
+                // Normalize to short code for session & setLocale
+                $normalizedLocale = in_array($locale, ['id', 'id_ID']) ? 'id' : 'en';
+
+                session(['app_locale' => $normalizedLocale]);
+                app()->setLocale($normalizedLocale);
+
+                // Also persist primary_locale to the journal's DB settings
+                // so the Languages table radio button stays in sync with UI locale.
+                try {
+                    $journal = app()->bound('currentJournal') ? app('currentJournal') : null;
+
+                    // Fallback: try reading journal from previous URL referer slug
+                    if (!$journal) {
+                        $referer = request()->headers->get('referer', '');
+                        if (preg_match('#/([^/?#]+)/(dashboard|submissions|settings|issues|users|announcements|workflow|reviewer|editor)#', $referer, $m)) {
+                            $slug = $m[1];
+                            $journal = \App\Models\Journal::where('slug', $slug)->first();
+                        }
+                    }
+
+                    if ($journal) {
+                        \App\Facades\Settings::setJournal(
+                            $journal->id,
+                            'primary_locale',
+                            $normalizedLocale,
+                            'string',
+                            'setup'
+                        );
+                    }
+                } catch (\Throwable $e) {
+                    // Silently ignore: journal context may not always be available
+                }
             }
             return redirect()->back();
         })->name('locale.switch');
