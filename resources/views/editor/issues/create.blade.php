@@ -4,7 +4,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Create New Issue')
+@section('title', ($isId ? 'Buat Terbitan Baru' : 'Create New Issue'))
 
 @section('content')
     <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -14,18 +14,18 @@
             <div class="mb-8">
                 <div class="flex items-center gap-2 text-sm text-gray-500 mb-4">
                     <a href="{{ route('journal.issues.index', ['journal' => $journal->slug]) }}"
-                        class="hover:text-indigo-600 transition-colors">Issues</a>
+                        class="hover:text-indigo-600 transition-colors">{{ $isId ? 'Terbitan' : 'Issues' }}</a>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
-                    <span class="text-gray-900">Create New</span>
+                    <span class="text-gray-900">{{ $isId ? 'Buat Baru' : 'Create New' }}</span>
                 </div>
 
                 <h1 class="text-3xl font-bold text-indigo-700">
-                    Create New Issue
+                    {{ $isId ? 'Buat Terbitan Baru' : 'Create New Issue' }}
                 </h1>
                 <p class="mt-2 text-gray-500">
-                    Set up a new issue to schedule articles for publication.
+                    {{ $isId ? 'Siapkan terbitan baru untuk menjadwalkan artikel yang akan dipublikasikan.' : 'Set up a new issue to schedule articles for publication.' }}
                 </p>
             </div>
 
@@ -63,14 +63,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                                 </svg>
-                                Issue Identification
+                                {{ $isId ? 'Identifikasi Terbitan' : 'Issue Identification' }}
                             </h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                                 <!-- Volume -->
                                 <div>
                                     <label for="volume" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Volume <span class="text-red-500">*</span>
+                                        {{ $isId ? 'Volume' : 'Volume' }} <span class="text-red-500">*</span>
                                     </label>
                                     <input type="number" id="volume" name="volume"
                                         x-model="volume" @input="generateSlug"
@@ -84,7 +84,7 @@
                                 <!-- Number -->
                                 <div>
                                     <label for="number" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Number <span class="text-red-500">*</span>
+                                        {{ $isId ? 'Nomor' : 'Number' }} <span class="text-red-500">*</span>
                                     </label>
                                     <input type="number" id="number" name="number"
                                         x-model="number" @input="generateSlug"
@@ -98,7 +98,7 @@
                                 <!-- Year -->
                                 <div>
                                     <label for="year" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Year <span class="text-red-500">*</span>
+                                        {{ $isId ? 'Tahun' : 'Year' }} <span class="text-red-500">*</span>
                                     </label>
                                     <input type="number" id="year" name="year"
                                         x-model="year" @input="generateSlug"
@@ -116,25 +116,25 @@
                                     <input type="checkbox" name="show_volume" value="1"
                                         {{ old('show_volume', true) ? 'checked' : '' }}
                                         class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Volume</span>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">{{ $isId ? 'Tampilkan Volume' : 'Show Volume' }}</span>
                                 </label>
                                 <label class="inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="show_number" value="1"
                                         {{ old('show_number', true) ? 'checked' : '' }}
                                         class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Number</span>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">{{ $isId ? 'Tampilkan Nomor' : 'Show Number' }}</span>
                                 </label>
                                 <label class="inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="show_year" value="1"
                                         {{ old('show_year', true) ? 'checked' : '' }}
                                         class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Year</span>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">{{ $isId ? 'Tampilkan Tahun' : 'Show Year' }}</span>
                                 </label>
                                 <label class="inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="show_title" value="1"
                                         x-model="showTitle" @change="generateSlug"
                                         class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                    <span class="ml-2 text-sm font-medium text-gray-700">Show Title</span>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">{{ $isId ? 'Tampilkan Judul' : 'Show Title' }}</span>
                                 </label>
                             </div>
 
@@ -144,7 +144,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                This will create issue: <strong>Vol. <span x-text="volume || '1'"></span> No. <span x-text="number || '1'"></span>, <span x-text="year || new Date().getFullYear()"></span> <span x-show="showTitle && title" x-text="'- ' + title"></span></strong>
+                                {{ $isId ? 'Ini akan membuat terbitan:' : 'This will create issue:' }} <strong>Vol. <span x-text="volume || '1'"></span> No. <span x-text="number || '1'"></span>, <span x-text="year || new Date().getFullYear()"></span> <span x-show="showTitle && title" x-text="'- ' + title"></span></strong>
                             </p>
                         </div>
 
@@ -156,16 +156,16 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 6h16M4 12h16M4 18h7" />
                                 </svg>
-                                Issue Title
+                                {{ $isId ? 'Judul Terbitan' : 'Issue Title' }}
                             </h3>
 
                             <div>
                                 <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Title <span class="text-gray-400">(Optional - for special/themed issues)</span>
+                                    {{ $isId ? 'Judul' : 'Title' }} <span class="text-gray-400">{{ $isId ? '(Opsional - untuk terbitan khusus/bertema)' : '(Optional - for special/themed issues)' }}</span>
                                 </label>
                                 <input type="text" id="title" name="title"
                                     x-model="title" @input="generateSlug"
-                                    placeholder="e.g., Special Issue on AI in Education"
+                                    placeholder="{{ $isId ? 'cth., Edisi Khusus Kecerdasan Buatan dalam Pendidikan' : 'e.g., Special Issue on AI in Education' }}"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('title') border-red-500 @enderror">
                                 @error('title')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -181,15 +181,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                Description
+                                {{ $isId ? 'Deskripsi' : 'Description' }}
                             </h3>
 
                             <div>
                                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Issue Description <span class="text-gray-400">(Optional)</span>
+                                    {{ $isId ? 'Deskripsi Terbitan' : 'Issue Description' }} <span class="text-gray-400">{{ $isId ? '(Opsional)' : '(Optional)' }}</span>
                                 </label>
                                 <textarea id="description" name="description" rows="6"
-                                    placeholder="Enter detailed description for this issue..."
+                                    placeholder="{{ $isId ? 'Masukkan deskripsi terperinci untuk terbitan ini...' : 'Enter detailed description for this issue...' }}"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
                                 <p class="mt-2 text-sm text-gray-500">
                                     <svg class="w-4 h-4 inline-block mr-1 text-gray-400" fill="none"
@@ -197,8 +197,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    You can use HTML formatting. A rich text editor (TinyMCE/CKEditor) can be integrated
-                                    here.
+                                    {{ $isId ? 'Anda dapat menggunakan format HTML. Editor teks kaya (TinyMCE/CKEditor) dapat diintegrasikan di sini.' : 'You can use HTML formatting. A rich text editor (TinyMCE/CKEditor) can be integrated here.' }}
                                 </p>
                                 @error('description')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -214,7 +213,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                Cover Image
+                                {{ $isId ? 'Gambar Sampul' : 'Cover Image' }}
                             </h3>
 
                             <div class="flex items-start gap-6">
@@ -238,7 +237,7 @@
                                 <!-- Upload -->
                                 <div class="flex-1">
                                     <label for="cover" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Upload Cover <span class="text-gray-400">(Optional)</span>
+                                        {{ $isId ? 'Unggah Sampul' : 'Upload Cover' }} <span class="text-gray-400">{{ $isId ? '(Opsional)' : '(Optional)' }}</span>
                                     </label>
                                     <div class="relative">
                                         <input type="file" id="cover" name="cover" accept="image/*"
@@ -246,7 +245,7 @@
                                             class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                                     </div>
                                     <p class="mt-2 text-sm text-gray-500">
-                                        Recommended size: 300x400 pixels. Max file size: 2MB.
+                                        {{ $isId ? 'Ukuran yang disarankan: 300x400 piksel. Ukuran file maksimal: 2MB.' : 'Recommended size: 300x400 pixels. Max file size: 2MB.' }}
                                     </p>
                                     @error('cover')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -263,19 +262,19 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                 </svg>
-                                Custom URL
+                                {{ $isId ? 'URL Kustom' : 'Custom URL' }}
                             </h3>
 
                             <div class="mb-6">
                                 <label for="url_path" class="block text-sm font-medium text-gray-700 mb-1">
-                                    URL Path <span class="text-gray-400">(Optional)</span>
+                                    {{ $isId ? 'Jalur URL' : 'URL Path' }} <span class="text-gray-400">{{ $isId ? '(Opsional)' : '(Optional)' }}</span>
                                 </label>
                                 <input type="text" id="url_path" name="url_path" 
                                     x-model="urlPath" @input="manualUrlPath = true"
                                     placeholder="e.g., vol1-no2-2026"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('url_path') border-red-500 @enderror">
                                 <p class="mt-2 text-sm text-gray-500">
-                                    An optional path to use in the URL instead of the issue ID.
+                                    {{ $isId ? 'Jalur opsional untuk digunakan dalam URL sebagai pengganti ID terbitan.' : 'An optional path to use in the URL instead of the issue ID.' }}
                                 </p>
                                 @error('url_path')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -289,13 +288,13 @@
                                 <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                 </svg>
-                                Public Identifiers (DOI)
+                                {{ $isId ? 'Pengidentifikasi Publik (DOI)' : 'Public Identifiers (DOI)' }}
                             </h3>
 
                             @if($journal->doi_enabled && in_array('issues', $journal->doi_objects ?? []))
                                 <div>
                                     <label for="doi_suffix" class="block text-sm font-medium text-gray-700 mb-1">
-                                        DOI Suffix <span class="text-gray-400">(Optional)</span>
+                                        {{ $isId ? 'Akhiran DOI' : 'DOI Suffix' }} <span class="text-gray-400">{{ $isId ? '(Opsional)' : '(Optional)' }}</span>
                                     </label>
                                     <div class="flex items-center">
                                         <span class="inline-flex items-center px-4 py-3 rounded-l-xl border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
@@ -307,7 +306,7 @@
                                             class="flex-1 px-4 py-3 rounded-r-xl border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors @error('doi_suffix') border-red-500 @enderror">
                                     </div>
                                     <p class="mt-2 text-sm text-gray-500">
-                                        Leave empty to automatically generate a DOI based on the journal's pattern when published.
+                                        {{ $isId ? 'Biarkan kosong untuk menghasilkan DOI secara otomatis berdasarkan pola jurnal saat diterbitkan.' : 'Leave empty to automatically generate a DOI based on the journal\'s pattern when published.' }}
                                     </p>
                                     @error('doi_suffix')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -315,7 +314,7 @@
                                 </div>
                             @else
                                 <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-500">
-                                    DOI registration for Issues is currently disabled in <a href="{{ route('journal.settings.tools.crossref.index', $journal->slug) }}" class="text-indigo-600 hover:underline">Crossref settings</a>.
+                                    {{ $isId ? 'Registrasi DOI untuk Terbitan saat ini dinonaktifkan di' : 'DOI registration for Issues is currently disabled in' }} <a href="{{ route('journal.settings.tools.crossref.index', $journal->slug) }}" class="text-indigo-600 hover:underline">{{ $isId ? 'pengaturan Crossref' : 'Crossref settings' }}</a>.
                                 </div>
                             @endif
                         </div>
@@ -325,11 +324,11 @@
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
                         <a href="{{ route('journal.issues.index', ['journal' => $journal->slug]) }}"
                             class="px-6 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                            Cancel
+                            {{ $isId ? 'Batal' : 'Cancel' }}
                         </a>
                         <button type="submit"
                             class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:bg-indigo-700 transition-all">
-                            Create Issue
+                            {{ $isId ? 'Buat Terbitan' : 'Create Issue' }}
                         </button>
                     </div>
                 </form>
