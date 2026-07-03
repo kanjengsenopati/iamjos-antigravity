@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'New Submission - ' . $journal->name)
+@section('title', ($isId ? 'Pengajuan Baru - ' : 'New Submission - ') . $journal->name)
 
 @section('content')
     <style>
@@ -28,7 +28,7 @@
 
             <!-- Header / Progress -->
             <div class="bg-gray-50 border-b border-gray-200 px-8 py-4">
-                <h1 class="text-xl font-bold text-gray-900 mb-4">Submit an Article</h1>
+                <h1 class="text-xl font-bold text-gray-900 mb-4">{{ $isId ? 'Kirimkan Naskah' : 'Submit an Article' }}</h1>
 
                 <!-- Progress Bar -->
                 <div class="relative">
@@ -38,10 +38,10 @@
                         </div>
                     </div>
                     <div class="flex justify-between text-xs font-semibold text-gray-500">
-                        <span :class="{ 'text-indigo-700': step >= 1 }">1. Start</span>
-                        <span :class="{ 'text-indigo-700': step >= 2 }">2. Upload</span>
-                        <span :class="{ 'text-indigo-700': step >= 3 }">3. Metadata</span>
-                        <span :class="{ 'text-indigo-700': step >= 4 }">4. Confirmation</span>
+                        <span :class="{ 'text-indigo-700': step >= 1 }">1. {{ $isId ? 'Mulai' : 'Start' }}</span>
+                        <span :class="{ 'text-indigo-700': step >= 2 }">2. {{ $isId ? 'Unggah' : 'Upload' }}</span>
+                        <span :class="{ 'text-indigo-700': step >= 3 }">3. {{ $isId ? 'Metadata' : 'Metadata' }}</span>
+                        <span :class="{ 'text-indigo-700': step >= 4 }">4. {{ $isId ? 'Konfirmasi' : 'Confirmation' }}</span>
                     </div>
                 </div>
             </div>
@@ -60,7 +60,7 @@
                     <div class="mx-8 mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
                         <div class="flex items-center gap-2 mb-2">
                             <i class="fa-solid fa-circle-exclamation text-red-500"></i>
-                            <h4 class="text-sm font-bold text-red-800">Please correct the following errors:</h4>
+                            <h4 class="text-sm font-bold text-red-800">{{ $isId ? 'Harap perbaiki kesalahan berikut:' : 'Please correct the following errors:' }}</h4>
                         </div>
                         <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
                             @foreach ($errors->all() as $error)
@@ -75,7 +75,7 @@
                     class="mx-8 mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center gap-2 mb-2">
                         <i class="fa-solid fa-circle-exclamation text-red-500"></i>
-                        <h4 class="text-sm font-bold text-red-800">Please correct the following errors:</h4>
+                        <h4 class="text-sm font-bold text-red-800">{{ $isId ? 'Harap perbaiki kesalahan berikut:' : 'Please correct the following errors:' }}</h4>
                     </div>
                     <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
                         <template x-for="error in validationErrors" :key="error">
@@ -86,34 +86,33 @@
 
                 <!-- STEP 1: START -->
                 <div x-show="step === 1" x-transition class="p-8">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Submission Requirements</h2>
-                    <p class="text-sm text-gray-500 mb-6">Create a new submission to the <span
-                            class="font-bold">{{ $journal->name }}</span>. Please check the following requirements before
-                        proceeding.</p>
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">{{ $isId ? 'Persyaratan Pengajuan' : 'Submission Requirements' }}</h2>
+                    <p class="text-sm text-gray-500 mb-6">{{ $isId ? 'Buat pengajuan baru ke' : 'Create a new submission to the' }} <span
+                            class="font-bold">{{ $journal->name }}</span>. {{ $isId ? 'Harap periksa persyaratan berikut sebelum melanjutkan.' : 'Please check the following requirements before proceeding.' }}</p>
 
                     <!-- Section Selection -->
                     <div class="mb-8 max-w-md">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Section <span
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Bagian' : 'Section' }} <span
                                 class="text-red-500">*</span></label>
                         <select name="section_id" x-model="section_id"
                             class="block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3" required>
-                            <option value="" class="text-gray-500">Select a section...</option>
+                            <option value="" class="text-gray-500">{{ $isId ? 'Pilih bagian...' : 'Select a section...' }}</option>
                             @if ($sections->count() > 0)
                                 @foreach ($sections as $section)
                                     <option value="{{ $section->id }}" class="text-black"
                                         {{ old('section_id') == $section->id ? 'selected' : '' }}>
-                                        {{ $section->name }} {{ $section->is_active ? '' : '(Inactive)' }}
+                                        {{ $section->name }} {{ $section->is_active ? '' : ($isId ? '(Nonaktif)' : '(Inactive)') }}
                                     </option>
                                 @endforeach
                             @else
-                                <option value="" disabled>No active sections found.</option>
+                                <option value="" disabled>{{ $isId ? 'Tidak ada bagian aktif yang ditemukan.' : 'No active sections found.' }}</option>
                             @endif
                         </select>
                     </div>
 
                     <!-- Checklist -->
                     <div class="space-y-4 mb-8">
-                        <label class="block text-sm font-medium text-gray-700">Submission Checklist</label>
+                        <label class="block text-sm font-medium text-gray-700">{{ $isId ? 'Daftar Periksa Pengajuan' : 'Submission Checklist' }}</label>
                         @if ($submissionChecklists->isNotEmpty())
                             @foreach ($submissionChecklists as $item)
                                 <div class="flex items-start">
@@ -128,7 +127,7 @@
                                 </div>
                             @endforeach
                         @else
-                            <p class="text-sm text-gray-500 italic bg-gray-50 p-3 rounded">No specific requirements checked.
+                            <p class="text-sm text-gray-500 italic bg-gray-50 p-3 rounded">{{ $isId ? 'Tidak ada persyaratan khusus yang dicentang.' : 'No specific requirements checked.' }}
                             </p>
                         @endif
                     </div>
@@ -136,31 +135,29 @@
                     <!-- Copyright Notice -->
                     @if ($journal->license_terms)
                         <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100">
-                            <h4 class="text-sm font-bold text-blue-800 mb-2">Copyright Notice</h4>
+                            <h4 class="text-sm font-bold text-blue-800 mb-2">{{ $isId ? 'Pernyataan Hak Cipta' : 'Copyright Notice' }}</h4>
                             <p class="text-xs text-blue-700 whitespace-pre-line">{{ $journal->license_terms }}</p>
                             <label class="flex items-center mt-3">
                                 <input type="checkbox" required
                                     class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
-                                <span class="ml-2 text-xs text-blue-700 font-medium">I agree to the copyright terms.</span>
+                                <span class="ml-2 text-xs text-blue-700 font-medium">{{ $isId ? 'Saya menyetujui ketentuan hak cipta.' : 'I agree to the copyright terms.' }}</span>
                             </label>
                         </div>
                     @endif
 
                     <!-- Comments for the Editor -->
                     <div class="border-t border-gray-200 pt-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Comments for the Editor
-                            (Optional)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Komentar untuk Editor (Opsional)' : 'Comments for the Editor (Optional)' }}</label>
                         <div id="commentsEditor" class="rounded-lg border border-gray-300">{!! old('comments_for_editor', ($draft && isset($draft->metadata['comments_for_editor'])) ? $draft->metadata['comments_for_editor'] : '') !!}</div>
                         <textarea name="comments_for_editor" id="commentsHidden" class="hidden" style="display: none;">{{ old('comments_for_editor', ($draft && isset($draft->metadata['comments_for_editor'])) ? $draft->metadata['comments_for_editor'] : '') }}</textarea>
-                        <p class="text-xs text-gray-500 mt-2">These comments will be visible only to the editorial team and
-                            will be added as a discussion.</p>
+                        <p class="text-xs text-gray-500 mt-2">{{ $isId ? 'Komentar ini hanya akan terlihat oleh tim editorial dan akan ditambahkan sebagai diskusi.' : 'These comments will be visible only to the editorial team and will be added as a discussion.' }}</p>
                     </div>
                 </div>
 
                 <!-- STEP 2: UPLOAD SUBMISSION -->
                 <div x-show="step === 2" x-transition class="p-8">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Upload Submission</h2>
-                    <p class="text-sm text-gray-500 mb-6">Upload your manuscript file. Allowed formats: DOC, DOCX, PDF.</p>
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">{{ $isId ? 'Unggah Pengajuan' : 'Upload Submission' }}</h2>
+                    <p class="text-sm text-gray-500 mb-6">{{ $isId ? 'Unggah berkas naskah Anda. Format yang diperbolehkan: DOC, DOCX, PDF.' : 'Upload your manuscript file. Allowed formats: DOC, DOCX, PDF.' }}</p>
 
                     <div class="border-2 border-dashed border-gray-300 rounded-xl p-10 flex flex-col items-center justify-center transition-colors bg-gray-50 hover:bg-gray-100 hover:border-indigo-400 cursor-pointer"
                         @click="$refs.fileInput.click()"
@@ -170,8 +167,8 @@
 
                         <div x-show="!fileName" class="text-center pointer-events-none">
                             <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-3"></i>
-                            <p class="text-sm font-medium text-gray-900">Drag and drop your file here</p>
-                            <p class="text-xs text-gray-500 mt-1">or click to browse</p>
+                            <p class="text-sm font-medium text-gray-900">{{ $isId ? 'Seret dan letakkan berkas Anda di sini' : 'Drag and drop your file here' }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'atau klik untuk memilih berkas' : 'or click to browse' }}</p>
                         </div>
 
                         <div x-show="fileName" class="text-center w-full pointer-events-none">
@@ -188,42 +185,42 @@
                     <div x-show="fileName" class="mt-3 text-center">
                         <button type="button" @click.stop="clearFile"
                             class="text-xs text-red-600 hover:text-red-800 font-medium">
-                            <i class="fa-solid fa-times mr-1"></i> Remove File
+                            <i class="fa-solid fa-times mr-1"></i> {{ $isId ? 'Hapus Berkas' : 'Remove File' }}
                         </button>
                     </div>
                 </div>
 
                 <!-- STEP 3: ENTER METADATA -->
                 <div x-show="step === 3" x-transition class="p-8">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Enter Metadata</h2>
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">{{ $isId ? 'Masukkan Metadata' : 'Enter Metadata' }}</h2>
 
                     <!-- Title & Abstract -->
                     <div class="space-y-6 mb-8">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Title <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Judul' : 'Title' }} <span
                                     class="text-red-500">*</span></label>
                             <textarea name="title" x-model="title" rows="2"
                                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Article Title" required></textarea>
+                                placeholder="{{ $isId ? 'Judul Artikel' : 'Article Title' }}" required></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Subjudul' : 'Subtitle' }}</label>
                             <input type="text" name="subtitle" x-model="subtitle"
                                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Optional subtitle">
+                                placeholder="{{ $isId ? 'Subjudul opsional' : 'Optional subtitle' }}">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Abstract <span
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Abstrak' : 'Abstract' }} <span
                                     class="text-red-500">*</span></label>
                             <div id="abstractEditor" class="rounded-lg border border-gray-300">{!! old('abstract', $draft->abstract ?? '') !!}</div>
                             <textarea name="abstract" id="abstractHidden" class="hidden" style="display: none;">{{ old('abstract', $draft->abstract ?? '') }}</textarea>
                         </div>
                         <div x-data="keywordInputCustom({{ json_encode(old('keywords', [])) }})" class="relative">
                             <label class="flex items-center text-sm font-medium text-gray-700 mb-1">
-                                Keywords
+                                {{ $isId ? 'Kata Kunci' : 'Keywords' }}
                                 <i class="fa-solid fa-circle-question text-gray-400 cursor-pointer ml-1.5" 
-                                   title="Press Enter or comma to add keywords. Start typing to see suggestions."></i>
-                                <span class="text-xs text-gray-500 font-normal ml-2">(Untuk pemisah keyword adalah koma)</span>
+                                   title="{{ $isId ? 'Tekan Enter atau koma untuk menambahkan kata kunci. Mulai mengetik untuk melihat saran.' : 'Press Enter or comma to add keywords. Start typing to see suggestions.' }}"></i>
+                                <span class="text-xs text-gray-500 font-normal ml-2">{{ $isId ? '(Gunakan koma sebagai pemisah kata kunci)' : '(Use comma as separator)' }}</span>
                             </label>
                             <input type="text" 
                                 x-model="newTag"
@@ -234,7 +231,7 @@
                                 @keydown.arrow-up.prevent="highlightUp()"
                                 @keydown.escape.prevent="showSuggestions = false"
                                 class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                placeholder="Type keyword and press Enter">
+                                placeholder="{{ $isId ? 'Ketik kata kunci dan tekan Enter' : 'Type keyword and press Enter' }}">
                             
                             <div x-show="showSuggestions && suggestions.length > 0" 
                                  @click.away="showSuggestions = false" 
@@ -264,21 +261,21 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">References</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Referensi' : 'References' }}</label>
                             <textarea name="references" x-model="references" rows="5"
                                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Paste your references here..."></textarea>
-                            <p class="text-xs text-gray-500 mt-1">Provide a list of references for your work.</p>
+                                placeholder="{{ $isId ? 'Tempel referensi Anda di sini...' : 'Paste your references here...' }}"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Berikan daftar referensi untuk karya Anda.' : 'Provide a list of references for your work.' }}</p>
                         </div>
                     </div>
 
                     <!-- Contributors -->
                     <div class="border-t border-gray-200 pt-6">
                         <div class="flex items-center justify-between mb-4">
-                            <label class="block text-sm font-medium text-gray-900">List of Contributors</label>
+                            <label class="block text-sm font-medium text-gray-900">{{ $isId ? 'Daftar Kontributor' : 'List of Contributors' }}</label>
                             <button type="button" @click="addAuthor"
                                 class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md font-medium transition">
-                                <i class="fa-solid fa-plus mr-1"></i> Add Contributor
+                                <i class="fa-solid fa-plus mr-1"></i> {{ $isId ? 'Tambah Kontributor' : 'Add Contributor' }}
                             </button>
                         </div>
 
@@ -299,52 +296,52 @@
                                             @mousedown="dragEnabledIndex = index"
                                             @mouseup="dragEnabledIndex = null"
                                             @mouseleave="dragEnabledIndex = null"
-                                            title="Drag to reorder">
+                                            title="{{ $isId ? 'Geser untuk mengurutkan' : 'Drag to reorder' }}">
                                             <i class="fa-solid fa-grip-vertical text-slate-400 hover:text-indigo-600 text-[18px]"></i>
                                         </div>
                                         
                                         <!-- Delete Button -->
                                         <button type="button" @click="removeAuthor(index)" x-show="authors.length > 1"
                                             class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                                            title="Delete Contributor">
+                                            title="{{ $isId ? 'Hapus Kontributor' : 'Delete Contributor' }}">
                                             <i class="fa-solid fa-trash-can text-[18px]"></i>
                                         </button>
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pr-16">
                                         <div>
-                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">First Name</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ $isId ? 'Nama Depan' : 'First Name' }}</label>
                                             <input type="text" :name="'authors[' + index + '][first_name]'"
                                                 x-model="author.first_name"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                                 required>
                                         </div>
                                         <div>
-                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Last Name</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ $isId ? 'Nama Belakang' : 'Last Name' }}</label>
                                             <input type="text" :name="'authors[' + index + '][last_name]'"
                                                 x-model="author.last_name"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                                 required>
                                         </div>
                                         <div class="md:col-span-2">
-                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Email</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ $isId ? 'Surel (Email)' : 'Email' }}</label>
                                             <input type="email" :name="'authors[' + index + '][email]'"
                                                 x-model="author.email"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                                 required>
                                         </div>
                                         <div>
-                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Affiliation</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ $isId ? 'Afiliasi' : 'Affiliation' }}</label>
                                             <input type="text" :name="'authors[' + index + '][affiliation]'"
                                                 x-model="author.affiliation"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                         </div>
                                         <div>
-                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Country</label>
+                                            <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ $isId ? 'Negara' : 'Country' }}</label>
                                             <select :name="'authors[' + index + '][country]'"
                                                 x-model="author.country"
                                                 class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
-                                                <option value="">Select Country...</option>
+                                                <option value="">{{ $isId ? 'Pilih Negara...' : 'Select Country...' }}</option>
                                                 @foreach (config('countries', []) as $code => $name)
                                                     <option value="{{ $code }}">{{ $name }}</option>
                                                 @endforeach
@@ -375,7 +372,7 @@
                                             <input type="radio" name="primary_contact" :value="index"
                                                 x-model="primaryContactIndex"
                                                 class="text-indigo-600 focus:ring-indigo-500">
-                                            <span class="ml-2 text-xs font-semibold text-gray-600">Primary Contact</span>
+                                            <span class="ml-2 text-xs font-semibold text-gray-600">{{ $isId ? 'Kontak Utama' : 'Primary Contact' }}</span>
                                         </label>
                                     </div>
                                 </div>
@@ -386,35 +383,34 @@
 
                 <!-- STEP 4: CONFIRMATION -->
                 <div x-show="step === 4" x-transition class="p-8">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Confirm Submission</h2>
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">{{ $isId ? 'Konfirmasi Pengajuan' : 'Confirm Submission' }}</h2>
                     <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-5 mb-6">
-                        <p class="text-sm text-indigo-800">Please review your data before finishing. Once submitted, you
-                            may not be able to edit specific details immediately.</p>
+                        <p class="text-sm text-indigo-800">{{ $isId ? 'Harap tinjau data Anda sebelum menyelesaikan. Setelah dikirim, Anda mungkin tidak dapat langsung mengubah rincian tertentu.' : 'Please review your data before finishing. Once submitted, you may not be able to edit specific details immediately.' }}</p>
                     </div>
 
                     <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                         <div class="sm:col-span-2">
-                            <dt class="text-sm font-medium text-gray-500">Title</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ $isId ? 'Judul' : 'Title' }}</dt>
                             <dd class="mt-1 text-sm text-gray-900 font-semibold" x-text="title"></dd>
                         </div>
                         <div class="sm:col-span-2">
-                            <dt class="text-sm font-medium text-gray-500">Abstract</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ $isId ? 'Abstrak' : 'Abstract' }}</dt>
                             <dd class="mt-1 text-sm text-gray-900 italic prose prose-sm max-w-none" x-html="abstractHtml">
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">File</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ $isId ? 'Berkas' : 'File' }}</dt>
                             <dd class="mt-1 text-sm text-gray-900 flex items-center gap-2">
                                 <i class="fa-regular fa-file-lines"></i>
-                                <span x-text="fileName || 'No file selected'"></span>
+                                <span x-text="fileName || '{{ $isId ? 'Tidak ada berkas yang dipilih' : 'No file selected' }}'"></span>
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Contributors</dt>
-                            <dd class="mt-1 text-sm text-gray-900" x-text="authors.length + ' author(s)'"></dd>
+                            <dt class="text-sm font-medium text-gray-500">{{ $isId ? 'Kontributor' : 'Contributors' }}</dt>
+                            <dd class="mt-1 text-sm text-gray-900" x-text="authors.length + ' ' + ('{{ $isId ? 'penulis' : 'author(s)' }}')"></dd>
                         </div>
                         <div x-show="references" class="sm:col-span-2">
-                            <dt class="text-sm font-medium text-gray-500">References</dt>
+                            <dt class="text-sm font-medium text-gray-500">{{ $isId ? 'Referensi' : 'References' }}</dt>
                             <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line break-words"
                                 x-text="references"></dd>
                         </div>
@@ -427,29 +423,29 @@
                 <div class="bg-gray-50 px-8 py-4 border-t border-gray-200 flex justify-between items-center rounded-b-xl">
                     <button type="button" x-show="step > 1" @click="step--"
                         class="text-gray-600 hover:text-gray-900 font-medium text-sm">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Back
+                        <i class="fa-solid fa-arrow-left mr-1"></i> {{ $isId ? 'Kembali' : 'Back' }}
                     </button>
                     <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}" 
                        x-show="step === 1"
                        class="text-gray-600 hover:text-gray-900 font-medium text-sm flex items-center gap-1">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Back To Submission
+                        <i class="fa-solid fa-arrow-left mr-1"></i> {{ $isId ? 'Kembali ke Daftar Pengajuan' : 'Back To Submission' }}
                     </a>
 
                     <div class="flex items-center gap-3">
                         <button type="button" @click="cancelSubmission()"
                             class="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                            Cancel
+                            {{ $isId ? 'Batal' : 'Cancel' }}
                         </button>
 
                         <button type="button" x-show="step < 4" @click="nextStep()"
                             class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                            Save & Continue <i class="fa-solid fa-arrow-right ml-1"></i>
+                            {{ $isId ? 'Simpan & Lanjutkan' : 'Save & Continue' }} <i class="fa-solid fa-arrow-right ml-1"></i>
                         </button>
 
                         <button type="button" x-show="step === 4" @click="submitForm()" :disabled="isSubmitting"
                             class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span x-show="!isSubmitting">Finish Submission <i class="fa-solid fa-check ml-1"></i></span>
-                            <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...</span>
+                            <span x-show="!isSubmitting">{{ $isId ? 'Selesaikan Pengajuan' : 'Finish Submission' }} <i class="fa-solid fa-check ml-1"></i></span>
+                            <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin mr-2"></i> {{ $isId ? 'Memproses...' : 'Processing...' }}</span>
                         </button>
                     </div>
                 </div>
@@ -533,7 +529,7 @@
                     table: {
                         contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
                     },
-                    placeholder: 'Enter your abstract here...'
+                    placeholder: '{{ $isId ? "Masukkan abstrak Anda di sini..." : "Enter your abstract here..." }}'
                 })
                 .then(editor => {
                     editorInstance = editor;
@@ -560,7 +556,7 @@
                             'undo', 'redo'
                         ]
                     },
-                    placeholder: 'Enter your comments for the editor here...'
+                    placeholder: '{{ $isId ? "Masukkan komentar Anda untuk editor di sini..." : "Enter your comments for the editor here..." }}'
                 })
                 .then(editor => {
                     commentsEditorInstance = editor;
@@ -687,15 +683,15 @@
                     if (this.step === 1) {
                         const allRequiredChecked = this.requiredRequirements.every(id => this.requirements.includes(id));
                         if (!allRequiredChecked) {
-                            this.validationErrors.push('Please check all required submission checklist items.');
+                            this.validationErrors.push('{{ $isId ? "Harap centang semua item daftar periksa pengajuan yang wajib." : "Please check all required submission checklist items." }}');
                         }
                     } else if (this.step === 2) {
                         if (!this.fileName) {
-                            this.validationErrors.push('Please upload a manuscript file.');
+                            this.validationErrors.push('{{ $isId ? "Harap unggah berkas naskah." : "Please upload a manuscript file." }}');
                         }
                     } else if (this.step === 3) {
                         if (!this.title || this.title.trim() === '') {
-                            this.validationErrors.push('Title is required.');
+                            this.validationErrors.push('{{ $isId ? "Judul wajib diisi." : "Title is required." }}');
                         }
 
                         if (editorInstance) {
@@ -705,21 +701,21 @@
                             this.abstract = div.textContent || div.innerText || '';
                         }
                         if (!this.abstract || this.abstract.trim() === '') {
-                            this.validationErrors.push('Abstract is required.');
+                            this.validationErrors.push('{{ $isId ? "Abstrak wajib diisi." : "Abstract is required." }}');
                         }
 
                         // Validate authors
                         this.authors.forEach((author, index) => {
                             if (!author.first_name || author.first_name.trim() === '') {
-                                this.validationErrors.push(`Contributor ${index + 1}: First name is required.`);
+                                this.validationErrors.push(`{{ $isId ? 'Kontributor' : 'Contributor' }} ${index + 1}: {{ $isId ? 'Nama depan wajib diisi.' : 'First name is required.' }}`);
                             }
                             if (!author.last_name || author.last_name.trim() === '') {
-                                this.validationErrors.push(`Contributor ${index + 1}: Last name is required.`);
+                                this.validationErrors.push(`{{ $isId ? 'Kontributor' : 'Contributor' }} ${index + 1}: {{ $isId ? 'Nama belakang wajib diisi.' : 'Last name is required.' }}`);
                             }
                             if (!author.email || author.email.trim() === '') {
-                                this.validationErrors.push(`Contributor ${index + 1}: Email is required.`);
+                                this.validationErrors.push(`{{ $isId ? 'Kontributor' : 'Contributor' }} ${index + 1}: {{ $isId ? 'Email wajib diisi.' : 'Email is required.' }}`);
                             } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(author.email)) {
-                                this.validationErrors.push(`Contributor ${index + 1}: Valid email is required.`);
+                                this.validationErrors.push(`{{ $isId ? 'Kontributor' : 'Contributor' }} ${index + 1}: {{ $isId ? 'Format email tidak valid.' : 'Valid email is required.' }}`);
                             }
                         });
                     }
@@ -798,7 +794,7 @@
                 },
 
                 cancelSubmission() {
-                    if (confirm('Are you sure you want to cancel this submission? This will delete the draft submission.')) {
+                    if (confirm('{{ $isId ? "Apakah Anda yakin ingin membatalkan pengajuan ini? Ini akan menghapus draf pengajuan." : "Are you sure you want to cancel this submission? This will delete the draft submission." }}')) {
                         const draftId = '{{ $draft->id ?? '' }}';
                         if (draftId) {
                             document.getElementById('cancelSubmissionForm').submit();
