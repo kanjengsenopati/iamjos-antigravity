@@ -83,14 +83,13 @@
                         <div class="space-y-8">
                             <!-- Section: Basic Identity -->
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-1">Journal Identity</h3>
-                                <p class="text-sm text-gray-500 mb-6">Basic information about your journal.</p>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ $isId ? 'Identitas Jurnal' : 'Journal Identity' }}</h3>
+                                <p class="text-sm text-gray-500 mb-6">{{ $isId ? 'Informasi dasar tentang jurnal Anda.' : 'Basic information about your journal.' }}</p>
 
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <!-- Journal Name -->
                                     <div class="lg:col-span-2">
-                                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Journal
-                                            Name *</label>
+                                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Jurnal *' : 'Journal Name *' }}</label>
                                         <input type="text" name="name" id="name"
                                             value="{{ old('name', $journal->name) }}"
                                             placeholder="e.g., International Journal of Medicine" class="w-full" required>
@@ -99,31 +98,28 @@
                                     <!-- Abbreviation -->
                                     <div>
                                         <label for="abbreviation"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Journal Initials /
-                                            Abbreviation</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Inisial / Singkatan Jurnal' : 'Journal Initials / Abbreviation' }}</label>
                                         <input type="text" name="abbreviation" id="abbreviation"
                                             value="{{ old('abbreviation', $journal->abbreviation) }}"
                                             placeholder="e.g., IJM" class="w-full">
-                                        <p class="mt-1 text-xs text-gray-500">Short code for your journal (2-5 characters
-                                            recommended)</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Kode singkat untuk jurnal Anda (direkomendasikan 2-5 karakter)' : 'Short code for your journal (2-5 characters recommended)' }}</p>
                                     </div>
 
                                     <!-- Publisher Name -->
                                     <div>
                                         <label for="publisher"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Publisher / Institution Name</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Penerbit / Institusi' : 'Publisher / Institution Name' }}</label>
                                         <input type="text" name="publisher" id="publisher"
                                             value="{{ old('publisher', $journal->publisher ?? '') }}"
                                             placeholder="e.g., University Press / Association" class="w-full border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm">
                                         <p class="mt-1 text-xs text-amber-600 font-medium">
-                                            <i class="fa-solid fa-circle-info mr-1"></i> Essential for Google Scholar metadata indexing
+                                            <i class="fa-solid fa-circle-info mr-1"></i> {{ $isId ? 'Penting untuk indeksasi metadata Google Scholar' : 'Essential for Google Scholar metadata indexing' }}
                                         </p>
                                     </div>
 
                                     <!-- ISSN Print -->
                                     <div>
-                                        <label for="issn_print" class="block text-sm font-medium text-gray-700 mb-1">ISSN
-                                            (Print)</label>
+                                        <label for="issn_print" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'ISSN (Cetak)' : 'ISSN (Print)' }}</label>
                                         <input type="text" name="issn_print" id="issn_print"
                                             value="{{ old('issn_print', $journal->issn_print ?? '') }}"
                                             placeholder="XXXX-XXXX" class="w-full font-mono">
@@ -131,8 +127,7 @@
 
                                     <!-- URL ISSN Print -->
                                     <div>
-                                        <label for="url_issn_print" class="block text-sm font-medium text-gray-700 mb-1">URL ISSN
-                                            (Print)</label>
+                                        <label for="url_issn_print" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'URL ISSN (Cetak)' : 'URL ISSN (Print)' }}</label>
                                         <input type="url" name="url_issn_print" id="url_issn_print"
                                             value="{{ old('url_issn_print', $journal->url_issn_print ?? '') }}"
                                             placeholder="https://..." class="w-full">
@@ -140,8 +135,7 @@
 
                                     <!-- ISSN Online -->
                                     <div>
-                                        <label for="issn_online" class="block text-sm font-medium text-gray-700 mb-1">ISSN
-                                            (Online)</label>
+                                        <label for="issn_online" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'ISSN (Online)' : 'ISSN (Online)' }}</label>
                                         <input type="text" name="issn_online" id="issn_online"
                                             value="{{ old('issn_online', $journal->issn_online ?? '') }}"
                                             placeholder="XXXX-XXXX" class="w-full font-mono">
@@ -149,8 +143,7 @@
 
                                     <!-- URL ISSN Online -->
                                     <div>
-                                        <label for="url_issn_online" class="block text-sm font-medium text-gray-700 mb-1">URL ISSN
-                                            (Online)</label>
+                                        <label for="url_issn_online" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'URL ISSN (Online)' : 'URL ISSN (Online)' }}</label>
                                         <input type="url" name="url_issn_online" id="url_issn_online"
                                             value="{{ old('url_issn_online', $journal->url_issn_online ?? '') }}"
                                             placeholder="https://..." class="w-full">
@@ -162,15 +155,13 @@
 
                             <!-- Section: Descriptions -->
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-1">Journal Descriptions</h3>
-                                <p class="text-sm text-gray-500 mb-6">Describe your journal for readers and authors. Rich
-                                    text formatting is supported.</p>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ $isId ? 'Deskripsi Jurnal' : 'Journal Descriptions' }}</h3>
+                                <p class="text-sm text-gray-500 mb-6">{{ $isId ? 'Jelaskan jurnal Anda untuk pembaca dan penulis. Format teks kaya didukung.' : 'Describe your journal for readers and authors. Rich text formatting is supported.' }}</p>
 
                                 <div class="space-y-6">
                                     <!-- Journal Summary -->
                                     <div>
-                                        <label for="summary" class="block text-sm font-medium text-gray-700 mb-1">Journal
-                                            Summary</label>
+                                        <label for="summary" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Ringkasan Jurnal' : 'Journal Summary' }}</label>
                                         <textarea name="summary" id="summary" rows="4" class="tinymce-editor w-full">{{ old('summary', $journal->summary ?? '') }}</textarea>
 
                                         <div class="flex items-center gap-2 mt-3">
@@ -179,29 +170,25 @@
                                                 class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                                 {{ old('show_summary', $journal->show_summary) ? 'checked' : '' }}>
                                             <label for="show_summary" class="text-sm text-gray-700">
-                                                Show the journal summary on the homepage
+                                                {{ $isId ? 'Tampilkan ringkasan jurnal di beranda' : 'Show the journal summary on the homepage' }}
                                             </label>
                                         </div>
-                                        <p class="mt-1 text-xs text-gray-500">This appears on the journal homepage.</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Ini muncul di beranda jurnal.' : 'This appears on the journal homepage.' }}</p>
                                     </div>
 
                                     <!-- About the Journal -->
                                     <div>
-                                        <label for="about" class="block text-sm font-medium text-gray-700 mb-1">About
-                                            the Journal</label>
+                                        <label for="about" class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tentang Jurnal' : 'About the Journal' }}</label>
                                         <textarea name="about" id="about" rows="8" class="tinymce-editor w-full">{{ old('about', $mastheadSettings['about'] ?? '') }}</textarea>
-                                        <p class="mt-1 text-xs text-gray-500">Full description of the journal, its history,
-                                            aims and scope, editorial policies.</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Deskripsi lengkap tentang jurnal, sejarahnya, tujuan dan ruang lingkup, serta kebijakan editorial.' : 'Full description of the journal, its history, aims and scope, editorial policies.' }}</p>
                                     </div>
 
                                     <!-- Editorial Team -->
                                     <div>
                                         <label for="editorial_team"
-                                            class="block text-sm font-medium text-gray-700 mb-1">Editorial Team
-                                            Description</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Deskripsi Tim Editorial' : 'Editorial Team Description' }}</label>
                                         <textarea name="editorial_team" id="editorial_team" rows="6" class="tinymce-editor w-full">{{ old('editorial_team', $mastheadSettings['editorial_team'] ?? '') }}</textarea>
-                                        <p class="mt-1 text-xs text-gray-500">List your editorial board members and their
-                                            roles.</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Daftar anggota dewan redaksi Anda dan perannya.' : 'List your editorial board members and their roles.' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -212,7 +199,7 @@
                             <button type="submit"
                                 class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-check mr-2"></i>
-                                Save Masthead
+                                {{ $isId ? 'Simpan Masthead' : 'Save Masthead' }}
                             </button>
                         </div>
                     </form>

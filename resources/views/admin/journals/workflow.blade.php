@@ -38,8 +38,8 @@
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Workflow Settings</h1>
-                <p class="mt-1 text-sm text-gray-500">Configure submission, review, and publishing workflows.</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Alur Kerja' : 'Workflow Settings' }}</h1>
+                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Konfigurasikan alur kerja pengajuan, ulasan, dan penerbitan.' : 'Configure submission, review, and publishing workflows.' }}</p>
             </div>
             <div class="mt-4 sm:mt-0">
                 <a href="/{{ $journal->slug }}" target="_blank"
@@ -48,7 +48,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    View Journal Site
+                    {{ $isId ? 'Lihat Situs Jurnal' : 'View Journal Site' }}
                 </a>
             </div>
         </div>
@@ -64,28 +64,28 @@
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-file-arrow-up mr-2"></i>
-                        Submissions
+                        {{ $isId ? 'Pengajuan' : 'Submissions' }}
                     </button>
                     <button type="button" @click="activeTab = 'review'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'review' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-clipboard-check mr-2"></i>
-                        Review
+                        {{ $isId ? 'Ulasan' : 'Review' }}
                     </button>
                     <button type="button" @click="activeTab = 'library'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'library' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-folder-open mr-2"></i>
-                        Publisher Library
+                        {{ $isId ? 'Pustaka Penerbit' : 'Publisher Library' }}
                     </button>
                     <button type="button" @click="activeTab = 'emails'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'emails' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-envelope mr-2"></i>
-                        Emails
+                        {{ $isId ? 'Surel' : 'Emails' }}
                     </button>
                     <button type="button" @click="activeTab = 'notifications'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'notifications' ? 'border-primary-500 text-primary-600' :
@@ -119,9 +119,8 @@
                                         <i class="fa-solid fa-book-open text-indigo-600"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-base font-semibold text-gray-900">Author Guidelines</h3>
-                                        <p class="text-sm text-gray-500">Provide instructions for authors submitting
-                                            manuscripts.</p>
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Panduan Penulis' : 'Author Guidelines' }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $isId ? 'Sediakan petunjuk bagi penulis yang mengirimkan naskah.' : 'Provide instructions for authors submitting manuscripts.' }}</p>
                                     </div>
                                 </div>
                                 <!-- Tiptap Editor Container -->
@@ -208,7 +207,7 @@
                                                                     ['link', 'image', 'video', 'clean']
                                                                 ]
                                                             },
-                                                            placeholder: 'Enter detailed guidelines for authors...'
+                                                            placeholder: '{{ $isId ? "Masukkan panduan terperinci untuk penulis..." : "Enter detailed guidelines for authors..." }}'
                                                         });
 
                                                         // Set initial content securely
@@ -238,16 +237,15 @@
                                             <i class="fa-solid fa-list-check text-amber-600"></i>
                                         </div>
                                         <div>
-                                            <h3 class="text-base font-semibold text-gray-900">Submission Checklist</h3>
-                                            <p class="text-sm text-gray-500">Authors must confirm each item before
-                                                submitting.</p>
+                                            <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Daftar Periksa Pengajuan' : 'Submission Checklist' }}</h3>
+                                            <p class="text-sm text-gray-500">{{ $isId ? 'Penulis harus mengonfirmasi setiap item sebelum mengirimkan.' : 'Authors must confirm each item before submitting.' }}</p>
                                         </div>
                                     </div>
                                     <button type="button"
                                         @click="showChecklistModal = true; isEditMode = false; newChecklist = { content: '', is_required: true }"
                                         class="inline-flex items-center px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
                                         <i class="fa-solid fa-plus mr-2"></i>
-                                        Add Item
+                                        {{ $isId ? 'Tambah Item' : 'Add Item' }}
                                     </button>
                                 </div>
 
@@ -265,25 +263,25 @@
                                             <div class="flex items-center gap-2 flex-shrink-0">
                                                 @if ($checklist->is_required)
                                                     <span
-                                                        class="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">Required</span>
+                                                        class="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">{{ $isId ? 'Wajib' : 'Required' }}</span>
                                                 @else
                                                     <span
-                                                        class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs font-medium rounded">Optional</span>
+                                                        class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs font-medium rounded">{{ $isId ? 'Opsional' : 'Optional' }}</span>
                                                 @endif
 
                                                 <!-- Edit Button -->
                                                 <button type="button"
                                                     @click="isEditMode = true; editingItem = { id: '{{ $checklist->id }}', content: '{{ addslashes($checklist->content) }}', is_required: {{ $checklist->is_required ? 'true' : 'false' }} }; newChecklist = { content: editingItem.content, is_required: editingItem.is_required }; showChecklistModal = true;"
                                                     class="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
-                                                    title="Edit Item">
+                                                    title="{{ $isId ? 'Ubah Item' : 'Edit Item' }}">
                                                     <i class="fa-solid fa-pen-to-square text-sm"></i>
                                                 </button>
 
                                                 <!-- Helper JS used for Delete -->
                                                 <button type="button"
-                                                    onclick="submitForm('{{ route('journal.settings.workflow.checklists.destroy', ['journal' => $journal->slug, 'checklist' => $checklist->id]) }}', 'DELETE', 'Delete this checklist item?')"
+                                                    onclick="submitForm('{{ route('journal.settings.workflow.checklists.destroy', ['journal' => $journal->slug, 'checklist' => $checklist->id]) }}', 'DELETE', '{{ $isId ? 'Hapus item daftar periksa ini?' : 'Delete this checklist item?' }}')"
                                                     class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                    title="Delete Item">
+                                                    title="{{ $isId ? 'Hapus Item' : 'Delete Item' }}">
                                                     <i class="fa-solid fa-trash text-sm"></i>
                                                 </button>
                                             </div>
@@ -292,7 +290,7 @@
                                         <div
                                             class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                                             <i class="fa-solid fa-list-check text-3xl text-gray-300 mb-3"></i>
-                                            <p class="text-sm text-gray-500">No checklist items defined.</p>
+                                            <p class="text-sm text-gray-500">{{ $isId ? 'Belum ada item daftar periksa yang ditentukan.' : 'No checklist items defined.' }}</p>
                                         </div>
                                     @endforelse
                                 </div>
@@ -307,9 +305,8 @@
                                         <i class="fa-solid fa-tags text-emerald-600"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-base font-semibold text-gray-900">Submission Metadata</h3>
-                                        <p class="text-sm text-gray-500">Select which metadata fields are enabled for
-                                            submissions.</p>
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Metadata Pengajuan' : 'Submission Metadata' }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $isId ? 'Pilih bidang metadata mana yang diaktifkan untuk pengajuan naskah.' : 'Select which metadata fields are enabled for submissions.' }}</p>
                                     </div>
                                 </div>
 
@@ -317,12 +314,12 @@
                                     @php
                                         $metaSettings = $journal->submission_metadata_settings ?? [];
                                         $metaFields = [
-                                            'keywords' => 'Keywords',
-                                            'references' => 'References',
-                                            'languages' => 'Languages',
-                                            'rights' => 'Rights',
-                                            'coverage' => 'Coverage',
-                                            'disciplines' => 'Disciplines',
+                                            'keywords' => $isId ? 'Kata Kunci (Keywords)' : 'Keywords',
+                                            'references' => $isId ? 'Referensi (References)' : 'References',
+                                            'languages' => $isId ? 'Bahasa (Languages)' : 'Languages',
+                                            'rights' => $isId ? 'Hak Cipta (Rights)' : 'Rights',
+                                            'coverage' => $isId ? 'Cakupan (Coverage)' : 'Coverage',
+                                            'disciplines' => $isId ? 'Disiplin Ilmu (Disciplines)' : 'Disciplines',
                                         ];
                                     @endphp
 
@@ -346,7 +343,7 @@
                             <button type="submit"
                                 class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-check mr-2"></i>
-                                Save Submission Settings
+                                {{ $isId ? 'Simpan Pengaturan Pengajuan' : 'Save Submission Settings' }}
                             </button>
                         </div>
                     </form>
