@@ -4,24 +4,24 @@
 @endphp
 
 <x-app-layout :journal="$journal" :journalSlug="$journalSlug">
-    <x-slot name="title">Announcements - {{ $journal->name }}</x-slot>
+    <x-slot name="title">{{ $isId ? 'Pengumuman' : 'Announcements' }} - {{ $journal->name }}</x-slot>
 
     <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8" x-data="announcementManager()">
         {{-- Page Header --}}
         <div class="mb-8 flex items-center justify-between">
             <div>
                 <nav class="text-sm text-gray-500 mb-2">
-                    <a href="{{ route('journal.dashboard', $journalSlug) }}" class="hover:text-indigo-600">Dashboard</a>
+                    <a href="{{ route('journal.dashboard', $journalSlug) }}" class="hover:text-indigo-600">{{ $isId ? 'Dasbor' : 'Dashboard' }}</a>
                     <span class="mx-2">/</span>
-                    <span class="text-gray-700">Announcements</span>
+                    <span class="text-gray-700">{{ $isId ? 'Pengumuman' : 'Announcements' }}</span>
                 </nav>
-                <h1 class="text-2xl font-bold text-gray-900">Announcements</h1>
-                <p class="text-gray-500 mt-1">Manage news and announcements for your journal homepage</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengumuman' : 'Announcements' }}</h1>
+                <p class="text-gray-500 mt-1">{{ $isId ? 'Kelola berita dan pengumuman untuk halaman beranda jurnal Anda' : 'Manage news and announcements for your journal homepage' }}</p>
             </div>
             <button @click="openCreateModal()"
                 class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
                 <i class="fa-solid fa-plus mr-2"></i>
-                Create New
+                {{ $isId ? 'Buat Baru' : 'Create New' }}
             </button>
         </div>
 
@@ -42,12 +42,12 @@
                     <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fa-solid fa-bullhorn text-2xl text-indigo-400"></i>
                     </div>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No announcements yet</h3>
-                    <p class="text-gray-500 mb-6">Create your first announcement to display on the journal homepage.</p>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">{{ $isId ? 'Belum ada pengumuman' : 'No announcements yet' }}</h3>
+                    <p class="text-gray-500 mb-6">{{ $isId ? 'Buat pengumuman pertama Anda untuk ditampilkan di halaman beranda jurnal.' : 'Create your first announcement to display on the journal homepage.' }}</p>
                     <button @click="openCreateModal()"
                         class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                         <i class="fa-solid fa-plus mr-2"></i>
-                        Create Announcement
+                        {{ $isId ? 'Buat Pengumuman' : 'Create Announcement' }}
                     </button>
                 </div>
             @else
@@ -56,19 +56,19 @@
                         <tr>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Title</th>
+                                {{ $isId ? 'Judul' : 'Title' }}</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Date Posted</th>
+                                {{ $isId ? 'Tanggal Diposting' : 'Date Posted' }}</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Expires</th>
+                                {{ $isId ? 'Kedaluwarsa' : 'Expires' }}</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Status</th>
                             <th scope="col"
                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions</th>
+                                {{ $isId ? 'Aksi' : 'Actions' }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -92,16 +92,16 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
-                                        {{ $announcement->published_at?->format('M d, Y') ?? 'Not set' }}</div>
+                                        {{ $announcement->published_at?->translatedFormat('M d, Y') ?? ($isId ? 'Belum diatur' : 'Not set') }}</div>
                                     <div class="text-xs text-gray-500">
                                         {{ $announcement->published_at?->format('H:i') ?? '' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if ($announcement->expires_at)
                                         <div class="text-sm text-gray-900">
-                                            {{ $announcement->expires_at->format('M d, Y') }}</div>
+                                            {{ $announcement->expires_at->translatedFormat('M d, Y') }}</div>
                                     @else
-                                        <span class="text-sm text-gray-400">Never</span>
+                                        <span class="text-sm text-gray-400">{{ $isId ? 'Selamanya' : 'Never' }}</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -116,12 +116,12 @@
                                     @endphp
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClasses }}">
-                                        {{ ucfirst($status) }}
+                                        {{ $status === 'active' ? ($isId ? 'Aktif' : 'Active') : ($status === 'expired' ? ($isId ? 'Kedaluwarsa' : 'Expired') : ($status === 'inactive' ? ($isId ? 'Nonaktif' : 'Inactive') : ucfirst($status))) }}
                                     </span>
                                     @if ($announcement->is_urgent)
                                         <span
                                             class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Urgent
+                                            {{ $isId ? 'Penting' : 'Urgent' }}
                                         </span>
                                     @endif
                                 </td>
@@ -151,7 +151,7 @@
                                         <form
                                             action="{{ route('journal.announcements.destroy', ['journal' => $journalSlug, 'announcement' => $announcement->id]) }}"
                                             method="POST" class="inline"
-                                            onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+                                            onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus pengumuman ini?' : 'Are you sure you want to delete this announcement?' }}');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
@@ -197,8 +197,8 @@
 
                     <div class="mb-6">
                         <h3 class="text-lg font-semibold text-gray-900"
-                            x-text="isEditing ? 'Edit Announcement' : 'Create Announcement'"></h3>
-                        <p class="text-sm text-gray-500 mt-1">Fill in the details below</p>
+                            x-text="isEditing ? '{{ $isId ? 'Edit Pengumuman' : 'Edit Announcement' }}' : '{{ $isId ? 'Buat Pengumuman' : 'Create Announcement' }}'"></h3>
+                        <p class="text-sm text-gray-500 mt-1">{{ $isId ? 'Isi detail di bawah ini' : 'Fill in the details below' }}</p>
                     </div>
 
                     <form :action="formAction" method="POST" @submit="handleSubmit">
@@ -208,61 +208,61 @@
                         <div class="space-y-5">
                             {{-- Title --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Title <span
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Judul' : 'Title' }} <span
                                         class="text-red-500">*</span></label>
                                 <input type="text" name="title" x-model="form.title" required
                                     class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                    placeholder="Enter announcement title">
+                                    placeholder="{{ $isId ? 'Masukkan judul pengumuman' : 'Enter announcement title' }}">
                             </div>
 
                             {{-- Short Description / Excerpt --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Deskripsi Singkat' : 'Short Description' }}</label>
                                 <textarea name="excerpt" x-model="form.excerpt" rows="2"
                                     class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                    placeholder="Brief summary for the card preview (max 500 characters)" maxlength="500"></textarea>
-                                <p class="text-xs text-gray-400 mt-1">Displayed on the homepage announcement cards</p>
+                                    placeholder="{{ $isId ? 'Ringkasan singkat untuk pratinjau kartu (maks 500 karakter)' : 'Brief summary for the card preview (max 500 characters)' }}" maxlength="500"></textarea>
+                                <p class="text-xs text-gray-400 mt-1">{{ $isId ? 'Ditampilkan pada kartu pengumuman di halaman beranda' : 'Displayed on the homepage announcement cards' }}</p>
                             </div>
 
                             {{-- Full Content --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Full Content</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Konten Lengkap' : 'Full Content' }}</label>
                                 <textarea name="content" x-model="form.content" rows="5"
                                     class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                    placeholder="Full announcement content (optional)"></textarea>
+                                    placeholder="{{ $isId ? 'Konten pengumuman lengkap (opsional)' : 'Full announcement content (optional)' }}"></textarea>
                             </div>
 
                             {{-- Date Fields --}}
-                            <div class="grid grid-cols-2 gap-4">
+                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Publish Date</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tanggal Publikasi' : 'Publish Date' }}</label>
                                     <input type="datetime-local" name="published_at" x-model="form.published_at"
                                         class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date
-                                        <span class="text-gray-400">(Optional)</span></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tanggal Kedaluwarsa' : 'Expiry Date' }}
+                                        <span class="text-gray-400">({{ $isId ? 'Opsional' : 'Optional' }})</span></label>
                                     <input type="datetime-local" name="expires_at" x-model="form.expires_at"
                                         class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                             </div>
 
                             {{-- Toggles --}}
-                            <div class="grid grid-cols-2 gap-4">
+                             <div class="grid grid-cols-2 gap-4">
                                 <label class="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer">
                                     <input type="checkbox" name="is_active" x-model="form.is_active" value="1"
                                         class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                     <div class="ml-3">
-                                        <span class="text-sm font-medium text-gray-900">Active</span>
-                                        <p class="text-xs text-gray-500">Show on the homepage</p>
+                                        <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Aktif' : 'Active' }}</span>
+                                        <p class="text-xs text-gray-500">{{ $isId ? 'Tampilkan di halaman beranda' : 'Show on the homepage' }}</p>
                                     </div>
                                 </label>
                                 <label class="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer">
                                     <input type="checkbox" name="is_urgent" x-model="form.is_urgent" value="1"
                                         class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
                                     <div class="ml-3">
-                                        <span class="text-sm font-medium text-gray-900">Urgent</span>
-                                        <p class="text-xs text-gray-500">Highlight as important</p>
+                                        <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Penting' : 'Urgent' }}</span>
+                                        <p class="text-xs text-gray-500">{{ $isId ? 'Sorot sebagai informasi penting' : 'Highlight as important' }}</p>
                                     </div>
                                 </label>
                             </div>
@@ -272,11 +272,11 @@
                         <div class="mt-6 flex justify-end space-x-3">
                             <button type="button" @click="showModal = false"
                                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                             <button type="submit"
                                 class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
-                                <span x-text="isEditing ? 'Save Changes' : 'Create Announcement'"></span>
+                                <span x-text="isEditing ? '{{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}' : '{{ $isId ? 'Buat Pengumuman' : 'Create Announcement' }}'"></span>
                             </button>
                         </div>
                     </form>

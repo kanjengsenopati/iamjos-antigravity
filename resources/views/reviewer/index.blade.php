@@ -3,11 +3,11 @@ $journal = current_journal();
 @endphp
 
 <x-app-layout>
-    <x-slot name="title">My Reviews</x-slot>
+    <x-slot name="title">{{ $isId ? 'Ulasan Saya' : 'My Reviews' }}</x-slot>
 
     <x-slot name="header">
-        <h1 class="text-2xl font-bold text-gray-900">My Reviews</h1>
-        <p class="mt-1 text-sm text-gray-500">Submissions assigned to you for peer review.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Ulasan Saya' : 'My Reviews' }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Naskah yang ditugaskan kepada Anda untuk peer review.' : 'Submissions assigned to you for peer review.' }}</p>
     </x-slot>
 
     <!-- Tabs & Filters Navigation -->
@@ -23,7 +23,7 @@ $journal = current_journal();
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}
                     whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
-                My Queue
+                {{ $isId ? 'Antrean Saya' : 'My Queue' }}
                 <span class="{{ $currentStatus === 'myqueue' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900' }} ml-3 py-0.5 px-2.5 rounded-full text-xs font-medium md:inline-block">
                     {{ $statusCounts['myqueue'] }}
                 </span>
@@ -35,7 +35,7 @@ $journal = current_journal();
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}
                     whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
-                Archives
+                {{ $isId ? 'Arsip' : 'Archives' }}
                 <span class="{{ $currentStatus === 'archives' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900' }} ml-3 py-0.5 px-2.5 rounded-full text-xs font-medium md:inline-block">
                     {{ $statusCounts['archives'] }}
                 </span>
@@ -74,7 +74,7 @@ $journal = current_journal();
 
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm transition-colors group-focus-within:text-indigo-500"></i>
                 <input type="text" name="search" x-model="search" @keydown.enter.prevent="submitSearch()"
-                    placeholder="Search by title or ID..."
+                    placeholder="{{ $isId ? 'Cari berdasarkan judul atau ID...' : 'Search by title or ID...' }}"
                     class="pl-9 pr-4 py-2 text-sm border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 w-48 lg:w-64 transition-all"
                     style="padding-left: 2.25rem !important;">
             </form>
@@ -84,7 +84,7 @@ $journal = current_journal();
                 <button @click="showFilters = !showFilters"
                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all {{ request()->hasAny(['sections', 'statuses']) ? 'ring-2 ring-indigo-500 border-transparent text-indigo-700' : '' }}">
                     <i class="fa-solid fa-filter mr-2 {{ request()->hasAny(['sections', 'statuses']) ? 'text-indigo-600' : 'text-gray-400' }}"></i>
-                    Filters
+                    {{ $isId ? 'Filter' : 'Filters' }}
                     @php
                         $activeFilters = count(request('sections', [])) + count(request('statuses', []));
                     @endphp
@@ -114,23 +114,23 @@ $journal = current_journal();
                         @endif
 
                         <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-tight">Filters</h3>
+                            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-tight">{{ $isId ? 'Filter' : 'Filters' }}</h3>
                             <button type="button" @click="clearFilters()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold">
-                                Clear All
+                                {{ $isId ? 'Bersihkan Semua' : 'Clear All' }}
                             </button>
                         </div>
 
                         <div class="overflow-y-auto p-4 space-y-6 custom-scrollbar">
                             {{-- Status Section --}}
                             <div>
-                                <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Review Status</h4>
+                                <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{{ $isId ? 'Status Ulasan' : 'Review Status' }}</h4>
                                 <div class="space-y-2.5">
                                     @php
                                         $statusOptions = [
-                                            'pending' => 'Pending Response',
-                                            'accepted' => 'Active / In Progress',
-                                            'overdue' => 'Overdue',
-                                            'completed' => 'Completed'
+                                            'pending' => $isId ? 'Menunggu Tanggapan' : 'Pending Response',
+                                            'accepted' => $isId ? 'Aktif / Sedang Berjalan' : 'Active / In Progress',
+                                            'overdue' => $isId ? 'Terlambat' : 'Overdue',
+                                            'completed' => $isId ? 'Selesai' : 'Completed'
                                         ];
                                     @endphp
                                     @foreach($statusOptions as $val => $label)
@@ -147,7 +147,7 @@ $journal = current_journal();
                             {{-- Sections Section --}}
                             @if($journalSections->count() > 0)
                             <div>
-                                <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Journal Sections</h4>
+                                <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{{ $isId ? 'Bagian Jurnal' : 'Journal Sections' }}</h4>
                                 <div class="space-y-2.5">
                                     @foreach($journalSections as $section)
                                         <label class="flex items-center gap-3 cursor-pointer group">
@@ -164,7 +164,7 @@ $journal = current_journal();
 
                         <div class="p-4 border-t border-gray-100 bg-gray-50/50">
                             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-bold shadow-md shadow-indigo-100 transition-all transform active:scale-[0.98]">
-                                Apply Filters
+                                {{ $isId ? 'Terapkan Filter' : 'Apply Filters' }}
                             </button>
                         </div>
                     </form>
@@ -180,14 +180,14 @@ $journal = current_journal();
         <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <i class="fa-solid fa-list-check text-blue-400 text-2xl"></i>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-1">No Reviews in Your Queue</h3>
-        <p class="text-gray-500">You're all caught up! New review invitations will appear here.</p>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">{{ $isId ? 'Tidak Ada Ulasan di Antrean Anda' : 'No Reviews in Your Queue' }}</h3>
+        <p class="text-gray-500">{{ $isId ? 'Anda sudah menyelesaikan semua! Undangan ulasan baru akan muncul di sini.' : "You're all caught up! New review invitations will appear here." }}</p>
         @else
         <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <i class="fa-solid fa-archive text-green-400 text-2xl"></i>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-1">No Archived Reviews</h3>
-        <p class="text-gray-500">Reviews you complete will be archived here.</p>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">{{ $isId ? 'Tidak Ada Ulasan Terarsip' : 'No Archived Reviews' }}</h3>
+        <p class="text-gray-500">{{ $isId ? 'Ulasan yang Anda selesaikan akan diarsipkan di sini.' : 'Reviews you complete will be archived here.' }}</p>
         @endif
     </div>
     @else
@@ -204,28 +204,28 @@ $journal = current_journal();
                             @case('pending')
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pending Response
+                                {{ $isId ? 'Menunggu Tanggapan' : 'Pending Response' }}
                             </span>
                             @break
 
                             @case('accepted')
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                In Progress
+                                {{ $isId ? 'Sedang Berjalan' : 'In Progress' }}
                             </span>
                             @break
 
                             @case('completed')
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Completed
+                                {{ $isId ? 'Selesai' : 'Completed' }}
                             </span>
                             @break
 
                             @case('declined')
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Declined
+                                {{ $isId ? 'Ditolak' : 'Declined' }}
                             </span>
                             @break
                             @endswitch
@@ -233,11 +233,11 @@ $journal = current_journal();
                             @if ($assignment->isOverdue())
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Overdue
+                                {{ $isId ? 'Terlambat' : 'Overdue' }}
                             </span>
                             @endif
 
-                            <span class="text-xs text-gray-500">Round {{ $assignment->round }}</span>
+                            <span class="text-xs text-gray-500">{{ $isId ? 'Putaran' : 'Round' }} {{ $assignment->round }}</span>
                         </div>
 
                         <!-- Title (Blind Review - No Author Info) -->
@@ -249,13 +249,13 @@ $journal = current_journal();
                         <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                             <span>{{ $assignment->submission->section->name ?? 'Uncategorized' }}</span>
                             <span>•</span>
-                            <span>Assigned: {{ $assignment->assigned_at?->format('M j, Y') }}</span>
+                            <span>{{ $isId ? 'Ditugaskan' : 'Assigned' }}: {{ $assignment->assigned_at?->translatedFormat('M j, Y') }}</span>
                             @if ($assignment->due_date)
                             <span>•</span>
                             <span class="{{ $assignment->isOverdue() ? 'text-red-600 font-medium' : '' }}">
-                                Due: {{ $assignment->due_date->format('M j, Y') }}
+                                {{ $isId ? 'Batas Waktu' : 'Due' }}: {{ $assignment->due_date->translatedFormat('M j, Y') }}
                                 @if (!$assignment->isOverdue() && $assignment->days_until_due !== null)
-                                ({{ $assignment->days_until_due }} days)
+                                ({{ $assignment->days_until_due }} {{ $isId ? 'hari' : 'days' }})
                                 @endif
                             </span>
                             @endif
@@ -265,7 +265,7 @@ $journal = current_journal();
                         @if ($assignment->status === 'completed')
                         <div
                             class="mt-3 inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-{{ $assignment->recommendation_color }}-100 text-{{ $assignment->recommendation_color }}-800">
-                            Your recommendation: {{ $assignment->recommendation_label }}
+                            {{ $isId ? 'Rekomendasi Anda' : 'Your recommendation' }}: {{ $assignment->recommendation_label }}
                         </div>
                         @endif
                     </div>
@@ -280,7 +280,7 @@ $journal = current_journal();
                                     @csrf
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
-                                        Accept
+                                        {{ $isId ? 'Terima' : 'Accept' }}
                                     </button>
                                 </form>
                                 <form action="{{ route('journal.reviewer.decline', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST"
@@ -288,7 +288,7 @@ $journal = current_journal();
                                     @csrf
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                                        Decline
+                                        {{ $isId ? 'Tolak' : 'Decline' }}
                                     </button>
                                 </form>
                             </div>
@@ -300,12 +300,12 @@ $journal = current_journal();
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                Submit Review
+                                {{ $isId ? 'Kirim Ulasan' : 'Submit Review' }}
                             </a>
                             @elseif($assignment->status === 'completed')
                             <a href="{{ route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->slug]) }}"
                                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                                View Review
+                                {{ $isId ? 'Lihat Ulasan' : 'View Review' }}
                             </a>
                             @endif
                             
@@ -324,20 +324,20 @@ $journal = current_journal();
                         <div class="space-y-3">
                             <h4 class="font-bold text-gray-900 flex items-center gap-2">
                                 <i class="fa-solid fa-info-circle text-gray-400"></i>
-                                Review Details
+                                {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
                             </h4>
                             <div class="space-y-2 text-gray-600">
                                 <p class="flex items-center gap-2">
-                                    <span class="text-gray-400 w-24">Submission ID:</span>
+                                    <span class="text-gray-400 w-24">{{ $isId ? 'ID Naskah:' : 'Submission ID:' }}</span>
                                     <span class="font-mono text-gray-900">{{ $assignment->submission->submission_code }}</span>
                                 </p>
                                 <p class="flex items-center gap-2">
-                                    <span class="text-gray-400 w-24">Section:</span>
+                                    <span class="text-gray-400 w-24">{{ $isId ? 'Bagian:' : 'Section:' }}</span>
                                     <span class="text-gray-900">{{ $assignment->submission->section->name ?? 'N/A' }}</span>
                                 </p>
                                 <p class="flex items-center gap-2">
-                                    <span class="text-gray-400 w-24">Method:</span>
-                                    <span class="text-gray-900">{{ ucfirst(str_replace('_', ' ', $assignment->review_method)) }}</span>
+                                    <span class="text-gray-400 w-24">{{ $isId ? 'Metode:' : 'Method:' }}</span>
+                                    <span class="text-gray-900">{{ $isId ? ($assignment->review_method === 'double_blind' ? 'Double Blind' : ucfirst(str_replace('_', ' ', $assignment->review_method))) : ucfirst(str_replace('_', ' ', $assignment->review_method)) }}</span>
                                 </p>
                             </div>
                         </div>
@@ -345,21 +345,21 @@ $journal = current_journal();
                         <div class="space-y-3">
                             <h4 class="font-bold text-gray-900 flex items-center gap-2">
                                 <i class="fa-solid fa-calendar text-gray-400"></i>
-                                Key Dates
+                                {{ $isId ? 'Tanggal Penting' : 'Key Dates' }}
                             </h4>
                             <div class="space-y-2 text-gray-600">
                                 <p class="flex items-center gap-2">
-                                    <span class="text-gray-400 w-32">Response Due:</span>
-                                    <span class="text-gray-900 font-medium">{{ $assignment->response_due_date?->format('F j, Y') ?? 'N/A' }}</span>
+                                    <span class="text-gray-400 w-32">{{ $isId ? 'Batas Tanggapan:' : 'Response Due:' }}</span>
+                                    <span class="text-gray-900 font-medium">{{ $assignment->response_due_date?->translatedFormat('F j, Y') ?? 'N/A' }}</span>
                                 </p>
                                 <p class="flex items-center gap-2">
-                                    <span class="text-gray-400 w-32">Review Due:</span>
-                                    <span class="text-gray-900 font-medium {{ $assignment->isOverdue() ? 'text-red-600' : '' }}">{{ $assignment->due_date?->format('F j, Y') ?? 'N/A' }}</span>
+                                    <span class="text-gray-400 w-32">{{ $isId ? 'Batas Ulasan:' : 'Review Due:' }}</span>
+                                    <span class="text-gray-900 font-medium {{ $assignment->isOverdue() ? 'text-red-600' : '' }}">{{ $assignment->due_date?->translatedFormat('F j, Y') ?? 'N/A' }}</span>
                                 </p>
                                 @if($assignment->completed_at)
                                 <p class="flex items-center gap-2 text-green-600 font-medium">
                                     <i class="fa-solid fa-check-circle"></i>
-                                    <span>Completed on {{ $assignment->completed_at->format('F j, Y') }}</span>
+                                    <span>{{ $isId ? 'Selesai pada' : 'Completed on' }} {{ $assignment->completed_at->translatedFormat('F j, Y') }}</span>
                                 </p>
                                 @endif
                             </div>
@@ -372,7 +372,7 @@ $journal = current_journal();
                                 @click.stop="openLogModal('{{ route('submission.log.history', $assignment->submission->id) }}')"
                                 class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-all">
                             <i class="fa-solid fa-clock-rotate-left"></i>
-                            Activity Log & Notes
+                            {{ $isId ? 'Log Aktivitas & Catatan' : 'Activity Log & Notes' }}
                         </button>
                     </div>
                 </div>
@@ -399,7 +399,7 @@ $journal = current_journal();
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
-                    <p class="text-sm font-medium text-gray-500">Fetching activity records...</p>
+                    <p class="text-sm font-medium text-gray-500">{{ $isId ? 'Mengambil catatan aktivitas...' : 'Fetching activity records...' }}</p>
                 </div>
             </div>
             
