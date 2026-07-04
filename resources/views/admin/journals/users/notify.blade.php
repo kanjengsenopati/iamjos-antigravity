@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Notify Users')
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', $isId ? 'Kirim Notifikasi' : 'Notify Users')
 @push('styles')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
@@ -52,8 +57,8 @@
 <!-- Notify Form Card -->
 <div class="bg-white rounded-xl border border-gray-200 shadow-sm" x-data="{ loading: false }">
     <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Compose Notification</h2>
-        <p class="text-sm text-gray-500 mt-1">Select recipient roles and compose your message below.</p>
+        <h2 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Tulis Notifikasi' : 'Compose Notification' }}</h2>
+        <p class="text-sm text-gray-500 mt-1">{{ $isId ? 'Pilih peran penerima dan tulis pesan Anda di bawah ini.' : 'Select recipient roles and compose your message below.' }}</p>
     </div>
 
     <form action="{{ route($routePrefix . '.notify.send', ['journal' => $journal->slug]) }}" method="POST"
@@ -63,9 +68,9 @@
         <!-- Recipient Roles -->
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-3">
-                Recipient Roles <span class="text-red-500">*</span>
+                {{ $isId ? 'Peran Penerima' : 'Recipient Roles' }} <span class="text-red-500">*</span>
             </label>
-            <p class="text-xs text-gray-500 mb-4">Select which user roles should receive this notification.</p>
+            <p class="text-xs text-gray-500 mb-4">{{ $isId ? 'Pilih peran pengguna mana yang harus menerima notifikasi ini.' : 'Select which user roles should receive this notification.' }}</p>
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 @foreach ($roles as $role)
@@ -96,7 +101,7 @@
                         {{ in_array($role->name, old('roles', [])) ? 'checked' : '' }}>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid {{ $iconClass }}"></i>
-                        <span class="text-sm font-medium text-gray-900">{{ $role->name }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $isId ? ($role->name === 'Super Admin' ? 'Super Administrator' : ($role->name === 'Journal Manager' ? 'Manajer Jurnal' : ($role->name === 'Section Editor' ? 'Editor Bagian' : ($role->name === 'Reviewer' ? 'Peninjau' : ($role->name === 'Author' ? 'Penulis' : ($role->name === 'Reader' ? 'Pembaca' : $role->name)))))) : $role->name }}</span>
                     </div>
                 </label>
                 @endforeach
@@ -109,12 +114,12 @@
 
         <!-- Subject -->
         <div>
-            <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
-                Subject <span class="text-red-500">*</span>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                {{ $isId ? 'Subjek' : 'Subject' }} <span class="text-red-500">*</span>
             </label>
             <input type="text" name="subject" id="subject" value="{{ old('subject') }}" required
                 class="block w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white transition-colors @error('subject') border-red-300 @enderror"
-                placeholder="Enter email subject...">
+                placeholder="{{ $isId ? 'Masukkan subjek surel...' : 'Enter email subject...' }}">
             @error('subject')
             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -123,18 +128,18 @@
         <!-- Body -->
         <div>
             <label for="editor" class="block text-sm font-medium text-gray-700 mb-2">
-                Message Body <span class="text-red-500">*</span>
+                {{ $isId ? 'Isi Pesan' : 'Message Body' }} <span class="text-red-500">*</span>
             </label>
-            <p class="text-xs text-gray-500 mb-3">You can use basic HTML formatting in the message body.</p>
+            <p class="text-xs text-gray-500 mb-3">{{ $isId ? 'Anda dapat menggunakan format HTML dasar di dalam isi pesan.' : 'You can use basic HTML formatting in the message body.' }}</p>
             
             <!-- Dynamic Placeholders Guide -->
             <div class="mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800">
-                <span class="font-semibold block mb-1">Available Placeholders:</span>
+                <span class="font-semibold block mb-1">{{ $isId ? 'Variabel yang Tersedia:' : 'Available Placeholders:' }}</span>
                 <div class="grid grid-cols-2 gap-2">
-                    <code>{$name}</code> <span class="text-indigo-600">- Recipient Name</span>
-                    <code>{$email}</code> <span class="text-indigo-600">- Recipient Email</span>
-                    <code>{$journal_name}</code> <span class="text-indigo-600">- Journal Name</span>
-                    <code>{$site_url}</code> <span class="text-indigo-600">- Site URL</span>
+                    <code>{$name}</code> <span class="text-indigo-600">{{ $isId ? '- Nama Penerima' : '- Recipient Name' }}</span>
+                    <code>{$email}</code> <span class="text-indigo-600">{{ $isId ? '- Surel Penerima' : '- Recipient Email' }}</span>
+                    <code>{$journal_name}</code> <span class="text-indigo-600">{{ $isId ? '- Nama Jurnal' : '- Journal Name' }}</span>
+                    <code>{$site_url}</code> <span class="text-indigo-600">{{ $isId ? '- URL Jurnal' : '- Site URL' }}</span>
                 </div>
             </div>
 
@@ -158,8 +163,8 @@
                 </div>
             </label>
             <div>
-                <span class="text-sm font-medium text-gray-900">Send a copy to myself</span>
-                <p class="text-xs text-gray-500">Receive a copy of this notification at {{ auth()->user()->email }}</p>
+                <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Kirim salinan ke diri saya sendiri' : 'Send a copy to myself' }}</span>
+                <p class="text-xs text-gray-500">{{ $isId ? 'Terima salinan notifikasi ini di' : 'Receive a copy of this notification at' }} {{ auth()->user()->email }}</p>
             </div>
         </div>
 
@@ -167,7 +172,7 @@
         <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
             <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
                 class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                Cancel
+                {{ $isId ? 'Batal' : 'Cancel' }}
             </a>
             <button type="submit"
                 class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition-colors shadow-sm shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -175,13 +180,13 @@
                 <template x-if="!loading">
                     <span class="flex items-center gap-2">
                         <i class="fa-solid fa-paper-plane"></i>
-                        Send Notification
+                        {{ $isId ? 'Kirim Notifikasi' : 'Send Notification' }}
                     </span>
                 </template>
                 <template x-if="loading">
                     <span class="flex items-center gap-2">
                         <i class="fa-solid fa-spinner fa-spin"></i>
-                        Sending...
+                        {{ $isId ? 'Mengirim...' : 'Sending...' }}
                     </span>
                 </template>
             </button>
@@ -196,11 +201,11 @@
             <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
         </div>
         <div class="text-sm text-blue-800">
-            <p class="font-medium mb-1">How it works</p>
+            <p class="font-medium mb-1">{{ $isId ? 'Cara kerja' : 'How it works' }}</p>
             <ul class="list-disc list-inside space-y-1 text-blue-700">
-                <li>Notifications are sent via background queue for optimal performance.</li>
-                <li>Large recipient lists are processed in batches to prevent timeouts.</li>
-                <li>You will see a confirmation once the notification is queued.</li>
+                <li>{{ $isId ? 'Notifikasi dikirim melalui antrean latar belakang (queue) untuk performa optimal.' : 'Notifications are sent via background queue for optimal performance.' }}</li>
+                <li>{{ $isId ? 'Daftar penerima yang besar diproses secara bertahap untuk mencegah kegagalan waktu habis (timeout).' : 'Large recipient lists are processed in batches to prevent timeouts.' }}</li>
+                <li>{{ $isId ? 'Anda akan melihat konfirmasi setelah notifikasi masuk ke dalam antrean.' : 'You will see a confirmation once the notification is queued.' }}</li>
             </ul>
         </div>
     </div>
@@ -225,7 +230,7 @@
                         ['link']
                     ]
                 },
-                placeholder: 'Compose your message here...'
+                placeholder: "{{ $isId ? 'Tulis pesan Anda di sini...' : 'Compose your message here...' }}"
             });
 
             // Update hidden input on change

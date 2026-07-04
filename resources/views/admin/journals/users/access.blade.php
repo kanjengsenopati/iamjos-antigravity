@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Site Access Options')
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', $isId ? 'Opsi Akses Situs' : 'Site Access Options')
 
 @section('content')
     <!-- Header -->
@@ -28,7 +33,7 @@
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
                     <div class="mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-lock text-primary-600"></i>
-                        <x-text.h2 class="text-gray-900 font-semibold">Site Access</x-text.h2>
+                        <x-text.h2 class="text-gray-900 font-semibold">{{ $isId ? 'Akses Situs' : 'Site Access' }}</x-text.h2>
                     </div>
                     
                     <div class="space-y-5">
@@ -40,7 +45,7 @@
                             </div>
                             <div class="ml-3 text-sm">
                                 <label for="restrict_site_access" class="font-medium text-slate-700 cursor-pointer">
-                                    <x-text.body class="text-slate-700 font-medium">Users must be registered and log in to view the journal site.</x-text.body>
+                                    <x-text.body class="text-slate-700 font-medium">{{ $isId ? 'Pengguna harus terdaftar dan masuk untuk melihat situs jurnal.' : 'Users must be registered and log in to view the journal site.' }}</x-text.body>
                                 </label>
                             </div>
                         </div>
@@ -53,7 +58,7 @@
                             </div>
                             <div class="ml-3 text-sm">
                                 <label for="restrict_article_access" class="font-medium text-slate-700 cursor-pointer">
-                                    <x-text.body class="text-slate-700 font-medium">Users must be registered and log in to view open access content.</x-text.body>
+                                    <x-text.body class="text-slate-700 font-medium">{{ $isId ? 'Pengguna harus terdaftar dan masuk untuk melihat konten akses terbuka.' : 'Users must be registered and log in to view open access content.' }}</x-text.body>
                                 </label>
                             </div>
                         </div>
@@ -64,7 +69,7 @@
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
                     <div class="mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-check-double text-primary-600"></i>
-                        <x-text.h2 class="text-gray-900 font-semibold">Validation</x-text.h2>
+                        <x-text.h2 class="text-gray-900 font-semibold">{{ $isId ? 'Validasi' : 'Validation' }}</x-text.h2>
                     </div>
                     
                     <div class="flex items-start">
@@ -75,8 +80,8 @@
                         </div>
                         <div class="ml-3 text-sm">
                             <label for="require_validation" class="font-medium text-slate-700 cursor-pointer">
-                                <x-text.body class="text-slate-700 font-medium block">Require email validation</x-text.body>
-                                <x-text.caption class="text-slate-400 mt-1 block">Users will not be able to log in until they verify their email address.</x-text.caption>
+                                <x-text.body class="text-slate-700 font-medium block">{{ $isId ? 'Wajibkan verifikasi surel' : 'Require email validation' }}</x-text.body>
+                                <x-text.caption class="text-slate-400 mt-1 block">{{ $isId ? 'Pengguna tidak akan dapat masuk sampai mereka memverifikasi alamat surel mereka.' : 'Users will not be able to log in until they verify their email address.' }}</x-text.caption>
                             </label>
                         </div>
                     </div>
@@ -89,7 +94,7 @@
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
                     <div class="mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-primary-600"></i>
-                        <x-text.h2 class="text-gray-900 font-semibold">User Registration</x-text.h2>
+                        <x-text.h2 class="text-gray-900 font-semibold">{{ $isId ? 'Pendaftaran Pengguna' : 'User Registration' }}</x-text.h2>
                     </div>
                     
                     <div class="space-y-5">
@@ -101,7 +106,7 @@
                             </div>
                             <div class="ml-3 text-sm">
                                 <label for="reg_open" class="font-medium text-slate-700 cursor-pointer">
-                                    <x-text.body class="text-slate-700 font-medium">Visitors can register a user account with the journal.</x-text.body>
+                                    <x-text.body class="text-slate-700 font-medium">{{ $isId ? 'Pengunjung dapat mendaftarkan akun pengguna pada jurnal.' : 'Visitors can register a user account with the journal.' }}</x-text.body>
                                 </label>
                             </div>
                         </div>
@@ -114,7 +119,7 @@
                             </div>
                             <div class="ml-3 text-sm">
                                 <label for="reg_disabled" class="font-medium text-slate-700 cursor-pointer">
-                                    <x-text.body class="text-slate-700 font-medium">The Journal Manager will register all user accounts. Editors or Section Editors may register user accounts for reviewers.</x-text.body>
+                                    <x-text.body class="text-slate-700 font-medium">{{ $isId ? 'Manajer Jurnal akan mendaftarkan semua akun pengguna. Editor atau Editor Bagian dapat mendaftarkan akun pengguna untuk reviewer.' : 'The Journal Manager will register all user accounts. Editors or Section Editors may register user accounts for reviewers.' }}</x-text.body>
                                 </label>
                             </div>
                         </div>
@@ -125,9 +130,9 @@
                 <div class="bg-white rounded-[24px] shadow-custom p-6">
                     <div class="mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-id-badge text-primary-600"></i>
-                        <x-text.h2 class="text-gray-900 font-semibold">Role Registration</x-text.h2>
+                        <x-text.h2 class="text-gray-900 font-semibold">{{ $isId ? 'Pendaftaran Peran' : 'Role Registration' }}</x-text.h2>
                     </div>
-                    <x-text.body class="text-slate-400 mb-6 block">Select which roles users can self-register for (if registration is open).</x-text.body>
+                    <x-text.body class="text-slate-400 mb-6 block">{{ $isId ? 'Pilih peran mana yang dapat didaftarkan sendiri oleh pengguna (jika pendaftaran dibuka).' : 'Select which roles users can self-register for (if registration is open).' }}</x-text.body>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- Reader -->
@@ -139,8 +144,8 @@
                             </div>
                             <div class="ml-3 text-sm">
                                 <label for="role_reader" class="font-medium text-slate-700">
-                                    <x-text.body class="text-slate-700 font-semibold block">Reader</x-text.body>
-                                    <x-text.caption class="text-slate-400 block mt-0.5">Default role.</x-text.caption>
+                                    <x-text.body class="text-slate-700 font-semibold block">{{ $isId ? 'Pembaca' : 'Reader' }}</x-text.body>
+                                    <x-text.caption class="text-slate-400 block mt-0.5">{{ $isId ? 'Peran bawaan.' : 'Default role.' }}</x-text.caption>
                                 </label>
                             </div>
                         </div>
@@ -154,8 +159,8 @@
                             </div>
                             <div class="ml-3 text-sm">
                                 <label for="role_author" class="font-medium text-slate-700 cursor-pointer">
-                                    <x-text.body class="text-slate-700 font-semibold block">Author</x-text.body>
-                                    <x-text.caption class="text-slate-400 block mt-0.5">Submit articles.</x-text.caption>
+                                    <x-text.body class="text-slate-700 font-semibold block">{{ $isId ? 'Penulis' : 'Author' }}</x-text.body>
+                                    <x-text.caption class="text-slate-400 block mt-0.5">{{ $isId ? 'Mengirimkan artikel.' : 'Submit articles.' }}</x-text.caption>
                                 </label>
                             </div>
                         </div>
@@ -169,8 +174,8 @@
                             </div>
                             <div class="ml-3 text-sm">
                                 <label for="role_reviewer" class="font-medium text-slate-700 cursor-pointer">
-                                    <x-text.body class="text-slate-700 font-semibold block">Reviewer</x-text.body>
-                                    <x-text.caption class="text-slate-400 block mt-0.5">Allows users to be selected for peer review.</x-text.caption>
+                                    <x-text.body class="text-slate-700 font-semibold block">{{ $isId ? 'Peninjau' : 'Reviewer' }}</x-text.body>
+                                    <x-text.caption class="text-slate-400 block mt-0.5">{{ $isId ? 'Memungkinkan pengguna untuk dipilih untuk ulasan sejawat.' : 'Allows users to be selected for peer review.' }}</x-text.caption>
                                 </label>
                             </div>
                         </div>
@@ -184,11 +189,11 @@
             <div class="max-w-7xl mx-auto flex justify-end gap-3">
                 <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
                     class="px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors flex items-center justify-center">
-                    Cancel
+                    {{ $isId ? 'Batal' : 'Cancel' }}
                 </a>
                 <button type="submit"
                     class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 border border-transparent rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm hover:shadow-md transition-all">
-                    Save Changes
+                    {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                 </button>
             </div>
         </div>

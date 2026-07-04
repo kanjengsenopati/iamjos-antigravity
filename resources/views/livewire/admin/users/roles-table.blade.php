@@ -1,3 +1,8 @@
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" x-data="rolesTable()">
     {{-- Flash Message Container (JS controlled) --}}
     <div x-show="flashHash" x-transition class="fixed bottom-5 right-5 z-50">
@@ -30,41 +35,41 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">Role Name</th>
-                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Permission Level</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">{{ $isId ? 'Nama Peran' : 'Role Name' }}</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Tingkat Izin' : 'Permission Level' }}</th>
 
                     <th scope="col" class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                        <div class="flex flex-col items-center gap-1" title="Submission Stage Access">
+                        <div class="flex flex-col items-center gap-1" title="{{ $isId ? 'Akses Tahap Pengajuan' : 'Submission Stage Access' }}">
                             <i class="fa-solid fa-file-upload text-gray-400 text-sm"></i><span>Subm.</span>
                         </div>
                     </th>
                     <th scope="col" class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                        <div class="flex flex-col items-center gap-1" title="Review Stage Access">
+                        <div class="flex flex-col items-center gap-1" title="{{ $isId ? 'Akses Tahap Ulasan' : 'Review Stage Access' }}">
                             <i class="fa-solid fa-glasses text-gray-400 text-sm"></i><span>Review</span>
                         </div>
                     </th>
                     <th scope="col" class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                        <div class="flex flex-col items-center gap-1" title="Copyediting Stage Access">
+                        <div class="flex flex-col items-center gap-1" title="{{ $isId ? 'Akses Tahap Copyediting' : 'Copyediting Stage Access' }}">
                             <i class="fa-solid fa-pen-nib text-gray-400 text-sm"></i><span>Copy.</span>
                         </div>
                     </th>
                     <th scope="col" class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                        <div class="flex flex-col items-center gap-1" title="Production Stage Access">
+                        <div class="flex flex-col items-center gap-1" title="{{ $isId ? 'Akses Tahap Produksi' : 'Production Stage Access' }}">
                             <i class="fa-solid fa-print text-gray-400 text-sm"></i><span>Prod.</span>
                         </div>
                     </th>
                     <th scope="col" class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24 border-l border-gray-200">
-                        <div class="flex flex-col items-center gap-1" title="Allow Self-Registration">
+                        <div class="flex flex-col items-center gap-1" title="{{ $isId ? 'Izinkan Pendaftaran Mandiri' : 'Allow Self-Registration' }}">
                             <i class="fa-solid fa-user-plus text-gray-400 text-sm"></i><span>Reg.</span>
                         </div>
                     </th>
                     <th scope="col" class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                        <div class="flex flex-col items-center gap-1" title="Show in Contributor List">
+                        <div class="flex flex-col items-center gap-1" title="{{ $isId ? 'Tampilkan di Daftar Kontributor' : 'Show in Contributor List' }}">
                             <i class="fa-solid fa-users text-gray-400 text-sm"></i><span>List</span>
                         </div>
                     </th>
                     <th scope="col" class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                        <div class="flex flex-col items-center gap-1" title="Allow Submission">
+                        <div class="flex flex-col items-center gap-1" title="{{ $isId ? 'Izinkan Pengajuan' : 'Allow Submission' }}">
                             <i class="fa-solid fa-upload text-gray-400 text-sm"></i><span>Subm.</span>
                         </div>
                     </th>
@@ -74,7 +79,15 @@
             <tbody class="divide-y divide-gray-200 bg-white">
                 @foreach($roles as $role)
                 @php
-                $levelMap = [
+                $levelMap = $isId ? [
+                    1 => ['label' => 'Manajer Jurnal', 'color' => 'bg-red-100 text-red-800'],
+                    2 => ['label' => 'Editor Bagian', 'color' => 'bg-blue-100 text-blue-800'],
+                    3 => ['label' => 'Asisten', 'color' => 'bg-teal-100 text-teal-800'],
+                    4 => ['label' => 'Peninjau', 'color' => 'bg-amber-100 text-amber-800'],
+                    5 => ['label' => 'Penulis', 'color' => 'bg-green-100 text-green-800'],
+                    6 => ['label' => 'Pembaca', 'color' => 'bg-gray-100 text-gray-600'],
+                    0 => ['label' => 'Admin Situs', 'color' => 'bg-purple-100 text-purple-800'],
+                ] : [
                     1 => ['label' => 'Journal Manager', 'color' => 'bg-red-100 text-red-800'],
                     2 => ['label' => 'Section Editor', 'color' => 'bg-blue-100 text-blue-800'],
                     3 => ['label' => 'Assistant', 'color' => 'bg-teal-100 text-teal-800'],
@@ -89,7 +102,7 @@
                     <tr class="hover:bg-slate-50 transition duration-150 group">
                     {{-- Role Name --}}
                     <td class="px-6 py-4 font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                        {{ $role->name }}
+                        {{ $isId ? ($role->name === 'Journal manager' ? 'Manajer Jurnal' : ($role->name === 'Journal editor' ? 'Editor Jurnal' : ($role->name === 'Production editor' ? 'Editor Produksi' : ($role->name === 'Section editor' ? 'Editor Bagian' : ($role->name === 'Reviewer' ? 'Peninjau' : ($role->name === 'Author' ? 'Penulis' : ($role->name === 'Reader' ? 'Pembaca' : ($role->name === 'Subscription manager' ? 'Manajer Langganan' : $role->name)))))))) : $role->name }}
                     </td>
 
                     {{-- Level Badge --}}
@@ -121,7 +134,7 @@
                             <form action="{{ route($routePrefix . '.roles.destroy', ['journal' => current_journal()->slug, 'role' => $role->id]) }}"
                                 method="POST"
                                 class="inline-block"
-                                onsubmit="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
+                                onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus peran ini? Tindakan ini tidak dapat dibatalkan.' : 'Are you sure you want to delete this role? This action cannot be undone.' }}');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-500 hover:text-red-700 transition-colors" title="Delete Role">
@@ -163,15 +176,15 @@
                     })
                     .then(response => {
                         if (response.data.success) {
-                            this.showFlash('success', 'Permission updated successfully.');
+                            this.showFlash('success', '{{ $isId ? 'Izin berhasil diperbarui.' : 'Permission updated successfully.' }}');
                         } else {
-                            this.showFlash('error', response.data.message || 'Update failed.');
+                            this.showFlash('error', response.data.message || '{{ $isId ? 'Pembaruan gagal.' : 'Update failed.' }}');
                             // Revert checkbox if needed (complex without x-model binding to specific rows, skipping for now)
                         }
                     })
                     .catch(error => {
                         console.error(error);
-                        this.showFlash('error', 'An error occurred while updating permission.');
+                        this.showFlash('error', '{{ $isId ? 'Terjadi kesalahan saat memperbarui izin.' : 'An error occurred while updating permission.' }}');
                     });
             },
 
