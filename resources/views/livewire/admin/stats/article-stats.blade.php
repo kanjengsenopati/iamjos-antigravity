@@ -1,10 +1,14 @@
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
 <div class="space-y-6">
     {{-- FILTER BAR --}}
     <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-                <h2 class="font-bold text-slate-800 text-xl">Article Impact Report</h2>
-                <p class="text-sm text-slate-500 mt-1">Track views, downloads, and reader engagement</p>
+                <h2 class="font-bold text-slate-800 text-xl">{{ $isId ? 'Laporan Dampak Artikel' : 'Article Impact Report' }}</h2>
+                <p class="text-sm text-slate-500 mt-1">{{ $isId ? 'Lacak tayangan, unduhan, dan interaksi pembaca' : 'Track views, downloads, and reader engagement' }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 {{-- Date Range --}}
@@ -13,7 +17,7 @@
                         <input type="date" wire:model.live.debounce.300ms="dateStart"
                             class="w-36 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white">
                     </div>
-                    <span class="text-slate-400 text-sm font-medium">to</span>
+                    <span class="text-slate-400 text-sm font-medium">{{ $isId ? 'sampai' : 'to' }}</span>
                     <div class="relative">
                         <input type="date" wire:model.live.debounce.300ms="dateEnd"
                             class="w-36 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white">
@@ -24,15 +28,15 @@
                 <div class="flex items-center bg-slate-100 rounded-lg p-1">
                     <button wire:click="setGranularity('daily')"
                         class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all {{ $granularity === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700' }}">
-                        Daily
+                        {{ $isId ? 'Harian' : 'Daily' }}
                     </button>
                     <button wire:click="setGranularity('weekly')"
                         class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all {{ $granularity === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700' }}">
-                        Weekly
+                        {{ $isId ? 'Mingguan' : 'Weekly' }}
                     </button>
                     <button wire:click="setGranularity('monthly')"
                         class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all {{ $granularity === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700' }}">
-                        Monthly
+                        {{ $isId ? 'Bulanan' : 'Monthly' }}
                     </button>
                 </div>
             </div>
@@ -46,7 +50,7 @@
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
                 <div>
-                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Total Views</div>
+                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Total Tayangan' : 'Total Views' }}</div>
                     <div class="text-3xl font-bold text-slate-800">{{ number_format($totalViews) }}</div>
                 </div>
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -63,7 +67,7 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center text-xs text-slate-500">
-                <span>Abstract & Galley views</span>
+                <span>{{ $isId ? 'Tayangan abstrak & galley' : 'Abstract & Galley views' }}</span>
             </div>
             <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-blue-50 rounded-full opacity-50 z-0"></div>
         </div>
@@ -73,7 +77,7 @@
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
                 <div>
-                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Total Downloads</div>
+                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Total Unduhan' : 'Total Downloads' }}</div>
                     <div class="text-3xl font-bold text-slate-800">{{ number_format($totalDownloads) }}</div>
                 </div>
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -87,7 +91,7 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center text-xs text-slate-500">
-                <span>PDF file downloads</span>
+                <span>{{ $isId ? 'Unduhan berkas PDF' : 'PDF file downloads' }}</span>
             </div>
             <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-orange-50 rounded-full opacity-50 z-0"></div>
         </div>
@@ -97,12 +101,12 @@
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
                 <div>
-                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Top Country</div>
+                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Negara Teratas' : 'Top Country' }}</div>
                     <div class="text-2xl font-bold text-slate-800">
                         {{ $topCountry ? $countryNames[$topCountry->country_code] ?? $topCountry->country_code : '-' }}
                     </div>
                     @if ($topCountry)
-                        <div class="text-sm text-slate-500 mt-1">{{ number_format($topCountry->total) }} visits</div>
+                        <div class="text-sm text-slate-500 mt-1">{{ number_format($topCountry->total) }} {{ $isId ? 'kunjungan' : 'visits' }}</div>
                     @endif
                 </div>
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -124,12 +128,12 @@
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-purple-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
                 <div>
-                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Busiest Day</div>
+                    <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Hari Tersibuk' : 'Busiest Day' }}</div>
                     <div class="text-lg font-bold text-slate-800">
                         {{ $busiestDay ? \Carbon\Carbon::parse($busiestDay->date)->format('M d, Y') : '-' }}
                     </div>
                     @if ($busiestDay)
-                        <div class="text-sm text-slate-500 mt-1">{{ number_format($busiestDay->total) }} hits</div>
+                        <div class="text-sm text-slate-500 mt-1">{{ number_format($busiestDay->total) }} {{ $isId ? 'akses' : 'hits' }}</div>
                     @endif
                 </div>
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -153,17 +157,17 @@
         <div class="xl:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-lg">Traffic Trends</h3>
-                    <p class="text-sm text-slate-500">Views vs Downloads over time</p>
+                    <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Tren Lalu Lintas' : 'Traffic Trends' }}</h3>
+                    <p class="text-sm text-slate-500">{{ $isId ? 'Tayangan vs Unduhan dari waktu ke waktu' : 'Views vs Downloads over time' }}</p>
                 </div>
                 <div class="flex items-center gap-4 text-sm">
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                        <span class="text-slate-600">Views</span>
+                        <span class="text-slate-600">{{ $isId ? 'Tayangan' : 'Views' }}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 rounded-full bg-orange-500"></span>
-                        <span class="text-slate-600">Downloads</span>
+                        <span class="text-slate-600">{{ $isId ? 'Unduhan' : 'Downloads' }}</span>
                     </div>
                 </div>
             </div>
@@ -176,8 +180,8 @@
         {{-- Geo Map (Span 1) --}}
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div class="mb-4">
-                <h3 class="font-bold text-slate-800 text-lg">Reader Locations</h3>
-                <p class="text-sm text-slate-500">Geographic distribution</p>
+                <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Lokasi Pembaca' : 'Reader Locations' }}</h3>
+                <p class="text-sm text-slate-500">{{ $isId ? 'Distribusi geografis' : 'Geographic distribution' }}</p>
             </div>
             <div wire:ignore>
                 <div id="worldMap" class="h-64 bg-slate-50 rounded-lg mb-4"></div>
@@ -215,11 +219,11 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-lg">Top Performing Articles</h3>
-                    <p class="text-sm text-slate-500">Ranked by total views in selected period</p>
+                    <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Artikel Berkinerja Terbaik' : 'Top Performing Articles' }}</h3>
+                    <p class="text-sm text-slate-500">{{ $isId ? 'Diurutkan berdasarkan total tayangan dalam periode yang dipilih' : 'Ranked by total views in selected period' }}</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-sm text-slate-500">Showing top</span>
+                    <span class="text-sm text-slate-500">{{ $isId ? 'Menampilkan' : 'Showing top' }}</span>
                     <select wire:model.live="limit"
                         class="text-sm border-slate-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="10">10</option>
@@ -234,8 +238,8 @@
                 <thead class="bg-slate-50 text-xs font-bold text-slate-600 uppercase tracking-wider">
                     <tr>
                         <th class="px-6 py-4 w-12">#</th>
-                        <th class="px-6 py-4">Article Title</th>
-                        <th class="px-6 py-4 w-28 text-center">Section</th>
+                        <th class="px-6 py-4">{{ $isId ? 'Judul Artikel' : 'Article Title' }}</th>
+                        <th class="px-6 py-4 w-28 text-center">{{ $isId ? 'Bagian' : 'Section' }}</th>
                         <th class="px-6 py-4 w-28 text-center">
                             <span class="inline-flex items-center gap-1">
                                 <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor"
@@ -246,7 +250,7 @@
                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
                                     </path>
                                 </svg>
-                                Views
+                                {{ $isId ? 'Tayangan' : 'Views' }}
                             </span>
                         </th>
                         <th class="px-6 py-4 w-28 text-center">
@@ -256,10 +260,10 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                 </svg>
-                                Downloads
+                                {{ $isId ? 'Unduhan' : 'Downloads' }}
                             </span>
                         </th>
-                        <th class="px-6 py-4 w-40 text-center">Trend</th>
+                        <th class="px-6 py-4 w-40 text-center">{{ $isId ? 'Tren' : 'Trend' }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -278,14 +282,14 @@
                                         {{ $article->title }}
                                     </a>
                                     <div class="text-xs text-slate-500 mt-1">
-                                        {{ $article->authors->pluck('last_name')->join(', ') ?: 'Unknown Author' }}
+                                        {{ $article->authors->pluck('last_name')->join(', ') ?: ($isId ? 'Penulis Tidak Diketahui' : 'Unknown Author') }}
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <span
                                     class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
-                                    {{ Str::limit($article->section->name ?? 'Uncategorized', 15) }}
+                                    {{ Str::limit($article->section->name ?? ($isId ? 'Tanpa Kategori' : 'Uncategorized'), 15) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-center">
@@ -314,7 +318,7 @@
                                     @foreach ($sampledSparkline as $val)
                                         <div class="flex-1 bg-blue-400 rounded-t transition-all hover:bg-blue-600"
                                             style="height: {{ max(2, ($val / $maxSparkline) * 100) }}%"
-                                            title="{{ $val }} views"></div>
+                                            title="{{ $val }} {{ $isId ? 'tayangan' : 'views' }}"></div>
                                     @endforeach
                                 </div>
                             </td>
@@ -329,8 +333,8 @@
                                             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                                         </path>
                                     </svg>
-                                    <p class="font-medium">No article data available</p>
-                                    <p class="text-sm">Adjust the date range or check back later</p>
+                                    <p class="font-medium">{{ $isId ? 'Data artikel tidak tersedia' : 'No article data available' }}</p>
+                                    <p class="text-sm">{{ $isId ? 'Sesuaikan rentang tanggal atau periksa kembali nanti' : 'Adjust the date range or check back later' }}</p>
                                 </div>
                             </td>
                         </tr>
@@ -354,6 +358,8 @@
         // Chart instance (global to this component scope)
         let mainChart = null;
         let worldMap = null;
+
+        const isId = @json($isId);
 
         // Initial chart data from PHP
         const initialData = @json($chartData);
@@ -384,11 +390,11 @@
                     }
                 },
                 series: [{
-                        name: 'Views',
+                        name: isId ? 'Tayangan' : 'Views',
                         data: views
                     },
                     {
-                        name: 'Downloads',
+                        name: isId ? 'Unduhan' : 'Downloads',
                         data: downloads
                     }
                 ],
@@ -495,7 +501,7 @@
                     onRegionTooltipShow: function(event, tooltip, code) {
                         const count = geoData[code] || 0;
                         tooltip.text(
-                            `<div class="p-2"><strong>${code}</strong><br><span class="text-sm">${count.toLocaleString()} views</span></div>`,
+                            `<div class="p-2"><strong>${code}</strong><br><span class="text-sm">${count.toLocaleString()} ${isId ? 'tayangan' : 'views'}</span></div>`,
                             true
                         );
                     }

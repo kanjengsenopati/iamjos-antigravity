@@ -30,6 +30,7 @@ class ArticleStatsController extends Controller
         $journalId = $journal?->id;
 
         $start = $request->get('start', now()->subDays(30)->toDateString());
+        $end = $request->get('end', now()->toDateString());
         $granularity = $request->get('granularity', 'daily');
 
         $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();

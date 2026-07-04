@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Article Statistics')
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', $isId ? 'Statistik Artikel' : 'Article Statistics')
 
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css">
@@ -48,7 +53,7 @@
                                 d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                                 clip-rule="evenodd" />
                         </svg>
-                        <span class="ml-4 text-sm font-medium text-gray-500">Statistics</span>
+                        <span class="ml-4 text-sm font-medium text-gray-500">{{ $isId ? 'Statistik' : 'Statistics' }}</span>
                     </div>
                 </li>
                 <li>
@@ -58,7 +63,7 @@
                                 d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                                 clip-rule="evenodd" />
                         </svg>
-                        <span class="ml-4 text-sm font-medium text-gray-700" aria-current="page">Articles</span>
+                        <span class="ml-4 text-sm font-medium text-gray-700" aria-current="page">{{ $isId ? 'Artikel' : 'Articles' }}</span>
                     </div>
                 </li>
             </ol>
@@ -69,8 +74,8 @@
             <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
-                        <h2 class="font-bold text-slate-800 text-xl">Article Impact Report</h2>
-                        <p class="text-sm text-slate-500 mt-1">Track views, downloads, and reader engagement</p>
+                        <h2 class="font-bold text-slate-800 text-xl">{{ $isId ? 'Laporan Dampak Artikel' : 'Article Impact Report' }}</h2>
+                        <p class="text-sm text-slate-500 mt-1">{{ $isId ? 'Lacak tayangan, unduhan, dan interaksi pembaca' : 'Track views, downloads, and reader engagement' }}</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-3">
                         {{-- Date Range --}}
@@ -79,7 +84,7 @@
                                 <input type="date" x-model="dateStart" @change="fetchData()"
                                     class="w-36 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white">
                             </div>
-                            <span class="text-slate-400 text-sm font-medium">to</span>
+                            <span class="text-slate-400 text-sm font-medium">{{ $isId ? 'sampai' : 'to' }}</span>
                             <div class="relative">
                                 <input type="date" x-model="dateEnd" @change="fetchData()"
                                     class="w-36 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white">
@@ -92,19 +97,19 @@
                                 :class="granularity === 'daily' ? 'bg-white text-indigo-600 shadow-sm' :
                                     'text-slate-500 hover:text-slate-700'"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all">
-                                Daily
+                                {{ $isId ? 'Harian' : 'Daily' }}
                             </button>
                             <button @click="setGranularity('weekly')"
                                 :class="granularity === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' :
                                     'text-slate-500 hover:text-slate-700'"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all">
-                                Weekly
+                                {{ $isId ? 'Mingguan' : 'Weekly' }}
                             </button>
                             <button @click="setGranularity('monthly')"
                                 :class="granularity === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' :
                                     'text-slate-500 hover:text-slate-700'"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all">
-                                Monthly
+                                {{ $isId ? 'Bulanan' : 'Monthly' }}
                             </button>
                         </div>
 
@@ -118,7 +123,7 @@
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                 </path>
                             </svg>
-                            Updating...
+                            {{ $isId ? 'Memperbarui...' : 'Updating...' }}
                         </span>
                     </div>
                 </div>
@@ -131,7 +136,7 @@
                     class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all duration-200 relative overflow-hidden">
                     <div class="flex items-start justify-between relative z-10">
                         <div>
-                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Total Views</div>
+                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Total Tayangan' : 'Total Views' }}</div>
                             <div class="text-3xl font-bold text-slate-800" x-text="formatNumber(kpi.views)">0</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -147,7 +152,7 @@
                         </div>
                     </div>
                     <div class="mt-3 flex items-center text-xs text-slate-500">
-                        <span>Abstract & Galley views</span>
+                        <span>{{ $isId ? 'Tayangan abstrak & galley' : 'Abstract & Galley views' }}</span>
                     </div>
                     <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-blue-50 rounded-full opacity-50 z-0"></div>
                 </div>
@@ -157,8 +162,7 @@
                     class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 relative overflow-hidden">
                     <div class="flex items-start justify-between relative z-10">
                         <div>
-                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Total Downloads
-                            </div>
+                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Total Unduhan' : 'Total Downloads' }}</div>
                             <div class="text-3xl font-bold text-slate-800" x-text="formatNumber(kpi.downloads)">0</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -171,7 +175,7 @@
                         </div>
                     </div>
                     <div class="mt-3 flex items-center text-xs text-slate-500">
-                        <span>PDF file downloads</span>
+                        <span>{{ $isId ? 'Unduhan berkas PDF' : 'PDF file downloads' }}</span>
                     </div>
                     <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-orange-50 rounded-full opacity-50 z-0"></div>
                 </div>
@@ -181,11 +185,11 @@
                     class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-200 transition-all duration-200 relative overflow-hidden">
                     <div class="flex items-start justify-between relative z-10">
                         <div>
-                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Top Country</div>
+                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Negara Teratas' : 'Top Country' }}</div>
                             <div class="text-2xl font-bold text-slate-800" x-text="kpi.top_country?.name || '-'">-</div>
                             <template x-if="kpi.top_country">
                                 <div class="text-sm text-slate-500 mt-1"
-                                    x-text="formatNumber(kpi.top_country.total) + ' visits'"></div>
+                                    x-text="formatNumber(kpi.top_country.total) + ' ' + (isId ? 'kunjungan' : 'visits')"></div>
                             </template>
                         </div>
                         <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -206,12 +210,12 @@
                     class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-purple-200 transition-all duration-200 relative overflow-hidden">
                     <div class="flex items-start justify-between relative z-10">
                         <div>
-                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Busiest Day</div>
+                            <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Hari Tersibuk' : 'Busiest Day' }}</div>
                             <div class="text-lg font-bold text-slate-800" x-text="kpi.busiest_day?.formatted || '-'">-
                             </div>
                             <template x-if="kpi.busiest_day">
                                 <div class="text-sm text-slate-500 mt-1"
-                                    x-text="formatNumber(kpi.busiest_day.total) + ' hits'"></div>
+                                    x-text="formatNumber(kpi.busiest_day.total) + ' ' + (isId ? 'akses' : 'hits')"></div>
                             </template>
                         </div>
                         <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
@@ -234,17 +238,17 @@
                 <div class="xl:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Traffic Trends</h3>
-                            <p class="text-sm text-slate-500">Views vs Downloads over time</p>
+                            <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Tren Lalu Lintas' : 'Traffic Trends' }}</h3>
+                            <p class="text-sm text-slate-500">{{ $isId ? 'Tayangan vs Unduhan dari waktu ke waktu' : 'Views vs Downloads over time' }}</p>
                         </div>
                         <div class="flex items-center gap-4 text-sm">
                             <div class="flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                                <span class="text-slate-600">Views</span>
+                                <span class="text-slate-600">{{ $isId ? 'Tayangan' : 'Views' }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full bg-orange-500"></span>
-                                <span class="text-slate-600">Downloads</span>
+                                <span class="text-slate-600">{{ $isId ? 'Unduhan' : 'Downloads' }}</span>
                             </div>
                         </div>
                     </div>
@@ -254,8 +258,8 @@
                 {{-- Geo Map (Span 1) --}}
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div class="mb-4">
-                        <h3 class="font-bold text-slate-800 text-lg">Reader Locations</h3>
-                        <p class="text-sm text-slate-500">Geographic distribution</p>
+                        <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Lokasi Pembaca' : 'Reader Locations' }}</h3>
+                        <p class="text-sm text-slate-500">{{ $isId ? 'Distribusi geografis' : 'Geographic distribution' }}</p>
                     </div>
                     <div id="worldMap" class="h-64 bg-slate-50 rounded-lg mb-4"></div>
 
@@ -289,8 +293,8 @@
                 <div class="p-6 border-b border-slate-200">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Top Performing Articles</h3>
-                            <p class="text-sm text-slate-500">Ranked by total views in selected period</p>
+                            <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Artikel Berkinerja Terbaik' : 'Top Performing Articles' }}</h3>
+                            <p class="text-sm text-slate-500">{{ $isId ? 'Diurutkan berdasarkan total tayangan dalam periode yang dipilih' : 'Ranked by total views in selected period' }}</p>
                         </div>
                     </div>
                 </div>
@@ -299,8 +303,8 @@
                         <thead class="bg-slate-50 text-xs font-bold text-slate-600 uppercase tracking-wider">
                             <tr>
                                 <th class="px-6 py-4 w-12">#</th>
-                                <th class="px-6 py-4">Article Title</th>
-                                <th class="px-6 py-4 w-28 text-center">Section</th>
+                                <th class="px-6 py-4">{{ $isId ? 'Judul Artikel' : 'Article Title' }}</th>
+                                <th class="px-6 py-4 w-28 text-center">{{ $isId ? 'Bagian' : 'Section' }}</th>
                                 <th class="px-6 py-4 w-28 text-center">
                                     <span class="inline-flex items-center gap-1">
                                         <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor"
@@ -311,7 +315,7 @@
                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
                                             </path>
                                         </svg>
-                                        Views
+                                        {{ $isId ? 'Tayangan' : 'Views' }}
                                     </span>
                                 </th>
                                 <th class="px-6 py-4 w-28 text-center">
@@ -321,10 +325,10 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                         </svg>
-                                        Downloads
+                                        {{ $isId ? 'Unduhan' : 'Downloads' }}
                                     </span>
                                 </th>
-                                <th class="px-6 py-4 w-40 text-center">Trend</th>
+                                <th class="px-6 py-4 w-40 text-center">{{ $isId ? 'Tren' : 'Trend' }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -342,13 +346,13 @@
                                             <a :href="row.url"
                                                 class="font-semibold text-slate-800 hover:text-indigo-600 line-clamp-2"
                                                 x-text="row.title"></a>
-                                            <div class="text-xs text-slate-500 mt-1" x-text="row.author"></div>
+                                            <div class="text-xs text-slate-500 mt-1" x-text="row.author === 'Unknown' ? (isId ? 'Penulis Tidak Diketahui' : 'Unknown') : row.author"></div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600"
-                                            x-text="row.section"></span>
+                                            x-text="row.section === 'Uncategorized' ? (isId ? 'Tanpa Kategori' : 'Uncategorized') : row.section"></span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <span class="font-mono font-bold text-blue-600 text-base"
@@ -379,8 +383,8 @@
                                                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                                                 </path>
                                             </svg>
-                                            <p class="font-medium">No article data available</p>
-                                            <p class="text-sm">Adjust the date range or check back later</p>
+                                            <p class="font-medium">{{ $isId ? 'Data artikel tidak tersedia' : 'No article data available' }}</p>
+                                            <p class="text-sm">{{ $isId ? 'Sesuaikan rentang tanggal atau periksa kembali nanti' : 'Adjust the date range or check back later' }}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -402,6 +406,7 @@
         function articleDashboard() {
             return {
                 // State
+                isId: @json($isId),
                 dateStart: '{{ now()->subDays(30)->format('Y-m-d') }}',
                 dateEnd: '{{ now()->format('Y-m-d') }}',
                 granularity: 'daily',
@@ -459,11 +464,11 @@
                             }
                         },
                         series: [{
-                                name: 'Views',
+                                name: this.isId ? 'Tayangan' : 'Views',
                                 data: []
                             },
                             {
-                                name: 'Downloads',
+                                name: this.isId ? 'Unduhan' : 'Downloads',
                                 data: []
                             }
                         ],
@@ -621,11 +626,11 @@
                     });
 
                     this.chartInstance.updateSeries([{
-                            name: 'Views',
+                            name: this.isId ? 'Tayangan' : 'Views',
                             data: this.chartData.views
                         },
                         {
-                            name: 'Downloads',
+                            name: this.isId ? 'Unduhan' : 'Downloads',
                             data: this.chartData.downloads
                         }
                     ]);
@@ -664,7 +669,7 @@
                             onRegionTooltipShow: (event, tooltip, code) => {
                                 const count = this.mapData[code] || 0;
                                 tooltip.text(
-                                    `<div class="p-2"><strong>${code}</strong><br><span class="text-sm">${count.toLocaleString()} views</span></div>`,
+                                    `<div class="p-2"><strong>${code}</strong><br><span class="text-sm">${count.toLocaleString()} ${this.isId ? 'tayangan' : 'views'}</span></div>`,
                                     true
                                 );
                             }
