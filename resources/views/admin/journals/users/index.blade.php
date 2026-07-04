@@ -228,21 +228,21 @@
                 class="relative inline-block w-full max-w-lg overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
 
                 <!-- Header -->
-                <div class="relative px-6 py-4 bg-blue-600 border-b border-blue-500/30 rounded-t-[24px]">
+                <div class="relative px-6 py-4 bg-white border-b border-slate-200 rounded-t-[24px]">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
-                                <i class="text-lg text-white fa-solid fa-paper-plane"></i>
+                            <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-blue-50 border border-blue-100">
+                                <i class="text-lg text-blue-600 fa-solid fa-paper-plane"></i>
                             </div>
                             <div>
-                                <x-text.h1 id="email-modal-title" class="text-white font-bold tracking-tight !text-[18px]">
+                                <x-text.h1 id="email-modal-title" class="text-slate-800 font-bold tracking-tight !text-[18px]">
                                     {{ $isId ? 'Kirim Surel' : 'Send Email' }}
                                 </x-text.h1>
-                                <p class="text-xs text-blue-100 font-medium">{{ $isId ? 'Buat surel untuk pengguna ini' : 'Compose an email to user' }}</p>
+                                <p class="text-xs text-slate-400 font-medium">{{ $isId ? 'Buat surel untuk pengguna ini' : 'Compose an email to user' }}</p>
                             </div>
                         </div>
                         <button @click="emailModalOpen = false"
-                            class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 focus:outline-none">
+                            class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all duration-200 focus:outline-none">
                             <i class="text-lg fa-solid fa-xmark"></i>
                         </button>
                     </div>
@@ -334,21 +334,21 @@
                     @csrf
 
                     <!-- Header -->
-                    <div class="relative px-6 py-4 bg-primary-600 border-b border-primary-500/30 rounded-t-[24px]">
+                    <div class="relative px-6 py-4 bg-white border-b border-slate-200 rounded-t-[24px]">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
-                                <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
-                                    <i class="text-lg text-white fa-solid fa-user-check"></i>
+                                <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-primary-50 border border-primary-100">
+                                    <i class="text-lg text-primary-600 fa-solid fa-user-check"></i>
                                 </div>
                                 <div>
-                                    <x-text.h1 id="enroll-modal-title" class="text-white font-bold tracking-tight !text-[18px]">
+                                    <x-text.h1 id="enroll-modal-title" class="text-slate-800 font-bold tracking-tight !text-[18px]">
                                         {{ $isId ? 'Daftarkan Pengguna yang Ada' : 'Enroll Existing User' }}
                                     </x-text.h1>
-                                    <p class="text-xs text-primary-100 font-medium">{{ $isId ? 'Tambahkan pengguna yang sudah terdaftar ke' : 'Add an existing user to' }} {{ $journal->name }} {{ $isId ? 'dengan peran tertentu.' : 'with specific roles.' }}</p>
+                                    <p class="text-xs text-slate-400 font-medium">{{ $isId ? 'Tambahkan pengguna yang sudah terdaftar ke' : 'Add an existing user to' }} {{ $journal->name }} {{ $isId ? 'dengan peran tertentu.' : 'with specific roles.' }}</p>
                                 </div>
                             </div>
                             <button type="button" @click="enrollModalOpen = false"
-                                class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 focus:outline-none cursor-pointer">
+                                class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all duration-200 focus:outline-none cursor-pointer">
                                 <i class="text-lg fa-solid fa-xmark"></i>
                             </button>
                         </div>
@@ -472,7 +472,7 @@
                                 </div>
                             @enderror
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                                 @foreach ($assignableRoles as $role)
                                     @php
                                         $badgeClass = match ($role->name) {
@@ -554,21 +554,21 @@
                     @csrf
 
                     <!-- Header -->
-                    <div class="relative px-6 py-4 bg-primary-600 border-b border-primary-500/30 rounded-t-[24px]">
+                    <div class="relative px-6 py-4 bg-white border-b border-slate-200 rounded-t-[24px]">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
-                                <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
-                                    <i class="text-lg text-white fa-solid fa-user-plus"></i>
+                                <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-primary-50 border border-primary-100">
+                                    <i class="text-lg text-primary-600 fa-solid fa-user-plus"></i>
                                 </div>
                                 <div>
-                                    <x-text.h1 id="create-user-modal-title" class="text-white font-bold tracking-tight !text-[18px]">
+                                    <x-text.h1 id="create-user-modal-title" class="text-slate-800 font-bold tracking-tight !text-[18px]">
                                         {{ $isId ? 'Buat Pengguna Baru' : 'Create New User' }}
                                     </x-text.h1>
-                                    <p class="text-xs text-primary-100 font-medium">{{ $isId ? 'Buat akun pengguna baru dan daftarkan di' : 'Create a new user account and enroll in' }} {{ $journal->name }}.</p>
+                                    <p class="text-xs text-slate-400 font-medium">{{ $isId ? 'Buat akun pengguna baru dan daftarkan di' : 'Create a new user account and enroll in' }} {{ $journal->name }}.</p>
                                 </div>
                             </div>
                             <button type="button" @click="createUserModalOpen = false"
-                                class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 focus:outline-none cursor-pointer">
+                                class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all duration-200 focus:outline-none cursor-pointer">
                                 <i class="text-lg fa-solid fa-xmark"></i>
                             </button>
                         </div>
@@ -704,7 +704,7 @@
                                 <p class="mb-3 text-xs text-red-500">{{ $message }}</p>
                             @enderror
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 @php
                                     $roleDescriptions = $isId ? [
                                         'Journal Manager' => 'Akses administratif penuh ke jurnal',

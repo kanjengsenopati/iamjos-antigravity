@@ -51,21 +51,21 @@
                     @csrf
 
                     <!-- Header -->
-                    <div class="relative px-6 py-4 bg-primary-600 border-b border-primary-500/30 rounded-t-[24px]">
+                    <div class="relative px-6 py-4 bg-white border-b border-slate-200 rounded-t-[24px]">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
-                                <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
-                                    <i class="text-lg text-white fa-solid fa-user-gear"></i>
+                                <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-primary-50 border border-primary-100">
+                                    <i class="text-lg text-primary-600 fa-solid fa-user-gear"></i>
                                 </div>
                                 <div>
-                                    <x-text.h1 id="create-role-modal-title" class="text-white font-bold tracking-tight !text-[18px]">
+                                    <x-text.h1 id="create-role-modal-title" class="text-slate-800 font-bold tracking-tight !text-[18px]">
                                         {{ $isId ? 'Buat Peran Baru' : 'Create New Role' }}
                                     </x-text.h1>
-                                    <p class="text-xs text-primary-100 font-medium">{{ $isId ? 'Tentukan properti, tingkat izin, dan akses alur kerja untuk peran ini.' : 'Define properties, permission levels, and workflow access for this role.' }}</p>
+                                    <p class="text-xs text-slate-400 font-medium">{{ $isId ? 'Tentukan properti, tingkat izin, dan akses alur kerja untuk peran ini.' : 'Define properties, permission levels, and workflow access for this role.' }}</p>
                                 </div>
                             </div>
                             <button type="button" @click="createRoleModalOpen = false"
-                                class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 focus:outline-none cursor-pointer">
+                                class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all duration-200 focus:outline-none cursor-pointer">
                                 <i class="text-lg fa-solid fa-xmark"></i>
                             </button>
                         </div>
