@@ -1,4 +1,5 @@
 @php
+    $isId = app()->getLocale() === 'id';
     $roleOrder = ['Author' => 1, 'Reader' => 2, 'Reviewer' => 3, 'Translator' => 4];
     $sortedAvailableRoles = $availableRoles->sortBy(function($role) use ($roleOrder) {
         return $roleOrder[$role->name] ?? 99;
@@ -9,8 +10,8 @@
     @method('PUT')
 
     <div class="border-b-2 border-[#DAD8F4] pb-6 mb-8">
-        <x-text.h1>Journal Roles</x-text.h1>
-        <x-text.body class="mt-1 text-slate-500">Select the roles you wish to assume in this journal.</x-text.body>
+        <x-text.h1>{{ $isId ? 'Peran Jurnal' : 'Journal Roles' }}</x-text.h1>
+        <x-text.body class="mt-1 text-slate-500">{{ $isId ? 'Pilih peran yang ingin Anda ambil dalam jurnal ini.' : 'Select the roles you wish to assume in this journal.' }}</x-text.body>
     </div>
 
     @if (!empty($userJournalAdminRoles[$journal->id]))
@@ -21,9 +22,9 @@
                 </svg>
             </div>
             <div>
-                <x-text.h2 class="text-indigo-900 font-semibold">Active Administrative Roles</x-text.h2>
+                <x-text.h2 class="text-indigo-900 font-semibold">{{ $isId ? 'Peran Administratif Aktif' : 'Active Administrative Roles' }}</x-text.h2>
                 <x-text.body class="text-indigo-700 mt-1">
-                    You are registered with the following staff role(s): <strong class="font-bold text-indigo-900">{{ implode(', ', $userJournalAdminRoles[$journal->id]) }}</strong>. Administrative roles cannot be self-modified.
+                    {{ $isId ? 'Anda terdaftar dengan peran staf berikut: ' : 'You are registered with the following staff role(s): ' }}<strong class="font-bold text-indigo-900">{{ implode(', ', $userJournalAdminRoles[$journal->id]) }}</strong>. {{ $isId ? 'Peran administratif tidak dapat diubah secara mandiri.' : 'Administrative roles cannot be self-modified.' }}
                 </x-text.body>
             </div>
         </div>
@@ -41,7 +42,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-yellow-700">
-                        No self-registerable roles are available for this journal.
+                        {{ $isId ? 'Tidak ada peran yang dapat didaftarkan sendiri untuk jurnal ini.' : 'No self-registerable roles are available for this journal.' }}
                     </p>
                 </div>
             </div>
@@ -89,15 +90,15 @@
 
                         <div class="flex flex-col">
                             <x-text.h2 x-bind:class="selected.includes('{{ $role->id }}') ? 'text-emerald-900' : 'text-slate-800'">
-                                {{ $role->name }}
+                                {{ $isId ? ($role->name === 'Author' ? 'Penulis' : ($role->name === 'Reviewer' ? 'Mitra Bestari' : ($role->name === 'Reader' ? 'Pembaca' : ($role->name === 'Translator' ? 'Penerjemah' : $role->name)))) : $role->name }}
                             </x-text.h2>
                             <x-text.body class="mt-1" x-bind:class="selected.includes('{{ $role->id }}') ? 'text-emerald-700' : 'text-slate-500'">
                                 @if ($role->name === 'Author')
-                                    Submit manuscripts and track your work.
+                                    {{ $isId ? 'Kirimkan naskah dan lacak pekerjaan Anda.' : 'Submit manuscripts and track your work.' }}
                                 @elseif($role->name === 'Reviewer')
-                                    Review submissions assigned to you.
+                                    {{ $isId ? 'Tinjau naskah yang ditugaskan kepada Anda.' : 'Review submissions assigned to you.' }}
                                 @else
-                                    Read content and receive notifications.
+                                    {{ $isId ? 'Baca konten dan terima pemberitahuan.' : 'Read content and receive notifications.' }}
                                 @endif
                             </x-text.body>
                         </div>
@@ -116,7 +117,7 @@
         <div class="flex justify-end pt-6 border-t mt-8">
             <button type="submit"
                 class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm font-medium">
-                Save Roles
+                {{ $isId ? 'Simpan Peran' : 'Save Roles' }}
             </button>
         </div>
     @endif
@@ -127,7 +128,7 @@
         <div class="w-full border-t-2 border-slate-100"></div>
     </div>
     <div class="relative flex justify-center">
-        <x-text.h1 class="bg-white px-6">Enroll in Other Journals</x-text.h1>
+        <x-text.h1 class="bg-white px-6">{{ $isId ? 'Mendaftar di Jurnal Lain' : 'Enroll in Other Journals' }}</x-text.h1>
     </div>
 </div>
 
@@ -145,7 +146,8 @@
             journalAbbreviation: '{{ addslashes($otherJournal->abbreviation ?? $otherJournal->name) }}',
             syncUrl: '{{ route('journal.profile.sync-roles', $otherJournal->slug) }}',
             initialRoles: @js($userJournalRoles[$otherJournal->id] ?? []),
-            availableRoles: @js($sortedOtherRoles)
+            availableRoles: @js($sortedOtherRoles),
+            isId: @js($isId)
         })" class="rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-200 group mb-4">
             
             <!-- Row Header -->
@@ -158,7 +160,7 @@
                     <div>
                         <x-text.h2>{{ $otherJournal->name }}</x-text.h2>
                         <x-text.body class="text-slate-500 truncate max-w-md mt-1">
-                            {{ $otherJournal->description ?? 'Open Access Journal' }}
+                            {{ $otherJournal->description ?? ($isId ? 'Jurnal Akses Terbuka' : 'Open Access Journal') }}
                         </x-text.body>
                         @if (!empty($userJournalAdminRoles[$otherJournal->id]))
                             <div class="flex flex-wrap gap-1.5 mt-2">
@@ -182,17 +184,17 @@
                         <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-emerald-500" fill="currentColor" viewBox="0 0 8 8">
                             <circle cx="4" cy="4" r="3" />
                         </svg>
-                        Enrolled
+                        {{ $isId ? 'Terdaftar' : 'Enrolled' }}
                     </span>
                     <span x-show="!isEnrolled"
                         class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600" x-cloak>
-                        Not Enrolled
+                        {{ $isId ? 'Tidak Terdaftar' : 'Not Enrolled' }}
                     </span>
 
                     <!-- Toggle Button -->
                     <button type="button" @click="isExpanded = !isExpanded"
                         class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-semibold text-blue-600 shadow-sm ring-1 ring-inset ring-blue-300 hover:bg-blue-50 transition-colors">
-                        <span x-text="isExpanded ? 'Hide Roles' : 'Manage Roles'"></span>
+                        <span x-text="isExpanded ? (isId ? 'Sembunyikan Peran' : 'Hide Roles') : (isId ? 'Kelola Peran' : 'Manage Roles')"></span>
                         <svg class="ml-1.5 h-4 w-4 transform transition-transform duration-200" :class="isExpanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
@@ -258,8 +260,8 @@
                                     </div>
 
                                     <div class="flex flex-col">
-                                        <x-text.h2 x-bind:class="selectedRoles.includes(role.id) ? 'text-emerald-900' : 'text-slate-800'" x-text="role.name"></x-text.h2>
-                                        <x-text.caption x-text="role.name === 'Author' ? 'Submit manuscripts' : (role.name === 'Reviewer' ? 'Review submissions' : 'Read content')"></x-text.caption>
+                                        <x-text.h2 x-bind:class="selectedRoles.includes(role.id) ? 'text-emerald-900' : 'text-slate-800'" x-text="isId ? (role.name === 'Author' ? 'Penulis' : (role.name === 'Reviewer' ? 'Mitra Bestari' : (role.name === 'Reader' ? 'Pembaca' : (role.name === 'Translator' ? 'Penerjemah' : role.name)))) : role.name"></x-text.h2>
+                                        <x-text.caption x-text="role.name === 'Author' ? (isId ? 'Kirimkan naskah' : 'Submit manuscripts') : (role.name === 'Reviewer' ? (isId ? 'Tinjau naskah' : 'Review submissions') : (isId ? 'Baca konten' : 'Read content'))"></x-text.caption>
                                     </div>
                                 </div>
 
@@ -299,6 +301,7 @@
             syncUrl: config.syncUrl,
             availableRoles: config.availableRoles,
             selectedRoles: config.initialRoles,
+            isId: config.isId,
             isExpanded: false,
             isLoading: false,
             statusMessage: '',
@@ -331,7 +334,7 @@
                     if (response.data.success) {
                         this.selectedRoles = response.data.roles;
                         this.statusType = 'success';
-                        this.statusMessage = 'Peran berhasil diperbarui!';
+                        this.statusMessage = this.isId ? 'Peran berhasil diperbarui!' : 'Roles successfully updated!';
                         
                         // Dispatch custom event to dynamically update layouts' switchers
                         window.dispatchEvent(new CustomEvent('journal-enrollment-updated', {
@@ -345,17 +348,17 @@
                         }));
                         
                         setTimeout(() => {
-                            if (this.statusMessage === 'Peran berhasil diperbarui!') {
+                            if (this.statusMessage === 'Peran berhasil diperbarui!' || this.statusMessage === 'Roles successfully updated!') {
                                 this.statusMessage = '';
                             }
                         }, 3000);
                     } else {
-                        throw new Error(response.data.message || 'Gagal memperbarui peran.');
+                        throw new Error(response.data.message || (this.isId ? 'Gagal memperbarui peran.' : 'Failed to update roles.'));
                     }
                 } catch (error) {
                     console.error(error);
                     this.statusType = 'error';
-                    this.statusMessage = error.response?.data?.message || 'Terjadi kesalahan saat memperbarui peran.';
+                    this.statusMessage = error.response?.data?.message || (this.isId ? 'Terjadi kesalahan saat memperbarui peran.' : 'An error occurred while updating roles.');
                 } finally {
                     this.isLoading = false;
                 }

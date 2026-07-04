@@ -1,4 +1,7 @@
 <x-app-layout>
+    @php
+        $isId = app()->getLocale() === 'id';
+    @endphp
     @push('styles')
         <style>
             /* CKEditor 4 Custom Styling */
@@ -19,7 +22,7 @@
             }
         </style>
     @endpush
-    <x-slot name="title">Profile Settings</x-slot>
+    <x-slot name="title">{{ $isId ? 'Pengaturan Profil' : 'Profile Settings' }}</x-slot>
 
     <div class="min-h-screen bg-gray-50 -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
         <div class="max-w-6xl mx-auto">
@@ -31,10 +34,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    Back to Dashboard
+                    {{ $isId ? 'Kembali ke Dasbor' : 'Back to Dashboard' }}
                 </a>
-                <h1 class="text-3xl font-bold text-gray-900">Profile Settings</h1>
-                <p class="mt-2 text-gray-600">Manage your account information and preferences</p>
+                <h1 class="text-3xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Profil' : 'Profile Settings' }}</h1>
+                <p class="mt-2 text-gray-600">{{ $isId ? 'Kelola informasi akun dan preferensi Anda' : 'Manage your account information and preferences' }}</p>
             </div>
 
             <!-- Success/Error Messages -->
@@ -60,7 +63,7 @@
                                 clip-rule="evenodd" />
                         </svg>
                         <div>
-                            <p class="font-medium text-red-800">Please fix the following errors:</p>
+                            <p class="font-medium text-red-800">{{ $isId ? 'Harap perbaiki kesalahan berikut:' : 'Please fix the following errors:' }}</p>
                             <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -96,7 +99,7 @@
                             <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ $user->name }}</h3>
                             <p class="text-sm text-gray-500 mb-4">{{ $user->email }}</p>
                             <p class="text-xs text-gray-600 mb-4">
-                                Upload a new avatar. Max file size: 2MB. Allowed formats: JPG, PNG, WebP.
+                                {{ $isId ? 'Unggah avatar baru. Ukuran file maksimum: 2MB. Format yang diperbolehkan: JPG, PNG, WebP.' : 'Upload a new avatar. Max file size: 2MB. Allowed formats: JPG, PNG, WebP.' }}
                             </p>
                             <div class="flex flex-wrap gap-3 justify-center md:justify-start">
                                 <form action="{{ route('journal.profile.avatar', $journal->slug) }}" method="POST"
@@ -107,7 +110,7 @@
                                         accept="image/jpeg,image/png,image/jpg,image/webp"
                                         @change="if ($event.target.files[0]) { 
                                             if ($event.target.files[0].size > 2 * 1024 * 1024) { 
-                                                alert('File size must be less than 2MB'); 
+                                                alert('{{ $isId ? 'Ukuran file harus kurang dari 2MB' : 'File size must be less than 2MB' }}'); 
                                                 $event.target.value = ''; 
                                             } else { 
                                                 previewUrl = URL.createObjectURL($event.target.files[0]); 
@@ -121,7 +124,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        Choose Image
+                                        {{ $isId ? 'Pilih Gambar' : 'Choose Image' }}
                                     </label>
                                     <button x-show="previewUrl" x-cloak type="submit"
                                         class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors">
@@ -130,7 +133,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                         </svg>
-                                        Upload
+                                        {{ $isId ? 'Unggah' : 'Upload' }}
                                     </button>
                                 </form>
 
@@ -141,13 +144,13 @@
                                         @method('DELETE')
                                         <button type="submit"
                                             class="inline-flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
-                                            onclick="return confirm('Are you sure you want to remove your avatar?')">
+                                            onclick="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus avatar Anda?' : 'Are you sure you want to remove your avatar?' }}')">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
-                                            Remove
+                                            {{ $isId ? 'Hapus' : 'Remove' }}
                                         </button>
                                     </form>
                                 @endif
@@ -180,7 +183,7 @@
                                 'border-transparent text-slate-400 hover:text-slate-600'"
                             class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-user text-lg opacity-70"></i>
-                            Identity
+                            {{ $isId ? 'Identitas' : 'Identity' }}
                             <div x-show="activeTab === 'identity'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="setActiveTab('contact')" type="button"
@@ -189,7 +192,7 @@
                                 'border-transparent text-slate-400 hover:text-slate-600'"
                             class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-address-book text-lg opacity-70"></i>
-                            Contact
+                            {{ $isId ? 'Kontak' : 'Contact' }}
                             <div x-show="activeTab === 'contact'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="setActiveTab('public')" type="button"
@@ -198,7 +201,7 @@
                                 'border-transparent text-slate-400 hover:text-slate-600'"
                             class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-globe text-lg opacity-70"></i>
-                            Public
+                            {{ $isId ? 'Publik' : 'Public' }}
                             <div x-show="activeTab === 'public'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="setActiveTab('password')" type="button"
@@ -207,7 +210,7 @@
                                 'border-transparent text-slate-400 hover:text-slate-600'"
                             class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-lock text-lg opacity-70"></i>
-                            Password
+                            {{ $isId ? 'Kata Sandi' : 'Password' }}
                             <div x-show="activeTab === 'password'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                         <button @click="setActiveTab('roles')" type="button"
@@ -216,7 +219,7 @@
                                 'border-transparent text-slate-400 hover:text-slate-600'"
                             class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
                             <i class="fa-solid fa-user-tag text-lg opacity-70"></i>
-                            Roles
+                            {{ $isId ? 'Peran' : 'Roles' }}
                             <div x-show="activeTab === 'roles'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
                         </button>
                     </nav>
@@ -231,18 +234,18 @@
                     <div x-show="activeTab === 'identity'" x-cloak>
                         <div class="flex items-center gap-3 mb-6">
                             <i class="fa-solid fa-id-card text-indigo-600 text-xl"></i>
-                            <h3 class="text-lg font-bold text-slate-800">Identity Information</h3>
+                            <h3 class="text-lg font-bold text-slate-800">{{ $isId ? 'Informasi Identitas' : 'Identity Information' }}</h3>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                             <!-- Public Name -->
                             <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Public Name
+                                    {{ $isId ? 'Nama Publik' : 'Public Name' }}
                                 </label>
                                 <input type="text" name="name" id="name"
                                     value="{{ old('name', $user->name) }}"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('name') border-red-500 @enderror">
-                                <p class="mt-1 text-xs text-gray-500">Your public display name (optional)</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Nama tampilan publik Anda (opsional)' : 'Your public display name (optional)' }}</p>
                                 @error('name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -251,23 +254,23 @@
                             <!-- Username -->
                             <div>
                                 <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Username
+                                    {{ $isId ? 'Nama Pengguna' : 'Username' }}
                                 </label>
                                 <input type="text" name="username" id="username"
                                     value="{{ old('username', $user->username ?? strstr($user->email, '@', true)) }}" readonly
                                     class="w-full px-4 py-2.5 border border-gray-200 bg-gray-100 text-gray-500 rounded-lg cursor-not-allowed select-none">
-                                <p class="mt-1 text-xs text-gray-500">Your unique username identifier (cannot be changed)</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Pengidentifikasi nama pengguna unik Anda (tidak dapat diubah)' : 'Your unique username identifier (cannot be changed)' }}</p>
                             </div>
 
                             <!-- Given Name -->
                             <div>
                                 <label for="given_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Given Name <span class="text-red-500">*</span>
+                                    {{ $isId ? 'Nama Depan' : 'Given Name' }} <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="given_name" id="given_name"
                                     value="{{ old('given_name', $user->given_name) }}" required
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('given_name') border-red-500 @enderror">
-                                <p class="mt-1 text-xs text-gray-500">Your primary first/given name (required)</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Nama depan/utama Anda (wajib)' : 'Your primary first/given name (required)' }}</p>
                                 @error('given_name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -276,34 +279,34 @@
                             <!-- Family Name -->
                             <div>
                                 <label for="family_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Family Name
+                                    {{ $isId ? 'Nama Belakang' : 'Family Name' }}
                                 </label>
                                 <input type="text" name="family_name" id="family_name"
                                     value="{{ old('family_name', $user->family_name) }}"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <p class="mt-1 text-xs text-gray-500">Your last/family name (optional)</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Nama belakang/keluarga Anda (opsional)' : 'Your last/family name (optional)' }}</p>
                             </div>
 
                             <!-- Affiliation -->
                             <div>
                                 <label for="affiliation" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Affiliation / Institution
+                                    {{ $isId ? 'Afiliasi / Institusi' : 'Affiliation / Institution' }}
                                 </label>
                                 <input type="text" name="affiliation" id="affiliation"
                                     value="{{ old('affiliation', $user->affiliation) }}"
                                     placeholder="e.g., Department of Computer Science, University of Indonesia"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <p class="mt-1 text-xs text-gray-500">Your current institution or organization</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Institusi atau organisasi Anda saat ini' : 'Your current institution or organization' }}</p>
                             </div>
 
                             <!-- Country -->
                             <div>
                                 <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Country
+                                    {{ $isId ? 'Negara' : 'Country' }}
                                 </label>
                                 <select name="country" id="country"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                    <option value="">Select a country</option>
+                                    <option value="">{{ $isId ? 'Pilih negara...' : 'Select a country' }}</option>
                                     @php
                                         $countries = [
                                             'Indonesia',
@@ -351,24 +354,24 @@
                     <div x-show="activeTab === 'contact'" x-cloak>
                         <div class="flex items-center gap-3 mb-6">
                             <i class="fa-solid fa-envelope-open-text text-indigo-600 text-xl"></i>
-                            <h3 class="text-lg font-bold text-slate-800">Contact Information</h3>
+                            <h3 class="text-lg font-bold text-slate-800">{{ $isId ? 'Informasi Kontak' : 'Contact Information' }}</h3>
                         </div>
                         <div class="grid grid-cols-1 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                             <!-- Email Address -->
                             <div>
                                 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Email Address <span class="text-red-500">*</span>
+                                    {{ $isId ? 'Alamat Email' : 'Email Address' }} <span class="text-red-500">*</span>
                                 </label>
                                 <input type="email" name="email" id="email"
                                     value="{{ old('email', $user->email) }}" required
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <p class="mt-1 text-xs text-gray-500">Your primary email address for communication and notifications.</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Alamat email utama Anda untuk komunikasi dan pemberitahuan.' : 'Your primary email address for communication and notifications.' }}</p>
                             </div>
 
                              <!-- Phone Number with WhatsApp -->
                              <div x-data="phoneInputComponent('{{ old('phone', $user->phone) }}')">
                                  <label for="phone_display" class="block text-sm font-medium text-gray-700 mb-2">
-                                     Phone / WhatsApp Number
+                                     {{ $isId ? 'Nomor Telepon / WhatsApp' : 'Phone / WhatsApp Number' }}
                                  </label>
 
                                  <input type="hidden" name="phone" :value="fullPhone">
@@ -387,7 +390,7 @@
                                          <div x-show="open" x-cloak
                                              class="absolute left-0 z-50 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto py-1">
                                              <div class="px-2 py-1.5 sticky top-0 bg-white border-b border-gray-100">
-                                                 <input type="text" x-model="search" placeholder="Search country..." @click.stop
+                                                 <input type="text" x-model="search" placeholder="{{ $isId ? 'Cari negara...' : 'Search country...' }}" @click.stop
                                                      class="w-full px-2.5 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
                                              </div>
                                              <template x-for="c in filteredCountries" :key="c.code + c.dial">
@@ -413,19 +416,19 @@
                                      <span
                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                          <i class="fa-brands fa-whatsapp mr-1"></i>
-                                         WhatsApp Active
+                                         {{ $isId ? 'WhatsApp Aktif' : 'WhatsApp Active' }}
                                      </span>
-                                     <p class="ml-2 text-xs text-gray-500">Select country code with flag and enter your mobile number for WhatsApp notifications.</p>
+                                     <p class="ml-2 text-xs text-gray-500">{{ $isId ? 'Pilih kode negara dengan bendera dan masukkan nomor ponsel Anda untuk pemberitahuan WhatsApp.' : 'Select country code with flag and enter your mobile number for WhatsApp notifications.' }}</p>
                                  </div>
                              </div>
 
                             <!-- Mailing Address -->
                             <div>
                                 <label for="mailing_address" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Mailing Address
+                                    {{ $isId ? 'Alamat Surat Menyurat' : 'Mailing Address' }}
                                 </label>
                                 <textarea name="mailing_address" id="mailing_address" rows="4"
-                                    placeholder="Enter your complete mailing address..."
+                                    placeholder="{{ $isId ? 'Masukkan alamat surat menyurat lengkap Anda...' : 'Enter your complete mailing address...' }}"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('mailing_address', $user->mailing_address) }}</textarea>
                             </div>
                         </div>
@@ -435,24 +438,23 @@
                     <div x-show="activeTab === 'public'" x-cloak>
                         <div class="flex items-center gap-3 mb-6">
                             <i class="fa-solid fa-user-astronaut text-indigo-600 text-xl"></i>
-                            <h3 class="text-lg font-bold text-slate-800">Public Profile</h3>
+                            <h3 class="text-lg font-bold text-slate-800">{{ $isId ? 'Profil Publik' : 'Public Profile' }}</h3>
                         </div>
                         <div class="grid grid-cols-1 gap-6 p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                             <!-- Bio Statement with CKEditor 4 -->
                             <div>
                                 <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Biography / Bio Statement
+                                    {{ $isId ? 'Biografi / Pernyataan Bio' : 'Biography / Bio Statement' }}
                                 </label>
                                 <textarea name="bio" id="bio" rows="6"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">{{ old('bio', $user->bio) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">Maximum 5000 characters. This will be displayed
-                                    on your public profile.</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Maksimum 5000 karakter. Ini akan ditampilkan di profil publik Anda.' : 'Maximum 5000 characters. This will be displayed on your public profile.' }}</p>
                             </div>
 
                             <!-- Homepage URL -->
                             <div>
                                 <label for="homepage" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Homepage URL
+                                    {{ $isId ? 'URL Beranda' : 'Homepage URL' }}
                                 </label>
                                 <div class="relative">
                                     <input type="url" name="homepage" id="homepage"
@@ -460,7 +462,7 @@
                                         placeholder="https://yourwebsite.com"
                                         class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500">Your personal or institutional website</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Situs web pribadi atau institusi Anda' : 'Your personal or institutional website' }}</p>
                             </div>
 
                             <!-- ORCID iD -->
@@ -485,8 +487,7 @@
                                         placeholder="https://orcid.org/0000-0001-2345-6789"
                                         class="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500">Your unique researcher identifier. Format:
-                                    https://orcid.org/0000-0001-2345-6789</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Pengenal unik peneliti Anda. Format: https://orcid.org/0000-0001-2345-6789' : 'Your unique researcher identifier. Format: https://orcid.org/0000-0001-2345-6789' }}</p>
                                 @error('orcid_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -508,7 +509,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M5 13l4 4L19 7" />
                             </svg>
-                            Save Changes
+                            {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                         </button>
                     </div>
                 </form>
@@ -517,7 +518,7 @@
                 <div x-show="activeTab === 'password'" x-cloak class="p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <i class="fa-solid fa-key text-indigo-600 text-xl"></i>
-                        <h3 class="text-lg font-bold text-slate-800">Change Password</h3>
+                        <h3 class="text-lg font-bold text-slate-800">{{ $isId ? 'Ubah Kata Sandi' : 'Change Password' }}</h3>
                     </div>
                     <form action="{{ route('journal.profile.password', $journal->slug) }}" method="POST" class="p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                         @csrf
@@ -527,7 +528,7 @@
                             <!-- Current Password -->
                             <div>
                                 <label for="current_password" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Current Password <span class="text-red-500">*</span>
+                                    {{ $isId ? 'Kata Sandi Saat Ini' : 'Current Password' }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <input :type="showCurrentPassword ? 'text' : 'password'" name="current_password" id="current_password" required
@@ -546,7 +547,7 @@
                             <!-- New Password -->
                             <div>
                                 <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                                    New Password <span class="text-red-500">*</span>
+                                    {{ $isId ? 'Kata Sandi Baru' : 'New Password' }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <input :type="showNewPassword ? 'text' : 'password'" name="password" id="password" required
@@ -560,14 +561,14 @@
                                 @error('password')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
-                                <p class="mt-1 text-xs text-gray-500">Min 8 characters, mixed case, numbers</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Minimal 8 karakter, kombinasi huruf besar/kecil, angka' : 'Min 8 characters, mixed case, numbers' }}</p>
                             </div>
 
                             <!-- Confirm Password -->
                             <div>
                                 <label for="password_confirmation"
                                     class="block text-sm font-medium text-gray-700 mb-2">
-                                    Confirm Password <span class="text-red-500">*</span>
+                                    {{ $isId ? 'Konfirmasi Kata Sandi' : 'Confirm Password' }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <input :type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation" id="password_confirmation"
@@ -588,7 +589,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                 </svg>
-                                Update Password
+                                {{ $isId ? 'Perbarui Kata Sandi' : 'Update Password' }}
                             </button>
                         </div>
                     </form>
@@ -605,24 +606,24 @@
             <!-- Account Stats -->
             <div class="mt-6 bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] overflow-hidden">
                 <div class="px-8 py-5 border-b-2 border-[#DAD8F4] bg-slate-50/50">
-                    <h2 class="text-lg font-bold text-slate-800">Account Information</h2>
+                    <h2 class="text-lg font-bold text-slate-800">{{ $isId ? 'Informasi Akun' : 'Account Information' }}</h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div class="text-center p-4 bg-gray-50 rounded-xl">
-                            <p class="text-sm text-gray-500 mb-1">Member Since</p>
+                            <p class="text-sm text-gray-500 mb-1">{{ $isId ? 'Anggota Sejak' : 'Member Since' }}</p>
                             <p class="text-lg font-semibold text-gray-900">
-                                {{ $user->created_at->format('M d, Y') }}</p>
+                                {{ $isId ? $user->created_at->translatedFormat('d M Y') : $user->created_at->format('M d, Y') }}</p>
                         </div>
                         <div class="text-center p-4 bg-gray-50 rounded-xl">
-                            <p class="text-sm text-gray-500 mb-1">Email Verified</p>
+                            <p class="text-sm text-gray-500 mb-1">{{ $isId ? 'Verifikasi Email' : 'Email Verified' }}</p>
                             <p
                                 class="text-lg font-semibold {{ $user->email_verified_at ? 'text-green-600' : 'text-yellow-600' }}">
-                                {{ $user->email_verified_at ? 'Verified' : 'Pending' }}
+                                {{ $isId ? ($user->email_verified_at ? 'Terverifikasi' : 'Tertunda') : ($user->email_verified_at ? 'Verified' : 'Pending') }}
                             </p>
                         </div>
                         <div class="text-center p-4 bg-gray-50 rounded-xl">
-                            <p class="text-sm text-gray-500 mb-1">Total Submissions</p>
+                            <p class="text-sm text-gray-500 mb-1">{{ $isId ? 'Total Naskah' : 'Total Submissions' }}</p>
                             <p class="text-lg font-semibold text-gray-900">{{ $user->submissions()->count() }}</p>
                         </div>
                     </div>
