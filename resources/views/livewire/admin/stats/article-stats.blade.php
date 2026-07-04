@@ -49,9 +49,9 @@
         <div
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
-                <div>
+                <div class="flex-1">
                     <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Total Tayangan' : 'Total Views' }}</div>
-                    <div class="text-3xl font-bold text-slate-800">{{ number_format($totalViews) }}</div>
+                    <div class="text-3xl font-bold text-slate-800 text-center">{{ number_format($totalViews) }}</div>
                 </div>
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
                     style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);">
@@ -76,9 +76,9 @@
         <div
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
-                <div>
+                <div class="flex-1">
                     <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Total Unduhan' : 'Total Downloads' }}</div>
-                    <div class="text-3xl font-bold text-slate-800">{{ number_format($totalDownloads) }}</div>
+                    <div class="text-3xl font-bold text-slate-800 text-center">{{ number_format($totalDownloads) }}</div>
                 </div>
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"
                     style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); box-shadow: 0 4px 14px 0 rgba(249, 115, 22, 0.39);">
@@ -100,9 +100,9 @@
         <div
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
-                <div>
+                <div class="flex-1">
                     <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Negara Teratas' : 'Top Country' }}</div>
-                    <div class="text-2xl font-bold text-slate-800">
+                    <div class="text-2xl font-bold text-slate-800 text-center">
                         {{ $topCountry ? $countryNames[$topCountry->country_code] ?? $topCountry->country_code : '-' }}
                     </div>
                     @if ($topCountry)
@@ -127,9 +127,9 @@
         <div
             class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-purple-200 transition-all duration-200 relative overflow-hidden">
             <div class="flex items-start justify-between relative z-10">
-                <div>
+                <div class="flex-1">
                     <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ $isId ? 'Hari Tersibuk' : 'Busiest Day' }}</div>
-                    <div class="text-lg font-bold text-slate-800">
+                    <div class="text-lg font-bold text-slate-800 text-center">
                         {{ $busiestDay ? \Carbon\Carbon::parse($busiestDay->date)->format('M d, Y') : '-' }}
                     </div>
                     @if ($busiestDay)

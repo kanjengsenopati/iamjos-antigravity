@@ -66,7 +66,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.received">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.received">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Total diterima dalam periode' : 'Total received in period' }}
                         </p>
@@ -88,7 +88,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.accepted">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.accepted">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Artikel diterima' : 'Articles accepted' }}
                         </p>
@@ -111,7 +111,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800"><span x-text="kpi.acceptance_rate">0</span>%</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center"><span x-text="kpi.acceptance_rate">0</span>%</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Dari pengajuan yang diputuskan' : 'Of decided submissions' }}
                         </p>
@@ -133,7 +133,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.avg_days_first || '-'">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.avg_days_first || '-'">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Rata-rata hari' : 'Average days' }}
                         </p>
@@ -158,7 +158,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.avg_days_accept || '-'">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.avg_days_accept || '-'">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Dari pengajuan sampai diterima' : 'From submission to acceptance' }}
                         </p>

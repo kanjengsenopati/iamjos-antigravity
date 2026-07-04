@@ -64,7 +64,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.total">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.total">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Terdaftar di jurnal' : 'Registered in journal' }}
                         </p>
@@ -88,7 +88,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.new">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.new">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? '30 hari terakhir' : 'Last 30 days' }}
                         </p>
@@ -110,7 +110,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.active">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.active">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Login baru-baru ini' : 'Logged in recently' }}
                         </p>
@@ -134,7 +134,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.registered_this_year">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.registered_this_year">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Bergabung di ' . date('Y') : 'Joined in ' . date('Y') }}
                         </p>
@@ -155,7 +155,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800" x-text="kpi.active_this_month">0</div>
+                        <div class="text-3xl font-bold text-slate-800 text-center" x-text="kpi.active_this_month">0</div>
                         <p class="text-xs text-slate-400 mt-1">
                             {{ $isId ? 'Pengguna aktif' : 'Active users' }}
                         </p>
