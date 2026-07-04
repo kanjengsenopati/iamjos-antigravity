@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Enroll User')
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', $isId ? 'Daftarkan Pengguna' : 'Enroll User')
 
 @section('content')
     <!-- Header -->
@@ -8,26 +13,25 @@
         <nav class="flex mb-2" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                 <li class="inline-flex items-center">
-                    <span class="text-gray-400 text-sm font-medium">Journal Manager</span>
+                    <span class="text-gray-400 text-sm font-medium">{{ $isId ? 'Manajer Jurnal' : 'Journal Manager' }}</span>
                 </li>
                 <li>
                     <div class="flex items-center">
                         <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
                         <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
-                            class="text-sm font-medium text-gray-500 hover:text-indigo-600">Users</a>
+                            class="text-sm font-medium text-gray-500 hover:text-indigo-600">{{ $isId ? 'Pengguna' : 'Users' }}</a>
                     </div>
                 </li>
                 <li aria-current="page">
                     <div class="flex items-center">
                         <i class="fa-solid fa-chevron-right text-gray-300 mx-2 text-xs"></i>
-                        <span class="text-sm font-medium text-indigo-600">Enroll User</span>
+                        <span class="text-sm font-medium text-indigo-600">{{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}</span>
                     </div>
                 </li>
             </ol>
         </nav>
-        <h1 class="text-2xl font-bold text-gray-900">Enroll Existing User</h1>
-        <p class="text-sm text-gray-500 mt-1">Add an existing user to <strong>{{ $journal->name }}</strong> with specific
-            roles.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Daftarkan Pengguna yang Ada' : 'Enroll Existing User' }}</h1>
+        <p class="text-sm text-gray-500 mt-1">{{ $isId ? 'Tambahkan pengguna yang sudah terdaftar ke' : 'Add an existing user to' }} <strong>{{ $journal->name }}</strong> {{ $isId ? 'dengan peran tertentu.' : 'with specific roles.' }}</p>
     </div>
 
     <!-- Main Content Grid -->
@@ -40,9 +44,9 @@
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div class="p-6 border-b border-gray-100 rounded-t-xl">
                         <h2 class="text-lg font-semibold text-gray-900 mb-1 flex items-center">
-                            <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i> Select User
+                            <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i> {{ $isId ? 'Pilih Pengguna' : 'Select User' }}
                         </h2>
-                        <p class="text-sm text-gray-500">Search for a registered user to enroll.</p>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Cari pengguna terdaftar untuk didaftarkan.' : 'Search for a registered user to enroll.' }}</p>
                     </div>
 
                     <div class="p-6">
@@ -51,8 +55,8 @@
                                 class="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 flex items-start">
                                 <i class="fa-solid fa-info-circle mt-0.5 mr-2"></i>
                                 <div>
-                                    <p class="font-medium">No users available.</p>
-                                    <p class="mt-1">All registered users are already enrolled in this journal.</p>
+                                    <p class="font-medium">{{ $isId ? 'Tidak ada pengguna yang tersedia.' : 'No users available.' }}</p>
+                                    <p class="mt-1">{{ $isId ? 'Semua pengguna terdaftar sudah terdaftar di jurnal ini.' : 'All registered users are already enrolled in this journal.' }}</p>
                                 </div>
                             </div>
                         @else
@@ -80,7 +84,7 @@
                                 }
                             }" class="relative max-w-xl">
                                 <label for="user_search" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Search User <span class="text-red-500">*</span>
+                                    {{ $isId ? 'Cari Pengguna' : 'Search User' }} <span class="text-red-500">*</span>
                                 </label>
 
                                 <input type="hidden" name="user_id" :value="selectedId">
@@ -90,7 +94,7 @@
                                         class="w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                         aria-haspopup="listbox" :aria-expanded="open" aria-labelledby="listbox-label">
                                         <span class="block truncate"
-                                            x-text="selectedName ? selectedName : '-- Select a user --'"></span>
+                                            x-text="selectedName ? selectedName : '{{ $isId ? '-- Pilih pengguna --' : '-- Select a user --' }}'"></span>
                                         <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                             <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
                                         </span>
@@ -109,7 +113,7 @@
                                                 <input type="text" x-model="search"
                                                     class="block w-full rounded-md border-gray-300 pl-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-xs"
                                                     style="padding-left: 2.5rem !important;"
-                                                    placeholder="Search by name or email...">
+                                                    placeholder="{{ $isId ? 'Cari berdasarkan nama atau surel...' : 'Search by name or email...' }}">
                                             </div>
                                         </div>
 
@@ -131,7 +135,7 @@
 
                                         <div x-show="filteredUsers.length === 0"
                                             class="py-2 px-3 text-sm text-gray-500 text-center">
-                                            No users found.
+                                            {{ $isId ? 'Pengguna tidak ditemukan.' : 'No users found.' }}
                                         </div>
                                     </div>
                                 </div>
@@ -147,9 +151,9 @@
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-gray-100">
                         <h2 class="text-lg font-semibold text-gray-900 mb-1 flex items-center">
-                            <i class="fa-solid fa-tags text-indigo-500 mr-2"></i> Assign Roles
+                            <i class="fa-solid fa-tags text-indigo-500 mr-2"></i> {{ $isId ? 'Tetapkan Peran' : 'Assign Roles' }}
                         </h2>
-                        <p class="text-sm text-gray-500">Pick roles for {{ $journal->name }}.</p>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Pilih peran untuk' : 'Pick roles for' }} {{ $journal->name }}.</p>
                     </div>
                     <div class="p-6 bg-gray-50/30">
                         @error('roles')
@@ -187,7 +191,7 @@
                             @endforeach
                         </div>
                         @if ($roles->isEmpty())
-                            <p class="text-sm text-gray-500 italic">No available roles found for this journal.</p>
+                            <p class="text-sm text-gray-500 italic">{{ $isId ? 'Tidak ada peran tersedia yang ditemukan untuk jurnal ini.' : 'No available roles found for this journal.' }}</p>
                         @endif
                     </div>
                 </div>
@@ -197,12 +201,12 @@
             <div class="mt-6 flex justify-end gap-3">
                 <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
                     class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors">
-                    Cancel
+                    {{ $isId ? 'Batal' : 'Cancel' }}
                 </a>
                 @if (!$availableUsers->isEmpty())
                     <button type="submit"
                         class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors shadow-sm shadow-indigo-200">
-                        <i class="fa-solid fa-user-plus mr-2"></i> Enroll User
+                        <i class="fa-solid fa-user-plus mr-2"></i> {{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}
                     </button>
                 @endif
             </div>

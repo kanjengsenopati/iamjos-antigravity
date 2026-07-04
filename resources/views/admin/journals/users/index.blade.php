@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'User Management')
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', $isId ? 'Manajemen Pengguna' : 'User Management')
 
 @section('content')
     <div x-data="{
@@ -132,12 +137,12 @@
                         </div>
                         <input type="text" name="search" x-model="searchQuery"
                             class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white transition-colors"
-                            placeholder="Search by name, username, or email..."
+                            placeholder="{{ $isId ? 'Cari nama, username, atau surel...' : 'Search by name, username, or email...' }}"
                             style="padding-left: 2.5rem !important;">
                     </div>
                     <button type="button" @click="triggerSearch()"
                         class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all duration-155 flex items-center gap-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <i class="fa-solid fa-magnifying-glass text-xs"></i> Search
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i> {{ $isId ? 'Cari' : 'Search' }}
                     </button>
                 </div>
                 <!-- Notifikasi Error Karakter < 3 -->
@@ -154,7 +159,7 @@
                 <select name="role" x-model="selectedRole" x-on:change="performSearch()"
                     class="block w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white appearance-none cursor-pointer"
                     style="padding-left: 2.5rem !important; padding-right: 2.5rem !important;">
-                    <option value="">All Roles</option>
+                    <option value="">{{ $isId ? 'Semua Peran' : 'All Roles' }}</option>
                     @foreach ($roles as $roleName)
                         <option value="{{ $roleName }}">{{ $roleName }}</option>
                     @endforeach
@@ -177,7 +182,7 @@
         <div x-show="isLoading" class="absolute inset-0 bg-white/40 backdrop-blur-[1px] flex items-center justify-center z-10" x-cloak>
             <div class="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full shadow-sm border border-gray-100">
                 <i class="fa-solid fa-circle-notch animate-spin text-indigo-600"></i>
-                <span class="text-xs font-semibold text-gray-600">Searching...</span>
+                <span class="text-xs font-semibold text-gray-600">{{ $isId ? 'Mencari...' : 'Searching...' }}</span>
             </div>
         </div>
 
@@ -229,9 +234,9 @@
                             </div>
                             <div>
                                 <x-text.h1 id="email-modal-title" class="text-white font-bold tracking-tight !text-[18px]">
-                                    Send Email
+                                    {{ $isId ? 'Kirim Surel' : 'Send Email' }}
                                 </x-text.h1>
-                                <p class="text-xs text-blue-100 font-medium">Compose an email to user</p>
+                                <p class="text-xs text-blue-100 font-medium">{{ $isId ? 'Buat surel untuk pengguna ini' : 'Compose an email to user' }}</p>
                             </div>
                         </div>
                         <button @click="emailModalOpen = false"
@@ -256,7 +261,7 @@
 
                     <!-- To Recipient -->
                     <div>
-                        <x-text.label class="block mb-1">To Recipient</x-text.label>
+                        <x-text.label class="block mb-1">{{ $isId ? 'Kepada' : 'To Recipient' }}</x-text.label>
                         <div class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 flex items-center justify-between">
                             <span x-text="recipientName + ' <' + recipientEmail + '>'"></span>
                         </div>
@@ -264,18 +269,18 @@
 
                     <!-- Subject -->
                     <div>
-                        <x-text.label class="block mb-1">Subject</x-text.label>
+                        <x-text.label class="block mb-1">{{ $isId ? 'Subjek' : 'Subject' }}</x-text.label>
                         <input type="text" x-model="subject" 
                             class="w-full px-3 py-2 border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm text-slate-800"
-                            placeholder="Enter email subject...">
+                            placeholder="{{ $isId ? 'Masukkan subjek surel...' : 'Enter email subject...' }}">
                     </div>
 
                     <!-- Body -->
                     <div>
-                        <x-text.label class="block mb-1">Message Body</x-text.label>
+                        <x-text.label class="block mb-1">{{ $isId ? 'Isi Pesan' : 'Message Body' }}</x-text.label>
                         <textarea x-model="body" rows="6"
                             class="w-full px-3 py-2 border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm text-slate-800 resize-y"
-                            placeholder="Type your message here..."></textarea>
+                            placeholder="{{ $isId ? 'Ketik pesan Anda di sini...' : 'Type your message here...' }}"></textarea>
                     </div>
                 </div>
 
@@ -283,13 +288,13 @@
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[24px]">
                     <button type="button" @click="emailModalOpen = false"
                         class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 transition-colors">
-                        Cancel
+                        {{ $isId ? 'Batal' : 'Cancel' }}
                     </button>
                     <button type="button" @click="sendEmail()" :disabled="isSubmitting"
                         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm disabled:opacity-55">
                         <i class="fa-solid fa-paper-plane" x-show="!isSubmitting"></i>
                         <i class="fa-solid fa-spinner animate-spin" x-show="isSubmitting" x-cloak></i>
-                        <span x-text="isSubmitting ? 'Sending...' : 'Send Email'"></span>
+                        <span x-text="isSubmitting ? '{{ $isId ? 'Mengirim...' : 'Sending...' }}' : '{{ $isId ? 'Kirim Surel' : 'Send Email' }}'"></span>
                     </button>
                 </div>
             </div>
