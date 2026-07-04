@@ -358,6 +358,28 @@ class WorkflowSettingsController extends Controller
         return back()->with('success', 'Review form deleted successfully.');
     }
 
+    /**
+     * Duplicate a review form.
+     */
+    public function duplicateReviewForm(string $journal, string $reviewFormId): RedirectResponse
+    {
+        $currentJournal = current_journal();
+
+        if (!$currentJournal) {
+            abort(404, 'Journal not found.');
+        }
+
+        $reviewForm = ReviewForm::findOrFail($reviewFormId);
+
+        if ($reviewForm->journal_id !== $currentJournal->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $newForm = $reviewForm->duplicate();
+
+        return back()->with('success', "Review form duplicated successfully: {$newForm->title}");
+    }
+
     // =====================================================
     // LIBRARY FILES
     // =====================================================

@@ -546,6 +546,15 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::post('/review-forms', [WorkflowSettingsController::class, 'storeReviewForm'])->name('review-forms.store');
                         Route::put('/review-forms/{reviewForm}', [WorkflowSettingsController::class, 'updateReviewForm'])->name('review-forms.update');
                         Route::delete('/review-forms/{reviewForm}', [WorkflowSettingsController::class, 'destroyReviewForm'])->name('review-forms.destroy');
+                        Route::post('/review-forms/{reviewForm}/duplicate', [WorkflowSettingsController::class, 'duplicateReviewForm'])->name('review-forms.duplicate');
+
+                        // Review Form Elements
+                        Route::get('/review-forms/{reviewForm}/builder', [\App\Http\Controllers\ReviewFormElementController::class, 'builder'])->name('review-forms.builder');
+                        Route::get('/review-forms/{reviewForm}/preview', [\App\Http\Controllers\ReviewFormElementController::class, 'preview'])->name('review-forms.preview');
+                        Route::post('/review-forms/{reviewForm}/elements', [\App\Http\Controllers\ReviewFormElementController::class, 'store'])->name('review-forms.elements.store');
+                        Route::put('/review-forms/{reviewForm}/elements/{element}', [\App\Http\Controllers\ReviewFormElementController::class, 'update'])->name('review-forms.elements.update');
+                        Route::delete('/review-forms/{reviewForm}/elements/{element}', [\App\Http\Controllers\ReviewFormElementController::class, 'destroy'])->name('review-forms.elements.destroy');
+                        Route::post('/review-forms/{reviewForm}/elements/reorder', [\App\Http\Controllers\ReviewFormElementController::class, 'reorder'])->name('review-forms.elements.reorder');
                         Route::post('/library', [WorkflowSettingsController::class, 'storeLibraryFile'])->name('library.store');
                         Route::get('/library/{libraryFile}/download', [WorkflowSettingsController::class, 'downloadLibraryFile'])->name('library.download');
                         Route::delete('/library/{libraryFile}', [WorkflowSettingsController::class, 'destroyLibraryFile'])->name('library.destroy');

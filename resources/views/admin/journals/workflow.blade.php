@@ -7,8 +7,10 @@
         activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'submissions') }}',
         showChecklistModal: false,
         showReviewFormModal: false,
+        showEditReviewFormModal: false,
         newChecklist: { content: '', is_required: true },
         newReviewForm: { title: '', description: '' },
+        editReviewForm: { id: '', title: '', description: '', is_active: true },
         isEditMode: false,
         editingItem: null
     }">
@@ -473,11 +475,21 @@
                                                                 {{ Str::limit($form->description, 50) }}
                                                             </p>
                                                         @endif
+                                                        <p class="text-xs text-gray-400 mt-1">
+                                                            <i class="fa-solid fa-list-check mr-1"></i>
+                                                            {{ $form->getElementCount() }} {{ $isId ? 'pertanyaan' : 'questions' }}
+                                                        </p>
                                                     </td>
                                                     <td class="px-4 py-4 text-center">
                                                         @if ($form->is_active)
-                                                            <span
-                                                                class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">{{ $isId ? 'Aktif' : 'Active' }}</span>
+                                                            @if ($form->hasElements())
+                                                                <span
+                                                                    class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">{{ $isId ? 'Aktif' : 'Active' }}</span>
+                                                            @else
+                                                                <span
+                                                                    class="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full"
+                                                                    title="{{ $isId ? 'Tidak ada pertanyaan' : 'No questions' }}">{{ $isId ? 'Kosong' : 'Empty' }}</span>
+                                                            @endif
                                                         @else
                                                             <span
                                                                 class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">{{ $isId ? 'Tidak Aktif' : 'Inactive' }}</span>
@@ -489,6 +501,39 @@
                                                     </td>
                                                     <td class="px-4 py-4 text-right">
                                                         <div class="flex items-center justify-end gap-2">
+                                                            <!-- Preview Button -->
+                                                            @if ($form->hasElements())
+                                                                <a href="{{ route('journal.settings.workflow.review-forms.preview', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}"
+                                                                    class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                                                    title="{{ $isId ? 'Pratinjau' : 'Preview' }}">
+                                                                    <i class="fa-solid fa-eye text-sm"></i>
+                                                                </a>
+                                                            @endif
+
+                                                            <!-- Edit Button -->
+                                                            <button type="button"
+                                                                @click="editReviewForm = {{ json_encode(['id' => $form->id, 'title' => $form->title, 'description' => $form->description, 'is_active' => $form->is_active]) }}; showEditReviewFormModal = true"
+                                                                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                                                title="{{ $isId ? 'Edit' : 'Edit' }}">
+                                                                <i class="fa-solid fa-pencil text-sm"></i>
+                                                            </button>
+
+                                                            <!-- Builder Button -->
+                                                            <a href="{{ route('journal.settings.workflow.review-forms.builder', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}"
+                                                                class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                                                                title="{{ $isId ? 'Kelola Pertanyaan' : 'Manage Questions' }}">
+                                                                <i class="fa-solid fa-list-check text-sm"></i>
+                                                            </a>
+
+                                                            <!-- Duplicate Button -->
+                                                            <button type="button"
+                                                                onclick="submitForm('{{ route('journal.settings.workflow.review-forms.duplicate', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', 'POST', '{{ $isId ? 'Duplikasi formulir ini?' : 'Duplicate this form?' }}')"
+                                                                class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+                                                                title="{{ $isId ? 'Duplikasi' : 'Duplicate' }}">
+                                                                <i class="fa-solid fa-copy text-sm"></i>
+                                                            </button>
+
+                                                            <!-- Delete Button -->
                                                             @if ($form->response_count == 0)
                                                                 <button type="button"
                                                                     onclick="submitForm('{{ route('journal.settings.workflow.review-forms.destroy', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', 'DELETE', '{{ $isId ? 'Hapus formulir ulasan ini?' : 'Delete this review form?' }}')"
@@ -893,6 +938,52 @@
                                 class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">{{ $isId ? 'Batal' : 'Cancel' }}</button>
                             <button type="submit"
                                 class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700">{{ $isId ? 'Buat Formulir' : 'Create Form' }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Review Form Modal -->
+        <div x-show="showEditReviewFormModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex min-h-screen items-center justify-center p-4">
+                <div class="fixed inset-0 bg-black/50" @click="showEditReviewFormModal = false"></div>
+                <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+                    <form
+                        :action="'{{ route('journal.settings.workflow.review-forms.update', ['journal' => $journal->slug, 'reviewForm' => '__FORM_ID__']) }}'.replace('__FORM_ID__', editReviewForm.id)"
+                        method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Edit Formulir Ulasan' : 'Edit Review Form' }}</h3>
+                            <button type="button" @click="showEditReviewFormModal = false"
+                                class="text-gray-400 hover:text-gray-600">
+                                <i class="fa-solid fa-xmark text-lg"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Judul *' : 'Title *' }}</label>
+                                <input type="text" name="title" x-model="editReviewForm.title" required
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Deskripsi' : 'Description' }}</label>
+                                <textarea name="description" x-model="editReviewForm.description" rows="2"
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
+                            </div>
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" name="is_active" value="1"
+                                    x-model="editReviewForm.is_active"
+                                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm text-gray-700">{{ $isId ? 'Formulir aktif' : 'Form is active' }}</span>
+                            </label>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" @click="showEditReviewFormModal = false"
+                                class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">{{ $isId ? 'Batal' : 'Cancel' }}</button>
+                            <button type="submit"
+                                class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700">{{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}</button>
                         </div>
                     </form>
                 </div>
