@@ -50,7 +50,7 @@
                     </div>
 
                     <div class="p-6">
-                        @if (count($reviewForm->elements) === 0)
+                        @if (($reviewForm->elements ?? []) === [] || count($reviewForm->elements ?? []) === 0)
                             <div class="text-center py-12">
                                 <i class="fa-solid fa-list-check text-6xl text-gray-300 mb-4"></i>
                                 <h3 class="text-lg font-medium text-gray-900 mb-2">
@@ -172,7 +172,7 @@
                         </div>
                         <div>
                             <dt class="text-gray-500">{{ $isId ? 'Total Pertanyaan' : 'Total Questions' }}</dt>
-                            <dd class="mt-1 font-medium text-gray-900">{{ count($reviewForm->elements) }}</dd>
+                            <dd class="mt-1 font-medium text-gray-900">{{ count($reviewForm->elements ?? []) }}</dd>
                         </div>
                         <div>
                             <dt class="text-gray-500">{{ $isId ? 'Total Tanggapan' : 'Total Responses' }}</dt>
