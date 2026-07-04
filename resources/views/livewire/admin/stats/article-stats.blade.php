@@ -184,35 +184,36 @@
                 <p class="text-sm text-slate-500">{{ $isId ? 'Distribusi geografis' : 'Geographic distribution' }}</p>
             </div>
             <div wire:ignore>
-                <div id="worldMap" class="h-64 bg-slate-50 rounded-lg mb-4"></div>
-            </div>
-
-            {{-- Top Countries List --}}
-            <div class="space-y-2 max-h-48 overflow-y-auto">
-                @php
-                    $topGeoData = collect($geoData)->take(10);
-                    $maxCount = $topGeoData->max() ?: 1;
-                @endphp
-                @foreach ($topGeoData as $code => $count)
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 text-center">
-                            <span class="text-sm font-mono font-bold text-slate-600">{{ $code }}</span>
-                        </div>
-                        <div class="flex-1">
-                            <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full transition-all duration-500"
-                                    style="width: {{ ($count / $maxCount) * 100 }}%; background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w-16 text-right">
-                            <span class="text-sm font-semibold text-slate-700">{{ number_format($count) }}</span>
-                        </div>
-                    </div>
-                @endforeach
+                <div id="worldMap" class="h-64 bg-slate-50 rounded-lg"></div>
             </div>
         </div>
     </div>
+
+    {{-- SECONDARY CHARTS ROW --}}
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {{-- Country Distribution Bar Chart (Span 2) --}}
+        <div class="xl:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="mb-4">
+                <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Distribusi Negara Teratas' : 'Top Country Distribution' }}</h3>
+                <p class="text-sm text-slate-500">{{ $isId ? 'Peringkat negara berdasarkan total tayangan' : 'Countries ranked by total views' }}</p>
+            </div>
+            <div wire:ignore>
+                <div id="countryBarChart" class="h-72"></div>
+            </div>
+        </div>
+
+        {{-- Views vs Downloads Donut (Span 1) --}}
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="mb-4">
+                <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Rasio Tayangan & Unduhan' : 'Views & Downloads Ratio' }}</h3>
+                <p class="text-sm text-slate-500">{{ $isId ? 'Perbandingan total interaksi' : 'Total engagement comparison' }}</p>
+            </div>
+            <div wire:ignore>
+                <div id="ratioDonutChart" class="h-72 flex items-center justify-center"></div>
+            </div>
+        </div>
+    </div>
+
 
     {{-- TOP ARTICLES TABLE --}}
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -355,15 +356,18 @@
 
 @script
     <script>
-        // Chart instance (global to this component scope)
         let mainChart = null;
         let worldMap = null;
+        let countryBarChart = null;
+        let ratioDonutChart = null;
 
         const isId = @json($isId);
 
-        // Initial chart data from PHP
         const initialData = @json($chartData);
         const initialGeoData = @json($geoData);
+        const initialTotalViews = @json($totalViews);
+        const initialTotalDownloads = @json($totalDownloads);
+
 
         function initMainChart(categories, views, downloads) {
             const options = {
@@ -514,13 +518,15 @@
         // Initialize charts on mount
         initMainChart(initialData.categories, initialData.views, initialData.downloads);
         initWorldMap(initialGeoData);
+        initCountryBarChart(initialGeoData);
+        initRatioDonutChart(initialTotalViews, initialTotalDownloads);
+
 
         // LISTEN FOR UPDATE EVENTS FROM LIVEWIRE
         $wire.on('update-chart', (data) => {
             const payload = data[0]; // Livewire wraps event data in array
 
             if (mainChart) {
-                // Update chart data without destroying it
                 mainChart.updateOptions({
                     xaxis: {
                         categories: payload.categories
@@ -528,12 +534,149 @@
                 });
                 mainChart.updateSeries(payload.series);
             } else {
-                // Fallback: reinitialize if chart was lost
                 const views = payload.series[0]?.data || [];
                 const downloads = payload.series[1]?.data || [];
                 initMainChart(payload.categories, views, downloads);
             }
         });
+
+        $wire.on('update-geo', (data) => {
+            const payload = data[0];
+            if (payload && payload.geoData) {
+                initWorldMap(payload.geoData);
+                initCountryBarChart(payload.geoData);
+            }
+        });
+
+        $wire.on('update-kpi', (data) => {
+            const payload = data[0];
+            if (payload) {
+                initRatioDonutChart(payload.views || 0, payload.downloads || 0);
+            }
+        });
+
+        function initCountryBarChart(geoData) {
+            const entries = Object.entries(geoData).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const categories = entries.map(e => e[0]);
+            const values = entries.map(e => e[1]);
+
+            const options = {
+                chart: {
+                    type: 'bar',
+                    height: 288,
+                    fontFamily: 'Inter, sans-serif',
+                    toolbar: { show: false },
+                    animations: { enabled: true, easing: 'easeinout', speed: 500 }
+                },
+                series: [{ name: isId ? 'Tayangan' : 'Views', data: values }],
+                colors: ['#6366f1'],
+                plotOptions: {
+                    bar: {
+                        horizontal: true,
+                        borderRadius: 6,
+                        barHeight: '60%',
+                        distributed: true
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'light',
+                        type: 'horizontal',
+                        shadeIntensity: 0.2,
+                        gradientToColors: ['#a855f7'],
+                        opacityFrom: 1,
+                        opacityTo: 0.9,
+                        stops: [0, 100]
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: (val) => val ? val.toLocaleString() : '0',
+                    style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] },
+                    offsetX: -5
+                },
+                xaxis: {
+                    categories: categories,
+                    labels: { style: { colors: '#64748b', fontSize: '11px' } },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    labels: { style: { colors: '#334155', fontSize: '13px', fontWeight: 600 } }
+                },
+                grid: { borderColor: '#f1f5f9', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+                legend: { show: false },
+                tooltip: {
+                    y: { formatter: (val) => val ? val.toLocaleString() + (isId ? ' tayangan' : ' views') : '0' }
+                }
+            };
+
+            if (countryBarChart) {
+                countryBarChart.destroy();
+            }
+            const chartEl = document.querySelector('#countryBarChart');
+            if (chartEl) {
+                countryBarChart = new ApexCharts(chartEl, options);
+                countryBarChart.render();
+            }
+        }
+
+        function initRatioDonutChart(totalViews, totalDownloads) {
+            const options = {
+                chart: {
+                    type: 'donut',
+                    height: 288,
+                    fontFamily: 'Inter, sans-serif',
+                    animations: { enabled: true, easing: 'easeinout', speed: 500 }
+                },
+                series: [totalViews, totalDownloads],
+                labels: [isId ? 'Tayangan' : 'Views', isId ? 'Unduhan' : 'Downloads'],
+                colors: ['#3b82f6', '#f97316'],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '70%',
+                            labels: {
+                                show: true,
+                                name: { show: true, fontSize: '14px', fontWeight: 600, color: '#334155' },
+                                value: { show: true, fontSize: '24px', fontWeight: 700, color: '#1e293b', formatter: (val) => parseInt(val).toLocaleString() },
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    color: '#64748b',
+                                    formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString()
+                                }
+                            }
+                        }
+                    }
+                },
+                dataLabels: { enabled: false },
+                stroke: { width: 3, colors: ['#fff'] },
+                legend: {
+                    position: 'bottom',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    labels: { colors: '#475569' },
+                    markers: { width: 10, height: 10, radius: 3 },
+                    itemMargin: { horizontal: 12 }
+                },
+                tooltip: {
+                    y: { formatter: (val) => val ? val.toLocaleString() : '0' }
+                }
+            };
+
+            if (ratioDonutChart) {
+                ratioDonutChart.destroy();
+            }
+            const chartEl = document.querySelector('#ratioDonutChart');
+            if (chartEl) {
+                ratioDonutChart = new ApexCharts(chartEl, options);
+                ratioDonutChart.render();
+            }
+        }
     </script>
 @endscript
 

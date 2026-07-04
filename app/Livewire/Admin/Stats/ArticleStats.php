@@ -60,7 +60,36 @@ class ArticleStats extends Component
                 ['name' => 'Downloads', 'data' => $chartData['downloads']]
             ]
         ]);
+
+        // Update geo data for country bar chart
+        $geoData = ArticleMetric::selectRaw('country_code, count(*) as total')
+            ->where('type', ArticleMetric::TYPE_VIEW)
+            ->when($journalId, fn($q) => $q->whereHas('submission', fn($s) => $s->where('journal_id', $journalId)))
+            ->whereBetween('date', [$this->dateStart, $this->dateEnd])
+            ->whereNotNull('country_code')
+            ->where('country_code', '!=', '')
+            ->groupBy('country_code')
+            ->orderByDesc('total')
+            ->limit(50)
+            ->pluck('total', 'country_code')
+            ->toArray();
+
+        $this->dispatch('update-geo', ['geoData' => $geoData]);
+
+        // Update KPI data for donut chart
+        $totalViews = ArticleMetric::where('type', ArticleMetric::TYPE_VIEW)
+            ->when($journalId, fn($q) => $q->whereHas('submission', fn($s) => $s->where('journal_id', $journalId)))
+            ->whereBetween('date', [$this->dateStart, $this->dateEnd])
+            ->count();
+
+        $totalDownloads = ArticleMetric::where('type', ArticleMetric::TYPE_DOWNLOAD)
+            ->when($journalId, fn($q) => $q->whereHas('submission', fn($s) => $s->where('journal_id', $journalId)))
+            ->whereBetween('date', [$this->dateStart, $this->dateEnd])
+            ->count();
+
+        $this->dispatch('update-kpi', ['views' => $totalViews, 'downloads' => $totalDownloads]);
     }
+
 
     public function render()
     {

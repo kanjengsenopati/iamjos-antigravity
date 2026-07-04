@@ -261,30 +261,28 @@
                         <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Lokasi Pembaca' : 'Reader Locations' }}</h3>
                         <p class="text-sm text-slate-500">{{ $isId ? 'Distribusi geografis' : 'Geographic distribution' }}</p>
                     </div>
-                    <div id="worldMap" class="h-64 bg-slate-50 rounded-lg mb-4"></div>
+                    <div id="worldMap" class="h-64 bg-slate-50 rounded-lg"></div>
+                </div>
+            </div>
 
-                    {{-- Top Countries List --}}
-                    <div class="space-y-2 max-h-48 overflow-y-auto">
-                        <template x-for="(count, code) in getTopMapData()" :key="code">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 text-center">
-                                    <span class="text-sm font-mono font-bold text-slate-600" x-text="code"></span>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                        <div class="h-full rounded-full transition-all duration-500"
-                                            :style="'width: ' + getPercentage(count) +
-                                                '%; background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);'">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="w-16 text-right">
-                                    <span class="text-sm font-semibold text-slate-700"
-                                        x-text="formatNumber(count)"></span>
-                                </div>
-                            </div>
-                        </template>
+            {{-- SECONDARY CHARTS ROW --}}
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {{-- Country Distribution Bar Chart (Span 2) --}}
+                <div class="xl:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="mb-4">
+                        <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Distribusi Negara Teratas' : 'Top Country Distribution' }}</h3>
+                        <p class="text-sm text-slate-500">{{ $isId ? 'Peringkat negara berdasarkan total tayangan' : 'Countries ranked by total views' }}</p>
                     </div>
+                    <div id="countryBarChart" class="h-72"></div>
+                </div>
+
+                {{-- Views vs Downloads Donut (Span 1) --}}
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="mb-4">
+                        <h3 class="font-bold text-slate-800 text-lg">{{ $isId ? 'Rasio Tayangan & Unduhan' : 'Views & Downloads Ratio' }}</h3>
+                        <p class="text-sm text-slate-500">{{ $isId ? 'Perbandingan total interaksi' : 'Total engagement comparison' }}</p>
+                    </div>
+                    <div id="ratioDonutChart" class="h-72 flex items-center justify-center"></div>
                 </div>
             </div>
 
@@ -430,11 +428,15 @@
                 // Chart instances
                 chartInstance: null,
                 mapInstance: null,
+                countryBarChartInstance: null,
+                ratioDonutChartInstance: null,
 
                 // Initialize dashboard
                 initDashboard() {
                     this.initChart();
                     this.initMap();
+                    this.initCountryBarChart();
+                    this.initRatioDonutChart();
                     this.fetchData();
                 },
 
@@ -570,6 +572,113 @@
                     }
                 },
 
+                // Initialize Country Bar Chart
+                initCountryBarChart() {
+                    const options = {
+                        chart: {
+                            type: 'bar',
+                            height: 288,
+                            fontFamily: 'Inter, sans-serif',
+                            toolbar: { show: false },
+                            animations: { enabled: true, easing: 'easeinout', speed: 500 }
+                        },
+                        series: [{ name: this.isId ? 'Tayangan' : 'Views', data: [] }],
+                        colors: ['#6366f1'],
+                        plotOptions: {
+                            bar: {
+                                horizontal: true,
+                                borderRadius: 6,
+                                barHeight: '60%',
+                                distributed: true
+                            }
+                        },
+                        fill: {
+                            type: 'gradient',
+                            gradient: {
+                                shade: 'light',
+                                type: 'horizontal',
+                                shadeIntensity: 0.2,
+                                gradientToColors: ['#a855f7'],
+                                opacityFrom: 1,
+                                opacityTo: 0.9,
+                                stops: [0, 100]
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: (val) => val ? val.toLocaleString() : '0',
+                            style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] },
+                            offsetX: -5
+                        },
+                        xaxis: {
+                            categories: [],
+                            labels: { style: { colors: '#64748b', fontSize: '11px' } },
+                            axisBorder: { show: false },
+                            axisTicks: { show: false }
+                        },
+                        yaxis: {
+                            labels: { style: { colors: '#334155', fontSize: '13px', fontWeight: 600 } }
+                        },
+                        grid: { borderColor: '#f1f5f9', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+                        legend: { show: false },
+                        tooltip: {
+                            y: { formatter: (val) => val ? val.toLocaleString() + (this.isId ? ' tayangan' : ' views') : '0' }
+                        }
+                    };
+                    this.countryBarChartInstance = new ApexCharts(document.querySelector('#countryBarChart'), options);
+                    this.countryBarChartInstance.render();
+                },
+
+                // Initialize Ratio Donut Chart
+                initRatioDonutChart() {
+                    const options = {
+                        chart: {
+                            type: 'donut',
+                            height: 288,
+                            fontFamily: 'Inter, sans-serif',
+                            animations: { enabled: true, easing: 'easeinout', speed: 500 }
+                        },
+                        series: [0, 0],
+                        labels: [this.isId ? 'Tayangan' : 'Views', this.isId ? 'Unduhan' : 'Downloads'],
+                        colors: ['#3b82f6', '#f97316'],
+                        plotOptions: {
+                            pie: {
+                                donut: {
+                                    size: '70%',
+                                    labels: {
+                                        show: true,
+                                        name: { show: true, fontSize: '14px', fontWeight: 600, color: '#334155' },
+                                        value: { show: true, fontSize: '24px', fontWeight: 700, color: '#1e293b', formatter: (val) => parseInt(val).toLocaleString() },
+                                        total: {
+                                            show: true,
+                                            label: this.isId ? 'Total' : 'Total',
+                                            fontSize: '13px',
+                                            fontWeight: 600,
+                                            color: '#64748b',
+                                            formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString()
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        dataLabels: { enabled: false },
+                        stroke: { width: 3, colors: ['#fff'] },
+                        legend: {
+                            position: 'bottom',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            labels: { colors: '#475569' },
+                            markers: { width: 10, height: 10, radius: 3 },
+                            itemMargin: { horizontal: 12 }
+                        },
+                        tooltip: {
+                            y: { formatter: (val) => val ? val.toLocaleString() : '0' }
+                        }
+                    };
+                    this.ratioDonutChartInstance = new ApexCharts(document.querySelector('#ratioDonutChart'), options);
+                    this.ratioDonutChartInstance.render();
+                },
+
                 // Set granularity and refetch
                 setGranularity(value) {
                     this.granularity = value;
@@ -604,6 +713,10 @@
 
                         // Update Table
                         this.tableData = data.table;
+
+                        // Update Secondary Charts
+                        this.updateCountryBarChart();
+                        this.updateRatioDonutChart();
 
                     } catch (error) {
                         console.error('Failed to fetch statistics:', error);
@@ -677,6 +790,22 @@
                     } catch (e) {
                         console.warn('Map update error:', e);
                     }
+                },
+
+                // Update Country Bar Chart with map data
+                updateCountryBarChart() {
+                    if (!this.countryBarChartInstance) return;
+                    const entries = Object.entries(this.mapData).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                    const categories = entries.map(e => e[0]);
+                    const values = entries.map(e => e[1]);
+                    this.countryBarChartInstance.updateOptions({ xaxis: { categories: categories } });
+                    this.countryBarChartInstance.updateSeries([{ name: this.isId ? 'Tayangan' : 'Views', data: values }]);
+                },
+
+                // Update Ratio Donut Chart with KPI data
+                updateRatioDonutChart() {
+                    if (!this.ratioDonutChartInstance) return;
+                    this.ratioDonutChartInstance.updateSeries([this.kpi.views || 0, this.kpi.downloads || 0]);
                 },
 
                 // Helper: Format number with commas
