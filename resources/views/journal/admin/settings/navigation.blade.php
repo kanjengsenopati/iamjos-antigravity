@@ -3,6 +3,27 @@
 @php
     $currentLoc = session('app_locale', app()->getLocale());
     $isId = in_array($currentLoc, ['id', 'id_ID']);
+    $systemLabels = [
+        'Home' => 'Beranda',
+        'About' => 'Tentang',
+        'About the Journal' => 'Tentang Jurnal',
+        'Editorial Team' => 'Tim Editorial',
+        'Current' => 'Terkini',
+        'Archives' => 'Arsip',
+        'Announcements' => 'Pengumuman',
+        'Author Guidelines' => 'Panduan Penulis',
+        'Submissions' => 'Kiriman',
+        'Privacy Statement' => 'Pernyataan Privasi',
+        'Contact' => 'Kontak',
+        'Search' => 'Cari',
+        'Login' => 'Masuk',
+        'Register' => 'Daftar',
+        'Admin' => 'Admin',
+        'Administration' => 'Administrasi',
+        'Dashboard' => 'Dasbor',
+        'View Profile' => 'Lihat Profil',
+        'Logout' => 'Keluar',
+    ];
 @endphp
 
 @section('title', ($isId ? 'Manajemen Navigasi - ' : 'Navigation Manager - ') . $journal->name)
@@ -740,13 +761,21 @@ function navigationManager(initialData) {
                     @endif
                     <div>
                         <span class="font-medium text-slate-700 block">
-                            {{ $item->title }}
+                            {{ $isId && isset($systemLabels[$item->title]) ? $systemLabels[$item->title] : $item->title }}
                             @if($isSystemItem)
-                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">System</span>
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{{ $isId ? 'Sistem' : 'System' }}</span>
                             @endif
                         </span>
                         <span class="text-xs text-slate-400">
-                            {{ ucfirst($item->type) }}
+                            @if($item->type === 'custom')
+                                {{ $isId ? 'Tautan Kustom' : 'Custom Link' }}
+                            @elseif($item->type === 'route')
+                                {{ $isId ? 'Rute' : 'Route' }}
+                            @elseif($item->type === 'page')
+                                {{ $isId ? 'Halaman' : 'Page' }}
+                            @else
+                                {{ ucfirst($item->type) }}
+                            @endif
                             @if($item->type === 'route' && $item->route_name)
                                 — {{ $item->route_name }}
                             @elseif($item->type === 'custom' && $item->url)
@@ -969,10 +998,22 @@ function navigationManager(initialData) {
                                             <i class="{{ $item->icon }} {{ $isSystemItem ? 'text-blue-500' : 'text-slate-400' }} text-sm"></i>
                                         @endif
                                         <div class="flex-1 min-w-0">
-                                            <span class="text-sm font-medium text-slate-700 block truncate">{{ $item->title }}</span>
+                                            <span class="text-sm font-medium text-slate-700 block truncate">{{ $isId && isset($systemLabels[$item->title]) ? $systemLabels[$item->title] : $item->title }}</span>
                                             <span class="text-xs {{ $isSystemItem ? 'text-blue-500' : 'text-slate-400' }}">
-                                                {{ $isSystemItem ? 'System' : ucfirst($item->type) }}
-                                            </span>
+                                                @if($isSystemItem)
+                                                    {{ $isId ? 'Sistem' : 'System' }}
+                                                @else
+                                                    @if($item->type === 'custom')
+                                                        {{ $isId ? 'Tautan Kustom' : 'Custom Link' }}
+                                                    @elseif($item->type === 'route')
+                                                        {{ $isId ? 'Rute' : 'Route' }}
+                                                    @elseif($item->type === 'page')
+                                                        {{ $isId ? 'Halaman' : 'Page' }}
+                                                    @else
+                                                        {{ ucfirst($item->type) }}
+                                                    @endif
+                                                @endif
+                                             </span>
                                         </div>
                                     </div>
                                     <button @click.stop="assignItem('{{ $menu->id }}', '{{ $item->id }}', '{{ $isVirtualItem ? $item->route_name : '' }}')"

@@ -368,8 +368,8 @@
                                         <i class="fa-solid fa-glasses text-purple-600"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-base font-semibold text-gray-900">Review Policy</h3>
-                                        <p class="text-sm text-gray-500">Configure how the peer review process works.</p>
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Kebijakan Ulasan' : 'Review Policy' }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $isId ? 'Konfigurasikan cara kerja proses ulasan sejawat.' : 'Configure how the peer review process works.' }}</p>
                                     </div>
                                 </div>
 
@@ -377,63 +377,57 @@
                                     <label
                                         class="relative flex flex-col p-4 bg-white border rounded-xl cursor-pointer hover:border-primary-500 transition-colors {{ $journal->review_mode === 'double_blind' ? 'border-primary-500 ring-1 ring-primary-500 bg-primary-50' : 'border-gray-200' }}">
                                         <div class="flex items-center justify-between mb-2">
-                                            <span class="text-sm font-medium text-gray-900">Double Blind</span>
+                                            <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Double Blind (Anonim Ganda)' : 'Double Blind' }}</span>
                                             <input type="radio" name="review_mode" value="double_blind"
                                                 class="text-primary-600 focus:ring-primary-500"
                                                 {{ $journal->review_mode === 'double_blind' ? 'checked' : '' }}>
                                         </div>
-                                        <p class="text-xs text-gray-500">Neither author nor reviewer knows each other's
-                                            identity.</p>
+                                        <p class="text-xs text-gray-500">{{ $isId ? 'Penulis maupun peninjau tidak mengetahui identitas masing-masing.' : 'Neither author nor reviewer knows each other\'s identity.' }}</p>
                                     </label>
 
                                     <label
                                         class="relative flex flex-col p-4 bg-white border rounded-xl cursor-pointer hover:border-primary-500 transition-colors {{ $journal->review_mode === 'blind' ? 'border-primary-500 ring-1 ring-primary-500 bg-primary-50' : 'border-gray-200' }}">
                                         <div class="flex items-center justify-between mb-2">
-                                            <span class="text-sm font-medium text-gray-900">Blind</span>
+                                            <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Blind (Anonim)' : 'Blind' }}</span>
                                             <input type="radio" name="review_mode" value="blind"
                                                 class="text-primary-600 focus:ring-primary-500"
                                                 {{ $journal->review_mode === 'blind' ? 'checked' : '' }}>
                                         </div>
-                                        <p class="text-xs text-gray-500">Reviewer knows author, but author doesn't know
-                                            reviewer.</p>
+                                        <p class="text-xs text-gray-500">{{ $isId ? 'Peninjau mengetahui penulis, tetapi penulis tidak mengetahui peninjau.' : 'Reviewer knows author, but author doesn\'t know reviewer.' }}</p>
                                     </label>
 
                                     <label
                                         class="relative flex flex-col p-4 bg-white border rounded-xl cursor-pointer hover:border-primary-500 transition-colors {{ $journal->review_mode === 'open' ? 'border-primary-500 ring-1 ring-primary-500 bg-primary-50' : 'border-gray-200' }}">
                                         <div class="flex items-center justify-between mb-2">
-                                            <span class="text-sm font-medium text-gray-900">Open</span>
+                                            <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Open (Terbuka)' : 'Open' }}</span>
                                             <input type="radio" name="review_mode" value="open"
                                                 class="text-primary-600 focus:ring-primary-500"
                                                 {{ $journal->review_mode === 'open' ? 'checked' : '' }}>
                                         </div>
-                                        <p class="text-xs text-gray-500">Identities are known to both parties.</p>
+                                        <p class="text-xs text-gray-500">{{ $isId ? 'Identitas diketahui oleh kedua belah pihak.' : 'Identities are known to both parties.' }}</p>
                                     </label>
                                 </div>
                             </div>
 
                             <!-- Section: Timelines -->
                             <div>
-                                <h4 class="text-sm font-medium text-gray-900 mb-4">Review Deadlines</h4>
+                                <h4 class="text-sm font-medium text-gray-900 mb-4">{{ $isId ? 'Tenggat Waktu Ulasan' : 'Review Deadlines' }}</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Response Time
-                                            (Weeks)</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Waktu Tanggapan (Minggu)' : 'Response Time (Weeks)' }}</label>
                                         <input type="number" name="review_response_weeks"
                                             value="{{ old('review_response_weeks', $journal->review_response_weeks) }}"
                                             min="1" max="12"
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
-                                        <p class="mt-1 text-xs text-gray-500">Time allowed for reviewer to accept/decline
-                                            request.</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Waktu yang diberikan bagi peninjau untuk menerima/menolak permintaan.' : 'Time allowed for reviewer to accept/decline request.' }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Completion Time
-                                            (Weeks)</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Waktu Penyelesaian (Minggu)' : 'Completion Time (Weeks)' }}</label>
                                         <input type="number" name="review_completion_weeks"
                                             value="{{ old('review_completion_weeks', $journal->review_completion_weeks) }}"
                                             min="1" max="24"
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
-                                        <p class="mt-1 text-xs text-gray-500">Time allowed for reviewer to complete the
-                                            review.</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Waktu yang diberikan bagi peninjau untuk menyelesaikan ulasan.' : 'Time allowed for reviewer to complete the review.' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -441,12 +435,12 @@
                             <!-- Section: Review Forms -->
                             <div>
                                 <div class="flex items-center justify-between mb-4">
-                                    <h4 class="text-sm font-medium text-gray-900">Review Forms</h4>
+                                    <h4 class="text-sm font-medium text-gray-900">{{ $isId ? 'Formulir Ulasan' : 'Review Forms' }}</h4>
                                     <button type="button"
                                         @click="showReviewFormModal = true; newReviewForm = { title: '', description: '' }"
                                         class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                                         <i class="fa-solid fa-plus mr-2"></i>
-                                        Create Form
+                                        {{ $isId ? 'Buat Formulir' : 'Create Form' }}
                                     </button>
                                 </div>
 
@@ -456,16 +450,16 @@
                                             <tr>
                                                 <th
                                                     class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                                    Form Title</th>
+                                                    {{ $isId ? 'Judul Formulir' : 'Form Title' }}</th>
                                                 <th
                                                     class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
                                                     Status</th>
                                                 <th
                                                     class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">
-                                                    Responses</th>
+                                                    {{ $isId ? 'Tanggapan' : 'Responses' }}</th>
                                                 <th
                                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                                    Actions</th>
+                                                    {{ $isId ? 'Aksi' : 'Actions' }}</th>
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
@@ -483,10 +477,10 @@
                                                     <td class="px-4 py-4 text-center">
                                                         @if ($form->is_active)
                                                             <span
-                                                                class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">Active</span>
+                                                                class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">{{ $isId ? 'Aktif' : 'Active' }}</span>
                                                         @else
                                                             <span
-                                                                class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">Inactive</span>
+                                                                class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">{{ $isId ? 'Tidak Aktif' : 'Inactive' }}</span>
                                                         @endif
                                                     </td>
                                                     <td class="px-4 py-4 text-center hidden sm:table-cell">
@@ -497,9 +491,9 @@
                                                         <div class="flex items-center justify-end gap-2">
                                                             @if ($form->response_count == 0)
                                                                 <button type="button"
-                                                                    onclick="submitForm('{{ route('journal.settings.workflow.review-forms.destroy', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', 'DELETE', 'Delete this review form?')"
+                                                                    onclick="submitForm('{{ route('journal.settings.workflow.review-forms.destroy', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', 'DELETE', '{{ $isId ? 'Hapus formulir ulasan ini?' : 'Delete this review form?' }}')"
                                                                     class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                                                                    title="Delete">
+                                                                    title="{{ $isId ? 'Hapus' : 'Delete' }}">
                                                                     <i class="fa-solid fa-trash text-sm"></i>
                                                                 </button>
                                                             @endif
@@ -517,7 +511,7 @@
                             <button type="submit"
                                 class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                 <i class="fa-solid fa-check mr-2"></i>
-                                Save Review Settings
+                                {{ $isId ? 'Simpan Pengaturan Ulasan' : 'Save Review Settings' }}
                             </button>
                         </div>
                     </form>
@@ -532,15 +526,14 @@
 
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h3 class="text-base font-semibold text-gray-900">Publisher Library</h3>
-                            <p class="text-sm text-gray-500">Repository for documents, forms, and policies shared with
-                                editors.</p>
+                            <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Pustaka Penerbit' : 'Publisher Library' }}</h3>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Repositori dokumen, formulir, dan kebijakan yang dibagikan dengan editor.' : 'Repository for documents, forms, and policies shared with editors.' }}</p>
                         </div>
                         <!-- Upload Form/Button could go here. For now, assuming modal trigger -->
                         <!-- NOTE: Implementation below is read-only list for now, as user didn't specify upload UI in Prompt,
                                                                                                                      But based on previous file, there was likely an upload modal.
                                                                                                                      I will keep the generic structure.
-                                                                                                                -->
+                                                                                                                 -->
                     </div>
 
                     @if ($libraryFiles->count() > 0)
@@ -548,16 +541,15 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">File
-                                            Name</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{{ $isId ? 'Nama File' : 'File Name' }}</th>
                                         <th
                                             class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">
-                                            Type</th>
+                                            {{ $isId ? 'Jenis' : 'Type' }}</th>
                                         <th
                                             class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">
-                                            Size</th>
+                                            {{ $isId ? 'Ukuran' : 'Size' }}</th>
                                         <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                            Actions</th>
+                                            {{ $isId ? 'Aksi' : 'Actions' }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -581,13 +573,13 @@
                                                 <div class="flex items-center justify-end gap-2">
                                                     <a href="{{ route('journal.settings.workflow.library.download', ['journal' => $journal->slug, 'libraryFile' => $file->id]) }}"
                                                         class="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded"
-                                                        title="Download">
+                                                        title="{{ $isId ? 'Unduh' : 'Download' }}">
                                                         <i class="fa-solid fa-download text-sm"></i>
                                                     </a>
                                                     <button type="button"
-                                                        onclick="submitForm('{{ route('journal.settings.workflow.library.destroy', ['journal' => $journal->slug, 'libraryFile' => $file->id]) }}', 'DELETE', 'Delete this file?')"
+                                                        onclick="submitForm('{{ route('journal.settings.workflow.library.destroy', ['journal' => $journal->slug, 'libraryFile' => $file->id]) }}', 'DELETE', '{{ $isId ? 'Hapus file ini?' : 'Delete this file?' }}')"
                                                         class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                                                        title="Delete">
+                                                        title="{{ $isId ? 'Hapus' : 'Delete' }}">
                                                         <i class="fa-solid fa-trash text-sm"></i>
                                                     </button>
                                                 </div>
@@ -600,8 +592,8 @@
                     @else
                         <div class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                             <i class="fa-solid fa-folder-open text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-base font-medium text-gray-700 mb-1">No files in library</p>
-                            <p class="text-sm text-gray-500">Upload documents to share with the editorial team.</p>
+                            <p class="text-base font-medium text-gray-700 mb-1">{{ $isId ? 'Tidak ada file di pustaka' : 'No files in library' }}</p>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Unggah dokumen untuk dibagikan dengan tim editorial.' : 'Upload documents to share with the editorial team.' }}</p>
                         </div>
                     @endif
                 </div>
@@ -628,8 +620,8 @@
                                 <i class="fa-brands fa-whatsapp text-green-600 text-xl"></i>
                             </div>
                             <div>
-                                <h3 class="text-base font-semibold text-gray-900">WhatsApp Notification Templates</h3>
-                                <p class="text-sm text-gray-500">Manage automated WhatsApp messages sent by the system.</p>
+                                <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Templat Notifikasi WhatsApp' : 'WhatsApp Notification Templates' }}</h3>
+                                <p class="text-sm text-gray-500">{{ $isId ? 'Kelola pesan WhatsApp otomatis yang dikirim oleh sistem.' : 'Manage automated WhatsApp messages sent by the system.' }}</p>
                             </div>
                         </div>
 
@@ -657,20 +649,20 @@
                                         if (data.success) {
                                             this.waNotificationsEnabled = data.enabled;
                                         } else {
-                                            alert(data.error || 'Failed to update settings');
+                                            alert(data.error || '{{ $isId ? "Gagal memperbarui pengaturan" : "Failed to update settings" }}');
                                             this.waNotificationsEnabled = !this.waNotificationsEnabled; // revert
                                         }
                                     })
                                     .catch(error => {
                                         this.isSaving = false;
-                                        alert('An error occurred. Please try again.');
+                                        alert('{{ $isId ? "Terjadi kesalahan. Silakan coba lagi." : "An error occurred. Please try again." }}');
                                         this.waNotificationsEnabled = !this.waNotificationsEnabled; // revert
                                     });
                                 }
                             }">
                             <div>
-                                <h4 class="text-sm font-semibold text-gray-900">Enable WhatsApp Notifications</h4>
-                                <p class="text-sm text-gray-500 mt-1">When turned off, the system will not send any automated WhatsApp messages even if templates are active.</p>
+                                <h4 class="text-sm font-semibold text-gray-900">{{ $isId ? 'Aktifkan Notifikasi WhatsApp' : 'Enable WhatsApp Notifications' }}</h4>
+                                <p class="text-sm text-gray-500 mt-1">{{ $isId ? 'Jika dinonaktifkan, sistem tidak akan mengirim pesan WhatsApp otomatis meskipun templat aktif.' : 'When turned off, the system will not send any automated WhatsApp messages even if templates are active.' }}</p>
                             </div>
                             <div class="flex items-center">
                                 <button type="button" 
@@ -697,12 +689,10 @@
                                 </button>
                                 
                                 <span x-show="isSaving" class="ml-3 text-xs text-gray-400 flex items-center gap-1" style="display: none;">
-                                    <i class="fa-solid fa-circle-notch fa-spin"></i> Saving...
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i> {{ $isId ? 'Menyimpan...' : 'Saving...' }}
                                 </span>
                             </div>
                         </div>
-
-
 
                         @foreach ($notificationTemplates as $template)
                             <div class="bg-gray-50 rounded-xl border border-gray-200 p-4" x-data="{ expanded: false }">
@@ -719,17 +709,17 @@
                                                 @if (isset($template->source))
                                                     @if ($template->source === 'journal')
                                                         <span
-                                                            class="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded border border-blue-200">Custom</span>
+                                                            class="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded border border-blue-200">{{ $isId ? 'Kustom' : 'Custom' }}</span>
                                                     @elseif($template->source === 'global')
                                                         <span
                                                             class="px-1.5 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-700 rounded border border-purple-200">Global</span>
                                                     @else
                                                         <span
-                                                            class="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 rounded border border-gray-200">Default</span>
+                                                            class="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 rounded border border-gray-200">{{ $isId ? 'Bawaan' : 'Default' }}</span>
                                                     @endif
                                                 @endif
                                             </div>
-                                            <p class="text-xs text-gray-500 mt-0.5">Event Key: <code
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Kunci Kejadian' : 'Event Key' }}: <code
                                                     class="bg-gray-200 px-1 py-0.5 rounded">{{ $template->event_key }}</code>
                                             </p>
                                         </div>
@@ -737,10 +727,10 @@
                                     <div class="flex items-center gap-3">
                                         @if ($template->is_active)
                                             <span
-                                                class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200">Active</span>
+                                                class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200">{{ $isId ? 'Aktif' : 'Active' }}</span>
                                         @else
                                             <span
-                                                class="px-2 py-1 text-xs font-medium bg-gray-200 text-gray-600 rounded-full border border-gray-300">Inactive</span>
+                                                class="px-2 py-1 text-xs font-medium bg-gray-200 text-gray-600 rounded-full border border-gray-300">{{ $isId ? 'Tidak Aktif' : 'Inactive' }}</span>
                                         @endif
                                         <div
                                             class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors">
@@ -759,15 +749,14 @@
 
                                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                             <div class="lg:col-span-2">
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Message
-                                                    Template</label>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Templat Pesan' : 'Message Template' }}</label>
                                                 <div class="relative">
                                                     <textarea name="body" rows="4"
                                                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 font-mono text-sm leading-relaxed"
-                                                        placeholder="Enter message here...">{{ $template->body }}</textarea>
+                                                        placeholder="{{ $isId ? 'Masukkan pesan di sini...' : 'Enter message here...' }}">{{ $template->body }}</textarea>
                                                     <div
                                                         class="absolute bottom-2 right-2 text-xs text-gray-400 pointer-events-none">
-                                                        WhatsApp Format
+                                                        {{ $isId ? 'Format WhatsApp' : 'WhatsApp Format' }}
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center mt-4 mb-2">
@@ -778,7 +767,7 @@
 
                                                     <label for="is_active_{{ $template->id ?? 'new' }}"
                                                         class="ms-2 text-sm font-medium text-black">
-                                                        Enable this notification
+                                                        {{ $isId ? 'Aktifkan notifikasi ini' : 'Enable this notification' }}
                                                     </label>
                                                 </div>
                                             </div>
@@ -786,23 +775,21 @@
                                                 <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
                                                     <h5
                                                         class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                        <i class="fa-solid fa-code"></i> Available Variables
+                                                        <i class="fa-solid fa-code"></i> {{ $isId ? 'Variabel yang Tersedia' : 'Available Variables' }}
                                                     </h5>
                                                     <div class="flex flex-wrap gap-2">
                                                         @if ($template->variables)
                                                             @foreach ($template->variables as $var)
                                                                 <code
                                                                     class="px-2 py-1 bg-white border border-blue-200 rounded text-xs text-blue-700 font-mono shadow-sm select-all cursor-pointer hover:bg-blue-50"
-                                                                    title="Click to copy">{<span>{{ $var }}</span>}</code>
+                                                                    title="{{ $isId ? 'Klik untuk menyalin' : 'Click to copy' }}">{<span>{{ $var }}</span>}</code>
                                                             @endforeach
                                                         @else
-                                                            <span class="text-xs text-gray-400 italic">No variables
-                                                                available</span>
+                                                            <span class="text-xs text-gray-400 italic">{{ $isId ? 'Tidak ada variabel yang tersedia' : 'No variables available' }}</span>
                                                         @endif
                                                     </div>
                                                     <p class="text-xs text-blue-600 mt-3 leading-relaxed">
-                                                        Copy variables exactly as shown to insert dynamic data into your
-                                                        message. Variables are case-sensitive.
+                                                        {{ $isId ? 'Salin variabel persis seperti yang ditunjukkan untuk memasukkan data dinamis ke dalam pesan Anda. Variabel sensitif terhadap huruf besar-kecil.' : 'Copy variables exactly as shown to insert dynamic data into your message. Variables are case-sensitive.' }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -812,7 +799,7 @@
                                             <button type="submit"
                                                 class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                                                 <i class="fa-solid fa-save mr-2"></i>
-                                                Save Changes
+                                                {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                                             </button>
                                         </div>
                                     </form>
@@ -842,7 +829,7 @@
                             <input type="hidden" name="_method" value="PUT">
                         </template>
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900" x-text="isEditMode ? 'Edit Checklist Item' : 'Add Checklist Item'"></h3>
+                            <h3 class="text-lg font-semibold text-gray-900" x-text="isEditMode ? '{{ $isId ? "Ubah Item Daftar Periksa" : "Edit Checklist Item" }}' : '{{ $isId ? "Tambah Item Daftar Periksa" : "Add Checklist Item" }}'"></h3>
                             <button type="button" @click="showChecklistModal = false"
                                 class="text-gray-400 hover:text-gray-600">
                                 <i class="fa-solid fa-xmark text-lg"></i>
@@ -850,7 +837,7 @@
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Content *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Konten *' : 'Content *' }}</label>
                                 <textarea name="content" x-model="newChecklist.content" required rows="3"
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
                             </div>
@@ -858,15 +845,15 @@
                                 <input type="checkbox" name="is_required" value="1"
                                     x-model="newChecklist.is_required"
                                     class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                                <span class="text-sm text-gray-700">Required item</span>
+                                <span class="text-sm text-gray-700">{{ $isId ? 'Item wajib' : 'Required item' }}</span>
                             </label>
                         </div>
                         <div class="flex justify-end gap-3 mt-6">
                             <button type="button" @click="showChecklistModal = false"
-                                class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                                class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">{{ $isId ? 'Batal' : 'Cancel' }}</button>
                             <button type="submit"
                                 class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700"
-                                x-text="isEditMode ? 'Save Changes' : 'Add Item'"></button>
+                                x-text="isEditMode ? '{{ $isId ? "Simpan Perubahan" : "Save Changes" }}' : '{{ $isId ? "Tambah Item" : "Add Item" }}'"></button>
                         </div>
                     </form>
                 </div>
@@ -883,7 +870,7 @@
                         method="POST">
                         @csrf
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900">Create Review Form</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Buat Formulir Ulasan' : 'Create Review Form' }}</h3>
                             <button type="button" @click="showReviewFormModal = false"
                                 class="text-gray-400 hover:text-gray-600">
                                 <i class="fa-solid fa-xmark text-lg"></i>
@@ -891,22 +878,21 @@
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Judul *' : 'Title *' }}</label>
                                 <input type="text" name="title" x-model="newReviewForm.title" required
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Deskripsi' : 'Description' }}</label>
                                 <textarea name="description" x-model="newReviewForm.description" rows="2"
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
                             </div>
                         </div>
                         <div class="flex justify-end gap-3 mt-6">
                             <button type="button" @click="showReviewFormModal = false"
-                                class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                                class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">{{ $isId ? 'Batal' : 'Cancel' }}</button>
                             <button type="submit"
-                                class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700">Create
-                                Form</button>
+                                class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700">{{ $isId ? 'Buat Formulir' : 'Create Form' }}</button>
                         </div>
                     </form>
                 </div>

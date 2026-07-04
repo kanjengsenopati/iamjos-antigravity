@@ -1,6 +1,8 @@
 @php
     $journal = current_journal();
     $journalSlug = $journal->slug;
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
 @endphp
 
 <div x-data="{
@@ -59,32 +61,28 @@
                         <i class="fa-solid fa-at text-indigo-600"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-semibold text-gray-900">Email Configuration</h3>
-                        <p class="text-sm text-gray-500">Configure email sending settings.</p>
+                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Konfigurasi Surel' : 'Email Configuration' }}</h3>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Konfigurasikan pengaturan pengiriman surel.' : 'Configure email sending settings.' }}</p>
                     </div>
                 </div>
 
                 <div class="space-y-6">
                     <div>
-                        <label for="email_signature" class="block text-sm font-medium text-gray-700 mb-2">Email
-                            Signature</label>
+                        <label for="email_signature" class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Tanda Tangan Surel' : 'Email Signature' }}</label>
                         <textarea name="email_signature" id="email_signature" rows="5"
                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            placeholder="e.g. The Editor, {{ $journal->name }}">{{ $journal->email_signature }}</textarea>
-                        <p class="mt-2 text-xs text-gray-500">This signature will be appended to the bottom of outgoing
-                            emails.</p>
+                            placeholder="{{ $isId ? 'cth. Editor, ' : 'e.g. The Editor, ' }}{{ $journal->name }}">{{ $journal->email_signature }}</textarea>
+                        <p class="mt-2 text-xs text-gray-500">{{ $isId ? 'Tanda tangan ini akan ditambahkan di bagian bawah surel keluar.' : 'This signature will be appended to the bottom of outgoing emails.' }}</p>
                     </div>
 
                     <div>
-                        <label for="email_bounce_address" class="block text-sm font-medium text-gray-700 mb-2">Bounce
-                            Address</label>
+                        <label for="email_bounce_address" class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Alamat Pantulan (Bounce Address)' : 'Bounce Address' }}</label>
                         <input type="email" name="email_bounce_address" id="email_bounce_address"
                             value="{{ $journal->email_bounce_address }}"
                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700">
                             <i class="fa-solid fa-info-circle mr-1"></i>
-                            Undeliverable emails will be returned to this address. Ensure your server configuration
-                            allows sending on behalf of this domain.
+                            {{ $isId ? 'Surel yang tidak terkirim akan dikembalikan ke alamat ini. Pastikan konfigurasi server Anda mengizinkan pengiriman atas nama domain ini.' : 'Undeliverable emails will be returned to this address. Ensure your server configuration allows sending on behalf of this domain.' }}
                         </div>
                     </div>
                 </div>
@@ -94,7 +92,7 @@
 
             <!-- Section: Templates -->
             <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-4">Email Templates</h4>
+                <h4 class="text-sm font-medium text-gray-900 mb-4">{{ $isId ? 'Templat Surel' : 'Email Templates' }}</h4>
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     {{-- Toolbar --}}
                     <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
@@ -104,7 +102,7 @@
                             </div>
                             <input type="text" x-model="searchQuery"
                                 class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                placeholder="Find email template...">
+                                placeholder="{{ $isId ? 'Cari templat surel...' : 'Find email template...' }}">
                         </div>
                     </div>
 
@@ -115,13 +113,13 @@
                                 <tr>
                                     <th scope="col"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Template Name</th>
+                                        {{ $isId ? 'Nama Templat' : 'Template Name' }}</th>
                                     <th scope="col"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Enabled</th>
+                                        {{ $isId ? 'Aktif' : 'Enabled' }}</th>
                                     <th scope="col"
                                         class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions</th>
+                                        {{ $isId ? 'Aksi' : 'Actions' }}</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -145,9 +143,9 @@
                                                 :class="$el.value == 1 ? 'text-green-700 bg-green-50 border-green-200' :
                                                     'text-red-700 bg-red-50 border-red-200'">
                                                 <option value="1" {{ $template->is_enabled ? 'selected' : '' }}
-                                                    class="text-gray-900 bg-white">Enabled</option>
+                                                    class="text-gray-900 bg-white">{{ $isId ? 'Aktif' : 'Enabled' }}</option>
                                                 <option value="0" {{ !$template->is_enabled ? 'selected' : '' }}
-                                                    class="text-gray-900 bg-white">Disabled</option>
+                                                    class="text-gray-900 bg-white">{{ $isId ? 'Tidak Aktif' : 'Disabled' }}</option>
                                             </select>
                                         </td>
                                         </td>
@@ -155,13 +153,13 @@
                                             <div class="flex items-center justify-end space-x-3">
                                                 @if ($template->is_custom)
                                                     <button type="button"
-                                                        onclick="submitForm('{{ route('journal.settings.workflow.email-templates.reset', ['journal' => $journalSlug, 'emailTemplate' => $template->id]) }}', 'POST', 'Reset this template to its default content?')"
-                                                        class="text-xs text-orange-600 hover:text-orange-900 bg-orange-50 px-2 py-1 rounded">Reset</button>
+                                                        onclick="submitForm('{{ route('journal.settings.workflow.email-templates.reset', ['journal' => $journalSlug, 'emailTemplate' => $template->id]) }}', 'POST', '{{ $isId ? 'Kembalikan templat ini ke konten bawaannya?' : 'Reset this template to its default content?' }}')"
+                                                        class="text-xs text-orange-600 hover:text-orange-900 bg-orange-50 px-2 py-1 rounded">{{ $isId ? 'Atur Ulang' : 'Reset' }}</button>
                                                 @endif
 
                                                 <button type="button" @click="editTemplate({{ $template }})"
                                                     class="text-indigo-600 hover:text-indigo-900">
-                                                    <i class="fa-solid fa-pen"></i> Edit
+                                                    <i class="fa-solid fa-pen"></i> {{ $isId ? 'Ubah' : 'Edit' }}
                                                 </button>
                                             </div>
                                         </td>
@@ -178,7 +176,7 @@
             <button type="submit"
                 class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                 <i class="fa-solid fa-check mr-2"></i>
-                Save Setup
+                {{ $isId ? 'Simpan Pengaturan' : 'Save Setup' }}
             </button>
         </div>
     </form>
@@ -217,7 +215,7 @@
                                 <div class="flex items-center justify-between mb-5">
                                     <div>
                                         <h3 class="text-xl font-bold text-gray-900">
-                                            Edit Email Template
+                                            {{ $isId ? 'Ubah Templat Surel' : 'Edit Email Template' }}
                                         </h3>
                                         <p class="text-sm text-gray-500 mt-1">
                                             <span class="font-medium text-gray-700"
@@ -240,7 +238,7 @@
                                     {{-- Subject --}}
                                     <div>
                                         <label for="subject"
-                                            class="block text-sm font-semibold text-gray-700 mb-1">Subject Line</label>
+                                            class="block text-sm font-semibold text-gray-700 mb-1">{{ $isId ? 'Baris Subjek' : 'Subject Line' }}</label>
                                         <input type="text" name="subject" id="subject"
                                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             x-model="editingTemplate.subject" required>
@@ -249,7 +247,7 @@
                                     {{-- Body --}}
                                     <div>
                                         <label for="body"
-                                            class="block text-sm font-semibold text-gray-700 mb-1">Email Body</label>
+                                            class="block text-sm font-semibold text-gray-700 mb-1">{{ $isId ? 'Badan Surel' : 'Email Body' }}</label>
                                         <textarea name="body" id="body" rows="12"
                                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm leading-relaxed"
                                             x-model="editingTemplate.body" required></textarea>
@@ -258,7 +256,7 @@
                                     {{-- Variables Hint --}}
                                     <div class="bg-gray-50 rounded-lg border border-gray-200 p-3">
                                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                                            Available Variables</p>
+                                            {{ $isId ? 'Variabel yang Tersedia' : 'Available Variables' }}</p>
                                         <div class="flex flex-wrap gap-2 text-xs font-mono text-gray-600">
                                             <span
                                                 class="bg-white border border-gray-200 px-1.5 py-0.5 rounded">{$authorName}</span>
@@ -280,11 +278,11 @@
                             <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-gray-100">
                                 <button type="submit"
                                     class="inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
-                                    Save Changes
+                                    {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                                 </button>
                                 <button type="button" @click="showEditModal = false"
                                     class="inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
-                                    Cancel
+                                    {{ $isId ? 'Batal' : 'Cancel' }}
                                 </button>
                             </div>
                         </form>
