@@ -1,5 +1,90 @@
 @php
     $isId = app()->getLocale() === 'id';
+
+    // Helper untuk menerjemahkan label
+    $translateLabel = function($label) use ($isId) {
+        if (!$isId) return $label;
+        $labels = [
+            'Article Title' => 'Judul Artikel',
+            'Abstract' => 'Abstrak',
+            'Authors' => 'Penulis',
+            'Authors Affiliation' => 'Afiliasi Penulis',
+            'Author Names' => 'Nama Penulis',
+            'Keywords' => 'Kata Kunci',
+            'References & Citations' => 'Referensi & Sitasi',
+            'Galley (PDF)' => 'Galley (PDF)',
+            'Publication Date' => 'Tanggal Publikasi'
+        ];
+        return $labels[$label] ?? $label;
+    };
+
+    // Helper untuk menerjemahkan message
+    $translateMessage = function($msg) use ($isId) {
+        if (!$isId) return $msg;
+
+        // Title Check
+        if ($msg === 'Title is empty.') return 'Judul kosong.';
+        if ($msg === 'Title should not be in all capital letters.') return 'Judul tidak boleh menggunakan huruf kapital semua.';
+        if (preg_match('/Title is too short \((\d+) words\)\. Aim for 10-20 words\./', $msg, $matches)) {
+            return "Judul terlalu pendek ({$matches[1]} kata). Targetkan 10-20 kata.";
+        }
+        if (preg_match('/Title is quite long \((\d+) words\)\. Optimal is 10-20 words\./', $msg, $matches)) {
+            return "Judul cukup panjang ({$matches[1]} kata). Optimalnya adalah 10-20 kata.";
+        }
+        if ($msg === 'Perfect title length and formatting.') return 'Panjang judul dan pemformatan sempurna.';
+
+        // Abstract Check
+        if ($msg === 'Abstract is missing.') return 'Abstrak tidak ditemukan.';
+        if (preg_match('/Abstract is too short \((\d+) words\)\. Minimum 100 words required\./', $msg, $matches)) {
+            return "Abstrak terlalu pendek ({$matches[1]} kata). Diperlukan minimal 100 kata.";
+        }
+        if (preg_match('/Abstract is a bit long \((\d+) words\)\. Recommended maximum is 300 words\./', $msg, $matches)) {
+            return "Abstrak agak panjang ({$matches[1]} kata). Rekomendasi maksimum adalah 300 kata.";
+        }
+        if ($msg === 'Abstract length is optimal.') return 'Panjang abstrak optimal.';
+
+        // Authors Check
+        if ($msg === 'No authors listed.') return 'Tidak ada penulis yang terdaftar.';
+        if (preg_match('/Missing affiliation for: (.*?)\./', $msg, $matches)) {
+            return "Afiliasi tidak ditemukan untuk: {$matches[1]}.";
+        }
+        if (preg_match('/Some authors have single names \((.*?)\)\. "First Last" format is preferred\./', $msg, $matches)) {
+            return "Beberapa penulis hanya memiliki satu nama ({$matches[1]}). Format \"Nama Depan Nama Belakang\" lebih disukai.";
+        }
+        if ($msg === 'All authors have valid names and affiliations.') return 'Semua penulis memiliki nama dan afiliasi yang valid.';
+
+        // Keywords Check
+        if (preg_match('/Too few keywords \((\d+)\)\. Minimum 3 required\./', $msg, $matches)) {
+            return "Kata kunci terlalu sedikit ({$matches[1]}). Diperlukan minimal 3 kata kunci.";
+        }
+        if (preg_match('/Too many keywords \((\d+)\)\. Recommended maximum is 6\./', $msg, $matches)) {
+            return "Kata kunci terlalu banyak ({$matches[1]}). Rekomendasi maksimum adalah 6.";
+        }
+        if ($msg === 'Keyword count is optimal.') return 'Jumlah kata kunci optimal.';
+
+        // References Check
+        if ($msg === 'No references provided. Google Scholar requires citations to trace the citation graph.') {
+            return 'Tidak ada referensi yang disediakan. Google Scholar memerlukan sitasi untuk melacak grafik kutipan.';
+        }
+        if (preg_match('/Reference count is low \((\d+)\)\. Google Scholar prefers at least 10\+ robust citations\./', $msg, $matches)) {
+            return "Jumlah referensi rendah ({$matches[1]}). Google Scholar menyukai setidaknya 10+ sitasi yang kuat.";
+        }
+        if (preg_match('/Good number of references found \((\d+)\)\./', $msg, $matches)) {
+            return "Jumlah referensi yang baik ditemukan ({$matches[1]}).";
+        }
+
+        // Galleys Check
+        if ($msg === 'No publication galleys found. At least one PDF galley is required.') {
+            return 'Tidak ada galley publikasi yang ditemukan. Setidaknya diperlukan satu galley PDF.';
+        }
+        if ($msg === 'Galley files are available.') return 'File galley tersedia.';
+
+        // Publication Date Check
+        if ($msg === 'Publication date is not set.') return 'Tanggal publikasi belum diatur.';
+        if ($msg === 'Publication date is set.') return 'Tanggal publikasi telah diatur.';
+
+        return $msg;
+    };
 @endphp
 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full">
     {{-- Header --}}
@@ -33,7 +118,7 @@
         @endphp
 
         <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $statusColor }}">
-            {{ ucfirst($analysis['status']) }}
+            {{ $isId ? ['good' => 'Baik', 'warning' => 'Peringatan', 'bad' => 'Buruk'][$analysis['status']] ?? ucfirst($analysis['status']) : ucfirst($analysis['status']) }}
         </span>
     </div>
 
@@ -80,8 +165,8 @@
                         @endif
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-gray-900">{{ $check['label'] }}</p>
-                        <p class="text-xs text-gray-600 mt-0.5">{{ $check['message'] }}</p>
+                        <p class="text-sm font-semibold text-gray-900">{{ $translateLabel($check['label']) }}</p>
+                        <p class="text-xs text-gray-600 mt-0.5">{{ $translateMessage($check['message']) }}</p>
                     </div>
                 </div>
             @endforeach
