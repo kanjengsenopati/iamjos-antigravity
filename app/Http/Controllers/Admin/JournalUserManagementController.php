@@ -118,11 +118,33 @@ class JournalUserManagementController extends Controller
 
         $routePrefix = $this->getRoutePrefix();
 
+        // Get users NOT already in this journal (exclude Super Admins)
+        $existingUserIds = JournalUserRole::where('journal_id', $journal->id)
+            ->distinct()
+            ->pluck('user_id')
+            ->toArray();
+
+        $superAdminIds = User::whereHas('roles', function ($q) {
+            $q->where('name', Role::ROLE_SUPERADMIN)
+                ->where('guard_name', 'web');
+        })->pluck('id')->toArray();
+
+        $excludeIds = array_unique(array_merge($existingUserIds, $superAdminIds));
+
+        $availableUsers = User::whereNotIn('id', $excludeIds)
+            ->orderBy('name')
+            ->get();
+
+        // Get all assignable roles (exclude Super Admin)
+        $assignableRoles = Role::where('journal_id', $journal->id)
+            ->whereNotIn('name', ['Super Admin'])
+            ->get();
+
         if ($request->ajax()) {
             return view('admin.journals.users._table', compact('journal', 'users', 'roles', 'routePrefix'));
         }
 
-        return view('admin.journals.users.index', compact('journal', 'users', 'roles', 'routePrefix'));
+        return view('admin.journals.users.index', compact('journal', 'users', 'roles', 'routePrefix', 'availableUsers', 'assignableRoles'));
     }
 
     /**
