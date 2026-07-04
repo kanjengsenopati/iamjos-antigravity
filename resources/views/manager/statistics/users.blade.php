@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'User Statistics - ' . $journal->name)
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', ($isId ? 'Statistik Pengguna - ' : 'User Statistics - ') . $journal->name)
 
 @section('content')
     <div x-data="userDashboard()" x-init="init()" class="space-y-6">
@@ -10,9 +15,11 @@
             class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200/60 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text">
-                    User Statistics
+                    {{ $isId ? 'Statistik Pengguna' : 'User Statistics' }}
                 </h1>
-                <p class="text-sm text-slate-500 mt-1">Overview of users, roles, and activity for {{ $journal->name }}.</p>
+                <p class="text-sm text-slate-500 mt-1">
+                    {{ $isId ? 'Ikhtisar pengguna, peran, dan aktivitas untuk ' . $journal->name . '.' : 'Overview of users, roles, and activity for ' . $journal->name . '.' }}
+                </p>
             </div>
             <button @click="fetchData()"
                 class="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-all">
@@ -21,7 +28,7 @@
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                     </path>
                 </svg>
-                Refresh
+                {{ $isId ? 'Perbarui' : 'Refresh' }}
             </button>
         </div>
 
@@ -43,7 +50,9 @@
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Users</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Total Pengguna' : 'Total Users' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -56,14 +65,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.total">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Registered in journal</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Terdaftar di jurnal' : 'Registered in journal' }}
+                        </p>
                     </div>
 
                     {{-- New Users (30d) --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">New (30d)</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Baru (30h)' : 'New (30d)' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -76,14 +89,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.new">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Last 30 days</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? '30 hari terakhir' : 'Last 30 days' }}
+                        </p>
                     </div>
 
                     {{-- Active Users (90d) --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active (90d)</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Aktif (90h)' : 'Active (90d)' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -94,14 +111,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.active">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Logged in recently</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Login baru-baru ini' : 'Logged in recently' }}
+                        </p>
                     </div>
 
                     {{-- Registered This Year --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">This Year</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Tahun Ini' : 'This Year' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -114,14 +135,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.registered_this_year">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Joined in {{ date('Y') }}</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Bergabung di ' . date('Y') : 'Joined in ' . date('Y') }}
+                        </p>
                     </div>
 
                     {{-- Active This Month --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">This Month</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Bulan Ini' : 'This Month' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -131,7 +156,9 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.active_this_month">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Active users</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Pengguna aktif' : 'Active users' }}
+                        </p>
                     </div>
 
                 </div>
@@ -142,8 +169,12 @@
                     {{-- Role Distribution (Donut Chart) --}}
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6">
                         <div class="mb-4">
-                            <h3 class="font-bold text-slate-700">Role Distribution</h3>
-                            <p class="text-xs text-slate-400">Users by role type</p>
+                            <h3 class="font-bold text-slate-700">
+                                {{ $isId ? 'Distribusi Peran' : 'Role Distribution' }}
+                            </h3>
+                            <p class="text-xs text-slate-400">
+                                {{ $isId ? 'Pengguna berdasarkan jenis peran' : 'Users by role type' }}
+                            </p>
                         </div>
                         <div id="roleChart" class="h-72"></div>
                     </div>
@@ -151,8 +182,12 @@
                     {{-- Registration Growth (Area Chart) --}}
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6">
                         <div class="mb-4">
-                            <h3 class="font-bold text-slate-700">Registration Growth</h3>
-                            <p class="text-xs text-slate-400">Monthly new registrations</p>
+                            <h3 class="font-bold text-slate-700">
+                                {{ $isId ? 'Pertumbuhan Registrasi' : 'Registration Growth' }}
+                            </h3>
+                            <p class="text-xs text-slate-400">
+                                {{ $isId ? 'Registrasi baru bulanan' : 'Monthly new registrations' }}
+                            </p>
                         </div>
                         <div id="growthChart" class="h-72"></div>
                     </div>
@@ -167,8 +202,12 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-700">Top Reviewers</h3>
-                                <p class="text-xs text-slate-400">By completed reviews</p>
+                                <h3 class="font-bold text-slate-700">
+                                    {{ $isId ? 'Peninjau Terbaik' : 'Top Reviewers' }}
+                                </h3>
+                                <p class="text-xs text-slate-400">
+                                    {{ $isId ? 'Berdasarkan tinjauan yang selesai' : 'By completed reviews' }}
+                                </p>
                             </div>
                         </div>
                         <ul class="space-y-2">
@@ -183,13 +222,13 @@
                                     </div>
                                     <span
                                         class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                                        <span x-text="user.count"></span> reviews
+                                        <span x-text="user.count"></span> {{ $isId ? 'tinjauan' : 'reviews' }}
                                     </span>
                                 </li>
                             </template>
                             <template x-if="!leaderboard.reviewers || leaderboard.reviewers.length === 0">
                                 <li class="text-sm text-slate-400 italic text-center py-6">
-                                    No completed reviews yet.
+                                    {{ $isId ? 'Belum ada tinjauan yang selesai.' : 'No completed reviews yet.' }}
                                 </li>
                             </template>
                         </ul>
@@ -209,8 +248,12 @@
                             </svg>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-700">Top Authors</h3>
-                            <p class="text-xs text-slate-400">By submission count</p>
+                            <h3 class="font-bold text-slate-700">
+                                {{ $isId ? 'Penulis Teratas' : 'Top Authors' }}
+                            </h3>
+                            <p class="text-xs text-slate-400">
+                                {{ $isId ? 'Berdasarkan jumlah pengajuan' : 'By submission count' }}
+                            </p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -222,13 +265,13 @@
                                 <span class="text-sm font-medium text-slate-700 text-center line-clamp-1"
                                     x-text="author.name"></span>
                                 <span class="text-xs text-indigo-600 font-semibold mt-1">
-                                    <span x-text="author.count"></span> submissions
+                                    <span x-text="author.count"></span> {{ $isId ? 'pengajuan' : 'submissions' }}
                                 </span>
                             </div>
                         </template>
                         <template x-if="!leaderboard.authors || leaderboard.authors.length === 0">
                             <div class="col-span-full text-sm text-slate-400 italic text-center py-6">
-                                No submissions yet.
+                                {{ $isId ? 'Belum ada pengajuan.' : 'No submissions yet.' }}
                             </div>
                         </template>
                     </div>
@@ -244,6 +287,7 @@
     <script>
         function userDashboard() {
             return {
+                isId: @json($isId),
                 loading: true,
                 kpi: {
                     total: 0,
@@ -292,6 +336,20 @@
                     if (this.roleChart) this.roleChart.destroy();
                     if (this.growthChart) this.growthChart.destroy();
 
+                    // Translate role names dynamically if language is Indonesian
+                    const roleLabels = data.roles.labels ? data.roles.labels.map(label => {
+                        if (this.isId) {
+                            if (label === 'Journal Manager') return 'Manajer Jurnal';
+                            if (label === 'Section Editor') return 'Editor Bagian';
+                            if (label === 'Editor') return 'Editor';
+                            if (label === 'Reviewer') return 'Peninjau';
+                            if (label === 'Author') return 'Penulis';
+                            if (label === 'Reader') return 'Pembaca';
+                            if (label === 'Subscription Manager') return 'Manajer Langganan';
+                        }
+                        return label;
+                    }) : [];
+
                     // 1. Role Distribution (Donut)
                     this.roleChart = new ApexCharts(document.querySelector("#roleChart"), {
                         chart: {
@@ -300,7 +358,7 @@
                             fontFamily: 'inherit',
                         },
                         series: data.roles.series || [],
-                        labels: data.roles.labels || [],
+                        labels: roleLabels,
                         colors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'],
                         legend: {
                             position: 'bottom',
@@ -344,7 +402,7 @@
                             fontFamily: 'inherit',
                         },
                         series: [{
-                            name: 'New Users',
+                            name: this.isId ? 'Pengguna Baru' : 'New Users',
                             data: data.growth.data || []
                         }],
                         xaxis: {
@@ -391,3 +449,4 @@
         }
     </script>
 @endsection
+
