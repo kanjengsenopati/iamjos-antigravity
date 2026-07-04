@@ -40,8 +40,11 @@ class EditorialStatsController extends Controller
         }
 
         // Date range (default: last 12 months)
-        $start = $request->get('start', now()->subYear()->toDateString());
-        $end = $request->get('end', now()->toDateString());
+        $startStr = $request->get('start', now()->subYear()->toDateString());
+        $endStr = $request->get('end', now()->toDateString());
+
+        $startDate = Carbon::parse($startStr)->startOfDay();
+        $endDate = Carbon::parse($endStr)->endOfDay();
 
         // =====================================================
         // KPI CALCULATIONS
@@ -49,13 +52,13 @@ class EditorialStatsController extends Controller
 
         // 1. Total Submissions Received
         $totalReceived = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->whereNotNull('submitted_at')
             ->count();
 
         // 2. Accepted Count (status = accepted, scheduled, published, etc.)
         $acceptedCount = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->whereIn('status', [
                 Submission::STATUS_ACCEPTED,
                 Submission::STATUS_QUEUED_FOR_COPYEDITING,
@@ -67,7 +70,7 @@ class EditorialStatsController extends Controller
 
         // 3. Rejected Count (desk reject + review reject)
         $rejectedCount = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->where('status', Submission::STATUS_REJECTED)
             ->count();
 
@@ -77,22 +80,21 @@ class EditorialStatsController extends Controller
 
         // 5. Average Days to First Decision
         // First decision = first decision_made log entry after submission
-        $avgDaysFirstDecision = $this->calculateAvgDaysToFirstDecision($journal->id, $start, $end);
+        $avgDaysFirstDecision = $this->calculateAvgDaysToFirstDecision($journal->id, $startDate, $endDate);
 
         // 6. Average Days to Accept
         // Time from submitted_at to accepted_at
         $avgDaysAccept = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->whereNotNull('accepted_at')
             ->selectRaw('AVG(accepted_at::date - submitted_at::date) as avg_days')
             ->value('avg_days');
 
+
         // =====================================================
         // TREND DATA (Monthly)
         // =====================================================
-        $startDate = Carbon::parse($start);
-        $endDate = Carbon::parse($end);
-        $period = CarbonPeriod::create($startDate->startOfMonth(), '1 month', $endDate->endOfMonth());
+        $period = CarbonPeriod::create(Carbon::parse($startStr)->startOfMonth(), '1 month', Carbon::parse($endStr)->endOfMonth());
 
         $trendCategories = [];
         $trendReceived = [];
@@ -133,28 +135,28 @@ class EditorialStatsController extends Controller
 
         // Desk Reject: rejected at stage 1 (submission stage)
         $deskReject = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->where('status', Submission::STATUS_REJECTED)
             ->where('stage_id', 1)
             ->count();
 
         // Review Reject: rejected at stage 2+ (review stage)
         $reviewReject = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->where('status', Submission::STATUS_REJECTED)
             ->where('stage_id', '>', 1)
             ->count();
 
         // Withdrawn: we'll track this as draft after submission (simplified)
         $withdrawn = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->where('status', Submission::STATUS_DRAFT)
             ->whereNotNull('submitted_at')
             ->count();
 
         // In Progress (not yet decided)
         $inProgress = Submission::where('journal_id', $journal->id)
-            ->whereBetween('submitted_at', [$start, $end])
+            ->whereBetween('submitted_at', [$startDate, $endDate])
             ->whereIn('status', [
                 Submission::STATUS_SUBMITTED,
                 Submission::STATUS_UNDER_REVIEW,
@@ -162,6 +164,7 @@ class EditorialStatsController extends Controller
                 Submission::STATUS_REVISION_REQUIRED,
             ])
             ->count();
+
 
         // =====================================================
         // EFFICIENCY TREND (Avg Days to Decision per Month)
@@ -209,7 +212,7 @@ class EditorialStatsController extends Controller
     /**
      * Calculate average days to first editorial decision.
      */
-    private function calculateAvgDaysToFirstDecision(string $journalId, string $start, string $end): ?float
+    private function calculateAvgDaysToFirstDecision(string $journalId, $start, $end): ?float
     {
         // Get submissions with first decision log
         return DB::table('submissions')

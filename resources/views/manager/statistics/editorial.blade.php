@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Editorial Activity - ' . $journal->name)
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', ($isId ? 'Aktivitas Editorial - ' : 'Editorial Activity - ') . $journal->name)
 
 @section('content')
     <div x-data="editorialDashboard()" x-init="init()" class="space-y-6">
@@ -10,9 +15,11 @@
             class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200/60 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text">
-                    Editorial Activity
+                    {{ $isId ? 'Aktivitas Editorial' : 'Editorial Activity' }}
                 </h1>
-                <p class="text-sm text-slate-500 mt-1">Monitor submission flow, decisions, and editorial efficiency.</p>
+                <p class="text-sm text-slate-500 mt-1">
+                    {{ $isId ? 'Pantau alur pengajuan, keputusan, dan efisiensi editorial.' : 'Monitor submission flow, decisions, and editorial efficiency.' }}
+                </p>
             </div>
             <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
                 <div class="flex items-center gap-2">
@@ -45,7 +52,9 @@
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all group">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Submissions</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Pengajuan' : 'Submissions' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -58,14 +67,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.received">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Total received in period</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Total diterima dalam periode' : 'Total received in period' }}
+                        </p>
                     </div>
 
                     {{-- Accepted --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all group">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Accepted</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Diterima' : 'Accepted' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -76,15 +89,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.accepted">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Articles accepted</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Artikel diterima' : 'Articles accepted' }}
+                        </p>
                     </div>
 
                     {{-- Acceptance Rate --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all group">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Acceptance
-                                Rate</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Tingkat Penerimaan' : 'Acceptance Rate' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -96,15 +112,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800"><span x-text="kpi.acceptance_rate">0</span>%</div>
-                        <p class="text-xs text-slate-400 mt-1">Of decided submissions</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Dari pengajuan yang diputuskan' : 'Of decided submissions' }}
+                        </p>
                     </div>
 
                     {{-- Days to First Decision --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all group">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Days to 1st
-                                Decision</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Hari ke Keputusan ke-1' : 'Days to 1st Decision' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -115,15 +134,18 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.avg_days_first || '-'">0</div>
-                        <p class="text-xs text-slate-400 mt-1">Average days</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Rata-rata hari' : 'Average days' }}
+                        </p>
                     </div>
 
                     {{-- Days to Accept --}}
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md transition-all group">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Days to
-                                Accept</span>
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {{ $isId ? 'Hari untuk Diterima' : 'Days to Accept' }}
+                            </span>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center"
                                 style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -137,7 +159,9 @@
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-800" x-text="kpi.avg_days_accept || '-'">0</div>
-                        <p class="text-xs text-slate-400 mt-1">From submission to acceptance</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {{ $isId ? 'Dari pengajuan sampai diterima' : 'From submission to acceptance' }}
+                        </p>
                     </div>
 
                 </div>
@@ -149,18 +173,25 @@
                     <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6">
                         <div class="flex items-center justify-between mb-4">
                             <div>
-                                <h3 class="font-bold text-slate-700">Submission Trends</h3>
-                                <p class="text-xs text-slate-400">Monthly activity overview</p>
+                                <h3 class="font-bold text-slate-700">
+                                    {{ $isId ? 'Tren Pengajuan' : 'Submission Trends' }}
+                                </h3>
+                                <p class="text-xs text-slate-400">
+                                    {{ $isId ? 'Ikhtisar aktivitas bulanan' : 'Monthly activity overview' }}
+                                </p>
                             </div>
                             <div class="flex gap-4 text-xs">
                                 <span class="flex items-center gap-1.5">
-                                    <span class="w-3 h-3 rounded-full" style="background: #6366f1"></span> Received
+                                    <span class="w-3 h-3 rounded-full" style="background: #6366f1"></span>
+                                    {{ $isId ? 'Diterima' : 'Received' }}
                                 </span>
                                 <span class="flex items-center gap-1.5">
-                                    <span class="w-3 h-3 rounded-full" style="background: #10b981"></span> Accepted
+                                    <span class="w-3 h-3 rounded-full" style="background: #10b981"></span>
+                                    {{ $isId ? 'Disetujui' : 'Accepted' }}
                                 </span>
                                 <span class="flex items-center gap-1.5">
-                                    <span class="w-3 h-3 rounded-full" style="background: #ef4444"></span> Declined
+                                    <span class="w-3 h-3 rounded-full" style="background: #ef4444"></span>
+                                    {{ $isId ? 'Ditolak' : 'Declined' }}
                                 </span>
                             </div>
                         </div>
@@ -170,8 +201,12 @@
                     {{-- Decision Outcomes (Donut Chart) --}}
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6">
                         <div class="mb-4">
-                            <h3 class="font-bold text-slate-700">Decision Outcomes</h3>
-                            <p class="text-xs text-slate-400">Distribution of final decisions</p>
+                            <h3 class="font-bold text-slate-700">
+                                {{ $isId ? 'Hasil Keputusan' : 'Decision Outcomes' }}
+                            </h3>
+                            <p class="text-xs text-slate-400">
+                                {{ $isId ? 'Distribusi keputusan akhir' : 'Distribution of final decisions' }}
+                            </p>
                         </div>
                         <div id="outcomeChart" class="h-72"></div>
                     </div>
@@ -182,15 +217,19 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="font-bold text-slate-700">Editorial Efficiency</h3>
-                            <p class="text-xs text-slate-400">Average days to first decision over time</p>
+                            <h3 class="font-bold text-slate-700">
+                                {{ $isId ? 'Efisiensi Editorial' : 'Editorial Efficiency' }}
+                            </h3>
+                            <p class="text-xs text-slate-400">
+                                {{ $isId ? 'Rata-rata hari untuk keputusan pertama dari waktu ke waktu' : 'Average days to first decision over time' }}
+                            </p>
                         </div>
                         <div class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full"
                             :class="kpi.avg_days_first <= 14 ? 'bg-green-50 text-green-600' : (kpi.avg_days_first <= 30 ?
                                 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600')">
                             <i class="fa-solid" :class="kpi.avg_days_first <= 14 ? 'fa-circle-check' : 'fa-clock'"></i>
                             <span
-                                x-text="kpi.avg_days_first <= 14 ? 'Excellent' : (kpi.avg_days_first <= 30 ? 'Good' : 'Needs Improvement')"></span>
+                                x-text="kpi.avg_days_first <= 14 ? (isId ? 'Sangat Baik' : 'Excellent') : (kpi.avg_days_first <= 30 ? (isId ? 'Baik' : 'Good') : (isId ? 'Butuh Perbaikan' : 'Needs Improvement'))"></span>
                         </div>
                     </div>
                     <div id="efficiencyChart" class="h-64"></div>
@@ -205,8 +244,12 @@
                                 <i class="fa-solid fa-ban text-white"></i>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-slate-700">Desk Rejects</h4>
-                                <p class="text-xs text-slate-500">Rejected at submission stage</p>
+                                <h4 class="font-semibold text-slate-700">
+                                    {{ $isId ? 'Penolakan Awal (Desk Reject)' : 'Desk Rejects' }}
+                                </h4>
+                                <p class="text-xs text-slate-500">
+                                    {{ $isId ? 'Ditolak pada tahap pengajuan' : 'Rejected at submission stage' }}
+                                </p>
                             </div>
                         </div>
                         <div class="text-2xl font-bold text-orange-600" x-text="outcomes.data ? outcomes.data[1] : 0">0
@@ -220,8 +263,12 @@
                                 <i class="fa-solid fa-times-circle text-white"></i>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-slate-700">Review Rejects</h4>
-                                <p class="text-xs text-slate-500">Rejected after peer review</p>
+                                <h4 class="font-semibold text-slate-700">
+                                    {{ $isId ? 'Penolakan Review (Review Reject)' : 'Review Rejects' }}
+                                </h4>
+                                <p class="text-xs text-slate-500">
+                                    {{ $isId ? 'Ditolak setelah tinjauan sejawat' : 'Rejected after peer review' }}
+                                </p>
                             </div>
                         </div>
                         <div class="text-2xl font-bold text-red-600" x-text="outcomes.data ? outcomes.data[2] : 0">0</div>
@@ -234,8 +281,12 @@
                                 <i class="fa-solid fa-hourglass-half text-white"></i>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-slate-700">In Progress</h4>
-                                <p class="text-xs text-slate-500">Awaiting decision</p>
+                                <h4 class="font-semibold text-slate-700">
+                                    {{ $isId ? 'Sedang Diproses' : 'In Progress' }}
+                                </h4>
+                                <p class="text-xs text-slate-500">
+                                    {{ $isId ? 'Menunggu keputusan' : 'Awaiting decision' }}
+                                </p>
                             </div>
                         </div>
                         <div class="text-2xl font-bold text-indigo-600" x-text="outcomes.data ? outcomes.data[3] : 0">0
@@ -252,8 +303,9 @@
     <script>
         function editorialDashboard() {
             return {
-                dateStart: '{{ now()->subYear()->format('Y-m-d') }}',
-                dateEnd: '{{ now()->format('Y-m-d') }}',
+                isId: @json($isId),
+                dateStart: new URLSearchParams(window.location.search).get('start') || '{{ now()->subYear()->format('Y-m-d') }}',
+                dateEnd: new URLSearchParams(window.location.search).get('end') || '{{ now()->format('Y-m-d') }}',
                 loading: true,
                 kpi: {},
                 trends: {},
@@ -269,6 +321,12 @@
 
                 async fetchData() {
                     this.loading = true;
+
+                    // Update URL search parameters to make it persistent on page reload
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('start', this.dateStart);
+                    url.searchParams.set('end', this.dateEnd);
+                    window.history.replaceState({}, '', url.toString());
 
                     try {
                         const response = await fetch(
@@ -310,15 +368,15 @@
                             fontFamily: 'inherit',
                         },
                         series: [{
-                                name: 'Received',
+                                name: this.isId ? 'Diterima' : 'Received',
                                 data: this.trends.received || []
                             },
                             {
-                                name: 'Accepted',
+                                name: this.isId ? 'Disetujui' : 'Accepted',
                                 data: this.trends.accepted || []
                             },
                             {
-                                name: 'Declined',
+                                name: this.isId ? 'Ditolak' : 'Declined',
                                 data: this.trends.declined || []
                             },
                         ],
@@ -364,6 +422,18 @@
                     });
                     this.trendChart.render();
 
+                    // Map outcome chart labels based on locale
+                    const outcomeLabels = this.outcomes.labels ? this.outcomes.labels.map(label => {
+                        if (this.isId) {
+                            if (label === 'Accepted') return 'Disetujui';
+                            if (label === 'Desk Reject') return 'Penolakan Awal';
+                            if (label === 'Review Reject') return 'Penolakan Review';
+                            if (label === 'In Progress') return 'Sedang Diproses';
+                            if (label === 'Withdrawn') return 'Ditarik';
+                        }
+                        return label;
+                    }) : [];
+
                     // 2. Outcome Chart (Donut)
                     this.outcomeChart = new ApexCharts(document.querySelector("#outcomeChart"), {
                         chart: {
@@ -372,7 +442,7 @@
                             fontFamily: 'inherit',
                         },
                         series: this.outcomes.data || [],
-                        labels: this.outcomes.labels || [],
+                        labels: outcomeLabels,
                         colors: this.outcomes.colors || ['#10b981', '#f97316', '#ef4444', '#6366f1', '#94a3b8'],
                         legend: {
                             position: 'bottom',
@@ -389,7 +459,7 @@
                                         show: true,
                                         total: {
                                             show: true,
-                                            label: 'Total Decided',
+                                            label: this.isId ? 'Total Diputuskan' : 'Total Decided',
                                             color: '#475569',
                                             formatter: (w) => {
                                                 return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
@@ -416,7 +486,7 @@
                             fontFamily: 'inherit',
                         },
                         series: [{
-                            name: 'Avg Days to Decision',
+                            name: this.isId ? 'Rata-rata Hari untuk Keputusan' : 'Avg Days to Decision',
                             data: this.efficiency.data || [],
                         }],
                         xaxis: {
@@ -463,7 +533,7 @@
                                         color: '#fff',
                                         background: '#10b981'
                                     },
-                                    text: 'Target: 14 days',
+                                    text: this.isId ? 'Target: 14 hari' : 'Target: 14 days',
                                 },
                             }],
                         },
