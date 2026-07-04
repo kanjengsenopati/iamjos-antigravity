@@ -438,12 +438,21 @@
                             <div>
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="text-sm font-medium text-gray-900">{{ $isId ? 'Formulir Ulasan' : 'Review Forms' }}</h4>
-                                    <button type="button"
-                                        @click="showReviewFormModal = true; newReviewForm = { title: '', description: '' }"
-                                        class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
-                                        <i class="fa-solid fa-plus mr-2"></i>
-                                        {{ $isId ? 'Buat Formulir' : 'Create Form' }}
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <!-- Template Button -->
+                                        <a href="{{ route('journal.settings.workflow.review-forms.templates', ['journal' => $journal->slug]) }}"
+                                            class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-indigo-600 text-sm font-medium rounded-lg text-white hover:bg-indigo-700 transition-colors">
+                                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+                                            {{ $isId ? 'Template' : 'Templates' }}
+                                        </a>
+                                        <!-- Create Form Button -->
+                                        <button type="button"
+                                            @click="showReviewFormModal = true; newReviewForm = { title: '', description: '' }"
+                                            class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                                            <i class="fa-solid fa-plus mr-2"></i>
+                                            {{ $isId ? 'Buat Formulir' : 'Create Form' }}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="overflow-hidden rounded-xl border border-gray-200">
@@ -524,6 +533,16 @@
                                                                 title="{{ $isId ? 'Kelola Pertanyaan' : 'Manage Questions' }}">
                                                                 <i class="fa-solid fa-list-check text-sm"></i>
                                                             </a>
+
+                                                            <!-- Export Button -->
+                                                            @if ($form->hasElements())
+                                                                <a href="{{ route('journal.settings.workflow.review-forms.export', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}"
+                                                                    class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                                                                    title="{{ $isId ? 'Ekspor JSON' : 'Export JSON' }}"
+                                                                    download>
+                                                                    <i class="fa-solid fa-download text-sm"></i>
+                                                                </a>
+                                                            @endif
 
                                                             <!-- Duplicate Button -->
                                                             <button type="button"

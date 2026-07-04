@@ -7,10 +7,12 @@ use App\Models\LibraryFile;
 use App\Models\ReviewForm;
 use App\Models\SubmissionChecklist;
 use App\Models\EmailTemplate;
+use App\Services\ReviewFormTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class WorkflowSettingsController extends Controller
 {
@@ -378,6 +380,125 @@ class WorkflowSettingsController extends Controller
         $newForm = $reviewForm->duplicate();
 
         return back()->with('success', "Review form duplicated successfully: {$newForm->title}");
+    }
+
+    // =====================================================
+    // REVIEW FORM TEMPLATES (Phase 4)
+    // =====================================================
+
+    /**
+     * Show available review form templates.
+     */
+    public function showTemplates(): View
+    {
+        $journal = current_journal();
+
+        if (!$journal) {
+            abort(404, 'Journal not found.');
+        }
+
+        $templates = ReviewFormTemplateService::getTemplates();
+        $isId = app()->getLocale() === 'id';
+
+        return view('admin.journals.review-forms.templates', compact('journal', 'templates', 'isId'));
+    }
+
+    /**
+     * Create a review form from a template.
+     */
+    public function createFromTemplate(Request $request, string $journal): RedirectResponse
+    {
+        $currentJournal = current_journal();
+
+        if (!$currentJournal) {
+            abort(404, 'Journal not found.');
+        }
+
+        $validated = $request->validate([
+            'template_key' => 'required|string',
+            'locale' => 'nullable|string|in:en,id',
+        ]);
+
+        try {
+            $locale = $validated['locale'] ?? app()->getLocale();
+            $form = ReviewFormTemplateService::createFromTemplate(
+                $currentJournal,
+                $validated['template_key'],
+                $locale
+            );
+
+            return redirect()
+                ->route('journal.settings.workflow.review-forms.builder', [
+                    'journal' => $currentJournal->slug,
+                    'reviewForm' => $form->id
+                ])
+                ->with('success', 'Review form created successfully from template.');
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Export a review form to JSON.
+     */
+    public function exportForm(string $journal, string $reviewFormId)
+    {
+        $currentJournal = current_journal();
+
+        if (!$currentJournal) {
+            abort(404, 'Journal not found.');
+        }
+
+        $reviewForm = ReviewForm::findOrFail($reviewFormId);
+
+        if ($reviewForm->journal_id !== $currentJournal->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $data = ReviewFormTemplateService::exportToJson($reviewForm);
+
+        $filename = \Illuminate\Support\Str::slug($reviewForm->title) . '-form-template.json';
+
+        return response()->json($data)
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"")
+            ->header('Content-Type', 'application/json');
+    }
+
+    /**
+     * Import a review form from JSON.
+     */
+    public function importForm(Request $request, string $journal): RedirectResponse
+    {
+        $currentJournal = current_journal();
+
+        if (!$currentJournal) {
+            abort(404, 'Journal not found.');
+        }
+
+        $validated = $request->validate([
+            'import_file' => 'required|file|mimes:json|max:5120', // 5MB max
+        ]);
+
+        try {
+            $file = $request->file('import_file');
+            $jsonContent = file_get_contents($file->getRealPath());
+            $data = json_decode($jsonContent, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \InvalidArgumentException('Invalid JSON file format.');
+            }
+
+            $form = ReviewFormTemplateService::importFromJson($currentJournal, $data);
+
+            return redirect()
+                ->route('journal.settings.workflow.review-forms.builder', [
+                    'journal' => $currentJournal->slug,
+                    'reviewForm' => $form->id
+                ])
+                ->with('success', 'Review form imported successfully. You can activate it when ready.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
     }
 
     // =====================================================

@@ -158,32 +158,60 @@ class ReviewFormElementController extends Controller
     /**
      * Reorder form elements.
      */
-    public function reorder(Request $request, string $journal, string $reviewFormId): RedirectResponse
+    public function reorder(Request $request, string $journal, string $reviewFormId)
     {
         $currentJournal = current_journal();
 
         if (!$currentJournal) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Journal not found'], 404);
+            }
             abort(404, 'Journal not found.');
         }
 
         $reviewForm = ReviewForm::findOrFail($reviewFormId);
 
         if ($reviewForm->journal_id !== $currentJournal->id) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
             abort(403, 'Unauthorized.');
         }
 
-        $validated = $request->validate([
-            'elements' => 'required|array',
-            'elements.*.id' => 'required|uuid|exists:review_form_elements,id',
-            'elements.*.sequence' => 'required|integer|min:0',
-        ]);
+        // Handle both old format (elements array) and new format (order array)
+        if ($request->has('order')) {
+            // New format: simple array of element IDs in order
+            $validated = $request->validate([
+                'order' => 'required|array',
+                'order.*' => 'required|uuid|exists:review_form_elements,id',
+            ]);
 
-        foreach ($validated['elements'] as $elementData) {
-            $element = ReviewFormElement::find($elementData['id']);
-
-            if ($element && $element->review_form_id === $reviewForm->id) {
-                $element->update(['sequence' => $elementData['sequence']]);
+            foreach ($validated['order'] as $sequence => $elementId) {
+                $element = ReviewFormElement::find($elementId);
+                
+                if ($element && $element->review_form_id === $reviewForm->id) {
+                    $element->update(['sequence' => $sequence + 1]); // 1-indexed
+                }
             }
+        } else {
+            // Old format: array of objects with id and sequence
+            $validated = $request->validate([
+                'elements' => 'required|array',
+                'elements.*.id' => 'required|uuid|exists:review_form_elements,id',
+                'elements.*.sequence' => 'required|integer|min:0',
+            ]);
+
+            foreach ($validated['elements'] as $elementData) {
+                $element = ReviewFormElement::find($elementData['id']);
+
+                if ($element && $element->review_form_id === $reviewForm->id) {
+                    $element->update(['sequence' => $elementData['sequence']]);
+                }
+            }
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Elements reordered successfully']);
         }
 
         return back()->with('success', 'Elements reordered successfully.');

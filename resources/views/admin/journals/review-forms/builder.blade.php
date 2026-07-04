@@ -190,6 +190,12 @@
                                 <i class="fa-solid fa-eye mr-2"></i>
                                 {{ $isId ? 'Pratinjau Formulir' : 'Preview Form' }}
                             </a>
+                            <a href="{{ route('journal.settings.workflow.review-forms.export', ['journal' => $journal->slug, 'reviewForm' => $reviewForm->id]) }}"
+                                class="block w-full text-center px-4 py-2 bg-indigo-600 border border-indigo-600 text-sm font-medium rounded-lg text-white hover:bg-indigo-700"
+                                download>
+                                <i class="fa-solid fa-download mr-2"></i>
+                                {{ $isId ? 'Ekspor Template' : 'Export Template' }}
+                            </a>
                             <a href="{{ route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'review']) }}"
                                 class="block w-full text-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50">
                                 <i class="fa-solid fa-arrow-left mr-2"></i>
@@ -340,10 +346,48 @@
                     required: false,
                     options: []
                 },
+                sortable: null,
 
                 init() {
-                    // Initialize Sortable if needed
-                    console.log('Form builder initialized');
+                    // Initialize Sortable.js for drag-and-drop
+                    this.$nextTick(() => {
+                        const elementsList = this.$refs.elementsList;
+                        if (elementsList && typeof Sortable !== 'undefined') {
+                            this.sortable = Sortable.create(elementsList, {
+                                animation: 150,
+                                handle: '.fa-grip-vertical',
+                                ghostClass: 'sortable-ghost',
+                                dragClass: 'sortable-drag',
+                                onEnd: (evt) => {
+                                    // Get new order
+                                    const items = Array.from(elementsList.children);
+                                    const order = items.map(item => item.dataset.elementId);
+                                    
+                                    // Send reorder request
+                                    fetch('{{ route('journal.settings.workflow.review-forms.elements.reorder', ['journal' => $journal->slug, 'reviewForm' => $reviewForm->id]) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        },
+                                        body: JSON.stringify({ order: order })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (!data.success) {
+                                            alert('{{ $isId ? 'Gagal mengubah urutan' : 'Failed to reorder' }}');
+                                            window.location.reload();
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        alert('{{ $isId ? 'Gagal mengubah urutan' : 'Failed to reorder' }}');
+                                        window.location.reload();
+                                    });
+                                }
+                            });
+                        }
+                    });
                 },
 
                 resetForm() {
@@ -384,4 +428,19 @@
             }
         }
     </script>
+
+    <!-- Sortable.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <style>
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #f3f4f6;
+        }
+        
+        .sortable-drag {
+            opacity: 1;
+            cursor: move;
+        }
+    </style>
 @endsection

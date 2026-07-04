@@ -557,6 +557,12 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::delete('/review-forms/{reviewForm}', [WorkflowSettingsController::class, 'destroyReviewForm'])->name('review-forms.destroy');
                         Route::post('/review-forms/{reviewForm}/duplicate', [WorkflowSettingsController::class, 'duplicateReviewForm'])->name('review-forms.duplicate');
 
+                        // Review Form Templates (Phase 4)
+                        Route::get('/review-forms/templates', [WorkflowSettingsController::class, 'showTemplates'])->name('review-forms.templates');
+                        Route::post('/review-forms/from-template', [WorkflowSettingsController::class, 'createFromTemplate'])->name('review-forms.from-template');
+                        Route::get('/review-forms/{reviewForm}/export', [WorkflowSettingsController::class, 'exportForm'])->name('review-forms.export');
+                        Route::post('/review-forms/import', [WorkflowSettingsController::class, 'importForm'])->name('review-forms.import');
+
                         // Review Form Elements
                         Route::get('/review-forms/{reviewForm}/builder', [\App\Http\Controllers\ReviewFormElementController::class, 'builder'])->name('review-forms.builder');
                         Route::get('/review-forms/{reviewForm}/preview', [\App\Http\Controllers\ReviewFormElementController::class, 'preview'])->name('review-forms.preview');
