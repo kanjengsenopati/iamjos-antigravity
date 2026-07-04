@@ -64,7 +64,12 @@ class ToolsController extends Controller
             });
         });
 
-        return redirect()->back()->with('success', "Article permissions have been reset to journal defaults. {$affectedCount} articles updated.");
+        $isId = in_array(app()->getLocale(), ['id', 'id_ID']);
+        $message = $isId 
+            ? "Hak akses artikel telah di-reset ke pengaturan default jurnal. {$affectedCount} artikel diperbarui."
+            : "Article permissions have been reset to journal defaults. {$affectedCount} articles updated.";
+
+        return redirect()->back()->with('success', $message);
     }
 
     /**
