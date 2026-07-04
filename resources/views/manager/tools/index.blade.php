@@ -46,6 +46,66 @@
                 'desc' => 'Tambahkan artikel yang sudah diterbitkan dengan cepat tanpa melalui alur kerja pengajuan lengkap.'
             ]
         ];
+
+        // Color Map: Setiap class ditulis lengkap agar Tailwind JIT/purge bisa mendeteksinya.
+        $colorMap = [
+            'indigo' => [
+                'cardHover' => 'hover:border-indigo-400 hover:bg-indigo-50/30 hover:shadow-xl hover:shadow-indigo-500/10',
+                'iconBase' => 'bg-indigo-50 text-indigo-600',
+                'iconHover' => 'group-hover:bg-indigo-100',
+                'titleHover' => 'group-hover:text-indigo-700',
+                'badgeHover' => 'group-hover:bg-indigo-100 group-hover:text-indigo-600',
+                'btnHover' => 'group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 group-hover:shadow-lg group-hover:shadow-indigo-500/25',
+            ],
+            'blue' => [
+                'cardHover' => 'hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-xl hover:shadow-blue-500/10',
+                'iconBase' => 'bg-blue-50 text-blue-600',
+                'iconHover' => 'group-hover:bg-blue-100',
+                'titleHover' => 'group-hover:text-blue-700',
+                'badgeHover' => 'group-hover:bg-blue-100 group-hover:text-blue-600',
+                'btnHover' => 'group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:shadow-lg group-hover:shadow-blue-500/25',
+            ],
+            'purple' => [
+                'cardHover' => 'hover:border-purple-400 hover:bg-purple-50/30 hover:shadow-xl hover:shadow-purple-500/10',
+                'iconBase' => 'bg-purple-50 text-purple-600',
+                'iconHover' => 'group-hover:bg-purple-100',
+                'titleHover' => 'group-hover:text-purple-700',
+                'badgeHover' => 'group-hover:bg-purple-100 group-hover:text-purple-600',
+                'btnHover' => 'group-hover:bg-purple-600 group-hover:text-white group-hover:border-purple-600 group-hover:shadow-lg group-hover:shadow-purple-500/25',
+            ],
+            'emerald' => [
+                'cardHover' => 'hover:border-emerald-400 hover:bg-emerald-50/30 hover:shadow-xl hover:shadow-emerald-500/10',
+                'iconBase' => 'bg-emerald-50 text-emerald-600',
+                'iconHover' => 'group-hover:bg-emerald-100',
+                'titleHover' => 'group-hover:text-emerald-700',
+                'badgeHover' => 'group-hover:bg-emerald-100 group-hover:text-emerald-600',
+                'btnHover' => 'group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25',
+            ],
+            'amber' => [
+                'cardHover' => 'hover:border-amber-400 hover:bg-amber-50/30 hover:shadow-xl hover:shadow-amber-500/10',
+                'iconBase' => 'bg-amber-50 text-amber-600',
+                'iconHover' => 'group-hover:bg-amber-100',
+                'titleHover' => 'group-hover:text-amber-700',
+                'badgeHover' => 'group-hover:bg-amber-100 group-hover:text-amber-600',
+                'btnHover' => 'group-hover:bg-amber-600 group-hover:text-white group-hover:border-amber-600 group-hover:shadow-lg group-hover:shadow-amber-500/25',
+            ],
+            'rose' => [
+                'cardHover' => 'hover:border-rose-400 hover:bg-rose-50/30 hover:shadow-xl hover:shadow-rose-500/10',
+                'iconBase' => 'bg-rose-50 text-rose-600',
+                'iconHover' => 'group-hover:bg-rose-100',
+                'titleHover' => 'group-hover:text-rose-700',
+                'badgeHover' => 'group-hover:bg-rose-100 group-hover:text-rose-600',
+                'btnHover' => 'group-hover:bg-rose-600 group-hover:text-white group-hover:border-rose-600 group-hover:shadow-lg group-hover:shadow-rose-500/25',
+            ],
+            'cyan' => [
+                'cardHover' => 'hover:border-cyan-400 hover:bg-cyan-50/30 hover:shadow-xl hover:shadow-cyan-500/10',
+                'iconBase' => 'bg-cyan-50 text-cyan-600',
+                'iconHover' => 'group-hover:bg-cyan-100',
+                'titleHover' => 'group-hover:text-cyan-700',
+                'badgeHover' => 'group-hover:bg-cyan-100 group-hover:text-cyan-600',
+                'btnHover' => 'group-hover:bg-cyan-600 group-hover:text-white group-hover:border-cyan-600 group-hover:shadow-lg group-hover:shadow-cyan-500/25',
+            ],
+        ];
     @endphp
 
     <div x-data="toolsPage()" class="space-y-6">
@@ -121,14 +181,15 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach ($tools as $tool)
-                    <div class="bg-white rounded-xl border-2 border-slate-200/80 hover:border-{{ $tool['color'] }}-400 hover:bg-{{ $tool['color'] }}-50/40 hover:shadow-xl hover:shadow-{{ $tool['color'] }}-500/10 transition-all duration-300 group flex flex-col h-full"
+                    @php $cc = $colorMap[$tool['color']] ?? $colorMap['indigo']; @endphp
+                    <div class="bg-white rounded-xl border border-slate-200 {{ $cc['cardHover'] }} transition-all duration-300 group flex flex-col h-full"
                         x-show="'{{ strtolower($tool['title'] . ' ' . $tool['description']) }}'.includes(search.toLowerCase())"
                         x-transition>
 
                         <div class="p-5 flex-grow">
                             <div class="flex items-start gap-4 mb-4">
                                 <div
-                                    class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-{{ $tool['color'] }}-50 text-{{ $tool['color'] }}-600 group-hover:bg-{{ $tool['color'] }}-100 group-hover:scale-110 transition-all duration-300">
+                                    class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 {{ $cc['iconBase'] }} {{ $cc['iconHover'] }} group-hover:scale-110 transition-all duration-300">
                                     @switch($tool['icon'])
                                         @case('scholar')
                                             <i class="fa-brands fa-google-scholar text-2xl"></i>
@@ -205,11 +266,11 @@
                                 </div>
                                 <div class="flex-grow">
                                     <h3
-                                        class="font-bold text-slate-800 group-hover:text-{{ $tool['color'] }}-700 transition-colors duration-300">
+                                        class="font-bold text-slate-800 {{ $cc['titleHover'] }} transition-colors duration-300">
                                         {{ $isId ? ($toolTranslations[$tool['key']]['title'] ?? $tool['title']) : $tool['title'] }}
                                     </h3>
                                     <span
-                                        class="inline-flex items-center text-xs font-semibold bg-slate-100 text-slate-500 group-hover:bg-{{ $tool['color'] }}-100 group-hover:text-{{ $tool['color'] }}-600 px-2 py-0.5 rounded-full mt-1 transition-colors duration-300">
+                                        class="inline-flex items-center text-xs font-semibold bg-slate-100 text-slate-500 {{ $cc['badgeHover'] }} px-2 py-0.5 rounded-full mt-1 transition-colors duration-300">
                                         Plugin
                                     </span>
                                 </div>
@@ -223,7 +284,7 @@
                         <div class="px-5 pb-5">
                             <button type="button"
                                 @click="openTool('{{ $tool['key'] }}', '{{ $tool['route'] }}', '{{ $isId ? ($toolTranslations[$tool['key']]['title'] ?? $tool['title']) : $tool['title'] }}', '{{ $isId ? ($toolTranslations[$tool['key']]['desc'] ?? $tool['description']) : $tool['description'] }}', '{{ $tool['icon'] }}', '{{ $tool['color'] }}')"
-                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 group-hover:bg-{{ $tool['color'] }}-600 group-hover:text-white group-hover:border-{{ $tool['color'] }}-600 group-hover:shadow-lg group-hover:shadow-{{ $tool['color'] }}-500/25 transition-all duration-300 cursor-pointer">
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 {{ $cc['btnHover'] }} transition-all duration-300 cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
