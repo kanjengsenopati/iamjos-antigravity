@@ -121,14 +121,14 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach ($tools as $tool)
-                    <div class="bg-white rounded-xl border border-slate-200 hover:border-{{ $tool['color'] }}-400 hover:shadow-lg transition-all group flex flex-col h-full"
+                    <div class="bg-white rounded-xl border-2 border-slate-200/80 hover:border-{{ $tool['color'] }}-400 hover:bg-{{ $tool['color'] }}-50/40 hover:shadow-xl hover:shadow-{{ $tool['color'] }}-500/10 transition-all duration-300 group flex flex-col h-full"
                         x-show="'{{ strtolower($tool['title'] . ' ' . $tool['description']) }}'.includes(search.toLowerCase())"
                         x-transition>
 
                         <div class="p-5 flex-grow">
                             <div class="flex items-start gap-4 mb-4">
                                 <div
-                                    class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-{{ $tool['color'] }}-50 text-{{ $tool['color'] }}-600 group-hover:bg-{{ $tool['color'] }}-100 transition-colors">
+                                    class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-{{ $tool['color'] }}-50 text-{{ $tool['color'] }}-600 group-hover:bg-{{ $tool['color'] }}-100 group-hover:scale-110 transition-all duration-300">
                                     @switch($tool['icon'])
                                         @case('scholar')
                                             <i class="fa-brands fa-google-scholar text-2xl"></i>
@@ -205,17 +205,17 @@
                                 </div>
                                 <div class="flex-grow">
                                     <h3
-                                        class="font-bold text-slate-800 group-hover:text-{{ $tool['color'] }}-600 transition-colors">
+                                        class="font-bold text-slate-800 group-hover:text-{{ $tool['color'] }}-700 transition-colors duration-300">
                                         {{ $isId ? ($toolTranslations[$tool['key']]['title'] ?? $tool['title']) : $tool['title'] }}
                                     </h3>
                                     <span
-                                        class="inline-flex items-center text-xs font-semibold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full mt-1">
+                                        class="inline-flex items-center text-xs font-semibold bg-slate-100 text-slate-500 group-hover:bg-{{ $tool['color'] }}-100 group-hover:text-{{ $tool['color'] }}-600 px-2 py-0.5 rounded-full mt-1 transition-colors duration-300">
                                         Plugin
                                     </span>
                                 </div>
                             </div>
 
-                            <p class="text-sm text-slate-500 leading-relaxed">
+                            <p class="text-sm text-slate-500 group-hover:text-slate-600 leading-relaxed transition-colors duration-300">
                                 {{ $isId ? ($toolTranslations[$tool['key']]['desc'] ?? $tool['description']) : $tool['description'] }}
                             </p>
                         </div>
@@ -223,7 +223,7 @@
                         <div class="px-5 pb-5">
                             <button type="button"
                                 @click="openTool('{{ $tool['key'] }}', '{{ $tool['route'] }}', '{{ $isId ? ($toolTranslations[$tool['key']]['title'] ?? $tool['title']) : $tool['title'] }}', '{{ $isId ? ($toolTranslations[$tool['key']]['desc'] ?? $tool['description']) : $tool['description'] }}', '{{ $tool['icon'] }}', '{{ $tool['color'] }}')"
-                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:bg-{{ $tool['color'] }}-600 hover:text-white hover:border-{{ $tool['color'] }}-600 transition-all cursor-pointer">
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 group-hover:bg-{{ $tool['color'] }}-600 group-hover:text-white group-hover:border-{{ $tool['color'] }}-600 group-hover:shadow-lg group-hover:shadow-{{ $tool['color'] }}-500/25 transition-all duration-300 cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
