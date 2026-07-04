@@ -8,11 +8,26 @@
         showChecklistModal: false,
         showReviewFormModal: false,
         showEditReviewFormModal: false,
+        showReviewFormIframeModal: false,
+        reviewFormIframeUrl: '',
+        reviewFormIframeTitle: '',
         newChecklist: { content: '', is_required: true },
         newReviewForm: { title: '', description: '' },
         editReviewForm: { id: '', title: '', description: '', is_active: true },
         isEditMode: false,
-        editingItem: null
+        editingItem: null,
+        onIframeLoad(event) {
+            try {
+                const iframeWindow = event.target.contentWindow;
+                const iframeUrl = iframeWindow.location.href;
+                if (iframeUrl.includes('/settings/workflow') && (iframeUrl.includes('tab=review') || !iframeUrl.includes('/review-forms/'))) {
+                    this.showReviewFormIframeModal = false;
+                    window.location.reload();
+                }
+            } catch (e) {
+                // Keamanan lintas asal jika berbeda port/domain, tapi di sini satu domain
+            }
+        }
     }">
 
         <!-- Flash Messages -->
@@ -512,27 +527,29 @@
                                                         <div class="flex items-center justify-end gap-2">
                                                             <!-- Preview Button -->
                                                             @if ($form->hasElements())
-                                                                <a href="{{ route('journal.settings.workflow.review-forms.preview', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}"
-                                                                    class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                                                <button type="button"
+                                                                    @click="reviewFormIframeUrl = '{{ route('journal.settings.workflow.review-forms.preview', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}'; reviewFormIframeTitle = '{{ $isId ? "Pratinjau Formulir" : "Form Preview" }} - {{ $form->title }}'; showReviewFormIframeModal = true"
+                                                                    class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                     title="{{ $isId ? 'Pratinjau' : 'Preview' }}">
                                                                     <i class="fa-solid fa-eye text-sm"></i>
-                                                                </a>
+                                                                </button>
                                                             @endif
 
                                                             <!-- Edit Button -->
                                                             <button type="button"
                                                                 @click="editReviewForm = {{ json_encode(['id' => $form->id, 'title' => $form->title, 'description' => $form->description, 'is_active' => $form->is_active]) }}; showEditReviewFormModal = true"
-                                                                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                                                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Edit' : 'Edit' }}">
                                                                 <i class="fa-solid fa-pencil text-sm"></i>
                                                             </button>
 
                                                             <!-- Builder Button -->
-                                                            <a href="{{ route('journal.settings.workflow.review-forms.builder', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}"
-                                                                class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                                                            <button type="button"
+                                                                @click="reviewFormIframeUrl = '{{ route('journal.settings.workflow.review-forms.builder', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}'; reviewFormIframeTitle = '{{ $isId ? "Kelola Pertanyaan" : "Manage Questions" }} - {{ $form->title }}'; showReviewFormIframeModal = true"
+                                                                class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Kelola Pertanyaan' : 'Manage Questions' }}">
                                                                 <i class="fa-solid fa-list-check text-sm"></i>
-                                                            </a>
+                                                            </button>
 
                                                             <!-- Export Button -->
                                                             @if ($form->hasElements())
@@ -1005,6 +1022,36 @@
                                 class="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700">{{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wide Iframe Modal (Pratinjau & Kelola Pertanyaan) -->
+        <div x-show="showReviewFormIframeModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;"
+            @keydown.escape.window="showReviewFormIframeModal = false; window.location.reload();">
+            <div class="flex min-h-screen items-center justify-center p-4">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" 
+                    @click="showReviewFormIframeModal = false; window.location.reload();"></div>
+                
+                <!-- Modal Card (Radius 24px / rounded-3xl) -->
+                <div class="relative bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden transition-all transform">
+                    <!-- Modal Header (Glassmorphism bg-white/80, H2 Typography) -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                        <div>
+                            <h3 class="text-[16px] font-semibold text-slate-800" x-text="reviewFormIframeTitle"></h3>
+                        </div>
+                        <button type="button" @click="showReviewFormIframeModal = false; window.location.reload();"
+                            class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Body (Iframe) -->
+                    <div class="flex-1 bg-slate-50 relative">
+                        <iframe :src="reviewFormIframeUrl" class="absolute inset-0 w-full h-full border-0" 
+                            @load="onIframeLoad($event)"></iframe>
+                    </div>
                 </div>
             </div>
         </div>
