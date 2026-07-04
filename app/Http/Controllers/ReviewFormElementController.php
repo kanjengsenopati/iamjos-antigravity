@@ -32,7 +32,7 @@ class ReviewFormElementController extends Controller
 
         $elementTypes = ReviewFormElementType::toArray();
 
-        return view('admin.journals.review-forms.builder', compact('reviewForm', 'elementTypes'));
+        return view('admin.journals.review-forms.builder', compact('reviewForm', 'elementTypes', 'currentJournal'))->with('journal', $currentJournal);
     }
 
     /**
@@ -208,6 +208,6 @@ class ReviewFormElementController extends Controller
             abort(403, 'Unauthorized.');
         }
 
-        return view('admin.journals.review-forms.preview', compact('reviewForm'));
+        return view('admin.journals.review-forms.preview', compact('reviewForm', 'currentJournal'))->with('journal', $currentJournal);
     }
 }
