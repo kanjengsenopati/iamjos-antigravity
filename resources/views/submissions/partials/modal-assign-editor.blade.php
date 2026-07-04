@@ -3,24 +3,24 @@
     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
         {{-- Background overlay --}}
         <div x-show="assignEditorModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
-            @click="assignEditorModalOpen = false"></div>
+             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
+             @click="assignEditorModalOpen = false"></div>
 
         {{-- Modal Panel --}}
         <div x-show="assignEditorModalOpen" x-transition:enter="ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            class="relative bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full max-h-[90vh] flex flex-col z-50">
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             class="relative bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full max-h-[90vh] flex flex-col z-50">
 
             {{-- Header --}}
             <div
                 class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 flex-shrink-0">
                 <h3 class="text-lg font-bold text-gray-800 flex items-center" id="modal-title">
-                    Assign Editor
+                    {{ $isId ? 'Tugaskan Editor' : 'Assign Editor' }}
                 </h3>
                 <button type="button" @click="assignEditorModalOpen = false"
                     class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
@@ -40,7 +40,7 @@
                         {{-- Search Input --}}
                         <div class="relative">
                             <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" x-model="editorSearch" placeholder="Search by name or email..."
+                            <input type="text" x-model="editorSearch" placeholder="{{ $isId ? 'Cari berdasarkan nama atau email...' : 'Search by name or email...' }}"
                                 class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                 style="padding-left: 2.5rem !important;"
                                 autocomplete="off">
@@ -48,11 +48,11 @@
 
                         {{-- Role Filter --}}
                         <div class="flex items-center space-x-2">
-                            <span class="text-xs font-semibold text-gray-500 uppercase">Filter Role:</span>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">{{ $isId ? 'Filter Peran:' : 'Filter Role:' }}</span>
                             <select x-model="editorRoleFilter"
                                 class="form-select flex-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option value="Journal editor">Journal Editor</option>
-                                <option value="Section editor">Section Editor</option>
+                                <option value="Journal editor">{{ $isId ? 'Editor Jurnal' : 'Journal Editor' }}</option>
+                                <option value="Section editor">{{ $isId ? 'Editor Bagian' : 'Section Editor' }}</option>
                             </select>
                         </div>
                     </div>
@@ -62,13 +62,13 @@
                         @if ($potentialEditors->isEmpty())
                             <div class="p-8 text-center text-gray-500">
                                 <i class="fa-solid fa-users-slash text-4xl mb-3 text-gray-300"></i>
-                                <p>No eligible editors found.</p>
+                                <p>{{ $isId ? 'Tidak ada editor yang memenuhi syarat.' : 'No eligible editors found.' }}</p>
                             </div>
                         @else
                             {{-- Empty Search/Filter Results --}}
                             <div x-show="filteredEditors.length === 0" class="p-8 text-center text-gray-500"
                                 style="display: none;">
-                                <p>No editors match your search or filter.</p>
+                                <p>{{ $isId ? 'Tidak ada editor yang cocok dengan pencarian atau filter Anda.' : 'No editors match your search or filter.' }}</p>
                             </div>
 
                             <template x-for="editor in filteredEditors" :key="editor.id">
@@ -91,7 +91,7 @@
                                                 <template x-for="role in editor.role_names">
                                                     <span
                                                         class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                                                        x-text="role"></span>
+                                                        x-text="{'journal editor': '{{ $isId ? 'Editor Jurnal' : 'Journal Editor' }}', 'section editor': '{{ $isId ? 'Editor Bagian' : 'Section Editor' }}'}[role.toLowerCase()] || role"></span>
                                                 </template>
                                             </template>
                                         </div>
@@ -114,11 +114,11 @@
                         class="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 rounded-b-xl flex-shrink-0">
                         <button type="button" @click="assignEditorModalOpen = false"
                             class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">
-                            Cancel
+                            {{ $isId ? 'Batal' : 'Cancel' }}
                         </button>
                         <button type="submit" :disabled="!selectedEditor"
                             class="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow">
-                            Assign
+                            {{ $isId ? 'Tugaskan' : 'Assign' }}
                         </button>
                     </div>
                 </form>

@@ -9,15 +9,16 @@
         \App\Models\Role::LEVEL_ADMIN
     ], $journal->id);
     $stageDiscussions = $discussions->where('stage_id', $stageId);
+    $isId = app()->getLocale() === 'id';
 
     // Stage names for display
     $stageLabels = [
-        1 => 'Pre-Review',
-        2 => 'Review',
-        3 => 'Copyediting',
-        4 => 'Production',
+        1 => $isId ? 'Naskah' : 'Pre-Review',
+        2 => $isId ? 'Ulasan' : 'Review',
+        3 => $isId ? 'Penyuntingan' : 'Copyediting',
+        4 => $isId ? 'Produksi' : 'Production',
     ];
-    $stageLabel = $stageLabels[$stageId] ?? 'Stage ' . $stageId;
+    $stageLabel = $stageLabels[$stageId] ?? ($isId ? 'Tahap ' : 'Stage ') . $stageId;
 @endphp
 
 <div class="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[24px] overflow-hidden" x-data="discussionPanel({
@@ -33,11 +34,11 @@
 
     {{-- Panel Header --}}
     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-        <x-text.h2 class="text-gray-900">{{ $stageLabel }} Discussions</x-text.h2>
+        <x-text.h2 class="text-gray-900">{{ $isId ? 'Diskusi ' . $stageLabel : $stageLabel . ' Discussions' }}</x-text.h2>
         <button @click="openAddModal()" type="button"
             class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
             <i class="fa-solid fa-plus mr-1.5 text-[14px]"></i>
-            <x-text.body class="inline font-semibold text-inherit">Add Discussion</x-text.body>
+            <x-text.body class="inline font-semibold text-inherit">{{ $isId ? 'Tambah Diskusi' : 'Add Discussion' }}</x-text.body>
         </button>
     </div>
 
@@ -84,20 +85,20 @@
                                         class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                                         <x-text.caption class="not-italic text-gray-600 flex items-center">
                                             <i class="fa-solid fa-lock mr-1 text-[10px]"></i>
-                                            Closed
+                                            {{ $isId ? 'Ditutup' : 'Closed' }}
                                         </x-text.caption>
                                     </span>
                                 @endif
                                 @if ($unreadCount > 0)
                                     <span class="unread-badge inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 ml-2 font-bold">
                                         <x-text.caption class="not-italic text-blue-700 font-bold">
-                                            {{ $unreadCount }} New
+                                            {{ $unreadCount }} {{ $isId ? 'Baru' : 'New' }}
                                         </x-text.caption>
                                     </span>
                                 @endif
                             </div>
                             <x-text.caption class="text-gray-500 block">
-                                From {{ $discussion->user->name }} •
+                                {{ $isId ? 'Dari' : 'From' }} {{ $discussion->user->name }} •
                                 {{ $discussion->created_at->format('M d, Y') }}
                             </x-text.caption>
                         </div>
@@ -127,29 +128,27 @@
                         <span
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full {{ $replyCount > 0 ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600' }}">
                             <x-text.caption class="not-italic font-semibold {{ $replyCount > 0 ? 'text-blue-700' : 'text-slate-600' }}">
-                                {{ $replyCount }} {{ $replyCount === 1 ? 'reply' : 'replies' }}
+                                {{ $replyCount }} {{ $isId ? 'balasan' : ($replyCount === 1 ? 'reply' : 'replies') }}
                             </x-text.caption>
                         </span>
 
                         <i
                             class="fa-solid fa-chevron-down text-gray-400 transform group-open:rotate-180 transition-transform"></i>
                     </div>
-                </summary>
-
-                {{-- Expanded Content --}}
+                </summary>                {{-- Expanded Content --}}
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
                     {{-- Participants Header --}}
                     <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-150">
                         <div class="flex items-center gap-2">
-                            <x-text.label class="text-slate-400">Participants:</x-text.label>
+                            <x-text.label class="text-slate-400">{{ $isId ? 'Partisipan:' : 'Participants:' }}</x-text.label>
                             <div class="flex flex-wrap gap-1.5">
                                 @foreach ($discussionParticipants as $participant)
                                     @php
-                                        $role = $participant->id === $submission->user_id ? 'Author' : 'Editor';
+                                        $role = $participant->id === $submission->user_id ? ($isId ? 'Penulis' : 'Author') : ($isId ? 'Editor' : 'Editor');
                                     @endphp
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === 'Author' ? 'bg-amber-55 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === 'Author' ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === 'Author' ? '#D97706' : '' }}">
-                                        <x-text.caption class="not-italic font-medium {{ $role === 'Author' ? 'text-amber-700' : 'text-blue-700' }}">
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-55 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === ($isId ? 'Penulis' : 'Author') ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === ($isId ? 'Penulis' : 'Author') ? '#D97706' : '' }}">
+                                        <x-text.caption class="not-italic font-medium {{ $role === ($isId ? 'Penulis' : 'Author') ? 'text-amber-700' : 'text-blue-700' }}">
                                             {{ $participant->name }}
                                         </x-text.caption>
                                     </span>
@@ -168,7 +167,7 @@
                                         <button type="submit"
                                             class="inline-flex items-center text-slate-500 hover:text-red-600 transition-colors">
                                             <i class="fa-solid fa-lock mr-1 text-[12px]"></i>
-                                            <x-text.caption class="not-italic font-medium text-inherit">Close Discussion</x-text.caption>
+                                            <x-text.caption class="not-italic font-medium text-inherit">{{ $isId ? 'Tutup Diskusi' : 'Close Discussion' }}</x-text.caption>
                                         </button>
                                     </form>
                                 @else
@@ -179,7 +178,7 @@
                                         <button type="submit"
                                             class="inline-flex items-center text-slate-500 hover:text-emerald-600 transition-colors">
                                             <i class="fa-solid fa-lock-open mr-1 text-[12px]"></i>
-                                            <x-text.caption class="not-italic font-medium text-inherit">Reopen</x-text.caption>
+                                            <x-text.caption class="not-italic font-medium text-inherit">{{ $isId ? 'Buka Kembali' : 'Reopen' }}</x-text.caption>
                                         </button>
                                     </form>
                                 @endif
@@ -190,7 +189,7 @@
                         @foreach ($discussion->messages as $message)
                             @php
                                 $isOwner = $message->user_id === $currentUser->id;
-                                $messageRole = $message->user_id === $submission->user_id ? 'Author' : 'Editor';
+                                $messageRole = $message->user_id === $submission->user_id ? ($isId ? 'Penulis' : 'Author') : ($isId ? 'Editor' : 'Editor');
                                 
                                 // Highlight if not owner and (never read OR newer than last read)
                                 $isNew = !$isOwner && (is_null($lastReadAt) || $message->created_at->gt($lastReadAt));
@@ -208,8 +207,8 @@
                                         <div class="flex items-center gap-2">
                                             <x-text.body class="font-semibold text-slate-900 inline">{{ $message->user->name }}</x-text.body>
                                             <span
-                                                class="inline-flex items-center px-1.5 py-0.5 rounded {{ $messageRole === 'Author' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $messageRole === 'Author' ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $messageRole === 'Author' ? '#D97706' : '' }}">
-                                                <x-text.caption class="not-italic font-medium text-[10px] {{ $messageRole === 'Author' ? 'text-amber-700' : 'text-blue-700' }}">
+                                                class="inline-flex items-center px-1.5 py-0.5 rounded {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-55 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? '#D97706' : '' }}">
+                                                <x-text.caption class="not-italic font-medium text-[10px] {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? 'text-amber-700' : 'text-blue-700' }}">
                                                     {{ $messageRole }}
                                                 </x-text.caption>
                                             </span>
@@ -227,7 +226,7 @@
                                         <div class="mt-2.5 pt-2.5 border-t border-gray-100">
                                             <x-text.caption class="block font-medium text-slate-500 mb-1.5">
                                                 <i class="fa-solid fa-paperclip mr-1"></i>
-                                                Attachments
+                                                {{ $isId ? 'Lampiran' : 'Attachments' }}
                                             </x-text.caption>
                                             <div class="flex flex-wrap gap-2">
                                                 @foreach ($message->files as $file)
@@ -252,17 +251,17 @@
                                 <button @click="replyExpanded = true; $nextTick(() => initReplyEditor())" type="button"
                                     class="w-full text-left px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
                                     <i class="fa-regular fa-comment-dots mr-2"></i>
-                                    Write a reply...
+                                    {{ $isId ? 'Tulis balasan...' : 'Write a reply...' }}
                                 </button>
                             </div>
-
+ 
                             <div x-show="replyExpanded" x-cloak
                                 class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                                 <form
                                     action="{{ route('journal.discussion.reply', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id]) }}"
                                     method="POST" class="space-y-4" @submit="submitting = true">
                                     @csrf
-
+ 
                                     {{-- Hidden fields for files --}}
                                     <template x-for="(file, index) in replyFiles" :key="file.id">
                                         <div>
@@ -272,34 +271,34 @@
                                                 :value="file.name">
                                         </div>
                                     </template>
-
+ 
                                     {{-- Rich Text Editor --}}
                                     <div>
                                         <label class="block mb-1">
-                                            <x-text.body class="font-medium text-slate-700">Your Reply</x-text.body>
+                                            <x-text.body class="font-medium text-slate-700">{{ $isId ? 'Balasan Anda' : 'Your Reply' }}</x-text.body>
                                         </label>
                                         <textarea name="body" :id="'reply-editor-' + discussionId" class="hidden"></textarea>
                                     </div>
-
+ 
                                     {{-- File Attachments --}}
                                     <div class="border-t border-gray-100 pt-3">
                                         <div class="flex items-center justify-between mb-2">
-                                            <x-text.caption class="not-italic font-medium text-slate-700">Attachments</x-text.caption>
+                                            <x-text.caption class="not-italic font-medium text-slate-700">{{ $isId ? 'Lampiran' : 'Attachments' }}</x-text.caption>
                                             <label
                                                 :class="replyIsUploading ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'">
                                                 <x-text.caption class="not-italic text-blue-600 font-semibold hover:underline flex items-center">
                                                     <i class="fa-solid fa-paperclip mr-1"></i>
-                                                    Add File
+                                                    {{ $isId ? 'Tambah File' : 'Add File' }}
                                                 </x-text.caption>
                                                 <input type="file" class="sr-only" :disabled="replyIsUploading"
                                                     @change="uploadReplyFile($event)">
                                             </label>
                                         </div>
-
+ 
                                         <!-- Progress Bar for uploading reply file -->
                                         <div x-show="replyIsUploading" class="mb-2 p-3 border rounded bg-slate-50 space-y-2">
                                             <div class="flex items-center justify-between">
-                                                <x-text.caption class="text-slate-600 font-medium">Uploading file...</x-text.caption>
+                                                <x-text.caption class="text-slate-600 font-medium">{{ $isId ? 'Mengunggah file...' : 'Uploading file...' }}</x-text.caption>
                                                 <x-text.caption class="text-blue-600 font-semibold" x-text="replyUploadProgress + '%'"></x-text.caption>
                                             </div>
                                             <div class="w-full bg-slate-200 rounded-full h-1.5">
@@ -322,22 +321,22 @@
                                                 </li>
                                             </template>
                                             <template x-if="replyFiles.length === 0">
-                                                <li class="py-1"><x-text.caption class="text-slate-400">No files attached.</x-text.caption></li>
+                                                <li class="py-1"><x-text.caption class="text-slate-400">{{ $isId ? 'Tidak ada file yang dilampirkan.' : 'No files attached.' }}</x-text.caption></li>
                                             </template>
                                         </ul>
                                     </div>
-
+ 
                                     {{-- Action Buttons --}}
                                     <div class="flex justify-end gap-2 pt-2">
                                         <button type="button" @click="replyExpanded = false; resetReplyForm()"
                                             class="px-4 py-2 text-slate-600 hover:text-slate-800">
-                                            <x-text.body class="font-medium text-inherit">Cancel</x-text.body>
+                                            <x-text.body class="font-medium text-inherit">{{ $isId ? 'Batal' : 'Cancel' }}</x-text.body>
                                         </button>
                                         <button type="submit" :disabled="submitting"
                                             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
                                             <i class="fa-solid fa-paper-plane mr-2 text-[14px]"></i>
                                             <x-text.body class="font-medium text-white inline">
-                                                <span x-text="submitting ? 'Sending...' : 'Send Reply'"></span>
+                                                <span x-text="submitting ? '{{ $isId ? 'Mengirim...' : 'Sending...' }}' : '{{ $isId ? 'Kirim Balasan' : 'Send Reply' }}'"></span>
                                             </x-text.body>
                                         </button>
                                     </div>
@@ -350,9 +349,9 @@
                             <div class="bg-slate-50 rounded-lg p-4 text-center">
                                 <x-text.body class="text-slate-500 flex items-center justify-center">
                                     <i class="fa-solid fa-lock mr-2"></i>
-                                    This discussion is closed.
+                                    {{ $isId ? 'Diskusi ini telah ditutup.' : 'This discussion is closed.' }}
                                     @if ($discussion->closed_at)
-                                        Closed {{ $discussion->closed_at->diffForHumans() }}.
+                                        {{ $isId ? 'Ditutup' : 'Closed' }} {{ $discussion->closed_at->diffForHumans() }}.
                                     @endif
                                 </x-text.body>
                             </div>
@@ -363,11 +362,11 @@
         @empty
             <div class="px-6 py-10 text-center">
                 <i class="fa-regular fa-comments text-gray-300 text-4xl mb-3"></i>
-                <x-text.body class="text-slate-500 mb-2">No discussions in this stage yet.</x-text.body>
+                <x-text.body class="text-slate-500 mb-2">{{ $isId ? 'Belum ada diskusi di tahap ini.' : 'No discussions in this stage yet.' }}</x-text.body>
                 <button @click="openAddModal()" type="button"
                     class="mt-3 inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 transition-colors">
                     <i class="fa-solid fa-plus mr-1.5 text-[14px]"></i>
-                    <x-text.body class="font-semibold text-inherit inline">Start a discussion</x-text.body>
+                    <x-text.body class="font-semibold text-inherit inline">{{ $isId ? 'Mulai diskusi' : 'Start a discussion' }}</x-text.body>
                 </button>
             </div>
         @endforelse
@@ -391,14 +390,12 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-
-                {{-- Modal Header --}}
+                class="relative inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">                {{-- Modal Header --}}
                 <div class="px-6 py-4 border-b border-gray-150 bg-gray-50">
                     <div class="flex items-center justify-between">
                         <x-text.h2 id="add-discussion-title" class="text-gray-900 flex items-center">
                             <i class="fa-regular fa-comments text-blue-600 mr-2"></i>
-                            Add {{ $stageLabel }} Discussion
+                            {{ $isId ? 'Tambah Diskusi ' . $stageLabel : 'Add ' . $stageLabel . ' Discussion' }}
                         </x-text.h2>
                         <button @click="showAddModal = false" type="button"
                             class="text-slate-400 hover:text-slate-600 transition-colors">
@@ -425,19 +422,19 @@
                     <div>
                         <label for="subject-{{ $stageId }}"
                             class="block mb-1">
-                            <x-text.body class="font-medium text-slate-700">Subject <span class="text-red-600">*</span></x-text.body>
+                            <x-text.body class="font-medium text-slate-700">{{ $isId ? 'Subjek' : 'Subject' }} <span class="text-red-600">*</span></x-text.body>
                         </label>
                         <input type="text" name="subject" id="subject-{{ $stageId }}" required
                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Brief description of the discussion topic">
+                            placeholder="{{ $isId ? 'Deskripsi singkat mengenai topik diskusi' : 'Brief description of the discussion topic' }}">
                     </div>
 
                     {{-- Participants Selection --}}
                     <div>
                         <label class="block mb-2">
-                            <x-text.body class="font-medium text-slate-700">Participants <span class="text-red-600">*</span></x-text.body>
+                            <x-text.body class="font-medium text-slate-700">{{ $isId ? 'Partisipan' : 'Participants' }} <span class="text-red-600">*</span></x-text.body>
                             <x-text.caption class="text-slate-500 ml-1">
-                                (Select who should be part of this discussion)
+                                {{ $isId ? '(Pilih siapa saja yang harus menjadi bagian dari diskusi ini)' : '(Select who should be part of this discussion)' }}
                             </x-text.caption>
                         </label>
                         <div
@@ -455,23 +452,23 @@
                                         {{ strtoupper(substr($currentUser->name, 0, 1)) }}
                                     </div>
                                     <div class="min-w-0">
-                                        <x-text.body class="font-medium text-slate-900 block truncate">{{ $currentUser->name }} (You)</x-text.body>
+                                        <x-text.body class="font-medium text-slate-900 block truncate">{{ $currentUser->name }} {{ $isId ? '(Anda)' : '(You)' }}</x-text.body>
                                         <x-text.caption class="not-italic text-slate-500 block truncate">{{ $currentUser->email }}</x-text.caption>
                                     </div>
                                 </div>
                                 <span
                                     class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                                    <x-text.caption class="not-italic font-semibold text-blue-700">Creator</x-text.caption>
+                                    <x-text.caption class="not-italic font-semibold text-blue-700">{{ $isId ? 'Pembuat' : 'Creator' }}</x-text.caption>
                                 </span>
                             </label>
 
                             {{-- Other Participants --}}
                             @foreach ($participants->reject(fn($p) => $p->id === $currentUser->id) as $participant)
                                 @php
-                                    $role = $participant->id === $submission->user_id ? 'Author' : 'Editor';
+                                    $role = $participant->id === $submission->user_id ? ($isId ? 'Penulis' : 'Author') : ($isId ? 'Editor' : 'Editor');
                                     $isOtherParty =
-                                        ($currentUser->id === $submission->user_id && $role === 'Editor') ||
-                                        ($currentUser->id !== $submission->user_id && $role === 'Author');
+                                        ($currentUser->id === $submission->user_id && $role === ($isId ? 'Editor' : 'Editor')) ||
+                                        ($currentUser->id !== $submission->user_id && $role === ($isId ? 'Penulis' : 'Author'));
                                 @endphp
                                 <label
                                     class="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
@@ -480,7 +477,7 @@
                                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                     <div class="flex items-center gap-2 flex-1 min-w-0">
                                         <div
-                                            class="w-8 h-8 rounded-full {{ $role === 'Author' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }} flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                            class="w-8 h-8 rounded-full {{ $role === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }} flex items-center justify-center font-bold text-xs flex-shrink-0">
                                             {{ strtoupper(substr($participant->name, 0, 1)) }}
                                         </div>
                                         <div class="min-w-0">
@@ -489,14 +486,14 @@
                                         </div>
                                     </div>
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === 'Author' ? 'bg-amber-50 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === 'Author' ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === 'Author' ? '#D97706' : '' }}">
-                                        <x-text.caption class="not-italic font-semibold {{ $role === 'Author' ? 'text-amber-700' : 'text-blue-700' }}">{{ $role }}</x-text.caption>
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-50 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === ($isId ? 'Penulis' : 'Author') ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === ($isId ? 'Penulis' : 'Author') ? '#D97706' : '' }}">
+                                        <x-text.caption class="not-italic font-semibold {{ $role === ($isId ? 'Penulis' : 'Author') ? 'text-amber-700' : 'text-blue-700' }}">{{ $role }}</x-text.caption>
                                     </span>
                                 </label>
                             @endforeach
 
                             @if ($participants->reject(fn($p) => $p->id === $currentUser->id)->isEmpty())
-                                <p class="text-sm text-slate-500 italic text-center py-2">No other participants available.</p>
+                                <p class="text-sm text-slate-500 italic text-center py-2">{{ $isId ? 'Tidak ada partisipan lain yang tersedia.' : 'No other participants available.' }}</p>
                             @endif
                         </div>
                     </div>
@@ -505,7 +502,7 @@
                     <div>
                         <label for="new-discussion-editor-{{ $stageId }}"
                             class="block mb-1">
-                            <x-text.body class="font-medium text-slate-700">Message <span class="text-red-600">*</span></x-text.body>
+                            <x-text.body class="font-medium text-slate-700">{{ $isId ? 'Pesan' : 'Message' }} <span class="text-red-600">*</span></x-text.body>
                         </label>
                         <div class="mt-1">
                             <textarea name="body" id="new-discussion-editor-{{ $stageId }}"></textarea>
@@ -515,12 +512,12 @@
                     {{-- File Attachments --}}
                     <div class="border-t border-gray-200 pt-4">
                         <div class="flex items-center justify-between mb-3">
-                            <x-text.h2 class="text-gray-900">Attachments</x-text.h2>
+                            <x-text.h2 class="text-gray-900">{{ $isId ? 'Lampiran' : 'Attachments' }}</x-text.h2>
                             <label
                                 :class="newIsUploading ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'"
                                 class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-800 transition-colors">
                                 <i class="fa-solid fa-paperclip mr-1.5 text-[14px]"></i>
-                                <x-text.body class="font-semibold text-inherit inline">Attach File</x-text.body>
+                                <x-text.body class="font-semibold text-inherit inline">{{ $isId ? 'Lampirkan File' : 'Attach File' }}</x-text.body>
                                 <input type="file" class="sr-only" :disabled="newIsUploading" @change="uploadNewDiscussionFile($event)">
                             </label>
                         </div>
@@ -528,7 +525,7 @@
                         <!-- Progress Bar for uploading new file -->
                         <div x-show="newIsUploading" class="mb-3 p-4 border rounded-lg bg-slate-50 space-y-2">
                             <div class="flex items-center justify-between">
-                                <x-text.body class="text-slate-600 font-medium">Uploading file...</x-text.body>
+                                <x-text.body class="text-slate-600 font-medium">{{ $isId ? 'Mengunggah file...' : 'Uploading file...' }}</x-text.body>
                                 <x-text.body class="text-blue-600 font-semibold" x-text="newUploadProgress + '%'"></x-text.body>
                             </div>
                             <div class="w-full bg-slate-200 rounded-full h-2">
@@ -552,7 +549,7 @@
                                 </li>
                             </template>
                             <template x-if="newDiscussionFiles.length === 0">
-                                <li class="py-2"><x-text.body class="text-slate-500 italic">No files attached.</x-text.body></li>
+                                <li class="py-2"><x-text.body class="text-slate-500 italic">{{ $isId ? 'Tidak ada file yang dilampirkan.' : 'No files attached.' }}</x-text.body></li>
                             </template>
                         </ul>
                     </div>
@@ -561,13 +558,13 @@
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <button type="button" @click="showAddModal = false"
                             class="px-4 py-2.5 text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                            <x-text.body class="font-medium text-inherit">Cancel</x-text.body>
+                            <x-text.body class="font-medium text-inherit">{{ $isId ? 'Batal' : 'Cancel' }}</x-text.body>
                         </button>
                         <button type="submit" :disabled="submittingNew"
                             class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
                             <i class="fa-solid fa-paper-plane mr-2 text-[14px]"></i>
                             <x-text.body class="font-medium text-white inline">
-                                <span x-text="submittingNew ? 'Creating...' : 'Create Discussion'"></span>
+                                <span x-text="submittingNew ? '{{ $isId ? 'Membuat...' : 'Creating...' }}' : '{{ $isId ? 'Buat Diskusi' : 'Create Discussion' }}'"></span>
                             </x-text.body>
                         </button>
                     </div>
@@ -643,16 +640,16 @@
                             const data = JSON.parse(xhr.responseText);
                             this.newDiscussionFiles.push(data);
                         } catch (e) {
-                            alert('Upload failed: Invalid response');
+                            alert('{{ $isId ? 'Unggah gagal: Respons tidak valid' : 'Upload failed: Invalid response' }}');
                         }
                     } else {
-                        alert('Upload failed: ' + xhr.statusText);
+                        alert('{{ $isId ? 'Unggah gagal: ' : 'Upload failed: ' }}' + xhr.statusText);
                     }
                 };
 
                 xhr.onerror = () => {
                     this.newIsUploading = false;
-                    alert('Upload failed');
+                    alert('{{ $isId ? 'Unggah gagal' : 'Upload failed' }}');
                 };
 
                 xhr.send(formData);
@@ -724,16 +721,16 @@
                             const data = JSON.parse(xhr.responseText);
                             this.replyFiles.push(data);
                         } catch (e) {
-                            alert('Upload failed: Invalid response');
+                            alert('{{ $isId ? 'Unggah gagal: Respons tidak valid' : 'Upload failed: Invalid response' }}');
                         }
                     } else {
-                        alert('Upload failed: ' + xhr.statusText);
+                        alert('{{ $isId ? 'Unggah gagal: ' : 'Upload failed: ' }}' + xhr.statusText);
                     }
                 };
 
                 xhr.onerror = () => {
                     this.replyIsUploading = false;
-                    alert('Upload failed');
+                    alert('{{ $isId ? 'Unggah gagal' : 'Upload failed' }}');
                 };
 
                 xhr.send(formData);

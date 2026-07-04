@@ -626,7 +626,7 @@
                                                                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                     <i
                                                                                         class="fa-solid fa-envelope text-indigo-500 w-4"></i>
-                                                                                    <span>Send Email</span>
+                                                                                    <span>{{ $isId ? 'Kirim Email' : 'Send Email' }}</span>
                                                                                 </button>
                                                                             @endif
 
@@ -640,7 +640,7 @@
                                                                                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                         <i
                                                                                             class="fa-solid fa-user-shield text-purple-500 w-4"></i>
-                                                                                        <span>Login As User</span>
+                                                                                        <span>{{ $isId ? 'Masuk Sebagai Pengguna' : 'Login As User' }}</span>
                                                                                     </button>
                                                                                 </form>
                                                                             @endif
@@ -651,14 +651,14 @@
                                                                             @if ($member['type'] === 'editorial')
                                                                                 <form method="POST"
                                                                                     action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
-                                                                                    onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
+                                                                                    onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus partisipan ini? Tindakan ini tidak dapat dibatalkan.' : 'Are you sure you want to remove this participant? This action cannot be undone.' }}');">
                                                                                     @csrf
                                                                                     @method('DELETE')
                                                                                     <button type="submit"
                                                                                         class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                                                                                         <i
                                                                                             class="fa-solid fa-trash w-4"></i>
-                                                                                        <span>Remove</span>
+                                                                                        <span>{{ $isId ? 'Hapus' : 'Remove' }}</span>
                                                                                     </button>
                                                                                 </form>
                                                                             @endif
@@ -1406,10 +1406,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                     <i
                                                                                         class="fa-solid fa-envelope text-indigo-500 w-4"></i>
-                                                                                    <span>Send Email</span>
+                                                                                    <span>{{ $isId ? 'Kirim Email' : 'Send Email' }}</span>
                                                                                 </button>
                                                                             @endif
-
+ 
                                                                             {{-- Login As (Super Admin Only) --}}
                                                                             @if ($userIsSuperAdmin && $user->exists)
                                                                                 <form
@@ -1420,26 +1420,26 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                         <i
                                                                                             class="fa-solid fa-user-shield text-purple-500 w-4"></i>
-                                                                                        <span>Login As User</span>
+                                                                                        <span>{{ $isId ? 'Masuk Sebagai Pengguna' : 'Login As User' }}</span>
                                                                                     </button>
                                                                                 </form>
                                                                             @endif
-
+ 
                                                                             <div class="border-t border-gray-100">
                                                                             </div>
-
+ 
                                                                             {{-- Remove Action (Not for Authors) --}}
                                                                             @if ($member['type'] === 'editorial')
                                                                                 <form method="POST"
                                                                                     action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
-                                                                                    onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
+                                                                                    onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus partisipan ini? Tindakan ini tidak dapat dibatalkan.' : 'Are you sure you want to remove this participant? This action cannot be undone.' }}');">
                                                                                     @csrf
                                                                                     @method('DELETE')
                                                                                     <button type="submit"
                                                                                         class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                                                                                         <i
                                                                                             class="fa-solid fa-trash w-4"></i>
-                                                                                        <span>Remove</span>
+                                                                                        <span>{{ $isId ? 'Hapus' : 'Remove' }}</span>
                                                                                     </button>
                                                                                 </form>
                                                                             @endif
@@ -1906,7 +1906,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                 <i
                                                                                     class="fa-solid fa-envelope text-indigo-500 w-4"></i>
-                                                                                <span>Send Email</span>
+                                                                                <span>{{ $isId ? 'Kirim Email' : 'Send Email' }}</span>
                                                                             </button>
                                                                         @endif
 
@@ -1920,7 +1920,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                     <i
                                                                                         class="fa-solid fa-user-shield text-purple-500 w-4"></i>
-                                                                                    <span>Login As User</span>
+                                                                                    <span>{{ $isId ? 'Masuk Sebagai Pengguna' : 'Login As User' }}</span>
                                                                                 </button>
                                                                             </form>
                                                                         @endif
@@ -1931,14 +1931,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         @if ($member['type'] === 'editorial')
                                                                             <form method="POST"
                                                                                 action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
-                                                                                onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
+                                                                                onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus partisipan ini? Tindakan ini tidak dapat dibatalkan.' : 'Are you sure you want to remove this participant? This action cannot be undone.' }}');">
                                                                                 @csrf
                                                                                 @method('DELETE')
                                                                                 <button type="submit"
                                                                                     class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                                                                                     <i
                                                                                         class="fa-solid fa-trash w-4"></i>
-                                                                                    <span>Remove</span>
+                                                                                    <span>{{ $isId ? 'Hapus' : 'Remove' }}</span>
                                                                                 </button>
                                                                             </form>
                                                                         @endif
@@ -2327,7 +2327,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                 <i
                                                                                     class="fa-solid fa-envelope text-indigo-500 w-4"></i>
-                                                                                <span>Send Email</span>
+                                                                                <span>{{ $isId ? 'Kirim Email' : 'Send Email' }}</span>
                                                                             </button>
                                                                         @endif
 
@@ -2341,7 +2341,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                                                     <i
                                                                                         class="fa-solid fa-user-shield text-purple-500 w-4"></i>
-                                                                                    <span>Login As User</span>
+                                                                                    <span>{{ $isId ? 'Masuk Sebagai Pengguna' : 'Login As User' }}</span>
                                                                                 </button>
                                                                             </form>
                                                                         @endif
@@ -2352,14 +2352,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         @if ($member['type'] === 'editorial')
                                                                             <form method="POST"
                                                                                 action="{{ route('journal.workflow.remove-editor', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $member['assignment_id']]) }}"
-                                                                                onsubmit="return confirm('Are you sure you want to remove this participant? This action cannot be undone.');">
+                                                                                onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus partisipan ini? Tindakan ini tidak dapat dibatalkan.' : 'Are you sure you want to remove this participant? This action cannot be undone.' }}');">
                                                                                 @csrf
                                                                                 @method('DELETE')
                                                                                 <button type="submit"
                                                                                     class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                                                                                     <i
                                                                                         class="fa-solid fa-trash w-4"></i>
-                                                                                    <span>Remove</span>
+                                                                                    <span>{{ $isId ? 'Hapus' : 'Remove' }}</span>
                                                                                 </button>
                                                                             </form>
                                                                         @endif
@@ -4165,11 +4165,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     class="relative z-50 inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
 
                     <div class="mb-5">
-                        <h3 class="text-lg leading-6 font-bold text-gray-900">Upload Submission File</h3>
+                        <h3 class="text-lg leading-6 font-bold text-gray-900">{{ $isId ? 'Unggah File Naskah' : 'Upload Submission File' }}</h3>
                         <p class="text-sm text-gray-500 mt-1">
-                            Uploading file to <strong class="text-indigo-600"><span
-                                    x-text="uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1)"></span></strong>
-                            stage.
+                            {{ $isId ? 'Mengunggah file ke tahap' : 'Uploading file to' }} <strong class="text-indigo-600"><span
+                                    x-text="{submission: '{{ $isId ? 'Naskah' : 'Submission' }}', review: '{{ $isId ? 'Ulasan' : 'Review' }}', copyedited: '{{ $isId ? 'Hasil Penyuntingan' : 'Copyedited' }}', production: '{{ $isId ? 'Produksi' : 'Production' }}'}[uploadStage] || (uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1))"></span></strong>{{ $isId ? '.' : ' stage.' }}
                         </p>
                     </div>
 
@@ -4181,7 +4180,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Select File</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Pilih File' : 'Select File' }}</label>
                                 <div
                                     class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:bg-gray-50 hover:border-indigo-400 transition-colors cursor-pointer relative group">
                                     <div class="space-y-1 text-center">
@@ -4190,12 +4189,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <div class="flex text-sm text-gray-600 justify-center">
                                             <span
                                                 class="relative bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                                                <span>Upload a file</span>
+                                                <span>{{ $isId ? 'Unggah file' : 'Upload a file' }}</span>
                                             </span>
-                                            <p class="pl-1">or drag and drop</p>
+                                            <p class="pl-1">{{ $isId ? 'atau seret dan lepas' : 'or drag and drop' }}</p>
                                         </div>
                                         <p class="text-xs text-gray-500">
-                                            PDF, DOC, DOCX, XLS up to 10MB
+                                            {{ $isId ? 'PDF, DOC, DOCX, XLS hingga 10MB' : 'PDF, DOC, DOCX, XLS up to 10MB' }}
                                         </p>
                                         <p x-ref="fileNameDisplay"
                                             class="text-sm text-indigo-600 font-medium mt-2 min-h-[20px]"></p>
@@ -4210,11 +4209,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                             <button type="submit"
                                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
-                                <i class="fa-solid fa-upload mr-2 mt-0.5"></i> Upload
+                                <i class="fa-solid fa-upload mr-2 mt-0.5"></i> {{ $isId ? 'Unggah' : 'Upload' }}
                             </button>
                             <button type="button" @click="fileModalOpen = false"
                                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                         </div>
                     </form>
@@ -5756,7 +5755,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             
                 async copySelectedFiles() {
                     if (this.selectedReviewFiles.length === 0) {
-                        alert('Please select at least one file to copy.');
+                        alert('{{ $isId ? 'Harap pilih minimal satu file untuk disalin.' : 'Please select at least one file to copy.' }}');
                         return;
                     }
             
@@ -5777,11 +5776,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         if (data.success) {
                             window.location.reload();
                         } else {
-                            alert('Failed to copy files. Please try again.');
+                            alert('{{ $isId ? 'Gagal menyalin file. Silakan coba lagi.' : 'Failed to copy files. Please try again.' }}');
                         }
                     } catch (e) {
                         console.error('Failed to copy files:', e);
-                        alert('An error occurred. Please try again.');
+                        alert('{{ $isId ? 'Terjadi kesalahan. Silakan coba lagi.' : 'An error occurred. Please try again.' }}');
                     }
                     this.isSubmittingSelection = false;
                 },
@@ -5816,7 +5815,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-bold text-white flex items-center">
                                 <i class="fa-solid fa-file-import mr-2"></i>
-                                Manage Draft Files
+                                {{ $isId ? 'Kelola File Draf' : 'Manage Draft Files' }}
                             </h3>
                             <button @click="draftFilesModalOpen = false"
                                 class="text-blue-100 hover:text-white transition-colors">
@@ -5833,14 +5832,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                 class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors">
                                 <i class="fa-solid fa-upload mr-2"></i>
-                                Upload New File
+                                {{ $isId ? 'Unggah File Baru' : 'Upload New File' }}
                             </button>
                             <button @click="draftTab = 'select'"
                                 :class="draftTab === 'select' ? 'border-blue-600 text-blue-600' :
                                     'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                 class="w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors">
                                 <i class="fa-solid fa-check-square mr-2"></i>
-                                Select from Review
+                                {{ $isId ? 'Pilih dari Ulasan' : 'Select from Review' }}
                             </button>
                         </nav>
                     </div>
@@ -5863,8 +5862,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             accept=".doc,.docx,.pdf,.odt,.rtf" required class="hidden">
                                         <label for="draftFileInput" class="cursor-pointer">
                                             <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-3"></i>
-                                            <p class="text-sm text-gray-600 mb-1">Click to upload or drag and drop</p>
-                                            <p class="text-xs text-gray-500">DOC, DOCX, PDF, ODT, RTF (max 20MB)</p>
+                                            <p class="text-sm text-gray-600 mb-1">{{ $isId ? 'Klik untuk mengunggah atau seret dan lepas' : 'Click to upload or drag and drop' }}</p>
+                                            <p class="text-xs text-gray-500">{{ $isId ? 'DOC, DOCX, PDF, ODT, RTF (maks 20MB)' : 'DOC, DOCX, PDF, ODT, RTF (max 20MB)' }}</p>
                                         </label>
                                     </div>
 
@@ -5891,12 +5890,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="mt-6 flex justify-end gap-3">
                                     <button type="button" @click="draftFilesModalOpen = false"
                                         class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                        Cancel
+                                        {{ $isId ? 'Batal' : 'Cancel' }}
                                     </button>
                                     <button type="submit"
                                         class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                                         <i class="fa-solid fa-upload mr-2"></i>
-                                        Upload File
+                                        {{ $isId ? 'Unggah File' : 'Upload File' }}
                                     </button>
                                 </div>
                             </form>
@@ -5906,19 +5905,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div x-show="draftTab === 'select'">
                             <div x-show="isLoadingReviewFiles" class="text-center py-8">
                                 <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-600 mb-3"></i>
-                                <p class="text-sm text-gray-600">Loading review files...</p>
+                                <p class="text-sm text-gray-600">{{ $isId ? 'Memuat file ulasan...' : 'Loading review files...' }}</p>
                             </div>
 
                             <div x-show="!isLoadingReviewFiles && reviewFiles.length === 0"
                                 class="text-center py-8">
                                 <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-3"></i>
-                                <p class="text-sm text-gray-600">No files available from the Review stage.</p>
+                                <p class="text-sm text-gray-600">{{ $isId ? 'Tidak ada file yang tersedia dari tahap Ulasan.' : 'No files available from the Review stage.' }}</p>
                             </div>
 
                             <div x-show="!isLoadingReviewFiles && reviewFiles.length > 0">
                                 <p class="text-sm text-gray-600 mb-4">
-                                    Select files from the Review stage to copy to Draft Files. The original files will
-                                    remain in the Review stage.
+                                    {{ $isId ? 'Pilih file dari tahap Ulasan untuk disalin ke File Draf. File asli akan tetap berada di tahap Ulasan.' : 'Select files from the Review stage to copy to Draft Files. The original files will remain in the Review stage.' }}
                                 </p>
 
                                 <div class="space-y-2 max-h-96 overflow-y-auto">
@@ -5937,7 +5935,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
                                                 </div>
                                                 <p class="text-xs text-gray-500">
-                                                    Uploaded by <span x-text="file.uploader"></span> on <span
+                                                    {{ $isId ? 'Diunggah oleh' : 'Uploaded by' }} <span x-text="file.uploader"></span> {{ $isId ? 'pada' : 'on' }} <span
                                                         x-text="file.uploaded_at"></span>
                                                 </p>
                                             </div>
@@ -5947,12 +5945,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                 <div class="mt-6 flex justify-between items-center">
                                     <p class="text-sm text-gray-600">
-                                        <span x-text="selectedReviewFiles.length"></span> file(s) selected
+                                        <span x-text="selectedReviewFiles.length"></span> {{ $isId ? 'file terpilih' : 'file(s) selected' }}
                                     </p>
                                     <div class="flex gap-3">
                                         <button type="button" @click="draftFilesModalOpen = false"
                                             class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                            Cancel
+                                            {{ $isId ? 'Batal' : 'Cancel' }}
                                         </button>
                                         <button type="button" @click="copySelectedFiles()"
                                             :disabled="selectedReviewFiles.length === 0 || isSubmittingSelection"
@@ -5962,7 +5960,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <i class="fa-solid fa-copy mr-2"
                                                 :class="isSubmittingSelection ? 'fa-spinner fa-spin' : 'fa-copy'"></i>
                                             <span
-                                                x-text="isSubmittingSelection ? 'Copying...' : 'Copy to Draft Files'"></span>
+                                                x-text="isSubmittingSelection ? '{{ $isId ? 'Menyalin...' : 'Copying...' }}' : '{{ $isId ? 'Salin ke File Draf' : 'Copy to Draft Files' }}'"></span>
                                         </button>
                                     </div>
                                 </div>
