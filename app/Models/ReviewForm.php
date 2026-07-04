@@ -17,7 +17,6 @@ class ReviewForm extends Model
         'journal_id',
         'title',
         'description',
-        'elements',
         'is_active',
         'response_count',
     ];
@@ -25,7 +24,6 @@ class ReviewForm extends Model
     protected function casts(): array
     {
         return [
-            'elements' => 'array',
             'is_active' => 'boolean',
             'response_count' => 'integer',
         ];

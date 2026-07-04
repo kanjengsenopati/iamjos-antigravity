@@ -295,7 +295,6 @@ class WorkflowSettingsController extends Controller
             'journal_id' => $journal->id,
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'elements' => [],
             'is_active' => true,
         ]);
 

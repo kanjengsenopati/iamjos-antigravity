@@ -35,18 +35,18 @@
                 <div class="mt-3 flex items-center gap-4 text-xs text-gray-500">
                     <span>
                         <i class="fa-solid fa-list-check mr-1"></i>
-                        {{ count($reviewForm->elements) }} {{ $isId ? 'pertanyaan' : 'questions' }}
+                        {{ count($reviewForm->elements ?? []) }} {{ $isId ? 'pertanyaan' : 'questions' }}
                     </span>
                     <span>
                         <i class="fa-solid fa-clock mr-1"></i>
-                        {{ $isId ? 'Estimasi: ~' . (count($reviewForm->elements) * 2) . ' menit' : 'Estimated: ~' . (count($reviewForm->elements) * 2) . ' minutes' }}
+                        {{ $isId ? 'Estimasi: ~' . (count($reviewForm->elements ?? []) * 2) . ' menit' : 'Estimated: ~' . (count($reviewForm->elements ?? []) * 2) . ' minutes' }}
                     </span>
                 </div>
             </div>
 
             <!-- Form Body -->
             <div class="p-6">
-                @if (count($reviewForm->elements) === 0)
+                @if (count($reviewForm->elements ?? []) === 0)
                     <div class="text-center py-12">
                         <i class="fa-solid fa-file-circle-exclamation text-6xl text-gray-300 mb-4"></i>
                         <h3 class="text-lg font-medium text-gray-900 mb-2">
