@@ -174,10 +174,8 @@
                 <div class="flex items-center">
                     <i class="fa-solid fa-ban text-red-500 text-xl mr-3"></i>
                     <div>
-                        <p class="text-red-800 font-semibold">This submission has been declined.</p>
-                        <p class="text-red-600 text-sm">Workflow actions are disabled. This submission will appear
-                            in
-                            the Archives.</p>
+                        <p class="text-red-800 font-semibold">{{ $isId ? 'Naskah ini telah ditolak.' : 'This submission has been declined.' }}</p>
+                        <p class="text-red-600 text-sm">{{ $isId ? 'Tindakan alur kerja dinonaktifkan. Naskah ini akan muncul di Arsip.' : 'Workflow actions are disabled. This submission will appear in the Archives.' }}</p>
                     </div>
                 </div>
             </div>
@@ -191,14 +189,14 @@
                         <div class="flex items-center">
                             <i class="fa-solid fa-exclamation-triangle text-red-500 text-xl mr-3"></i>
                             <div>
-                                <p class="text-red-800 font-semibold">No editor has been assigned to this submission.
+                                <p class="text-red-800 font-semibold">{{ $isId ? 'Belum ada editor yang ditugaskan ke naskah ini.' : 'No editor has been assigned to this submission.' }}
                                 </p>
-                                <p class="text-red-600 text-sm">Assign an editor to enable editorial decisions.</p>
+                                <p class="text-red-600 text-sm">{{ $isId ? 'Tugaskan editor untuk mengaktifkan keputusan editorial.' : 'Assign an editor to enable editorial decisions.' }}</p>
                             </div>
                         </div>
                         <button @click="assignEditorModalOpen = true; resetEditorModal()"
                             class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">
-                            Assign Editor
+                            {{ $isId ? 'Tugaskan Editor' : 'Assign Editor' }}
                         </button>
                     </div>
                 </div>
@@ -785,26 +783,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                                                     <i
                                                         class="fa-solid fa-rotate mr-1.5 {{ $isSelected ? 'text-indigo-500' : 'text-gray-400' }}"></i>
-                                                    Round {{ $round->round }}
+                                                    {{ $isId ? 'Putaran' : 'Round' }} {{ $round->round }}
                                                     @if ($isCompleted)
                                                         <i class="fa-solid fa-check text-green-500 ml-1 text-xs"></i>
                                                     @elseif ($round->round == $latestRoundNumber)
                                                         <span
-                                                            class="ml-1 text-xs font-normal {{ $isSelected ? 'text-indigo-500' : 'text-gray-400' }}">(Latest)</span>
+                                                            class="ml-1 text-xs font-normal {{ $isSelected ? 'text-indigo-500' : 'text-gray-400' }}">({{ $isId ? 'Terbaru' : 'Latest' }})</span>
                                                     @endif
                                                 </a>
                                             @endforeach
                                             @if ($allRounds->isEmpty())
-                                                <span class="py-3 px-5 text-sm text-gray-500 italic">No review
-                                                    rounds
-                                                    yet</span>
+                                                <span class="py-3 px-5 text-sm text-gray-500 italic">{{ $isId ? 'Belum ada putaran ulasan' : 'No review rounds yet' }}</span>
                                             @endif
                                         </div>
                                         {{-- New Review Round Button (only show if author has revisions AND no pending new round exists) --}}
                                         @if ($hasAuthorRevisions && $submission->status === 'revision_required' && !$hasPendingNewRound)
                                             <button type="button" @click="openNewRoundModal()"
                                                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors my-2">
-                                                <i class="fa-solid fa-plus mr-1.5"></i> New Review Round
+                                                <i class="fa-solid fa-plus mr-1.5"></i> {{ $isId ? 'Putaran Ulasan Baru' : 'New Review Round' }}
                                             </button>
                                         @endif
                                     </nav>
@@ -826,61 +822,60 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                         // Determine the status message based on selected round state (Priority Chain)
                                         if ($displayRoundStatus === 'completed') {
-                                            // Priority 5: Decision State (Completed)
-                                            $statusConfig = [
-                                                'class' => 'border-green-400 bg-green-50',
-                                                'icon' => 'fa-check-circle text-green-500',
-                                                'title' => 'Round Complete',
-                                                'message' => 'This review round has been completed.',
-                                            ];
-                                        } elseif ($reviewersCount === 0) {
-                                            // Priority 1: Awaiting Reviewers
-                                            $statusConfig = [
-                                                'class' => 'border-amber-400 bg-amber-50',
-                                                'icon' => 'fa-user-plus text-amber-500',
-                                                'title' => 'Awaiting Reviewers',
-                                                'message' => 'No reviewers have been assigned yet. Add reviewers to begin the review process.',
-                                            ];
-                                        } elseif (
-                                            $hasAuthorRevisions &&
-                                            $submission->status === 'revision_required' &&
-                                            $displayRoundNumber == $latestRoundNumber
-                                        ) {
-                                            // Priority 2: Revisions Submitted
-                                            $statusConfig = [
-                                                'class' => 'border-teal-400 bg-teal-50',
-                                                'icon' => 'fa-file-circle-check text-teal-500',
-                                                'title' => 'Revisions Submitted',
-                                                'message' => 'The author has submitted revised files. You can create a new review round to send these revisions to reviewers.',
-                                            ];
-                                        } elseif ($completedReviews < $reviewersCount) {
-                                            // Priority 3: Under Review
-                                            $statusConfig = [
-                                                'class' => 'border-blue-400 bg-blue-50',
-                                                'icon' => 'fa-clock text-blue-500',
-                                                'title' => 'Under Review',
-                                                'message' => "{$completedReviews} of {$reviewersCount} reviewers have completed their review.",
-                                            ];
-                                        } elseif (
-                                            $displayRoundStatus === 'revisions_requested' ||
-                                            $submission->status === 'revision_required'
-                                        ) {
-                                            // Priority 5: Decision State (Revisions Requested)
-                                            $statusConfig = [
-                                                'class' => 'border-orange-400 bg-orange-50',
-                                                'icon' => 'fa-pen text-orange-500',
-                                                'title' => 'Revisions Requested',
-                                                'message' => 'Waiting for author to submit revised manuscript.',
-                                            ];
-                                        } else {
-                                            // Priority 4: Reviews Complete (reviewersCount > 0 AND completedReviews === reviewersCount)
-                                            $statusConfig = [
-                                                'class' => 'border-green-400 bg-green-50',
-                                                'icon' => 'fa-check-circle text-green-500',
-                                                'title' => 'Reviews Complete',
-                                                'message' => 'All reviewers have completed their review. A decision can now be made.',
-                                            ];
-                                        }
+                                             $statusConfig = [
+                                                 'class' => 'border-green-400 bg-green-50',
+                                                 'icon' => 'fa-check-circle text-green-500',
+                                                 'title' => $isId ? 'Putaran Selesai' : 'Round Complete',
+                                                 'message' => $isId ? 'Putaran ulasan ini telah diselesaikan.' : 'This review round has been completed.',
+                                             ];
+                                         } elseif ($reviewersCount === 0) {
+                                             // Priority 1: Awaiting Reviewers
+                                             $statusConfig = [
+                                                 'class' => 'border-amber-400 bg-amber-50',
+                                                 'icon' => 'fa-user-plus text-amber-500',
+                                                 'title' => $isId ? 'Menunggu Reviewer' : 'Awaiting Reviewers',
+                                                 'message' => $isId ? 'Belum ada reviewer yang ditugaskan. Tambahkan reviewer untuk memulai proses peninjauan.' : 'No reviewers have been assigned yet. Add reviewers to begin the review process.',
+                                             ];
+                                         } elseif (
+                                             $hasAuthorRevisions &&
+                                             $submission->status === 'revision_required' &&
+                                             $displayRoundNumber == $latestRoundNumber
+                                         ) {
+                                             // Priority 2: Revisions Submitted
+                                             $statusConfig = [
+                                                 'class' => 'border-teal-400 bg-teal-50',
+                                                 'icon' => 'fa-file-circle-check text-teal-500',
+                                                 'title' => $isId ? 'Revisian Dikirim' : 'Revisions Submitted',
+                                                 'message' => $isId ? 'Penulis telah mengunggah file revisi. Anda dapat membuat putaran ulasan baru untuk mengirimkan revisi ini ke reviewer.' : 'The author has submitted revised files. You can create a new review round to send these revisions to reviewers.',
+                                             ];
+                                         } elseif ($completedReviews < $reviewersCount) {
+                                             // Priority 3: Under Review
+                                             $statusConfig = [
+                                                 'class' => 'border-blue-400 bg-blue-50',
+                                                 'icon' => 'fa-clock text-blue-500',
+                                                 'title' => $isId ? 'Sedang Ditinjau' : 'Under Review',
+                                                 'message' => $isId ? "{$completedReviews} dari {$reviewersCount} reviewer telah menyelesaikan ulasan mereka." : "{$completedReviews} of {$reviewersCount} reviewers have completed their review.",
+                                             ];
+                                         } elseif (
+                                             $displayRoundStatus === 'revisions_requested' ||
+                                             $submission->status === 'revision_required'
+                                         ) {
+                                             // Priority 5: Decision State (Revisions Requested)
+                                             $statusConfig = [
+                                                 'class' => 'border-orange-400 bg-orange-50',
+                                                 'icon' => 'fa-pen text-orange-500',
+                                                 'title' => $isId ? 'Revisi Diminta' : 'Revisions Requested',
+                                                 'message' => $isId ? 'Menunggu penulis mengirimkan naskah revisi.' : 'Waiting for author to submit revised manuscript.',
+                                             ];
+                                         } else {
+                                             // Priority 4: Reviews Complete (reviewersCount > 0 AND completedReviews === reviewersCount)
+                                             $statusConfig = [
+                                                 'class' => 'border-green-400 bg-green-50',
+                                                 'icon' => 'fa-check-circle text-green-500',
+                                                 'title' => $isId ? 'Ulasan Selesai' : 'Reviews Complete',
+                                                 'message' => $isId ? 'Semua reviewer telah menyelesaikan ulasan mereka. Keputusan editorial kini dapat dibuat.' : 'All reviewers have completed their review. A decision can now be made.',
+                                             ];
+                                         }
                                     @endphp
                                     <div class="border-l-4 {{ $statusConfig['class'] }} p-4 rounded-r-lg">
                                         <div class="flex items-start">
@@ -889,7 +884,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             </div>
                                             <div class="ml-3">
                                                 <h3 class="text-sm font-semibold text-gray-900">
-                                                    Round {{ $displayRoundNumber }} Status:
+                                                    {{ $isId ? "Status Putaran $displayRoundNumber:" : "Round $displayRoundNumber Status:" }}
                                                     {{ $statusConfig['title'] }}
                                                 </h3>
                                                 <p class="mt-1 text-sm text-gray-600">
@@ -906,17 +901,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div
                                     class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                     <h3 class="text-base font-bold text-gray-900">
-                                        <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i>Reviewers
+                                        <i class="fa-solid fa-user-check text-indigo-500 mr-2"></i>{{ $isId ? 'Mitra Bestari (Reviewer)' : 'Reviewers' }}
                                     </h3>
                                     @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                                         @if ($canPerformAction)
                                             <a href="{{ route('journal.workflow.assign-reviewer-page', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                                 class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
-                                                <i class="fa-solid fa-plus mr-1"></i> Add Reviewer
+                                                <i class="fa-solid fa-plus mr-1"></i> {{ $isId ? 'Tambah Reviewer' : 'Add Reviewer' }}
                                             </a>
                                         @else
                                             <span class="text-sm text-gray-400 font-medium cursor-not-allowed flex items-center" title="Anda tidak ditugaskan ke naskah ini">
-                                                <i class="fa-solid fa-plus mr-1"></i> Add Reviewer
+                                                <i class="fa-solid fa-plus mr-1"></i> {{ $isId ? 'Tambah Reviewer' : 'Add Reviewer' }}
                                             </span>
                                         @endif
                                     @endif
@@ -937,7 +932,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         </div>
                                                         <div class="ml-4 truncate">
                                                             <div class="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                                                                {{ $assignment->reviewer->name ?? 'Unknown' }}
+                                                                {{ $assignment->reviewer->name ?? ($isId ? 'Tidak Diketahui' : 'Unknown') }}
                                                             </div>
                                                             <div class="flex items-center gap-2 mt-0.5">
                                                                 @php
@@ -954,7 +949,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 </span>
                                                                 @if($assignment->due_date)
                                                                     <span class="text-[11px] {{ $assignment->isOverdue() ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
-                                                                        {{ $assignment->isOverdue() ? 'Overdue: ' : 'Due: ' }}{{ $assignment->due_date->format('M d') }}
+                                                                        {{ $assignment->isOverdue() ? ($isId ? 'Terlambat: ' : 'Overdue: ') : ($isId ? 'Batas: ' : 'Due: ') }}{{ $assignment->due_date->format($isId ? 'd M' : 'M d') }}
                                                                     </span>
                                                                 @endif
                                                             </div>
@@ -965,14 +960,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <div class="flex items-center gap-4">
                                                     @if ($assignment->recommendation)
                                                         <div class="hidden sm:block text-right">
-                                                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Recommendation</span>
+                                                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ $isId ? 'Rekomendasi' : 'Recommendation' }}</span>
                                                             <span class="text-xs font-bold text-{{ $assignment->recommendation_color }}-600">
                                                                 {{ $assignment->recommendation_label }}
                                                             </span>
                                                         </div>
                                                     @else
                                                         <div class="hidden sm:block text-right">
-                                                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Method</span>
+                                                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ $isId ? 'Metode' : 'Method' }}</span>
                                                             <span class="text-xs font-medium text-gray-600">
                                                                 {{ ucfirst($assignment->review_method) }}
                                                             </span>
@@ -990,7 +985,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             @csrf
                                                             <input type="hidden" name="journal_id" value="{{ $journal->id }}">
                                                             <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                                                                <i class="fa-solid fa-user-secret mr-2"></i> Login As Reviewer
+                                                                <i class="fa-solid fa-user-secret mr-2"></i> {{ $isId ? 'Masuk Sebagai Reviewer' : 'Login As Reviewer' }}
                                                             </button>
                                                         </form>
 
@@ -998,25 +993,25 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         @if ($assignment->status === 'completed' || $assignment->recommendation)
                                                             <button type="button" @click='openReviewDetailsModal({{ json_encode($assignment) }})'
                                                                 class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
-                                                <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> Review Details
+                                                                <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
                                                             </button>
                                                         @endif
 
                                                         {{-- Edit Assignment --}}
                                                         <button type="button" @click='openEditReviewModal({{ json_encode($assignment) }})' {{ !$canPerformAction ? 'disabled' : '' }}
                                                             class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
-                                                            <i class="fa-solid fa-calendar-check {{ $canPerformAction ? 'text-indigo-500' : 'text-gray-400' }} mr-2"></i> Edit Assignment
+                                                            <i class="fa-solid fa-calendar-check {{ $canPerformAction ? 'text-indigo-500' : 'text-gray-400' }} mr-2"></i> {{ $isId ? 'Edit Penugasan' : 'Edit Assignment' }}
                                                         </button>
 
                                                         {{-- Unassign --}}
                                                         @if (!in_array($assignment->status, ['completed', 'declined', 'cancelled']))
                                                             <form action="{{ route('journal.workflow.unassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
-                                                                method="POST" @if($canPerformAction) onsubmit="return confirm('Remove this reviewer?')" @endif>
+                                                                method="POST" @if($canPerformAction) onsubmit="return confirm('{{ $isId ? 'Hapus reviewer ini?' : 'Remove this reviewer?' }}')" @endif>
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
                                                                     class="w-full flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-red-100 text-red-600 hover:bg-red-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
-                                                                    <i class="fa-solid fa-user-minus mr-2"></i> Unassign
+                                                                    <i class="fa-solid fa-user-minus mr-2"></i> {{ $isId ? 'Batalkan Penugasan' : 'Unassign' }}
                                                                 </button>
                                                             </form>
                                                         @endif
@@ -1029,7 +1024,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-50 mb-3">
                                                 <i class="fa-solid fa-user-slash text-gray-300"></i>
                                             </div>
-                                            <p class="text-sm text-gray-500 italic">No reviewers assigned to this round yet.</p>
+                                            <p class="text-sm text-gray-500 italic">{{ $isId ? 'Belum ada reviewer yang ditugaskan ke putaran ini.' : 'No reviewers assigned to this round yet.' }}</p>
                                         </div>
                                     @endforelse
                                 </div>
@@ -1054,8 +1049,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div
                                     class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                     <h3 class="text-base font-bold text-gray-900">
-                                        <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>Review Files
-                                        <span class="text-xs text-gray-500 font-normal ml-2">(Round
+                                        <i class="fa-solid fa-file-lines text-indigo-500 mr-2"></i>{{ $isId ? 'File Ulasan' : 'Review Files' }}
+                                        <span class="text-xs text-gray-500 font-normal ml-2">({{ $isId ? 'Putaran' : 'Round' }}
                                             {{ $selectedRoundNumber }})</span>
                                     </h3>
                                 </div>
@@ -1097,7 +1092,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <p class="text-xs text-gray-500">
                                                         @if (isset($file->metadata['promoted_from']))
                                                             <span class="text-purple-600"><i
-                                                                    class="fa-solid fa-arrow-up-from-bracket mr-1"></i>Promoted</span>
+                                                                    class="fa-solid fa-arrow-up-from-bracket mr-1"></i>{{ $isId ? 'Dipromosikan' : 'Promoted' }}</span>
                                                             •
                                                         @endif
                                                         {{ number_format($file->file_size / 1024, 0) }} KB
@@ -1118,8 +1113,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             </div>
                                         </div>
                                     @empty
-                                        <p class="text-sm text-gray-500 italic text-center py-4">No review files
-                                            for Round {{ $selectedRoundNumber }}.
+                                        <p class="text-sm text-gray-500 italic text-center py-4">{{ $isId ? "Tidak ada file ulasan untuk Putaran $selectedRoundNumber." : "No review files for Round $selectedRoundNumber." }}
                                         </p>
                                     @endforelse
                                 </div>
@@ -1130,21 +1124,20 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div
                                     class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-teal-50 to-emerald-50">
                                     <h3 class="text-base font-bold text-gray-900">
-                                        <i class="fa-solid fa-file-circle-check text-teal-500 mr-2"></i>Revisions
-                                        <span class="text-xs text-gray-500 font-normal ml-2">(Round
+                                        <i class="fa-solid fa-file-circle-check text-teal-500 mr-2"></i>{{ $isId ? 'Revisi' : 'Revisions' }}
+                                        <span class="text-xs text-gray-500 font-normal ml-2">({{ $isId ? 'Putaran' : 'Round' }}
                                             {{ $selectedRoundNumber }})</span>
                                         @if ($authorRevisionFiles->isNotEmpty())
                                             <span
                                                 class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
-                                                {{ $authorRevisionFiles->count() }} file(s)
+                                                {{ $authorRevisionFiles->count() }} {{ $isId ? 'file' : 'file(s)' }}
                                             </span>
                                         @endif
                                     </h3>
                                     @if ($authorRevisionFiles->isNotEmpty())
                                         <button type="button" @click="openNewRoundModal()"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors">
-                                            <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i> Send to
-                                            Review
+                                            <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i> {{ $isId ? 'Kirim ke Ulasan' : 'Send to Review' }}
                                         </button>
                                     @endif
                                 </div>
@@ -1170,26 +1163,23 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         {{ $file->file_name }}
                                                     </p>
                                                     <p class="text-xs text-gray-500">
-                                                        Uploaded by <span
-                                                            class="font-medium">{{ $file->uploader?->name ?? 'Author' }}</span>
-                                                        • {{ $file->created_at->format('M d, Y - H:i') }}
+                                                        {{ $isId ? 'Diunggah oleh' : 'Uploaded by' }} <span
+                                                            class="font-medium">{{ $file->uploader?->name ?? ($isId ? 'Penulis' : 'Author') }}</span>
+                                                        • {{ $file->created_at->format($isId ? 'd M Y - H:i' : 'M d, Y - H:i') }}
                                                     </p>
                                                 </div>
                                             </div>
                                             <a href="{{ route('files.download', $file) }}"
                                                 class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                                                <i class="fa-solid fa-download mr-1.5"></i> Download
+                                                <i class="fa-solid fa-download mr-1.5"></i> {{ $isId ? 'Unduh' : 'Download' }}
                                             </a>
                                         </div>
                                     @empty
                                         <div class="text-center py-8">
                                             <i class="fa-solid fa-clock-rotate-left text-gray-300 text-3xl"></i>
-                                            <p class="text-sm text-gray-500 mt-3">No revisions for Round
-                                                {{ $selectedRoundNumber }}.
+                                            <p class="text-sm text-gray-500 mt-3">{{ $isId ? "Tidak ada revisi untuk Putaran $selectedRoundNumber." : "No revisions for Round $selectedRoundNumber." }}
                                             </p>
-                                            <p class="text-xs text-gray-400 mt-1">The author will upload revised
-                                                files
-                                                after revisions are requested.</p>
+                                            <p class="text-xs text-gray-400 mt-1">{{ $isId ? 'Penulis akan mengunggah naskah revisi di sini setelah revisi diminta.' : 'The author will upload revised files after revisions are requested.' }}</p>
                                         </div>
                                     @endforelse
                                 </div>
@@ -1206,8 +1196,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                                 <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
-                                        Editor
-                                        Decision</h4>
+                                        {{ $isId ? 'Keputusan Editor' : 'Editor Decision' }}</h4>
 
                                     @if ($submission->stage_id == 2 && $submission->status != 3)
                                         {{-- Active - Stage 2 and not declined --}}
@@ -1215,23 +1204,23 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <button type="button" @click="openAcceptModal()"
                                                 {{ !$canPerformAction ? 'disabled' : '' }}
                                                 class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white {{ $canPerformAction ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }}">
-                                                <i class="fa-solid fa-check mr-2"></i> Accept Submission
+                                                <i class="fa-solid fa-check mr-2"></i> {{ $isId ? 'Terima Naskah' : 'Accept Submission' }}
                                             </button>
                                             {{-- Request Revisions - Opens Modal --}}
                                             <button type="button" @click="openRevisionModal()"
                                                 {{ !$canPerformAction ? 'disabled' : '' }}
                                                 class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-yellow-300 text-yellow-700 bg-yellow-50 hover:bg-yellow-100' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} shadow-sm text-sm font-medium rounded-md">
-                                                <i class="fa-solid fa-pen mr-2"></i> Request Revisions
+                                                <i class="fa-solid fa-pen mr-2"></i> {{ $isId ? 'Minta Revisi' : 'Request Revisions' }}
                                             </button>
                                             <form
                                                 action="{{ route('journal.workflow.record-decision', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                                 method="POST"
-                                                @if($canPerformAction) onsubmit="return confirm('This will decline the submission. Continue?')" @endif>
+                                                @if($canPerformAction) onsubmit="return confirm('{{ $isId ? 'Ini akan menolak naskah. Lanjutkan?' : 'This will decline the submission. Continue?' }}')" @endif>
                                                 @csrf
                                                 <input type="hidden" name="decision" value="decline">
                                                 <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
                                                     class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-red-300 text-red-700 bg-white hover:bg-red-50' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} shadow-sm text-sm font-medium rounded-md">
-                                                    <i class="fa-solid fa-xmark mr-2"></i> Decline
+                                                    <i class="fa-solid fa-xmark mr-2"></i> {{ $isId ? 'Tolak' : 'Decline' }}
                                                 </button>
                                             </form>
                                         </div>
@@ -1241,27 +1230,27 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <p class="text-sm text-gray-600 flex items-center">
                                                 <i class="fa-solid fa-check-circle text-gray-400 mr-2"></i>
                                                 @if ($submission->status == 3)
-                                                    Submission has been declined.
+                                                    {{ $isId ? 'Naskah telah ditolak.' : 'Submission has been declined.' }}
                                                 @elseif($submission->stage_id > 2)
-                                                    Review stage complete. Moved to
+                                                    {{ $isId ? 'Tahap review selesai. Dipindahkan ke' : 'Review stage complete. Moved to' }}
                                                     <strong
-                                                        class="ml-1">{{ ucfirst($stageNames[$submission->stage_id] ?? 'next stage') }}</strong>.
+                                                        class="ml-1">{{ $isId ? ($submission->stage_id == 3 ? 'Penyuntingan' : ($submission->stage_id == 4 ? 'Produksi' : 'tahap berikutnya')) : ucfirst($stageNames[$submission->stage_id] ?? 'next stage') }}</strong>.
                                                 @else
-                                                    Awaiting review stage.
+                                                    {{ $isId ? 'Menunggu tahap review.' : 'Awaiting review stage.' }}
                                                 @endif
                                             </p>
                                         </div>
                                         <button disabled
                                             class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
-                                            <i class="fa-solid fa-check mr-2"></i> Accept Submission
+                                            <i class="fa-solid fa-check mr-2"></i> {{ $isId ? 'Terima Naskah' : 'Accept Submission' }}
                                         </button>
                                         <button disabled
                                             class="w-full mb-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
-                                            <i class="fa-solid fa-pen mr-2"></i> Request Revisions
+                                            <i class="fa-solid fa-pen mr-2"></i> {{ $isId ? 'Minta Revisi' : 'Request Revisions' }}
                                         </button>
                                         <button disabled
                                             class="w-full px-4 py-2 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed text-sm font-medium">
-                                            <i class="fa-solid fa-xmark mr-2"></i> Decline
+                                            <i class="fa-solid fa-xmark mr-2"></i> {{ $isId ? 'Tolak' : 'Decline' }}
                                         </button>
                                     @endif
                                 </div>
@@ -1372,7 +1361,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                     {{ $user->name }}
                                                                     @if ($isCurrentUser)
                                                                         <span
-                                                                            class="text-xs text-indigo-600 font-normal">(You)</span>
+                                                                            class="text-xs text-indigo-600 font-normal">({{ $isId ? 'Anda' : 'You' }})</span>
                                                                     @endif
                                                                 </p>
                                                                 <p class="text-xs text-gray-500 truncate">
@@ -1455,8 +1444,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     @endforeach
 
                                     @if (array_sum(array_map('count', $groupedParticipants)) === 0)
-                                        <p class="text-sm text-gray-400 italic text-center py-4">No participants
-                                            assigned
+                                        <p class="text-sm text-gray-400 italic text-center py-4">{{ $isId ? 'Tidak ada partisipan yang ditugaskan' : 'No participants assigned' }}
                                         </p>
                                     @endif
                                 </div>
@@ -1872,7 +1860,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 {{ $user->name }}
                                                                 @if ($isCurrentUser)
                                                                     <span
-                                                                        class="text-xs text-indigo-600 font-normal">(You)</span>
+                                                                        class="text-xs text-indigo-600 font-normal">({{ $isId ? 'Anda' : 'You' }})</span>
                                                                 @endif
                                                             </p>
                                                             <p class="text-xs text-gray-500 truncate">
@@ -1954,8 +1942,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 @endforeach
 
                                 @if (array_sum(array_map('count', $groupedParticipants)) === 0)
-                                    <p class="text-sm text-gray-400 italic text-center py-4">No participants
-                                        assigned
+                                    <p class="text-sm text-gray-400 italic text-center py-4">{{ $isId ? 'Tidak ada partisipan yang ditugaskan' : 'No participants assigned' }}
                                     </p>
                                 @endif
                             </div>
@@ -2293,7 +2280,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 {{ $user->name }}
                                                                 @if ($isCurrentUser)
                                                                     <span
-                                                                        class="text-xs text-indigo-600 font-normal">(You)</span>
+                                                                        class="text-xs text-indigo-600 font-normal">({{ $isId ? 'Anda' : 'You' }})</span>
                                                                 @endif
                                                             </p>
                                                             <p class="text-xs text-gray-500 truncate">
@@ -2375,8 +2362,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 @endforeach
 
                                 @if (array_sum(array_map('count', $groupedParticipants)) === 0)
-                                    <p class="text-sm text-gray-400 italic text-center py-4">No participants
-                                        assigned
+                                    <p class="text-sm text-gray-400 italic text-center py-4">{{ $isId ? 'Tidak ada partisipan yang ditugaskan' : 'No participants assigned' }}
                                     </p>
                                 @endif
                             </div>
@@ -2413,10 +2399,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <i class="fa-solid fa-calendar-plus text-indigo-600"></i>
                                 </div>
                                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                                    <h3 class="text-lg leading-6 font-semibold text-gray-900">Schedule for
-                                        Publication
+                                    <h3 class="text-lg leading-6 font-semibold text-gray-900">
+                                        {{ $isId ? 'Jadwalkan untuk Publikasi' : 'Schedule for Publication' }}
                                     </h3>
-                                    <p class="mt-1 text-sm text-gray-500">Assign this submission to an issue.</p>
+                                    <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Tempatkan naskah ini ke suatu nomor terbitan.' : 'Assign this submission to an issue.' }}</p>
                                 </div>
                             </div>
 
@@ -2427,20 +2413,20 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                 <div>
                                     <label for="issue-select" class="block text-sm font-medium text-gray-700">
-                                        Select Issue <span class="text-red-500">*</span>
+                                        {{ $isId ? 'Pilih Nomor Terbitan' : 'Select Issue' }} <span class="text-red-500">*</span>
                                     </label>
                                     <div class="mt-1 relative">
                                         <template x-if="isLoadingIssues">
                                             <div class="flex items-center justify-center py-4">
                                                 <i class="fa-solid fa-spinner fa-spin text-gray-400 mr-2"></i>
-                                                <span class="text-sm text-gray-500">Loading issues...</span>
+                                                <span class="text-sm text-gray-500" x-text="isLoadingIssues ? '{{ $isId ? 'Memuat nomor terbitan...' : 'Loading issues...' }}' : ''"></span>
                                             </div>
                                         </template>
                                         <template x-if="!isLoadingIssues && issues.length === 0">
                                             <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
                                                 <p class="text-sm text-amber-700">
                                                     <i class="fa-solid fa-exclamation-triangle mr-1"></i>
-                                                    No issues found. Please create an issue first.
+                                                    {{ $isId ? 'Nomor terbitan tidak ditemukan. Silakan buat nomor terbitan terlebih dahulu.' : 'No issues found. Please create an issue first.' }}
                                                 </p>
                                             </div>
                                         </template>
@@ -2448,7 +2434,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <select name="issue_id" id="issue-select" required
                                                 x-model="selectedIssueId"
                                                 class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                                <option value="">-- Select an Issue --</option>
+                                                <option value="">{{ $isId ? '-- Pilih Nomor Terbitan --' : '-- Select an Issue --' }}</option>
                                                 <template x-for="issue in issues" :key="issue.id">
                                                     <option :value="issue.id" x-text="issue.label"></option>
                                                 </template>
@@ -2464,22 +2450,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                                     </div>
                                     <div class="ml-3 text-sm">
-                                        <label for="permissions-confirmed" class="font-medium text-gray-700">Copyright
-                                            Confirmed</label>
-                                        <p class="text-gray-500">I confirm that all copyright and permissions are
-                                            in
-                                            order.</p>
+                                        <label for="permissions-confirmed" class="font-medium text-gray-700">{{ $isId ? 'Hak Cipta Dikonfirmasi' : 'Copyright Confirmed' }}</label>
+                                        <p class="text-gray-500">{{ $isId ? 'Saya mengonfirmasi bahwa semua hak cipta dan izin telah lengkap/sesuai.' : 'I confirm that all copyright and permissions are in order.' }}</p>
                                     </div>
                                 </div>
 
                                 <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                                     <button type="submit" :disabled="!selectedIssueId"
                                         class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed sm:col-start-2 sm:text-sm">
-                                        <i class="fa-solid fa-calendar-check mr-2"></i> Save Schedule
+                                        <i class="fa-solid fa-calendar-check mr-2"></i> {{ $isId ? 'Simpan Jadwal' : 'Save Schedule' }}
                                     </button>
                                     <button type="button" @click="scheduleModalOpen = false"
                                         class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                                        Cancel
+                                        {{ $isId ? 'Batal' : 'Cancel' }}
                                     </button>
                                 </div>
                             </form>
@@ -2605,11 +2588,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     if (response.ok) {
                         window.location.reload();
                     } else {
-                        alert('Failed to save order. Please try again.');
+                        alert('{{ $isId ? 'Gagal menyimpan urutan. Silakan coba lagi.' : 'Failed to save order. Please try again.' }}');
                     }
                 } catch (e) {
                     console.error(e);
-                    alert('An error occurred.');
+                    alert('{{ $isId ? 'Terjadi kesalahan.' : 'An error occurred.' }}');
                 }
                 this.isSavingOrder = false;
             }
@@ -2619,7 +2602,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             <div class="bg-white border-b border-gray-200 -mx-6 -mt-6 px-6 py-4 mb-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
-                        <h2 class="text-lg font-semibold text-gray-900">Publication</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Publikasi' : 'Publication' }}</h2>
                         @php
                             $statusColors = [
                                 1 => 'bg-gray-100 text-gray-700',
@@ -2628,10 +2611,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 4 => 'bg-orange-100 text-orange-700',
                             ];
                             $statusLabels = [
-                                1 => 'Unscheduled',
-                                2 => 'Scheduled',
-                                3 => 'Published',
-                                4 => 'Unpublished',
+                                1 => $isId ? 'Belum Dijadwalkan' : 'Unscheduled',
+                                2 => $isId ? 'Dijadwalkan' : 'Scheduled',
+                                3 => $isId ? 'Diterbitkan' : 'Published',
+                                4 => $isId ? 'Batal Diterbitkan' : 'Unpublished',
                             ];
                         @endphp
                         <span
@@ -2656,9 +2639,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     action="{{ route('journal.workflow.publication.unpublish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                     method="POST">
                                     @csrf
-                                    <button type="submit" onclick="return confirm('Are you sure?')"
+                                    <button type="submit" onclick="return confirm('{{ $isId ? 'Apakah Anda yakin?' : 'Are you sure?' }}')"
                                         class="inline-flex items-center px-4 py-2 border border-orange-200 text-sm font-medium rounded-lg text-orange-700 bg-white hover:bg-orange-50">
-                                        <i class="fa-solid fa-eye-slash mr-2"></i> Unpublish
+                                        <i class="fa-solid fa-eye-slash mr-2"></i> {{ $isId ? 'Batal Terbitkan' : 'Unpublish' }}
                                     </button>
                                 </form>
                             @elseif($pubStatus == 2)
@@ -2668,13 +2651,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     @csrf
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm">
-                                        <i class="fa-solid fa-rocket mr-2"></i> Publish
+                                        <i class="fa-solid fa-rocket mr-2"></i> {{ $isId ? 'Terbitkan' : 'Publish' }}
                                     </button>
                                 </form>
                             @else
                                 <button @click="pubTab = 'issue'" :disabled="!issues.length"
                                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fa-solid fa-calendar-plus mr-2"></i> Schedule for Publication
+                                    <i class="fa-solid fa-calendar-plus mr-2"></i> {{ $isId ? 'Jadwalkan untuk Publikasi' : 'Schedule for Publication' }}
                                 </button>
                             @endif
                         </div>
@@ -2692,14 +2675,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             :class="pubTab === 'title' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-heading w-5 mr-2 text-center"></i> Title & Abstract
+                            <i class="fa-solid fa-heading w-5 mr-2 text-center"></i> {{ $isId ? 'Judul & Abstrak' : 'Title & Abstract' }}
                         </button>
                         <button @click="pubTab = 'contributors'"
                             :class="pubTab === 'contributors' ?
                                 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-users w-5 mr-2 text-center"></i> Contributors
+                            <i class="fa-solid fa-users w-5 mr-2 text-center"></i> {{ $isId ? 'Kontributor' : 'Contributors' }}
                             <span
                                 class="ml-auto text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">{{ $pubAuthors->count() }}</span>
                         </button>
@@ -2707,47 +2690,47 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             :class="pubTab === 'metadata' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-tags w-5 mr-2 text-center"></i> Metadata
+                            <i class="fa-solid fa-tags w-5 mr-2 text-center"></i> {{ $isId ? 'Metadata' : 'Metadata' }}
                         </button>
                         <button @click="pubTab = 'references'"
                             :class="pubTab === 'references' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-quote-left w-5 mr-2 text-center"></i> References
+                            <i class="fa-solid fa-quote-left w-5 mr-2 text-center"></i> {{ $isId ? 'Referensi' : 'References' }}
                         </button>
 
                         <button @click="pubTab = 'galleys'"
                             :class="pubTab === 'galleys' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-file-pdf w-5 mr-2 text-center"></i> Galleys
+                            <i class="fa-solid fa-file-pdf w-5 mr-2 text-center"></i> {{ $isId ? 'Galley' : 'Galleys' }}
                             <span
                                 class="ml-auto text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">{{ $submission->galleys->count() }}</span>
                         </button>
                         <button @click="pubTab = 'license'"
-                            :class="pubTab === 'license' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
+                            :class="pubTab === 'license' ? 'bg-indigo-50 text-indigo-750 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-scale-balanced w-5 mr-2 text-center"></i> Permissions & Disclosure
+                            <i class="fa-solid fa-scale-balanced w-5 mr-2 text-center"></i> {{ $isId ? 'Izin & Pengungkapan' : 'Permissions & Disclosure' }}
                         </button>
                         <button @click="pubTab = 'issue'"
                             :class="pubTab === 'issue' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-book-open w-5 mr-2 text-center"></i> Issue
+                            <i class="fa-solid fa-book-open w-5 mr-2 text-center"></i> {{ $isId ? 'Nomor Terbitan' : 'Issue' }}
                         </button>
                         <button @click="pubTab = 'identifiers'"
                             :class="pubTab === 'identifiers' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-solid fa-fingerprint w-5 mr-2 text-center"></i> Identifiers
+                            <i class="fa-solid fa-fingerprint w-5 mr-2 text-center"></i> {{ $isId ? 'Identifikator' : 'Identifiers' }}
                         </button>
                       
                         <button @click="pubTab = 'seo'"
                             :class="pubTab === 'seo' ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' :
                                 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'"
                             class="w-full text-left px-4 py-2.5 text-sm font-medium rounded-r-lg transition-colors">
-                            <i class="fa-brands fa-google-scholar w-5 mr-2 text-center"></i> Google Scholar Forecaster
+                            <i class="fa-brands fa-google-scholar w-5 mr-2 text-center"></i> {{ $isId ? 'Peramal Google Scholar' : 'Google Scholar Forecaster' }}
                         </button>
                     </div>
                 </nav>
@@ -2764,9 +2747,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-sm text-white">
-                                        <span class="font-bold block mb-0.5">This version has been published and can
-                                            not be edited.</span>
-                                        You must unpublish this version before making any changes.
+                                        <span class="font-bold block mb-0.5">{{ $isId ? 'Versi ini telah diterbitkan dan tidak dapat diedit.' : 'This version has been published and can not be edited.' }}</span>
+                                        {{ $isId ? 'Anda harus membatalkan penerbitan versi ini sebelum melakukan perubahan apa pun.' : 'You must unpublish this version before making any changes.' }}
                                     </p>
                                 </div>
                             </div>
@@ -2777,8 +2759,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div x-show="pubTab === 'title'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <h3 class="text-base font-bold text-gray-900">Title & Abstract</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">Edit the publication title and abstract.</p>
+                            <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Judul & Abstrak' : 'Title & Abstract' }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Edit judul dan abstrak publikasi.' : 'Edit the publication title and abstract.' }}</p>
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.title.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
@@ -2786,7 +2768,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             @csrf
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Title <span
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Judul' : 'Title' }} <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" name="title"
                                         value="{{ old('title', $publication->title ?? $submission->title) }}"
@@ -2795,23 +2777,23 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Anak Judul' : 'Subtitle' }}</label>
                                     <input type="text" name="subtitle"
                                         value="{{ old('subtitle', $publication->subtitle ?? $submission->subtitle) }}"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Abstract</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Abstrak' : 'Abstract' }}</label>
                                     <textarea name="abstract" id="publicationAbstract" rows="8"
                                         class="hidden w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('abstract', $publication->abstract ?? $submission->abstract) }}</textarea>
-                                    <p class="mt-1 text-xs text-gray-500">HTML formatting is allowed.</p>
+                                    <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Pemformatan HTML diperbolehkan.' : 'HTML formatting is allowed.' }}</p>
                                 </div>
 
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <i class="fa-solid fa-save mr-2"></i> Save
+                                        <i class="fa-solid fa-save mr-2"></i> {{ $isId ? 'Simpan' : 'Save' }}
                                     </button>
                                 </div>
                             </fieldset>
@@ -2823,20 +2805,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                             <div>
-                                <h3 class="text-base font-bold text-gray-900">Contributors</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">Manage authors and contributors for this
-                                    publication.</p>
+                                <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Kontributor' : 'Contributors' }}</h3>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Kelola penulis dan kontributor untuk publikasi ini.' : 'Manage authors and contributors for this publication.' }}</p>
                             </div>
                             @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                 <button @click="openContributorModal()"
                                     :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
                                     class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fa-solid fa-plus mr-1.5"></i> Add Contributor
+                                    <i class="fa-solid fa-plus mr-1.5"></i> {{ $isId ? 'Tambah Kontributor' : 'Add Contributor' }}
                                 </button>
                                 <button @click="openReorderModal()"
                                     :disabled="allAuthors.length < 2 || {{ $pubStatus == 3 ? 'true' : 'false' }}"
                                     class="ml-2 inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fa-solid fa-arrow-down-short-wide mr-1.5"></i> Order
+                                    <i class="fa-solid fa-arrow-down-short-wide mr-1.5"></i> {{ $isId ? 'Urutkan' : 'Order' }}
                                 </button>
                             @endjournalPermission
                         </div>
@@ -2847,19 +2828,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                             #
-                                        </th>
+                                                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            {{ $isId ? 'Nama' : 'Name' }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            Name</th>
+                                            {{ $isId ? 'Email' : 'Email' }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            Email</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            Affiliation</th>
+                                            {{ $isId ? 'Afiliasi' : 'Affiliation' }}</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                                            Primary</th>
+                                            {{ $isId ? 'Utama' : 'Primary' }}</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                                            In Browse</th>
+                                            {{ $isId ? 'Daftar Telusur' : 'In Browse' }}</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                            Actions</th>
+                                            {{ $isId ? 'Aksi' : 'Actions' }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -2929,7 +2909,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         <form
                                                             action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'author' => $author['id']]) }}"
                                                             method="POST" class="inline"
-                                                            onsubmit="return confirm('Remove this contributor?')">
+                                                            onsubmit="return confirm('{{ $isId ? 'Hapus kontributor ini?' : 'Remove this contributor?' }}')">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit"
@@ -2950,12 +2930,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                                                         <i class="fa-solid fa-user-plus text-gray-400 text-xl"></i>
                                                     </div>
-                                                    <p class="text-sm font-medium text-gray-900">No contributors
-                                                        yet
+                                                    <p class="text-sm font-medium text-gray-900">{{ $isId ? 'Belum ada kontributor' : 'No contributors yet' }}
                                                     </p>
-                                                    <p class="text-xs text-gray-500 mt-1">Add authors and
-                                                        contributors
-                                                        to this publication.</p>
+                                                    <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Tambahkan penulis dan kontributor ke publikasi ini.' : 'Add authors and contributors to this publication.' }}</p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -2969,8 +2946,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div x-show="pubTab === 'metadata'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <h3 class="text-base font-bold text-gray-900">Metadata</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">Keywords and other metadata for indexing.</p>
+                            <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Metadata' : 'Metadata' }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Kata kunci dan metadata lainnya untuk pengindeksan.' : 'Keywords and other metadata for indexing.' }}</p>
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.metadata.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
@@ -2979,10 +2956,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
                                 <div x-data="keywordInputCustom({{ json_encode($submission->keywords->pluck('content')->toArray()) }})" class="relative">
                                     <label class="flex items-center text-sm font-medium text-gray-700 mb-1">
-                                        Keywords
+                                        {{ $isId ? 'Kata Kunci' : 'Keywords' }}
                                         <i class="fa-solid fa-circle-question text-gray-400 cursor-pointer ml-1.5" 
-                                           title="Press Enter or comma to add keywords. Start typing to see suggestions."></i>
-                                        <span class="text-xs text-gray-500 font-normal ml-2">(Untuk pemisah keyword adalah koma)</span>
+                                           title="{{ $isId ? 'Tekan Enter atau koma untuk menambahkan kata kunci. Mulai mengetik untuk melihat saran.' : 'Press Enter or comma to add keywords. Start typing to see suggestions.' }}"></i>
+                                        <span class="text-xs text-gray-500 font-normal ml-2">{{ $isId ? '(Gunakan koma sebagai pemisah kata kunci)' : '(Use comma to separate keywords)' }}</span>
                                     </label>
                                     <input type="text" 
                                         x-model="newTag"
@@ -2993,7 +2970,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         @keydown.arrow-up.prevent="highlightUp()"
                                         @keydown.escape.prevent="showSuggestions = false"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                        placeholder="Type keyword and press Enter">
+                                        placeholder="{{ $isId ? 'Ketik kata kunci dan tekan Enter' : 'Type keyword and press Enter' }}">
                                     
                                     <div x-show="showSuggestions && suggestions.length > 0" 
                                          @click.away="showSuggestions = false" 
@@ -3026,7 +3003,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <i class="fa-solid fa-save mr-2"></i> Save
+                                        <i class="fa-solid fa-save mr-2"></i> {{ $isId ? 'Simpan' : 'Save' }}
                                     </button>
                                 </div>
                             </fieldset>
@@ -3037,8 +3014,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div x-show="pubTab === 'references'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <h3 class="text-base font-bold text-gray-900">References</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">Manage article references for indexing.</p>
+                            <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Referensi' : 'References' }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Kelola referensi artikel untuk pengindeksan.' : 'Manage article references for indexing.' }}</p>
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.references.update', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
@@ -3046,18 +3023,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             @csrf
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">References</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Referensi' : 'References' }}</label>
                                     <textarea name="references" rows="15"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm leading-6"
-                                        placeholder="Paste your references here...">{{ old('references', $publication->references ?? $submission->references) }}</textarea>
-                                    <p class="mt-1 text-xs text-gray-500">Provide a list of references for your work.
+                                        placeholder="{{ $isId ? 'Tempel referensi Anda di sini...' : 'Paste your references here...' }}">{{ old('references', $publication->references ?? $submission->references) }}</textarea>
+                                    <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Sediakan daftar referensi untuk karya Anda.' : 'Provide a list of references for your work.' }}
                                     </p>
                                 </div>
 
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <i class="fa-solid fa-save mr-2"></i> Save References
+                                        <i class="fa-solid fa-save mr-2"></i> {{ $isId ? 'Simpan Referensi' : 'Save References' }}
                                     </button>
                                 </div>
                             </fieldset>
@@ -3068,14 +3045,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     {{-- ====== SEO CHECK (Google Scholar) ====== --}}
                     <div x-show="pubTab === 'seo'" class="h-full">
                         <x-google-scholar-seo :analysis="$seoAnalysis" />
-                    </div>
-
-                    {{-- ====== ISSUE (SCHEDULING) ====== --}}
+                                        {{-- ====== ISSUE (SCHEDULING) ====== --}}
                     <div x-show="pubTab === 'issue'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <h3 class="text-base font-bold text-gray-900">Issue</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">Schedule this publication to an issue.</p>
+                            <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Nomor Terbitan' : 'Issue' }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Jadwalkan publikasi ini ke suatu nomor terbitan.' : 'Schedule this publication to an issue.' }}</p>
                         </div>
                         <form
                             action="{{ route('journal.workflow.publication.issue.assign', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
@@ -3084,17 +3059,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Issue <span
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nomor Terbitan' : 'Issue' }} <span
                                                 class="text-red-500">*</span></label>
                                         <template x-if="isLoadingIssues">
                                             <div class="flex items-center py-2 text-sm text-gray-500">
-                                                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
+                                                <i class="fa-solid fa-spinner fa-spin mr-2"></i> {{ $isId ? 'Memuat...' : 'Loading...' }}
                                             </div>
                                         </template>
                                         <template x-if="!isLoadingIssues">
                                             <select name="issue_id" required
                                                 class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                                <option value="">-- Select Issue --</option>
+                                                <option value="">{{ $isId ? '-- Pilih Nomor Terbitan --' : '-- Select Issue --' }}</option>
                                                 <template x-for="issue in issues" :key="issue.id">
                                                     <option :value="issue.id"
                                                         :selected="issue.id === '{{ $publication->issue_id ?? '' }}'"
@@ -3106,16 +3081,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Bagian/Rubrik' : 'Section' }}</label>
                                         <template x-if="isLoadingSections">
                                             <div class="flex items-center py-2 text-sm text-gray-500">
-                                                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading...
+                                                <i class="fa-solid fa-spinner fa-spin mr-2"></i> {{ $isId ? 'Memuat...' : 'Loading...' }}
                                             </div>
                                         </template>
                                         <template x-if="!isLoadingSections">
                                             <select name="section_id"
                                                 class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                                <option value="">-- Select Section --</option>
+                                                <option value="">{{ $isId ? '-- Pilih Bagian --' : '-- Select Section --' }}</option>
                                                 <template x-for="section in sections" :key="section.id">
                                                     <option :value="section.id"
                                                         :selected="section
@@ -3130,7 +3105,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Pages</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Halaman' : 'Pages' }}</label>
                                         <input type="text" name="pages"
                                             value="{{ old('pages', $publication->pages ?? '') }}"
                                             placeholder="e.g., 1-12"
@@ -3138,8 +3113,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Date
-                                            Published</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tanggal Terbit' : 'Date Published' }}</label>
                                         <input type="date" name="date_published"
                                             value="{{ old('date_published', $publication->date_published?->format('Y-m-d') ?? '') }}"
                                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
@@ -3149,8 +3123,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 {{-- URL Path & Cover Image --}}
                                 <div class="grid grid-cols-1 gap-5">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">URL Path <span
-                                                class="text-gray-400 font-normal">(Optional)</span></label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Jalur URL' : 'URL Path' }} <span
+                                                class="text-gray-400 font-normal">{{ $isId ? '(Opsional)' : '(Optional)' }}</span></label>
                                         <div class="flex items-center">
                                             <span
                                                 class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm h-[42px]">
@@ -3161,13 +3135,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 placeholder="custom-slug"
                                                 class="flex-1 rounded-r-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                         </div>
-                                        <p class="mt-1 text-xs text-gray-500">An optional path to use in the URL
-                                            instead
-                                            of the ID.</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Jalur opsional untuk digunakan dalam URL sebagai pengganti ID.' : 'An optional path to use in the URL instead of the ID.' }}</p>
                                     </div>
 
                                     <div x-data="{ coverPreview: '{{ $publication->cover_image_path ? Storage::disk('public')->url($publication->cover_image_path) : '' }}' }">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Gambar Sampul' : 'Cover Image' }}</label>
 
                                         <template x-if="coverPreview">
                                             <div class="mb-3 flex items-start gap-4 p-3 bg-gray-50 border rounded-lg">
@@ -3175,19 +3147,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     alt="Cover Image"
                                                     class="h-20 w-auto rounded shadow-sm object-cover">
                                                 <div>
-                                                    <div class="text-sm font-medium text-gray-900">Cover Image Preview</div>
+                                                    <div class="text-sm font-medium text-gray-900">{{ $isId ? 'Pratinjau Gambar Sampul' : 'Cover Image Preview' }}</div>
                                                     @if ($publication->cover_image_path)
                                                         <button type="button"
-                                                            @click="if(confirm('Delete cover image?')) {
+                                                            @click="if(confirm('{{ $isId ? 'Hapus gambar sampul?' : 'Delete cover image?' }}')) {
                                                                 fetch('{{ route('journal.workflow.publication.cover-image.delete', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}', {
                                                                     method: 'DELETE',
                                                                     headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
                                                                 }).then(() => { coverPreview = ''; document.getElementById('cover_image').value = ''; });
                                                             }"
-                                                            class="text-red-600 text-xs mt-1 hover:underline block">Remove Cover Image</button>
+                                                            class="text-red-600 text-xs mt-1 hover:underline block">{{ $isId ? 'Hapus Gambar Sampul' : 'Remove Cover Image' }}</button>
                                                     @else
                                                         <button type="button" @click="coverPreview = ''; document.getElementById('cover_image').value = '';"
-                                                            class="text-red-600 text-xs mt-1 hover:underline block">Remove Cover Image</button>
+                                                            class="text-red-600 text-xs mt-1 hover:underline block">{{ $isId ? 'Hapus Gambar Sampul' : 'Remove Cover Image' }}</button>
                                                     @endif
                                                 </div>
                                             </div>
@@ -3196,7 +3168,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <input type="file" id="cover_image" name="cover_image" accept="image/*"
                                             @change="coverPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''"
                                             class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-colors">
-                                        <p class="mt-1 text-xs text-gray-500">Formats: JPG, PNG, WEBP.</p>
+                                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Format: JPG, PNG, WEBP.' : 'Formats: JPG, PNG, WEBP.' }}</p>
                                     </div>
                                 </div>
 
@@ -3205,7 +3177,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <div class="flex items-center">
                                             <i class="fa-solid fa-calendar-check text-blue-500 mr-3"></i>
                                             <div>
-                                                <p class="text-sm font-medium text-blue-800">Currently Scheduled</p>
+                                                <p class="text-sm font-medium text-blue-800">{{ $isId ? 'Saat Ini Dijadwalkan' : 'Currently Scheduled' }}</p>
                                                 <p class="text-xs text-blue-600">
                                                     {{ $publication->issue->identifier ?? 'Unknown Issue' }}
                                                 </p>
@@ -3222,7 +3194,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             @csrf
                                             <button type="submit"
                                                 class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-600 bg-white hover:bg-gray-50">
-                                                <i class="fa-solid fa-calendar-xmark mr-2"></i> Unschedule
+                                                <i class="fa-solid fa-calendar-xmark mr-2"></i> {{ $isId ? 'Batal Jadwalkan' : 'Unschedule' }}
                                             </button>
                                         </form>
                                     @else
@@ -3231,7 +3203,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                         <i class="fa-solid fa-calendar-check mr-2"></i>
-                                        {{ $publication->issue_id ? 'Save' : 'Save' }}
+                                        {{ $isId ? 'Simpan' : 'Save' }}
                                     </button>
                                 </div>
                             </fieldset>
@@ -3244,15 +3216,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                             <div>
                                 <h3 class="text-base font-bold text-gray-900">
-                                    <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i>Publication Galleys
+                                    <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i>{{ $isId ? 'Galley Publikasi' : 'Publication Galleys' }}
                                 </h3>
-                                <p class="text-xs text-gray-500 mt-0.5">Final formats available to readers (PDF,
-                                    HTML, EPUB).</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Format akhir yang tersedia untuk pembaca (PDF, HTML, EPUB).' : 'Final formats available to readers (PDF, HTML, EPUB).' }}</p>
                             </div>
                             @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                 <button @click="openAddGalley()" @if ($pubStatus == 3) disabled @endif
                                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fa-solid fa-plus mr-2"></i> Add Galley
+                                    <i class="fa-solid fa-plus mr-2"></i> {{ $isId ? 'Tambah Galley' : 'Add Galley' }}
                                 </button>
                             @endjournalPermission
                         </div>
@@ -3263,15 +3234,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            Format</th>
+                                            {{ $isId ? 'Format' : 'Format' }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            File / URL</th>
+                                            {{ $isId ? 'File / URL' : 'File / URL' }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            Language</th>
+                                            {{ $isId ? 'Bahasa' : 'Language' }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            Type</th>
+                                            {{ $isId ? 'Tipe' : 'Type' }}</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                            Actions</th>
+                                            {{ $isId ? 'Aksi' : 'Actions' }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -3299,7 +3270,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             </p>
                                                         @else
                                                             <p class="text-sm font-medium text-gray-900">
-                                                                {{ $galley->file->file_name ?? 'No file' }}
+                                                                {{ $galley->file->file_name ?? ($isId ? 'Tidak ada file' : 'No file') }}
                                                             </p>
                                                             @if ($galley->file)
                                                                 <p class="text-xs text-gray-500">
@@ -3319,12 +3290,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 @if ($galley->is_remote)
                                                     <span
                                                         class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                                        <i class="fa-solid fa-link mr-1"></i> Remote
+                                                        <i class="fa-solid fa-link mr-1"></i> {{ $isId ? 'Tautan Luar' : 'Remote' }}
                                                     </span>
                                                 @else
                                                     <span
                                                         class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                                        <i class="fa-solid fa-hdd mr-1"></i> Local
+                                                        <i class="fa-solid fa-hdd mr-1"></i> {{ $isId ? 'Lokal' : 'Local' }}
                                                     </span>
                                                 @endif
                                             </td>
@@ -3333,7 +3304,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     @if ($galley->download_url)
                                                         <a href="{{ $galley->download_url }}" target="_blank"
                                                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                                            title="Download / View">
+                                                            title="{{ $isId ? 'Unduh / Lihat' : 'Download / View' }}">
                                                             <i
                                                                 class="fa-solid fa-{{ $galley->is_remote ? 'external-link' : 'download' }}"></i>
                                                         </a>
@@ -3356,13 +3327,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         <form
                                                             action="{{ route('journal.workflow.galley.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'galley' => $galley->id]) }}"
                                                             method="POST" class="inline"
-                                                            onsubmit="return confirm('Are you sure you want to delete this galley?')">
+                                                            onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus galley ini?' : 'Are you sure you want to delete this galley?' }}')">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit"
                                                                 @if ($pubStatus == 3) disabled @endif
                                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                title="Delete">
+                                                                title="{{ $isId ? 'Hapus' : 'Delete' }}">
                                                                 <i class="fa-solid fa-trash"></i>
                                                             </button>
                                                         </form>
@@ -3378,16 +3349,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-4">
                                                         <i class="fa-solid fa-file-pdf text-indigo-400 text-2xl"></i>
                                                     </div>
-                                                    <p class="text-sm font-semibold text-gray-900">No galleys uploaded
-                                                        yet</p>
-                                                    <p class="text-xs text-gray-500 mt-1 max-w-xs">Upload PDF, HTML,
-                                                        or
-                                                        EPUB files so readers can access the article.</p>
+                                                    <p class="text-sm font-semibold text-gray-900">{{ $isId ? 'Belum ada galley yang diunggah' : 'No galleys uploaded yet' }}</p>
+                                                    <p class="text-xs text-gray-500 mt-1 max-w-xs">{{ $isId ? 'Unggah file PDF, HTML, atau EPUB agar pembaca dapat mengakses artikel.' : 'Upload PDF, HTML, or EPUB files so readers can access the article.' }}</p>
                                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                                         <button @click="openAddGalley()"
                                                             @if ($pubStatus == 3) disabled @endif
                                                             class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                                            <i class="fa-solid fa-plus mr-2"></i> Add your first galley
+                                                            <i class="fa-solid fa-plus mr-2"></i> {{ $isId ? 'Tambah galley pertama Anda' : 'Add your first galley' }}
                                                         </button>
                                                     @endjournalPermission
                                                 </div>
@@ -3405,25 +3373,22 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <i
                                         class="fa-solid fa-exclamation-triangle text-amber-500 mt-0.5 mr-3 flex-shrink-0"></i>
                                     <div>
-                                        <p class="text-sm font-medium text-amber-800">Required for Publication</p>
+                                        <p class="text-sm font-medium text-amber-800">{{ $isId ? 'Wajib untuk Publikasi' : 'Required for Publication' }}</p>
                                         <p class="text-xs text-amber-700 mt-0.5">
-                                            At least one galley (e.g., PDF) must be uploaded before the article can be
-                                            published.
+                                            {{ $isId ? 'Setidaknya satu galley (misalnya, PDF) harus diunggah sebelum artikel dapat diterbitkan.' : 'At least one galley (e.g., PDF) must be uploaded before the article can be published.' }}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         @endif
-
-
                     </div>
 
                     {{-- ====== LICENSE & DOI ====== --}}
                     <div x-show="pubTab === 'license'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <h3 class="text-base font-bold text-gray-900">Permissions & Disclosure</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">Copyright and License Information
+                            <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Izin & Pengungkapan' : 'Permissions & Disclosure' }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Informasi Hak Cipta dan Lisensi' : 'Copyright and License Information' }}
                             </p>
                         </div>
                         <form
@@ -3433,17 +3398,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
-                                            Holder</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Pemegang Hak Cipta' : 'Copyright Holder' }}</label>
                                         <input type="text" name="copyright_holder"
                                             value="{{ old('copyright_holder', $publication->copyright_holder ?? '') }}"
-                                            placeholder="e.g., The Author(s)"
+                                            placeholder="{{ $isId ? 'misalnya, Penulis' : 'e.g., The Author(s)' }}"
                                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Copyright
-                                            Year</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tahun Hak Cipta' : 'Copyright Year' }}</label>
                                         <input type="number" name="copyright_year"
                                             value="{{ old('copyright_year', $publication->copyright_year ?? date('Y')) }}"
                                             min="1900" max="2100"
@@ -3452,25 +3415,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">License URL</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'URL Lisensi' : 'License URL' }}</label>
                                     <input type="url" name="license_url"
                                         value="{{ old('license_url', $publication->license_url ?? '') }}"
                                         placeholder="https://creativecommons.org/licenses/by/4.0/"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                    <p class="mt-1 text-xs text-gray-500">Common licenses: CC BY 4.0, CC BY-SA 4.0, CC
-                                        BY-NC 4.0</p>
+                                    <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Lisensi umum: CC BY 4.0, CC BY-SA 4.0, CC BY-NC 4.0' : 'Common licenses: CC BY 4.0, CC BY-SA 4.0, CC BY-NC 4.0' }}</p>
                                 </div>
 
                                 {{-- ── FUNDING INFORMATION ─────────────────────────────────── --}}
                                 <div x-data="fundingManager(@js($publication->funding_info ?? []))" class="pt-4 border-t border-gray-100">
                                     <div class="flex items-center justify-between mb-3">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700">Funding Information</label>
-                                            <p class="text-xs text-gray-500 mt-0.5">Sumber pendanaan penelitian. Dibutuhkan untuk deposit Crossref dan compliance funder.</p>
+                                            <label class="block text-sm font-medium text-gray-700">{{ $isId ? 'Informasi Pendanaan' : 'Funding Information' }}</label>
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Sumber pendanaan penelitian. Dibutuhkan untuk deposit Crossref dan kepatuhan funder.' : 'Research funding sources. Required for Crossref deposits and funder compliance.' }}</p>
                                         </div>
                                         <button type="button" @click="addFunder()"
                                             class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                                            <i class="fa-solid fa-plus"></i> Tambah Funder
+                                            <i class="fa-solid fa-plus"></i> {{ $isId ? 'Tambah Funder' : 'Add Funder' }}
                                         </button>
                                     </div>
 
@@ -3485,21 +3447,21 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             </div>
                                             <div class="grid grid-cols-1 gap-3">
                                                 <div>
-                                                    <label class="block text-xs font-medium text-gray-600 mb-1">Nama Funder <span class="text-red-500">*</span></label>
+                                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ $isId ? 'Nama Funder' : 'Funder Name' }} <span class="text-red-500">*</span></label>
                                                     <input type="text" x-model="funder.funder_name"
                                                         placeholder="e.g., Kementerian Pendidikan dan Kebudayaan"
                                                         class="block w-full text-sm rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                                 </div>
                                                 <div class="grid grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block text-xs font-medium text-gray-600 mb-1">Funder DOI <span class="text-gray-400">(opsional)</span></label>
+                                                        <label class="block text-xs font-medium text-gray-600 mb-1">Funder DOI <span class="text-gray-400">({{ $isId ? 'opsional' : 'optional' }})</span></label>
                                                         <input type="text" x-model="funder.funder_doi"
                                                             placeholder="10.13039/501100003093"
                                                             class="block w-full text-sm rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                                        <p class="text-xs text-gray-400 mt-0.5">Dari <a href="https://www.crossref.org/services/funder-registry/" target="_blank" class="underline">Crossref Funder Registry</a></p>
+                                                        <p class="text-xs text-gray-400 mt-0.5">{{ $isId ? 'Dari' : 'From' }} <a href="https://www.crossref.org/services/funder-registry/" target="_blank" class="underline">Crossref Funder Registry</a></p>
                                                     </div>
                                                     <div>
-                                                        <label class="block text-xs font-medium text-gray-600 mb-1">Nomor Hibah <span class="text-gray-400">(opsional)</span></label>
+                                                        <label class="block text-xs font-medium text-gray-600 mb-1">{{ $isId ? 'Nomor Hibah' : 'Award Number' }} <span class="text-gray-400">({{ $isId ? 'opsional' : 'optional' }})</span></label>
                                                         <input type="text" x-model="funder.award_number"
                                                             placeholder="e.g., 123/UN1/2024"
                                                             class="block w-full text-sm rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
@@ -3516,7 +3478,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
                                     <button type="submit"
                                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <i class="fa-solid fa-save mr-2"></i> Save
+                                        <i class="fa-solid fa-save mr-2"></i> {{ $isId ? 'Simpan' : 'Save' }}
                                     </button>
                                 </div>
                             </fieldset>
@@ -3533,7 +3495,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             doiEnabled: {{ $journal->doi_enabled ? 'true' : 'false' }},
                         
                             async assignDoi() {
-                                if (!confirm('Are you sure you want to assign a DOI to this publication?')) return;
+                                if (!confirm('{{ $isId ? 'Apakah Anda yakin ingin memberikan DOI pada publikasi ini?' : 'Are you sure you want to assign a DOI to this publication?' }}')) return;
                                 this.isAssigning = true;
                                 try {
                                     const res = await fetch('{{ route('journal.workflow.publication.doi.assign', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}', {
@@ -3547,17 +3509,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     if (data.success) {
                                         this.currentDoi = data.doi;
                                     } else {
-                                        alert(data.message || 'Failed to assign DOI');
+                                        alert(data.message || '{{ $isId ? 'Gagal memberikan DOI' : 'Failed to assign DOI' }}');
                                     }
                                 } catch (e) {
                                     console.error(e);
-                                    alert('An error occurred while assigning DOI');
+                                    alert('{{ $isId ? 'Terjadi kesalahan saat memberikan DOI' : 'An error occurred while assigning DOI' }}');
                                 }
                                 this.isAssigning = false;
                             },
                         
                             async clearDoi() {
-                                if (!confirm('Are you sure you want to clear the DOI? This action cannot be undone if the DOI has been registered.')) return;
+                                if (!confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus DOI? Tindakan ini tidak dapat dibatalkan jika DOI telah terdaftar.' : 'Are you sure you want to clear the DOI? This action cannot be undone if the DOI has been registered.' }}')) return;
                                 this.isClearing = true;
                                 try {
                                     const res = await fetch('{{ route('journal.workflow.publication.doi.clear', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}', {
@@ -3571,19 +3533,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     if (data.success) {
                                         this.currentDoi = '';
                                     } else {
-                                        alert(data.message || 'Failed to clear DOI');
+                                        alert(data.message || '{{ $isId ? 'Gagal menghapus DOI' : 'Failed to clear DOI' }}');
                                     }
                                 } catch (e) {
                                     console.error(e);
-                                    alert('An error occurred while clearing DOI');
+                                    alert('{{ $isId ? 'Terjadi kesalahan saat menghapus DOI' : 'An error occurred while clearing DOI' }}');
                                 }
                                 this.isClearing = false;
                             }
                         }">
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <h3 class="text-base font-bold text-gray-900">Identifiers</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">Digital Object Identifier (DOI) for this
-                                publication.</p>
+                            <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'Identifikator' : 'Identifiers' }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Digital Object Identifier (DOI) untuk publikasi ini.' : 'Digital Object Identifier (DOI) for this publication.' }}</p>
                         </div>
                         <div class="p-6 space-y-5">
                             {{-- DOI Status Banner (if disabled) --}}
@@ -3592,11 +3553,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <div class="flex">
                                         <i class="fa-solid fa-exclamation-triangle text-amber-500 mt-0.5 mr-3"></i>
                                         <div>
-                                            <p class="text-sm font-medium text-amber-800">DOI Assignment Disabled</p>
+                                            <p class="text-sm font-medium text-amber-800">{{ $isId ? 'Pemberian DOI Dinonaktifkan' : 'DOI Assignment Disabled' }}</p>
                                             <p class="text-xs text-amber-700 mt-1">
-                                                DOI assignment is not enabled for this journal.
+                                                {{ $isId ? 'Pemberian DOI tidak diaktifkan untuk jurnal ini.' : 'DOI assignment is not enabled for this journal.' }}
                                                 <a href="{{ route('journal.settings.doi.edit', $journal->slug) }}"
-                                                    class="underline hover:no-underline">Configure DOI Settings</a>
+                                                    class="underline hover:no-underline">{{ $isId ? 'Konfigurasi Pengaturan DOI' : 'Configure DOI Settings' }}</a>
                                             </p>
                                         </div>
                                     </div>
@@ -3613,7 +3574,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <span
                                             class="px-3 py-2.5 text-sm text-gray-500 bg-gray-100 border-r border-gray-300 whitespace-nowrap">https://doi.org/</span>
                                         <input type="text" :value="currentDoi" disabled
-                                            :placeholder="currentDoi ? '' : 'No DOI assigned'"
+                                            :placeholder="currentDoi ? '' : '{{ $isId ? 'Tidak ada DOI yang diberikan' : 'No DOI assigned' }}'"
                                             class="flex-1 px-3 py-2.5 text-sm text-gray-700 bg-gray-50 border-0 focus:ring-0 cursor-not-allowed">
                                     </div>
 
@@ -3627,7 +3588,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <template x-if="!isAssigning">
                                             <i class="fa-solid fa-check mr-2"></i>
                                         </template>
-                                        <span x-text="isAssigning ? 'Assigning...' : 'Assign'"></span>
+                                        <span x-text="isAssigning ? '{{ $isId ? 'Memberikan...' : 'Assigning...' }}' : '{{ $isId ? 'Berikan DOI' : 'Assign' }}'"></span>
                                     </button>
 
                                     {{-- Clear Button (shown when DOI exists) --}}
@@ -3640,7 +3601,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <template x-if="!isClearing">
                                             <i class="fa-solid fa-times mr-2"></i>
                                         </template>
-                                        <span x-text="isClearing ? 'Clearing...' : 'Clear'"></span>
+                                        <span x-text="isClearing ? '{{ $isId ? 'Menghapus...' : 'Clearing...' }}' : '{{ $isId ? 'Hapus DOI' : 'Clear' }}'"></span>
                                     </button>
                                 </div>
 
@@ -3649,13 +3610,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <p class="mt-2 text-xs text-gray-500">
                                         <a :href="'https://doi.org/' + currentDoi" target="_blank"
                                             class="text-indigo-600 hover:underline">
-                                            <i class="fa-solid fa-external-link mr-1"></i> View on doi.org
+                                            <i class="fa-solid fa-external-link mr-1"></i> {{ $isId ? 'Lihat di doi.org' : 'View on doi.org' }}
                                         </a>
                                     </p>
                                 </template>
                                 <template x-if="!currentDoi">
-                                    <p class="mt-2 text-xs text-gray-500">Click "Assign" to generate a DOI for this
-                                        publication.</p>
+                                    <p class="mt-2 text-xs text-gray-500">{{ $isId ? 'Klik "Berikan DOI" untuk membuat DOI untuk publikasi ini.' : 'Click "Assign" to generate a DOI for this publication.' }}</p>
                                 </template>
                             </div>
 
@@ -3664,10 +3624,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="flex">
                                     <i class="fa-solid fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
                                     <div class="text-xs text-blue-700">
-                                        <p class="font-medium mb-1">About DOIs</p>
-                                        <p>A DOI (Digital Object Identifier) is a persistent identifier used to uniquely
-                                            identify scholarly articles. Once assigned, the DOI should not be changed as
-                                            it may have been registered with external services like Crossref.</p>
+                                        <p class="font-medium mb-1">{{ $isId ? 'Tentang DOI' : 'About DOIs' }}</p>
+                                        <p>{{ $isId ? 'DOI (Digital Object Identifier) adalah identifikator persisten yang digunakan secara unik untuk mengidentifikasi artikel ilmiah. Setelah diberikan, DOI tidak boleh diubah karena mungkin telah didaftarkan ke layanan eksternal seperti Crossref.' : 'A DOI (Digital Object Identifier) is a persistent identifier used to uniquely identify scholarly articles. Once assigned, the DOI should not be changed as it may have been registered with external services like Crossref.' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -3695,17 +3653,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         x-transition:leave="ease-in duration-200"
                         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        class="relative z-50 inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-
-                        <div class="sm:flex sm:items-start mb-5">
+                        class="relative z-50 inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl                        <div class="sm:flex sm:items-start mb-5">
                             <div
                                 class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
                                 <i class="fa-solid fa-user-plus text-indigo-600"></i>
                             </div>
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                                 <h3 class="text-lg leading-6 font-semibold text-gray-900"
-                                    x-text="editingContributor ? 'Edit Contributor' : 'Add Contributor'"></h3>
-                                <p class="mt-1 text-sm text-gray-500">Enter the contributor's information.</p>
+                                    x-text="editingContributor ? '{{ $isId ? 'Edit Kontributor' : 'Edit Contributor' }}' : '{{ $isId ? 'Tambah Kontributor' : 'Add Contributor' }}'"></h3>
+                                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Masukkan informasi kontributor.' : "Enter the contributor's information." }}</p>
                             </div>
                         </div>
 
@@ -3723,14 +3679,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Depan' : 'First Name' }} <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" name="given_name" required
                                         :value="editingContributor?.given_name || ''"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Belakang' : 'Last Name' }} <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" name="family_name" required
                                         :value="editingContributor?.family_name || ''"
@@ -3739,7 +3695,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Email <span
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Email' : 'Email' }} <span
                                         class="text-red-500">*</span></label>
                                 <input type="email" name="email" required
                                     :value="editingContributor?.email || ''"
@@ -3747,19 +3703,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Affiliation</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Afiliasi' : 'Affiliation' }}</label>
                                 <input type="text" name="affiliation"
                                     :value="editingContributor?.affiliation || ''"
-                                    placeholder="e.g., Harvard University"
+                                    placeholder="{{ $isId ? 'misalnya, Universitas Harvard' : 'e.g., Harvard University' }}"
                                     class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Negara' : 'Country' }}</label>
                                     <select name="country"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white">
-                                        <option value="">Select Country...</option>
+                                        <option value="">{{ $isId ? 'Pilih Negara...' : 'Select Country...' }}</option>
                                         @foreach (config('countries', []) as $code => $name)
                                             <option value="{{ $code }}" :selected="editingContributor?.country === '{{ addslashes($code) }}' || editingContributor?.country === '{{ addslashes($name) }}'">{{ $name }}</option>
                                         @endforeach
@@ -3774,7 +3730,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     'PH' => 'Philippines',
                                                     'AU' => 'Australia',
                                                     'US' => 'United States',
-                                                    'OTHER' => 'Other',
+                                                    'OTHER' => $isId ? 'Lainnya' : 'Other',
                                                 ];
                                             @endphp
                                             @foreach ($fallbacks as $code => $name)
@@ -3799,8 +3755,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                                     </div>
                                     <div class="ml-3 text-sm">
-                                        <label class="font-medium text-gray-700">Principal contact for editorial
-                                            correspondence</label>
+                                        <label class="font-medium text-gray-700">{{ $isId ? 'Kontak utama untuk korespondensi editorial' : 'Principal contact for editorial correspondence' }}</label>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
@@ -3810,9 +3765,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                                     </div>
                                     <div class="ml-3 text-sm">
-                                        <label class="font-medium text-gray-700">Include this contributor in
-                                            browse
-                                            lists</label>
+                                        <label class="font-medium text-gray-700">{{ $isId ? 'Sertakan kontributor ini dalam daftar telusur' : 'Include this contributor in browse lists' }}</label>
                                     </div>
                                 </div>
                             </div>
@@ -3821,13 +3774,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <button type="submit"
                                     class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
                                     <i class="fa-solid fa-save mr-2"></i> <span
-                                        x-text="editingContributor ? 'Update' : 'Add'"></span>
+                                        x-text="editingContributor ? '{{ $isId ? 'Perbarui' : 'Update' }}' : '{{ $isId ? 'Tambah' : 'Add' }}'"></span>
                                 </button>
                                 <button type="button"
                                     @click="contributorModalOpen = false; editingContributor = null"
                                     class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                                    Cancel
-                                </button>
+                                    {{ $isId ? 'Batal' : 'Cancel' }}
                             </div>
                         </form>
                     </div>
@@ -3852,18 +3804,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         x-transition:leave="ease-in duration-200"
                         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        class="relative z-50 inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full sm:p-6">
-
-                        <div class="sm:flex sm:items-start mb-5">
+                        class="relative z-50 inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl                        <div class="sm:flex sm:items-start mb-5">
                             <div
                                 class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
                                 <i class="fa-solid fa-arrow-down-short-wide text-indigo-600"></i>
                             </div>
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                                <h3 class="text-lg leading-6 font-semibold text-gray-900">Order Contributors</h3>
-                                <p class="mt-1 text-sm text-gray-500">Drag and drop or use arrows to change the
-                                    order.
-                                </p>
+                                <h3 class="text-lg leading-6 font-semibold text-gray-900">{{ $isId ? 'Urutkan Kontributor' : 'Order Contributors' }}</h3>
+                                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Gunakan tanda panah untuk mengubah urutan.' : 'Drag and drop or use arrows to change the order.' }}</p>
                             </div>
                         </div>
 
@@ -3895,20 +3843,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <button type="button" @click="saveOrder()" :disabled="isSavingOrder"
                                 class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none disabled:opacity-75 sm:col-start-2 sm:text-sm">
                                 <i class="fa-solid fa-spinner fa-spin mr-2" x-show="isSavingOrder"></i>
-                                <span x-text="isSavingOrder ? 'Saving...' : 'Done'"></span>
+                                <span x-text="isSavingOrder ? '{{ $isId ? 'Menyimpan...' : 'Saving...' }}' : '{{ $isId ? 'Selesai' : 'Done' }}'"></span>
                             </button>
                             <button type="button" @click="reorderModalOpen = false"
                                 class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        {{-- NEW DISCUSSION MODAL --}}
+            {{-- NEW DISCUSSION MODAL --}}
         <div x-show="discussionModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -3917,7 +3859,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 <div
                     class="relative z-50 inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
                     <div class="mb-4">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Add Discussion</h3>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">{{ $isId ? 'Tambah Diskusi' : 'Add Discussion' }}</h3>
                     </div>
 
                     <form id="discussion-form"
@@ -3939,7 +3881,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="space-y-4">
                             <div>
                                 <label for="subject"
-                                    class="block text-sm font-medium text-gray-700">Subject</label>
+                                    class="block text-sm font-medium text-gray-700">{{ $isId ? 'Subjek' : 'Subject' }}</label>
                                 <input type="text" name="subject" id="subject"
                                     class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                                     required>
@@ -3947,8 +3889,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                             @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Notify
-                                        Participants</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Beri Tahu Peserta' : 'Notify Participants' }}</label>
                                     <div
                                         class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
                                         @forelse($participants as $participant)
@@ -3973,16 +3914,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 {{-- Role Badge --}}
                                                 @php
                                                     $role =
-                                                        $participant->id === $submission->user_id ? 'Author' : 'Editor';
+                                                        $participant->id === $submission->user_id ? ($isId ? 'Penulis' : 'Author') : ($isId ? 'Editor' : 'Editor');
                                                 @endphp
                                                 <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $role === 'Author' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
+                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $role === 'Author' || $role === 'Penulis' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
                                                     {{ $role }}
                                                 </span>
                                             </label>
                                         @empty
-                                            <p class="text-sm text-gray-500 italic text-center py-2">No other
-                                                participants to notify.</p>
+                                            <p class="text-sm text-gray-500 italic text-center py-2">{{ $isId ? 'Tidak ada peserta lain untuk diberitahu.' : 'No other participants to notify.' }}</p>
                                         @endforelse
                                     </div>
                                 </div>
@@ -3990,7 +3930,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                             <div>
                                 <label for="discussion-editor"
-                                    class="block text-sm font-medium text-gray-700">Message</label>
+                                    class="block text-sm font-medium text-gray-700">{{ $isId ? 'Pesan' : 'Message' }}</label>
                                 <div class="mt-1">
                                     <textarea name="body" id="discussion-editor"></textarea>
                                 </div>
@@ -3998,10 +3938,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                             <div class="border-t border-gray-200 pt-4">
                                 <div class="flex items-center justify-between">
-                                    <h4 class="text-sm font-medium text-gray-900">Attached Files</h4>
+                                    <h4 class="text-sm font-medium text-gray-900">{{ $isId ? 'File Lampiran' : 'Attached Files' }}</h4>
                                     <button type="button" @click="fileWizardOpen = true"
                                         class="text-sm text-indigo-600 font-medium hover:underline">
-                                        + Attach File
+                                        {{ $isId ? '+ Lampirkan File' : '+ Attach File' }}
                                     </button>
                                 </div>
                                 <ul class="mt-3 space-y-2">
@@ -4015,11 +3955,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
                                             </div>
                                             <button type="button" class="text-xs text-red-600 hover:text-red-800"
-                                                @click="discussionFiles = discussionFiles.filter(f => f.id !== file.id)">Remove</button>
+                                                @click="discussionFiles = discussionFiles.filter(f => f.id !== file.id)">{{ $isId ? 'Hapus' : 'Remove' }}</button>
                                         </li>
                                     </template>
                                     <template x-if="discussionFiles.length === 0">
-                                        <li class="text-sm text-gray-500 italic">No files attached.</li>
+                                        <li class="text-sm text-gray-500 italic">{{ $isId ? 'Tidak ada file terlampir.' : 'No files attached.' }}</li>
                                     </template>
                                 </ul>
                             </div>
@@ -4028,11 +3968,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                             <button type="button" @click="submitDiscussion()"
                                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
-                                OK
+                                {{ $isId ? 'Ya' : 'OK' }}
                             </button>
                             <button type="button" @click="discussionModalOpen = false"
                                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                         </div>
                     </form>
@@ -4051,15 +3991,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     class="relative z-50 inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
                     <div class="mb-4 border-b border-gray-200 pb-2">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="wizard-title">
-                            Add File to Discussion
+                            {{ $isId ? 'Tambah File ke Diskusi' : 'Add File to Discussion' }}
                         </h3>
                         <div class="flex space-x-2 mt-2">
                             <span :class="wizardStep >= 1 ? 'text-indigo-600 font-bold' : 'text-gray-400'"
-                                class="text-xs">1. Upload</span>
+                                class="text-xs">{{ $isId ? '1. Unggah' : '1. Upload' }}</span>
                             <span :class="wizardStep >= 2 ? 'text-indigo-600 font-bold' : 'text-gray-400'"
                                 class="text-xs">2. Metadata</span>
                             <span :class="wizardStep >= 3 ? 'text-indigo-600 font-bold' : 'text-gray-400'"
-                                class="text-xs">3. Confirm</span>
+                                class="text-xs">{{ $isId ? '3. Konfirmasi' : '3. Confirm' }}</span>
                         </div>
                     </div>
 
@@ -4067,12 +4007,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div x-show="wizardStep === 1">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Article
-                                    Component</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Komponen Artikel' : 'Article Component' }}</label>
                                 <select
                                     class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                    <option>Article Text</option>
-                                    <option>Other</option>
+                                    <option>{{ $isId ? 'Naskah Artikel' : 'Article Text' }}</option>
+                                    <option>{{ $isId ? 'Lainnya' : 'Other' }}</option>
                                 </select>
                             </div>
                             <div x-show="!wizardIsUploading"
@@ -4082,16 +4021,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <div class="flex text-sm text-gray-600 justify-center">
                                         <label
                                             class="relative cursor-pointer rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
-                                            <span>Upload a file</span>
+                                            <span>{{ $isId ? 'Unggah file' : 'Upload a file' }}</span>
                                             <input type="file" class="sr-only" @change="handleFileUpload">
-                                        </label>
-                                    </div>
-                                    <p class="text-xs text-gray-500">Drag and drop or select file</p>
+                                              <p class="text-xs text-gray-500">{{ $isId ? 'Seret dan lepas atau pilih file' : 'Drag and drop or select file' }}</p>
                                 </div>
                             </div>
                             <div x-show="wizardIsUploading" class="mt-2 p-6 border-2 border-gray-200 rounded-md bg-gray-50 space-y-3">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-gray-700">Uploading file...</span>
+                                    <span class="text-sm font-medium text-gray-700">{{ $isId ? 'Mengunggah file...' : 'Uploading file...' }}</span>
                                     <span class="text-sm font-semibold text-indigo-600" x-text="wizardUploadProgress + '%'"></span>
                                 </div>
                                 <div class="w-full bg-gray-200 rounded-full h-2.5">
@@ -4102,7 +4039,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="mt-5 sm:flex sm:flex-row-reverse">
                             <button type="button" @click="fileWizardOpen = false" :disabled="wizardIsUploading"
                                 :class="wizardIsUploading ? 'opacity-50 cursor-not-allowed' : ''"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">{{ $isId ? 'Batal' : 'Cancel' }}</button>
                         </div>
                     </div>
 
@@ -4110,18 +4047,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <template x-if="wizardStep === 2">
                         <div>
                             <div class="space-y-4">
-                                <p class="text-sm text-gray-500">File uploaded. Please review metadata.</p>
+                                <p class="text-sm text-gray-500">{{ $isId ? 'File berhasil diunggah. Silakan periksa metadata.' : 'File uploaded. Please review metadata.' }}</p>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Filename</label>
+                                    <label class="block text-sm font-medium text-gray-700">{{ $isId ? 'Nama File' : 'Filename' }}</label>
                                     <input type="text" x-model="tempUploadedFile.name"
                                         class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                 </div>
                             </div>
                             <div class="mt-5 sm:flex sm:flex-row-reverse">
                                 <button type="button" @click="wizardStep = 3"
-                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Continue</button>
+                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">{{ $isId ? 'Lanjutkan' : 'Continue' }}</button>
                                 <button type="button" @click="fileWizardOpen = false"
-                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">{{ $isId ? 'Batal' : 'Cancel' }}</button>
                             </div>
                         </div>
                     </template>
@@ -4133,24 +4070,22 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-3">
                                 <i class="fa-solid fa-check text-green-600 text-lg"></i>
                             </div>
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">File Added</h3>
-                            <p class="text-sm text-gray-500 mt-2">The file <span class="font-bold"
-                                    x-text="tempUploadedFile && tempUploadedFile.name"></span> is ready to be
-                                attached.
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">{{ $isId ? 'File Ditambahkan' : 'File Added' }}</h3>
+                            <p class="text-sm text-gray-500 mt-2">{{ $isId ? 'File' : 'The file' }} <span class="font-bold"
+                                    x-text="tempUploadedFile && tempUploadedFile.name"></span> {{ $isId ? 'siap untuk dilampirkan.' : 'is ready to be attached.' }}
                             </p>
                         </div>
                         <div class="mt-5 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                             <button type="button" @click="completeWizard()"
                                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm">
-                                Complete
+                                {{ $isId ? 'Selesai' : 'Complete' }}
                             </button>
                             <button type="button" @click="addAnotherFile()"
                                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
-                                Add Another File
+                                {{ $isId ? 'Tambah File Lain' : 'Add Another File' }}
                             </button>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -4708,9 +4643,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
                                 <div class="ml-4">
                                     <h3 class="text-lg font-semibold text-gray-900" id="revision-modal-title">
-                                        Request Revisions
+                                        {{ $isId ? 'Minta Revisi' : 'Request Revisions' }}
                                     </h3>
-                                    <p class="text-sm text-gray-500">Configure revision request for the author</p>
+                                    <p class="text-sm text-gray-500">{{ $isId ? 'Konfigurasikan permintaan revisi untuk penulis' : 'Configure revision request for the author' }}</p>
                                 </div>
                             </div>
                             <button type="button" @click="resetRevisionModal()"
@@ -4732,7 +4667,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                                 <h4 class="text-sm font-semibold text-gray-900 mb-3">
                                     <i class="fa-solid fa-rotate text-indigo-500 mr-2"></i>
-                                    Require New Review Round
+                                    {{ $isId ? 'Wajibkan Ronde Ulasan Baru' : 'Require New Review Round' }}
                                 </h4>
                                 <div class="space-y-3">
                                     <label
@@ -4742,11 +4677,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             x-model="revisionNewRound" :value="false"
                                             class="mt-0.5 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                                         <div>
-                                            <span class="text-sm font-medium text-gray-900">No new review
-                                                round</span>
-                                            <p class="text-xs text-gray-500 mt-0.5">Revisions will not be subject
-                                                to a
-                                                new round of peer reviews.</p>
+                                            <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Tanpa ronde ulasan baru' : 'No new review round' }}</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Revisi tidak akan melalui ronde ulasan mitra bestari baru.' : 'Revisions will not be subject to a new round of peer reviews.' }}</p>
                                         </div>
                                     </label>
                                     <label
@@ -4756,11 +4688,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             x-model="revisionNewRound" :value="true"
                                             class="mt-0.5 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                                         <div>
-                                            <span class="text-sm font-medium text-gray-900">Require new review
-                                                round</span>
-                                            <p class="text-xs text-gray-500 mt-0.5">Revisions will be subject to a
-                                                new
-                                                round of peer reviews.</p>
+                                            <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Wajibkan ronde ulasan baru' : 'Require new review round' }}</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Revisi akan melalui ronde ulasan mitra bestari baru.' : 'Revisions will be subject to a new round of peer reviews.' }}</p>
                                         </div>
                                     </label>
                                 </div>
@@ -4770,7 +4699,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                                 <h4 class="text-sm font-semibold text-gray-900 mb-3">
                                     <i class="fa-solid fa-envelope text-blue-500 mr-2"></i>
-                                    Send Email
+                                    {{ $isId ? 'Kirim Email' : 'Send Email' }}
                                 </h4>
                                 <div class="space-y-3">
                                     <label
@@ -4780,11 +4709,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             x-model="revisionSendEmail" :value="true"
                                             class="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
                                         <div>
-                                            <span class="text-sm font-medium text-gray-900">Send email
-                                                notification</span>
+                                            <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Kirim notifikasi email' : 'Send email notification' }}</span>
                                             <p class="text-xs text-gray-500 mt-0.5">
-                                                Notify author(s): <span
-                                                    class="font-medium text-gray-700">{{ $submission->authors->first()?->name ?? 'Author' }}</span>
+                                                {{ $isId ? 'Beri tahu penulis:' : 'Notify author(s):' }} <span
+                                                    class="font-medium text-gray-700">{{ $submission->authors->first()?->name ?? ($isId ? 'Penulis' : 'Author') }}</span>
                                             </p>
                                         </div>
                                     </label>
@@ -4795,10 +4723,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             x-model="revisionSendEmail" :value="false"
                                             class="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
                                         <div>
-                                            <span class="text-sm font-medium text-gray-900">Do not send
-                                                email</span>
-                                            <p class="text-xs text-gray-500 mt-0.5">No email notification will be
-                                                sent.</p>
+                                            <span class="text-sm font-medium text-gray-900">{{ $isId ? 'Jangan kirim email' : 'Do not send email' }}</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'Tidak ada notifikasi email yang akan dikirim.' : 'No email notification will be sent.' }}</p>
                                         </div>
                                     </label>
                                 </div>
@@ -4809,14 +4735,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                                 <h4 class="text-sm font-semibold text-gray-900 mb-3">
                                     <i class="fa-solid fa-file-lines text-teal-500 mr-2"></i>
-                                    Email Content
+                                    {{ $isId ? 'Isi Email' : 'Email Content' }}
                                 </h4>
                                 <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                                     <textarea name="email_body" id="revision-email-editor" x-model="revisionEmailBody" class="hidden"></textarea>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-2">
                                     <i class="fa-solid fa-info-circle mr-1"></i>
-                                    Include reviewer feedback and specific revision requirements.
+                                    {{ $isId ? 'Sertakan umpan balik reviewer dan persyaratan revisi spesifik.' : 'Include reviewer feedback and specific revision requirements.' }}
                                 </p>
                             </div>
 
@@ -4825,17 +4751,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="flex items-center justify-between mb-3">
                                     <h4 class="text-sm font-semibold text-gray-900">
                                         <i class="fa-solid fa-paperclip text-purple-500 mr-2"></i>
-                                        Review Attachments
+                                        {{ $isId ? 'Lampiran Ulasan' : 'Review Attachments' }}
                                     </h4>
                                     <label
                                         class="inline-flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors">
                                         <i class="fa-solid fa-upload mr-1"></i>
-                                        Upload File
+                                        {{ $isId ? 'Unggah File' : 'Upload File' }}
                                         <input type="file" class="sr-only"
                                             @change="uploadRevisionFile($event)">
                                     </label>
                                 </div>
-                                <p class="text-xs text-gray-500 mb-3">Select files to share with the author(s).
+                                <p class="text-xs text-gray-500 mb-3">{{ $isId ? 'Pilih file untuk dibagikan ke penulis.' : 'Select files to share with the author(s).' }}
                                 </p>
 
                                 {{-- Hidden inputs for selected files --}}
@@ -4849,7 +4775,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <template x-if="revisionIsLoadingFiles">
                                         <div class="px-4 py-6 text-center">
                                             <i class="fa-solid fa-spinner fa-spin text-gray-400 text-lg"></i>
-                                            <p class="text-sm text-gray-500 mt-2">Loading files...</p>
+                                            <p class="text-sm text-gray-500 mt-2">{{ $isId ? 'Memuat file...' : 'Loading files...' }}</p>
                                         </div>
                                     </template>
 
@@ -4857,8 +4783,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         x-if="!revisionIsLoadingFiles && revisionAttachments.length === 0 && revisionUploadedFiles.length === 0">
                                         <div class="px-4 py-6 text-center">
                                             <i class="fa-solid fa-folder-open text-gray-300 text-2xl"></i>
-                                            <p class="text-sm text-gray-500 mt-2">No reviewer attachments
-                                                available.
+                                            <p class="text-sm text-gray-500 mt-2">{{ $isId ? 'Tidak ada lampiran reviewer yang tersedia.' : 'No reviewer attachments available.' }}
                                             </p>
                                         </div>
                                     </template>
@@ -4901,7 +4826,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 x-text="file.name"></p>
                                                             <p class="text-xs text-green-600">
                                                                 <i class="fa-solid fa-check-circle mr-1"></i>
-                                                                Just uploaded
+                                                                {{ $isId ? 'Baru diunggah' : 'Just uploaded' }}
                                                             </p>
                                                         </div>
                                                     </label>
@@ -4913,7 +4838,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                 <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
                                     <span>
-                                        <span x-text="revisionSelectedFiles.length"></span> file(s) selected
+                                        <span x-text="revisionSelectedFiles.length"></span> {{ $isId ? 'file terpilih' : 'file(s) selected' }}
                                     </span>
                                 </div>
                             </div>
@@ -4924,14 +4849,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
                             <button type="button" @click="resetRevisionModal()"
                                 class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                             <button type="submit"
                                 :disabled="revisionIsSubmitting || (revisionSendEmail && !revisionEmailBody)"
                                 class="inline-flex items-center px-4 py-2.5 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                                 <i class="fa-solid fa-gavel mr-2"></i>
                                 <span
-                                    x-text="revisionIsSubmitting ? 'Submitting...' : 'Record Editorial Decision'"></span>
+                                    x-text="revisionIsSubmitting ? '{{ $isId ? 'Mengirim...' : 'Submitting...' }}' : '{{ $isId ? 'Catat Keputusan Editorial' : 'Record Editorial Decision' }}'"></span>
                             </button>
                         </div>
                     </form>
@@ -4969,7 +4894,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
                                 <div class="ml-4">
                                     <h3 class="text-lg font-semibold text-gray-900" id="decision-modal-title"
-                                        x-text="selectedDecision?.type_label || 'Editorial Decision'"></h3>
+                                        x-text="selectedDecision?.type_label || '{{ $isId ? 'Keputusan Editorial' : 'Editorial Decision' }}'"></h3>
                                     <p class="text-sm text-gray-500" x-show="selectedDecision?.made_at"
                                         x-text="selectedDecision?.made_at ? new Date(selectedDecision.made_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''">
                                     </p>
@@ -4992,18 +4917,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         {{-- No Email Content --}}
                         <div x-show="!selectedDecision?.email_body" class="text-center py-8">
                             <i class="fa-solid fa-envelope-circle-check text-gray-300 text-4xl"></i>
-                            <p class="text-gray-500 mt-4">No detailed message was included with this decision.</p>
-                            <p class="text-sm text-gray-400 mt-1">Please contact the editor if you need more
-                                information.</p>
+                            <p class="text-gray-500 mt-4">{{ $isId ? 'Tidak ada pesan detail yang disertakan dengan keputusan ini.' : 'No detailed message was included with this decision.' }}</p>
+                            <p class="text-sm text-gray-400 mt-1">{{ $isId ? 'Silakan hubungi editor jika Anda membutuhkan informasi lebih lanjut.' : 'Please contact the editor if you need more information.' }}</p>
                         </div>
 
                         {{-- New Round Notice --}}
                         <div x-show="selectedDecision?.new_review_round" class="mt-6 border-t border-gray-200 pt-4">
                             <div class="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-3 rounded-lg">
                                 <i class="fa-solid fa-rotate"></i>
-                                <span class="text-sm font-medium">Your revised manuscript will undergo a new round
-                                    of
-                                    peer review.</span>
+                                <span class="text-sm font-medium">{{ $isId ? 'Naskah revisi Anda akan melalui ronde ulasan mitra bestari baru.' : 'Your revised manuscript will undergo a new round of peer review.' }}</span>
                             </div>
                         </div>
                     </div>
@@ -5012,7 +4934,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
                         <button type="button" @click="showDecisionModal = false; selectedDecision = null"
                             class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                            Close
+                            {{ $isId ? 'Tutup' : 'Close' }}
                         </button>
                     </div>
                 </div>
@@ -5050,9 +4972,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="ml-4">
                                     <h3 class="text-lg font-semibold text-gray-900"
                                         id="revision-upload-modal-title">
-                                        Upload Revised Manuscript
+                                        {{ $isId ? 'Unggah Naskah Revisi' : 'Upload Revised Manuscript' }}
                                     </h3>
-                                    <p class="text-sm text-gray-500">Submit your revised files</p>
+                                    <p class="text-sm text-gray-500">{{ $isId ? 'Kirimkan file revisi Anda' : 'Submit your revised files' }}</p>
                                 </div>
                             </div>
                             <button type="button" @click="revisionUploadModalOpen = false"
@@ -5077,9 +4999,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     accept=".doc,.docx,.pdf,.odt,.rtf" required>
                                 <label for="revisionFileInput" class="cursor-pointer">
                                     <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-4 block"></i>
-                                    <p class="text-sm font-medium text-gray-700">Click to upload your revised
-                                        manuscript</p>
-                                    <p class="text-xs text-gray-500 mt-1">DOC, DOCX, PDF, ODT (Max 10MB)</p>
+                                    <p class="text-sm font-medium text-gray-700">{{ $isId ? 'Klik untuk mengunggah naskah revisi Anda' : 'Click to upload your revised manuscript' }}</p>
+                                    <p class="text-xs text-gray-500 mt-1">DOC, DOCX, PDF, ODT ({{ $isId ? 'Maks' : 'Max' }} 10MB)</p>
                                 </label>
                             </div>
 
@@ -5097,8 +5018,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                 <p class="text-xs text-blue-700">
                                     <i class="fa-solid fa-info-circle mr-1"></i>
-                                    Please ensure your revised manuscript addresses all reviewer comments before
-                                    uploading.
+                                    {{ $isId ? 'Pastikan naskah revisi Anda sudah menanggapi semua komentar reviewer sebelum mengunggah.' : 'Please ensure your revised manuscript addresses all reviewer comments before uploading.' }}
                                 </p>
                             </div>
                         </div>
@@ -5107,11 +5027,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
                             <button type="button" @click="revisionUploadModalOpen = false"
                                 class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                             <button type="submit"
                                 class="inline-flex items-center px-4 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
-                                <i class="fa-solid fa-upload mr-2"></i> Upload Revision
+                                <i class="fa-solid fa-upload mr-2"></i> {{ $isId ? 'Unggah Revisi' : 'Upload Revision' }}
                             </button>
                         </div>
                     </form>
@@ -5167,9 +5087,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
                                 <div class="ml-4">
                                     <h3 class="text-lg font-semibold text-gray-900" id="new-round-modal-title">
-                                        Create New Review Round
+                                        {{ $isId ? 'Buat Ronde Ulasan Baru' : 'Create New Review Round' }}
                                     </h3>
-                                    <p class="text-sm text-gray-500">Round
+                                    <p class="text-sm text-gray-500">{{ $isId ? 'Ronde' : 'Round' }}
                                         {{ ($submission->currentReviewRound()?->round ?? 0) + 1 }}
                                     </p>
                                 </div>
@@ -5188,20 +5108,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         @csrf
                         <div class="px-6 py-6 space-y-4">
                             <p class="text-sm text-gray-600">
-                                You are about to create a new review round for this submission. Select the revision
-                                files you want to send to reviewers.
+                                {{ $isId ? 'Anda akan membuat ronde ulasan baru untuk naskah ini. Pilih file revisi yang ingin dikirim ke reviewer.' : 'You are about to create a new review round for this submission. Select the revision files you want to send to reviewers.' }}
                             </p>
 
                             {{-- File Selection --}}
                             <div class="space-y-2">
                                 <label class="block text-sm font-medium text-gray-700">
-                                    Select Files for Review
+                                    {{ $isId ? 'Pilih File untuk Ulasan' : 'Select Files for Review' }}
                                 </label>
 
                                 {{-- Loading State --}}
                                 <div x-show="newRoundIsLoading" class="flex items-center justify-center py-8">
                                     <i class="fa-solid fa-spinner fa-spin text-indigo-500 text-2xl"></i>
-                                    <span class="ml-3 text-sm text-gray-500">Loading revision files...</span>
+                                    <span class="ml-3 text-sm text-gray-500">{{ $isId ? 'Memuat file revisi...' : 'Loading revision files...' }}</span>
                                 </div>
 
                                 {{-- File List --}}
@@ -5210,7 +5129,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <template x-if="newRoundFiles.length === 0">
                                         <div class="text-center py-6 px-4">
                                             <i class="fa-solid fa-folder-open text-gray-300 text-2xl"></i>
-                                            <p class="text-sm text-gray-500 mt-2">No revision files available.</p>
+                                            <p class="text-sm text-gray-500 mt-2">{{ $isId ? 'Tidak ada file revisi yang tersedia.' : 'No revision files available.' }}</p>
                                         </div>
                                     </template>
                                     <template x-for="file in newRoundFiles" :key="file.id">
@@ -5233,8 +5152,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                 <p class="text-xs text-gray-500 flex items-center gap-1.5 mt-2">
                                     <i class="fa-solid fa-info-circle text-gray-400"></i>
-                                    <span x-text="newRoundSelectedFiles.length"></span> file(s) selected for
-                                    promotion
+                                    <span x-text="newRoundSelectedFiles.length"></span> {{ $isId ? 'file terpilih untuk dipromosikan' : 'file(s) selected for promotion' }}
                                 </p>
                             </div>
 
@@ -5242,9 +5160,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                 <p class="text-xs text-blue-700">
                                     <i class="fa-solid fa-lightbulb mr-1"></i>
-                                    Selected files will be copied to the new review round as review files. You can
-                                    then
-                                    assign new reviewers.
+                                    {{ $isId ? 'File yang dipilih akan disalin ke ronde ulasan baru sebagai file ulasan. Anda kemudian dapat menugaskan reviewer baru.' : 'Selected files will be copied to the new review round as review files. You can then assign new reviewers.' }}
                                 </p>
                             </div>
                         </div>
@@ -5253,7 +5169,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
                             <button type="button" @click="resetNewRoundModal()"
                                 class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                             <button type="submit"
                                 :disabled="newRoundIsSubmitting || newRoundSelectedFiles.length === 0"
@@ -5263,7 +5179,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <i class="fa-solid fa-rotate mr-2"
                                     :class="newRoundIsSubmitting ? 'fa-spin' : ''"></i>
                                 <span
-                                    x-text="newRoundIsSubmitting ? 'Creating...' : 'Create New Review Round'"></span>
+                                    x-text="newRoundIsSubmitting ? '{{ $isId ? 'Membuat...' : 'Creating...' }}' : '{{ $isId ? 'Buat Ronde Ulasan Baru' : 'Create New Review Round' }}'"></span>
                             </button>
                         </div>
                     </form>
@@ -5300,7 +5216,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <i class="fa-solid fa-clock-rotate-left text-white text-lg"></i>
                                 </div>
                                 <h3 class="ml-3 text-xl font-bold text-white" id="activity-log-modal-title">
-                                    Submission Activity Log
+                                    {{ $isId ? 'Log Aktivitas Naskah' : 'Submission Activity Log' }}
                                 </h3>
                             </div>
                             <button @click="showActivityLog = false" type="button"
@@ -5309,7 +5225,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             </button>
                         </div>
                         <p class="mt-2 text-sm text-indigo-50">
-                            Complete timeline of actions and events for <span
+                            {{ $isId ? 'Linimasa lengkap aksi dan peristiwa untuk' : 'Complete timeline of actions and events for' }} <span
                                 class="font-semibold text-white">{{ $submission->submission_code }}</span>
                         </p>
                     </div>
@@ -5433,12 +5349,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <div class="mt-3">
                                                                 <button @click="showEmail = !showEmail" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                                                                     <i class="fa-solid fa-envelope mr-1.5 text-gray-500"></i>
-                                                                    <span x-text="showEmail ? 'Hide Email' : 'View Email'"></span>
+                                                                    <span x-text="showEmail ? '{{ $isId ? 'Sembunyikan Email' : 'Hide Email' }}' : '{{ $isId ? 'Lihat Email' : 'View Email' }}'"></span>
                                                                 </button>
                                                                 <div x-show="showEmail" x-collapse class="mt-3 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden text-sm">
                                                                     <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex flex-col gap-1">
-                                                                        <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Subject</div>
-                                                                        <div class="font-medium text-gray-900">{{ $log->email_subject ?? 'No Subject' }}</div>
+                                                                        <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold">{{ $isId ? 'Subjek' : 'Subject' }}</div>
+                                                                        <div class="font-medium text-gray-900">{{ $log->email_subject ?? ($isId ? 'Tanpa Subjek' : 'No Subject') }}</div>
                                                                     </div>
                                                                     <div class="p-4 prose prose-sm max-w-none text-gray-700">
                                                                         {!! clean($log->email_body) !!}
@@ -5477,9 +5393,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                                     <i class="fa-solid fa-timeline text-gray-400 text-2xl"></i>
                                 </div>
-                                <h3 class="text-sm font-medium text-gray-900 mb-1">No Activity Yet</h3>
-                                <p class="text-sm text-gray-500">Activity will appear here as actions are taken on
-                                    this submission.</p>
+                                <h3 class="text-sm font-medium text-gray-900 mb-1">{{ $isId ? 'Belum Ada Aktivitas' : 'No Activity Yet' }}</h3>
+                                <p class="text-sm text-gray-500">{{ $isId ? 'Aktivitas akan muncul di sini saat ada tindakan yang dilakukan pada naskah ini.' : 'Activity will appear here as actions are taken on this submission.' }}</p>
                             </div>
                         @endif
                     </div>
@@ -5488,13 +5403,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-gray-200 gap-2">
                         <button @click="showActivityLog = false" type="button"
                             class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto">
-                            Close
+                            {{ $isId ? 'Tutup' : 'Close' }}
                         </button>
                         @if ($submission->status == \App\Models\Submission::STATUS_PUBLISHED)
                             <a href="{{ route('journal.correspondence.download', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                 target="_blank"
                                 class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto">
-                                <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i> Download Correspondence Proof
+                                <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i> {{ $isId ? 'Unduh Bukti Korespondensi' : 'Download Correspondence Proof' }}
                             </a>
                         @endif
                     </div>
@@ -5532,9 +5447,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
                                 <div class="ml-3">
                                     <h3 class="text-xl font-bold text-green-500" id="send-production-modal-title">
-                                        Send to Production
+                                        {{ $isId ? 'Kirim ke Produksi' : 'Send to Production' }}
                                     </h3>
-                                    <p class="text-sm text-teal-100 mt-0.5">Record your editorial decision</p>
+                                    <p class="text-sm text-teal-100 mt-0.5">{{ $isId ? 'Catat keputusan editorial Anda' : 'Record your editorial decision' }}</p>
                                 </div>
                             </div>
                             <button @click="resetProductionModal()" type="button"
@@ -5555,7 +5470,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="mb-6">
                                 <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
                                     <i class="fa-solid fa-envelope text-teal-500 mr-2"></i>
-                                    Send Email
+                                    {{ $isId ? 'Kirim Email' : 'Send Email' }}
                                 </h4>
                                 <div class="space-y-3 bg-gray-50 rounded-lg p-4 border border-gray-200">
                                     <label class="flex items-start cursor-pointer group">
@@ -5563,9 +5478,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             x-model="productionSendEmail" @change="productionSendEmail = true"
                                             class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 mt-0.5">
                                         <span class="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
-                                            Send an email notification to the author(s):
+                                            {{ $isId ? 'Kirim notifikasi email ke penulis:' : 'Send an email notification to the author(s):' }}
                                             <span
-                                                class="font-semibold text-teal-700">{{ $submission->author->name ?? ($submission->authors->first()?->name ?? 'Author') }}</span>
+                                                class="font-semibold text-teal-700">{{ $submission->author->name ?? ($submission->authors->first()?->name ?? ($isId ? 'Penulis' : 'Author')) }}</span>
                                         </span>
                                     </label>
                                     <label class="flex items-start cursor-pointer group">
@@ -5573,7 +5488,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             x-model="productionSendEmail" @change="productionSendEmail = false"
                                             class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 mt-0.5">
                                         <span class="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
-                                            Do not send an email notification
+                                            {{ $isId ? 'Jangan kirim notifikasi email' : 'Do not send an email notification' }}
                                         </span>
                                     </label>
                                 </div>
@@ -5583,7 +5498,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div x-show="productionSendEmail" x-transition class="mb-6">
                                 <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
                                     <i class="fa-solid fa-file-lines text-teal-500 mr-2"></i>
-                                    Email Content
+                                    {{ $isId ? 'Isi Email' : 'Email Content' }}
                                 </h4>
                                 <div class="border border-gray-200 rounded-lg overflow-hidden">
                                     <textarea id="production-email-editor" name="email_body" x-model="productionEmailBody"
@@ -5591,8 +5506,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
                                 <p class="text-xs text-gray-500 mt-2">
                                     <i class="fa-solid fa-info-circle mr-1"></i>
-                                    This email will be sent to notify the author that their submission is moving to
-                                    production.
+                                    {{ $isId ? 'Email ini akan dikirim untuk memberi tahu penulis bahwa naskah mereka akan masuk ke tahap produksi.' : 'This email will be sent to notify the author that their submission is moving to production.' }}
                                 </p>
                             </div>
 
@@ -5600,10 +5514,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="mb-4">
                                 <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
                                     <i class="fa-solid fa-files text-teal-500 mr-2"></i>
-                                    Files to be Forwarded Automatically
+                                    {{ $isId ? 'File yang Akan Diteruskan Otomatis' : 'Files to be Forwarded Automatically' }}
                                 </h4>
                                 <p class="text-xs text-gray-600 mb-3">
-                                    The following draft files will be automatically forwarded to the Production stage:
+                                    {{ $isId ? 'File draf berikut akan diteruskan secara otomatis ke tahap Produksi:' : 'The following draft files will be automatically forwarded to the Production stage:' }}
                                 </p>
 
                                 @php
@@ -5619,7 +5533,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div class="px-4 py-2 border-b border-teal-100">
                                                 <span class="text-xs font-bold uppercase tracking-wider text-teal-700">
                                                     <i class="fa-solid fa-check-circle mr-1"></i>
-                                                    Copyedited ({{ $copyeditedFiles->count() }})
+                                                    {{ $isId ? 'Telah Disunting' : 'Copyedited' }} ({{ $copyeditedFiles->count() }})
                                                 </span>
                                             </div>
                                             @foreach ($copyeditedFiles as $file)
@@ -5633,7 +5547,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         </p>
                                                     </div>
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800 flex-shrink-0 ml-2">
-                                                        Copyedited
+                                                        {{ $isId ? 'Telah Disunting' : 'Copyedited' }}
                                                     </span>
                                                 </div>
                                             @endforeach
@@ -5646,7 +5560,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div class="px-4 py-2 border-b border-blue-100">
                                                 <span class="text-xs font-bold uppercase tracking-wider text-blue-700">
                                                     <i class="fa-solid fa-file-import mr-1"></i>
-                                                    Draft Files ({{ $draftFiles->count() }})
+                                                    {{ $isId ? 'File Draf' : 'Draft Files' }} ({{ $draftFiles->count() }})
                                                 </span>
                                             </div>
                                             @foreach ($draftFiles as $file)
@@ -5660,7 +5574,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         </p>
                                                     </div>
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0 ml-2">
-                                                        Draft
+                                                        {{ $isId ? 'Draf' : 'Draft' }}
                                                     </span>
                                                 </div>
                                             @endforeach
@@ -5673,8 +5587,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 mb-3">
                                                 <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xl"></i>
                                             </div>
-                                            <p class="text-sm font-medium text-gray-900">No draft files found</p>
-                                            <p class="text-xs text-gray-500 mt-1">No draft or copyedited files exist in Copyediting. You may proceed, but no files will be forwarded to Production.</p>
+                                            <p class="text-sm font-medium text-gray-900">{{ $isId ? 'Tidak ada file draf ditemukan' : 'No draft files found' }}</p>
+                                            <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Tidak ada file draf atau yang telah disunting di Penyuntingan. Anda dapat melanjutkan, namun tidak ada file yang akan diteruskan ke Produksi.' : 'No draft or copyedited files exist in Copyediting. You may proceed, but no files will be forwarded to Production.' }}</p>
                                         </div>
                                     @endif
                                 </div>
@@ -5686,10 +5600,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <div class="flex">
                                         <i class="fa-solid fa-circle-info text-teal-500 mt-0.5 mr-3 flex-shrink-0"></i>
                                         <div>
-                                            <p class="text-sm font-medium text-teal-800">Automatic File Forwarding</p>
+                                            <p class="text-sm font-medium text-teal-800">{{ $isId ? 'Penerusan File Otomatis' : 'Automatic File Forwarding' }}</p>
                                             <p class="text-xs text-teal-700 mt-1">
-                                                All {{ $copyeditedFiles->count() + $draftFiles->count() }} file(s) listed above will be automatically copied to the Production stage.
-                                                The submission status will change to "In Production".
+                                                {{ $isId ? 'Semua ' . ($copyeditedFiles->count() + $draftFiles->count()) . ' file yang tercantum di atas akan disalin secara otomatis ke tahap Produksi. Status naskah akan berubah menjadi "Dalam Produksi".' : 'All ' . ($copyeditedFiles->count() + $draftFiles->count()) . ' file(s) listed above will be automatically copied to the Production stage. The submission status will change to "In Production".' }}
                                             </p>
                                         </div>
                                     </div>
@@ -5702,7 +5615,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             class="bg-gray-50 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 border-t border-gray-200">
                             <button @click="resetProductionModal()" type="button"
                                 class="inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
-                                Cancel
+                                {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                             <button type="submit" :disabled="productionIsSubmitting"
                                 :class="productionIsSubmitting ? 'opacity-50 cursor-not-allowed' : ''"
@@ -5714,7 +5627,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <i class="fa-solid fa-gavel mr-2"></i>
                                 </template>
                                 <span
-                                    x-text="productionIsSubmitting ? 'Recording...' : 'Record Editorial Decision'"></span>
+                                    x-text="productionIsSubmitting ? '{{ $isId ? 'Mencatat...' : 'Recording...' }}' : '{{ $isId ? 'Catat Keputusan Editorial' : 'Record Editorial Decision' }}'"></span>
                             </button>
                         </div>
                     </form>
@@ -6001,30 +5914,29 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             </div>
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Review Details
+                                    {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
                                 </h3>
                                 <template x-if="selectedReview">
                                     <div class="mt-4">
                                         <div class="mb-4">
-                                            <h4 class="text-sm font-semibold text-gray-700">Recommendation</h4>
+                                            <h4 class="text-sm font-semibold text-gray-700">{{ $isId ? 'Rekomendasi' : 'Recommendation' }}</h4>
                                             <span
                                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
                                                 x-text="selectedReview?.recommendation_label || selectedReview?.recommendation"></span>
                                         </div>
 
                                         <div class="mb-4">
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Comments for Author</h4>
+                                            <h4 class="text-sm font-semibold text-gray-700 mb-1">{{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}</h4>
                                             <div class="bg-gray-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none"
-                                                x-html="selectedReview?.comments_for_author || '<em>No comments provided.</em>'">
+                                                x-html="selectedReview?.comments_for_author || '<em>{{ $isId ? 'Tidak ada komentar yang diberikan.' : 'No comments provided.' }}</em>'">
                                             </div>
                                         </div>
 
                                         @if (!$isAuthorView)
                                             <div class="mb-4">
-                                                <h4 class="text-sm font-semibold text-gray-700 mb-1">Comments for Editor
-                                                    (Internal)</h4>
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-1">{{ $isId ? 'Komentar untuk Editor (Internal)' : 'Comments for Editor (Internal)' }}</h4>
                                                 <div class="bg-yellow-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none border border-yellow-200"
-                                                    x-html="selectedReview?.comments_for_editor || '<em>No confidential comments provided.</em>'">
+                                                    x-html="selectedReview?.comments_for_editor || '<em>{{ $isId ? 'Tidak ada komentar rahasia yang diberikan.' : 'No confidential comments provided.' }}</em>'">
                                                 </div>
                                             </div>
 
@@ -6056,7 +5968,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     this.isSaving = false;
                                                 }
                                             }">
-                                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Reviewer Quality Rating</h4>
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-2">{{ $isId ? 'Penilaian Kualitas Reviewer' : 'Reviewer Quality Rating' }}</h4>
                                                 <div class="flex items-center gap-1">
                                                     <template x-for="i in 5">
                                                         <button @click="saveRating(i)" 
@@ -6072,15 +5984,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         <i class="fa-solid fa-spinner fa-spin"></i>
                                                     </span>
                                                     <span x-show="showSaved" x-cloak x-transition class="ml-2 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-100">
-                                                        <i class="fa-solid fa-check"></i> Saved!
+                                                        <i class="fa-solid fa-check"></i> {{ $isId ? 'Tersimpan!' : 'Saved!' }}
+                                                    </span>
                                                     </span>
                                                 </div>
-                                                <p class="mt-1 text-xs text-gray-400">Rate the quality of this review for internal editorial records.</p>
+                                                <p class="mt-1 text-xs text-gray-400">{{ $isId ? 'Beri penilaian kualitas ulasan ini untuk catatan editorial internal.' : 'Rate the quality of this review for internal editorial records.' }}</p>
                                             </div>
                                         @endif
 
                                         <div class="mt-2 text-xs text-gray-400">
-                                            Completed at: <span
+                                            {{ $isId ? 'Diselesaikan pada:' : 'Completed at:' }} <span
                                                 x-text="new Date(selectedReview?.completed_at).toLocaleDateString()"></span>
                                         </div>
                                     </div>
@@ -6091,7 +6004,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button type="button" @click="closeReviewDetailsModal()"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Close
+                            {{ $isId ? 'Tutup' : 'Close' }}
                         </button>
                     </div>
                 </div>
@@ -6107,7 +6020,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div class="bg-white px-6 py-6">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-bold text-gray-900" id="edit-review-modal-title">
-                                <i class="fa-solid fa-edit text-indigo-500 mr-2"></i>Edit Review Assignment
+                                <i class="fa-solid fa-edit text-indigo-500 mr-2"></i>{{ $isId ? 'Edit Penugasan Ulasan' : 'Edit Review Assignment' }}
                             </h3>
                             <button @click="editReviewModalOpen = false" class="text-gray-400 hover:text-gray-600 transition-colors">
                                 <i class="fa-solid fa-times"></i>
@@ -6115,28 +6028,28 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         </div>
                         <form @submit.prevent="submitEditReview()" class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Review Method</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Metode Ulasan' : 'Review Method' }}</label>
                                 <select x-model="editReviewMethod" class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
-                                    <option value="blind">Blind</option>
-                                    <option value="double_blind">Double Blind</option>
-                                    <option value="open">Open</option>
+                                    <option value="blind">{{ $isId ? 'Buta Tunggal' : 'Blind' }}</option>
+                                    <option value="double_blind">{{ $isId ? 'Buta Ganda' : 'Double Blind' }}</option>
+                                    <option value="open">{{ $isId ? 'Terbuka' : 'Open' }}</option>
                                 </select>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Response Due Date</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Batas Respons' : 'Response Due Date' }}</label>
                                     <input type="date" x-model="editResponseDueDate" class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Due Date</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Batas Ulasan' : 'Review Due Date' }}</label>
                                     <input type="date" x-model="editReviewDueDate" class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                                 </div>
                             </div>
                             <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                <button type="button" @click="editReviewModalOpen = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                                <button type="button" @click="editReviewModalOpen = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">{{ $isId ? 'Batal' : 'Cancel' }}</button>
                                 <button type="submit" :disabled="editIsSubmitting" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center transition-colors">
                                     <i x-show="editIsSubmitting" class="fa-solid fa-spinner fa-spin mr-2"></i>
-                                    Save Changes
+                                    {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                                 </button>
                             </div>
                         </form>
@@ -6403,11 +6316,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         if (response.ok) {
                             window.location.reload();
                         } else {
-                            alert(data.message || 'Failed to update review assignment.');
+                            alert(data.message || '{{ $isId ? 'Gagal memperbarui penugasan ulasan.' : 'Failed to update review assignment.' }}');
                         }
                     } catch (e) {
                         console.error(e);
-                        alert('An error occurred while updating the review assignment.');
+                        alert('{{ $isId ? 'Terjadi kesalahan saat memperbarui penugasan ulasan.' : 'An error occurred while updating the review assignment.' }}');
                     }
                     this.editIsSubmitting = false;
                 },
@@ -6436,11 +6349,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 },
 
                 getAcceptEmailTemplate() {
+                    @if($isId)
+                    return `<p>Yth. ${config.authorName},</p>
+                            <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong>${config.journalName}</strong>.</p>
+                            <p>Kami akan melanjutkan ke tahap Penyuntingan/Produksi.</p>
+                            <p>Terima kasih telah mengirimkan karya Anda kepada kami.</p>
+                            <p>Salam hormat,<br>Tim Editorial</p>`;
+                    @else
                     return `<p>Dear ${config.authorName},</p>
                             <p>We are pleased to inform you that your submission <strong>"${config.submissionTitle}"</strong> has been accepted for publication in <strong>${config.journalName}</strong>.</p>
                             <p>We will now proceed to the Copyediting/Production stage.</p>
                             <p>Thank you for submitting your work to us.</p>
                             <p>Best regards,<br>The Editorial Team</p>`;
+                    @endif
                 },
 
                 async loadAcceptFiles() {
@@ -6530,11 +6451,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                 getProductionEmailTemplate() {
                     const submissionUrl = window.location.href;
+                    @if($isId)
+                    return `<p>Yth. ${config.authorName},</p>
+                            <p>Penyuntingan naskah Anda, <strong>"${config.submissionTitle},"</strong> telah selesai. Kami sekarang akan mengirimkannya ke tahap produksi.</p>
+                            <p><strong>URL Naskah:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>
+                            <p>Jika Anda memiliki pertanyaan, silakan hubungi kami.</p>
+                            <p>Salam hormat,<br>Tim Editorial ${config.journalName}</p>`;
+                    @else
                     return `<p>Dear ${config.authorName},</p>
                             <p>The editing of your submission, <strong>"${config.submissionTitle},"</strong> is complete. We are now sending it to production.</p>
                             <p><strong>Submission URL:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>
                             <p>If you have any questions, please contact us.</p>
                             <p>Best regards,<br>The ${config.journalName} Editorial Team</p>`;
+                    @endif
                 },
 
                 initProductionEditor() {
@@ -6697,7 +6626,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                 submitDiscussion() {
                     if (!this.messageBody || this.messageBody.trim() === '') {
-                        alert('Message is required');
+                        alert('{{ $isId ? 'Pesan wajib diisi' : 'Message is required' }}');
                         return;
                     }
                     document.querySelector('#discussion-form').submit();
@@ -6731,16 +6660,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 this.tempUploadedFile = data;
                                 this.wizardStep = 2;
                             } catch (e) {
-                                alert('Upload failed: Invalid response');
+                                alert('{{ $isId ? 'Unggahan gagal: Respons tidak valid' : 'Upload failed: Invalid response' }}');
                             }
                         } else {
-                            alert('Upload failed: ' + xhr.statusText);
+                            alert('{{ $isId ? 'Unggahan gagal: ' : 'Upload failed: ' }}' + xhr.statusText);
                         }
                     };
 
                     xhr.onerror = () => {
                         this.wizardIsUploading = false;
-                        alert('Upload failed');
+                        alert('{{ $isId ? 'Unggahan gagal' : 'Upload failed' }}');
                     };
 
                     xhr.send(formData);
@@ -6861,6 +6790,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 },
 
                 getDefaultRevisionEmailTemplate() {
+                    @if($isId)
+                    return `<p>Yth. ${config.firstAuthorName},</p>
+                    <p>Kami telah mencapai keputusan terkait naskah Anda di <strong>${config.journalName}</strong>:</p>
+                    <p><strong>Naskah:</strong> ${config.submissionTitle}</p>
+                    <p><strong>ID Naskah:</strong> ${config.submissionCode}</p>
+                    <hr>
+                    <p><strong>Keputusan Kami: Diperlukan Revisi</strong></p>
+                    <p>Berdasarkan umpan balik reviewer, kami meminta Anda untuk merevisi naskah Anda. Harap tanggapi setiap komentar reviewer dengan cermat dan kirimkan naskah revisi Anda melalui portal jurnal.</p>
+                    <p>Komentar reviewer terlampir atau disertakan di bawah ini untuk referensi Anda.</p>
+                    <hr>
+                    <p>Jika Anda memiliki pertanyaan, jangan ragu untuk menghubungi kami.</p>
+                    <p>Salam hormat,<br>Tim Editorial</p>`;
+                    @else
                     return `<p>Dear ${config.firstAuthorName},</p>
                     <p>We have reached a decision regarding your submission to <strong>${config.journalName}</strong>:</p>
                     <p><strong>Submission:</strong> ${config.submissionTitle}</p>
@@ -6873,6 +6815,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <hr>
                     <p>If you have any questions, please do not hesitate to contact us.</p>
                     <p>Best regards,<br>The Editorial Team</p>`;
+                    @endif
                 },
 
                 toggleRevisionFile(fileId) {
@@ -6907,7 +6850,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         this.revisionUploadedFiles.push(data);
                         this.revisionSelectedFiles.push(data.id);
                     } catch (err) {
-                        alert('Upload failed');
+                        alert('{{ $isId ? 'Unggahan gagal' : 'Upload failed' }}');
                     }
                     event.target.value = '';
                 },
@@ -7005,12 +6948,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             if (data.errors) {
                                 this.errors = data.errors;
                             } else {
-                                alert(data.message || 'An error occurred');
+                                alert(data.message || '{{ $isId ? 'Terjadi kesalahan' : 'An error occurred' }}');
                             }
                         }
                     } catch (e) {
                         console.error(e);
-                        alert('An error occurred while saving');
+                        alert('{{ $isId ? 'Terjadi kesalahan saat menyimpan' : 'An error occurred while saving' }}');
                     }
 
                     this.isSubmitting = false;
@@ -7088,9 +7031,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 window.location.reload();
                             } else {
                                 res.json().then(data => {
-                                    alert(data.message || 'Failed to assign reviewer.');
+                                    alert(data.message || '{{ $isId ? 'Gagal menugaskan reviewer.' : 'Failed to assign reviewer.' }}');
                                 }).catch(() => {
-                                    alert('Failed to assign reviewer.');
+                                    alert('{{ $isId ? 'Gagal menugaskan reviewer.' : 'Failed to assign reviewer.' }}');
                                 });
                             }
                         });

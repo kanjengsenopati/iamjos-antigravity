@@ -3,7 +3,7 @@
     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
         <h3 class="font-bold text-gray-900 flex items-center gap-2">
             <i class="fa-brands fa-google-scholar text-blue-500 text-lg"></i>
-            Google Scholar Forecaster
+            {{ $isId ? 'Peramal Google Scholar' : 'Google Scholar Forecaster' }}
         </h3>
 
         @php
@@ -52,7 +52,7 @@
                 </div>
             </div>
             <div class="mt-2 text-center">
-                <span class="text-xs text-gray-500 uppercase font-bold tracking-wider">Indexing Requirement Score</span>
+                <span class="text-xs text-gray-500 uppercase font-bold tracking-wider">{{ $isId ? 'Skor Persyaratan Pengindeksan' : 'Indexing Requirement Score' }}</span>
             </div>
         </div>
 
@@ -87,7 +87,7 @@
         <div class="mt-6 pt-4 border-t border-gray-100">
             <p class="text-xs text-center text-gray-400">
                 <i class="fa-solid fa-circle-info mr-1"></i>
-                Based on Google Scholar Indexing Guidelines
+                {{ $isId ? 'Berdasarkan Panduan Pengindeksan Google Scholar' : 'Based on Google Scholar Indexing Guidelines' }}
             </p>
         </div>
     </div>
