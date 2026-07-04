@@ -205,7 +205,7 @@
                                                 <template x-for="key in Object.keys(previewData[0])"
                                                     :key="key">
                                                     <th class="py-2 px-3 uppercase font-bold text-slate-500 whitespace-nowrap"
-                                                        x-text="key.replace(/_/g, ' ')"></th>
+                                                        x-text="translateHeader(key)"></th>
                                                 </template>
                                             </tr>
                                         </thead>
@@ -241,11 +241,11 @@
                         {{-- Actions --}}
                         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                             <button type="button" @click="showModal = false"
-                                class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+                                class="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors cursor-pointer">
                                 {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                             <button type="submit"
-                                class="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
+                                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -283,6 +283,44 @@
                     this.showModal = true;
                     this.previewData = [];
                     this.fetchPreview();
+                },
+
+                translateHeader(key) {
+                    if (!this.isId) {
+                        return key.replace(/_/g, ' ');
+                    }
+
+                    const translations = {
+                        'code': 'Kode Artikel',
+                        'title': 'Judul Artikel',
+                        'author': 'Penulis',
+                        'section': 'Bagian',
+                        'status': 'Status',
+                        'stage': 'Tahap',
+                        'issue': 'Terbitan',
+                        'submitted_at': 'Tanggal Diajukan',
+                        'accepted_at': 'Tanggal Diterima',
+                        'published_at': 'Tanggal Diterbitkan',
+
+                        'article_code': 'Kode Artikel',
+                        'article_title': 'Judul Artikel',
+                        'reviewer': 'Peninjau',
+                        'reviewer_affiliation': 'Afiliasi Peninjau',
+                        'round': 'Putaran',
+                        'recommendation': 'Rekomendasi',
+                        'assigned_at': 'Tanggal Ditugaskan',
+                        'due_date': 'Tenggat Waktu',
+                        'responded_at': 'Tanggal Direspon',
+                        'completed_at': 'Tanggal Selesai',
+                        'days_taken': 'Durasi (Hari)',
+
+                        'metric_type': 'Jenis Metrik',
+                        'month': 'Bulan',
+                        'count': 'Jumlah'
+                    };
+
+                    const lowerKey = key.toLowerCase();
+                    return translations[lowerKey] || key.replace(/_/g, ' ');
                 },
 
                 async fetchPreview() {
