@@ -171,6 +171,22 @@ class ReviewAssignment extends Model
         return $this->belongsTo(User::class, 'reviewer_id');
     }
 
+    /**
+     * Get the review form assigned to this assignment
+     */
+    public function reviewForm(): BelongsTo
+    {
+        return $this->belongsTo(ReviewForm::class, 'review_form_id');
+    }
+
+    /**
+     * Get all form responses for this assignment
+     */
+    public function formResponses()
+    {
+        return $this->hasMany(ReviewFormResponse::class, 'review_assignment_id');
+    }
+
     // =====================================================
     // SCOPES
     // =====================================================
@@ -301,5 +317,69 @@ class ReviewAssignment extends Model
         }
 
         return now()->diffInDays($this->due_date, false);
+    }
+
+    // =====================================================
+    // REVIEW FORM HELPERS
+    // =====================================================
+
+    /**
+     * Check if this assignment has a review form
+     */
+    public function hasReviewForm(): bool
+    {
+        return !is_null($this->review_form_id);
+    }
+
+    /**
+     * Check if form responses have been submitted
+     */
+    public function hasFormResponses(): bool
+    {
+        return $this->formResponses()->exists();
+    }
+
+    /**
+     * Check if all required form elements have responses
+     */
+    public function isFormComplete(): bool
+    {
+        if (!$this->hasReviewForm()) {
+            return true; // No form = considered complete
+        }
+
+        $form = $this->reviewForm;
+        if (!$form) {
+            return true;
+        }
+
+        $requiredElements = $form->elements()->where('required', true)->pluck('id');
+        $answeredElements = $this->formResponses()->pluck('review_form_element_id');
+
+        // All required elements must have responses
+        return $requiredElements->diff($answeredElements)->isEmpty();
+    }
+
+    /**
+     * Get form completion percentage
+     */
+    public function getFormCompletionPercentage(): int
+    {
+        if (!$this->hasReviewForm()) {
+            return 100;
+        }
+
+        $form = $this->reviewForm;
+        if (!$form) {
+            return 100;
+        }
+
+        $totalElements = $form->elements()->count();
+        if ($totalElements === 0) {
+            return 100;
+        }
+
+        $answeredElements = $this->formResponses()->count();
+        return (int) round(($answeredElements / $totalElements) * 100);
     }
 }

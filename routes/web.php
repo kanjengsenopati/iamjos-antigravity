@@ -509,12 +509,21 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::post('/{assignment}/submit', [ReviewerController::class, 'submit'])->name('submit');
                     Route::post('/{assignment}/upload-attachment', [ReviewerController::class, 'uploadAttachment'])->name('upload-attachment');
                     Route::delete('/{assignment}/attachment/{file}', [ReviewerController::class, 'deleteAttachment'])->name('delete-attachment');
+                    
+                    // Review Form Routes
+                    Route::get('/{assignment}/form', [\App\Http\Controllers\ReviewFormResponseController::class, 'show'])->name('form.show');
+                    Route::post('/{assignment}/form', [\App\Http\Controllers\ReviewFormResponseController::class, 'store'])->name('form.store');
                 });
 
                 Route::prefix('editor')->name('journal.editor.')->middleware('role:Editor|Admin|Super Admin')->group(function () {
                     Route::get('/submission/{submission}', [EditorDecisionController::class, 'show'])->name('show');
                     Route::post('/submission/{submission}/assign-reviewer', [EditorDecisionController::class, 'assignReviewer'])->name('assign-reviewer');
                     Route::delete('/reviewer/{assignment}', [EditorDecisionController::class, 'cancelReviewer'])->name('cancel-reviewer');
+                    
+                    // Review Form Response Routes
+                    Route::get('/review/{assignment}/responses', [\App\Http\Controllers\ReviewFormResponseController::class, 'showResponses'])->name('review.responses');
+                    Route::get('/review/{assignment}/responses/export', [\App\Http\Controllers\ReviewFormResponseController::class, 'export'])->name('review.responses.export');
+                    
                     Route::post('/submission/{submission}/decision', [EditorDecisionController::class, 'recordDecision'])->name('decision');
                     Route::post('/submission/{submission}/send-to-review', [EditorDecisionController::class, 'sendToReview'])->name('send-to-review');
                 });
