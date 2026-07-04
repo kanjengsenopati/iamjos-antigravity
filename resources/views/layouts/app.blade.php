@@ -23,6 +23,13 @@
                 .lg\\:ml-64 { margin-left: 0 !important; }
                 /* Sembunyikan tombol kembali ke website settings di halaman manajemen */
                 a[href*="/settings/website"], a[href*="website/edit"] { display: none !important; }
+                /* Sembunyikan header khusus alat saat berada di dalam iframe modal */
+                main nav[aria-label="Breadcrumb"],
+                main [class*="bg-white/80"],
+                main div.flex.items-center.justify-between:has(a[href*="/tools"]),
+                main div.flex.items-center.justify-between:has(a[href*="/settings/tools"]) {
+                    display: none !important;
+                }
             `;
             document.head.appendChild(style);
         }

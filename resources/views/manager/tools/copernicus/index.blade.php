@@ -64,238 +64,227 @@
         @endif
 
         {{-- MAIN CONTENT --}}
-        <div class="bg-white rounded-[24px] shadow-sm border-2 border-[#DAD8F4] overflow-hidden">
+        {{-- TABS NAVIGATION (Flat Underline Style) --}}
+        <div class="border-b border-slate-200 mb-6">
+            <nav class="flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
+                <button type="button" @click="tab = 'articles'"
+                    :class="tab === 'articles' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    {{ $isId ? 'Ekspor Artikel' : 'Export Articles' }}
+                </button>
+                <button type="button" @click="tab = 'issues'"
+                    :class="tab === 'issues' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    {{ $isId ? 'Ekspor Terbitan' : 'Export Issues' }}
+                </button>
+            </nav>
+        </div>
 
-            {{-- TABS NAVIGATION (Seamless Door Style) --}}
-            <div class="relative">
-                <div class="absolute inset-x-0 bottom-0 border-b-2 border-[#DAD8F4]"></div>
-                <nav class="relative flex overflow-x-auto overflow-y-hidden no-scrollbar">
-                    <button @click="tab = 'articles'"
-                        :class="tab === 'articles' ?
-                            'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
-                            'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {{-- TAB 1: EXPORT ARTICLES --}}
+        <div x-show="tab === 'articles'" x-cloak x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+
+            <form action="{{ route('journal.settings.tools.copernicus.export.articles', ['journal' => $journal->slug]) }}"
+                method="POST">
+                @csrf
+
+                <div class="mb-6 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                    <p class="text-sm text-indigo-700 flex items-center gap-2">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        {{ $isId ? 'Hanya artikel dengan metadata lengkap yang dapat dipilih untuk diekspor. Silakan lengkapi data melalui menu Submissions jika tombol centang tidak aktif.' : 'Only articles with complete metadata can be selected for export. Please complete the data in Submissions menu if the checkbox is disabled.' }}
+                    </p>
+                </div>
+
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800">{{ $isId ? 'Pilih Artikel yang Diterbitkan' : 'Select Published Articles' }}</h3>
+                        <p class="text-sm text-slate-500">{{ $isId ? 'Pilih artikel tertentu untuk diekspor dalam format Index Copernicus (ICI).' : 'Choose specific articles to export in Index Copernicus (ICI) format.' }}</p>
+                    </div>
+                    <button type="submit"
+                        class="px-5 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2"
+                        style="background: linear-gradient(to right, #10b981, #14b8a6); color: white;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        {{ $isId ? 'Ekspor Terpilih' : 'Export Selected' }}
+                    </button>
+                </div>
+
+                @if ($submissions->count() > 0)
+                    <div class="border border-slate-200 rounded-[24px] overflow-hidden">
+                        <div class="max-h-[500px] overflow-y-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-50 text-slate-600 border-b border-slate-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-4 w-12">
+                                            <input type="checkbox" @change="toggleAllArticles($event)"
+                                                class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                        </th>
+                                        <th class="p-4 font-semibold">{{ $isId ? 'Judul' : 'Title' }}</th>
+                                        <th class="p-4 font-semibold">{{ $isId ? 'Penulis' : 'Authors' }}</th>
+                                        <th class="p-4 font-semibold text-amber-600">{{ $isId ? 'Kolom Kosong' : 'Missing Fields' }}</th>
+                                        <th class="p-4 font-semibold">{{ $isId ? 'Terbitan' : 'Issue' }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($submissions as $submission)
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="p-4">
+                                                <input type="checkbox" name="submission_ids[]"
+                                                    value="{{ $submission->id }}"
+                                                    @disabled(!empty($submission->ici_missing_fields))
+                                                    class="article-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            </td>
+                                            <td class="p-4">
+                                                <span class="font-medium text-slate-800">{{ Str::limit($submission->title, 60) }}</span>
+                                                @if ($submission->submission_code)
+                                                    <span class="block text-xs text-slate-400">{{ $submission->submission_code }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="p-4 text-slate-600">
+                                                {{ $submission->authors->pluck('family_name')->take(2)->join(', ') }}
+                                                @if ($submission->authors->count() > 2)
+                                                    <span class="text-slate-400">+{{ $submission->authors->count() - 2 }} {{ $isId ? 'lagi' : 'more' }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="p-4">
+                                                @if (!empty($submission->ici_missing_fields))
+                                                    <span class="inline-flex flex-wrap gap-1">
+                                                        @foreach ($submission->ici_missing_fields as $field)
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                {{ $field }}
+                                                            </span>
+                                                        @endforeach
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                                        {{ $isId ? 'Lengkap' : 'Complete' }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="p-4 text-slate-500">
+                                                {{ $submission->issue?->identifier ?? '-' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-16 text-slate-400">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                             </path>
                         </svg>
-                        Export Articles
-                        <div x-show="tab === 'articles'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
-                    </button>
-                    <button @click="tab = 'issues'"
-                        :class="tab === 'issues' ?
-                            'border-[#DAD8F4] text-indigo-600 bg-white rounded-t-2xl border-t-2 border-l-2 border-r-2' :
-                            'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="relative z-20 flex-1 md:flex-none whitespace-nowrap py-4 px-8 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 -mb-[2px]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <p class="font-medium">{{ $isId ? 'Tidak ada artikel terbit yang ditemukan' : 'No published articles found' }}</p>
+                    </div>
+                @endif
+            </form>
+        </div>
+
+        {{-- TAB 2: EXPORT ISSUES --}}
+        <div x-show="tab === 'issues'" x-cloak x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+
+            <form action="{{ route('journal.settings.tools.copernicus.export.issues', ['journal' => $journal->slug]) }}"
+                method="POST">
+                @csrf
+
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800">{{ $isId ? 'Pilih Terbitan yang Diterbitkan' : 'Select Published Issues' }}</h3>
+                        <p class="text-sm text-slate-500">{{ $isId ? 'Pilih terbitan untuk diekspor dalam format Index Copernicus.' : 'Select issues to export in Index Copernicus format.' }}</p>
+                    </div>
+                    <button type="submit"
+                        class="px-5 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2"
+                        style="background: linear-gradient(to right, #a855f7, #6366f1); color: white;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        {{ $isId ? 'Ekspor Terpilih' : 'Export Selected' }}
+                    </button>
+                </div>
+
+                @if ($issues->count() > 0)
+                    <div class="border border-slate-200 rounded-[24px] overflow-hidden">
+                        <div class="max-h-[500px] overflow-y-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-50 text-slate-600 border-b border-slate-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-4 w-12">
+                                            <input type="checkbox" @change="toggleAllIssues($event)"
+                                                class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                        </th>
+                                        <th class="p-4 font-semibold">{{ $isId ? 'Identifikasi Terbitan' : 'Issue Identification' }}</th>
+                                        <th class="p-4 font-semibold">{{ $isId ? 'Diterbitkan' : 'Published' }}</th>
+                                        <th class="p-4 font-semibold">{{ $isId ? 'Artikel' : 'Articles' }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($issues as $issue)
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="p-4">
+                                                <input type="checkbox" name="issue_ids[]"
+                                                    value="{{ $issue->id }}"
+                                                    class="issue-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                            </td>
+                                            <td class="p-4">
+                                                <span class="font-medium text-slate-800">
+                                                    Vol {{ $issue->volume }}, No {{ $issue->number }}
+                                                    ({{ $issue->year }})
+                                                </span>
+                                                @if ($issue->title)
+                                                    <span class="block text-sm text-slate-500">{{ $issue->title }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="p-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                                                    {{ $issue->published_at?->format('d M Y') ?? ($isId ? 'Diterbitkan' : 'Published') }}
+                                                </span>
+                                            </td>
+                                            <td class="p-4">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600">
+                                                    {{ $issue->submissions_count }}
+                                                    {{ $isId ? 'Artikel' : Str::plural('article', $issue->submissions_count) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-16 text-slate-400">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
                             </path>
                         </svg>
-                        Export Issues
-                        <div x-show="tab === 'issues'" class="absolute -bottom-[2px] inset-x-0 h-[3px] bg-white z-30"></div>
-                    </button>
-                </nav>
-            </div>
-
-            {{-- TAB 1: EXPORT ARTICLES --}}
-            <div x-show="tab === 'articles'" x-cloak x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="p-6">
-
-                <form action="{{ route('journal.settings.tools.copernicus.export.articles', ['journal' => $journal->slug]) }}"
-                    method="POST">
-                    @csrf
-
-                    <div class="mb-6 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
-                        <p class="text-sm text-indigo-700 flex items-center gap-2">
-                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            Hanya artikel dengan metadata lengkap yang dapat dipilih untuk diekspor. Silakan lengkapi data melalui menu Submissions jika tombol centang tidak aktif.
-                        </p>
+                        <p class="font-medium">{{ $isId ? 'Tidak ada terbitan yang diterbitkan ditemukan' : 'No published issues found' }}</p>
                     </div>
-
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                        <div>
-                            <h3 class="font-bold text-lg text-slate-800">Select Published Articles</h3>
-                            <p class="text-sm text-slate-500">Choose specific articles to export in Index Copernicus (ICI) format.</p>
-                        </div>
-                        <button type="submit"
-                            class="px-5 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2"
-                            style="background: linear-gradient(to right, #10b981, #14b8a6); color: white;">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                            </svg>
-                            Export Selected
-                        </button>
-                    </div>
-
-                    @if ($submissions->count() > 0)
-                        <div class="border-2 border-slate-50 bg-slate-50/30 rounded-[24px] overflow-hidden">
-                            <div class="max-h-[500px] overflow-y-auto">
-                                <table class="w-full text-sm text-left">
-                                    <thead class="bg-slate-50 text-slate-600 border-b-2 border-[#DAD8F4] sticky top-0 z-10">
-                                        <tr>
-                                            <th class="p-4 w-12">
-                                                <input type="checkbox" onChange="document.querySelectorAll('.article-checkbox').forEach(cb => cb.checked = this.checked)"
-                                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                            </th>
-                                            <th class="p-4 font-semibold">Title</th>
-                                            <th class="p-4 font-semibold">Authors</th>
-                                            <th class="p-4 font-semibold">Published</th>
-                                            <th class="p-4 font-semibold">Issue</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        @foreach ($submissions as $submission)
-                                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                                <td class="p-4">
-                                                    <input type="checkbox" name="submission_ids[]"
-                                                        value="{{ $submission->id }}"
-                                                        @if(!empty($submission->ici_missing_fields)) disabled @endif
-                                                        class="article-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed">
-                                                </td>
-                                                <td class="p-4">
-                                                    <span
-                                                        class="font-medium text-slate-800">{{ Str::limit($submission->title, 60) }}</span>
-                                                    @if(!empty($submission->ici_missing_fields))
-                                                        <div class="mt-1">
-                                                            <span class="inline-block text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
-                                                                Missing: {{ implode(', ', $submission->ici_missing_fields) }}
-                                                            </span>
-                                                        </div>
-                                                    @elseif ($submission->submission_code)
-                                                        <span
-                                                            class="block text-xs text-slate-400 mt-1">{{ $submission->submission_code }}</span>
-                                                    @endif
-                                                </td>
-                                                <td class="p-4 text-slate-600">
-                                                    {{ $submission->authors->pluck('name')->take(2)->join(', ') }}
-                                                    @if ($submission->authors->count() > 2)
-                                                        <span
-                                                            class="text-slate-400">+{{ $submission->authors->count() - 2 }}
-                                                            more</span>
-                                                    @endif
-                                                </td>
-                                                <td class="p-4">
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                                        {{ $submission->published_at?->format('M d, Y') ?? 'Published' }}
-                                                    </span>
-                                                </td>
-                                                <td class="p-4 text-slate-500">
-                                                    {{ $submission->issue?->identifier ?? '-' }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @else
-                        <div class="text-center py-16 text-slate-400">
-                            <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            <p class="font-medium">No published articles found</p>
-                        </div>
-                    @endif
-                </form>
-            </div>
-
-            {{-- TAB 2: EXPORT ISSUES --}}
-            <div x-show="tab === 'issues'" x-cloak x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="p-6">
-
-                <form action="{{ route('journal.settings.tools.copernicus.export.issues', ['journal' => $journal->slug]) }}"
-                    method="POST">
-                    @csrf
-
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                        <div>
-                            <h3 class="font-bold text-lg text-slate-800">Select Published Issues</h3>
-                            <p class="text-sm text-slate-500">Export whole issues with all their contained articles in ICI format.</p>
-                        </div>
-                        <button type="submit"
-                            class="px-5 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2"
-                            style="background: linear-gradient(to right, #a855f7, #6366f1); color: white;">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                            </svg>
-                            Export Selected
-                        </button>
-                    </div>
-
-                    @if ($issues->count() > 0)
-                        <div class="border-2 border-slate-50 bg-slate-50/30 rounded-[24px] overflow-hidden">
-                            <div class="max-h-[500px] overflow-y-auto">
-                                <table class="w-full text-sm text-left">
-                                    <thead class="bg-slate-50 text-slate-600 border-b-2 border-[#DAD8F4] sticky top-0 z-10">
-                                        <tr>
-                                            <th class="p-4 w-12">
-                                                <input type="checkbox" onChange="document.querySelectorAll('.issue-checkbox').forEach(cb => cb.checked = this.checked)"
-                                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                            </th>
-                                            <th class="p-4 font-semibold">Issue Identification</th>
-                                            <th class="p-4 font-semibold">Published</th>
-                                            <th class="p-4 font-semibold">Articles</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        @foreach ($issues as $issue)
-                                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                                <td class="p-4">
-                                                    <input type="checkbox" name="issue_ids[]"
-                                                        value="{{ $issue->id }}"
-                                                        class="issue-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                                </td>
-                                                <td class="p-4">
-                                                    <span class="font-medium text-slate-800">
-                                                        Vol {{ $issue->volume }}, No {{ $issue->number }}
-                                                        ({{ $issue->year }})
-                                                    </span>
-                                                    @if ($issue->title)
-                                                        <span
-                                                            class="block text-sm text-slate-500">{{ $issue->title }}</span>
-                                                    @endif
-                                                </td>
-                                                <td class="p-4">
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                                        {{ $issue->published_at?->format('M d, Y') ?? 'Published' }}
-                                                    </span>
-                                                </td>
-                                                <td class="p-4">
-                                                    <span
-                                                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600">
-                                                        {{ $issue->submissions_count }}
-                                                        {{ Str::plural('article', $issue->submissions_count) }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @else
-                        <div class="text-center py-16 text-slate-400">
-                            <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                                </path>
-                            </svg>
-                            <p class="font-medium">No published issues found</p>
-                        </div>
-                    @endif
-                </form>
-            </div>
-
+                @endif
+            </form>
         </div>
     </div>
 @endsection

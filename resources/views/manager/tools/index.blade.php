@@ -221,15 +221,16 @@
                         </div>
 
                         <div class="px-5 pb-5">
-                            <a href="{{ $tool['route'] }}"
-                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:bg-{{ $tool['color'] }}-600 hover:text-white hover:border-{{ $tool['color'] }}-600 transition-all">
+                            <button type="button"
+                                @click="openTool('{{ $tool['key'] }}', '{{ $tool['route'] }}', '{{ $isId ? ($toolTranslations[$tool['key']]['title'] ?? $tool['title']) : $tool['title'] }}', '{{ $isId ? ($toolTranslations[$tool['key']]['desc'] ?? $tool['description']) : $tool['description'] }}', '{{ $tool['icon'] }}', '{{ $tool['color'] }}')"
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:bg-{{ $tool['color'] }}-600 hover:text-white hover:border-{{ $tool['color'] }}-600 transition-all cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                     </path>
                                 </svg>
                                 {{ $isId ? 'Buka Alat' : 'Open Tool' }}
-                            </a>
+                            </button>
                         </div>
                     </div>
                 @endforeach
@@ -357,6 +358,55 @@
             </div>
         </div>
 
+        <!-- MODAL: DYNAMIC WIDE MODAL FOR TOOLS -->
+        <div x-show="showToolModal" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-10"
+             x-cloak>
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showToolModal = false"></div>
+
+            <!-- Modal Card -->
+            <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-7xl h-[85vh] flex flex-col overflow-hidden border border-slate-100">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                             :class="'bg-' + modalColor + '-100 text-' + modalColor + '-600'">
+                            <template x-if="modalIcon === 'scholar'">
+                                <i class="fa-brands fa-google-scholar text-lg"></i>
+                            </template>
+                            <template x-if="modalIcon !== 'scholar'">
+                                <i class="fa-solid" :class="getIconClass(modalIcon)"></i>
+                            </template>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900" x-text="modalTitle"></h3>
+                            <p class="text-xs text-slate-500" x-text="modalDescription"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="const iframe = $refs.toolIframe; iframe.src = iframe.src;" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-lg transition-colors" title="Reload">
+                            <i class="fa-solid fa-rotate-right text-base"></i>
+                        </button>
+                        <button type="button" @click="showToolModal = false" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Modal Body (Iframe) -->
+                <div class="flex-1 bg-slate-50">
+                    <iframe x-ref="toolIframe" :src="showToolModal ? modalUrl : 'about:blank'" class="w-full h-full border-0 rounded-b-[24px]" style="min-height: 100%;"></iframe>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -365,6 +415,38 @@
                 activeTab: 'import',
                 search: '',
                 tools: @json($tools),
+                showToolModal: false,
+                modalKey: '',
+                modalUrl: 'about:blank',
+                modalTitle: '',
+                modalDescription: '',
+                modalIcon: '',
+                modalColor: 'indigo',
+
+                openTool(key, url, title, description, icon, color) {
+                    this.modalKey = key;
+                    this.modalUrl = url;
+                    this.modalTitle = title;
+                    this.modalDescription = description;
+                    this.modalIcon = icon;
+                    this.modalColor = color;
+                    this.showToolModal = true;
+                },
+
+                getIconClass(icon) {
+                    const mapping = {
+                        'cloud-arrow-down': 'fa-cloud-arrow-down',
+                        'code-bracket': 'fa-code',
+                        'users': 'fa-users',
+                        'server-stack': 'fa-server',
+                        'link': 'fa-link',
+                        'beaker': 'fa-flask',
+                        'globe-alt': 'fa-globe',
+                        'document-text': 'fa-file-text',
+                        'bolt': 'fa-bolt'
+                    };
+                    return mapping[icon] || 'fa-cog';
+                },
 
                 hasVisibleTools() {
                     if (!this.search) return true;
