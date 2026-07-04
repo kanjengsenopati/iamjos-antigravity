@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Distribution Settings - ' . ($journal->abbreviation ?? 'IAMJOS'))
+@php
+    $currentLoc = session('app_locale', app()->getLocale());
+    $isId = in_array($currentLoc, ['id', 'id_ID']);
+@endphp
+
+@section('title', ($isId ? 'Pengaturan Distribusi - ' : 'Distribution Settings - ') . ($journal->abbreviation ?? 'IAMJOS'))
 
 @section('content')
     <div x-data="{
@@ -22,8 +27,8 @@
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Distribution Settings</h1>
-                <p class="mt-1 text-sm text-gray-500">Manage licensing, indexing, and access policies.</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Distribusi' : 'Distribution Settings' }}</h1>
+                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Kelola kebijakan lisensi, pengindeksan, dan akses.' : 'Manage licensing, indexing, and access policies.' }}</p>
             </div>
             <div class="mt-4 sm:mt-0">
                 <a href="/{{ $journal->slug ?? '#' }}" target="_blank"
@@ -32,7 +37,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    View Journal Site
+                    {{ $isId ? 'Lihat Situs Jurnal' : 'View Journal Site' }}
                 </a>
             </div>
         </div>
@@ -48,28 +53,28 @@
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-scale-balanced mr-2"></i>
-                        License
+                        {{ $isId ? 'Lisensi' : 'License' }}
                     </button>
                     <button type="button" @click="activeTab = 'indexing'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'indexing' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-magnifying-glass mr-2"></i>
-                        Search Indexing
+                        {{ $isId ? 'Pengindeksan' : 'Search Indexing' }}
                     </button>
                     <button type="button" @click="activeTab = 'access'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'access' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-lock-open mr-2"></i>
-                        Access
+                        {{ $isId ? 'Akses' : 'Access' }}
                     </button>
                     <button type="button" @click="activeTab = 'archiving'; history.replaceState(null, '', '?tab=' + activeTab)"
                         :class="activeTab === 'archiving' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
                         <i class="fa-solid fa-box-archive mr-2"></i>
-                        Archiving
+                        {{ $isId ? 'Pengarsipan' : 'Archiving' }}
                     </button>
                 </nav>
             </div>
@@ -90,8 +95,8 @@
                             <i class="fa-solid fa-scale-balanced text-indigo-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-gray-900">License Settings</h3>
-                            <p class="text-sm text-gray-500">Configure copyright and licensing terms for submissions.</p>
+                            <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Pengaturan Lisensi' : 'License Settings' }}</h3>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Konfigurasikan ketentuan hak cipta dan lisensi untuk pengajuan naskah.' : 'Configure copyright and licensing terms for submissions.' }}</p>
                         </div>
                     </div>
 
@@ -126,25 +131,25 @@
 
                         <!-- Copyright Holder -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-3">Copyright Holder</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">{{ $isId ? 'Pemegang Hak Cipta' : 'Copyright Holder' }}</label>
                             <div class="space-y-3">
                                 <label class="flex items-center">
                                     <input type="radio" name="license[copyright_holder_type]" value="author"
                                         x-model="copyrightType"
                                         class="text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                    <span class="ml-2 text-sm text-gray-700">Author</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $isId ? 'Penulis' : 'Author' }}</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="radio" name="license[copyright_holder_type]" value="context"
                                         x-model="copyrightType"
                                         class="text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                    <span class="ml-2 text-sm text-gray-700">Journal</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $isId ? 'Jurnal' : 'Journal' }}</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="radio" name="license[copyright_holder_type]" value="other"
                                         x-model="copyrightType"
                                         class="text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                    <span class="ml-2 text-sm text-gray-700">Custom</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $isId ? 'Kustom' : 'Custom' }}</span>
                                 </label>
                             </div>
 
@@ -153,13 +158,13 @@
                                 <input type="text" name="license[copyright_holder_other]"
                                     value="{{ old('license.copyright_holder_other', $journal->copyright_holder_other) }}"
                                     class="w-full sm:w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    placeholder="Enter copyright holder name">
+                                    placeholder="{{ $isId ? 'Masukkan nama pemegang hak cipta' : 'Enter copyright holder name' }}">
                             </div>
                         </div>
 
                         <!-- License -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-3">License</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">{{ $isId ? 'Lisensi' : 'License' }}</label>
                             <!-- Hidden input actually submits the URL -->
                             <input type="hidden" name="license[url]" x-model="customLicenseUrl">
 
@@ -181,13 +186,13 @@
                                     <input type="radio" name="license_selector" value="other"
                                         :checked="selectedLicense === 'other'" @change="setLicense('other')"
                                         class="text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                    <span class="ml-2 text-sm text-gray-700">Other license URL</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $isId ? 'URL lisensi lainnya' : 'Other license URL' }}</span>
                                 </label>
                             </div>
 
                             <!-- Custom License Input -->
                             <div x-show="selectedLicense === 'other'" x-collapse class="mt-3 pl-6">
-                                <label class="block text-xs text-gray-500 mb-1">License URL</label>
+                                <label class="block text-xs text-gray-500 mb-1">{{ $isId ? 'URL Lisensi' : 'License URL' }}</label>
                                 <input type="url" x-model="customLicenseUrl"
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     placeholder="https://example.com/license">
@@ -196,27 +201,27 @@
 
                         <!-- License Terms -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">License Terms</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Ketentuan Lisensi' : 'License Terms' }}</label>
                             <textarea name="license[terms]" rows="6" id="license_terms"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Enter the license terms that will be displayed with published content...">{{ old('license.terms', $journal->license_terms) }}</textarea>
+                                placeholder="{{ $isId ? 'Masukkan ketentuan lisensi yang akan ditampilkan dengan konten yang diterbitkan...' : 'Enter the license terms that will be displayed with published content...' }}">{{ old('license.terms', $journal->license_terms) }}</textarea>
                         </div>
 
                         <!-- Copyright Year Basis -->
                         <div>
-                            <span class="block text-sm font-medium text-gray-700 mb-2">Copyright Year Basis</span>
+                            <span class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Dasar Tahun Hak Cipta' : 'Copyright Year Basis' }}</span>
                             <div class="space-y-3">
                                 <label class="flex items-center">
                                     <input type="radio" name="license[copyright_year]" value="issue"
                                         {{ old('license.copyright_year', $journal->copyright_year_basis) === 'issue' ? 'checked' : '' }}
                                         class="text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                    <span class="ml-2 text-sm text-gray-700">Use Issue publication date</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $isId ? 'Gunakan tanggal terbit Nomor (Issue)' : 'Use Issue publication date' }}</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="radio" name="license[copyright_year]" value="article"
                                         {{ old('license.copyright_year', $journal->copyright_year_basis) === 'article' ? 'checked' : '' }}
                                         class="text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                    <span class="ml-2 text-sm text-gray-700">Use Article publication date</span>
+                                    <span class="ml-2 text-sm text-gray-700">{{ $isId ? 'Gunakan tanggal terbit Artikel' : 'Use Article publication date' }}</span>
                                 </label>
                             </div>
                         </div>
@@ -232,33 +237,33 @@
                                 <i class="fa-solid fa-magnifying-glass text-blue-600"></i>
                             </div>
                             <div>
-                                <h3 class="text-base font-semibold text-gray-900">Search Indexing & SEO</h3>
-                                <p class="text-sm text-gray-500">Configure how search engines (Google, Google Scholar) discover and display your journal.</p>
+                                <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Pengindeksan Pencarian & SEO' : 'Search Indexing & SEO' }}</h3>
+                                <p class="text-sm text-gray-500">{{ $isId ? 'Konfigurasikan bagaimana mesin pencari (Google, Google Scholar) menemukan dan menampilkan jurnal Anda.' : 'Configure how search engines (Google, Google Scholar) discover and display your journal.' }}</p>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 gap-8 max-w-4xl">
                             <!-- Description -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Journal Search Description (Meta Description)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Deskripsi Pencarian Jurnal (Meta Description)' : 'Journal Search Description (Meta Description)' }}</label>
                                 <textarea name="indexing[description]" rows="3"
                                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    placeholder="A brief description of the journal for search results...">{{ old('indexing.description', $journal->search_description) }}</textarea>
+                                    placeholder="{{ $isId ? 'Deskripsi singkat tentang jurnal untuk hasil pencarian...' : 'A brief description of the journal for search results...' }}">{{ old('indexing.description', $journal->search_description) }}</textarea>
                                 <div class="mt-2 flex items-center justify-between">
-                                    <p class="text-xs text-gray-500">A short summary of the journal's focus. Recommended length: 150-160 characters.</p>
-                                    <span class="text-[10px] font-medium px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">Highly Recommended</span>
+                                    <p class="text-xs text-gray-500">{{ $isId ? 'Ringkasan singkat dari fokus jurnal. Panjang yang disarankan: 150-160 karakter.' : 'A short summary of the journal\'s focus. Recommended length: 150-160 characters.' }}</p>
+                                    <span class="text-[10px] font-medium px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">{{ $isId ? 'Sangat Direkomendasikan' : 'Highly Recommended' }}</span>
                                 </div>
                             </div>
 
                             <!-- Custom Tags (Site verification) -->
                             <div class="p-5 bg-gray-50 rounded-xl border border-gray-200">
-                                <label class="block text-sm font-medium text-gray-900 mb-2">Custom Header Tags (Site Verification)</label>
-                                <p class="text-xs text-gray-500 mb-3">Use this to verify your site with Google Search Console, Bing Webmaster, or to add global scripts.</p>
+                                <label class="block text-sm font-medium text-gray-900 mb-2">{{ $isId ? 'Tag Header Kustom (Verifikasi Situs)' : 'Custom Header Tags (Site Verification)' }}</label>
+                                <p class="text-xs text-gray-500 mb-3">{{ $isId ? 'Gunakan ini untuk memverifikasi situs Anda dengan Google Search Console, Bing Webmaster, atau untuk menambahkan skrip global.' : 'Use this to verify your site with Google Search Console, Bing Webmaster, or to add global scripts.' }}</p>
                                 <textarea name="indexing[custom_tags]" rows="3"
                                     class="w-full font-mono text-xs rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     placeholder="<meta name='google-site-verification' content='...' />">{{ old('indexing.custom_headers', $journal->custom_headers) }}</textarea>
                                 <div class="mt-2 p-2 bg-blue-50/50 rounded border border-blue-100">
-                                    <p class="text-[10px] text-blue-700 italic">Example: &lt;meta name="google-site-verification" content="XYZ123..." /&gt;</p>
+                                    <p class="text-[10px] text-blue-700 italic">{{ $isId ? 'Contoh: ' : 'Example: ' }}&lt;meta name="google-site-verification" content="XYZ123..." /&gt;</p>
                                 </div>
                             </div>
 
@@ -273,11 +278,10 @@
                                     <div>
                                         <label for="block_search_indexing" class="text-sm font-bold text-red-900 flex items-center">
                                             <i class="fa-solid fa-triangle-exclamation mr-2"></i>
-                                            Block search engines from indexing the site
+                                            {{ $isId ? 'Cegah mesin pencari mengindeks situs ini' : 'Block search engines from indexing the site' }}
                                         </label>
                                         <p class="text-xs text-red-700 mt-1">
-                                            <strong>WARNING:</strong> If checked, Google Scholar and other search engines will NOT index your journal articles. 
-                                            Only use this during initial setup or site maintenance.
+                                            <strong>{{ $isId ? 'PERINGATAN:' : 'WARNING:' }}</strong> {{ $isId ? 'Jika dicentang, Google Scholar dan mesin pencari lainnya TIDAK AKAN mengindeks artikel jurnal Anda. Hanya gunakan ini selama penyiapan awal atau pemeliharaan situs.' : 'If checked, Google Scholar and other search engines will NOT index your journal articles. Only use this during initial setup or site maintenance.' }}
                                         </p>
                                     </div>
                                 </div>
@@ -285,16 +289,16 @@
 
                             <!-- Custom Meta Tags (Dynamic) -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Global Meta Tags (Advanced)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Tag Meta Global (Lanjutan)' : 'Global Meta Tags (Advanced)' }}</label>
                                 <textarea name="indexing[custom_meta_tags]" rows="3"
                                     class="w-full font-mono text-xs rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     placeholder="<meta name='custom-tag' content='...' />">{{ old('indexing.custom_meta_tags', $journal->custom_meta_tags) }}</textarea>
-                                <p class="mt-1 text-[11px] text-gray-500">These tags will be added to the <code>&lt;head&gt;</code> of every page in this journal.</p>
+                                <p class="mt-1 text-[11px] text-gray-500">{{ $isId ? 'Tag ini akan ditambahkan ke bagian <head> dari setiap halaman di jurnal ini.' : 'These tags will be added to the <head> of every page in this journal.' }}</p>
                             </div>
 
                             <!-- Sitemap URL -->
                             <div class="pt-4 border-t border-gray-100">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Automatic XML Sitemap</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Sitemap XML Otomatis' : 'Automatic XML Sitemap' }}</label>
                                 <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200">
                                     <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center">
                                         <i class="fa-solid fa-sitemap text-sm"></i>
@@ -302,10 +306,10 @@
                                     <code class="text-[11px] text-gray-600 flex-1">{{ url('sitemap.xml') }}</code>
                                     <a href="{{ url('sitemap.xml') }}" target="_blank"
                                         class="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-blue-600 transition-colors">
-                                        <i class="fa-solid fa-external-link mr-1"></i> Open
+                                        <i class="fa-solid fa-external-link mr-1"></i> {{ $isId ? 'Buka' : 'Open' }}
                                     </a>
                                 </div>
-                                <p class="mt-2 text-[10px] text-gray-500 italic">Submit this URL to <a href="https://search.google.com/search-console" target="_blank" class="text-blue-500 hover:underline">Google Search Console</a> to speed up indexing.</p>
+                                <p class="mt-2 text-[10px] text-gray-500 italic">{{ $isId ? 'Kirimkan URL ini ke Google Search Console untuk mempercepat pengindeksan.' : 'Submit this URL to Google Search Console to speed up indexing.' }} <a href="https://search.google.com/search-console" target="_blank" class="text-blue-500 hover:underline">Google Search Console</a>.</p>
                             </div>
                         </div>
                     </div>
@@ -319,18 +323,18 @@
                             <i class="fa-solid fa-lock-open text-emerald-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-gray-900">Access Settings</h3>
-                            <p class="text-sm text-gray-500">Control who can access journal content and when.</p>
+                            <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Pengaturan Akses' : 'Access Settings' }}</h3>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Kontrol siapa yang dapat mengakses konten jurnal dan kapan.' : 'Control who can access journal content and when.' }}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-6 max-w-4xl">
                         <!-- Open Access Policy -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Open Access Policy</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Kebijakan Akses Terbuka' : 'Open Access Policy' }}</label>
                             <textarea name="access[open_access_policy]" rows="6"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                placeholder="State the journal's policy regarding access to articles...">{{ old('access.open_access_policy', $journal->open_access_policy) }}</textarea>
+                                placeholder="{{ $isId ? 'Nyatakan kebijakan jurnal terkait akses ke artikel...' : 'State the journal\'s policy regarding access to articles...' }}">{{ old('access.open_access_policy', $journal->open_access_policy) }}</textarea>
                         </div>
 
                         <!-- Enable OAI -->
@@ -338,9 +342,8 @@
                             <div
                                 class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                                 <div>
-                                    <h4 class="text-sm font-medium text-gray-900">Enable OAI-PMH</h4>
-                                    <p class="text-sm text-gray-500">Allow metadata harvesting via Open Archives Initiative
-                                        Protocol.</p>
+                                    <h4 class="text-sm font-medium text-gray-900">{{ $isId ? 'Aktifkan OAI-PMH' : 'Enable OAI-PMH' }}</h4>
+                                    <p class="text-sm text-gray-500">{{ $isId ? 'Izinkan pemanenan metadata melalui Open Archives Initiative Protocol.' : 'Allow metadata harvesting via Open Archives Initiative Protocol.' }}</p>
                                 </div>
                                 <div x-data="{ enabled: {{ old('access.enable_oai', $journal->enable_oai) ? 'true' : 'false' }} }">
                                     <input type="hidden" name="access[enable_oai]" :value="enabled ? 1 : 0">
@@ -366,8 +369,8 @@
                             <i class="fa-solid fa-box-archive text-amber-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-gray-900">Archiving</h3>
-                            <p class="text-sm text-gray-500">Enable long-term preservation services (LOCKSS/CLOCKSS).</p>
+                            <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Pengarsipan' : 'Archiving' }}</h3>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Aktifkan layanan pelestarian jangka panjang (LOCKSS/CLOCKSS).' : 'Enable long-term preservation services (LOCKSS/CLOCKSS).' }}</p>
                         </div>
                     </div>
 
@@ -375,7 +378,7 @@
 
                         <!-- Archiving Networks -->
                         <div class="space-y-4">
-                            <label class="block text-sm font-medium text-gray-700">Archiving Networks</label>
+                            <label class="block text-sm font-medium text-gray-700">{{ $isId ? 'Jaringan Pengarsipan' : 'Archiving Networks' }}</label>
 
                             <!-- LOCKSS -->
                             <div class="relative flex items-start">
@@ -385,9 +388,8 @@
                                         class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
                                 </div>
                                 <div class="ml-3 text-sm">
-                                    <label class="font-medium text-gray-700">Enable LOCKSS</label>
-                                    <p class="text-gray-500">Enable LOCKSS to store and distribute journal content at
-                                        participating libraries via a LOCKSS Publisher Manifest page.</p>
+                                    <label class="font-medium text-gray-700">{{ $isId ? 'Aktifkan LOCKSS' : 'Enable LOCKSS' }}</label>
+                                    <p class="text-gray-500">{{ $isId ? 'Aktifkan LOCKSS untuk menyimpan dan mendistribusikan konten jurnal di perpustakaan yang berpartisipasi melalui halaman LOCKSS Publisher Manifest.' : 'Enable LOCKSS to store and distribute journal content at participating libraries via a LOCKSS Publisher Manifest page.' }}</p>
                                 </div>
                             </div>
 
@@ -399,19 +401,18 @@
                                         class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
                                 </div>
                                 <div class="ml-3 text-sm">
-                                    <label class="font-medium text-gray-700">Enable CLOCKSS</label>
-                                    <p class="text-gray-500">Enable CLOCKSS to store and distribute journal content via a
-                                        CLOCKSS Publisher Manifest page.</p>
+                                    <label class="font-medium text-gray-700">{{ $isId ? 'Aktifkan CLOCKSS' : 'Enable CLOCKSS' }}</label>
+                                    <p class="text-gray-500">{{ $isId ? 'Aktifkan CLOCKSS untuk menyimpan dan mendistribusikan konten jurnal melalui halaman CLOCKSS Publisher Manifest.' : 'Enable CLOCKSS to store and distribute journal content via a CLOCKSS Publisher Manifest page.' }}</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Archiving Policy -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Archiving Policy</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Kebijakan Pengarsipan' : 'Archiving Policy' }}</label>
                             <textarea name="archiving[policy]" rows="6"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
-                                placeholder="Describe the journal's digital archiving policy...">{{ old('archiving.policy', $journal->archiving_policy) }}</textarea>
+                                placeholder="{{ $isId ? 'Jelaskan kebijakan pengarsipan digital jurnal...' : 'Describe the journal\'s digital archiving policy...' }}">{{ old('archiving.policy', $journal->archiving_policy) }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -422,7 +423,7 @@
                     <button type="submit"
                         class="inline-flex items-center px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
                         <i class="fa-solid fa-floppy-disk mr-2"></i>
-                        Save Changes
+                        {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                     </button>
                 </div>
             </form>
