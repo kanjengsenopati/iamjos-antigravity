@@ -1,3 +1,6 @@
+@php
+    $isId = app()->getLocale() === 'id';
+@endphp
 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full">
     {{-- Header --}}
     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">

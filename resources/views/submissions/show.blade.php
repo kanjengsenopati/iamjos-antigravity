@@ -3045,6 +3045,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     {{-- ====== SEO CHECK (Google Scholar) ====== --}}
                     <div x-show="pubTab === 'seo'" class="h-full">
                         <x-google-scholar-seo :analysis="$seoAnalysis" />
+                    </div>
                                         {{-- ====== ISSUE (SCHEDULING) ====== --}}
                     <div x-show="pubTab === 'issue'"
                         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -3653,7 +3654,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         x-transition:leave="ease-in duration-200"
                         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        class="relative z-50 inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl                        <div class="sm:flex sm:items-start mb-5">
+                        class="relative z-50 inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                        <div class="sm:flex sm:items-start mb-5">
                             <div
                                 class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
                                 <i class="fa-solid fa-user-plus text-indigo-600"></i>
@@ -3780,6 +3782,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     @click="contributorModalOpen = false; editingContributor = null"
                                     class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm">
                                     {{ $isId ? 'Batal' : 'Cancel' }}
+                                </button>
                             </div>
                         </form>
                     </div>
