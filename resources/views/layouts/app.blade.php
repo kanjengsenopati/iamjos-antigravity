@@ -21,6 +21,7 @@
                 aside, header, footer { display: none !important; }
                 main { margin-left: 0 !important; padding-left: 0 !important; padding-top: 1rem !important; }
                 .lg\\:ml-64 { margin-left: 0 !important; }
+                .iframe-hidden { display: none !important; }
                 /* Sembunyikan tombol kembali ke website settings di halaman manajemen */
                 a[href*="/settings/website"], a[href*="website/edit"] { display: none !important; }
                 /* Sembunyikan header khusus alat saat berada di dalam iframe modal */

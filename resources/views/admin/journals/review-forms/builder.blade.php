@@ -24,7 +24,7 @@
         <div class="mb-6">
             <div class="flex items-center gap-3 mb-2">
                 <a href="{{ route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'review']) }}"
-                    class="text-gray-400 hover:text-gray-600">
+                    class="text-gray-400 hover:text-gray-600 iframe-hidden">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <h1 class="text-2xl font-bold text-gray-900">{{ $reviewForm->title }}</h1>
@@ -197,7 +197,7 @@
                                 {{ $isId ? 'Ekspor Template' : 'Export Template' }}
                             </a>
                             <a href="{{ route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'review']) }}"
-                                class="block w-full text-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50">
+                                class="block w-full text-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 iframe-hidden">
                                 <i class="fa-solid fa-arrow-left mr-2"></i>
                                 {{ $isId ? 'Kembali ke Pengaturan' : 'Back to Settings' }}
                             </a>
