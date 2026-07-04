@@ -1,5 +1,12 @@
 @php
     $isId = app()->getLocale() === 'id';
+    $roleLabels = [
+        'Journal Manager' => $isId ? 'Manajer Jurnal' : 'Journal Manager',
+        'Editor' => $isId ? 'Editor' : 'Editor',
+        'Section Editor' => $isId ? 'Editor Bagian' : 'Section Editor',
+        'Author' => $isId ? 'Penulis' : 'Author',
+        'Reviewer' => $isId ? 'Reviewer' : 'Reviewer',
+    ];
     $journal = current_journal();
     $allDiscussions = $submission->discussions;
 
@@ -484,12 +491,12 @@
                             {{-- Participants (Modernized - OJS 3.3 Style) --}}
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                     </h4>
                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                         <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                                            <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
+                                            <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                         </button>
                                     @endjournalPermission
                                 </div>
@@ -554,7 +561,7 @@
                                             <div>
                                                 <h5
                                                     class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                                                    {{ $role }}
+                                                    {{ $roleLabels[$role] ?? $role }}
                                                 </h5>
                                                 <div class="space-y-2">
                                                     @foreach ($members as $member)
@@ -686,7 +693,7 @@
                     <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <i class="fa-solid fa-lock text-gray-400 text-2xl"></i>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">The review process has not yet been initiated.</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Proses ulasan belum dimulai.' : 'The review process has not yet been initiated.' }}</h3>
                 </div>
             @else
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -1263,12 +1270,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             {{-- Participants (Modernized - OJS 3.3 Style) --}}
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                     </h4>
                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                         <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                                            <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
+                                            <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                         </button>
                                     @endjournalPermission
                                 </div>
@@ -1333,7 +1340,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div>
                                                 <h5
                                                     class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                                                    {{ $role }}
+                                                    {{ $roleLabels[$role] ?? $role }}
                                                 </h5>
                                                 <div class="space-y-2">
                                                     @foreach ($members as $member)
@@ -1473,15 +1480,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <div class="flex items-start justify-between">
                                         <div>
                                             <h3 class="text-base font-bold text-gray-900">
-                                                <i class="fa-solid fa-file-import text-blue-500 mr-2"></i>Draft Files
+                                                <i class="fa-solid fa-file-import text-blue-500 mr-2"></i>{{ $isId ? 'File Draf' : 'Draft Files' }}
                                             </h3>
-                                            <p class="text-xs text-gray-600 mt-1">Files from the review stage, ready for
-                                                copyediting</p>
+                                            <p class="text-xs text-gray-600 mt-1">{{ $isId ? 'File dari tahap ulasan, siap untuk penyuntingan' : 'Files from the review stage, ready for copyediting' }}</p>
                                         </div>
                                         <button @click="draftFilesModalOpen = true"
                                             class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             <i class="fa-solid fa-plus mr-1.5"></i>
-                                            Upload/Select Files
+                                            {{ $isId ? 'Unggah/Pilih File' : 'Upload/Select Files' }}
                                         </button>
                                     </div>
                                 </div>
@@ -1491,19 +1497,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <tr>
                                                 <th scope="col"
                                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    File
+                                                    {{ $isId ? 'File' : 'File' }}
                                                 </th>
                                                 <th scope="col"
                                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Type
+                                                    {{ $isId ? 'Tipe' : 'Type' }}
                                                 </th>
                                                 <th scope="col"
                                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Date Added
+                                                    {{ $isId ? 'Tanggal Ditambahkan' : 'Date Added' }}
                                                 </th>
                                                 <th scope="col"
                                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Actions
+                                                    {{ $isId ? 'Aksi' : 'Actions' }}
                                                 </th>
                                             </tr>
                                         </thead>
@@ -1583,8 +1589,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <tr>
                                                     <td colspan="4"
                                                         class="px-6 py-8 text-center text-sm text-gray-500 italic">
-                                                        No draft files available. Files will appear here after acceptance
-                                                        from the Review stage.
+                                                        {{ $isId ? 'Tidak ada file draf tersedia. File akan muncul di sini setelah diterima dari tahap Ulasan.' : 'No draft files available. Files will appear here after acceptance from the Review stage.' }}
                                                     </td>
                                                 </tr>
                                             @endforelse
@@ -1600,10 +1605,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <div class="flex items-start justify-between">
                                     <div>
                                         <h3 class="text-base font-bold text-gray-900">
-                                            <i class="fa-solid fa-file-pen text-teal-500 mr-2"></i>Copyedited
+                                            <i class="fa-solid fa-file-pen text-teal-500 mr-2"></i>{{ $isId ? 'Hasil Penyuntingan' : 'Copyedited' }}
                                         </h3>
-                                        <p class="text-xs text-gray-600 mt-1">Final files that have undergone
-                                            copyediting, ready for Production</p>
+                                        <p class="text-xs text-gray-600 mt-1">{{ $isId ? 'File final yang telah melalui proses penyuntingan, siap untuk Produksi' : 'Final files that have undergone copyediting, ready for Production' }}</p>
                                     </div>
                                     {{-- Authors can also upload copyedited files --}}
                                     @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id) ||
@@ -1611,7 +1615,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <button @click="fileModalOpen = true; uploadStage = 'copyedited'"
                                             class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                             <i class="fa-solid fa-upload mr-1.5"></i>
-                                            Upload Copyedited File
+                                            {{ $isId ? 'Unggah File Hasil Sunting' : 'Upload Copyedited File' }}
                                         </button>
                                     @endif
                                 </div>
@@ -1622,19 +1626,19 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <tr>
                                             <th scope="col"
                                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                File
+                                                {{ $isId ? 'File' : 'File' }}
                                             </th>
                                             <th scope="col"
                                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Type
+                                                {{ $isId ? 'Tipe' : 'Type' }}
                                             </th>
                                             <th scope="col"
                                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Date Added
+                                                {{ $isId ? 'Tanggal Ditambahkan' : 'Date Added' }}
                                             </th>
                                             <th scope="col"
                                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
+                                                {{ $isId ? 'Aksi' : 'Actions' }}
                                             </th>
                                         </tr>
                                     </thead>
@@ -1712,7 +1716,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <tr>
                                                 <td colspan="4"
                                                     class="px-6 py-8 text-center text-sm text-gray-500 italic">
-                                                    No copyedited files yet. Upload the final edited versions here.
+                                                    {{ $isId ? 'Belum ada file hasil penyuntingan. Unggah versi final yang telah disunting di sini.' : 'No copyedited files yet. Upload the final edited versions here.' }}
                                                 </td>
                                             </tr>
                                         @endforelse
@@ -1730,8 +1734,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     <div class="lg:col-span-1 space-y-6">
                         @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Workflow
-                                    Actions
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">{{ $isId ? 'Aksi Alur Kerja' : 'Workflow Actions' }}
                                 </h4>
                                 @if ($submission->stage_id == 3 && $submission->status != 3)
                                     {{-- Info Box --}}
@@ -1739,32 +1742,31 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <div class="flex items-start">
                                             <i class="fa-solid fa-info-circle text-teal-500 mt-0.5 mr-2"></i>
                                             <p class="text-xs text-teal-700">
-                                                Promote <strong>Copyedited</strong> files to Production stage when
-                                                editing is complete.
+                                                {{ $isId ? 'Lanjutkan file Hasil Penyuntingan ke tahap Produksi setelah proses penyuntingan selesai.' : 'Promote Copyedited files to Production stage when editing is complete.' }}
                                             </p>
                                         </div>
                                     </div>
                                     <button @click="openSendToProductionModal()"
                                         {{ !$canPerformAction ? 'disabled' : '' }}
                                         class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white {{ $canPerformAction ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500 focus:ring-2 focus:ring-offset-2' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} transition-colors focus:outline-none">
-                                        <i class="fa-solid fa-arrow-right mr-2"></i> Send to Production
+                                        <i class="fa-solid fa-arrow-right mr-2"></i> {{ $isId ? 'Kirim ke Produksi' : 'Send to Production' }}
                                     </button>
                                 @else
                                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
                                         <p class="text-sm text-gray-600 flex items-center">
                                             <i class="fa-solid fa-check-circle text-gray-400 mr-2"></i>
                                             @if ($submission->status == 3)
-                                                Submission has been declined.
+                                                {{ $isId ? 'Naskah telah ditolak.' : 'Submission has been declined.' }}
                                             @elseif($submission->stage_id > 3)
-                                                Copyediting complete. Moved to Production.
+                                                {{ $isId ? 'Penyuntingan selesai. Dipindahkan ke Produksi.' : 'Copyediting complete. Moved to Production.' }}
                                             @else
-                                                Awaiting copyediting stage.
+                                                {{ $isId ? 'Menunggu tahap penyuntingan.' : 'Awaiting copyediting stage.' }}
                                             @endif
                                         </p>
                                     </div>
                                     <button disabled
                                         class="w-full inline-flex justify-center items-center px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                        <i class="fa-solid fa-arrow-right mr-2"></i> Send to Production
+                                        <i class="fa-solid fa-arrow-right mr-2"></i> {{ $isId ? 'Kirim ke Produksi' : 'Send to Production' }}
                                     </button>
                                 @endif
                             </div>
@@ -1773,12 +1775,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         {{-- Participants (Modernized - OJS 3.3 Style) --}}
                         <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                             <div class="flex justify-between items-center mb-4">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                 </h4>
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                                        <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
+                                        <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                     </button>
                                 @endjournalPermission
                             </div>
@@ -1840,7 +1842,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <div>
                                             <h5
                                                 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                                                {{ $role }}
+                                                {{ $roleLabels[$role] ?? $role }}
                                             </h5>
                                             <div class="space-y-2">
                                                 @foreach ($members as $member)
@@ -1997,11 +1999,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                 <div>
                                     <h3 class="text-base font-bold text-gray-900">
-                                        <i class="fa-solid fa-file-circle-check text-emerald-500 mr-2"></i>Production
-                                        Ready Files
+                                        <i class="fa-solid fa-file-circle-check text-emerald-500 mr-2"></i>{{ $isId ? 'File Siap Produksi' : 'Production Ready Files' }}
                                     </h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">Edited files promoted from Copyediting.
-                                        Download these to create final galleys (PDF/HTML).</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">{{ $isId ? 'File hasil sunting yang dilanjutkan dari Penyuntingan. Unduh file ini untuk membuat galley final (PDF/HTML).' : 'Edited files promoted from Copyediting. Download these to create final galleys (PDF/HTML).' }}</p>
                                 </div>
                             </div>
 
@@ -2018,16 +2018,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <tr>
                                             <th
                                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                File Name</th>
+                                                {{ $isId ? 'Nama File' : 'File Name' }}</th>
                                             <th
                                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                Size</th>
+                                                {{ $isId ? 'Ukuran' : 'Size' }}</th>
                                             <th
                                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                Uploaded</th>
+                                                {{ $isId ? 'Diunggah' : 'Uploaded' }}</th>
                                             <th
                                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                                Actions</th>
+                                                {{ $isId ? 'Aksi' : 'Actions' }}</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
@@ -2058,8 +2058,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <td class="px-6 py-4 whitespace-nowrap text-right">
                                                     <a href="{{ route('files.download', $file) }}" target="_blank"
                                                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
-                                                        title="Download">
-                                                        <i class="fa-solid fa-download mr-1.5"></i> Download
+                                                        title="{{ $isId ? 'Unduh' : 'Download' }}">
+                                                        <i class="fa-solid fa-download mr-1.5"></i> {{ $isId ? 'Unduh' : 'Download' }}
                                                     </a>
                                                 </td>
                                             </tr>
@@ -2072,13 +2072,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <i
                                                                 class="fa-solid fa-folder-open text-gray-400 text-xl"></i>
                                                         </div>
-                                                        <p class="text-sm font-medium text-gray-900">No
-                                                            production-ready
-                                                            files yet</p>
-                                                        <p class="text-xs text-gray-500 mt-1 max-w-xs">Files will
-                                                            appear
-                                                            here after the "Send to Production" action from Copyediting
-                                                            stage.</p>
+                                                        <p class="text-sm font-medium text-gray-900">{{ $isId ? 'Belum ada file siap produksi' : 'No production-ready files yet' }}</p>
+                                                        <p class="text-xs text-gray-500 mt-1 max-w-xs">{{ $isId ? 'File akan muncul di sini setelah aksi "Kirim ke Produksi" dilakukan dari tahap Penyuntingan.' : 'Files will appear here after the "Send to Production" action from Copyediting stage.' }}</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -2100,16 +2095,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                         {{-- Publication Status Card --}}
                         <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Publication
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">{{ $isId ? 'Publikasi' : 'Publication' }}
                             </h4>
-
+ 
                             @if ($submission->status === 'published')
                                 {{-- Published State --}}
                                 <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
                                     <div class="flex items-center">
                                         <i class="fa-solid fa-check-circle text-emerald-500 text-xl mr-3"></i>
                                         <div>
-                                            <p class="text-sm font-semibold text-emerald-800">Published</p>
+                                            <p class="text-sm font-semibold text-emerald-800">{{ $isId ? 'Diterbitkan' : 'Published' }}</p>
                                             <p class="text-xs text-emerald-600">
                                                 {{ $submission->published_at?->format('M d, Y') }}
                                             </p>
@@ -2129,9 +2124,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         @csrf
                                         <button type="submit"
                                             {{ !$canPerformAction ? 'disabled' : '' }}
-                                            @if($canPerformAction) onclick="return confirm('Are you sure you want to unpublish this submission?')" @endif
+                                            @if($canPerformAction) onclick="return confirm('{{ $isId ? 'Apakah Anda yakin ingin membatalkan penerbitan naskah ini?' : 'Are you sure you want to unpublish this submission?' }}')" @endif
                                             class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-red-200 text-red-700 bg-white hover:bg-red-50' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} text-sm font-medium rounded-lg transition-colors">
-                                            <i class="fa-solid fa-eye-slash mr-2"></i> Unpublish
+                                            <i class="fa-solid fa-eye-slash mr-2"></i> {{ $isId ? 'Batal Terbitkan' : 'Unpublish' }}
                                         </button>
                                     </form>
                                 @endjournalPermission
@@ -2141,23 +2136,23 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <div class="flex items-center">
                                         <i class="fa-solid fa-calendar-check text-blue-500 text-xl mr-3"></i>
                                         <div>
-                                            <p class="text-sm font-semibold text-blue-800">Scheduled</p>
+                                            <p class="text-sm font-semibold text-blue-800">{{ $isId ? 'Dijadwalkan' : 'Scheduled' }}</p>
                                             <p class="text-xs text-blue-600">{{ $submission->issue->identifier }}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
-
+ 
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     @if (!$submission->hasGalleys())
                                         <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                                             <p class="text-xs text-amber-700">
                                                 <i class="fa-solid fa-exclamation-triangle mr-1"></i>
-                                                Upload at least one galley to publish.
+                                                {{ $isId ? 'Unggah minimal satu galley untuk menerbitkan.' : 'Upload at least one galley to publish.' }}
                                             </p>
                                         </div>
                                     @endif
-
+ 
                                     <div class="space-y-2">
                                         <form
                                             action="{{ route('journal.workflow.publish', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
@@ -2165,17 +2160,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             @csrf
                                             <button type="submit" {{ (!$canPerformAction || !$submission->hasGalleys()) ? 'disabled' : '' }}
                                                 class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white {{ ($canPerformAction && $submission->hasGalleys()) ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} transition-colors">
-                                                <i class="fa-solid fa-rocket mr-2"></i> Publish Now
+                                                <i class="fa-solid fa-rocket mr-2"></i> {{ $isId ? 'Terbitkan Sekarang' : 'Publish Now' }}
                                             </button>
                                         </form>
-
+ 
                                         <form
                                             action="{{ route('journal.workflow.unschedule', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                                             method="POST">
                                             @csrf
                                             <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
                                                 class="w-full inline-flex justify-center items-center px-4 py-2 border {{ $canPerformAction ? 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' }} text-sm font-medium rounded-lg transition-colors">
-                                                <i class="fa-solid fa-calendar-xmark mr-2"></i> Unschedule
+                                                <i class="fa-solid fa-calendar-xmark mr-2"></i> {{ $isId ? 'Batal Jadwalkan' : 'Unschedule' }}
                                             </button>
                                         </form>
                                     </div>
@@ -2183,16 +2178,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             @else
                                 {{-- Not Scheduled State --}}
                                 <p class="text-sm text-gray-500 mb-4">
-                                    This submission is not scheduled for publication yet.
+                                    {{ $isId ? 'Naskah ini belum dijadwalkan untuk publikasi.' : 'This submission is not scheduled for publication yet.' }}
                                 </p>
-
+ 
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     <button @click="activeTab = 'publication'"
                                         class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors">
-                                        <i class="fa-solid fa-arrow-right mr-2"></i> Go to Publication Tab
+                                        <i class="fa-solid fa-arrow-right mr-2"></i> {{ $isId ? 'Buka Tab Publikasi' : 'Go to Publication Tab' }}
                                     </button>
                                     <p class="text-xs text-gray-500 mt-2 text-center">
-                                        Manage galleys and schedule publication in the Publication tab.
+                                        {{ $isId ? 'Kelola galley dan jadwalkan publikasi di tab Publikasi.' : 'Manage galleys and schedule publication in the Publication tab.' }}
                                     </p>
                                 @endjournalPermission
                             @endif
@@ -2201,12 +2196,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         {{-- Participants (Modernized - OJS 3.3 Style) --}}
                         <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                             <div class="flex justify-between items-center mb-4">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Participants
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                 </h4>
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                                     <button @click="assignEditorModalOpen = true; resetEditorModal()"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                                        <i class="fa-solid fa-plus text-xs mr-1"></i> Assign
+                                        <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                     </button>
                                 @endjournalPermission
                             </div>
@@ -2268,7 +2263,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <div>
                                             <h5
                                                 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                                                {{ $role }}
+                                                {{ $roleLabels[$role] ?? $role }}
                                             </h5>
                                             <div class="space-y-2">
                                                 @foreach ($members as $member)
