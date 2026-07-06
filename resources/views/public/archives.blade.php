@@ -1,4 +1,4 @@
-@php $title = 'Archives'; @endphp
+@php $title = __('Archives'); @endphp
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$title">
 
@@ -8,15 +8,15 @@
         <nav class="text-sm text-slate-500 mb-6">
             <a href="{{ route('journal.public.home', $journal->slug) }}"
                class="hover:text-primary-600">
-                Home
+                {{ __('Home') }}
             </a>
             <span class="mx-2">/</span>
-            <span class="text-slate-700 font-medium">Archives</span>
+            <span class="text-slate-700 font-medium">{{ __('Archives') }}</span>
         </nav>
 
         {{-- PAGE TITLE --}}
         <h1 class="text-3xl font-bold text-slate-800 mb-12">
-            Archives
+            {{ __('Archives') }}
         </h1>
 
         {{-- ARCHIVE LIST --}}
@@ -39,7 +39,7 @@
                                     >
                                 @else
                                     <div class="w-full aspect-[3/4] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs font-semibold uppercase rounded-xl">
-                                        No Cover
+                                        {{ __('No Cover') }}
                                     </div>
                                 @endif
                             </a>
@@ -82,7 +82,7 @@
             </div>
         @else
             <div class="p-10 bg-slate-50 border border-slate-200 rounded text-center">
-                <p class="text-slate-500">No archives available.</p>
+                <p class="text-slate-500">{{ __('No archives available.') }}</p>
             </div>
         @endif
 

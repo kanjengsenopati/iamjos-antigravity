@@ -67,7 +67,14 @@ $registerAllRoutes = function ($prefix = '') {
         });
 
         // 2. PORTAL HOME
-Route::get('/', [PortalController::class, 'index'])->name('portal.home');
+        Route::middleware(['journal.detect'])->group(function () {
+            Route::get('/', [PortalController::class, 'index'])->name('portal.home');
+            Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
+            Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
+            Route::get('/about', [PortalController::class, 'about'])->name('portal.about');
+            Route::get('/page/{slug}', [PortalController::class, 'page'])->name('site.page');
+        });
+
         Route::get('/set-locale/{locale}', function ($locale) {
             if (in_array($locale, ['en', 'id', 'en_US', 'id_ID'])) {
                 // Normalize to short code for session & setLocale
@@ -105,10 +112,6 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             }
             return redirect()->back();
         })->name('locale.switch');
-        Route::get('/search', [PortalController::class, 'search'])->name('portal.search');
-        Route::get('/journals', [PortalController::class, 'journals'])->name('portal.journals');
-        Route::get('/about', [PortalController::class, 'about'])->name('portal.about');
-        Route::get('/page/{slug}', [PortalController::class, 'page'])->name('site.page');
         Route::get('/files/{file}/download', [SubmissionFileController::class, 'download'])->name('files.download');
         Route::get('/files/{file}/preview', [SubmissionFileController::class, 'preview'])->name('files.preview')->middleware('auth');
         Route::get('/files/{file}/serve', [SubmissionFileController::class, 'serve'])->name('files.serve');
@@ -285,7 +288,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
         Route::get('/about/login', [\App\Http\Controllers\PublicController::class, 'redirectLegacyOjsAbout'])->defaults('target', 'login');
 
         // 7. JOURNAL PUBLIC ROUTES
-        Route::prefix('{journal}')->group(function () {
+        Route::prefix('{journal}')->middleware(['journal.detect'])->group(function () {
             Route::any('oai', [\App\Http\Controllers\Public\OaiController::class, 'handle'])->middleware('throttle:60,1')->name('journal.oai');
             Route::get('lockss', [\App\Http\Controllers\Public\LockssController::class, 'manifest'])->name('journal.lockss.manifest');
             Route::get('clockss', [\App\Http\Controllers\Public\LockssController::class, 'clockssManifest'])->name('journal.clockss.manifest');

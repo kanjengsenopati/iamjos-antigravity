@@ -418,7 +418,7 @@
                 <div class="pt-6">
                     <h3
                         class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
-                        Abstract
+                        {{ __('Abstract') }}
                     </h3>
                     <div class="prose max-w-none text-slate-700 leading-relaxed text-justify">
                         {!! clean($article->abstract) !!}
@@ -430,7 +430,7 @@
             <div class="pt-6">
                 <h3
                     class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-6 pb-1 uppercase tracking-wide">
-                    Downloads
+                    {{ __('Downloads') }}
                 </h3>
 
                 {{-- Summary Stats (Inline) --}}
@@ -512,7 +512,7 @@
             @if (!empty($parsedRefs))
                 <section class="item references pt-6" id="references">
                     <h2 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
-                        References
+                        {{ __('References') }}
                     </h2>
                     <div class="value space-y-2 text-slate-600 text-sm leading-relaxed">
                         @foreach ($parsedRefs as $ref)
@@ -547,7 +547,7 @@
                 @endphp
                 <section class="item references pt-6" id="references">
                     <h2 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
-                        References
+                        {{ __('References') }}
                     </h2>
                     <div class="value text-slate-600 text-sm leading-relaxed">
                         {!! nl2br(e($rawRefText)) !!}
@@ -733,23 +733,23 @@
 
             {{-- ARTICLE METADATA --}}
             <div class="bg-slate-50 p-5 rounded border border-slate-200">
-                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">Article Info</h4>
+                <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">{{ __('Article Info') }}</h4>
                 <dl class="space-y-3 text-sm">
                     @if ($publicationDate)
                         <div>
-                            <dt class="text-xs font-bold text-slate-400 uppercase">Published</dt>
+                            <dt class="text-xs font-bold text-slate-400 uppercase">{{ __('Published') }}</dt>
                             <dd class="text-slate-800 mt-1">{{ $publicationDate->format('Y-m-d') }}</dd>
                         </div>
                     @endif
                     @if ($article->section)
                         <div>
-                            <dt class="text-xs font-bold text-slate-400 uppercase">Section</dt>
+                            <dt class="text-xs font-bold text-slate-400 uppercase">{{ __('Section') }}</dt>
                             <dd class="text-slate-800 mt-1">{{ $article->section->name }}</dd>
                         </div>
                     @endif
                     @if ($article->pages)
                         <div>
-                            <dt class="text-xs font-bold text-slate-400 uppercase">Pages</dt>
+                            <dt class="text-xs font-bold text-slate-400 uppercase">{{ __('Pages') }}</dt>
                             <dd class="text-slate-800 mt-1">{{ $article->pages }}</dd>
                         </div>
                     @endif

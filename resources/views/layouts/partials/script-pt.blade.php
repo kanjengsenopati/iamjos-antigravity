@@ -29,13 +29,13 @@
     $(document).on('click', '.btn-destroy', function(e) {
         var form = $("#" + e.target.dataset.id);
         Swal.fire({
-            title: 'Hapus Data',
-            text: 'Anda yakin akan menghapus data ini? Data yang telah dihapus tidak dapat dikembalikan.',
+            title: '{{ __('Delete Data') }}',
+            text: '{{ __('Are you sure you want to delete this data? Deleted data cannot be recovered.') }}',
             icon: "warning",
             showCancelButton: true,
             buttonsStyling: false,
-            confirmButtonText: 'Hapus',
-            cancelButtonText: 'Batal',
+            confirmButtonText: '{{ __('Delete') }}',
+            cancelButtonText: '{{ __('Cancel') }}',
             customClass: {
                 confirmButton: 'btn btn-sm fw-semibold btn-primary',
                 cancelButton: 'btn btn-sm fw-semibold btn-active-light-primary'
@@ -55,8 +55,8 @@
 @if (session($message))
 <script>
     Swal.fire({
-        title: '{{ ucfirst($message) }}',
-        text: "<?= session($message) ?>",
+        title: '{{ __(ucfirst($message)) }}',
+        text: "{{ __(session($message)) }}",
         icon: '{{ $message }}',
         confirmButtonText: 'Ok'
     }) 

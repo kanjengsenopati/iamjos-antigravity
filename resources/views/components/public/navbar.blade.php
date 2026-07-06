@@ -84,29 +84,29 @@
                         <a href="{{ route('journal.public.home', $journal->slug) }}"
                             class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
                                 {{ request()->routeIs('journal.public.home') ? 'bg-white/15 text-white' : '' }}">
-                            <i class="fa-solid fa-house mr-1.5 text-xs"></i> Home
+                            <i class="fa-solid fa-house mr-1.5 text-xs"></i> {{ __('Home') }}
                         </a>
                         <a href="{{ route('journal.public.about', $journal->slug) }}"
                             class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
                                 {{ request()->routeIs('journal.public.about') ? 'bg-white/15 text-white' : '' }}">
-                            <i class="fa-solid fa-info-circle mr-1.5 text-xs"></i> About
+                            <i class="fa-solid fa-info-circle mr-1.5 text-xs"></i> {{ __('About') }}
                         </a>
                         <a href="{{ route('journal.public.current', $journal->slug) }}"
                             class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
                                 {{ request()->routeIs('journal.public.current') ? 'bg-white/15 text-white' : '' }}">
-                            <i class="fa-solid fa-book-open mr-1.5 text-xs"></i> Current
+                            <i class="fa-solid fa-book-open mr-1.5 text-xs"></i> {{ __('Current') }}
                         </a>
                         <a href="{{ route('journal.public.archives', $journal->slug) }}"
                             class="px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors
                                 {{ request()->routeIs('journal.public.archives') ? 'bg-white/15 text-white' : '' }}">
-                            <i class="fa-solid fa-archive mr-1.5 text-xs"></i> Archives
+                            <i class="fa-solid fa-archive mr-1.5 text-xs"></i> {{ __('Archives') }}
                         </a>
 
                         {{-- About Dropdown --}}
                         <div x-data="{ open: false }" class="relative">
                             <button @click="open = !open" @click.outside="open = false"
                                 class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                                <i class="fa-solid fa-ellipsis-h text-xs"></i> More
+                                <i class="fa-solid fa-ellipsis-h text-xs"></i> {{ __('More') }}
                                 <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
                                     :class="{ 'rotate-180': open }"></i>
                             </button>
@@ -116,17 +116,16 @@
                                 class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
                                 <a href="{{ route('journal.public.editorial-team', $journal->slug) }}"
                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                    <i class="fa-solid fa-users text-slate-400 w-4 text-center"></i> Editorial Team
+                                    <i class="fa-solid fa-users text-slate-400 w-4 text-center"></i> {{ __('Editorial Team') }}
                                 </a>
                                 <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}"
                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                    <i class="fa-solid fa-file-alt text-slate-400 w-4 text-center"></i> Author
-                                    Guidelines
+                                    <i class="fa-solid fa-file-alt text-slate-400 w-4 text-center"></i> {{ __('Author Guidelines') }}
                                 </a>
                                 <hr class="my-2 border-slate-100">
                                 <a href="{{ route('journal.public.search', $journal->slug) }}"
                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                    <i class="fa-solid fa-search text-slate-400 w-4 text-center"></i> Search
+                                    <i class="fa-solid fa-search text-slate-400 w-4 text-center"></i> {{ __('Search') }}
                                 </a>
                             </div>
                         </div>
@@ -136,6 +135,8 @@
 
             {{-- Right Side: User Menu & Actions --}}
             <div class="hidden md:flex items-center space-x-4">
+                {{-- Locale Switcher --}}
+                <x-ui.locale-switcher />
 
                 {{-- Search Trigger --}}
                 <div x-data="{ searchOpen: false }" class="relative">
@@ -152,7 +153,7 @@
                         <form action="{{ route('journal.public.search', $journal->slug) }}" method="GET">
                             <div class="relative">
                                 <input type="text" name="q" x-ref="searchInput"
-                                    placeholder="Search articles, authors..."
+                                    placeholder="{{ __('Search articles, authors...') }}"
                                     class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fa-solid fa-search text-slate-400"></i>
@@ -161,7 +162,7 @@
                             <button type="submit"
                                 class="w-full mt-3 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
                                 style="background: {{ $primaryColor }};">
-                                Search
+                                {{ __('Search') }}
                             </button>
                         </form>
                     </div>
@@ -197,7 +198,7 @@
 
                             {{-- Header --}}
                             <div class="px-4 py-3 border-b border-gray-100">
-                                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Logged in as</p>
+                                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">{{ __('Logged in as') }}</p>
                                 <p class="text-sm font-medium text-slate-900 truncate">{{ Auth::user()->name }}</p>
                             </div>
 
@@ -236,13 +237,13 @@
                                     <a href="{{ route('journal.submissions.index', $journal->slug) }}"
                                         class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
                                         <i class="fa-solid fa-gauge-high text-slate-400 w-4 text-center"></i>
-                                        Dashboard
+                                        {{ __('Dashboard') }}
                                     </a>
 
                                     <a href="{{ route('journal.profile.edit', $journal->slug) }}"
                                         class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
                                         <i class="fa-solid fa-user-circle text-slate-400 w-4 text-center"></i>
-                                        View Profile
+                                        {{ __('View Profile') }}
                                     </a>
                                 @endif
                             </div>
@@ -256,7 +257,7 @@
                                 <button type="submit"
                                     class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3">
                                     <i class="fa-solid fa-sign-out-alt text-red-400 w-4 text-center"></i>
-                                    Logout
+                                    {{ __('Logout') }}
                                 </button>
                             </form>
                         </div>
@@ -266,11 +267,11 @@
                     <div class="flex items-center gap-3">
                         <a href="{{ route('journal.login', $journal->slug) }}"
                             class="text-sm font-medium text-white/90 hover:text-white transition">
-                            Login
+                            {{ __('Login') }}
                         </a>
                         <a href="{{ route('journal.register', $journal->slug) }}"
                             class="text-sm font-medium bg-white text-slate-900 px-4 py-2 rounded-full hover:bg-slate-100 transition shadow-sm">
-                            Register
+                            {{ __('Register') }}
                         </a>
                     </div>
                 @endauth
@@ -280,7 +281,7 @@
             <div class="md:hidden flex items-center space-x-3">
                 <a href="{{ route('journal.submissions.create', $journal->slug) }}"
                     class="px-3 py-1.5 text-xs font-medium bg-white text-slate-800 rounded-lg shadow-sm">
-                    Submit
+                    {{ __('Submit') }}
                 </a>
                 <button @click="mobileOpen = !mobileOpen"
                     class="p-2 text-white hover:bg-white/10 rounded-lg transition-colors">
@@ -300,7 +301,7 @@
             {{-- Search Box (Mobile) --}}
             <form action="{{ route('journal.public.search', $journal->slug) }}" method="GET" class="mb-4">
                 <div class="relative">
-                    <input type="text" name="q" placeholder="Search articles..."
+                    <input type="text" name="q" placeholder="{{ __('Search articles...') }}"
                         class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="fa-solid fa-search text-slate-400"></i>
@@ -342,27 +343,27 @@
                 {{-- Default Mobile Primary Links --}}
                 <a href="{{ route('journal.public.home', $journal->slug) }}"
                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                    <i class="fa-solid fa-house text-slate-400 w-5 text-center"></i> Home
+                    <i class="fa-solid fa-house text-slate-400 w-5 text-center"></i> {{ __('Home') }}
                 </a>
                 <a href="{{ route('journal.public.about', $journal->slug) }}"
                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                    <i class="fa-solid fa-info-circle text-slate-400 w-5 text-center"></i> About
+                    <i class="fa-solid fa-info-circle text-slate-400 w-5 text-center"></i> {{ __('About') }}
                 </a>
                 <a href="{{ route('journal.public.current', $journal->slug) }}"
                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                    <i class="fa-solid fa-book-open text-slate-400 w-5 text-center"></i> Current Issue
+                    <i class="fa-solid fa-book-open text-slate-400 w-5 text-center"></i> {{ __('Current Issue') }}
                 </a>
                 <a href="{{ route('journal.public.archives', $journal->slug) }}"
                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                    <i class="fa-solid fa-archive text-slate-400 w-5 text-center"></i> Archives
+                    <i class="fa-solid fa-archive text-slate-400 w-5 text-center"></i> {{ __('Archives') }}
                 </a>
                 <a href="{{ route('journal.public.editorial-team', $journal->slug) }}"
                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                    <i class="fa-solid fa-users text-slate-400 w-5 text-center"></i> Editorial Team
+                    <i class="fa-solid fa-users text-slate-400 w-5 text-center"></i> {{ __('Editorial Team') }}
                 </a>
                 <a href="{{ route('journal.public.author-guidelines', $journal->slug) }}"
                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                    <i class="fa-solid fa-file-alt text-slate-400 w-5 text-center"></i> Author Guidelines
+                    <i class="fa-solid fa-file-alt text-slate-400 w-5 text-center"></i> {{ __('Author Guidelines') }}
                 </a>
             @endif
 
@@ -400,11 +401,11 @@
                     {{-- Default User Navigation Links (Mobile) --}}
                     <a href="{{ route('journal.submissions.index', $journal->slug) }}"
                         class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                        <i class="fa-solid fa-gauge-high text-slate-400 w-5 text-center"></i> Dashboard
+                        <i class="fa-solid fa-gauge-high text-slate-400 w-5 text-center"></i> {{ __('Dashboard') }}
                     </a>
                     <a href="{{ route('journal.submissions.index', $journal->slug) }}"
                         class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg">
-                        <i class="fa-solid fa-paper-plane text-slate-400 w-5 text-center"></i> Submissions
+                        <i class="fa-solid fa-paper-plane text-slate-400 w-5 text-center"></i> {{ __('Submissions') }}
                     </a>
                 @endif
             @endauth
@@ -415,7 +416,7 @@
                     class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white rounded-lg"
                     style="background: {{ $primaryColor }};">
                     <i class="fa-solid fa-paper-plane"></i>
-                    Submit Manuscript
+                    {{ __('Submit Manuscript') }}
                 </a>
             </div>
 
@@ -424,15 +425,20 @@
                 <div class="pt-4 border-t border-slate-100 mt-4 flex gap-3">
                     <a href="{{ route('journal.login', $journal->slug) }}"
                         class="flex-1 text-center px-4 py-2.5 text-sm font-medium border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
-                        Login
+                        {{ __('Login') }}
                     </a>
                     <a href="{{ route('journal.register', $journal->slug) }}"
                         class="flex-1 text-center px-4 py-2.5 text-sm font-medium text-white rounded-lg"
                         style="background: {{ $primaryColor }};">
-                        Register
+                        {{ __('Register') }}
                     </a>
                 </div>
             @endguest
+
+            {{-- Mobile Locale Switcher --}}
+            <div class="pt-4 border-t border-slate-100 mt-4">
+                <x-ui.locale-switcher variant="sidebar" />
+            </div>
         </div>
     </div>
 </nav>

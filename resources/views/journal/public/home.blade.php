@@ -21,7 +21,7 @@
                     <p class="text-sm text-amber-700 mt-1">
                         {{ Str::limit($urgentAnnouncement->excerpt ?? $urgentAnnouncement->content, 150) }}</p>
                 </div>
-                <a href="#announcements" class="text-sm text-amber-600 hover:underline">View all</a>
+                <a href="#announcements" class="text-sm text-amber-600 hover:underline">{{ __('View all') }}</a>
             </div>
         </div>
     @endif
@@ -65,7 +65,7 @@
                     <div class="mb-8">
                         <h2
                             class="text-xl font-bold text-slate-700 uppercase tracking-wide inline-block border-b-4 border-orange-400 pb-1">
-                            Current Issue
+                            {{ __('Current Issue') }}
                         </h2>
                     </div>
 
@@ -108,7 +108,7 @@
                             <div class="space-y-2 text-sm text-slate-700 mt-4">
                                 @if ($currentIssue->published_at)
                                     <p>
-                                        <span class="font-bold text-slate-900">PUBLISHED:</span>
+                                        <span class="font-bold text-slate-900">{{ __('PUBLISHED:') }}</span>
                                         {{ $currentIssue->published_at->format('Y-m-d') }}
                                     </p>
                                 @endif
@@ -152,7 +152,7 @@
 
                     @if ($issueArticles->isNotEmpty())
                         <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
-                            <h3 class="text-xl font-bold text-slate-700 border-b border-slate-200 pb-2 mb-6">Articles
+                            <h3 class="text-xl font-bold text-slate-700 border-b border-slate-200 pb-2 mb-6">{{ __('Articles') }}
                             </h3>
 
                             <div class="space-y-8">
@@ -164,7 +164,7 @@
                     @else
                         <div class="bg-slate-50 rounded-lg p-8 text-center">
                             <i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-3"></i>
-                            <p class="text-slate-500">No articles published in this issue yet.</p>
+                            <p class="text-slate-500">{{ __('No articles published in this issue yet.') }}</p>
                         </div>
                     @endif
                 </section>
@@ -191,13 +191,13 @@
                                 class="inline-flex items-center px-5 py-2.5 text-sm font-bold text-white rounded-xl transition-all shadow-sm hover:shadow-md"
                                 style="background: {{ $primaryColor }};">
                                 <i class="fa-solid fa-paper-plane mr-2"></i>
-                                Submit Your Research
+                                {{ __('Submit Your Research') }}
                             </a>
                             <a href="{{ route('journal.public.about', $journal->slug) }}"
                                 class="inline-flex items-center px-5 py-2.5 text-sm font-bold border rounded-xl transition-colors hover:bg-slate-50"
                                 style="color: {{ $primaryColor }}; border-color: {{ $primaryColor }};">
                                 <i class="fa-solid fa-info-circle mr-2"></i>
-                                Learn More
+                                {{ __('Learn More') }}
                             </a>
                         </div>
                     </div>
@@ -208,10 +208,10 @@
                     <section class="mb-8 px-5">
                         <div class="mb-6 flex items-center justify-between">
                             <h2 class="text-xl font-bold text-slate-700 uppercase tracking-wide inline-block border-b-4 border-orange-400 pb-1">
-                                Latest Articles
+                                {{ __('Latest Articles') }}
                             </h2>
                             <a href="{{ route('journal.public.archives', $journal->slug) }}" class="text-sm font-bold text-blue-600 hover:underline">
-                                View All Archives
+                                {{ __('View All Archives') }}
                             </a>
                         </div>
 
@@ -233,7 +233,7 @@
                         style="border-color: {{ $primaryColor }};">
                         <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
                             <i class="fa-solid fa-bullhorn text-lg" style="color: {{ $primaryColor }};"></i>
-                            Announcements
+                            {{ __('Announcements') }}
                         </h2>
                     </div>
 
@@ -244,7 +244,7 @@
                                 @if ($announcement->is_urgent)
                                     <span
                                         class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-amber-700 bg-amber-100 rounded-full mb-2">
-                                        <i class="fa-solid fa-star mr-1"></i> Important
+                                        <i class="fa-solid fa-star mr-1"></i> {{ __('Important') }}
                                     </span>
                                 @endif
                                 <p class="text-xs text-slate-500 mb-2">
