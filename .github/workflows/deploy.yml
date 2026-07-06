@@ -280,6 +280,8 @@ jobs:
             fi
             git reset --hard
             git clean -fd
+            # Paksa Git menggunakan SSH untuk operasi pull dari GitHub
+            git config --global url."git@github.com:".insteadOf "https://github.com/"
             git pull origin ${{ env.BRANCH_NAME }}
 
             # ─── 1.5 Pastikan direktori storage ada dan writable ───────
