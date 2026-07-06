@@ -142,7 +142,9 @@ class ReviewFormElement extends Model
             case ReviewFormElementType::SELECT:
                 // Value should be one of the options
                 if ($this->options && !empty($value)) {
-                    $validOptions = array_column($this->options, 'value');
+                    $validOptions = array_map(function($opt) {
+                        return is_array($opt) ? ($opt['value'] ?? $opt) : $opt;
+                    }, $this->options);
                     return in_array($value, $validOptions);
                 }
                 return true;

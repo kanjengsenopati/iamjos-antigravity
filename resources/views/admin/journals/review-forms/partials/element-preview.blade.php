@@ -21,7 +21,7 @@
                 @foreach($element->options as $option)
                     <label class="flex items-center gap-2">
                         <input type="checkbox" disabled class="rounded border-gray-300 text-primary-600">
-                        <span class="text-sm text-gray-700">{{ $option['label'] ?? $option['value'] }}</span>
+                        <span class="text-sm text-gray-700">{{ is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option }}</span>
                     </label>
                 @endforeach
             </div>
@@ -36,7 +36,7 @@
                 @foreach($element->options as $option)
                     <label class="flex items-center gap-2">
                         <input type="radio" disabled name="preview_{{ $element->id }}" class="border-gray-300 text-primary-600">
-                        <span class="text-sm text-gray-700">{{ $option['label'] ?? $option['value'] }}</span>
+                        <span class="text-sm text-gray-700">{{ is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option }}</span>
                     </label>
                 @endforeach
             </div>
@@ -50,7 +50,7 @@
             <option>{{ $isId ? '-- Pilih salah satu --' : '-- Select one --' }}</option>
             @if($element->options && count($element->options) > 0)
                 @foreach($element->options as $option)
-                    <option>{{ $option['label'] ?? $option['value'] }}</option>
+                    <option>{{ is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option }}</option>
                 @endforeach
             @endif
         </select>

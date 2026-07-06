@@ -90,14 +90,14 @@
                                 <div class="ml-11">
                                     @switch($element->element_type->value)
                                         @case('text')
-                                            <input type="text" disabled
-                                                class="w-full rounded-lg border-gray-300 bg-gray-50"
+                                            <input type="text"
+                                                class="w-full rounded-lg border-gray-300"
                                                 placeholder="{{ $isId ? 'Masukkan jawaban Anda di sini...' : 'Enter your answer here...' }}">
                                         @break
 
                                         @case('textarea')
-                                            <textarea disabled rows="4"
-                                                class="w-full rounded-lg border-gray-300 bg-gray-50"
+                                            <textarea rows="4"
+                                                class="w-full rounded-lg border-gray-300"
                                                 placeholder="{{ $isId ? 'Masukkan jawaban Anda di sini...' : 'Enter your answer here...' }}"></textarea>
                                         @break
 
@@ -106,8 +106,8 @@
                                                 <div class="space-y-3">
                                                     @foreach ($element->options as $option)
                                                         <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
-                                                            <input type="checkbox" disabled class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                            <span class="text-sm text-gray-700">{{ $option['label'] ?? $option['value'] }}</span>
+                                                            <input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                            <span class="text-sm text-gray-700">{{ is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option }}</span>
                                                         </label>
                                                     @endforeach
                                                 </div>
@@ -119,8 +119,8 @@
                                                 <div class="space-y-3">
                                                     @foreach ($element->options as $option)
                                                         <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
-                                                            <input type="radio" disabled name="preview_{{ $element->id }}" class="border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                            <span class="text-sm text-gray-700">{{ $option['label'] ?? $option['value'] }}</span>
+                                                            <input type="radio" name="preview_{{ $element->id }}" class="border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                            <span class="text-sm text-gray-700">{{ is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option }}</span>
                                                         </label>
                                                     @endforeach
                                                 </div>
@@ -128,24 +128,31 @@
                                         @break
 
                                         @case('select')
-                                            <select disabled class="w-full rounded-lg border-gray-300 bg-gray-50">
-                                                <option>{{ $isId ? '-- Pilih salah satu --' : '-- Select one --' }}</option>
+                                            <select class="w-full rounded-lg border-gray-300 bg-white">
+                                                <option value="">{{ $isId ? '-- Pilih salah satu --' : '-- Select one --' }}</option>
                                                 @if ($element->options && count($element->options) > 0)
                                                     @foreach ($element->options as $option)
-                                                        <option>{{ $option['label'] ?? $option['value'] }}</option>
+                                                        <option value="{{ is_array($option) ? ($option['value'] ?? '') : $option }}">
+                                                            {{ is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option }}
+                                                        </option>
                                                     @endforeach
                                                 @endif
                                             </select>
                                         @break
 
                                         @case('rating')
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center gap-2" x-data="{ rating: 0, hoverRating: 0 }">
                                                 @for ($i = 1; $i <= 5; $i++)
-                                                    <button type="button" disabled class="text-3xl text-gray-300 hover:text-yellow-400 transition-colors">
+                                                    <button type="button" 
+                                                        @click="rating = {{ $i }}"
+                                                        @mouseenter="hoverRating = {{ $i }}"
+                                                        @mouseleave="hoverRating = 0"
+                                                        class="text-3xl transition-colors focus:outline-none"
+                                                        :class="(hoverRating || rating) >= {{ $i }} ? 'text-yellow-400' : 'text-gray-300'">
                                                         <i class="fa-solid fa-star"></i>
                                                     </button>
                                                 @endfor
-                                                <span class="text-sm text-gray-500 ml-3">{{ $isId ? '1 = Sangat Buruk, 5 = Sangat Baik' : '1 = Very Poor, 5 = Excellent' }}</span>
+                                                <span class="text-sm text-gray-500 ml-3" x-text="rating > 0 ? rating + '/5' : '{{ $isId ? 'Belum dinilai' : 'Not rated' }}'"></span>
                                             </div>
                                         @break
                                     @endswitch
