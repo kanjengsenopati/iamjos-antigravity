@@ -82,9 +82,6 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
  
             {{-- USER ACTION --}}
             <div class="flex items-center gap-3">
-                {{-- Locale Switcher --}}
-                <x-ui.locale-switcher />
-
                 @auth
                     {{-- Authenticated User Menu --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
@@ -116,19 +113,19 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                                 <a href="{{ auth()->user()->hasRole('Super Admin') ? route('admin.site.index') : route('journal.select') }}"
                                     class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
                                     <i class="fa-solid fa-tachometer-alt mr-2"></i>
-                                    {{ __('Dashboard') }}
+                                    Dashboard
                                 </a>
                                 <a href="{{ ($j = request()->route('journal') ?? \App\Models\Journal::first()) ? route('journal.profile.edit', $j) : '#' }}"
                                     class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
                                     <i class="fa-solid fa-user-edit mr-2"></i>
-                                    {{ __('Edit Profile') }}
+                                    Edit Profile
                                 </a>
                                 <hr class="border-slate-200 my-1">
                                 <a href="{{ route('logout') }}"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                                     class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
                                     <i class="fa-solid fa-sign-out-alt mr-2"></i>
-                                    {{ __('Logout') }}
+                                    Logout
                                 </a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                                     @csrf
@@ -148,10 +145,10 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                         @endforeach
                     @else
                         {{-- Default Login/Register --}}
-                        <a href="{{ route('login') }}" class="text-sm text-slate-600 hover:text-blue-600">{{ __('Login') }}</a>
+                        <a href="{{ route('login') }}" class="text-sm text-slate-600 hover:text-blue-600">Login</a>
                         <a href="{{ route('register') }}"
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                            {{ __('Register') }}
+                            Register
                         </a>
                     @endif
                 @endauth
@@ -192,16 +189,10 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
             @guest
                 @if ($userMenuItems->isEmpty())
                     <hr class="border-slate-200 my-2">
-                    <a href="{{ route('login') }}" class="block py-2 font-medium">{{ __('Login') }}</a>
-                    <a href="{{ route('register') }}" class="block py-2 font-medium text-blue-600">{{ __('Register') }}</a>
+                    <a href="{{ route('login') }}" class="block py-2 font-medium">Login</a>
+                    <a href="{{ route('register') }}" class="block py-2 font-medium text-blue-600">Register</a>
                 @endif
             @endguest
-
-            {{-- Mobile Locale Switcher --}}
-            <hr class="border-slate-200 my-2">
-            <div class="py-2">
-                <x-ui.locale-switcher variant="sidebar" />
-            </div>
         </div>
     </div>
 </div>

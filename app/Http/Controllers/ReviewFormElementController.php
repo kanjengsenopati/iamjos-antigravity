@@ -58,7 +58,8 @@ class ReviewFormElementController extends Controller
             'description' => 'nullable|string|max:2000',
             'required' => 'boolean',
             'options' => 'nullable|array',
-            'options.*' => 'required_with:options|string|max:255',
+            'options.*.value' => 'required_with:options|string',
+            'options.*.label' => 'required_with:options|string',
         ]);
 
         // Get the highest sequence number and add 1
@@ -106,7 +107,8 @@ class ReviewFormElementController extends Controller
             'description' => 'nullable|string|max:2000',
             'required' => 'boolean',
             'options' => 'nullable|array',
-            'options.*' => 'required_with:options|string|max:255',
+            'options.*.value' => 'required_with:options|string',
+            'options.*.label' => 'required_with:options|string',
         ]);
 
         $element->update([

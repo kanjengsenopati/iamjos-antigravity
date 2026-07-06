@@ -34,11 +34,11 @@
             <div class="text-center mb-8">
                 <span class="inline-flex items-center gap-2 px-3 py-1 bg-brand-soft rounded-full text-[10px] font-bold text-brand uppercase tracking-widest mb-4">
                     <i class="fa-solid fa-earth-asia"></i>
-                    {{ __('Global Discovery') }}
+                    Global Discovery
                 </span>
-                <h1 class="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">{{ __('Search Articles') }}</h1>
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">Search Articles</h1>
                 <p class="text-slate-500 max-w-lg mx-auto text-base">
-                    {{ __('Explore high-quality research and scholarly works across our specialized collections.') }}
+                    Explore high-quality research and scholarly works across our specialized collections.
                 </p>
             </div>
 
@@ -53,13 +53,13 @@
                         <input type="text" 
                                name="q" 
                                x-model="q"
-                               placeholder="{{ __('Search title, keywords, or authors...') }}"
+                               placeholder="Search title, keywords, or authors..."
                                class="w-full pl-4 pr-32 py-4.5 text-base border-0 focus:ring-0 placeholder-slate-400 text-slate-700 font-medium"
                                autofocus>
                         <div class="pr-2">
                             <button type="submit"
                                     class="px-6 py-2.5 bg-brand hover:brightness-110 text-white text-xs font-bold rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-brand/20">
-                                {{ __('Search') }}
+                                Search
                             </button>
                         </div>
                     </div>
@@ -81,10 +81,10 @@
                         </div>
 
                         @foreach([
-                            ['val' => 'all', 'label' => __('All')],
-                            ['val' => 'title', 'label' => __('Title')],
-                            ['val' => 'author', 'label' => __('Author')],
-                            ['val' => 'keywords', 'label' => __('Keywords')]
+                            ['val' => 'all', 'label' => 'All'],
+                            ['val' => 'title', 'label' => 'Title'],
+                            ['val' => 'author', 'label' => 'Author'],
+                            ['val' => 'keywords', 'label' => 'Keywords']
                         ] as $option)
                             <button type="button" 
                                     @click="activeTab = '{{ $option['val'] }}'; type = '{{ $option['val'] }}'"
@@ -103,7 +103,7 @@
                             <select name="year" 
                                     x-model="year"
                                     class="appearance-none bg-white border border-slate-200 rounded-xl py-2 pl-4 pr-10 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-brand/10 focus:border-brand/40 transition-all cursor-pointer shadow-sm">
-                                <option value="">{{ __('Any Year') }}</option>
+                                <option value="">Any Year</option>
                                 @foreach ($years as $y)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endforeach
@@ -129,13 +129,13 @@
                     <div>
                         <h2 class="text-xl font-bold text-slate-900">
                             @if ($totalFound > 0)
-                                <span class="text-brand">{{ number_format($totalFound) }}</span> {{ __('Results') }}
+                                <span class="text-brand">{{ number_format($totalFound) }}</span> Results
                             @else
-                                {{ __('No articles matched') }}
+                                No articles matched
                             @endif
                         </h2>
                         <p class="text-slate-400 text-sm mt-1">
-                            {{ __('Discovery for:') }} <span class="text-slate-600 font-medium italic">"{{ $query }}"</span>
+                            Discovery for: <span class="text-slate-600 font-medium italic">"{{ $query }}"</span>
                         </p>
                     </div>
 
@@ -143,7 +143,7 @@
                         <a href="{{ route('journal.public.search', ['journal' => $journal->slug]) }}"
                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-1.5">
                             <i class="fa-solid fa-xmark"></i>
-                            {{ __('Clear') }}
+                            Clear
                         </a>
                     @endif
                 </div>
@@ -168,7 +168,7 @@
                                         @endif
                                         <span class="w-1 h-1 rounded-full bg-slate-200"></span>
                                         <time class="text-[10px] text-slate-400 font-medium">
-                                            {{ $article->published_at?->format('F d, Y') ?? __('Unpublished') }}
+                                            {{ $article->published_at?->format('F d, Y') ?? 'Unpublished' }}
                                         </time>
                                     </div>
 
@@ -200,12 +200,12 @@
                                             <a href="{{ route('journal.public.article.reader', ['journal' => $journal->slug, 'article' => $article->slug ?? $article->id]) }}"
                                                class="flex items-center gap-1.5 text-[10px] font-bold text-brand uppercase tracking-widest hover:underline">
                                                 <i class="fa-solid fa-file-pdf opacity-70"></i>
-                                                {{ __('PDF Full-Text') }}
+                                                PDF Full-Text
                                             </a>
                                         @endif
                                         <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]) }}"
                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">
-                                            {{ __('Abstract Details') }}
+                                            Abstract Details
                                         </a>
                                         @php $doi = $article->currentPublication->doi ?? $article->doi; @endphp
                                         @if ($doi)
@@ -232,14 +232,14 @@
                             <div class="absolute inset-0 bg-brand-soft rounded-full scale-150 blur-2xl opacity-50"></div>
                             <i class="fa-solid fa-cloud-moon text-7xl text-slate-100 relative"></i>
                         </div>
-                        <h3 class="text-2xl font-bold text-slate-900 mb-2">{{ __('Finding your way?') }}</h3>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">Finding your way?</h3>
                         <p class="text-slate-400 max-w-sm mx-auto mb-8 text-sm leading-relaxed">
-                            {{ __('No articles matched') }} <span class="text-brand font-bold">"{{ $query }}"</span>. {{ __('Take a step back or browse recent additions.') }}
+                            No articles matched <span class="text-brand font-bold">"{{ $query }}"</span>. Take a step back or browse recent additions.
                         </p>
                         <div class="flex gap-3">
                             <a href="{{ route('journal.public.search', ['journal' => $journal->slug]) }}"
                                class="px-8 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest">
-                                {{ __('Global Search') }}
+                                Global Search
                             </a>
                         </div>
                     </div>
@@ -248,15 +248,15 @@
                 {{-- Clean Welcome Grid --}}
                 <div class="max-w-4xl mx-auto py-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <a href="{{ route('journal.public.current', ['journal' => $journal->slug]) }}"
+                        <a href="{{ route('journal.public.current', ['journal' => $journal->slug]) }}"
                            class="block p-8 bg-white border border-slate-100 rounded-3xl shadow-sm transition-all hover:shadow-md hover:-translate-y-1 group">
                             <div class="w-12 h-12 rounded-2xl bg-brand-soft flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <i class="fa-solid fa-bolt text-brand text-xl"></i>
                             </div>
-                            <h4 class="text-xl font-bold text-slate-900 mb-2">{{ __('Current Issue') }}</h4>
-                            <p class="text-slate-500 text-sm leading-relaxed mb-4">{{ __('Discover the latest research and scholarly publications in this edition.') }}</p>
+                            <h4 class="text-xl font-bold text-slate-900 mb-2">Current Issue</h4>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-4">Discover the latest research and scholarly publications in this edition.</p>
                             <span class="inline-flex items-center gap-2 text-[11px] font-bold text-brand uppercase tracking-widest">
-                                {{ __('EXPLORE LATEST') }} <i class="fa-solid fa-arrow-right-long"></i>
+                                EXPLORE LATEST <i class="fa-solid fa-arrow-right-long"></i>
                             </span>
                         </a>
 
@@ -265,10 +265,10 @@
                             <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <i class="fa-solid fa-box-archive text-white text-xl"></i>
                             </div>
-                            <h4 class="text-xl font-bold mb-2">{{ __('Historical Archives') }}</h4>
-                            <p class="text-white/70 text-sm leading-relaxed mb-4">{{ __('Access our extensive library of past issues and historical records.') }}</p>
+                            <h4 class="text-xl font-bold mb-2">Historical Archives</h4>
+                            <p class="text-white/70 text-sm leading-relaxed mb-4">Access our extensive library of past issues and historical records.</p>
                             <span class="inline-flex items-center gap-2 text-[11px] font-bold text-white/90 uppercase tracking-widest">
-                                {{ __('BROWSE LIBRARY') }} <i class="fa-solid fa-arrow-right-long"></i>
+                                BROWSE LIBRARY <i class="fa-solid fa-arrow-right-long"></i>
                             </span>
                         </a>
                     </div>

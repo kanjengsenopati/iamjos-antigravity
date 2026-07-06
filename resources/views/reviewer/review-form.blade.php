@@ -79,86 +79,71 @@
                                         @break
 
                                     @case('checkbox')
-                                         @php
-                                             $selectedValues = old($fieldName, json_decode($existingValue, true) ?? []);
-                                         @endphp
-                                         @if($element->options)
-                                             <div class="space-y-3">
-                                                 @foreach($element->options as $option)
-                                                     @php
-                                                         $optVal = is_array($option) ? ($option['value'] ?? '') : $option;
-                                                         $optLbl = is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option;
-                                                     @endphp
-                                                     <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
-                                                         <input type="checkbox" name="{{ $fieldName }}[]" value="{{ $optVal }}"
-                                                             {{ in_array($optVal, $selectedValues) ? 'checked' : '' }}
-                                                             class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                         <span class="text-sm text-gray-700">{{ $optLbl }}</span>
-                                                     </label>
-                                                 @endforeach
-                                             </div>
-                                         @endif
-                                         @break
+                                        @php
+                                            $selectedValues = old($fieldName, json_decode($existingValue, true) ?? []);
+                                        @endphp
+                                        @if($element->options)
+                                            <div class="space-y-3">
+                                                @foreach($element->options as $option)
+                                                    <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
+                                                        <input type="checkbox" name="{{ $fieldName }}[]" value="{{ $option['value'] }}"
+                                                            {{ in_array($option['value'], $selectedValues) ? 'checked' : '' }}
+                                                            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                        <span class="text-sm text-gray-700">{{ $option['label'] }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @break
 
-                                     @case('radio')
-                                         @if($element->options)
-                                             <div class="space-y-3">
-                                                 @foreach($element->options as $option)
-                                                     @php
-                                                         $optVal = is_array($option) ? ($option['value'] ?? '') : $option;
-                                                         $optLbl = is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option;
-                                                     @endphp
-                                                     <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
-                                                         <input type="radio" name="{{ $fieldName }}" value="{{ $optVal }}"
-                                                             {{ old($fieldName, $existingValue) == $optVal ? 'checked' : '' }}
-                                                             {{ $element->required ? 'required' : '' }}
-                                                             class="border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                         <span class="text-sm text-gray-700">{{ $optLbl }}</span>
-                                                     </label>
-                                                 @endforeach
-                                             </div>
-                                         @endif
-                                         @break
+                                    @case('radio')
+                                        @if($element->options)
+                                            <div class="space-y-3">
+                                                @foreach($element->options as $option)
+                                                    <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
+                                                        <input type="radio" name="{{ $fieldName }}" value="{{ $option['value'] }}"
+                                                            {{ old($fieldName, $existingValue) == $option['value'] ? 'checked' : '' }}
+                                                            {{ $element->required ? 'required' : '' }}
+                                                            class="border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                        <span class="text-sm text-gray-700">{{ $option['label'] }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @break
 
-                                     @case('select')
-                                         <select name="{{ $fieldName }}" {{ $element->required ? 'required' : '' }}
-                                             class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500">
-                                             <option value="">{{ $isId ? '-- Pilih --' : '-- Select --' }}</option>
-                                             @if($element->options)
-                                                 @foreach($element->options as $option)
-                                                     @php
-                                                         $optVal = is_array($option) ? ($option['value'] ?? '') : $option;
-                                                         $optLbl = is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option;
-                                                     @endphp
-                                                     <option value="{{ $optVal }}" 
-                                                         {{ old($fieldName, $existingValue) == $optVal ? 'selected' : '' }}>
-                                                         {{ $optLbl }}
-                                                     </option>
-                                                 @endforeach
-                                             @endif
-                                         </select>
-                                         @break
+                                    @case('select')
+                                        <select name="{{ $fieldName }}" {{ $element->required ? 'required' : '' }}
+                                            class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                                            <option value="">{{ $isId ? '-- Pilih --' : '-- Select --' }}</option>
+                                            @if($element->options)
+                                                @foreach($element->options as $option)
+                                                    <option value="{{ $option['value'] }}" 
+                                                        {{ old($fieldName, $existingValue) == $option['value'] ? 'selected' : '' }}>
+                                                        {{ $option['label'] }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        @break
 
-                                     @case('rating')
-                                         @php
-                                             $config = $element->getRatingConfig();
-                                             $selectedRating = old($fieldName, $existingValue);
-                                         @endphp
-                                         <div class="flex items-center gap-2" x-data="{ rating: {{ $selectedRating ?? 0 }}, hoverRating: 0 }">
-                                             @for($i = $config['min']; $i <= $config['max']; $i++)
-                                                 <button type="button" 
-                                                     @click="rating = {{ $i }}"
-                                                     @mouseenter="hoverRating = {{ $i }}"
-                                                     @mouseleave="hoverRating = 0"
-                                                     class="text-3xl transition-colors focus:outline-none"
-                                                     :class="(hoverRating || rating) >= {{ $i }} ? 'text-yellow-400' : 'text-gray-300'">
-                                                     <i class="fa-solid fa-star"></i>
-                                                 </button>
-                                             @endfor
-                                             <input type="hidden" name="{{ $fieldName }}" :value="rating" {{ $element->required ? 'required' : '' }}>
-                                             <span class="text-sm text-gray-500 ml-2" x-text="rating > 0 ? rating + '/{{ $config['max'] }}' : '{{ $isId ? 'Belum dinilai' : 'Not rated' }}'"></span>
-                                         </div>
-                                         @break
+                                    @case('rating')
+                                        @php
+                                            $config = $element->getRatingConfig();
+                                            $selectedRating = old($fieldName, $existingValue);
+                                        @endphp
+                                        <div class="flex items-center gap-2" x-data="{ rating: {{ $selectedRating ?? 0 }} }">
+                                            @for($i = $config['min']; $i <= $config['max']; $i++)
+                                                <button type="button" @click="rating = {{ $i }}"
+                                                    class="text-3xl transition-colors"
+                                                    :class="rating >= {{ $i }} ? 'text-yellow-400' : 'text-gray-300'">
+                                                    <i class="fa-solid fa-star"></i>
+                                                </button>
+                                            @endfor
+                                            <input type="hidden" name="{{ $fieldName }}" :value="rating" {{ $element->required ? 'required' : '' }}>
+                                            <span class="text-sm text-gray-500 ml-2" x-text="rating > 0 ? rating + '/{{ $config['max'] }}' : '{{ $isId ? 'Belum dinilai' : 'Not rated' }}'"></span>
+                                        </div>
+                                        @break
                                 @endswitch
 
                                 @error($fieldName)

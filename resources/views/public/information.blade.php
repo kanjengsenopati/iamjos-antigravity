@@ -7,18 +7,18 @@
             <aside class="hidden lg:block lg:col-span-3">
                 <nav class="space-y-1">
                     <a href="{{ route('journal.info.readers', ['journal' => $journal->slug]) }}"
-                        class="{{ Route::is('journal.info.readers') ? 'bg-gray-100 text-gray-900 border-l-4 border-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent' }} group flex items-center px-3 py-2 text-sm font-medium">
-                        <span class="truncate">{{ __('For Readers') }}</span>
+                       class="{{ Route::is('journal.info.readers') ? 'bg-gray-100 text-gray-900 border-l-4 border-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent' }} group flex items-center px-3 py-2 text-sm font-medium">
+                        <span class="truncate">For Readers</span>
                     </a>
 
                     <a href="{{ route('journal.info.authors', ['journal' => $journal->slug]) }}"
-                        class="{{ Route::is('journal.info.authors') ? 'bg-gray-100 text-gray-900 border-l-4 border-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent' }} group flex items-center px-3 py-2 text-sm font-medium">
-                        <span class="truncate">{{ __('For Authors') }}</span>
+                       class="{{ Route::is('journal.info.authors') ? 'bg-gray-100 text-gray-900 border-l-4 border-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent' }} group flex items-center px-3 py-2 text-sm font-medium">
+                        <span class="truncate">For Authors</span>
                     </a>
 
                     <a href="{{ route('journal.info.librarians', ['journal' => $journal->slug]) }}"
-                        class="{{ Route::is('journal.info.librarians') ? 'bg-gray-100 text-gray-900 border-l-4 border-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent' }} group flex items-center px-3 py-2 text-sm font-medium">
-                        <span class="truncate">{{ __('For Librarians') }}</span>
+                       class="{{ Route::is('journal.info.librarians') ? 'bg-gray-100 text-gray-900 border-l-4 border-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent' }} group flex items-center px-3 py-2 text-sm font-medium">
+                        <span class="truncate">For Librarians</span>
                     </a>
                 </nav>
             </aside>
@@ -45,7 +45,7 @@
                                     </div>
                                     <div class="ml-3">
                                         <p class="text-sm text-blue-700">
-                                            {{ __('No information available for this section.') }}
+                                            No information available for this section.
                                         </p>
                                     </div>
                                 </div>

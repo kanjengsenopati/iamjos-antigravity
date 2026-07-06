@@ -294,10 +294,14 @@
                                 <div class="space-y-2" id="options-container">
                                     <template x-for="(option, index) in formData.options" :key="index">
                                         <div class="flex gap-2">
-                                            <input type="text" :name="'options[' + index + ']'"
-                                                x-model="formData.options[index]"
+                                            <input type="text" :name="'options[' + index + '][value]'"
+                                                x-model="option.value"
                                                 class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                                                placeholder="{{ $isId ? 'Opsi' : 'Option' }}">
+                                                placeholder="{{ $isId ? 'Nilai' : 'Value' }}">
+                                            <input type="text" :name="'options[' + index + '][label]'"
+                                                x-model="option.label"
+                                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                                placeholder="{{ $isId ? 'Label' : 'Label' }}">
                                             <button type="button" @click="removeOption(index)"
                                                 class="px-3 py-2 text-red-600 hover:text-red-700">
                                                 <i class="fa-solid fa-times"></i>
@@ -400,28 +404,22 @@
 
                 editElement(element) {
                     this.editMode = true;
-                    let options = [];
-                    if (element.options && Array.isArray(element.options)) {
-                        options = element.options.map(opt => {
-                            if (opt && typeof opt === 'object') {
-                                return opt.value || opt.label || '';
-                            }
-                            return opt || '';
-                        });
-                    }
                     this.formData = {
                         id: element.id,
                         element_type: element.element_type,
                         question: element.question,
                         description: element.description || '',
                         required: element.required,
-                        options: options
+                        options: element.options || []
                     };
                     this.showAddModal = true;
                 },
 
                 addOption() {
-                    this.formData.options.push('');
+                    this.formData.options.push({
+                        value: '',
+                        label: ''
+                    });
                 },
 
                 removeOption(index) {

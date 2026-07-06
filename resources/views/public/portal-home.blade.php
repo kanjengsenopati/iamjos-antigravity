@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name') }} - {{ __('Academic Journal Portal') }}</title>
+    <title>{{ config('app.name') }} - Academic Journal Portal</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -54,23 +54,20 @@
 
                 <!-- Auth Buttons -->
                 <div class="flex items-center gap-4">
-                    {{-- Locale Switcher --}}
-                    <x-ui.locale-switcher />
-
                     @auth
                         <a href="{{ route('dashboard') }}"
-                            class="text-sm font-medium text-gray-600 hover:text-primary-600">{{ __('Dashboard') }}</a>
+                            class="text-sm font-medium text-gray-600 hover:text-primary-600">Dashboard</a>
                         <form action="{{ route('logout') }}" method="POST" class="inline">
                             @csrf
                             <button type="submit"
-                                class="text-sm font-medium text-gray-600 hover:text-primary-600">{{ __('Logout') }}</button>
+                                class="text-sm font-medium text-gray-600 hover:text-primary-600">Logout</button>
                         </form>
                     @else
                         <a href="{{ route('login') }}"
-                            class="text-sm font-medium text-gray-600 hover:text-primary-600">{{ __('Login') }}</a>
+                            class="text-sm font-medium text-gray-600 hover:text-primary-600">Login</a>
                         <a href="{{ route('login') }}"
                             class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
-                            {{ __('Submit Manuscript') }}
+                            Submit Manuscript
                         </a>
                     @endauth
                 </div>
@@ -91,27 +88,28 @@
         <div class="container mx-auto px-4 sm:px-6 relative">
             <div class="max-w-3xl mx-auto text-center">
                 <h1 class="text-4xl sm:text-5xl font-extrabold mb-6">
-                    {{ __('Open Access Academic Journals') }}
+                    Open Access Academic Journals
                 </h1>
                 <p class="text-xl text-primary-100 mb-8">
-                    {{ __('Discover peer-reviewed research across multiple disciplines. Browse our hosted journals and access the latest academic publications.') }}
+                    Discover peer-reviewed research across multiple disciplines. Browse our hosted journals and access
+                    the latest academic publications.
                 </p>
 
                 <!-- Stats -->
                 <div class="flex items-center justify-center gap-8 sm:gap-12">
                     <div class="text-center">
                         <p class="text-3xl sm:text-4xl font-bold">{{ $totalJournals }}</p>
-                        <p class="text-sm text-primary-200">{{ __('Journals') }}</p>
+                        <p class="text-sm text-primary-200">Journals</p>
                     </div>
                     <div class="w-px h-12 bg-primary-400/30"></div>
                     <div class="text-center">
                         <p class="text-3xl sm:text-4xl font-bold">{{ $totalArticles }}</p>
-                        <p class="text-sm text-primary-200">{{ __('Articles') }}</p>
+                        <p class="text-sm text-primary-200">Articles</p>
                     </div>
                     <div class="w-px h-12 bg-primary-400/30"></div>
                     <div class="text-center">
                         <p class="text-3xl sm:text-4xl font-bold">{{ $totalIssues }}</p>
-                        <p class="text-sm text-primary-200">{{ __('Issues') }}</p>
+                        <p class="text-sm text-primary-200">Issues</p>
                     </div>
                 </div>
             </div>
@@ -123,12 +121,12 @@
         <div class="container mx-auto px-4 sm:px-6">
             <div class="flex items-center justify-between mb-8">
                 <div>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ __('Our Journals') }}</h2>
-                    <p class="text-gray-500 mt-1">{{ __('Explore our collection of peer-reviewed academic journals') }}</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Our Journals</h2>
+                    <p class="text-gray-500 mt-1">Explore our collection of peer-reviewed academic journals</p>
                 </div>
                 <a href="{{ route('portal.journals') }}"
                     class="hidden sm:inline-flex items-center text-primary-600 hover:text-primary-700 font-medium">
-                    {{ __('View All') }}
+                    View All
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -142,8 +140,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">{{ __('No Journals Available') }}</h3>
-                    <p class="text-gray-500">{{ __('Check back soon for new publications.') }}</p>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">No Journals Available</h3>
+                    <p class="text-gray-500">Check back soon for new publications.</p>
                 </div>
             @else
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -187,7 +185,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
-                                        {{ $journal->submissions_count }} {{ __('Articles') }}
+                                        {{ $journal->submissions_count }} Articles
                                     </span>
                                     <span class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -195,7 +193,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                                         </svg>
-                                        {{ $journal->issues_count }} {{ __('Issues') }}
+                                        {{ $journal->issues_count }} Issues
                                     </span>
                                 </div>
                             </div>
@@ -211,8 +209,8 @@
         <section class="py-16 bg-gray-100">
             <div class="container mx-auto px-4 sm:px-6">
                 <div class="text-center mb-10">
-                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ __('Latest Publications') }}</h2>
-                    <p class="text-gray-500 mt-1">{{ __('Recent articles from across all journals') }}</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Latest Publications</h2>
+                    <p class="text-gray-500 mt-1">Recent articles from across all journals</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -221,7 +219,7 @@
                             <div class="flex items-center gap-2 mb-3">
                                 <span
                                     class="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded-full">
-                                    {{ $article->journal?->abbreviation ?? __('Journal') }}
+                                    {{ $article->journal?->abbreviation ?? 'Journal' }}
                                 </span>
                                 @if ($article->section)
                                     <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
@@ -239,7 +237,7 @@
                                 {{ $article->authors->pluck('name')->join(', ') }}
                             </p>
                             <p class="text-xs text-gray-400">
-                                {{ __('Published') }} {{ $article->published_at?->format('M d, Y') }}
+                                Published {{ $article->published_at?->format('M d, Y') }}
                             </p>
                         </article>
                     @endforeach
@@ -262,8 +260,9 @@
                     <span class="font-bold">{{ config('app.name') }}</span>
                 </div>
                 <div class="flex items-center gap-6 text-sm text-gray-400">
-                    <a href="{{ route('portal.journals') }}" class="hover:text-white transition-colors">{{ __('All Journals') }}</a>
-                    <a href="{{ route('login') }}" class="hover:text-white transition-colors">{{ __('Login') }}</a>
+                    <a href="{{ route('portal.journals') }}" class="hover:text-white transition-colors">All
+                        Journals</a>
+                    <a href="{{ route('login') }}" class="hover:text-white transition-colors">Login</a>
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">

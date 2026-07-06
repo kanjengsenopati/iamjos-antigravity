@@ -269,12 +269,12 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
                     {{-- Flash Messages --}}
                     @if(session('success'))
                         <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
-                            {{ __(session('success')) }}
+                            {{ session('success') }}
                         </div>
                     @endif
                     @if(session('error'))
                         <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-                            {{ __(session('error')) }}
+                            {{ session('error') }}
                         </div>
                     @endif
 
@@ -339,22 +339,22 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 
                 {{-- Quick Links --}}
                 <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">{{ __('Journal') }}</h4>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Journal</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="{{ route('journal.public.current', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">{{ __('Current Issue') }}</a></li>
-                        <li><a href="{{ route('journal.public.archives', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">{{ __('Archives') }}</a></li>
-                        <li><a href="{{ route('journal.public.about', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">{{ __('About') }}</a></li>
-                        <li><a href="{{ route('journal.public.editorial-team', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">{{ __('Editorial Board') }}</a></li>
+                        <li><a href="{{ route('journal.public.current', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Current Issue</a></li>
+                        <li><a href="{{ route('journal.public.archives', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Archives</a></li>
+                        <li><a href="{{ route('journal.public.about', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">About</a></li>
+                        <li><a href="{{ route('journal.public.editorial-team', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Editorial Board</a></li>
                     </ul>
                 </div>
 
                 {{-- For Authors --}}
                 <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">{{ __('For Authors') }}</h4>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">For Authors</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">{{ __('Author Guidelines') }}</a></li>
-                        <li><a href="{{ route('journal.submissions.create', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">{{ __('Submit Manuscript') }}</a></li>
-                        <li><a href="{{ route('login') }}" class="text-slate-400 hover:text-white transition-colors">{{ __('Login / Register') }}</a></li>
+                        <li><a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Author Guidelines</a></li>
+                        <li><a href="{{ route('journal.submissions.create', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Submit Manuscript</a></li>
+                        <li><a href="{{ route('login') }}" class="text-slate-400 hover:text-white transition-colors">Login / Register</a></li>
                     </ul>
 
                     {{-- Social Links --}}
@@ -397,15 +397,15 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
                 <p>
                     © {{ date('Y') }} {{ $journal->name ?? 'IAMJOS' }}. 
                     @if($journal->publisher)
-                        {{ __('Published by') }} {{ $journal->publisher }}.
+                        Published by {{ $journal->publisher }}.
                     @endif
                 </p>
                 <div class="mt-4 md:mt-0 flex items-center space-x-4">
                     <a href="{{ route('portal.home') }}" class="hover:text-white transition-colors">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> {{ __('Back to Portal') }}
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Back to Portal
                     </a>
                     <span class="text-slate-700">|</span>
-                    <span class="text-slate-600">{{ __('Powered by') }} <strong class="text-slate-400">{{ $siteTitle }}</strong></span>
+                    <span class="text-slate-600">Powered by <strong class="text-slate-400">{{ $siteTitle }}</strong></span>
                 </div>
             </div>
         </div>

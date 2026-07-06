@@ -1,7 +1,7 @@
 @extends('layouts.portal')
 
-@section('title', $settings['about_title'] ?? __('About Us'))
-@section('description', __('Tentang') . ' ' . \App\Facades\Settings::site('site_title', 'IAMJOS') . ' - ' . __('Academic Journal Portal'))
+@section('title', $settings['about_title'] ?? 'About Us')
+@section('description', 'Tentang ' . \App\Facades\Settings::site('site_title', 'IAMJOS') . ' - Platform Jurnal Akademik Indonesia')
 
 @section('content')
     <!-- Hero Section -->
@@ -18,16 +18,16 @@
             <!-- Badge -->
             <div class="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
                 <i class="fas fa-info-circle text-primary-300 mr-2"></i>
-                <span class="text-white/90 text-sm font-medium">{{ __('About Us') }}</span>
+                <span class="text-white/90 text-sm font-medium">Tentang Kami</span>
             </div>
 
             <!-- Title with Serif Font -->
             <h1 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold font-serif text-white mb-6 leading-tight">
-                {{ $settings['about_title'] ?? __('Empowering Knowledge Sharing Worldwide') }}
+                {{ $settings['about_title'] ?? 'Empowering Knowledge Sharing Worldwide' }}
             </h1>
 
             <p class="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto">
-                {{ __('Connecting researchers, academics, and institutions for the advancement of science') }}
+                Menghubungkan peneliti, akademisi, dan institusi untuk kemajuan ilmu pengetahuan Indonesia
             </p>
         </div>
     </section>
@@ -91,7 +91,7 @@
                         <i class="fas fa-book-open text-white text-2xl"></i>
                     </div>
                     <div class="text-3xl lg:text-4xl font-bold text-gray-900 font-display mb-1">{{ $journalCount }}</div>
-                    <div class="text-gray-500 font-medium">{{ __('Active Journals') }}</div>
+                    <div class="text-gray-500 font-medium">Jurnal Aktif</div>
                 </div>
 
                 <div class="text-center">
@@ -99,7 +99,7 @@
                         <i class="fas fa-file-alt text-white text-2xl"></i>
                     </div>
                     <div class="text-3xl lg:text-4xl font-bold text-gray-900 font-display mb-1">{{ $articleCount }}</div>
-                    <div class="text-gray-500 font-medium">{{ __('Published Articles') }}</div>
+                    <div class="text-gray-500 font-medium">Artikel Publikasi</div>
                 </div>
 
                 <div class="text-center">
@@ -107,7 +107,7 @@
                         <i class="fas fa-users text-white text-2xl"></i>
                     </div>
                     <div class="text-3xl lg:text-4xl font-bold text-gray-900 font-display mb-1">{{ $authorCount }}</div>
-                    <div class="text-gray-500 font-medium">{{ __('Registered Authors') }}</div>
+                    <div class="text-gray-500 font-medium">Penulis Terdaftar</div>
                 </div>
 
                 <div class="text-center">
@@ -115,7 +115,7 @@
                         <i class="fas fa-newspaper text-white text-2xl"></i>
                     </div>
                     <div class="text-3xl lg:text-4xl font-bold text-gray-900 font-display mb-1">{{ $issueCount }}</div>
-                    <div class="text-gray-500 font-medium">{{ __('Published Issues') }}</div>
+                    <div class="text-gray-500 font-medium">Issue Terbit</div>
                 </div>
             </div>
         </div>
@@ -130,21 +130,21 @@
 
         <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-3xl lg:text-4xl font-bold font-display text-white mb-6">
-                {{ __('Ready to Contribute?') }}
+                Siap Berkontribusi?
             </h2>
             <p class="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
-                {{ __('Join thousands of researchers and academics who have entrusted their work to our platform.') }}
+                Bergabunglah dengan ribuan peneliti dan akademisi yang telah mempercayakan karya mereka di platform kami.
             </p>
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                 @guest
                     <a href="{{ route('register') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-600 bg-white hover:bg-gray-100 rounded-xl transition-colors shadow-xl">
                         <i class="fas fa-user-plus mr-2"></i>
-                        {{ __('Register Now') }}
+                        Daftar Sekarang
                     </a>
                 @endguest
                 <a href="{{ route('portal.journals') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/10 hover:bg-white/20 rounded-xl transition-colors border border-white/30">
                     <i class="fas fa-book-open mr-2"></i>
-                    {{ __('Browse Journals') }}
+                    Jelajahi Jurnal
                 </a>
             </div>
         </div>
