@@ -314,7 +314,7 @@ jobs:
             # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel) agar tidak menyebabkan konflik git
             if [ -f public/.user.ini ]; then
               echo "🔓 Melepas atribut immutable pada public/.user.ini..."
-              sudo chattr -i public/.user.ini 2>/dev/null || true
+              sudo -n chattr -i public/.user.ini 2>/dev/null || true
               chmod 777 public/.user.ini 2>/dev/null || true
               rm -f public/.user.ini 2>/dev/null || true
             fi
@@ -340,8 +340,8 @@ jobs:
             # Hanya untuk production dan staging (bukan dev)
             if [ "${{ env.BRANCH_NAME }}" = "main" ] || [ "${{ env.BRANCH_NAME }}" = "staging" ]; then
               echo "📦 Membuat backup database PostgreSQL..."
-              BACKUP_DIR="/var/backups/iamjos"
-              mkdir -p $BACKUP_DIR
+              BACKUP_DIR="$HOME/backups/iamjos"
+              mkdir -p "$BACKUP_DIR"
               BACKUP_FILE="$BACKUP_DIR/backup-${{ env.BRANCH_NAME }}-$(date +%Y%m%d-%H%M%S).sql.gz"
 
               # Ambil kredensial DB dari .env dengan aman dari CRLF (\r) dan tanda kutip
@@ -401,9 +401,9 @@ jobs:
             # Deteksi PHP-FPM user dan set ownership
             PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
             echo "   PHP-FPM user terdeteksi: $PHP_FPM_USER"
-            sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+            sudo -n chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+              sudo -n chown -R www:www storage bootstrap/cache 2>/dev/null || \
+              sudo -n chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
             # ─── 9. Rebuild cache aplikasi ───────────────────────────────
             echo "⚡ Membangun ulang cache aplikasi..."
@@ -425,17 +425,17 @@ jobs:
             # ─── 10. Final permission fix setelah cache rebuild ───────────
             echo "🔑 Final permission fix..."
             chmod -R 775 storage bootstrap/cache
-            sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+            sudo -n chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+              sudo -n chown -R www:www storage bootstrap/cache 2>/dev/null || \
+              sudo -n chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
             # ─── 11. Restart services ───────────────────────────────────
             echo "🔄 Merestart services..."
             # Gunakan reload (graceful) bukan restart untuk zero-downtime
-            sudo systemctl reload php8.4-fpm 2>/dev/null || \
-              sudo systemctl reload php-fpm 2>/dev/null || \
+            sudo -n systemctl reload php8.4-fpm 2>/dev/null || \
+              sudo -n systemctl reload php-fpm 2>/dev/null || \
               sudo kill -USR2 $(cat /run/php/php8.4-fpm.pid 2>/dev/null) 2>/dev/null || true
-            sudo systemctl reload nginx 2>/dev/null || true
+            sudo -n systemctl reload nginx 2>/dev/null || true
 
             # ─── 12. Verifikasi health check setelah deployment ─────────
             echo "🏥 Menunggu aplikasi siap (5 detik)..."
@@ -476,8 +476,8 @@ jobs:
               $PHP_BIN artisan route:cache --ansi 2>/dev/null || true
               echo ""
               echo "🔄 Restart PHP-FPM..."
-              sudo systemctl restart php8.4-fpm 2>/dev/null || \
-                sudo systemctl restart php-fpm 2>/dev/null || true
+              sudo -n systemctl restart php8.4-fpm 2>/dev/null || \
+                sudo -n systemctl restart php-fpm 2>/dev/null || true
               echo ""
               echo "⏳ Tunggu 5 detik dan coba health check lagi..."
               sleep 5
