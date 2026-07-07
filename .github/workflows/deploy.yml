@@ -280,9 +280,11 @@ jobs:
             fi
             git reset --hard
             git clean -fd
-            # Paksa Git menggunakan SSH untuk operasi pull dari GitHub
-            git config --global url."git@github.com:".insteadOf "https://github.com/"
-            git pull origin ${{ env.BRANCH_NAME }}
+            # Hapus konfigurasi global insteadOf jika sebelumnya dipaksa menggunakan SSH
+            git config --global --unset url.git@github.com:.insteadOf || true
+            git config --global --unset url."git@github.com:".insteadOf || true
+            # Gunakan HTTPS dengan Personal Access Token (PAT) untuk pull dari GitHub
+            git pull https://${{ secrets.GITHUB_TOKEN_DEPLOY }}@github.com/${{ github.repository }}.git ${{ env.BRANCH_NAME }}
 
             # ─── 1.5 Pastikan direktori storage ada dan writable ───────
             mkdir -p storage/framework/cache/data
