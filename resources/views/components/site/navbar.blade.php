@@ -49,7 +49,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                                 @if ($item->icon)
                                     <i class="{{ $item->icon }}"></i>
                                 @endif
-                                <span>{{ $item->label }}</span>
+                                <span>{{ __($item->label) }}</span>
                                 <svg class="w-4 h-4 transition-transform" :class="open && 'rotate-180'" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -61,7 +61,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                                 @foreach ($item->children as $child)
                                     <a href="{{ $child->resolved_url }}" target="{{ $child->target }}"
                                         class="block px-4 py-2 text-sm hover:bg-slate-50">
-                                        {{ $child->label }}
+                                        {{ __($child->label) }}
                                     </a>
                                 @endforeach
                             </div>
@@ -74,7 +74,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                             @if ($item->icon)
                                 <i class="{{ $item->icon }}"></i>
                             @endif
-                            <span>{{ $item->label }}</span>
+                            <span>{{ __($item->label) }}</span>
                         </a>
                     @endif
                 @endforeach
@@ -82,6 +82,7 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
  
             {{-- USER ACTION --}}
             <div class="flex items-center gap-3">
+                <x-language-switcher inline="true" />
                 @auth
                     {{-- Authenticated User Menu --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
@@ -140,15 +141,15 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                         @foreach ($userMenuItems as $item)
                             <a href="{{ $item->resolved_url }}"
                                 class="hidden md:block text-sm text-slate-600 hover:text-blue-600">
-                                {{ $item->label }}
+                                {{ __($item->label) }}
                             </a>
                         @endforeach
                     @else
                         {{-- Default Login/Register --}}
-                        <a href="{{ route('login') }}" class="text-sm text-slate-600 hover:text-blue-600">Login</a>
+                        <a href="{{ route('login') }}" class="text-sm text-slate-600 hover:text-blue-600">{{ __('Login') }}</a>
                         <a href="{{ route('register') }}"
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                            Register
+                            {{ __('Register') }}
                         </a>
                     @endif
                 @endauth
@@ -168,19 +169,19 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
                 @if (isset($item->children) && $item->children->isNotEmpty())
                     <details>
                         <summary class="py-2 font-medium cursor-pointer">
-                            {{ $item->label }}
+                            {{ __($item->label) }}
                         </summary>
                         <div class="ml-4">
                             @foreach ($item->children as $child)
                                 <a href="{{ $child->resolved_url }}" class="block py-1 text-slate-600">
-                                    {{ $child->label }}
+                                    {{ __($child->label) }}
                                 </a>
                             @endforeach
                         </div>
                     </details>
                 @else
                     <a href="{{ $item->resolved_url }}" class="block py-2 font-medium">
-                        {{ $item->label }}
+                        {{ __($item->label) }}
                     </a>
                 @endif
             @endforeach
@@ -189,8 +190,8 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
             @guest
                 @if ($userMenuItems->isEmpty())
                     <hr class="border-slate-200 my-2">
-                    <a href="{{ route('login') }}" class="block py-2 font-medium">Login</a>
-                    <a href="{{ route('register') }}" class="block py-2 font-medium text-blue-600">Register</a>
+                    <a href="{{ route('login') }}" class="block py-2 font-medium">{{ __('Login') }}</a>
+                    <a href="{{ route('register') }}" class="block py-2 font-medium text-blue-600">{{ __('Register') }}</a>
                 @endif
             @endguest
         </div>

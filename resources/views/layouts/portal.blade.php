@@ -70,7 +70,6 @@
 </head>
 
 <body class="antialiased font-sans bg-gray-50 text-gray-900">
-    <x-language-switcher />
     {{-- ============================================ --}}
     {{-- DYNAMIC NAVIGATION BAR --}}
     {{-- ============================================ --}}

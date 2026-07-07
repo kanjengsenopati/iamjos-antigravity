@@ -94,13 +94,13 @@
                 {{-- INPUT FIELD --}}
                 <input type="text" name="q"
                     class="relative w-full h-14 pl-6 pr-32 rounded-2xl border-2 border-transparent bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 text-base shadow-2xl transition-all"
-                    placeholder="Search titles, abstracts, or keywords...">
+                    placeholder="{{ __('Search titles, abstracts, or keywords...') }}">
 
                 {{-- BUTTON (Floating Inside) --}}
                 <div class="absolute right-1.5 top-1.5 bottom-1.5">
                     <button type="submit"
                         class="h-full px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 flex items-center justify-center text-sm">
-                        Search
+                        {{ __('Search') }}
                     </button>
                 </div>
 
@@ -110,7 +110,7 @@
         {{-- 5. QUICK TAGS --}}
         @if($popularKeywords->isNotEmpty())
             <div class="mt-6 flex flex-wrap justify-center items-center gap-2 text-xs md:text-sm text-slate-500">
-                <span class="font-medium text-slate-400">Popular Queries:</span>
+                <span class="font-medium text-slate-400">{{ __('Popular Queries:') }}</span>
                 @foreach($popularKeywords as $keyword)
                     <a href="{{ route('portal.search', ['q' => $keyword->content]) }}"
                         class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200/50">

@@ -94,7 +94,6 @@
 </head>
 
 <body class="antialiased bg-white" x-data="{ mobileMenuOpen: false }">
-    <x-language-switcher />
 
     {{-- Navigation --}}
     <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-gray-100">
@@ -122,41 +121,42 @@
                     <a href="{{ route('journal.public.home', $journal->slug) }}"
                         class="text-sm font-medium {{ request()->routeIs('journal.public.home') ? 'text-primary-custom' : 'text-gray-600 hover:text-gray-900' }}"
                         style="{{ request()->routeIs('journal.public.home') ? 'color: var(--primary-color);' : '' }}">
-                        Home
+                        {{ __('Home') }}
                     </a>
                     <a href="{{ route('journal.public.current', $journal->slug) }}"
                         class="text-sm font-medium {{ request()->routeIs('journal.public.current') ? 'text-primary-custom' : 'text-gray-600 hover:text-gray-900' }}"
                         style="{{ request()->routeIs('journal.public.current') ? 'color: var(--primary-color);' : '' }}">
-                        Current Issue
+                        {{ __('Current Issue') }}
                     </a>
                     <a href="{{ route('journal.public.archives', $journal->slug) }}"
                         class="text-sm font-medium {{ request()->routeIs('journal.public.archives') ? 'text-primary-custom' : 'text-gray-600 hover:text-gray-900' }}"
                         style="{{ request()->routeIs('journal.public.archives') ? 'color: var(--primary-color);' : '' }}">
-                        Archives
+                        {{ __('Archives') }}
                     </a>
                     <a href="{{ route('journal.public.about', $journal->slug) }}"
                         class="text-sm font-medium {{ request()->routeIs('journal.public.about') ? 'text-primary-custom' : 'text-gray-600 hover:text-gray-900' }}"
                         style="{{ request()->routeIs('journal.public.about') ? 'color: var(--primary-color);' : '' }}">
-                        About
+                        {{ __('About') }}
                     </a>
                 </div>
 
                 {{-- Actions --}}
                 <div class="flex items-center space-x-4">
+                    <x-language-switcher inline="true" />
                     @auth
                         <a href="{{ route('journal.dashboard', $journal->slug) }}"
                             class="text-sm font-medium text-gray-600 hover:text-gray-900">
-                            Dashboard
+                            {{ __('Dashboard') }}
                         </a>
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 hover:text-gray-900">
-                            Login
+                            {{ __('Login') }}
                         </a>
                     @endauth
 
                     <a href="{{ route('journal.submissions.create', $journal->slug) }}"
                         class="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-full btn-primary shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all">
-                        Submit Manuscript
+                        {{ __('Submit Manuscript') }}
                     </a>
 
                     {{-- Mobile Menu Button --}}
@@ -170,18 +170,20 @@
         {{-- Mobile Menu --}}
         <div x-show="mobileMenuOpen" x-cloak x-transition class="md:hidden bg-white border-t border-gray-100">
             <div class="px-4 py-4 space-y-2">
+                <div class="px-4 pb-3 mb-3 border-b border-gray-100 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('Language') }}</span>
+                    <x-language-switcher inline="true" />
+                </div>
                 <a href="{{ route('journal.public.home', $journal->slug) }}"
-                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Home</a>
+                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">{{ __('Home') }}</a>
                 <a href="{{ route('journal.public.current', $journal->slug) }}"
-                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Current
-                    Issue</a>
+                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">{{ __('Current Issue') }}</a>
                 <a href="{{ route('journal.public.archives', $journal->slug) }}"
-                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Archives</a>
+                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">{{ __('Archives') }}</a>
                 <a href="{{ route('journal.public.about', $journal->slug) }}"
-                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">About</a>
+                    class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">{{ __('About') }}</a>
                 <a href="{{ route('journal.submissions.create', $journal->slug) }}"
-                    class="block px-4 py-2 text-sm font-medium text-white rounded-lg btn-primary text-center">Submit
-                    Manuscript</a>
+                    class="block px-4 py-2 text-sm font-medium text-white rounded-lg btn-primary text-center">{{ __('Submit Manuscript') }}</a>
             </div>
         </div>
     </nav>
