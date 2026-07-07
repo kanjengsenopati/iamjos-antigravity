@@ -285,15 +285,15 @@ jobs:
 
       - name: Create deployment archive
         run: |
-          tar -czf deploy.tar.gz \
+          tar -czf /tmp/deploy.tar.gz \
             --exclude=node_modules \
             --exclude=.git \
             --exclude=.env \
             --exclude=tests \
             --exclude=storage \
             --exclude=public/storage \
-            --exclude=deploy.tar.gz \
             .
+          mv /tmp/deploy.tar.gz ./deploy.tar.gz
 
       - name: Copy deployment archive to VPS via SCP
         uses: appleboy/scp-action@v0.1.7
