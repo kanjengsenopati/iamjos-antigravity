@@ -374,12 +374,11 @@
                                 @endif
                                 </div>
                             @endforeach
-                        </div>
 
                         @if ($group === 'email')
                             {{-- Test Connection Section --}}
                             <div class="px-6 py-6 bg-slate-50 border-t border-gray-100" x-data="testEmailHandler()">
-                                <h2 class="text-[16px] font-semibold text-slate-800 mb-1">{{ $isId ? 'Uji Konfigurasi SMTP' : 'Test SMTP Configuration' }}</h2>
+                                <x-text.h2 class="mb-1 text-slate-800">{{ $isId ? 'Uji Konfigurasi SMTP' : 'Test SMTP Configuration' }}</x-text.h2>
                                 <p class="text-[13px] text-slate-500 mb-4 font-normal">{{ $isId ? 'Kirim email tes untuk memverifikasi bahwa server SMTP Anda dikonfigurasi dengan benar. Simpan pengaturan Anda sebelum menguji.' : 'Send a test email to verify that your SMTP server is configured correctly. Save your settings before testing.' }}</p>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3">
