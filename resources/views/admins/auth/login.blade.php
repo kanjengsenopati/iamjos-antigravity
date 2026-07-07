@@ -54,6 +54,7 @@
 </head>
 
 <body class="font-sans antialiased bg-gray-50">
+    <x-language-switcher />
     <div class="min-h-screen flex" x-data="{ showPassword: false }">
         <!-- Left Side - Brand Panel (Dynamic based on Journal Context) -->
         <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-900"

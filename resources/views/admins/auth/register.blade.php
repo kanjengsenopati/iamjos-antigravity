@@ -48,6 +48,7 @@
 </head>
 
 <body class="font-sans antialiased bg-gray-50">
+    <x-language-switcher />
     <div class="min-h-screen flex lg:h-screen lg:overflow-hidden" x-data="registerForm()">
         <!-- Left Side - Brand Panel (Dynamic based on Journal Context) -->
         <div class="hidden lg:flex lg:w-[35%] xl:w-[40%] relative overflow-hidden bg-slate-900 h-full"

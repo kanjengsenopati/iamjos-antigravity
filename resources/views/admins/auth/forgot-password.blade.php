@@ -30,6 +30,9 @@
         }
     </script>
 
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
         .academic-overlay {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
@@ -43,6 +46,7 @@
 </head>
 
 <body class="font-sans antialiased bg-gray-50">
+    <x-language-switcher />
     <div class="min-h-screen flex">
         <!-- Left Side - Brand Panel -->
         <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-900"

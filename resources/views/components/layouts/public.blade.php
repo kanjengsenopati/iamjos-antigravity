@@ -201,6 +201,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 </head>
 
 <body class="antialiased font-sans bg-slate-50 text-slate-900" x-data="{ mobileMenuOpen: false }">
+    <x-language-switcher />
 
 
     {{-- ============================================ --}}

@@ -94,6 +94,7 @@
 </head>
 
 <body class="antialiased bg-white" x-data="{ mobileMenuOpen: false }">
+    <x-language-switcher />
 
     {{-- Navigation --}}
     <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-gray-100">
