@@ -55,9 +55,13 @@ class DetectJournalContext
             view()->share('currentJournal', null);
         }
 
-        // Set application locale based on session or journal primary locale
+        // Set application locale based on session, cookie, or journal primary locale
+        $locale = null;
         if (session()->has('app_locale')) {
             $locale = session('app_locale');
+        } elseif ($request->hasCookie('app_locale')) {
+            $locale = $request->cookie('app_locale');
+            session(['app_locale' => $locale]); // Sync back to session
         } elseif ($journal) {
             $journalSettings = $journal->getWebsiteSettings();
             $locale = $journalSettings['primary_locale'] ?? 'en';

@@ -67,9 +67,13 @@ class JournalContextMiddleware
         // Store in session for convenience
         session()->flash('current_journal_id', $journal->id);
 
-        // Set application locale based on session or journal primary locale
+        // Set application locale based on session, cookie, or journal primary locale
+        $locale = null;
         if (session()->has('app_locale')) {
             $locale = session('app_locale');
+        } elseif ($request->hasCookie('app_locale')) {
+            $locale = $request->cookie('app_locale');
+            session(['app_locale' => $locale]); // Sync back to session
         } else {
             $journalSettings = $journal->getWebsiteSettings();
             $locale = $journalSettings['primary_locale'] ?? 'en';

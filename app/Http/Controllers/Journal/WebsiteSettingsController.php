@@ -208,6 +208,7 @@ class WebsiteSettingsController extends Controller
             $prim = $request->input('primary_locale');
             session(['app_locale' => $prim]);
             app()->setLocale($prim);
+            cookie()->queue('app_locale', $prim, 525600);
         }
 
         $tab = $request->input('tab', 'setup');

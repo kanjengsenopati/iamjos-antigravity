@@ -75,6 +75,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
 
                 session(['app_locale' => $normalizedLocale]);
                 app()->setLocale($normalizedLocale);
+                cookie()->queue('app_locale', $normalizedLocale, 525600);
 
                 // Also persist primary_locale to the journal's DB settings
                 // so the Languages table radio button stays in sync with UI locale.
