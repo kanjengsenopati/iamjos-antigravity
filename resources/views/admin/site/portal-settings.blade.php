@@ -1,17 +1,17 @@
 @extends('layouts.admin')
 
-@section('title', 'Portal Settings')
+@section('title', $isId ? 'Pengaturan Portal' : 'Portal Settings')
 
 @section('content')
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <a href="{{ route('admin.site.index') }}" class="hover:text-gray-700">Site Administration</a>
+            <a href="{{ route('admin.site.index') }}" class="hover:text-gray-700">{{ $isId ? 'Administrasi Situs' : 'Site Administration' }}</a>
             <i class="fas fa-chevron-right text-xs"></i>
-            <span class="text-gray-900">Portal Settings</span>
+            <span class="text-gray-900">{{ $isId ? 'Pengaturan Portal' : 'Portal Settings' }}</span>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900">Portal Landing Page Settings</h1>
-        <p class="mt-1 text-gray-500">Customize the public landing page content and appearance.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Halaman Beranda Portal' : 'Portal Landing Page Settings' }}</h1>
+        <p class="mt-1 text-gray-500">{{ $isId ? 'Sesuaikan konten dan tampilan halaman beranda publik.' : 'Customize the public landing page content and appearance.' }}</p>
     </div>
 
     @if (session('success'))
@@ -33,8 +33,8 @@
                         <i class="fas fa-image text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Hero Section</h2>
-                        <p class="text-sm text-gray-500">Main banner area with title and search</p>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Bagian Hero' : 'Hero Section' }}</h2>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Area banner utama dengan judul dan pencarian' : 'Main banner area with title and search' }}</p>
                     </div>
                 </div>
             </div>
@@ -43,12 +43,12 @@
                 <!-- Hero Title -->
                 <div>
                     <label for="hero_title" class="block text-sm font-medium text-gray-700 mb-2">
-                        Title <span class="text-red-500">*</span>
+                        {{ $isId ? 'Judul' : 'Title' }} <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="hero_title" name="hero_title"
                         value="{{ old('hero_title', $hero['hero_title'] ?? '') }}"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 @error('hero_title') border-red-500 @enderror"
-                        placeholder="e.g. Temukan Pengetahuan, Bagikan Inovasi" required>
+                        placeholder="{{ $isId ? 'mis. Temukan Pengetahuan, Bagikan Inovasi' : 'e.g. Temukan Pengetahuan, Bagikan Inovasi' }}" required>
                     @error('hero_title')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -57,11 +57,11 @@
                 <!-- Hero Subtitle -->
                 <div>
                     <label for="hero_subtitle" class="block text-sm font-medium text-gray-700 mb-2">
-                        Subtitle <span class="text-red-500">*</span>
+                        {{ $isId ? 'Subjudul' : 'Subtitle' }} <span class="text-red-500">*</span>
                     </label>
                     <textarea id="hero_subtitle" name="hero_subtitle" rows="3"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 @error('hero_subtitle') border-red-500 @enderror"
-                        placeholder="Brief description about the platform" required>{{ old('hero_subtitle', $hero['hero_subtitle'] ?? '') }}</textarea>
+                        placeholder="{{ $isId ? 'Deskripsi singkat mengenai platform' : 'Brief description about the platform' }}" required>{{ old('hero_subtitle', $hero['hero_subtitle'] ?? '') }}</textarea>
                     @error('hero_subtitle')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -70,24 +70,24 @@
                 <!-- Search Placeholder -->
                 <div>
                     <label for="hero_search_placeholder" class="block text-sm font-medium text-gray-700 mb-2">
-                        Search Placeholder Text
+                        {{ $isId ? 'Teks Petunjuk Pencarian' : 'Search Placeholder Text' }}
                     </label>
                     <input type="text" id="hero_search_placeholder" name="hero_search_placeholder"
                         value="{{ old('hero_search_placeholder', $hero['hero_search_placeholder'] ?? '') }}"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="e.g. Cari jurnal, artikel, atau penulis...">
+                        placeholder="{{ $isId ? 'mis. Cari jurnal, artikel, atau penulis...' : 'e.g. Cari jurnal, artikel, atau penulis...' }}">
                 </div>
 
                 <!-- Popular Tags -->
                 <div>
                     <label for="hero_popular_tags" class="block text-sm font-medium text-gray-700 mb-2">
-                        Popular Tags
+                        {{ $isId ? 'Tag Populer' : 'Popular Tags' }}
                     </label>
                     <input type="text" id="hero_popular_tags" name="hero_popular_tags"
                         value="{{ old('hero_popular_tags', is_array($hero['hero_popular_tags'] ?? null) ? implode(', ', $hero['hero_popular_tags']) : '') }}"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="Kesehatan, Pendidikan, Teknologi (comma separated)">
-                    <p class="mt-1 text-xs text-gray-500">Enter tags separated by commas. These will appear below the search bar.</p>
+                        placeholder="{{ $isId ? 'Kesehatan, Pendidikan, Teknologi (pisahkan dengan koma)' : 'Kesehatan, Pendidikan, Teknologi (comma separated)' }}">
+                    <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Masukkan tag yang dipisahkan dengan koma. Tag ini akan muncul di bawah kotak pencarian.' : 'Enter tags separated by commas. These will appear below the search bar.' }}</p>
                 </div>
             </div>
         </div>
@@ -100,8 +100,8 @@
                         <i class="fas fa-star text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Featured Journals</h2>
-                        <p class="text-sm text-gray-500">Select journals to highlight on the landing page</p>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Jurnal Pilihan' : 'Featured Journals' }}</h2>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Pilih jurnal untuk disorot di halaman beranda' : 'Select journals to highlight on the landing page' }}</p>
                     </div>
                 </div>
             </div>
@@ -110,31 +110,31 @@
                 <!-- Featured Title -->
                 <div>
                     <label for="featured_title" class="block text-sm font-medium text-gray-700 mb-2">
-                        Section Title
+                        {{ $isId ? 'Judul Bagian' : 'Section Title' }}
                     </label>
                     <input type="text" id="featured_title" name="featured_title"
                         value="{{ old('featured_title', $featured['featured_title'] ?? 'Jurnal Pilihan') }}"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="e.g. Featured Journals">
+                        placeholder="{{ $isId ? 'mis. Jurnal Pilihan' : 'e.g. Featured Journals' }}">
                 </div>
 
                 <!-- Featured Subtitle -->
                 <div>
                     <label for="featured_subtitle" class="block text-sm font-medium text-gray-700 mb-2">
-                        Section Subtitle
+                        {{ $isId ? 'Subjudul Bagian' : 'Section Subtitle' }}
                     </label>
                     <input type="text" id="featured_subtitle" name="featured_subtitle"
                         value="{{ old('featured_subtitle', $featured['featured_subtitle'] ?? '') }}"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="e.g. Koleksi jurnal ilmiah terbaik">
+                        placeholder="{{ $isId ? 'mis. Koleksi jurnal ilmiah terbaik' : 'e.g. Koleksi jurnal ilmiah terbaik' }}">
                 </div>
 
                 <!-- Featured Journals Selection -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Select Featured Journals
+                        {{ $isId ? 'Pilih Jurnal Pilihan' : 'Select Featured Journals' }}
                     </label>
-                    <p class="text-sm text-gray-500 mb-4">Choose up to 6 journals to feature. If none selected, top journals by article count will be shown.</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ $isId ? 'Pilih hingga 6 jurnal pilihan. Jika tidak ada yang dipilih, jurnal teratas berdasarkan jumlah artikel akan ditampilkan.' : 'Choose up to 6 journals to feature. If none selected, top journals by article count will be shown.' }}</p>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-gray-50">
                         @forelse($journals as $journal)
@@ -148,7 +148,7 @@
                                 </div>
                             </label>
                         @empty
-                            <p class="col-span-2 text-gray-500 text-center py-4">No journals available</p>
+                            <p class="col-span-2 text-gray-500 text-center py-4">{{ $isId ? 'Tidak ada jurnal tersedia' : 'No journals available' }}</p>
                         @endforelse
                     </div>
                 </div>
@@ -163,8 +163,8 @@
                         <i class="fas fa-align-left text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Footer Content</h2>
-                        <p class="text-sm text-gray-500">About section and contact information</p>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Konten Footer' : 'Footer Content' }}</h2>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Bagian tentang kami dan informasi kontak' : 'About section and contact information' }}</p>
                     </div>
                 </div>
             </div>
@@ -173,18 +173,18 @@
                 <!-- Footer About -->
                 <div>
                     <label for="footer_about" class="block text-sm font-medium text-gray-700 mb-2">
-                        About Text
+                        {{ $isId ? 'Teks Tentang Kami' : 'About Text' }}
                     </label>
                     <textarea id="footer_about" name="footer_about" rows="4"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
-                        placeholder="Brief description about your organization">{{ old('footer_about', $footer['footer_about'] ?? '') }}</textarea>
+                        placeholder="{{ $isId ? 'Deskripsi singkat mengenai organisasi Anda' : 'Brief description about your organization' }}">{{ old('footer_about', $footer['footer_about'] ?? '') }}</textarea>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Address -->
                     <div>
                         <label for="footer_address" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-map-marker-alt mr-1 text-gray-400"></i> Address
+                            <i class="fas fa-map-marker-alt mr-1 text-gray-400"></i> {{ $isId ? 'Alamat' : 'Address' }}
                         </label>
                         <input type="text" id="footer_address" name="footer_address"
                             value="{{ old('footer_address', $footer['footer_address'] ?? '') }}"
@@ -195,7 +195,7 @@
                     <!-- Phone -->
                     <div>
                         <label for="footer_phone" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-phone mr-1 text-gray-400"></i> Phone
+                            <i class="fas fa-phone mr-1 text-gray-400"></i> {{ $isId ? 'Telepon' : 'Phone' }}
                         </label>
                         <input type="text" id="footer_phone" name="footer_phone"
                             value="{{ old('footer_phone', $footer['footer_phone'] ?? '') }}"
@@ -228,8 +228,8 @@
                         <i class="fas fa-share-alt text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Social Media Links</h2>
-                        <p class="text-sm text-gray-500">Connect your social media accounts</p>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Tautan Media Sosial' : 'Social Media Links' }}</h2>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Hubungkan akun media sosial Anda' : 'Connect your social media accounts' }}</p>
                     </div>
                 </div>
             </div>

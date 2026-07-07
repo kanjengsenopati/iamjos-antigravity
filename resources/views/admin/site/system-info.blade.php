@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'System Information')
+@section('title', $isId ? 'Informasi Sistem' : 'System Information')
 
 @section('content')
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">System & Maintenance</h1>
-        <p class="mt-1 text-gray-500">View server status and perform maintenance tasks.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Sistem & Pemeliharaan' : 'System & Maintenance' }}</h1>
+        <p class="mt-1 text-gray-500">{{ $isId ? 'Lihat status server dan lakukan tugas pemeliharaan.' : 'View server status and perform maintenance tasks.' }}</p>
     </div>
 
     <div class="mb-8">
@@ -14,8 +14,8 @@
         <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-gray-900">Administrative Tools</h2>
-                    <p class="text-sm text-gray-500">Maintenance and system actions</p>
+                    <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Alat Administrasi' : 'Administrative Tools' }}</h2>
+                    <p class="text-sm text-gray-500">{{ $isId ? 'Tindakan pemeliharaan dan sistem' : 'Maintenance and system actions' }}</p>
                 </div>
                 <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,12 +37,11 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 truncate">Malware Guard</h3>
-                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">Check system integrity and scan for
-                                suspicious files.</p>
+                            <h3 class="font-bold text-gray-900 truncate">{{ $isId ? 'Pemindai Malware' : 'Malware Guard' }}</h3>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ $isId ? 'Periksa integritas sistem dan pindai file mencurigakan.' : 'Check system integrity and scan for suspicious files.' }}</p>
                             <a href="{{ route('admin.malware.index') }}"
-                                class="inline-flex items-center gap-2 mt-4 px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-all">
-                                Open Scanner
+                                class="inline-flex items-center gap-2 mt-4 px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-all cursor-pointer">
+                                {{ $isId ? 'Buka Pemindai' : 'Open Scanner' }}
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 5l7 7-7 7" />
@@ -63,15 +62,14 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 truncate">Expire Sessions</h3>
-                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">Log out all users immediately. They will need
-                                to login again.</p>
+                            <h3 class="font-bold text-gray-900 truncate">{{ $isId ? 'Kedaluwarsa Sesi' : 'Expire Sessions' }}</h3>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ $isId ? 'Keluarkan semua pengguna segera. Mereka harus login kembali.' : 'Log out all users immediately. They will need to login again.' }}</p>
                             <form action="{{ route('admin.site.expire-sessions') }}" method="POST" class="mt-4">
                                 @csrf
                                 <button type="submit"
-                                    onclick="return confirm('This will log out ALL users immediately. Are you sure?')"
-                                    class="w-full sm:w-auto px-3 py-2 bg-orange-600 text-white text-xs font-semibold rounded-lg hover:bg-orange-700 transition-all">
-                                    Expire Sessions
+                                    onclick="return confirm('{{ $isId ? 'Ini akan mengeluarkan SEMUA pengguna segera. Apakah Anda yakin?' : 'This will log out ALL users immediately. Are you sure?' }}')"
+                                    class="w-full sm:w-auto px-3 py-2 bg-orange-600 text-white text-xs font-semibold rounded-lg hover:bg-orange-700 transition-all cursor-pointer">
+                                    {{ $isId ? 'Kedaluwarsakan Sesi' : 'Expire Sessions' }}
                                 </button>
                             </form>
                         </div>
@@ -89,14 +87,13 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 truncate">Clear Data Cache</h3>
-                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">Clear database query cache and application
-                                cache.</p>
+                            <h3 class="font-bold text-gray-900 truncate">{{ $isId ? 'Hapus Cache Data' : 'Clear Data Cache' }}</h3>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ $isId ? 'Hapus cache query database dan cache aplikasi.' : 'Clear database query cache and application cache.' }}</p>
                             <form action="{{ route('admin.site.clear-cache') }}" method="POST" class="mt-4">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full sm:w-auto px-3 py-2 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-all">
-                                    Clear Cache
+                                    class="w-full sm:w-auto px-3 py-2 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-all cursor-pointer">
+                                    {{ $isId ? 'Hapus Cache' : 'Clear Cache' }}
                                 </button>
                             </form>
                         </div>
@@ -114,14 +111,13 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 truncate">Clear Templates</h3>
-                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">Force re-compilation of all Blade templates.
-                            </p>
+                            <h3 class="font-bold text-gray-900 truncate">{{ $isId ? 'Hapus Templat' : 'Clear Templates' }}</h3>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ $isId ? 'Paksa kompilasi ulang semua templat Blade.' : 'Force re-compilation of all Blade templates.' }}</p>
                             <form action="{{ route('admin.site.clear-templates') }}" method="POST" class="mt-4">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full sm:w-auto px-3 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-all">
-                                    Clear Templates
+                                    class="w-full sm:w-auto px-3 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-all cursor-pointer">
+                                    {{ $isId ? 'Hapus Templat' : 'Clear Templates' }}
                                 </button>
                             </form>
                         </div>
@@ -139,14 +135,13 @@
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 truncate">Clear Task Logs</h3>
-                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">Remove old execution logs from scheduled
-                                tasks.</p>
+                            <h3 class="font-bold text-gray-900 truncate">{{ $isId ? 'Hapus Log Tugas' : 'Clear Task Logs' }}</h3>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ $isId ? 'Hapus log eksekusi lama dari tugas terjadwal.' : 'Remove old execution logs from scheduled tasks.' }}</p>
                             <form action="{{ route('admin.site.clear-logs') }}" method="POST" class="mt-4">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full sm:w-auto px-3 py-2 bg-slate-600 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 transition-all">
-                                    Clear Logs
+                                    class="w-full sm:w-auto px-3 py-2 bg-slate-600 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 transition-all cursor-pointer">
+                                    {{ $isId ? 'Hapus Log' : 'Clear Logs' }}
                                 </button>
                             </form>
                         </div>

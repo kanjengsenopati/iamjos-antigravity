@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'System Settings')
+@section('title', $isId ? 'Pengaturan Sistem' : 'System Settings')
 
 @section('content')
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">System Settings</h1>
-        <p class="mt-1 text-gray-500">Manage application-wide technical configuration. Changes take effect immediately.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Sistem' : 'System Settings' }}</h1>
+        <p class="mt-1 text-gray-500">{{ $isId ? 'Kelola konfigurasi teknis untuk seluruh aplikasi. Perubahan akan segera diterapkan.' : 'Manage application-wide technical configuration. Changes take effect immediately.' }}</p>
     </div>
 
     @if (session('success'))
@@ -34,12 +34,12 @@
 
     @php
         $groupLabels = [
-            'email'        => 'Email & SMTP Server',
-            'pagination'   => 'Pagination & Display Limits',
-            'uploads'      => 'File Upload Constraints',
-            'reviewer'     => 'Reviewer Reminders',
-            'integrations' => 'External Integrations',
-            'app'          => 'Application',
+            'email'        => $isId ? 'Email & Server SMTP' : 'Email & SMTP Server',
+            'pagination'   => $isId ? 'Batas Tampilan & Halaman' : 'Pagination & Display Limits',
+            'uploads'      => $isId ? 'Batasan Unggahan Berkas' : 'File Upload Constraints',
+            'reviewer'     => $isId ? 'Pengingat Reviewer' : 'Reviewer Reminders',
+            'integrations' => $isId ? 'Integrasi Eksternal' : 'External Integrations',
+            'app'          => $isId ? 'Aplikasi' : 'Application',
         ];
 
         $groupIcons = [
@@ -104,7 +104,7 @@
                         </div>
                         <div>
                             <h2 class="text-[16px] font-semibold text-slate-800">{{ $label }}</h2>
-                            <p class="text-xs text-gray-500 mt-0.5">{{ $groupSettings->count() }} setting{{ $groupSettings->count() !== 1 ? 's' : '' }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $groupSettings->count() }} {{ $isId ? 'pengaturan' : ('setting' . ($groupSettings->count() !== 1 ? 's' : '')) }}</p>
                         </div>
                     </div>
 
@@ -126,9 +126,9 @@
                                         name="{{ $setting->key }}"
                                         class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                                     >
-                                        <option value="smtp" {{ old($setting->key, $setting->value) === 'smtp' ? 'selected' : '' }}>SMTP Server (Recommended)</option>
-                                        <option value="phpmail" {{ old($setting->key, $setting->value) === 'phpmail' ? 'selected' : '' }}>PHP mail() Function</option>
-                                        <option value="log" {{ old($setting->key, $setting->value) === 'log' ? 'selected' : '' }}>Log (Dev/Testing only)</option>
+                                        <option value="smtp" {{ old($setting->key, $setting->value) === 'smtp' ? 'selected' : '' }}>{{ $isId ? 'Server SMTP (Direkomendasikan)' : 'SMTP Server (Recommended)' }}</option>
+                                        <option value="phpmail" {{ old($setting->key, $setting->value) === 'phpmail' ? 'selected' : '' }}>{{ $isId ? 'Fungsi PHP mail()' : 'PHP mail() Function' }}</option>
+                                        <option value="log" {{ old($setting->key, $setting->value) === 'log' ? 'selected' : '' }}>{{ $isId ? 'Log (Hanya untuk Dev/Uji coba)' : 'Log (Dev/Testing only)' }}</option>
                                     </select>
                                     @if ($setting->description)
                                         <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
@@ -145,7 +145,7 @@
                                         name="{{ $setting->key }}"
                                         class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                                     >
-                                        <option value="none" {{ old($setting->key, $setting->value) === 'none' ? 'selected' : '' }}>None (Plain text)</option>
+                                        <option value="none" {{ old($setting->key, $setting->value) === 'none' ? 'selected' : '' }}>{{ $isId ? 'Tidak ada (Teks biasa)' : 'None (Plain text)' }}</option>
                                         <option value="tls" {{ old($setting->key, $setting->value) === 'tls' ? 'selected' : '' }}>TLS (STARTTLS - port 587)</option>
                                         <option value="ssl" {{ old($setting->key, $setting->value) === 'ssl' ? 'selected' : '' }}>SSL (SMTPS - port 465)</option>
                                     </select>
@@ -156,7 +156,7 @@
                                 @elseif ($setting->key === 'mail_queue_connection')
                                     {{-- Custom Queue Connection Dropdown --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Mail Queue Connection
+                                        {{ $isId ? 'Koneksi Antrean Email' : 'Mail Queue Connection' }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <select
@@ -164,9 +164,9 @@
                                         name="{{ $setting->key }}"
                                         class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                                     >
-                                        <option value="sync" {{ old($setting->key, $setting->value) === 'sync' ? 'selected' : '' }}>Direct Send (No Server Setup / cPanel)</option>
-                                        <option value="database" {{ old($setting->key, $setting->value) === 'database' ? 'selected' : '' }}>Database Queue (Recommended with Cron)</option>
-                                        <option value="redis" {{ old($setting->key, $setting->value) === 'redis' ? 'selected' : '' }}>Redis Queue (High Performance / Supervisor)</option>
+                                        <option value="sync" {{ old($setting->key, $setting->value) === 'sync' ? 'selected' : '' }}>{{ $isId ? 'Kirim Langsung (Tanpa Pengaturan Server / cPanel)' : 'Direct Send (No Server Setup / cPanel)' }}</option>
+                                        <option value="database" {{ old($setting->key, $setting->value) === 'database' ? 'selected' : '' }}>{{ $isId ? 'Antrean Database (Direkomendasikan dengan Cron)' : 'Database Queue (Recommended with Cron)' }}</option>
+                                        <option value="redis" {{ old($setting->key, $setting->value) === 'redis' ? 'selected' : '' }}>{{ $isId ? 'Antrean Redis (Performa Tinggi / Supervisor)' : 'Redis Queue (High Performance / Supervisor)' }}</option>
                                     </select>
                                     @if ($setting->description)
                                         <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
@@ -281,8 +281,8 @@
                         @if ($group === 'email')
                             {{-- Test Connection Section --}}
                             <div class="px-6 py-6 bg-slate-50 border-t border-gray-100" x-data="testEmailHandler()">
-                                <x-text.h2 class="mb-1 text-slate-800">Test SMTP Configuration</x-text.h2>
-                                <p class="text-[13px] text-slate-500 mb-4 font-normal">Send a test email to verify that your SMTP server is configured correctly. Save your settings before testing.</p>
+                                <x-text.h2 class="mb-1 text-slate-800">{{ $isId ? 'Uji Konfigurasi SMTP' : 'Test SMTP Configuration' }}</x-text.h2>
+                                <p class="text-[13px] text-slate-500 mb-4 font-normal">{{ $isId ? 'Kirim email tes untuk memverifikasi bahwa server SMTP Anda dikonfigurasi dengan benar. Simpan pengaturan Anda sebelum menguji.' : 'Send a test email to verify that your SMTP server is configured correctly. Save your settings before testing.' }}</p>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3">
                                     <input 
@@ -301,7 +301,7 @@
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        <span x-text="loading ? 'Sending...' : 'Send Test Email'">Send Test Email</span>
+                                        <span x-text="loading ? '{{ $isId ? 'Mengirim...' : 'Sending...' }}' : '{{ $isId ? 'Kirim Email Tes' : 'Send Test Email' }}'">{{ $isId ? 'Kirim Email Tes' : 'Send Test Email' }}</span>
                                     </button>
                                 </div>
                                 
@@ -332,13 +332,13 @@
                     <!-- Save Button -->
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
                         <button
-                            type="submit"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl shadow-sm shadow-indigo-500/25 hover:bg-indigo-700 hover:shadow-indigo-500/40 transition-all"
+                             type="submit"
+                             class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl shadow-sm shadow-indigo-500/25 hover:bg-indigo-700 hover:shadow-indigo-500/40 transition-all"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            Save {{ $label }}
+                            {{ $isId ? 'Simpan' : 'Save' }} {{ $label }}
                         </button>
                     </div>
                 </form>
@@ -353,9 +353,9 @@
                     </svg>
                 </div>
                 
-                <h3 class="text-lg font-semibold text-slate-800 mb-2">No System Settings Found</h3>
+                <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ $isId ? 'Pengaturan Sistem Tidak Ditemukan' : 'No System Settings Found' }}</h3>
                 <p class="text-slate-500 text-sm mb-8 leading-relaxed">
-                    The system configuration table is currently empty. Initialize the database with default settings to configure email/SMTP, file constraints, integrations, and other parameters.
+                    {{ $isId ? 'Tabel konfigurasi sistem saat ini kosong. Inisialisasi database dengan pengaturan default untuk mengonfigurasi email/SMTP, batasan berkas, integrasi, dan parameter lainnya.' : 'The system configuration table is currently empty. Initialize the database with default settings to configure email/SMTP, file constraints, integrations, and other parameters.' }}
                 </p>
 
                 <form action="{{ route('admin.system-settings.seed') }}" method="POST" class="inline-block">
@@ -367,12 +367,12 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        Initialize Default Settings
+                        {{ $isId ? 'Inisialisasi Pengaturan Default' : 'Initialize Default Settings' }}
                     </button>
                 </form>
 
                 <div class="mt-8 pt-6 border-t border-gray-100">
-                    <p class="text-gray-400 text-xs">Alternative CLI Method:</p>
+                    <p class="text-gray-400 text-xs">{{ $isId ? 'Metode Alternatif CLI:' : 'Alternative CLI Method:' }}</p>
                     <code class="block mt-2 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-slate-600 text-xs font-mono select-all">php artisan db:seed --class=SystemSettingsSeeder</code>
                 </div>
             </div>

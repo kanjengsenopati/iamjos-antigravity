@@ -14,7 +14,7 @@
                     </a>
                     <div>
                         <h1 class="text-xl font-bold text-gray-900">{{ $title }}</h1>
-                        <p class="text-sm text-gray-500">{{ $page ? 'Update page content' : 'Create a new static page' }}</p>
+                        <p class="text-sm text-gray-500">{{ $isId ? ($page ? 'Perbarui konten halaman' : 'Buat halaman statis baru') : ($page ? 'Update page content' : 'Create a new static page') }}</p>
                     </div>
                 </div>
             </div>
@@ -34,13 +34,13 @@
             {{-- Page Settings --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h2 class="font-semibold text-gray-900">Page Settings</h2>
+                    <h2 class="font-semibold text-gray-900">{{ $isId ? 'Pengaturan Halaman' : 'Page Settings' }}</h2>
                 </div>
                 <div class="p-6 space-y-6">
                     {{-- Title --}}
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
-                            Page Title <span class="text-red-500">*</span>
+                            {{ $isId ? 'Judul Halaman' : 'Page Title' }} <span class="text-red-500">*</span>
                         </label>
                         <input type="text" 
                                name="title" 
@@ -48,7 +48,7 @@
                                value="{{ old('title', $page?->title) }}"
                                required
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                               placeholder="Enter page title">
+                               placeholder="{{ $isId ? 'Masukkan judul halaman' : 'Enter page title' }}">
                         @error('title')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
@@ -57,7 +57,7 @@
                     {{-- Slug --}}
                     <div>
                         <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">
-                            URL Slug
+                            Slug URL
                         </label>
                         <div class="flex items-center">
                             <span class="text-gray-500 text-sm mr-2">{{ url('/page/') }}/</span>
@@ -68,7 +68,7 @@
                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="auto-generated-from-title">
                         </div>
-                        <p class="mt-1 text-xs text-gray-500">Leave empty to auto-generate from title</p>
+                        <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Biarkan kosong untuk membuat otomatis dari judul' : 'Leave empty to auto-generate from title' }}</p>
                         @error('slug')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
@@ -83,7 +83,7 @@
                                {{ old('is_published', $page?->is_published) ? 'checked' : '' }}
                                class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         <label for="is_published" class="text-sm font-medium text-gray-700">
-                            Publish this page
+                            {{ $isId ? 'Terbitkan halaman ini' : 'Publish this page' }}
                         </label>
                     </div>
                 </div>
@@ -92,14 +92,14 @@
             {{-- Page Content --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h2 class="font-semibold text-gray-900">Page Content</h2>
-                    <p class="text-xs text-gray-500 mt-1">Use the editor to create rich content. Tailwind CSS classes are supported.</p>
+                    <h2 class="font-semibold text-gray-900">{{ $isId ? 'Konten Halaman' : 'Page Content' }}</h2>
+                    <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Gunakan editor untuk membuat konten kaya. Kelas Tailwind CSS didukung.' : 'Use the editor to create rich content. Tailwind CSS classes are supported.' }}</p>
                 </div>
                 <div class="p-6">
                     <textarea name="content" 
-                              id="content"
-                              class="tinymce-editor"
-                              rows="20">{{ old('content', $page?->content) }}</textarea>
+                               id="content"
+                               class="tinymce-editor"
+                               rows="20">{{ old('content', $page?->content) }}</textarea>
                     @error('content')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -109,13 +109,13 @@
             {{-- Actions --}}
             <div class="flex items-center justify-between">
                 <a href="{{ route('admin.site-pages.index') }}"
-                   class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
-                    Cancel
+                   class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                    {{ $isId ? 'Batal' : 'Cancel' }}
                 </a>
                 <button type="submit"
-                        class="px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700">
+                        class="px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer">
                     <i class="fa-solid fa-save mr-2"></i>
-                    {{ $page ? 'Update Page' : 'Create Page' }}
+                    {{ $isId ? ($page ? 'Perbarui Halaman' : 'Buat Halaman') : ($page ? 'Update Page' : 'Create Page') }}
                 </button>
             </div>
         </form>

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Block: ' . $block->title)
+@section('title', ($isId ? 'Edit Blok: ' : 'Edit Block: ') . $block->title)
 
 @section('content')
     <div class="min-h-screen bg-gray-50 py-8">
@@ -9,9 +9,9 @@
             <div class="mb-8">
                 <a href="{{ route('admin.site.appearance.index') }}" class="text-blue-600 hover:text-blue-700 text-sm">
                     <i class="fa-solid fa-arrow-left mr-2"></i>
-                    Back to Page Builder
+                    {{ $isId ? 'Kembali ke Pembuat Halaman' : 'Back to Page Builder' }}
                 </a>
-                <h1 class="text-2xl font-bold text-gray-900 mt-4">Edit: {{ $block->title }}</h1>
+                <h1 class="text-2xl font-bold text-gray-900 mt-4">{{ $isId ? 'Edit' : 'Edit' }}: {{ $block->title }}</h1>
                 <p class="text-gray-500">{{ $block->description }}</p>
             </div>
 
@@ -23,11 +23,11 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     {{-- Basic Settings --}}
                     <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4">Basic Settings</h2>
+                        <h2 class="text-lg font-bold text-gray-900 mb-4">{{ $isId ? 'Pengaturan Dasar' : 'Basic Settings' }}</h2>
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Judul Bagian' : 'Section Title' }}</label>
                                 <input type="text" name="title" value="{{ $block->title }}"
                                     class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                             </div>
@@ -36,14 +36,14 @@
                                 <input type="checkbox" name="is_active" value="1"
                                     {{ $block->is_active ? 'checked' : '' }} id="is_active"
                                     class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <label for="is_active" class="text-sm text-gray-700">Active (show on portal)</label>
+                                <label for="is_active" class="text-sm text-gray-700">{{ $isId ? 'Aktif (tampilkan di portal)' : 'Active (show on portal)' }}</label>
                             </div>
                         </div>
                     </div>
 
                     {{-- Block-Specific Configuration --}}
                     <div class="p-6 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4">Configuration</h2>
+                        <h2 class="text-lg font-bold text-gray-900 mb-4">{{ $isId ? 'Konfigurasi' : 'Configuration' }}</h2>
 
                         @switch($block->key)
                             {{-- Hero Search Block --}}
@@ -64,25 +64,24 @@
                                         <input type="checkbox" name="config[show_popular_topics]" value="1"
                                             {{ $block->getConfig('show_popular_topics', true) ? 'checked' : '' }}
                                             class="rounded border-gray-300 text-blue-600">
-                                        <label class="text-sm text-gray-700">Show Popular Topics</label>
+                                        <label class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Topik Populer' : 'Show Popular Topics' }}</label>
                                     </div>
 
                                     <hr class="border-gray-100 my-4">
 
                                     {{-- Social Proof Settings --}}
                                     <div>
-                                        <h3 class="text-sm font-medium text-gray-900 mb-3">Social Proof (Avatars & Stars)</h3>
+                                        <h3 class="text-sm font-medium text-gray-900 mb-3">{{ $isId ? 'Bukti Sosial (Avatar & Bintang)' : 'Social Proof (Avatars & Stars)' }}</h3>
                                         <div class="flex items-center gap-3 mb-4">
                                             <input type="checkbox" name="config[show_social_proof]" value="1"
                                                 {{ $block->getConfig('show_social_proof', true) ? 'checked' : '' }}
                                                 class="rounded border-gray-300 text-blue-600">
-                                            <label class="text-sm text-gray-700">Show Social Proof Section</label>
+                                            <label class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Bagian Bukti Sosial' : 'Show Social Proof Section' }}</label>
                                         </div>
 
                                         {{-- Current Logos --}}
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Institution Logos (Max
-                                                4)</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Logo Institusi (Maks 4)' : 'Institution Logos (Max 4)' }}</label>
                                             @php $logos = $block->getConfig('logos', []); @endphp
 
                                             @if (count($logos) > 0)
@@ -92,14 +91,14 @@
                                                             <img src="{{ Storage::disk('public')->url($logo) }}" alt="Logo"
                                                                 class="h-12 w-full object-contain">
                                                             <button type="button" onclick="deleteLogo('{{ $logo }}')"
-                                                                class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                                                 <i class="fa-solid fa-times text-xs"></i>
                                                             </button>
                                                         </div>
                                                     @endforeach
                                                 </div>
                                             @else
-                                                <p class="text-sm text-gray-500 mb-4">No logos uploaded yet.</p>
+                                                <p class="text-sm text-gray-500 mb-4">{{ $isId ? 'Belum ada logo yang diunggah.' : 'No logos uploaded yet.' }}</p>
                                             @endif
                                         </div>
 
@@ -107,7 +106,7 @@
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                                 <i class="fa-solid fa-upload mr-2"></i>
-                                                Upload Logos
+                                                {{ $isId ? 'Unggah Logo' : 'Upload Logos' }}
                                             </label>
                                             <div
                                                 class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
@@ -115,11 +114,10 @@
                                                     id="social-proof-logo-upload" class="hidden" onchange="previewLogos(this)">
                                                 <label for="social-proof-logo-upload" class="cursor-pointer">
                                                     <i class="fa-solid fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                                                    <p class="text-sm text-gray-600">Click to upload or drag and drop</p>
-                                                    <p class="text-xs text-gray-400">PNG, JPG, SVG (Max 2MB)</p>
+                                                    <p class="text-sm text-gray-600">{{ $isId ? 'Klik untuk mengunggah atau seret dan lepas' : 'Click to upload or drag and drop' }}</p>
+                                                    <p class="text-xs text-gray-400">PNG, JPG, SVG ({{ $isId ? 'Maks' : 'Max' }} 2MB)</p>
                                                 </label>
                                             </div>
-                                            <!-- We can reuse the same preview container id since only one case is active at a time, or give it a unique one if ensuring distinctness. Given the JS simply finds 'logo-preview', let's use a unique ID here and update the JS call or just rely on the fact that only one block type form is rendered. Wait, the JS function looks for 'logo-preview' by ID. So I should use id="logo-preview" here too. -->
                                             <div id="logo-preview" class="grid grid-cols-4 gap-4 mt-4"></div>
                                         </div>
                                     </div>
@@ -130,19 +128,19 @@
                             @case('featured_journals')
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Judul Bagian' : 'Section Title' }}</label>
                                         <input type="text" name="config[title]"
                                             value="{{ $block->getConfig('title', 'Featured Journals') }}"
                                             class="w-full rounded-lg border-gray-300">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Subjudul' : 'Subtitle' }}</label>
                                         <input type="text" name="config[subtitle]" value="{{ $block->getConfig('subtitle') }}"
                                             class="w-full rounded-lg border-gray-300">
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Layout</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Tata Letak' : 'Layout' }}</label>
                                             <select name="config[layout]" class="w-full rounded-lg border-gray-300">
                                                 <option value="grid"
                                                     {{ $block->getConfig('layout') === 'grid' ? 'selected' : '' }}>Grid</option>
@@ -154,7 +152,7 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Columns</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Kolom' : 'Columns' }}</label>
                                             <select name="config[columns]" class="w-full rounded-lg border-gray-300">
                                                 @for ($i = 2; $i <= 6; $i++)
                                                     <option value="{{ $i }}"
@@ -165,7 +163,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Journals to Show</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Jumlah Jurnal Maksimum untuk Ditampilkan' : 'Max Journals to Show' }}</label>
                                         <input type="number" name="config[limit]" value="{{ $block->getConfig('limit', 8) }}"
                                             min="1" max="20" class="w-full rounded-lg border-gray-300">
                                     </div>
@@ -176,31 +174,27 @@
                             @case('indexing_partners')
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Judul Bagian' : 'Section Title' }}</label>
                                         <input type="text" name="config[title]"
                                             value="{{ $block->getConfig('title', 'Indexed by Major Databases') }}"
                                             class="w-full rounded-lg border-gray-300">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Layout Mode</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Mode Tata Letak' : 'Layout Mode' }}</label>
                                         <select name="config[layout]" class="w-full rounded-lg border-gray-300">
                                             <option value="auto"
-                                                {{ $block->getConfig('layout', 'auto') === 'auto' ? 'selected' : '' }}>Auto
-                                                (Marquee if > 6 logos)</option>
+                                                {{ $block->getConfig('layout', 'auto') === 'auto' ? 'selected' : '' }}>{{ $isId ? 'Otomatis (Marquee jika > 6 logo)' : 'Auto (Marquee if > 6 logos)' }}</option>
                                             <option value="static-grid"
-                                                {{ $block->getConfig('layout') === 'static-grid' ? 'selected' : '' }}>Static Grid
-                                                (Centered)</option>
+                                                {{ $block->getConfig('layout') === 'static-grid' ? 'selected' : '' }}>{{ $isId ? 'Kisi Statis (Terpusat)' : 'Static Grid (Centered)' }}</option>
                                             <option value="marquee"
-                                                {{ $block->getConfig('layout') === 'marquee' ? 'selected' : '' }}>Marquee (Always
-                                                Scrolling)</option>
+                                                {{ $block->getConfig('layout') === 'marquee' ? 'selected' : '' }}>{{ $isId ? 'Marquee (Selalu Bergulir)' : 'Marquee (Always Scrolling)' }}</option>
                                         </select>
-                                        <p class="text-xs text-gray-500 mt-1">Auto mode switches to scrolling marquee when more
-                                            than 6 logos are uploaded.</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Mode otomatis beralih ke marquee bergulir ketika lebih dari 6 logo diunggah.' : 'Auto mode switches to scrolling marquee when more than 6 logos are uploaded.' }}</p>
                                     </div>
 
                                     {{-- Current Logos --}}
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Logos</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Logo Saat Ini' : 'Current Logos' }}</label>
                                         @php $logos = $block->getConfig('logos', []); @endphp
 
                                         @if (count($logos) > 0)
@@ -210,14 +204,14 @@
                                                         <img src="{{ Storage::disk('public')->url($logo) }}" alt="Logo"
                                                             class="h-12 w-full object-contain">
                                                         <button type="button" onclick="deleteLogo('{{ $logo }}')"
-                                                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                                             <i class="fa-solid fa-times text-xs"></i>
                                                         </button>
                                                     </div>
                                                 @endforeach
                                             </div>
                                         @else
-                                            <p class="text-sm text-gray-500 mb-4">No logos uploaded yet.</p>
+                                            <p class="text-sm text-gray-500 mb-4">{{ $isId ? 'Belum ada logo yang diunggah.' : 'No logos uploaded yet.' }}</p>
                                         @endif
                                     </div>
 
@@ -225,7 +219,7 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             <i class="fa-solid fa-upload mr-2"></i>
-                                            Upload New Logos
+                                            {{ $isId ? 'Unggah Logo Baru' : 'Upload New Logos' }}
                                         </label>
                                         <div
                                             class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
@@ -233,8 +227,8 @@
                                                 class="hidden" onchange="previewLogos(this)">
                                             <label for="logo-upload" class="cursor-pointer">
                                                 <i class="fa-solid fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                                                <p class="text-sm text-gray-600">Click to upload or drag and drop</p>
-                                                <p class="text-xs text-gray-400">PNG, JPG, SVG, GIF (Max 2MB each)</p>
+                                                <p class="text-sm text-gray-600">{{ $isId ? 'Klik untuk mengunggah atau seret dan lepas' : 'Click to upload or drag and drop' }}</p>
+                                                <p class="text-xs text-gray-400">PNG, JPG, SVG, GIF ({{ $isId ? 'Maks 2MB per file' : 'Max 2MB each' }})</p>
                                             </label>
                                         </div>
                                         <div id="logo-preview" class="grid grid-cols-4 gap-4 mt-4"></div>
@@ -246,20 +240,20 @@
                             @case('latest_articles')
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Judul Bagian' : 'Section Title' }}</label>
                                         <input type="text" name="config[title]"
                                             value="{{ $block->getConfig('title', 'Latest Publications') }}"
                                             class="w-full rounded-lg border-gray-300">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Subjudul' : 'Subtitle' }}</label>
                                         <input type="text" name="config[subtitle]"
                                             value="{{ $block->getConfig('subtitle') }}"
                                             class="w-full rounded-lg border-gray-300">
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Layout</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Tata Letak' : 'Layout' }}</label>
                                             <select name="config[layout]" class="w-full rounded-lg border-gray-300">
                                                 <option value="cards"
                                                     {{ $block->getConfig('layout') === 'cards' ? 'selected' : '' }}>Cards</option>
@@ -271,7 +265,7 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Articles to Show</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Artikel untuk Ditampilkan' : 'Articles to Show' }}</label>
                                             <input type="number" name="config[limit]"
                                                 value="{{ $block->getConfig('limit', 6) }}" min="1" max="20"
                                                 class="w-full rounded-lg border-gray-300">
@@ -282,19 +276,19 @@
                                             <input type="checkbox" name="config[show_abstract]" value="1"
                                                 {{ $block->getConfig('show_abstract', true) ? 'checked' : '' }}
                                                 class="rounded border-gray-300 text-blue-600">
-                                            <span class="text-sm text-gray-700">Show Abstract</span>
+                                            <span class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Abstrak' : 'Show Abstract' }}</span>
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" name="config[show_authors]" value="1"
                                                 {{ $block->getConfig('show_authors', true) ? 'checked' : '' }}
                                                 class="rounded border-gray-300 text-blue-600">
-                                            <span class="text-sm text-gray-700">Show Authors</span>
+                                            <span class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Penulis' : 'Show Authors' }}</span>
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" name="config[show_journal]" value="1"
                                                 {{ $block->getConfig('show_journal', true) ? 'checked' : '' }}
                                                 class="rounded border-gray-300 text-blue-600">
-                                            <span class="text-sm text-gray-700">Show Journal</span>
+                                            <span class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Jurnal' : 'Show Journal' }}</span>
                                         </label>
                                     </div>
                                 </div>
@@ -316,7 +310,7 @@
                                             class="w-full rounded-lg border-gray-300">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Teks Tombol' : 'Button Text' }}</label>
                                         <input type="text" name="config[button_text]"
                                             value="{{ $block->getConfig('button_text', 'Subscribe') }}"
                                             class="w-full rounded-lg border-gray-300">
@@ -328,13 +322,12 @@
                             @case('custom_html')
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">HTML Content</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Konten HTML' : 'HTML Content' }}</label>
                                         <textarea name="config[html_content]" rows="10" class="w-full rounded-lg border-gray-300 font-mono text-sm">{{ $block->getConfig('html_content') }}</textarea>
-                                        <p class="text-xs text-gray-500 mt-1">⚠️ Be careful with custom HTML. Only use trusted
-                                            content.</p>
+                                        <p class="text-xs text-gray-500 mt-1">⚠️ {{ $isId ? 'Hati-hati dengan HTML kustom. Hanya gunakan konten tepercaya.' : 'Be careful with custom HTML. Only use trusted content.' }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">CSS Classes</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Kelas CSS' : 'CSS Classes' }}</label>
                                         <input type="text" name="config[css_classes]"
                                             value="{{ $block->getConfig('css_classes') }}"
                                             class="w-full rounded-lg border-gray-300" placeholder="e.g., bg-gray-100 py-8">
@@ -346,13 +339,13 @@
                             @case('stats_counter')
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Judul Bagian' : 'Section Title' }}</label>
                                         <input type="text" name="config[title]"
                                             value="{{ $block->getConfig('title', 'Platform Statistics') }}"
                                             class="w-full rounded-lg border-gray-300">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Subjudul' : 'Subtitle' }}</label>
                                         <input type="text" name="config[subtitle]"
                                             value="{{ $block->getConfig('subtitle') }}"
                                             class="w-full rounded-lg border-gray-300">
@@ -360,46 +353,43 @@
 
                                     {{-- Current Statistics --}}
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Statistics</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Statistik Saat Ini' : 'Current Statistics' }}</label>
                                         <div class="bg-gray-50 rounded-lg p-4">
                                             @if (isset($stats))
                                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                     <div class="text-center">
                                                         <div class="text-2xl font-bold text-blue-600">
                                                             {{ number_format($stats['journals'] ?? 0) }}</div>
-                                                        <div class="text-sm text-gray-600">Active Journals</div>
+                                                        <div class="text-sm text-gray-600">{{ $isId ? 'Jurnal Aktif' : 'Active Journals' }}</div>
                                                     </div>
                                                     <div class="text-center">
                                                         <div class="text-2xl font-bold text-green-600">
                                                             {{ number_format($stats['submissions'] ?? 0) }}</div>
-                                                        <div class="text-sm text-gray-600">Total Submissions</div>
+                                                        <div class="text-sm text-gray-600">{{ $isId ? 'Total Pengajuan' : 'Total Submissions' }}</div>
                                                     </div>
                                                     <div class="text-center">
                                                         <div class="text-2xl font-bold text-purple-600">
                                                             {{ number_format($stats['users'] ?? 0) }}</div>
-                                                        <div class="text-sm text-gray-600">Registered Users</div>
+                                                        <div class="text-sm text-gray-600">{{ $isId ? 'Pengguna Terdaftar' : 'Registered Users' }}</div>
                                                     </div>
                                                 </div>
                                             @else
-                                                <p class="text-sm text-gray-500">Loading statistics...</p>
+                                                <p class="text-sm text-gray-500">{{ $isId ? 'Memuat statistik...' : 'Loading statistics...' }}</p>
                                             @endif
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-2">These statistics are automatically calculated from
-                                            the database.</p>
+                                        <p class="text-xs text-gray-500 mt-2">{{ $isId ? 'Statistik ini dihitung secara otomatis dari database.' : 'These statistics are automatically calculated from the database.' }}</p>
                                     </div>
 
                                     {{-- Configuration Options --}}
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Animation Duration
-                                                (ms)</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Durasi Animasi (ms)' : 'Animation Duration (ms)' }}</label>
                                             <input type="number" name="config[animation_duration]"
                                                 value="{{ $block->getConfig('animation_duration', 2000) }}" min="500"
                                                 max="5000" class="w-full rounded-lg border-gray-300">
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Animation Delay
-                                                (ms)</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Jeda Animasi (ms)' : 'Animation Delay (ms)' }}</label>
                                             <input type="number" name="config[animation_delay]"
                                                 value="{{ $block->getConfig('animation_delay', 200) }}" min="0"
                                                 max="1000" class="w-full rounded-lg border-gray-300">
@@ -411,13 +401,13 @@
                                             <input type="checkbox" name="config[show_icons]" value="1"
                                                 {{ $block->getConfig('show_icons', true) ? 'checked' : '' }}
                                                 class="rounded border-gray-300 text-blue-600">
-                                            <span class="text-sm text-gray-700">Show Icons</span>
+                                            <span class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Ikon' : 'Show Icons' }}</span>
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" name="config[animate_on_scroll]" value="1"
                                                 {{ $block->getConfig('animate_on_scroll', true) ? 'checked' : '' }}
                                                 class="rounded border-gray-300 text-blue-600">
-                                            <span class="text-sm text-gray-700">Animate on Scroll</span>
+                                            <span class="text-sm text-gray-700">{{ $isId ? 'Animasikan saat Gulir' : 'Animate on Scroll' }}</span>
                                         </label>
                                     </div>
                                 </div>
@@ -452,12 +442,12 @@
                     <div class="p-6 bg-gray-50 flex items-center justify-between">
                         <a href="{{ route('admin.site.appearance.index') }}"
                             class="px-4 py-2 text-gray-700 hover:text-gray-900">
-                            Cancel
+                            {{ $isId ? 'Batal' : 'Cancel' }}
                         </a>
                         <button type="submit"
-                            class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
+                            class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 cursor-pointer">
                             <i class="fa-solid fa-save mr-2"></i>
-                            Save Changes
+                            {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                         </button>
                     </div>
                 </div>
@@ -486,7 +476,7 @@
             }
 
             function deleteLogo(path) {
-                if (!confirm('Are you sure you want to delete this logo?')) return;
+                if (!confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus logo ini?' : 'Are you sure you want to delete this logo?' }}')) return;
 
                 fetch('{{ route('admin.site.appearance.logo.delete', $block) }}', {
                         method: 'DELETE',

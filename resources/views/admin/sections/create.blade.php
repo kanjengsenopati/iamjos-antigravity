@@ -3,7 +3,7 @@
 @endphp
 
 <x-app-layout>
-    <x-slot name="title">Add Section</x-slot>
+    <x-slot name="title">{{ $isId ? 'Tambah Bagian' : 'Add Section' }}</x-slot>
 
     <x-slot name="header">
         <div class="flex items-center space-x-4">
@@ -15,8 +15,8 @@
                 </svg>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Add Section</h1>
-                <p class="mt-1 text-sm text-gray-500">Create a new article section.</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Tambah Bagian' : 'Add Section' }}</h1>
+                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Buat bagian artikel baru.' : 'Create a new article section.' }}</p>
             </div>
         </div>
     </x-slot>
@@ -27,34 +27,34 @@
                 @csrf
                 <div class="space-y-6">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Section Name *</label>
+                        <label for="name" class="block text-sm font-medium text-gray-700">{{ $isId ? 'Nama Bagian' : 'Section Name' }} *</label>
                         <input type="text" name="name" id="name" required
-                            placeholder="e.g., Original Articles"
+                            placeholder="{{ $isId ? 'misal: Artikel Asli' : 'e.g., Original Articles' }}"
                             class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
                     </div>
                     <div>
-                        <label for="abbreviation" class="block text-sm font-medium text-gray-700">Abbreviation</label>
-                        <input type="text" name="abbreviation" id="abbreviation" placeholder="e.g., OA"
+                        <label for="abbreviation" class="block text-sm font-medium text-gray-700">{{ $isId ? 'Singkatan' : 'Abbreviation' }}</label>
+                        <input type="text" name="abbreviation" id="abbreviation" placeholder="{{ $isId ? 'misal: OA' : 'e.g., OA' }}"
                             class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
                     </div>
                     <div>
-                        <label for="policy" class="block text-sm font-medium text-gray-700">Section Policy</label>
+                        <label for="policy" class="block text-sm font-medium text-gray-700">{{ $isId ? 'Kebijakan Bagian' : 'Section Policy' }}</label>
                         <textarea name="policy" id="policy" rows="4"
-                            placeholder="Describe the types of articles accepted in this section..."
+                            placeholder="{{ $isId ? 'Jelaskan jenis artikel yang diterima di bagian ini...' : 'Describe the types of articles accepted in this section...' }}"
                             class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"></textarea>
                     </div>
                     <div class="flex items-center">
                         <input type="checkbox" name="is_active" id="is_active" checked
                             class="rounded border-gray-300 text-primary-500 focus:ring-primary-500">
-                        <label for="is_active" class="ml-2 text-sm text-gray-700">Active (accepts submissions)</label>
+                        <label for="is_active" class="ml-2 text-sm text-gray-700">{{ $isId ? 'Aktif (menerima pengajuan)' : 'Active (accepts submissions)' }}</label>
                     </div>
                 </div>
                 <div class="mt-8 flex items-center justify-end space-x-4">
                     <a href="{{ route('journal.admin.sections.index', ['journal' => $journal->slug]) }}"
-                        class="text-sm font-medium text-gray-600 hover:text-gray-900">Cancel</a>
+                        class="text-sm font-medium text-gray-600 hover:text-gray-900">{{ $isId ? 'Batal' : 'Cancel' }}</a>
                     <button type="submit"
-                        class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                        Create Section
+                        class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer">
+                        {{ $isId ? 'Buat Bagian' : 'Create Section' }}
                     </button>
                 </div>
             </form>

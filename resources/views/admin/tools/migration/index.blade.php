@@ -1,21 +1,21 @@
 @extends('layouts.admin')
 
-@section('title', 'OJS SQL Migration')
+@section('title', $isId ? 'Migrasi SQL OJS' : 'OJS SQL Migration')
 
 @section('content')
 <div x-data="migrationDashboard()">
     <!-- Header -->
     <div class="mb-8 flex justify-between items-end">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900">OJS SQL Migration</h1>
-            <p class="mt-1 text-slate-500 text-sm">Transform legacy MySQL OJS dump into IamJOS PostgreSQL structure.</p>
+            <h1 class="text-2xl font-bold text-slate-900">{{ $isId ? 'Migrasi SQL OJS' : 'OJS SQL Migration' }}</h1>
+            <p class="mt-1 text-slate-500 text-sm">{{ $isId ? 'Ubah dump MySQL OJS lama menjadi struktur PostgreSQL IamJOS.' : 'Transform legacy MySQL OJS dump into IamJOS PostgreSQL structure.' }}</p>
         </div>
         <div class="flex gap-3">
             @if($config)
             <form action="{{ route('admin.tools.migration.reset') }}" method="POST" onsubmit="return confirm('Hapus file dan reset progres?')">
                 @csrf
                 <button type="submit" class="px-5 py-2.5 rounded-xl font-medium bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-all text-sm">
-                    Reset & Cleanup
+                    {{ $isId ? 'Reset & Bersihkan' : 'Reset & Cleanup' }}
                 </button>
             </form>
             @endif
@@ -43,23 +43,23 @@
                 <div class="flex border-b border-slate-50">
                     <button @click="activeSetupTab = 'sql'" 
                         :class="activeSetupTab === 'sql' ? 'border-blue-500 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2">
+                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2 cursor-pointer">
                         <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px]" :class="activeSetupTab === 'sql' ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-200'">1</span>
-                        Database Source
+                        {{ $isId ? 'Sumber Database' : 'Database Source' }}
                     </button>
                     <button @click="activeSetupTab = 'progress'" 
                         :disabled="!{{ $config && $config->database ? 'true' : 'false' }}"
                         :class="activeSetupTab === 'progress' ? 'border-blue-500 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
+                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2 disabled:opacity-30 cursor-pointer">
                         <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px]" :class="activeSetupTab === 'progress' ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-200'">2</span>
-                        Migration Sync
+                        {{ $isId ? 'Sinkronisasi Migrasi' : 'Migration Sync' }}
                     </button>
                     <button @click="activeSetupTab = 'files'" 
                         :disabled="!{{ $config && $config->database ? 'true' : 'false' }}"
                         :class="activeSetupTab === 'files' ? 'border-blue-500 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
+                        class="flex-1 py-4 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-2 disabled:opacity-30 cursor-pointer">
                         <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px]" :class="activeSetupTab === 'files' ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-200'">3</span>
-                        Fill Assets
+                        {{ $isId ? 'Isi Aset Berkas' : 'Fill Assets' }}
                     </button>
                 </div>
 
@@ -69,15 +69,15 @@
                     <div class="flex p-1 bg-slate-100 rounded-xl w-max mb-8">
                         <button @click="mode = 'db'" 
                             :class="mode === 'db' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-                            class="px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                            class="px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 cursor-pointer">
                             <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
-                            Direct Database (Fast)
+                            {{ $isId ? 'Database Langsung (Cepat)' : 'Direct Database (Fast)' }}
                         </button>
                         <button @click="mode = 'file'" 
                             :class="mode === 'file' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-                            class="px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                            class="px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 cursor-pointer">
                             <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            SQL File (ETL)
+                            {{ $isId ? 'Berkas SQL (ETL)' : 'SQL File (ETL)' }}
                         </button>
                     </div>
 
@@ -85,9 +85,9 @@
                         <div class="mb-6 p-4 bg-emerald-50 rounded-xl flex items-center justify-between border border-emerald-100">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                <span class="text-sm font-medium text-emerald-800">Source Ready: {{ $config->database }}</span>
+                                <span class="text-sm font-medium text-emerald-800">{{ $isId ? 'Sumber Siap: ' : 'Source Ready: ' }}{{ $config->database }}</span>
                             </div>
-                            <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                            <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">{{ $isId ? 'AKTIF' : 'ACTIVE' }}</span>
                         </div>
                     @endif
 
@@ -100,29 +100,29 @@
                             <div class="grid grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Host</label>
-                                    <input type="text" name="host" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="127.0.0.1" value="{{ $config?->host ?? '127.0.0.1' }}" required>
+                                    <input type="text" name="host" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="127.0.0.1" value="{{ $config?->host ?? '127.0.0.1' }}" required>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Port</label>
-                                    <input type="number" name="port" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="3306" value="{{ $config?->port ?? '3306' }}" required>
+                                    <input type="number" name="port" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="3306" value="{{ $config?->port ?? '3306' }}" required>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database Name</label>
-                                    <input type="text" name="database" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="ojs_legacy_db" value="{{ ($config?->connection_name === 'ojs_legacy') ? $config->database : '' }}" required>
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">{{ $isId ? 'Nama Database' : 'Database Name' }}</label>
+                                    <input type="text" name="database" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="ojs_legacy_db" value="{{ ($config?->connection_name === 'ojs_legacy') ? $config->database : '' }}" required>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database User</label>
-                                    <input type="text" name="username" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="root" value="{{ $config?->username ?? 'root' }}" required>
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">{{ $isId ? 'Pengguna Database' : 'Database User' }}</label>
+                                    <input type="text" name="username" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="root" value="{{ $config?->username ?? 'root' }}" required>
                                 </div>
                                 <div class="col-span-2">
-                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Database Password</label>
-                                    <input type="password" name="password" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="Leave empty if none">
+                                    <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">{{ $isId ? 'Kata Sandi Database' : 'Database Password' }}</label>
+                                    <input type="password" name="password" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="{{ $isId ? 'Biarkan kosong jika tidak ada' : 'Leave empty if none' }}">
                                 </div>
                             </div>
                             
-                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex justify-center items-center gap-2">
+                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex justify-center items-center gap-2 cursor-pointer">
                                 <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                Connect & Initialize
+                                {{ $isId ? 'Hubungkan & Inisialisasi' : 'Connect & Initialize' }}
                             </button>
                         </form>
                     </div>
@@ -140,20 +140,20 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                         </svg>
                                     </div>
-                                    <h3 class="text-slate-800 font-bold" x-text="fileName || 'Click or drag SQL file here'"></h3>
-                                    <p class="text-slate-400 text-sm mt-1">Maximum file size: 512MB (.sql)</p>
+                                    <h3 class="text-slate-800 font-bold" x-text="fileName || '{{ $isId ? "Klik atau seret berkas SQL ke sini" : "Click or drag SQL file here" }}'"></h3>
+                                    <p class="text-slate-400 text-sm mt-1">{{ $isId ? 'Ukuran berkas maksimal: 512MB (.sql)' : 'Maximum file size: 512MB (.sql)' }}</p>
                                 </div>
                             </div>
-                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all">
-                                Upload & Initialize SQL
+                            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all cursor-pointer">
+                                {{ $isId ? 'Unggah & Inisialisasi SQL' : 'Upload & Initialize SQL' }}
                             </button>
                         </form>
                     </div>
 
                     @if($config && $config->database)
                         <div class="mt-6 border-t border-slate-100 pt-6 flex justify-end">
-                            <button type="button" @click="activeSetupTab = 'progress'" class="flex items-center gap-2 text-blue-600 font-bold hover:underline text-sm">
-                                Lanjut ke Migration Dashboard
+                            <button type="button" @click="activeSetupTab = 'progress'" class="flex items-center gap-2 text-blue-600 font-bold hover:underline text-sm cursor-pointer">
+                                {{ $isId ? 'Lanjut ke Dasbor Migrasi' : 'Lanjut to Migration Dashboard' }}
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </button>
                         </div>
@@ -166,19 +166,19 @@
                             <div class="flex items-center gap-2 text-sm">
                                 <template x-for="bc in breadcrumbs" :key="bc.path">
                                     <div class="flex items-center">
-                                        <button @click="loadPath(bc.path)" class="text-slate-400 hover:text-blue-600 font-medium" x-text="bc.name"></button>
+                                        <button @click="loadPath(bc.path)" class="text-slate-400 hover:text-blue-600 font-medium cursor-pointer" x-text="bc.name"></button>
                                         <svg class="w-4 h-4 text-slate-300 mx-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                                     </div>
                                 </template>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button @click="$refs.fileInput.click()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all">
+                                <button @click="$refs.fileInput.click()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                    Upload Files
+                                    {{ $isId ? 'Unggah Berkas' : 'Upload Files' }}
                                 </button>
-                                <button @click="createFolderPrompt()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all">
+                                <button @click="createFolderPrompt()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    New Folder
+                                    {{ $isId ? 'Folder Baru' : 'New Folder' }}
                                 </button>
                                 <input type="file" x-ref="fileInput" @change="uploadFiles($event)" multiple class="hidden">
                             </div>
@@ -218,7 +218,7 @@
                             </div>
                             <div x-show="!loading && items.length === 0" class="flex flex-col items-center justify-center h-[400px] text-slate-400">
                                 <svg class="w-16 h-16 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                <p class="text-sm font-medium">Folder ini kosong</p>
+                                <p class="text-sm font-medium">{{ $isId ? 'Folder ini kosong' : 'This folder is empty' }}</p>
                             </div>
                         </div>
 
@@ -227,11 +227,11 @@
                             @csrf
                             <input type="hidden" name="type" value="files">
                             <div>
-                                <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Selected OJS Files Path</label>
+                                <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">{{ $isId ? 'Jalur Berkas OJS Terpilih' : 'Selected OJS Files Path' }}</label>
                                 <div class="flex gap-2">
-                                    <input type="text" name="base_url" x-model="currentPath" placeholder="Click folder to select" class="flex-1 px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono text-slate-600 outline-none" readonly>
-                                    <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all text-sm">
-                                        Use This Folder
+                                    <input type="text" name="base_url" x-model="currentPath" placeholder="{{ $isId ? 'Klik folder untuk memilih' : 'Click folder to select' }}" class="flex-1 px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono text-slate-600 outline-none" readonly>
+                                    <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all text-sm cursor-pointer">
+                                        {{ $isId ? 'Gunakan Folder Ini' : 'Use This Folder' }}
                                     </button>
                                 </div>
                                 <p class="mt-2 text-[11px] text-slate-400 italic">Gunakan navigasi di atas untuk masuk ke direktori tempat file OJS berada.</p>
@@ -241,8 +241,8 @@
                         @if($config && $config->database)
                             <div class="mt-6 border-t border-slate-100 pt-6 flex justify-between items-center">
                                 <span class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">* Opsional jika tidak migrasi file PDF</span>
-                                <button type="button" @click="activeSetupTab = 'progress'" class="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all text-sm shadow-lg shadow-emerald-200">
-                                    Buka Migration Dashboard
+                                <button type="button" @click="activeSetupTab = 'progress'" class="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all text-sm shadow-lg shadow-emerald-200 cursor-pointer">
+                                    {{ $isId ? 'Buka Dasbor Migrasi' : 'Open Migration Dashboard' }}
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                 </button>
                             </div>
@@ -352,12 +352,12 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800">Source: {{ $config->database }}</h3>
-                        <p class="text-sm text-slate-500 italic">File successfully parsed and ready for transformation.</p>
+                        <h3 class="font-bold text-slate-800">{{ $isId ? 'Sumber: ' : 'Source: ' }}{{ $config->database }}</h3>
+                        <p class="text-sm text-slate-500 italic">{{ $isId ? 'Berkas berhasil diurai dan siap untuk transformasi.' : 'File successfully parsed and ready for transformation.' }}</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Target Database</p>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">{{ $isId ? 'Database Target' : 'Target Database' }}</p>
                     <p class="text-sm font-bold text-emerald-600">PostgreSQL (Local)</p>
                 </div>
             </div>
@@ -367,7 +367,7 @@
              <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden mb-8">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">SQL Data Preview</h2>
+                        <h2 class="text-lg font-bold text-slate-800">{{ $isId ? 'Pratinjau Data SQL' : 'SQL Data Preview' }}</h2>
                         <p class="text-sm text-slate-500">Pilih jurnal yang ingin di-import. Biarkan kosong untuk meng-import SEMUA.</p>
                     </div>
                 </div>
@@ -378,10 +378,10 @@
                                 <th class="px-6 py-3 w-10">
                                     <input type="checkbox" @change="toggleAllSource($event)" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                 </th>
-                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Nama Jurnal (SQL)</th>
-                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Section</th>
-                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Issue</th>
-                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Jml Article</th>
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $isId ? 'Nama Jurnal (SQL)' : 'Journal Name (SQL)' }}</th>
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">{{ $isId ? 'Jml Bagian' : 'Section Count' }}</th>
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">{{ $isId ? 'Jml Terbitan' : 'Issue Count' }}</th>
+                                <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">{{ $isId ? 'Jml Artikel' : 'Article Count' }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -415,27 +415,27 @@
             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Migration Matrix (Sync)</h2>
-                        <p class="text-sm text-slate-500">Step-by-step data transformation.</p>
+                        <h2 class="text-lg font-bold text-slate-800">{{ $isId ? 'Matriks Migrasi (Sinkronisasi)' : 'Migration Matrix (Sync)' }}</h2>
+                        <p class="text-sm text-slate-500">{{ $isId ? 'Transformasi data langkah demi langkah.' : 'Step-by-step data transformation.' }}</p>
                     </div>
-                    <button @click="syncAll()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
-                        Run All Steps Sequence
+                    <button @click="syncAll()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 cursor-pointer">
+                        {{ $isId ? 'Jalankan Semua Langkah Berurutan' : 'Run All Steps Sequence' }}
                     </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-slate-50/50">
-                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">Phase</th>
-                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">Description</th>
+                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">{{ $isId ? 'Tahap' : 'Phase' }}</th>
+                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">{{ $isId ? 'Deskripsi' : 'Description' }}</th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
                                     <span class="flex items-center justify-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Legacy
+                                        <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> {{ $isId ? 'Lama (Legacy)' : 'Legacy' }}
                                     </span>
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
                                     <span class="flex items-center justify-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Migrated
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> {{ $isId ? 'Dimigrasikan' : 'Migrated' }}
                                     </span>
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
@@ -445,25 +445,25 @@
                                 </th>
                                 <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-center">
                                     <span class="flex items-center justify-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-slate-800 inline-block"></span> Total Data
+                                        <span class="w-2 h-2 rounded-full bg-slate-800 inline-block"></span> {{ $isId ? 'Total Data' : 'Total Data' }}
                                     </span>
                                 </th>
-                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
+                                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 text-right">{{ $isId ? 'Aksi' : 'Action' }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @foreach([
-                                'users'       => ['label' => 'Users & Roles',    'desc' => 'Accounts, passwords (default), and group roles', 'step' => 'users'],
-                                'journals'    => ['label' => 'Journals',          'desc' => 'Core journal profiles and settings',              'step' => 'journals'],
-                                'sections'    => ['label' => 'Sections',          'desc' => 'Journal taxonomies and abbreviations',             'step' => 'sections'],
-                                'issues'      => ['label' => 'Issues',            'desc' => 'Volumes, numbers, and cover info',                 'step' => 'issues'],
-                                'submissions' => ['label' => 'Articles',          'desc' => 'All submissions (published, review, etc)',          'step' => 'submissions'],
-                                'authors'     => ['label' => 'Authors',           'desc' => 'Contributor roles and affiliations',               'step' => 'authors'],
-                                'reviews'     => ['label' => 'Review Workflow',   'desc' => 'Review assignments, rounds, and decisions',        'step' => 'reviews'],
-                                'discussions' => ['label' => 'Discussions',       'desc' => 'Queries, notes, and messages',                     'step' => 'discussions'],
-                                'logs'        => ['label' => 'Event Logs',        'desc' => 'System audit logs and email history',              'step' => 'logs'],
-                                'metrics'     => ['label' => 'Statistics',        'desc' => 'Legacy usage and view counts',                     'step' => 'metrics'],
-                                'galleys'     => ['label' => 'Files & Galleys',   'desc' => 'All submission files and galleys',                 'step' => 'galleys'],
+                                'users'       => ['label' => $isId ? 'Pengguna & Peran' : 'Users & Roles',    'desc' => $isId ? 'Akun, kata sandi (default), dan peran grup' : 'Accounts, passwords (default), and group roles', 'step' => 'users'],
+                                'journals'    => ['label' => $isId ? 'Jurnal' : 'Journals',          'desc' => $isId ? 'Profil dan pengaturan jurnal inti' : 'Core journal profiles and settings',              'step' => 'journals'],
+                                'sections'    => ['label' => $isId ? 'Bagian' : 'Sections',          'desc' => $isId ? 'Taksonomi dan singkatan jurnal' : 'Journal taxonomies and abbreviations',             'step' => 'sections'],
+                                'issues'      => ['label' => $isId ? 'Terbitan' : 'Issues',            'desc' => $isId ? 'Volume, nomor, dan info sampul' : 'Volumes, numbers, and cover info',                 'step' => 'issues'],
+                                'submissions' => ['label' => $isId ? 'Artikel' : 'Articles',          'desc' => $isId ? 'Semua naskah (diterbitkan, peninjauan, dll)' : 'All submissions (published, review, etc)',          'step' => 'submissions'],
+                                'authors'     => ['label' => $isId ? 'Penulis' : 'Authors',           'desc' => $isId ? 'Peran kontributor dan afiliasi' : 'Contributor roles and affiliations',               'step' => 'authors'],
+                                'reviews'     => ['label' => $isId ? 'Alur Kerja Ulasan' : 'Review Workflow',   'desc' => $isId ? 'Penugasan ulasan, putaran, dan keputusan' : 'Review assignments, rounds, and decisions',        'step' => 'reviews'],
+                                'discussions' => ['label' => $isId ? 'Diskusi' : 'Discussions',       'desc' => $isId ? 'Pertanyaan, catatan, dan pesan' : 'Queries, notes, and messages',                     'step' => 'discussions'],
+                                'logs'        => ['label' => $isId ? 'Log Aktivitas' : 'Event Logs',        'desc' => $isId ? 'Log audit sistem dan riwayat email' : 'System audit logs and email history',              'step' => 'logs'],
+                                'metrics'     => ['label' => $isId ? 'Statistik' : 'Statistics',        'desc' => $isId ? 'Riwayat penggunaan dan jumlah tayangan' : 'Legacy usage and view counts',                     'step' => 'metrics'],
+                                'galleys'     => ['label' => $isId ? 'Berkas & Galeri' : 'Files & Galleys',   'desc' => $isId ? 'Semua berkas naskah dan galeri' : 'All submission files and galleys',                 'step' => 'galleys'],
                             ] as $key => $meta)
                             @php
                                 $legacyCount   = $stats[$key]['legacy_count']   ?? '—';
@@ -505,12 +505,12 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <button @click="runStep('{{ $meta['step'] }}')" 
-                                        class="text-blue-600 hover:text-blue-800 font-bold text-sm disabled:opacity-50 flex items-center justify-end gap-2 ml-auto"
+                                        class="text-blue-600 hover:text-blue-800 font-bold text-sm disabled:opacity-50 flex items-center justify-end gap-2 ml-auto cursor-pointer"
                                         :disabled="loadingStep === '{{ $meta['step'] }}'">
                                         <template x-if="loadingStep === '{{ $meta['step'] }}'">
                                             <svg class="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                         </template>
-                                        <span x-text="loadingStep === '{{ $meta['step'] }}' ? 'Processing...' : 'Run Step'"></span>
+                                        <span x-text="loadingStep === '{{ $meta['step'] }}' ? '{{ $isId ? "Memproses..." : "Processing..." }}' : '{{ $isId ? "Jalankan Tahap" : "Run Step" }}'"></span>
                                     </button>
                                 </td>
                             </tr>
@@ -524,42 +524,42 @@
             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 overflow-hidden">
                 <div class="p-6 border-b border-slate-50 flex items-center justify-between">
                     <div>
-                        <h2 class="text-base font-bold text-slate-800">Journal Integrity Check</h2>
+                        <h2 class="text-base font-bold text-slate-800">{{ $isId ? 'Pemeriksaan Integritas Jurnal' : 'Journal Integrity Check' }}</h2>
                         <p class="text-xs text-slate-500 mt-0.5">Verifikasi data per-jurnal: issues dan artikel yang berhasil disinkronisasi.</p>
                     </div>
                     
                     <div class="flex items-center gap-4">
                         <!-- Bulk Action Dropdown -->
                         <div x-show="selectedTargetJournals.length > 0" x-cloak x-transition class="flex items-center gap-2 bg-red-50 px-4 py-2 rounded-xl border border-red-100">
-                            <span class="text-[10px] font-bold text-red-600 uppercase tracking-widest"><span x-text="selectedTargetJournals.length"></span> Selected</span>
+                            <span class="text-[10px] font-bold text-red-600 uppercase tracking-widest"><span x-text="selectedTargetJournals.length"></span> {{ $isId ? 'Terpilih' : 'Selected' }}</span>
                             <div class="h-4 w-px bg-red-200"></div>
                             <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST" class="inline" onsubmit="return confirm('Hapus artikel pada jurnal terpilih?')">
                                 @csrf
                                 <template x-for="id in selectedTargetJournals">
                                     <input type="hidden" name="journal_ids[]" :value="id">
                                 </template>
-                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline">Reset Articles</button>
+                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline cursor-pointer">{{ $isId ? 'Reset Artikel' : 'Reset Articles' }}</button>
                             </form>
                             <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST" class="inline" onsubmit="return confirm('Hapus issue pada jurnal terpilih?')">
                                 @csrf
                                 <template x-for="id in selectedTargetJournals">
                                     <input type="hidden" name="journal_ids[]" :value="id">
                                 </template>
-                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline ml-2">Reset Issues</button>
+                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline ml-2 cursor-pointer">{{ $isId ? 'Reset Terbitan' : 'Reset Issues' }}</button>
                             </form>
                             <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST" class="inline" onsubmit="return confirm('Hapus seluruh data (Jurnal, Section, Issue, Artikel) pada jurnal terpilih?')">
                                 @csrf
                                 <template x-for="id in selectedTargetJournals">
                                     <input type="hidden" name="journal_ids[]" :value="id">
                                 </template>
-                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline ml-2">Reset Everything</button>
+                                <button type="submit" class="text-[10px] font-bold text-red-600 hover:underline ml-2 cursor-pointer">{{ $isId ? 'Reset Semua' : 'Reset Everything' }}</button>
                             </form>
                         </div>
 
                         <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Complete</span>
-                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Partial</span>
-                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Empty</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> {{ $isId ? 'Lengkap' : 'Complete' }}</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> {{ $isId ? 'Sebagian' : 'Partial' }}</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> {{ $isId ? 'Kosong' : 'Empty' }}</span>
                             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Native</span>
                         </div>
                     </div>
@@ -571,13 +571,13 @@
                                 <th class="px-4 py-3 w-10">
                                     <input type="checkbox" @click="toggleAllTargets()" :checked="selectedTargetJournals.length === allTargets.length && allTargets.length > 0" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
                                 </th>
-                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Journal Name</th>
-                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Abbrev</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $isId ? 'Nama Jurnal' : 'Journal Name' }}</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $isId ? 'Singkatan' : 'Abbrev' }}</th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Path</th>
-                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Issues</th>
-                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Articles</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">{{ $isId ? 'Terbitan' : 'Issues' }}</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">{{ $isId ? 'Artikel' : 'Articles' }}</th>
                                 <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Status</th>
-                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
+                                <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">{{ $isId ? 'Aksi' : 'Action' }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -623,17 +623,17 @@
                                     @if($j['integrity'] === 'complete')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                            Complete
+                                            {{ $isId ? 'Lengkap' : 'Complete' }}
                                         </span>
                                     @elseif($j['integrity'] === 'partial')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
-                                            Partial
+                                            {{ $isId ? 'Sebagian' : 'Partial' }}
                                         </span>
                                     @elseif($j['integrity'] === 'empty')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            Empty
+                                            {{ $isId ? 'Kosong' : 'Empty' }}
                                         </span>
                                     @else
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
@@ -707,7 +707,7 @@
                         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     </div>
                     <div>
-                        <h2 class="text-sm font-bold text-red-900">Danger Zone — Reset Migration Data</h2>
+                        <h2 class="text-sm font-bold text-red-900">{{ $isId ? 'Zona Bahaya — Reset Data Migrasi' : 'Danger Zone — Reset Migration Data' }}</h2>
                         <p class="text-[11px] text-red-500/80 mt-0.5">Centang jurnal di tabel atas, atau biarkan kosong untuk reset semua jurnal.</p>
                     </div>
                 </div>
@@ -745,7 +745,7 @@
             <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Reset Articles -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset: Articles</h3>
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">{{ $isId ? 'Reset: Artikel' : 'Reset: Articles' }}</h3>
                     <p class="text-[11px] text-slate-500 mb-4">Hapus data Submission & Publication hasil migrasi.</p>
                     <form action="{{ route('admin.tools.migration.reset-articles') }}" method="POST"
                           @submit.prevent="if(confirm(selectedTargetJournals.length > 0 ? `Hapus artikel pada ${selectedTargetJournals.length} jurnal terpilih?` : 'Hapus SEMUA artikel hasil migrasi dari database?')) { $el.submit(); }">
@@ -753,7 +753,7 @@
                         <template x-for="id in selectedTargetJournals" :key="id">
                             <input type="hidden" name="journal_ids[]" :value="id">
                         </template>
-                        <button type="submit" class="w-full py-2.5 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all flex items-center justify-center gap-2">
+                        <button type="submit" class="w-full py-2.5 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all flex items-center justify-center gap-2 cursor-pointer">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             <span x-text="selectedTargetJournals.length > 0 ? `Reset Articles (${selectedTargetJournals.length} Jurnal)` : 'Reset ALL Articles'"></span>
                         </button>
@@ -762,7 +762,7 @@
 
                 <!-- Reset Issues -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-800 mb-1">Reset: Issues</h3>
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">{{ $isId ? 'Reset: Terbitan' : 'Reset: Issues' }}</h3>
                     <p class="text-[11px] text-slate-500 mb-4">Hapus data Issues (Vol/Nomor) hasil migrasi.</p>
                     <form action="{{ route('admin.tools.migration.reset-issues') }}" method="POST"
                           @submit.prevent="if(confirm(selectedTargetJournals.length > 0 ? `Hapus issue pada ${selectedTargetJournals.length} jurnal terpilih?` : 'Hapus SEMUA data issue hasil migrasi?')) { $el.submit(); }">
@@ -770,7 +770,7 @@
                         <template x-for="id in selectedTargetJournals" :key="id">
                             <input type="hidden" name="journal_ids[]" :value="id">
                         </template>
-                        <button type="submit" class="w-full py-2.5 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all flex items-center justify-center gap-2">
+                        <button type="submit" class="w-full py-2.5 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-lg hover:bg-red-50 transition-all flex items-center justify-center gap-2 cursor-pointer">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             <span x-text="selectedTargetJournals.length > 0 ? `Reset Issues (${selectedTargetJournals.length} Jurnal)` : 'Reset ALL Issues'"></span>
                         </button>
@@ -779,7 +779,7 @@
 
                 <!-- Reset Journals -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-red-100">
-                    <h3 class="text-sm font-bold text-red-800 mb-1">Reset: Journals (Total)</h3>
+                    <h3 class="text-sm font-bold text-red-800 mb-1">{{ $isId ? 'Reset: Jurnal (Total)' : 'Reset: Journals (Total)' }}</h3>
                     <p class="text-[11px] text-slate-500 mb-4">Hapus data Jurnal, Section, Issue & Artikel sekaligus.</p>
                     <form action="{{ route('admin.tools.migration.reset-journals') }}" method="POST"
                           @submit.prevent="if(confirm(selectedTargetJournals.length > 0 ? `HAPUS TOTAL data pada ${selectedTargetJournals.length} jurnal terpilih?` : 'PERINGATAN: Ini akan menghapus SELURUH data jurnal hasil migrasi. Lanjutkan?')) { $el.submit(); }">
@@ -810,9 +810,9 @@
             <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div>
                     <h2 class="text-xl font-bold text-slate-900" x-text="detailJournal.name"></h2>
-                    <p class="text-sm text-slate-500 mt-1">Select specific issues or articles to reset data.</p>
+                    <p class="text-sm text-slate-500 mt-1">{{ $isId ? 'Pilih terbitan atau artikel tertentu untuk mereset data.' : 'Select specific issues or articles to reset data.' }}</p>
                 </div>
-                <button @click="detailsModal = false" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-full transition-all shadow-sm">
+                <button @click="detailsModal = false" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-full transition-all shadow-sm cursor-pointer">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -821,13 +821,13 @@
             <div class="flex border-b border-slate-100 bg-white">
                 <button @click="activeTab = 'issues'" 
                         :class="activeTab === 'issues' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="px-8 py-4 text-sm font-bold border-b-2 transition-all">
-                    Issues (<span x-text="detailData.issues.length"></span>)
+                        class="px-8 py-4 text-sm font-bold border-b-2 transition-all cursor-pointer">
+                    {{ $isId ? 'Terbitan' : 'Issues' }} (<span x-text="detailData.issues.length"></span>)
                 </button>
                 <button @click="activeTab = 'articles'" 
                         :class="activeTab === 'articles' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'"
-                        class="px-8 py-4 text-sm font-bold border-b-2 transition-all">
-                    Articles (<span x-text="detailData.articles.length"></span>)
+                        class="px-8 py-4 text-sm font-bold border-b-2 transition-all cursor-pointer">
+                    {{ $isId ? 'Artikel' : 'Articles' }} (<span x-text="detailData.articles.length"></span>)
                 </button>
             </div>
 
@@ -889,14 +889,14 @@
             <!-- Modal Footer -->
             <div class="p-8 border-t border-slate-100 bg-white flex items-center justify-between">
                 <p class="text-xs text-slate-400 font-medium">
-                    <span x-text="activeTab === 'issues' ? selectedIssues.length : selectedArticles.length"></span> items selected for deletion
+                    <span x-text="activeTab === 'issues' ? selectedIssues.length : selectedArticles.length"></span> {{ $isId ? 'item terpilih untuk dihapus' : 'items selected for deletion' }}
                 </p>
                 <div class="flex gap-3">
-                    <button @click="detailsModal = false" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-all">Cancel</button>
+                    <button @click="detailsModal = false" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-all cursor-pointer">{{ $isId ? 'Batal' : 'Cancel' }}</button>
                     <button @click="resetSelectedItems()" 
                             :disabled="detailLoading || (activeTab === 'issues' ? selectedIssues.length === 0 : selectedArticles.length === 0)"
-                            class="px-8 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none">
-                        Reset Selected
+                            class="px-8 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none cursor-pointer">
+                        {{ $isId ? 'Reset Terpilih' : 'Reset Selected' }}
                     </button>
                 </div>
             </div>

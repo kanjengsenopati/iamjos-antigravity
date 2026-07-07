@@ -1,13 +1,13 @@
 @extends('layouts.admin')
 
-@section('title', 'Hosted Journals')
+@section('title', $isId ? 'Jurnal yang Dihosting' : 'Hosted Journals')
 
 @section('content')
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Hosted Journals</h1>
-            <p class="mt-1 text-gray-500">Manage all journals hosted on this installation.</p>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Jurnal yang Dihosting' : 'Hosted Journals' }}</h1>
+            <p class="mt-1 text-gray-500">{{ $isId ? 'Kelola semua jurnal yang dihosting pada instalasi ini.' : 'Manage all journals hosted on this installation.' }}</p>
         </div>
         <a href="{{ route('admin.journals.create') }}"
             class="inline-flex items-center justify-center gap-2
@@ -20,7 +20,7 @@
           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
           transition-all duration-200">
             <i class="fa-solid fa-plus text-sm"></i>
-            <span>Journal</span>
+            <span>{{ $isId ? 'Jurnal' : 'Journal' }}</span>
         </a>
 
 
@@ -30,19 +30,19 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl border border-gray-200 p-4">
             <p class="text-2xl font-bold text-gray-900">{{ $journals->count() }}</p>
-            <p class="text-sm text-gray-500">Total Journals</p>
+            <p class="text-sm text-gray-500">{{ $isId ? 'Total Jurnal' : 'Total Journals' }}</p>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-4">
             <p class="text-2xl font-bold text-emerald-600">{{ $journals->where('enabled', true)->count() }}</p>
-            <p class="text-sm text-gray-500">Active</p>
+            <p class="text-sm text-gray-500">{{ $isId ? 'Aktif' : 'Active' }}</p>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-4">
             <p class="text-2xl font-bold text-gray-400">{{ $journals->where('enabled', false)->count() }}</p>
-            <p class="text-sm text-gray-500">Disabled</p>
+            <p class="text-sm text-gray-500">{{ $isId ? 'Nonaktif' : 'Disabled' }}</p>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-4">
             <p class="text-2xl font-bold text-blue-600">{{ $journals->sum('submissions_count') }}</p>
-            <p class="text-sm text-gray-500">Total Articles</p>
+            <p class="text-sm text-gray-500">{{ $isId ? 'Total Artikel' : 'Total Articles' }}</p>
         </div>
     </div>
 
@@ -52,7 +52,7 @@
         <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="flex items-center gap-4">
                 <div class="relative">
-                    <input type="text" placeholder="Search journals..." id="searchInput"
+                    <input type="text" placeholder="{{ $isId ? 'Cari jurnal...' : 'Search journals...' }}" id="searchInput"
                         class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-64"
                         style="padding-left: 2.5rem !important;">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none"
@@ -63,8 +63,8 @@
                 </div>
             </div>
             <p class="text-sm text-gray-500">
-                Showing <span class="font-medium text-gray-900" id="visibleCount">{{ $journals->count() }}</span> of
-                <span class="font-medium text-gray-900">{{ $journals->count() }}</span> journals
+                {{ $isId ? 'Menampilkan' : 'Showing' }} <span class="font-medium text-gray-900" id="visibleCount">{{ $journals->count() }}</span> {{ $isId ? 'dari' : 'of' }}
+                <span class="font-medium text-gray-900">{{ $journals->count() }}</span> {{ $isId ? 'jurnal' : 'journals' }}
             </p>
         </div>
 
@@ -73,12 +73,12 @@
             <table class="w-full" id="journalsTable">
                 <thead class="bg-gray-50 text-left">
                     <tr>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">Path</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">{{ $isId ? 'Jalur' : 'Path' }}</th>
+                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Nama' : 'Name' }}</th>
                         <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Status</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Deskripsi' : 'Description' }}</th>
                         <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right w-64">
-                            Actions</th>
+                            {{ $isId ? 'Aksi' : 'Actions' }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -123,19 +123,19 @@
                                     <span
                                         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
                                         <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                                        Active
+                                        {{ $isId ? 'Aktif' : 'Active' }}
                                     </span>
                                 @else
                                     <span
                                         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
                                         <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
-                                        Disabled
+                                        {{ $isId ? 'Nonaktif' : 'Disabled' }}
                                     </span>
                                 @endif
                             </td>
                             <td class="px-6 py-4">
                                 <p class="text-sm text-gray-600 line-clamp-2 max-w-md">
-                                    {{ $journal->description ?? 'No description available.' }}
+                                    {{ $journal->description ?? ($isId ? 'Deskripsi tidak tersedia.' : 'No description available.') }}
                                 </p>
                             </td>
                             <td class="px-6 py-4">
@@ -143,49 +143,49 @@
                                     <!-- Settings Wizard -->
                                     <a href="{{ route('admin.journals.edit', $journal) }}"
                                         class="group relative inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                                        title="Settings Wizard">
+                                        title="{{ $isId ? 'Wisaya Pengaturan' : 'Settings Wizard' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                         </svg>
                                         <span
                                             class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                            Settings Wizard
+                                            {{ $isId ? 'Wisaya Pengaturan' : 'Settings Wizard' }}
                                         </span>
                                     </a>
 
                                     <!-- Users -->
                                     <a href="{{ route('journal.admin.users.index', ['journal' => $journal->slug]) }}"
                                         class="group relative inline-flex items-center justify-center w-9 h-9 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
-                                        title="Users">
+                                        title="{{ $isId ? 'Pengguna' : 'Users' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                         </svg>
                                         <span
                                             class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                            Users
+                                            {{ $isId ? 'Pengguna' : 'Users' }}
                                         </span>
                                     </a>
 
                                     <!-- Edit -->
                                     <a href="{{ route('admin.journals.edit', $journal) }}"
                                         class="group relative inline-flex items-center justify-center w-9 h-9 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                                        title="Edit">
+                                        title="{{ $isId ? 'Edit' : 'Edit' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                         <span
                                             class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                            Edit
+                                            {{ $isId ? 'Edit' : 'Edit' }}
                                         </span>
                                     </a>
 
                                     <!-- Delete -->
                                     <form action="{{ route('admin.journals.destroy', $journal) }}" method="POST"
                                         class="inline"
-                                        onsubmit="return confirm('Are you sure you want to delete this journal? This action cannot be undone.')">
+                                        onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus jurnal ini? Tindakan ini tidak dapat dibatalkan.' : 'Are you sure you want to delete this journal? This action cannot be undone.' }}')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
@@ -197,7 +197,7 @@
                                             </svg>
                                             <span
                                                 class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                                Delete
+                                                {{ $isId ? 'Hapus' : 'Delete' }}
                                             </span>
                                         </button>
                                     </form>
@@ -215,15 +215,15 @@
                                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                     </svg>
                                 </div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">No Journals Found</h3>
-                                <p class="text-gray-500 mb-6">Get started by creating your first journal.</p>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $isId ? 'Jurnal Tidak Ditemukan' : 'No Journals Found' }}</h3>
+                                <p class="text-gray-500 mb-6">{{ $isId ? 'Mulai dengan membuat jurnal pertama Anda.' : 'Get started by creating your first journal.' }}</p>
                                 <a href="{{ route('admin.journals.create') }}"
                                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 4v16m8-8H4" />
                                     </svg>
-                                    Create First Journal
+                                    {{ $isId ? 'Buat Jurnal Pertama' : 'Create First Journal' }}
                                 </a>
                             </td>
                         </tr>
@@ -235,7 +235,7 @@
         <!-- Pagination (if using pagination) -->
         @if ($journals->count() > 10)
             <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                <p class="text-sm text-gray-500">Showing all {{ $journals->count() }} journals</p>
+                <p class="text-sm text-gray-500">{{ $isId ? 'Menampilkan semua' : 'Showing all' }} {{ $journals->count() }} {{ $isId ? 'jurnal' : 'journals' }}</p>
             </div>
         @endif
     </div>

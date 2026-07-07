@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Public Page Management')
+@section('title', $isId ? 'Kelola Halaman Publik' : 'Public Page Management')
 
 @section('content')
 <div x-data="publicPageTabs('{{ $activeTab }}')" class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -10,18 +10,18 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        Public Page Management
+                        {{ $isId ? 'Kelola Halaman Publik' : 'Public Page Management' }}
                     </h1>
                     <p class="text-sm text-slate-600 mt-2 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Manage your portal's public-facing content with ease
+                        {{ $isId ? 'Kelola konten publik portal Anda dengan mudah' : "Manage your portal's public-facing content with ease" }}
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                        ● Live
+                        ● {{ $isId ? 'Aktif' : 'Live' }}
                     </span>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                             </div>
                             
                             <!-- Label -->
-                            <span class="relative font-semibold text-sm tracking-wide">Site Pages</span>
+                            <span class="relative font-semibold text-sm tracking-wide">{{ $isId ? 'Halaman Situs' : 'Site Pages' }}</span>
                             
                             <!-- Active Badge -->
                             <span x-show="tab === 'pages'" 
@@ -102,7 +102,7 @@
                             </div>
                             
                             <!-- Label -->
-                            <span class="relative font-semibold text-sm tracking-wide">Page Builder</span>
+                            <span class="relative font-semibold text-sm tracking-wide">{{ $isId ? 'Pembuat Halaman' : 'Page Builder' }}</span>
                             
                             <!-- Active Badge -->
                             <span x-show="tab === 'builder'" 
@@ -137,7 +137,7 @@
                             </div>
                             
                             <!-- Label -->
-                            <span class="relative font-semibold text-sm tracking-wide">Site Nav</span>
+                            <span class="relative font-semibold text-sm tracking-wide">{{ $isId ? 'Navigasi Situs' : 'Site Nav' }}</span>
                             
                             <!-- Active Badge -->
                             <span x-show="tab === 'nav'" 
@@ -234,16 +234,16 @@ function publicPageTabs(initialTab) {
         
         announceTabChange(tabName) {
             const tabLabels = {
-                'pages': 'Site Pages',
-                'builder': 'Page Builder',
-                'nav': 'Site Navigation'
+                'pages': '{{ $isId ? 'Halaman Situs' : 'Site Pages' }}',
+                'builder': '{{ $isId ? 'Pembuat Halaman' : 'Page Builder' }}',
+                'nav': '{{ $isId ? 'Navigasi Situs' : 'Site Navigation' }}'
             };
             
             const announcement = document.createElement('div');
             announcement.setAttribute('role', 'status');
             announcement.setAttribute('aria-live', 'polite');
             announcement.className = 'sr-only';
-            announcement.textContent = `${tabLabels[tabName]} tab selected`;
+            announcement.textContent = `${tabLabels[tabName]} ${this.tab === 'pages' ? 'tab terpilih' : 'tab selected'}`;
             document.body.appendChild(announcement);
             
             setTimeout(() => announcement.remove(), 1000);
@@ -313,16 +313,16 @@ function publicPageTabs(initialTab) {
         
         announceTabChange(tabName) {
             const tabLabels = {
-                'pages': 'Site Pages',
-                'builder': 'Page Builder',
-                'nav': 'Site Navigation'
+                'pages': '{{ $isId ? 'Halaman Situs' : 'Site Pages' }}',
+                'builder': '{{ $isId ? 'Pembuat Halaman' : 'Page Builder' }}',
+                'nav': '{{ $isId ? 'Navigasi Situs' : 'Site Navigation' }}'
             };
             
             const announcement = document.createElement('div');
             announcement.setAttribute('role', 'status');
             announcement.setAttribute('aria-live', 'polite');
             announcement.className = 'sr-only';
-            announcement.textContent = `${tabLabels[tabName]} tab selected`;
+            announcement.textContent = `${tabLabels[tabName]} ${this.tab === 'pages' ? 'tab terpilih' : 'tab selected'}`;
             document.body.appendChild(announcement);
             
             setTimeout(() => announcement.remove(), 1000);

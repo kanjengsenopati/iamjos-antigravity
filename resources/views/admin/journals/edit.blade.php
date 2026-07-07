@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Journal - ' . $journal->name)
+@section('title', ($isId ? 'Sunting Jurnal - ' : 'Edit Journal - ') . $journal->name)
 
 @section('content')
 <!-- Breadcrumb -->
 <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-    <a href="{{ route('admin.journals.index') }}" class="hover:text-indigo-600 transition-colors">Hosted Journals</a>
+    <a href="{{ route('admin.journals.index') }}" class="hover:text-indigo-600 transition-colors">{{ $isId ? 'Jurnal yang Dihosting' : 'Hosted Journals' }}</a>
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
     </svg>
@@ -31,9 +31,9 @@
                 <code class="font-mono text-sm text-indigo-600">/{{ $journal->slug }}</code>
                 <span class="mx-2">•</span>
                 @if ($journal->enabled)
-                <span class="text-emerald-600">Active</span>
+                <span class="text-emerald-600">{{ $isId ? 'Aktif' : 'Active' }}</span>
                 @else
-                <span class="text-gray-500">Disabled</span>
+                <span class="text-gray-500">{{ $isId ? 'Nonaktif' : 'Disabled' }}</span>
                 @endif
             </p>
         </div>
@@ -44,7 +44,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
-        View Public Site
+        {{ $isId ? 'Lihat Halaman Publik' : 'View Public Site' }}
     </a>
 </div>
 
@@ -57,13 +57,13 @@
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <!-- Basic Information -->
         <div class="p-6 border-b border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-6">Basic Information</h2>
+            <h2 class="text-lg font-bold text-gray-900 mb-6">{{ $isId ? 'Informasi Dasar' : 'Basic Information' }}</h2>
 
             <div class="space-y-6">
                 <!-- Journal Name -->
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                        Journal Name <span class="text-red-500">*</span>
+                        {{ $isId ? 'Nama Jurnal' : 'Journal Name' }} <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="name" name="name" value="{{ old('name', $journal->name) }}"
                         required
@@ -76,7 +76,7 @@
                 <!-- Abbreviation -->
                 <div>
                     <label for="abbreviation" class="block text-sm font-medium text-gray-700 mb-2">
-                        Abbreviation
+                        {{ $isId ? 'Singkatan' : 'Abbreviation' }}
                     </label>
                     <input type="text" id="abbreviation" name="abbreviation"
                         value="{{ old('abbreviation', $journal->abbreviation) }}"
@@ -89,7 +89,7 @@
                 <!-- Description -->
                 <div>
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                        Description
+                        {{ $isId ? 'Deskripsi' : 'Description' }}
                     </label>
                     <textarea id="description" name="description" rows="4"
                         class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('description') border-red-500 @enderror">{{ old('description', $journal->description) }}</textarea>
@@ -105,8 +105,8 @@
                             {{ old('enabled', $journal->enabled) ? 'checked' : '' }}
                             class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         <label for="enabled" class="cursor-pointer">
-                            <span class="block text-sm font-medium text-gray-900">Enable Journal</span>
-                            <span class="block text-xs text-gray-500">Journal is accessible to public</span>
+                            <span class="block text-sm font-medium text-gray-900">{{ $isId ? 'Aktifkan Jurnal' : 'Enable Journal' }}</span>
+                            <span class="block text-xs text-gray-500">{{ $isId ? 'Jurnal dapat diakses oleh publik' : 'Journal is accessible to public' }}</span>
                         </label>
                     </div>
                     <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
@@ -114,8 +114,8 @@
                             {{ old('visible', $journal->visible) ? 'checked' : '' }}
                             class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         <label for="visible" class="cursor-pointer">
-                            <span class="block text-sm font-medium text-gray-900">Show in Portal</span>
-                            <span class="block text-xs text-gray-500">Visible in the journal directory</span>
+                            <span class="block text-sm font-medium text-gray-900">{{ $isId ? 'Tampilkan di Portal' : 'Show in Portal' }}</span>
+                            <span class="block text-xs text-gray-500">{{ $isId ? 'Terlihat di direktori jurnal' : 'Visible in the journal directory' }}</span>
                         </label>
                     </div>
                 </div>
@@ -124,18 +124,18 @@
 
         <!-- Journal Content (Rich Text) -->
         <div class="p-6 border-b border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-2">Journal Content</h2>
-            <p class="text-sm text-gray-500 mb-6">Rich text content for your journal's public pages. Supports formatting, links, and images.</p>
+            <h2 class="text-lg font-bold text-gray-900 mb-2">{{ $isId ? 'Konten Jurnal' : 'Journal Content' }}</h2>
+            <p class="text-sm text-gray-500 mb-6">{{ $isId ? 'Konten rich text untuk halaman publik jurnal Anda. Mendukung pemformatan, tautan, dan gambar.' : "Rich text content for your journal's public pages. Supports formatting, links, and images." }}</p>
 
             <div class="space-y-6">
                 <!-- Journal Summary -->
                 <div>
                     <label for="summary" class="block text-sm font-medium text-gray-700 mb-2">
-                        Journal Summary
+                        {{ $isId ? 'Ringkasan Jurnal' : 'Journal Summary' }}
                     </label>
                     <textarea id="summary" name="summary" rows="6"
                         class="tinymce-editor w-full">{{ old('summary', $journal->summary ?? '') }}</textarea>
-                    <p class="mt-2 text-xs text-gray-500">A brief summary displayed on the journal homepage and listings.</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $isId ? 'Ringkasan singkat yang ditampilkan di beranda jurnal dan daftar jurnal.' : 'A brief summary displayed on the journal homepage and listings.' }}</p>
                     @error('summary')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -144,11 +144,11 @@
                 <!-- About the Journal -->
                 <div>
                     <label for="about" class="block text-sm font-medium text-gray-700 mb-2">
-                        About the Journal
+                        {{ $isId ? 'Tentang Jurnal' : 'About the Journal' }}
                     </label>
                     <textarea id="about" name="about" rows="8"
                         class="tinymce-editor w-full">{{ old('about', $journal->about ?? '') }}</textarea>
-                    <p class="mt-2 text-xs text-gray-500">Detailed information about the journal's scope, aims, and policies.</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $isId ? 'Informasi rinci tentang ruang lingkup, tujuan, dan kebijakan jurnal.' : 'Detailed information about the journal\'s scope, aims, and policies.' }}</p>
                     @error('about')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -158,13 +158,13 @@
 
         <!-- Publisher & Identifiers -->
         <div class="p-6 border-b border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900 mb-6">Publisher & Identifiers</h2>
+            <h2 class="text-lg font-bold text-gray-900 mb-6">{{ $isId ? 'Penerbit & Pengidentifikasi' : 'Publisher & Identifiers' }}</h2>
 
             <div class="space-y-6">
                 <!-- Publisher -->
                 <div>
                     <label for="publisher" class="block text-sm font-medium text-gray-700 mb-2">
-                        Publisher
+                        {{ $isId ? 'Penerbit' : 'Publisher' }}
                     </label>
                     <input type="text" id="publisher" name="publisher"
                         value="{{ old('publisher', $journal->publisher) }}"
@@ -179,7 +179,7 @@
                     <!-- Print ISSN -->
                     <div>
                         <label for="issn_print" class="block text-sm font-medium text-gray-700 mb-2">
-                            Print ISSN
+                            {{ $isId ? 'ISSN Cetak' : 'Print ISSN' }}
                         </label>
                         <input type="text" id="issn_print" name="issn_print"
                             value="{{ old('issn_print', $journal->issn_print) }}" placeholder="e.g., 1234-5678"
@@ -192,7 +192,7 @@
                     <!-- Online ISSN -->
                     <div>
                         <label for="issn_online" class="block text-sm font-medium text-gray-700 mb-2">
-                            Online ISSN
+                            {{ $isId ? 'ISSN Online' : 'Online ISSN' }}
                         </label>
                         <input type="text" id="issn_online" name="issn_online"
                             value="{{ old('issn_online', $journal->issn_online) }}" placeholder="e.g., 8765-4321"
@@ -212,7 +212,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <!-- Logo -->
                 <div x-data="{ previewUrl: '{{ $journal->logo_path ? Storage::disk('public')->url($journal->logo_path) : '' }}' }">
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Journal Logo</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">{{ $isId ? 'Logo Jurnal' : 'Journal Logo' }}</label>
                     <div class="flex items-center gap-4">
                         <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300"
                             :class="{ 'border-solid border-indigo-300': previewUrl }">
@@ -237,11 +237,11 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                     </svg>
-                                    Upload
+                                    {{ $isId ? 'Unggah' : 'Upload' }}
                                 </label>
                                 <template x-if="previewUrl">
                                     <button type="button"
-                                        @click="if(confirm('Delete logo?')) {
+                                        @click="if(confirm('{{ $isId ? 'Hapus logo?' : 'Delete logo?' }}')) {
                                             fetch('{{ route('admin.journals.logo.delete', $journal) }}', {
                                                 method: 'DELETE',
                                                 headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
@@ -251,11 +251,11 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
-                                        Remove
+                                        {{ $isId ? 'Hapus' : 'Remove' }}
                                     </button>
                                 </template>
                             </div>
-                            <p class="mt-1 text-xs text-gray-500">Max 2MB</p>
+                            <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Maksimal 2MB' : 'Max 2MB' }}</p>
                         </div>
                     </div>
                     @error('logo')
@@ -265,7 +265,7 @@
 
                 <!-- Thumbnail -->
                 <div x-data="{ previewUrl: '{{ $journal->thumbnail_path ? Storage::disk('public')->url($journal->thumbnail_path) : '' }}' }">
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Thumbnail</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">{{ $isId ? 'Miniatur' : 'Thumbnail' }}</label>
                     <div class="flex items-center gap-4">
                         <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300"
                             :class="{ 'border-solid border-indigo-300': previewUrl }">
@@ -290,11 +290,11 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                     </svg>
-                                    Upload
+                                    {{ $isId ? 'Unggah' : 'Upload' }}
                                 </label>
                                 <template x-if="previewUrl">
                                     <button type="button"
-                                        @click="if(confirm('Delete thumbnail?')) {
+                                        @click="if(confirm('{{ $isId ? 'Hapus miniatur?' : 'Delete thumbnail?' }}')) {
                                             fetch('{{ route('admin.journals.thumbnail.delete', $journal) }}', {
                                                 method: 'DELETE',
                                                 headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
@@ -304,11 +304,11 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
-                                        Remove
+                                        {{ $isId ? 'Hapus' : 'Remove' }}
                                     </button>
                                 </template>
                             </div>
-                            <p class="mt-1 text-xs text-gray-500">Max 1MB</p>
+                            <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Maksimal 1MB' : 'Max 1MB' }}</p>
                         </div>
                     </div>
                     @error('thumbnail')
@@ -319,20 +319,20 @@
         <!-- Form Actions -->
         <div class="p-6 bg-gray-50 flex items-center justify-between">
             <div class="text-sm text-gray-500">
-                Last updated: <span
+                {{ $isId ? 'Terakhir diperbarui:' : 'Last updated:' }} <span
                     class="font-medium text-gray-900">{{ $journal->updated_at->format('M d, Y H:i') }}</span>
             </div>
             <div class="flex items-center gap-4">
                 <a href="{{ route('admin.journals.index') }}"
                     class="px-5 py-2.5 text-gray-700 font-medium hover:text-gray-900 transition-colors">
-                    Cancel
+                    {{ $isId ? 'Batal' : 'Cancel' }}
                 </a>
                 <button type="submit"
                     class="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/25 hover:bg-indigo-700 hover:shadow-indigo-500/40 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                 </button>
             </div>
         </div>
@@ -341,7 +341,7 @@
 
 <!-- Quick Actions -->
 <div class="mt-8 w-full max-w-5xl">
-    <h2 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+    <h2 class="text-lg font-bold text-gray-900 mb-4">{{ $isId ? 'Tindakan Cepat' : 'Quick Actions' }}</h2>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <a href="{{ route('journal.admin.users.index', ['journal' => $journal->slug]) }}"
             class="p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-md transition-all group">
@@ -352,8 +352,8 @@
                         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
             </div>
-            <p class="font-semibold text-gray-900">Manage Users</p>
-            <p class="text-sm text-gray-500">Add editors, reviewers, and authors</p>
+            <p class="font-semibold text-gray-900">{{ $isId ? 'Kelola Pengguna' : 'Manage Users' }}</p>
+            <p class="text-sm text-gray-500">{{ $isId ? 'Tambah editor, reviewer, dan penulis' : 'Add editors, reviewers, and authors' }}</p>
         </a>
 
         <a href="{{ route('journal.admin.sections.index', ['journal' => $journal->slug]) }}"
@@ -365,8 +365,8 @@
                         d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
             </div>
-            <p class="font-semibold text-gray-900">Sections</p>
-            <p class="text-sm text-gray-500">Configure article sections</p>
+            <p class="font-semibold text-gray-900">{{ $isId ? 'Bagian' : 'Sections' }}</p>
+            <p class="text-sm text-gray-500">{{ $isId ? 'Konfigurasi bagian artikel' : 'Configure article sections' }}</p>
         </a>
 
         <a href="{{ route('journal.issues.index', ['journal' => $journal->slug]) }}"
@@ -378,8 +378,8 @@
                         d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
             </div>
-            <p class="font-semibold text-gray-900">Issues</p>
-            <p class="text-sm text-gray-500">Manage journal issues</p>
+            <p class="font-semibold text-gray-900">{{ $isId ? 'Terbitan' : 'Issues' }}</p>
+            <p class="text-sm text-gray-500">{{ $isId ? 'Kelola terbitan jurnal' : 'Manage journal issues' }}</p>
         </a>
     </div>
 </div>

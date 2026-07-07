@@ -1,17 +1,17 @@
 @extends('layouts.admin')
 
-@section('title', 'About Page Settings')
+@@section('title', $isId ? 'Pengaturan Halaman Tentang' : 'About Page Settings')
 
 @section('content')
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <a href="{{ route('admin.site.index') }}" class="hover:text-gray-700">Site Administration</a>
+            <a href="{{ route('admin.site.index') }}" class="hover:text-gray-700">{{ $isId ? 'Administrasi Situs' : 'Site Administration' }}</a>
             <i class="fas fa-chevron-right text-xs"></i>
-            <span class="text-gray-900">About Page Settings</span>
+            <span class="text-gray-900">{{ $isId ? 'Pengaturan Halaman Tentang' : 'About Page Settings' }}</span>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900">About Page Settings</h1>
-        <p class="mt-1 text-gray-500">Customize the public "About Us" page content.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Halaman Tentang' : 'About Page Settings' }}</h1>
+        <p class="mt-1 text-gray-500">{{ $isId ? 'Sesuaikan konten halaman publik "Tentang Kami".' : 'Customize the public "About Us" page content.' }}</p>
     </div>
 
     @if (session('success'))
@@ -29,12 +29,12 @@
         <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-505 to-purple-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-heading text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Page Header</h2>
-                        <p class="text-sm text-gray-500">The main title displayed in the hero section</p>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Header Halaman' : 'Page Header' }}</h2>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Judul utama yang ditampilkan di bagian hero' : 'The main title displayed in the hero section' }}</p>
                     </div>
                 </div>
             </div>
@@ -43,16 +43,16 @@
                 <!-- About Title -->
                 <div>
                     <label for="about_title" class="block text-sm font-medium text-gray-700 mb-2">
-                        Page Title <span class="text-red-500">*</span>
+                        {{ $isId ? 'Judul Halaman' : 'Page Title' }} <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="about_title" name="about_title"
                         value="{{ old('about_title', $content['about_title'] ?? 'Empowering Knowledge Sharing Worldwide') }}"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('about_title') border-red-500 @enderror"
-                        placeholder="e.g. Empowering Knowledge Sharing Worldwide" required>
+                        placeholder="{{ $isId ? 'mis. Empowering Knowledge Sharing Worldwide' : 'e.g. Empowering Knowledge Sharing Worldwide' }}" required>
                     @error('about_title')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
-                    <p class="mt-2 text-xs text-gray-500">This title appears in the hero section with a serif font styling.</p>
+                    <p class="mt-2 text-xs text-gray-500">{{ $isId ? 'Judul ini muncul di bagian hero dengan gaya font serif.' : 'This title appears in the hero section with a serif font styling.' }}</p>
                 </div>
             </div>
         </div>
@@ -65,8 +65,8 @@
                         <i class="fas fa-align-left text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Page Content</h2>
-                        <p class="text-sm text-gray-500">The main content of the About page (supports HTML)</p>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Konten Halaman' : 'Page Content' }}</h2>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Konten utama halaman Tentang (mendukung HTML)' : 'The main content of the About page (supports HTML)' }}</p>
                     </div>
                 </div>
             </div>
@@ -75,30 +75,30 @@
                 <!-- Content Editor -->
                 <div>
                     <label for="about_content" class="block text-sm font-medium text-gray-700 mb-2">
-                        Content <span class="text-red-500">*</span>
+                        {{ $isId ? 'Konten' : 'Content' }} <span class="text-red-500">*</span>
                     </label>
                     
                     <!-- Formatting Help -->
                     <div class="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
                         <p class="text-sm font-medium text-gray-700 mb-2">
                             <i class="fas fa-info-circle text-indigo-500 mr-1"></i>
-                            HTML Formatting Guide
+                            {{ $isId ? 'Panduan Pemformatan HTML' : 'HTML Formatting Guide' }}
                         </p>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-600">
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;h2&gt;</code> Heading 2</div>
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;h3&gt;</code> Heading 3</div>
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;p&gt;</code> Paragraph</div>
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;ul&gt;&lt;li&gt;</code> List</div>
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;strong&gt;</code> Bold</div>
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;em&gt;</code> Italic</div>
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;a href=""&gt;</code> Link</div>
-                            <div><code class="bg-gray-200 px-1 rounded">&lt;blockquote&gt;</code> Quote</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;h2&gt;</code> {{ $isId ? 'Judul 2' : 'Heading 2' }}</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;h3&gt;</code> {{ $isId ? 'Judul 3' : 'Heading 3' }}</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;p&gt;</code> {{ $isId ? 'Paragraf' : 'Paragraph' }}</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;ul&gt;&lt;li&gt;</code> {{ $isId ? 'Daftar' : 'List' }}</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;strong&gt;</code> {{ $isId ? 'Tebal' : 'Bold' }}</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;em&gt;</code> {{ $isId ? 'Miring' : 'Italic' }}</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;a href=""&gt;</code> {{ $isId ? 'Tautan' : 'Link' }}</div>
+                            <div><code class="bg-gray-200 px-1 rounded">&lt;blockquote&gt;</code> {{ $isId ? 'Kutipan' : 'Quote' }}</div>
                         </div>
                     </div>
 
                     <textarea id="about_content" name="about_content" rows="20"
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono text-sm @error('about_content') border-red-500 @enderror"
-                        placeholder="Enter your About page content here. You can use HTML for formatting." required>{{ old('about_content', $content['about_content'] ?? '') }}</textarea>
+                        placeholder="{{ $isId ? 'Masukkan konten halaman Tentang Anda di sini. Anda dapat menggunakan HTML untuk pemformatan.' : 'Enter your About page content here. You can use HTML for formatting.' }}" required>{{ old('about_content', $content['about_content'] ?? '') }}</textarea>
                     @error('about_content')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -107,15 +107,15 @@
                 <!-- Preview Toggle -->
                 <div x-data="{ showPreview: false }">
                     <button type="button" @click="showPreview = !showPreview"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer">
                         <i class="fas" :class="showPreview ? 'fa-eye-slash' : 'fa-eye'"></i>
-                        <span x-text="showPreview ? 'Hide Preview' : 'Show Preview'"></span>
+                        <span x-text="showPreview ? '{{ $isId ? 'Sembunyikan Pratinjau' : 'Hide Preview' }}' : '{{ $isId ? 'Tampilkan Pratinjau' : 'Show Preview' }}'"></span>
                     </button>
 
                     <div x-show="showPreview" x-collapse class="mt-4 p-6 bg-gray-50 rounded-xl border border-gray-200">
                         <p class="text-sm font-medium text-gray-700 mb-4">
                             <i class="fas fa-desktop text-gray-400 mr-1"></i>
-                            Content Preview
+                            {{ $isId ? 'Pratinjau Konten' : 'Content Preview' }}
                         </p>
                         <div class="prose-content bg-white p-6 rounded-lg border border-gray-100">
                             <div x-html="document.getElementById('about_content').value"></div>
@@ -133,8 +133,8 @@
                         <i class="fas fa-magic text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Quick Templates</h2>
-                        <p class="text-sm text-gray-500">Load a pre-made template to get started quickly</p>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Templat Cepat' : 'Quick Templates' }}</h2>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Muat templat siap pakai untuk memulai dengan cepat' : 'Load a pre-made template to get started quickly' }}</p>
                     </div>
                 </div>
             </div>
@@ -142,25 +142,25 @@
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button type="button" onclick="loadTemplate('default')"
-                        class="p-4 text-left border border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-colors group">
+                        class="p-4 text-left border border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-colors group cursor-pointer">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
                                 <i class="fas fa-file-alt text-indigo-600"></i>
                             </div>
-                            <span class="font-semibold text-gray-900">Default Template</span>
+                            <span class="font-semibold text-gray-900">{{ $isId ? 'Templat Bawaan' : 'Default Template' }}</span>
                         </div>
-                        <p class="text-sm text-gray-500">Standard about page with vision, mission, and features</p>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Halaman tentang standar dengan visi, misi, dan fitur' : 'Standard about page with vision, mission, and features' }}</p>
                     </button>
 
                     <button type="button" onclick="loadTemplate('minimal')"
-                        class="p-4 text-left border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-colors group">
+                        class="p-4 text-left border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-colors group cursor-pointer">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
                                 <i class="fas fa-minus text-emerald-600"></i>
                             </div>
-                            <span class="font-semibold text-gray-900">Minimal Template</span>
+                            <span class="font-semibold text-gray-900">{{ $isId ? 'Templat Minimal' : 'Minimal Template' }}</span>
                         </div>
-                        <p class="text-sm text-gray-500">Simple and clean about page structure</p>
+                        <p class="text-sm text-gray-500">{{ $isId ? 'Struktur halaman tentang yang sederhana dan bersih' : 'Simple and clean about page structure' }}</p>
                     </button>
                 </div>
             </div>
@@ -169,13 +169,13 @@
         <!-- Submit Button -->
         <div class="flex items-center justify-end gap-4">
             <a href="{{ route('admin.site.index') }}"
-                class="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                Cancel
+                class="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors cursor-pointer">
+                {{ $isId ? 'Batal' : 'Cancel' }}
             </a>
             <button type="submit"
-                class="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all">
+                class="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all cursor-pointer">
                 <i class="fas fa-save"></i>
-                Save Settings
+                {{ $isId ? 'Simpan Pengaturan' : 'Save Settings' }}
             </button>
         </div>
     </form>
@@ -232,7 +232,7 @@
     };
 
     function loadTemplate(type) {
-        if (confirm('This will replace the current content. Are you sure?')) {
+        if (confirm('{{ $isId ? 'Ini akan menggantikan konten saat ini. Apakah Anda yakin?' : 'This will replace the current content. Are you sure?' }}')) {
             document.getElementById('about_content').value = templates[type];
         }
     }

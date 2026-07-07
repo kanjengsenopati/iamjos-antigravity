@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Site Pages')
+@section('title', $isId ? 'Halaman Situs' : 'Site Pages')
 
 @section('content')
 <div class="min-h-screen bg-gray-50" x-data="pagesManager()">
@@ -9,13 +9,13 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">Site Pages</h1>
-                    <p class="text-sm text-gray-500">Manage custom static pages for your portal</p>
+                    <h1 class="text-xl font-bold text-gray-900">{{ $isId ? 'Halaman Situs' : 'Site Pages' }}</h1>
+                    <p class="text-sm text-gray-500">{{ $isId ? 'Kelola halaman statis kustom untuk portal Anda' : 'Manage custom static pages for your portal' }}</p>
                 </div>
                 <a href="{{ route('admin.site-pages.create') }}"
-                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700">
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer">
                     <i class="fa-solid fa-plus mr-2"></i>
-                    Create Page
+                    {{ $isId ? 'Buat Halaman' : 'Create Page' }}
                 </a>
             </div>
         </div>
@@ -39,7 +39,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Page
+                                {{ $isId ? 'Halaman' : 'Page' }}
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Slug
@@ -48,10 +48,10 @@
                                 Status
                             </th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Updated
+                                {{ $isId ? 'Diperbarui' : 'Updated' }}
                             </th>
                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
+                                {{ $isId ? 'Aksi' : 'Actions' }}
                             </th>
                         </tr>
                     </thead>
@@ -73,9 +73,9 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <button @click="toggleStatus('{{ $page->id }}')"
-                                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {{ $page->is_published ? 'bg-green-500' : 'bg-gray-300' }}"
-                                            data-page-id="{{ $page->id }}"
-                                            data-status="{{ $page->is_published ? 'true' : 'false' }}">
+                                             class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {{ $page->is_published ? 'bg-green-500' : 'bg-gray-300' }}"
+                                             data-page-id="{{ $page->id }}"
+                                             data-status="{{ $page->is_published ? 'true' : 'false' }}">
                                         <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $page->is_published ? 'translate-x-5' : 'translate-x-0' }}"></span>
                                     </button>
                                 </td>
@@ -86,22 +86,22 @@
                                     <div class="flex items-center justify-end gap-2">
                                         @if($page->is_published)
                                             <a href="{{ route('site.page', $page->slug) }}" target="_blank"
-                                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 cursor-pointer"
                                                title="View Page">
                                                 <i class="fa-solid fa-external-link-alt"></i>
                                             </a>
                                         @endif
                                         <a href="{{ route('admin.site-pages.edit', $page) }}"
-                                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"
+                                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer"
                                            title="Edit">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </a>
                                         <form action="{{ route('admin.site-pages.destroy', $page) }}" method="POST" class="inline"
-                                              onsubmit="return confirm('Are you sure you want to delete this page?')">
+                                              onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus halaman ini?' : 'Are you sure you want to delete this page?' }}')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
                                                     title="Delete">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
@@ -118,12 +118,12 @@
                 <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                     <i class="fa-solid fa-file-lines text-2xl text-gray-400"></i>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">No pages yet</h3>
-                <p class="text-gray-500 mb-6">Create your first custom page to get started.</p>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $isId ? 'Belum ada halaman' : 'No pages yet' }}</h3>
+                <p class="text-gray-500 mb-6">{{ $isId ? 'Buat halaman kustom pertama Anda untuk memulai.' : 'Create your first custom page to get started.' }}</p>
                 <a href="{{ route('admin.site-pages.create') }}"
-                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700">
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer">
                     <i class="fa-solid fa-plus mr-2"></i>
-                    Create Page
+                    {{ $isId ? 'Buat Halaman' : 'Create Page' }}
                 </a>
             </div>
         @endif

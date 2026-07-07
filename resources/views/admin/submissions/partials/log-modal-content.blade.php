@@ -4,7 +4,7 @@
     {{-- Modal Header --}}
     <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-lg">
         <h3 class="font-bold text-lg text-slate-800 truncate pr-4">{{ $submission->title }}</h3>
-        <button type="button" onclick="closeLogModal()" class="text-slate-400 hover:text-red-500 transition">
+        <button type="button" onclick="closeLogModal()" class="text-slate-400 hover:text-red-500 transition cursor-pointer">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -15,14 +15,14 @@
     <div class="px-6 pt-4 border-b border-slate-200 flex gap-6">
         <button @click="currentTab = 'history'"
                 :class="currentTab === 'history' ? 'border-primary-600 text-primary-700' : 'border-transparent text-slate-500 hover:text-slate-700'"
-                class="pb-3 text-sm font-bold border-b-2 transition">
-            <i class="fa-solid fa-clock-rotate-left mr-1.5 text-xs"></i> Activity History
+                class="pb-3 text-sm font-bold border-b-2 transition cursor-pointer">
+            <i class="fa-solid fa-clock-rotate-left mr-1.5 text-xs"></i> {{ $isId ? 'Riwayat Aktivitas' : 'Activity History' }}
         </button>
         @if(auth()->user()->hasJournalPermission([1, 2], $submission->journal->id))
         <button @click="currentTab = 'notes'"
                 :class="currentTab === 'notes' ? 'border-primary-600 text-primary-700' : 'border-transparent text-slate-500 hover:text-slate-700'"
-                class="pb-3 text-sm font-bold border-b-2 transition">
-            <i class="fa-solid fa-note-sticky mr-1.5 text-xs"></i> Internal Notes
+                class="pb-3 text-sm font-bold border-b-2 transition cursor-pointer">
+            <i class="fa-solid fa-note-sticky mr-1.5 text-xs"></i> {{ $isId ? 'Catatan Internal' : 'Internal Notes' }}
         </button>
         @endif
     </div>
@@ -40,15 +40,15 @@
             @if($logs->isEmpty())
                 <div class="text-center py-16 text-slate-400">
                     <i class="fa-solid fa-clock-rotate-left text-3xl mb-3 opacity-30"></i>
-                    <p class="italic text-sm">No activity recorded yet.</p>
+                    <p class="italic text-sm">{{ $isId ? 'Belum ada aktivitas yang tercatat.' : 'No activity recorded yet.' }}</p>
                 </div>
             @else
                 {{-- Sort toggle --}}
                 <div class="flex justify-end mb-3">
                     <button @click="sortAsc = !sortAsc"
-                            class="flex items-center gap-1.5 text-xs text-slate-500 hover:text-primary-600 transition font-medium select-none">
+                            class="flex items-center gap-1.5 text-xs text-slate-500 hover:text-primary-600 transition font-medium select-none cursor-pointer">
                         <i class="fa-solid fa-arrow-up-down text-[10px]"></i>
-                        <span x-text="sortAsc ? 'Oldest First' : 'Newest First'"></span>
+                        <span x-text="sortAsc ? '{{ $isId ? 'Terlama Pertama' : 'Oldest First' }}' : '{{ $isId ? 'Terbaru Pertama' : 'Newest First' }}'"></span>
                     </button>
                 </div>
 
@@ -72,8 +72,8 @@
                             'files'       => $l->files->map(fn($f) => [
                                 'name' => $f->file_name,
                                 'url'  => isset($f->metadata['copied_from_discussion']) 
-                                            ? route('journal.discussion.file.download', ['journal' => $journalSlug, 'file' => $f->metadata['copied_from_discussion']])
-                                            : route('files.download', ['file' => $f->id])
+                                             ? route('journal.discussion.file.download', ['journal' => $journalSlug, 'file' => $f->metadata['copied_from_discussion']])
+                                             : route('files.download', ['file' => $f->id])
                             ])->values()
                         ])->values()),
                         get sorted() {
@@ -83,9 +83,9 @@
                     <table class="w-full text-sm text-left border border-slate-200 rounded-lg overflow-hidden">
                         <thead class="text-[11px] text-slate-500 uppercase bg-slate-100 border-b border-slate-200">
                             <tr>
-                                <th class="px-4 py-2.5 w-32">Date</th>
-                                <th class="px-4 py-2.5 w-40">User</th>
-                                <th class="px-4 py-2.5">Event</th>
+                                <th class="px-4 py-2.5 w-32">{{ $isId ? 'Tanggal' : 'Date' }}</th>
+                                <th class="px-4 py-2.5 w-40">{{ $isId ? 'Pengguna' : 'User' }}</th>
+                                <th class="px-4 py-2.5">{{ $isId ? 'Peristiwa' : 'Event' }}</th>
                             </tr>
                         </thead>
                         <template x-for="row in sorted" :key="row.id">
@@ -97,7 +97,7 @@
                                     <td class="px-4 py-3 text-slate-500 align-top relative">
                                         <div class="flex items-start gap-1.5">
                                             <template x-if="row.files.length > 0">
-                                                <button type="button" class="mt-0.5 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none">
+                                                <button type="button" class="mt-0.5 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none cursor-pointer">
                                                     <i class="fa-solid fa-chevron-right text-[10px] transition-transform duration-200"
                                                        :class="open ? 'rotate-90' : ''"></i>
                                                 </button>
@@ -151,7 +151,7 @@
                                                 <template x-if="row.files.length > 0 && !open">
                                                     <p class="text-[10px] text-indigo-600 font-medium mt-1.5 flex items-center gap-1">
                                                         <i class="fa-solid fa-paperclip"></i>
-                                                        <span x-text="row.files.length + ' Attached File' + (row.files.length > 1 ? 's' : '')"></span>
+                                                        <span x-text="row.files.length + ' ' + ('{{ $isId ? 'Berkas Terlampir' : 'Attached File' }}' + (row.files.length > 1 && '{{ !$isId }}' ? 's' : ''))"></span>
                                                     </p>
                                                 </template>
                                             </div>
@@ -167,7 +167,7 @@
                                             {{-- Diff Viewer (if metadata has diff info) --}}
                                             <template x-if="row.metadata && row.metadata.diff">
                                                 <div class="mb-4 text-xs bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
-                                                    <h4 class="font-bold text-slate-700 mb-2 border-b border-slate-100 pb-1">Changes Summary</h4>
+                                                    <h4 class="font-bold text-slate-700 mb-2 border-b border-slate-100 pb-1">{{ $isId ? 'Ringkasan Perubahan' : 'Changes Summary' }}</h4>
                                                     <div class="space-y-1 text-slate-600" x-html="row.metadata.diff"></div>
                                                 </div>
                                             </template>
@@ -187,7 +187,7 @@
                                                                target="_blank"
                                                                class="flex-shrink-0 ml-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-md text-[11px] font-bold transition-colors">
                                                                 <i class="fa-solid fa-download"></i>
-                                                                Download
+                                                                {{ $isId ? 'Unduh' : 'Download' }}
                                                             </a>
                                                         </div>
                                                     </template>
@@ -218,10 +218,10 @@
                                 <p class="text-[11px] text-slate-500">{{ $note->created_at->format('M d, Y H:i') }}</p>
                             </div>
                             @if(auth()->id() === $note->user_id || auth()->user()->hasJournalPermission([1], $submission->journal->id))
-                                <form action="{{ route('submission.notes.destroy', ['journal' => $submission->journal->slug, 'submission' => $submission, 'note' => $note]) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this note?');">
+                                <form action="{{ route('submission.notes.destroy', ['journal' => $submission->journal->slug, 'submission' => $submission, 'note' => $note]) }}" method="POST" class="inline-block" onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus catatan ini?' : 'Are you sure you want to delete this note?' }}');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-slate-400 hover:text-red-600 transition p-1 opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Note">
+                                    <button type="submit" class="text-slate-400 hover:text-red-600 transition p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer" title="Delete Note">
                                         <i class="fa-solid fa-trash-can text-sm"></i>
                                     </button>
                                 </form>
@@ -232,7 +232,7 @@
                 @empty
                     <div class="text-center py-10 text-slate-400 bg-slate-50 border border-dashed border-slate-200 rounded-lg">
                         <i class="fa-regular fa-note-sticky text-3xl mb-3 opacity-40"></i>
-                        <p class="text-sm">There are no internal notes for this submission yet.</p>
+                        <p class="text-sm">{{ $isId ? 'Belum ada catatan internal untuk pengajuan ini.' : 'There are no internal notes for this submission yet.' }}</p>
                     </div>
                 @endforelse
             </div>
@@ -242,14 +242,14 @@
                 <form action="{{ route('submission.notes.store', ['journal' => $submission->journal->slug, 'submission' => $submission]) }}" method="POST">
                     @csrf
                     <div class="mb-3">
-                        <label for="note" class="block text-sm font-semibold text-slate-700 mb-2">Add Note</label>
+                        <label for="note" class="block text-sm font-semibold text-slate-700 mb-2">{{ $isId ? 'Tambah Catatan' : 'Add Note' }}</label>
                         <textarea name="note" id="note" rows="3" required
                                   class="w-full px-3 py-2 text-sm text-slate-700 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  placeholder="Type your internal editorial note here..."></textarea>
+                                  placeholder="{{ $isId ? 'Tulis catatan editorial internal Anda di sini...' : 'Type your internal editorial note here...' }}"></textarea>
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
-                            <i class="fa-solid fa-plus mr-1.5"></i> Add Note
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors cursor-pointer">
+                            <i class="fa-solid fa-plus mr-1.5"></i> {{ $isId ? 'Tambah Catatan' : 'Add Note' }}
                         </button>
                     </div>
                 </form>

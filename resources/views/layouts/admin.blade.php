@@ -176,8 +176,8 @@
                         <i class="fa-solid fa-book-open text-xs"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Switch Journal</p>
-                        <p class="text-sm font-medium text-white truncate">{{ $userJournals->count() }} Journal(s)</p>
+                        <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">{{ $isId ? 'Ganti Jurnal' : 'Switch Journal' }}</p>
+                        <p class="text-sm font-medium text-white truncate">{{ $userJournals->count() }} {{ $isId ? 'Jurnal' : 'Journal(s)' }}</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-400 text-xs transition-transform"
                         :class="{ 'rotate-90': journalOpen }"></i>
@@ -196,8 +196,8 @@
                     <div class="p-2">
                         <!-- Header -->
                         <div class="px-3 pb-2 pt-1 flex items-center justify-between border-b border-slate-700/80 mb-2">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select Workspace</span>
-                            <a href="{{ route('journal.select') }}" class="text-[11px] font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-2.5 py-0.5 rounded-md transition-colors">View All</a>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Pilih Ruang Kerja' : 'Select Workspace' }}</span>
+                            <a href="{{ route('journal.select') }}" class="text-[11px] font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-2.5 py-0.5 rounded-md transition-colors">{{ $isId ? 'Lihat Semua' : 'View All' }}</a>
                         </div>
 
                         <!-- List -->
@@ -234,7 +234,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
-                <span>Dashboard</span>
+                <span>{{ $isId ? 'Dasbor' : 'Dashboard' }}</span>
             </a>
 
             <!-- Hosted Journals -->
@@ -470,22 +470,22 @@
                         <!-- Header -->
                         <div
                             class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between rounded-t-xl">
-                            <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+                            <h3 class="text-sm font-semibold text-gray-900">{{ $isId ? 'Notifikasi' : 'Notifications' }}</h3>
                             <button @click="markAllAsRead()" x-show="unreadCount > 0"
                                 class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                                Mark all as read
+                                {{ $isId ? 'Tandai semua telah dibaca' : 'Mark all as read' }}
                             </button>
                         </div>
 
                         <!-- Content -->
                         <div class="max-h-80 overflow-y-auto">
-                            <!-- Loading -->
+                             <!-- Loading -->
                             <template x-if="isLoading">
                                 <div class="p-8 text-center">
                                     <div
                                         class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto">
                                     </div>
-                                    <p class="text-xs text-gray-400 mt-2">Loading...</p>
+                                    <p class="text-xs text-gray-400 mt-2">{{ $isId ? 'Memuat...' : 'Loading...' }}</p>
                                 </div>
                             </template>
 
@@ -493,7 +493,7 @@
                             <template x-if="!isLoading && notifications.length === 0">
                                 <div class="p-8 text-center">
                                     <i class="fa-solid fa-bell-slash text-gray-300 text-3xl"></i>
-                                    <p class="text-sm text-gray-500 mt-2">No notifications</p>
+                                    <p class="text-sm text-gray-500 mt-2">{{ $isId ? 'Tidak ada notifikasi' : 'No notifications' }}</p>
                                 </div>
                             </template>
 
@@ -522,7 +522,7 @@
                                                     <div class="flex-1 min-w-0">
                                                         <p class="text-sm font-semibold"
                                                             :class="notif.read_at ? 'text-gray-600' : 'text-gray-900'"
-                                                            x-text="notif.title || 'Notification'"></p>
+                                                            x-text="notif.title || '{{ $isId ? 'Notifikasi' : 'Notification' }}'"></p>
                                                         <p class="text-xs mt-0.5 line-clamp-2"
                                                             :class="notif.read_at ? 'text-gray-500' : 'text-gray-700'"
                                                             x-text="notif.message"></p>
@@ -544,7 +544,7 @@
                         <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 text-center rounded-b-xl">
                             <a href="{{ route('notifications.index') }}"
                                 class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-                                View all notifications
+                                {{ $isId ? 'Lihat semua notifikasi' : 'View all notifications' }}
                             </a>
                         </div>
                     </div>

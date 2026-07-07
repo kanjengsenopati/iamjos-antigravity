@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Site Appearance - Page Builder')
+@section('title', $isId ? 'Tampilan Situs - Pembuat Halaman' : 'Site Appearance - Page Builder')
 
 @section('content')
 <div class="min-h-screen bg-gray-50" x-data="pageBuilder()">
@@ -9,20 +9,20 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">Page Builder</h1>
-                    <p class="text-sm text-gray-500">Customize your portal landing page</p>
+                    <h1 class="text-xl font-bold text-gray-900">{{ $isId ? 'Pembuat Halaman' : 'Page Builder' }}</h1>
+                    <p class="text-sm text-gray-500">{{ $isId ? 'Sesuaikan halaman arahan portal Anda' : 'Customize your portal landing page' }}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <a href="{{ route('portal.home') }}" target="_blank"
-                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
                         <i class="fa-solid fa-external-link-alt mr-2"></i>
-                        Preview Portal
+                        {{ $isId ? 'Pratinjau Portal' : 'Preview Portal' }}
                     </a>
                     <button @click="saveOrder()"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
                             :disabled="!hasChanges">
                         <i class="fa-solid fa-save mr-2"></i>
-                        Save Changes
+                        {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                     </button>
                 </div>
             </div>
@@ -48,11 +48,11 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h2 class="text-lg font-bold text-gray-900">Active Sections</h2>
-                            <p class="text-sm text-gray-500">Drag to reorder • Click toggle to disable</p>
+                            <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Bagian Aktif' : 'Active Sections' }}</h2>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Geser untuk mengurutkan • Klik sakelar untuk menonaktifkan' : 'Drag to reorder • Click toggle to disable' }}</p>
                         </div>
                         <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                            <span x-text="activeBlocks.length"></span> Active
+                            <span x-text="activeBlocks.length"></span> {{ $isId ? 'Aktif' : 'Active' }}
                         </span>
                     </div>
 
@@ -85,14 +85,14 @@
                                         {{-- Edit Button - Full page for complex blocks, modal for simple ones --}}
                                         @if(in_array($block->key, ['indexing_partners', 'hero_search', 'custom_html']))
                                             <a href="{{ route('admin.site.appearance.edit', $block) }}"
-                                               class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                               title="Configure">
+                                               class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                                               title="{{ $isId ? 'Konfigurasi' : 'Configure' }}">
                                                 <i class="fa-solid fa-cog"></i>
                                             </a>
                                         @else
                                             <button @click="editBlock({{ $block->id }})"
-                                                    class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                    title="Configure">
+                                                    class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                                                    title="{{ $isId ? 'Konfigurasi' : 'Configure' }}">
                                                 <i class="fa-solid fa-cog"></i>
                                             </button>
                                         @endif
@@ -100,7 +100,7 @@
                                         {{-- Toggle Switch --}}
                                         <button @click="toggleBlock({{ $block->id }})"
                                                 class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-indigo-600"
-                                                title="Toggle Active">
+                                                title="{{ $isId ? 'Alihkan Status Aktif' : 'Toggle Active' }}">
                                             <span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                         </button>
                                     </div>
@@ -114,11 +114,11 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h2 class="text-lg font-bold text-gray-900">Available Sections</h2>
-                            <p class="text-sm text-gray-500">Enable these sections to add them to your portal</p>
+                            <h2 class="text-lg font-bold text-gray-900">{{ $isId ? 'Bagian yang Tersedia' : 'Available Sections' }}</h2>
+                            <p class="text-sm text-gray-500">{{ $isId ? 'Aktifkan bagian-bagian ini untuk menambahkannya ke portal Anda' : 'Enable these sections to add them to your portal' }}</p>
                         </div>
                         <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                            {{ $blocks->where('is_active', false)->count() }} Disabled
+                            {{ $blocks->where('is_active', false)->count() }} {{ $isId ? 'Dinonaktifkan' : 'Disabled' }}
                         </span>
                     </div>
 
@@ -145,12 +145,12 @@
                                         {{-- Edit Button - Full page for complex blocks --}}
                                         @if(in_array($block->key, ['indexing_partners', 'hero_search', 'custom_html']))
                                             <a href="{{ route('admin.site.appearance.edit', $block) }}"
-                                               class="p-2 text-gray-400 hover:text-gray-600 rounded-lg">
+                                               class="p-2 text-gray-400 hover:text-gray-600 rounded-lg cursor-pointer">
                                                 <i class="fa-solid fa-cog"></i>
                                             </a>
                                         @else
                                             <button @click="editBlock({{ $block->id }})"
-                                                    class="p-2 text-gray-400 hover:text-gray-600 rounded-lg">
+                                                    class="p-2 text-gray-400 hover:text-gray-600 rounded-lg cursor-pointer">
                                                 <i class="fa-solid fa-cog"></i>
                                             </button>
                                         @endif
@@ -158,7 +158,7 @@
                                         {{-- Enable Button --}}
                                         <button @click="toggleBlock({{ $block->id }})"
                                                 class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out bg-gray-200"
-                                                title="Enable">
+                                                title="{{ $isId ? 'Aktifkan' : 'Enable' }}">
                                             <span class="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                         </button>
                                     </div>
@@ -175,7 +175,7 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">
                         <i class="fa-solid fa-eye mr-2 text-indigo-500"></i>
-                        Current Layout
+                        {{ $isId ? 'Tata Letak Saat Ini' : 'Current Layout' }}
                     </h3>
                     <div class="space-y-2" id="preview-list">
                         @foreach($blocks->where('is_active', true)->sortBy('sort_order') as $index => $block)
@@ -191,7 +191,7 @@
                 </div>
 
                 {{-- Help Card --}}
-                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-600 rounded-xl p-6 text-white" style="background: linear-gradient(to right, #4f46e5, #9333ea); color: white;">
                     <h3 class="font-bold mb-3">
                         <i class="fa-solid fa-lightbulb mr-2"></i>
                         Tips
@@ -199,26 +199,26 @@
                     <ul class="space-y-2 text-sm text-indigo-100">
                         <li class="flex items-start gap-2">
                             <i class="fa-solid fa-check mt-1"></i>
-                            <span>Drag blocks to reorder them on your portal</span>
+                            <span>{{ $isId ? 'Geser blok untuk menyusun ulang di portal Anda' : 'Drag blocks to reorder them on your portal' }}</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <i class="fa-solid fa-check mt-1"></i>
-                            <span>Click the gear icon to customize each block</span>
+                            <span>{{ $isId ? 'Klik ikon roda gigi untuk menyesuaikan setiap blok' : 'Click the gear icon to customize each block' }}</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <i class="fa-solid fa-check mt-1"></i>
-                            <span>Toggle switches to show/hide sections</span>
+                            <span>{{ $isId ? 'Alihkan sakelar untuk menampilkan/menyembunyikan bagian' : 'Toggle switches to show/hide sections' }}</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <i class="fa-solid fa-check mt-1"></i>
-                            <span>Changes are saved automatically</span>
+                            <span>{{ $isId ? 'Perubahan disimpan secara otomatis' : 'Changes are saved automatically' }}</span>
                         </li>
                     </ul>
                 </div>
 
                 {{-- Block Categories --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Categories</h3>
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">{{ $isId ? 'Kategori' : 'Categories' }}</h3>
                     <div class="space-y-2">
                         @foreach($blocksByCategory as $category => $categoryBlocks)
                             <div class="flex items-center justify-between text-sm">
@@ -250,7 +250,7 @@
                         <h3 class="text-lg font-bold text-gray-900" x-text="currentBlock?.title"></h3>
                         <p class="text-sm text-gray-500" x-text="currentBlock?.description"></p>
                     </div>
-                    <button @click="showConfigModal = false" class="text-gray-400 hover:text-gray-600">
+                    <button @click="showConfigModal = false" class="text-gray-400 hover:text-gray-600 cursor-pointer">
                         <i class="fa-solid fa-times text-xl"></i>
                     </button>
                 </div>
@@ -259,13 +259,13 @@
                 <div class="p-6 max-h-[70vh] overflow-y-auto">
                     <div x-show="loadingConfig" class="text-center py-8">
                         <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-500"></i>
-                        <p class="text-gray-500 mt-2">Loading configuration...</p>
+                        <p class="text-gray-500 mt-2">{{ $isId ? 'Memuat konfigurasi...' : 'Loading configuration...' }}</p>
                     </div>
 
                     <div x-show="!loadingConfig">
                         {{-- Block Title --}}
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Judul Bagian' : 'Section Title' }}</label>
                             <input type="text" x-model="currentBlock.title"
                                    class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
@@ -275,7 +275,7 @@
                             <div class="space-y-6">
                                 {{-- Subtitle --}}
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Subjudul' : 'Subtitle' }}</label>
                                     <input type="text" x-model="currentBlock.config.subtitle"
                                            placeholder="e.g., Explore our top-rated journals"
                                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
@@ -284,13 +284,13 @@
                                 {{-- Display Count --}}
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Display Count</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Jumlah Tampilan' : 'Display Count' }}</label>
                                         <input type="number" x-model.number="currentBlock.config.display_count" min="1" max="12"
                                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                        <p class="text-xs text-gray-500 mt-1">Max journals to show on homepage</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Jumlah jurnal maksimum untuk ditampilkan di beranda' : 'Max journals to show on homepage' }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Layout Style</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Gaya Tata Letak' : 'Layout Style' }}</label>
                                         <select x-model="currentBlock.config.layout"
                                                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                             <option value="grid">Grid</option>
@@ -303,8 +303,8 @@
                                 {{-- Journal Selection --}}
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-3">
-                                        Select Featured Journals
-                                        <span class="text-gray-400 font-normal">(click to select/deselect)</span>
+                                        {{ $isId ? 'Pilih Jurnal Unggulan' : 'Select Featured Journals' }}
+                                        <span class="text-gray-400 font-normal">({{ $isId ? 'klik untuk memilih/batal memilih' : 'click to select/deselect' }})</span>
                                     </label>
                                     
                                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-80 overflow-y-auto p-1">
@@ -352,11 +352,11 @@
                                     {{-- Selection Summary --}}
                                     <div class="mt-3 flex items-center justify-between text-sm">
                                         <span class="text-gray-500">
-                                            <span x-text="(currentBlock.config.featured_ids || []).length"></span> journals selected
+                                            <span x-text="(currentBlock.config.featured_ids || []).length"></span> {{ $isId ? 'jurnal terpilih' : 'journals selected' }}
                                         </span>
                                         <button type="button" @click="currentBlock.config.featured_ids = []"
-                                                class="text-red-600 hover:text-red-700 text-sm font-medium">
-                                            Clear Selection
+                                                class="text-red-600 hover:text-red-700 text-sm font-medium cursor-pointer">
+                                            {{ $isId ? 'Bersihkan Pilihan' : 'Clear Selection' }}
                                         </button>
                                     </div>
                                 </div>
@@ -368,7 +368,7 @@
                             <div class="space-y-6">
                                 {{-- Subtitle --}}
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Subjudul' : 'Subtitle' }}</label>
                                     <input type="text" x-model="currentBlock.config.subtitle"
                                            placeholder="e.g., Growing academic community"
                                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
@@ -376,44 +376,44 @@
 
                                 {{-- Current Statistics Display --}}
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-3">Current Statistics</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">{{ $isId ? 'Statistik Saat Ini' : 'Current Statistics' }}</label>
                                     <div class="bg-gray-50 rounded-lg p-4">
                                         <template x-if="currentBlock.stats">
                                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div class="text-center">
                                                     <div class="text-2xl font-bold text-blue-600" x-text="formatNumber(currentBlock.stats.journals || 0)"></div>
-                                                    <div class="text-sm text-gray-600">Active Journals</div>
+                                                    <div class="text-sm text-gray-600">{{ $isId ? 'Jurnal Aktif' : 'Active Journals' }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="text-2xl font-bold text-green-600" x-text="formatNumber(currentBlock.stats.submissions || 0)"></div>
-                                                    <div class="text-sm text-gray-600">Total Submissions</div>
+                                                    <div class="text-sm text-gray-600">{{ $isId ? 'Total Pengajuan' : 'Total Submissions' }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="text-2xl font-bold text-purple-600" x-text="formatNumber(currentBlock.stats.users || 0)"></div>
-                                                    <div class="text-sm text-gray-600">Registered Users</div>
+                                                    <div class="text-sm text-gray-600">{{ $isId ? 'Pengguna Terdaftar' : 'Registered Users' }}</div>
                                                 </div>
                                             </div>
                                         </template>
                                         <template x-if="!currentBlock.stats">
-                                            <p class="text-sm text-gray-500">Loading statistics...</p>
+                                            <p class="text-sm text-gray-500">{{ $isId ? 'Memuat statistik...' : 'Loading statistics...' }}</p>
                                         </template>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-2">These statistics are automatically calculated from the database.</p>
+                                    <p class="text-xs text-gray-500 mt-2">{{ $isId ? 'Statistik ini dihitung secara otomatis dari database.' : 'These statistics are automatically calculated from the database.' }}</p>
                                 </div>
 
                                 {{-- Animation Settings --}}
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Animation Duration (ms)</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Durasi Animasi (ms)' : 'Animation Duration (ms)' }}</label>
                                         <input type="number" x-model.number="currentBlock.config.animation_duration" min="500" max="5000"
                                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                        <p class="text-xs text-gray-500 mt-1">How long each counter takes to animate</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Berapa lama setiap penghitung beranimasi' : 'How long each counter takes to animate' }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Animation Delay (ms)</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Jeda Animasi (ms)' : 'Animation Delay (ms)' }}</label>
                                         <input type="number" x-model.number="currentBlock.config.animation_delay" min="0" max="1000"
                                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                        <p class="text-xs text-gray-500 mt-1">Delay between starting each counter</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Jeda antara memulai setiap penghitung' : 'Delay between starting each counter' }}</p>
                                     </div>
                                 </div>
 
@@ -422,12 +422,12 @@
                                     <label class="flex items-center gap-2">
                                         <input type="checkbox" x-model="currentBlock.config.show_icons"
                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                        <span class="text-sm text-gray-700">Show Icons</span>
+                                        <span class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Ikon' : 'Show Icons' }}</span>
                                     </label>
                                     <label class="flex items-center gap-2">
                                         <input type="checkbox" x-model="currentBlock.config.animate_on_scroll"
                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                        <span class="text-sm text-gray-700">Animate on Scroll</span>
+                                        <span class="text-sm text-gray-700">{{ $isId ? 'Animasikan saat Gulir' : 'Animate on Scroll' }}</span>
                                     </label>
                                 </div>
                             </div>
@@ -438,7 +438,7 @@
                             <div class="space-y-6">
                                 {{-- Subtitle --}}
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Subjudul' : 'Subtitle' }}</label>
                                     <input type="text" x-model="currentBlock.config.subtitle"
                                            placeholder="e.g., Find journals in your research area"
                                            class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
@@ -447,7 +447,7 @@
                                 {{-- Layout Settings --}}
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Layout Style</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Gaya Tata Letak' : 'Layout Style' }}</label>
                                         <select x-model="currentBlock.config.layout"
                                                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                             <option value="icon-grid">Icon Grid</option>
@@ -456,10 +456,10 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Columns</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ $isId ? 'Kolom' : 'Columns' }}</label>
                                         <input type="number" x-model.number="currentBlock.config.columns" min="2" max="8"
                                                class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                        <p class="text-xs text-gray-500 mt-1">Number of columns in grid layout</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $isId ? 'Jumlah kolom dalam tata letak kisi' : 'Number of columns in grid layout' }}</p>
                                     </div>
                                 </div>
 
@@ -468,13 +468,13 @@
                                     <label class="flex items-center gap-2">
                                         <input type="checkbox" x-model="currentBlock.config.show_count"
                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                        <span class="text-sm text-gray-700">Show Journal Count</span>
+                                        <span class="text-sm text-gray-700">{{ $isId ? 'Tampilkan Jumlah Jurnal' : 'Show Journal Count' }}</span>
                                     </label>
                                 </div>
 
                                 {{-- Categories Management --}}
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-3">Subject Categories</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">{{ $isId ? 'Kategori Subjek' : 'Subject Categories' }}</label>
                                     <div class="space-y-3">
                                         <template x-for="(category, index) in currentBlock.config.categories" :key="index">
                                             <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -484,7 +484,7 @@
                                                 <div class="flex-1">
                                                     <input type="text" x-model="category.name"
                                                            class="w-full text-sm font-medium bg-transparent border-0 focus:ring-0 p-0"
-                                                           placeholder="Category name">
+                                                           placeholder="{{ $isId ? 'Nama kategori' : 'Category name' }}">
                                                 </div>
                                                 <div class="flex-shrink-0">
                                                     <input type="text" x-model="category.icon"
@@ -506,7 +506,7 @@
                                                 </div>
                                                 <div class="flex-shrink-0">
                                                     <button @click="removeCategory(index)"
-                                                            class="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
+                                                            class="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer">
                                                         <i class="fa-solid fa-trash text-sm"></i>
                                                     </button>
                                                 </div>
@@ -516,9 +516,9 @@
 
                                     {{-- Add New Category --}}
                                     <button @click="addCategory()"
-                                            class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
                                         <i class="fa-solid fa-plus mr-2"></i>
-                                        Add Category
+                                        {{ $isId ? 'Tambah Kategori' : 'Add Category' }}
                                     </button>
                                 </div>
                             </div>
@@ -551,7 +551,7 @@
                                                     <label class="flex items-center gap-2">
                                                         <input type="checkbox" x-model="currentBlock.config[key]"
                                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                                        <span class="text-sm text-gray-600">Enabled</span>
+                                                        <span class="text-sm text-gray-600">{{ $isId ? 'Diaktifkan' : 'Enabled' }}</span>
                                                     </label>
                                                 </template>
 
@@ -572,13 +572,13 @@
                 {{-- Footer --}}
                 <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-xl">
                     <button @click="showConfigModal = false"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                        Cancel
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        {{ $isId ? 'Batal' : 'Cancel' }}
                     </button>
                     <button @click="saveConfig()"
-                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 cursor-pointer">
                         <i class="fa-solid fa-save mr-2"></i>
-                        Save Configuration
+                        {{ $isId ? 'Simpan Konfigurasi' : 'Save Configuration' }}
                     </button>
                 </div>
             </div>
@@ -645,10 +645,10 @@ function pageBuilder() {
                 const data = await response.json();
                 if (data.success) {
                     this.hasChanges = false;
-                    this.showNotification('Order saved successfully', 'success');
+                    this.showNotification('{{ $isId ? 'Urutan berhasil disimpan' : 'Order saved successfully' }}', 'success');
                 }
             } catch (error) {
-                this.showNotification('Failed to save order', 'error');
+                this.showNotification('{{ $isId ? 'Gagal menyimpan urutan' : 'Failed to save order' }}', 'error');
             }
         },
 
@@ -667,7 +667,7 @@ function pageBuilder() {
                     location.reload(); // Simplest way to refresh the UI
                 }
             } catch (error) {
-                this.showNotification('Failed to toggle block', 'error');
+                this.showNotification('{{ $isId ? 'Gagal mengalihkan blok' : 'Failed to toggle block' }}', 'error');
             }
         },
 
@@ -716,7 +716,7 @@ function pageBuilder() {
                 
                 this.currentBlock = data;
             } catch (error) {
-                this.showNotification('Failed to load configuration', 'error');
+                this.showNotification('{{ $isId ? 'Gagal memuat konfigurasi' : 'Failed to load configuration' }}', 'error');
             } finally {
                 this.loadingConfig = false;
             }
@@ -755,7 +755,7 @@ function pageBuilder() {
         },
 
         removeCategory(index) {
-            if (this.currentBlock.config.categories && confirm('Are you sure you want to remove this category?')) {
+            if (this.currentBlock.config.categories && confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus kategori ini?' : 'Are you sure you want to remove this category?' }}')) {
                 this.currentBlock.config.categories.splice(index, 1);
             }
         },
@@ -784,10 +784,10 @@ function pageBuilder() {
                 const data = await response.json();
                 if (data.success) {
                     this.showConfigModal = false;
-                    this.showNotification('Configuration saved', 'success');
+                    this.showNotification('{{ $isId ? 'Konfigurasi disimpan' : 'Configuration saved' }}', 'success');
                 }
             } catch (error) {
-                this.showNotification('Failed to save configuration', 'error');
+                this.showNotification('{{ $isId ? 'Gagal menyimpan konfigurasi' : 'Failed to save configuration' }}', 'error');
             }
         },
 

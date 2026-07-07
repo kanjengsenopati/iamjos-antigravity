@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Site Settings')
+@section('title', $isId ? 'Pengaturan Situs' : 'Site Settings')
 
 @section('content')
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Site Settings</h1>
-        <p class="mt-1 text-gray-500">Configure global settings for your IAMJOS installation.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Situs' : 'Site Settings' }}</h1>
+        <p class="mt-1 text-gray-500">{{ $isId ? 'Konfigurasi pengaturan global untuk instalasi IAMJOS Anda.' : 'Configure global settings for your IAMJOS installation.' }}</p>
     </div>
 
     <div class="max-w-7xl mx-auto">
@@ -16,17 +16,17 @@
             <div class="mb-6 flex space-x-2 border-b border-gray-200">
                 <button @click="activeTab = 'general'"
                     :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'general', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'general' }"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    General Settings
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer">
+                    {{ $isId ? 'Pengaturan Umum' : 'General Settings' }}
                 </button>
                 <button @click="activeTab = 'whatsapp'"
                     :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'whatsapp', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'whatsapp' }"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer">
                     WhatsApp Gateway
                 </button>
                 <button @click="activeTab = 'recaptcha'"
                     :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'recaptcha', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'recaptcha' }"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer">
                     Google reCAPTCHA
                 </button>
             </div>
@@ -35,68 +35,63 @@
                 class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 @csrf
 
-                <!-- General Tab -->
+                 <!-- General Tab -->
                 <div x-show="activeTab === 'general'" class="animate-fade-in">
                     <div class="p-6 border-b border-gray-100">
-                        <h2 class="text-lg font-bold text-gray-900 mb-6">General Configuration</h2>
+                        <h2 class="text-lg font-bold text-gray-900 mb-6">{{ $isId ? 'Konfigurasi Umum' : 'General Configuration' }}</h2>
 
                         <div class="space-y-6">
                             <!-- Site Title -->
                             <div>
                                 <label for="site_title" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Site Title
+                                    {{ $isId ? 'Judul Situs' : 'Site Title' }}
                                 </label>
                                 <input type="text" id="site_title" name="site_title"
                                     value="{{ old('site_title', Settings::site('site_title', '')) }}"
                                     class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <p class="mt-1 text-xs text-gray-500">The main title displayed on the browser tab and meta
-                                    tags.
-                                </p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Judul utama yang ditampilkan pada tab browser dan meta tag.' : 'The main title displayed on the browser tab and meta tags.' }}</p>
                             </div>
 
                             <!-- Site Intro -->
                             <div>
                                 <label for="site_intro" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Site Introduction
+                                    {{ $isId ? 'Pengenalan Situs' : 'Site Introduction' }}
                                 </label>
                                 <textarea id="site_intro" name="site_intro" rows="3"
                                     class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('site_intro', Settings::site('site_intro', '')) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">A brief description displayed on the portal homepage.
-                                </p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Deskripsi singkat yang ditampilkan di halaman beranda portal.' : 'A brief description displayed on the portal homepage.' }}</p>
                             </div>
 
                             <!-- About Content -->
                             <div>
                                 <label for="about_content" class="block text-sm font-medium text-gray-700 mb-2">
-                                    About the Site
+                                    {{ $isId ? 'Tentang Situs' : 'About the Site' }}
                                 </label>
                                 <textarea id="about_content" name="about_content" rows="8"
                                     class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 tinymce-editor">{{ old('about_content', Settings::site('about_content', '')) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">Custom HTML content for the portal about page.
-                                    Supports rich text formatting.</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Konten HTML kustom untuk halaman tentang portal. Mendukung pemformatan teks kaya.' : 'Custom HTML content for the portal about page. Supports rich text formatting.' }}</p>
                             </div>
 
                             <!-- Footer Content -->
                             <div>
                                 <label for="footer_content" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Footer Content
+                                    {{ $isId ? 'Konten Footer' : 'Footer Content' }}
                                 </label>
                                 <textarea id="footer_content" name="footer_content" rows="8"
                                     class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 tinymce-editor">{{ old('footer_content', Settings::site('footer_content', '')) }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">Custom HTML content for the portal footer. Supports
-                                    rich text formatting.</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Konten HTML kustom untuk footer portal. Mendukung pemformatan teks kaya.' : 'Custom HTML content for the portal footer. Supports rich text formatting.' }}</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="p-6 border-b border-gray-100">
-                        <h2 class="text-lg font-bold text-gray-900 mb-6">Security & Routing</h2>
+                        <h2 class="text-lg font-bold text-gray-900 mb-6">{{ $isId ? 'Keamanan & Rute' : 'Security & Routing' }}</h2>
 
                         <div class="space-y-6">
                             <!-- Min Password Length -->
                             <div>
                                 <label for="min_password_length" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Minimum Password Length
+                                    {{ $isId ? 'Panjang Kata Sandi Minimal' : 'Minimum Password Length' }}
                                 </label>
                                 <input type="number" id="min_password_length" name="min_password_length" min="6"
                                     max="32"
@@ -104,16 +99,15 @@
                                     class="w-full sm:w-1/2 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             </div>
 
-                            <!-- Redirect to Journal -->
+                             <!-- Redirect to Journal -->
                             <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                                 <input type="checkbox" id="redirect_to_journal" name="redirect_to_journal" value="1"
                                     {{ old('redirect_to_journal', Settings::site('redirect_to_journal', false)) ? 'checked' : '' }}
                                     class="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                 <label for="redirect_to_journal" class="cursor-pointer">
-                                    <span class="block text-sm font-medium text-gray-900">Redirect to Single Journal</span>
+                                    <span class="block text-sm font-medium text-gray-900">{{ $isId ? 'Alihkan ke Jurnal Tunggal' : 'Redirect to Single Journal' }}</span>
                                     <span class="block text-xs text-gray-500 mt-1">
-                                        If enabled and only one active journal exists, visitors to the portal home will be
-                                        automatically redirected to that journal.
+                                        {{ $isId ? 'Jika diaktifkan dan hanya satu jurnal aktif yang tersedia, pengunjung ke halaman depan portal akan otomatis dialihkan ke jurnal tersebut.' : 'If enabled and only one active journal exists, visitors to the portal home will be automatically redirected to that journal.' }}
                                     </span>
                                 </label>
                             </div>
@@ -124,9 +118,9 @@
                                     {{ old('use_ojs_url_format', Settings::site('use_ojs_url_format', false)) ? 'checked' : '' }}
                                     class="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                 <label for="use_ojs_url_format" class="cursor-pointer">
-                                    <span class="block text-sm font-medium text-gray-900">OJS URL Compatibility Mode</span>
+                                    <span class="block text-sm font-medium text-gray-900">{{ $isId ? 'Mode Kompatibilitas URL OJS' : 'OJS URL Compatibility Mode' }}</span>
                                     <span class="block text-xs text-gray-500 mt-1">
-                                        Jika diaktifkan, URL publik akan menggunakan prefix 'index.php' untuk menjaga kompatibilitas dengan link OJS lama yang sudah terdaftar di ISSN/OAI.
+                                        {{ $isId ? 'Jika diaktifkan, URL publik akan menggunakan prefix \'index.php\' untuk menjaga kompatibilitas dengan tautan OJS lama yang sudah terdaftar di ISSN/OAI.' : "Jika diaktifkan, URL publik akan menggunakan prefix 'index.php' untuk menjaga kompatibilitas dengan link OJS lama yang sudah terdaftar di ISSN/OAI." }}
                                     </span>
                                 </label>
                             </div>
@@ -141,8 +135,7 @@
                         <div class="flex">
                             <div class="ml-3">
                                 <p class="text-sm text-blue-700">
-                                    Configure your WhatsApp Gateway provider here. These settings will be used to send
-                                    automated notifications (Submission Ack, LoA, etc.).
+                                    {{ $isId ? 'Konfigurasikan penyedia WhatsApp Gateway Anda di sini. Pengaturan ini akan digunakan untuk mengirimkan notifikasi otomatis (Tanda Terima Naskah, LoA, dll).' : 'Configure your WhatsApp Gateway provider here. These settings will be used to send automated notifications (Submission Ack, LoA, etc.).' }}
                                 </p>
                             </div>
                         </div>
@@ -151,7 +144,7 @@
                     <div class="grid grid-cols-1 gap-6">
                         <div>
                             <label for="wa_api_url" class="block text-sm font-medium text-gray-700 mb-2">
-                                Gateway API Link
+                                {{ $isId ? 'Tautan API Gateway' : 'Gateway API Link' }}
                             </label>
                             <input id="wa_api_url" name="wa_api_url" type="url"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -164,13 +157,13 @@
 
                         <div>
                             <label for="wa_sender_number" class="block text-sm font-medium text-gray-700 mb-2">
-                                WhatsApp Number
+                                {{ $isId ? 'Nomor WhatsApp' : 'WhatsApp Number' }}
                             </label>
                             <input id="wa_sender_number" name="wa_sender_number" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 value="{{ old('wa_sender_number', Settings::site('wa_sender_number', '')) }}"
                                 placeholder="628123456789">
-                            <p class="mt-1 text-xs text-gray-500">Format: 628xxx (Country code included).</p>
+                            <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Format: 628xxx (termasuk kode negara).' : 'Format: 628xxx (Country code included).' }}</p>
                             @error('wa_sender_number')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -178,7 +171,7 @@
 
                         <div>
                             <label for="wa_device_id" class="block text-sm font-medium text-gray-700 mb-2">
-                                Device ID / API Token
+                                {{ $isId ? 'ID Perangkat / Token API' : 'Device ID / API Token' }}
                             </label>
                             <input id="wa_device_id" name="wa_device_id" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
@@ -196,11 +189,9 @@
                     <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6">
                         <div class="flex">
                             <div class="ml-3">
-                                <h3 class="text-sm font-medium text-indigo-800">Global Google reCAPTCHA Configuration</h3>
+                                <h3 class="text-sm font-medium text-indigo-800">{{ $isId ? 'Konfigurasi Google reCAPTCHA Global' : 'Global Google reCAPTCHA Configuration' }}</h3>
                                 <div class="mt-2 text-sm text-indigo-700">
-                                    <p>Configure Google reCAPTCHA v2 keys here. These keys will be used globally across all
-                                        journals. Individual journals can enable/disable the feature, but they will use
-                                        these shared keys.</p>
+                                    <p>{{ $isId ? 'Konfigurasikan kunci Google reCAPTCHA v2 di sini. Kunci-kunci ini akan digunakan secara global di semua jurnal. Setiap jurnal dapat mengaktifkan/menonaktifkan fitur ini, namun mereka tetap menggunakan kunci bersama ini.' : 'Configure Google reCAPTCHA v2 keys here. These keys will be used globally across all journals. Individual journals can enable/disable the feature, but they will use these shared keys.' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -209,13 +200,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="recaptcha_site_key" class="block text-sm font-medium text-gray-700 mb-2">
-                                Site Key
+                                {{ $isId ? 'Kunci Situs (Site Key)' : 'Site Key' }}
                             </label>
                             <input id="recaptcha_site_key" name="recaptcha_site_key" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
                                 value="{{ old('recaptcha_site_key', Settings::site('recaptcha_site_key', '')) }}"
                                 placeholder="6LeIxAcTAAAAAJcZZZZZZZZZZZZZZZZZZZZZZZZ">
-                            <p class="mt-1 text-xs text-gray-500">Public key used in the HTML code.</p>
+                            <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Kunci publik yang digunakan dalam kode HTML.' : 'Public key used in the HTML code.' }}</p>
                             @error('recaptcha_site_key')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -223,13 +214,13 @@
 
                         <div>
                             <label for="recaptcha_secret_key" class="block text-sm font-medium text-gray-700 mb-2">
-                                Secret Key
+                                {{ $isId ? 'Kunci Rahasia (Secret Key)' : 'Secret Key' }}
                             </label>
                             <input id="recaptcha_secret_key" name="recaptcha_secret_key" type="text"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
                                 value="{{ old('recaptcha_secret_key', Settings::site('recaptcha_secret_key', '')) }}"
                                 placeholder="6LeIxAcTAAAAAGG-vFI1TnRWxXXXXXXXXXXXXXXX">
-                            <p class="mt-1 text-xs text-gray-500">Private key for server-side validation.</p>
+                            <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Kunci privat untuk validasi sisi server.' : 'Private key for server-side validation.' }}</p>
                             @error('recaptcha_secret_key')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -243,7 +234,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
-                        Save Settings
+                        {{ $isId ? 'Simpan Pengaturan' : 'Save Settings' }}
                     </button>
                 </div>
             </form>
