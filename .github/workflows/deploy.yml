@@ -255,6 +255,56 @@ jobs:
             echo "ENV_LABEL=DEVELOPMENT" >> $GITHUB_ENV
           fi
 
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pgsql, pdo_pgsql, redis, gd, zip, bcmath, intl, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer dependencies (production)
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-prod-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-prod-${{ runner.os }}-
+
+      - name: Install PHP dependencies (production)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+      - name: Download build assets artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-assets-${{ github.sha }}
+          path: public/build
+
+      - name: Create deployment archive
+        run: |
+          tar -czf deploy.tar.gz \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=.env \
+            --exclude=tests \
+            --exclude=storage \
+            --exclude=public/storage \
+            --exclude=deploy.tar.gz \
+            .
+
+      - name: Copy deployment archive to VPS via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          source: "deploy.tar.gz"
+          target: "/tmp"
+
       - name: Deploy ke VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -262,29 +312,42 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT || '22' }}
-          # set -e: hentikan script jika ada perintah yang gagal
           script: |
             set -eo pipefail
 
             echo "🚀 Memulai deployment ke ${{ env.ENV_LABEL }}..."
-            cd ${{ env.TARGET_PATH }}
 
-            # ─── 1. Pull kode terbaru ───────────────────────────────────
-            echo "📥 Mengambil kode terbaru dari branch ${{ env.BRANCH_NAME }}..."
-            # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel) agar tidak menyebabkan konflik git
-            if [ -f public/.user.ini ]; then
+            # Buat direktori target jika belum ada
+            mkdir -p ${{ env.TARGET_PATH }}
+
+            # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel)
+            if [ -f ${{ env.TARGET_PATH }}/public/.user.ini ]; then
               echo "🔓 Melepas atribut immutable pada public/.user.ini..."
-              sudo chattr -i public/.user.ini 2>/dev/null || true
-              chmod 777 public/.user.ini 2>/dev/null || true
-              rm -f public/.user.ini 2>/dev/null || true
+              sudo chattr -i ${{ env.TARGET_PATH }}/public/.user.ini 2>/dev/null || true
+              chmod 777 ${{ env.TARGET_PATH }}/public/.user.ini 2>/dev/null || true
+              rm -f ${{ env.TARGET_PATH }}/public/.user.ini 2>/dev/null || true
             fi
-            git reset --hard
-            git clean -fd
-            # Hapus konfigurasi global insteadOf jika sebelumnya dipaksa menggunakan SSH
-            git config --global --unset url.git@github.com:.insteadOf || true
-            git config --global --unset url."git@github.com:".insteadOf || true
-            # Gunakan HTTPS dengan Personal Access Token (PAT) untuk pull dari GitHub
-            git pull https://${{ secrets.GITHUB_TOKEN_DEPLOY }}@github.com/${{ github.repository }}.git ${{ env.BRANCH_NAME }}
+
+            # Backup file .env yang ada di VPS sebelum overwrite
+            if [ -f ${{ env.TARGET_PATH }}/.env ]; then
+              echo "💾 Membackup file .env yang ada..."
+              cp ${{ env.TARGET_PATH }}/.env /tmp/.env.backup
+            fi
+
+            # Ekstrak arsip ke target path
+            echo "📦 Mengekstrak berkas deployment..."
+            tar -xzf /tmp/deploy.tar.gz -C ${{ env.TARGET_PATH }}
+
+            # Kembalikan file .env dari backup jika ada
+            if [ -f /tmp/.env.backup ]; then
+              echo "💾 Mengembalikan file .env..."
+              mv /tmp/.env.backup ${{ env.TARGET_PATH }}/.env
+            fi
+
+            # Hapus file temporary deploy.tar.gz
+            rm -f /tmp/deploy.tar.gz
+
+            cd ${{ env.TARGET_PATH }}
 
             # ─── 1.5 Pastikan direktori storage ada dan writable ───────
             mkdir -p storage/framework/cache/data
@@ -342,21 +405,11 @@ jobs:
               echo "🧹 Backup lama (>7 hari) telah dihapus."
             fi
 
-            # ─── 3. Install PHP dependencies ───────────────────────────
-            echo "📦 Menginstall PHP dependencies..."
-            composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-
-            # ─── 4. Build assets frontend ──────────────────────────────
-            echo "🔨 Membangun assets frontend..."
-            rm -rf node_modules package-lock.json
-            npm install
-            NODE_OPTIONS="--max-old-space-size=512" npm run build
-
-            # Salin manifest Vite jika diperlukan
+            # ─── 3. Salin manifest Vite jika diperlukan ────────────────
             [ -f public/build/.vite/manifest.json ] && \
               cp public/build/.vite/manifest.json public/build/manifest.json || true
 
-            # ─── 5. Jalankan database migration ────────────────────────
+            # ─── 4. Jalankan database migration ────────────────────────
             echo "🗄️ Menjalankan database migration..."
             php artisan migrate --force --ansi
 
@@ -364,7 +417,7 @@ jobs:
             echo "🔗 Menghubungkan storage link..."
             php artisan storage:link --ansi || true
 
-            # ─── 6. Set permissions SEBELUM cache rebuild ─────────────
+            # ─── 5. Set permissions SEBELUM cache rebuild ─────────────
             echo "🔑 Menyesuaikan permission storage dan bootstrap/cache..."
             chmod -R 775 storage bootstrap/cache
             
@@ -375,7 +428,7 @@ jobs:
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
-            # ─── 6.5 Rebuild cache aplikasi ───────────────────────────────
+            # ─── 5.5 Rebuild cache aplikasi ───────────────────────────────
             echo "⚡ Membangun ulang cache aplikasi..."
             # Clear semua cache
             php artisan cache:clear --ansi || true
@@ -384,40 +437,35 @@ jobs:
             php artisan view:clear --ansi || true
             
             # Rebuild config dan route cache saja
-            # PENTING: TIDAK menjalankan view:cache agar Blade compile
-            # views on-demand sebagai PHP-FPM user (menghindari permission denied)
             php artisan config:cache --ansi
             php artisan route:cache --ansi
             
             # Livewire assets (skip jika error)
             php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
 
-            # ─── 6.6 Final permission fix setelah cache rebuild ───────────
+            # ─── 5.6 Final permission fix setelah cache rebuild ───────────
             echo "🔑 Final permission fix..."
             chmod -R 775 storage bootstrap/cache
             sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
-            # ─── 7. Restart services ───────────────────────────────────
+            # ─── 6. Restart services ───────────────────────────────────
             echo "🔄 Merestart services..."
-            # Gunakan reload (graceful) bukan restart untuk zero-downtime
             sudo systemctl reload php8.4-fpm 2>/dev/null || \
               sudo systemctl reload php-fpm 2>/dev/null || \
               sudo kill -USR2 $(cat /run/php/php8.4-fpm.pid 2>/dev/null) 2>/dev/null || true
             sudo systemctl reload nginx 2>/dev/null || true
 
-            # ─── 8. Verifikasi health check setelah deployment ─────────
+            # ─── 7. Verifikasi health check setelah deployment ─────────
             echo "🏥 Menunggu aplikasi siap (5 detik)..."
             sleep 5
 
             echo "🏥 Menjalankan verifikasi health check..."
-            # Coba health check via domain (HTTPS)
             HTTP_STATUS=$(curl -sk -o /dev/null -w "%{http_code}" \
               --max-time 15 \
               "${{ env.APP_URL }}/api/v1/health" 2>/dev/null) || HTTP_STATUS="000"
 
-            # Jika domain gagal (000 = connection error), coba via localhost
             if [ "$HTTP_STATUS" = "000" ]; then
               echo "⚠️ Domain unreachable dari VPS, mencoba via localhost..."
               HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -426,7 +474,6 @@ jobs:
             fi
 
             if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "503" ]; then
-              # 200 = healthy, 503 = degraded/unhealthy tapi aplikasi berjalan
               echo "✅ Health check OK — Aplikasi berjalan (HTTP $HTTP_STATUS)"
             else
               echo "❌ Health check mengembalikan HTTP $HTTP_STATUS"
@@ -452,7 +499,6 @@ jobs:
               echo "⏳ Tunggu 5 detik dan coba health check lagi..."
               sleep 5
 
-              # Retry — coba via domain, lalu fallback localhost
               HTTP_STATUS_RETRY=$(curl -sk -o /dev/null -w "%{http_code}" \
                 --max-time 15 \
                 "${{ env.APP_URL }}/api/v1/health" 2>/dev/null) || HTTP_STATUS_RETRY="000"
@@ -468,11 +514,8 @@ jobs:
                 echo "⚠️ Health check masih fail setelah retry (HTTP $HTTP_STATUS_RETRY)"
                 echo "   Deployment selesai tapi health check belum memverifikasi."
                 echo "   Periksa manual: ${{ env.APP_URL }}/api/v1/health"
-                # Non-blocking: jangan exit 1 agar deployment dianggap berhasil
-                # Deployment sudah benar, health check mungkin butuh waktu lebih lama
               fi
             fi
-
 
             echo ""
             echo "🎉 Deployment ke ${{ env.ENV_LABEL }} berhasil!"
