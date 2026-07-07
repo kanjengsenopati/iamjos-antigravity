@@ -48,7 +48,7 @@
                                 <i class="fa-solid fa-book-open text-xl" style="color: {{ $primaryColor }};"></i>
                             </div>
                             <h2 class="text-[22px] font-bold text-slate-900 leading-tight">
-                                Welcome to {{ $journal->name }}
+                                {{ __('Welcome to') }} {{ $journal->name }}
                             </h2>
                         </div>
                         <div class="text-[14px] font-medium text-slate-600 leading-relaxed text-justify prose prose-slate max-w-none [&_p]:text-justify">
@@ -65,7 +65,7 @@
                     <div class="mb-8">
                         <h2
                             class="text-xl font-bold text-slate-700 uppercase tracking-wide inline-block border-b-4 border-orange-400 pb-1">
-                            Current Issue
+                            {{ __('Current Issue') }}
                         </h2>
                     </div>
 
@@ -108,7 +108,7 @@
                             <div class="space-y-2 text-sm text-slate-700 mt-4">
                                 @if ($currentIssue->published_at)
                                     <p>
-                                        <span class="font-bold text-slate-900">PUBLISHED:</span>
+                                        <span class="font-bold text-slate-900">{{ __('Published') }}:</span>
                                         {{ $currentIssue->published_at->format('Y-m-d') }}
                                     </p>
                                 @endif
@@ -152,7 +152,7 @@
 
                     @if ($issueArticles->isNotEmpty())
                         <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
-                            <h3 class="text-xl font-bold text-slate-700 border-b border-slate-200 pb-2 mb-6">Articles
+                            <h3 class="text-xl font-bold text-slate-700 border-b border-slate-200 pb-2 mb-6">{{ __('Articles') }}
                             </h3>
 
                             <div class="space-y-8">
@@ -164,7 +164,7 @@
                     @else
                         <div class="bg-slate-50 rounded-lg p-8 text-center">
                             <i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-3"></i>
-                            <p class="text-slate-500">No articles published in this issue yet.</p>
+                            <p class="text-slate-500">{{ __('No articles published in this issue yet.') }}</p>
                         </div>
                     @endif
                 </section>
@@ -178,7 +178,7 @@
                                 <i class="fa-solid fa-book text-xl" style="color: {{ $primaryColor }};"></i>
                             </div>
                             <h2 class="text-[22px] font-bold text-slate-900 leading-tight">
-                                Welcome to {{ $journal->name }}
+                                {{ __('Welcome to') }} {{ $journal->name }}
                             </h2>
                         </div>
                         
@@ -191,13 +191,13 @@
                                 class="inline-flex items-center px-5 py-2.5 text-sm font-bold text-white rounded-xl transition-all shadow-sm hover:shadow-md"
                                 style="background: {{ $primaryColor }};">
                                 <i class="fa-solid fa-paper-plane mr-2"></i>
-                                Submit Your Research
+                                {{ __('Submit Your Research') }}
                             </a>
                             <a href="{{ route('journal.public.about', $journal->slug) }}"
                                 class="inline-flex items-center px-5 py-2.5 text-sm font-bold border rounded-xl transition-colors hover:bg-slate-50"
                                 style="color: {{ $primaryColor }}; border-color: {{ $primaryColor }};">
                                 <i class="fa-solid fa-info-circle mr-2"></i>
-                                Learn More
+                                {{ __('Learn More') }}
                             </a>
                         </div>
                     </div>

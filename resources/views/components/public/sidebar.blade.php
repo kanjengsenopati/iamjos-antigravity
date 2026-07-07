@@ -25,7 +25,7 @@
                     <div class="px-4 py-3 border-b border-slate-200 group-hover:bg-indigo-50 transition-colors">
                         <h3
                             class="font-bold text-slate-800 uppercase tracking-wider text-xs group-hover:text-indigo-700 transition-colors">
-                            {{ $block->title }}
+                            {{ __($block->title) }}
                         </h3>
                     </div>
                 @endif
@@ -40,7 +40,7 @@
             <div class="mb-6 custom-block-{{ $block->id }}">
                 @if ($block->show_title)
                     <h3 class="font-bold text-slate-800 mb-2 border-b pb-2 uppercase tracking-wider text-xs">
-                        {{ $block->title }}</h3>
+                        {{ __($block->title) }}</h3>
                 @endif
 
                 {{-- Render Content RAW --}}
@@ -57,7 +57,7 @@
                         @if ($block->icon ?? false)
                             <i class="{{ $block->icon }}" style="color: {{ $primaryColor }};"></i>
                         @endif
-                        {{ $block->title }}
+                        {{ __($block->title) }}
                     </h3>
                 </div>
 

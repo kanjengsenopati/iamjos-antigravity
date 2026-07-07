@@ -24,10 +24,10 @@
         </div>
         <div class="mt-4 text-right">
             <a href="{{ route('journal.announcement.index', $journal->slug) }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-1">
-                More Announcements <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+                {{ __('More Announcements') }} <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
             </a>
         </div>
     @else
-        <p class="text-slate-500 italic">No recent announcements.</p>
+        <p class="text-slate-500 italic">{{ __('No recent announcements.') }}</p>
     @endif
 </div>

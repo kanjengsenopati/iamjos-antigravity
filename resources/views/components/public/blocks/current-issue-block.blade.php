@@ -20,13 +20,13 @@
         </a>
         @if($currentIssue->published_at)
             <p class="text-xs text-slate-500 mt-1">
-                Published: {{ $currentIssue->published_at->format('M d, Y') }}
+                {{ __('Published') }}: {{ $currentIssue->published_at->format('Y-m-d') }}
             </p>
         @endif
     </div>
 </div>
 @else
 <div class="px-4 pb-1">
-    <p class="text-sm text-slate-500 italic text-center">No issues published yet.</p>
+    <p class="text-sm text-slate-500 italic text-center">{{ __('No issues published yet.') }}</p>
 </div>
 @endif

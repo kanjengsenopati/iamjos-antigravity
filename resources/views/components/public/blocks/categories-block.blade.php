@@ -16,6 +16,6 @@
             @endforeach
         </ul>
     @else
-        <p class="text-slate-500 italic">No categories available.</p>
+        <p class="text-slate-500 italic">{{ __('No categories available.') }}</p>
     @endif
 </div>

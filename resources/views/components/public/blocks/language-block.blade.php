@@ -1,11 +1,8 @@
 @props(['journal', 'block'])
-@php
-    $primaryColor = $journal->getWebsiteSettings()['primary_color'] ?? '#0369a1';
-@endphp
 <div class="text-sm text-slate-600">
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 mb-2">
         <i class="fa-solid fa-globe text-slate-400"></i>
-        <span>English</span>
+        <span class="font-semibold">{{ __('Select Language') }}</span>
     </div>
-    <p class="text-xs text-slate-500 mt-2 italic">More languages coming soon.</p>
+    <x-language-switcher :inline="true" />
 </div>

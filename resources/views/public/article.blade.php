@@ -199,10 +199,10 @@
             <!-- Breadcrumb -->
             <nav class="text-sm text-gray-500 mb-6">
                 <a href="{{ route('journal.public.home', ['journal' => $journal->slug]) }}"
-                    class="hover:text-primary-600">Home</a>
+                    class="hover:text-primary-600">{{ __('Home') }}</a>
                 <span class="mx-2">/</span>
                 <a href="{{ route('journal.public.archives', ['journal' => $journal->slug]) }}"
-                    class="hover:text-primary-600">Archives</a>
+                    class="hover:text-primary-600">{{ __('Archives') }}</a>
                 @if ($submission->issue)
                     <span class="mx-2">/</span>
                     <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $submission->issue->seq_id]) }}"
@@ -225,7 +225,7 @@
 
                 <!-- Authors -->
                 <div class="mb-6">
-                    <h2 class="sr-only">Authors</h2>
+                    <h2 class="sr-only">{{ __('Authors') }}</h2>
                     <div class="flex flex-wrap gap-2">
                         @foreach ($submission->authors as $author)
                             <div class="flex items-center bg-gray-50 rounded-lg px-3 py-2">
@@ -238,7 +238,7 @@
                                         {{ $author->name }}
                                         @if ($author->is_corresponding)
                                             <span class="ml-1 text-xs text-primary-600"
-                                                title="Corresponding Author">✉</span>
+                                                title="{{ __('Corresponding Author') }}">✉</span>
                                         @endif
                                     </p>
                                     @if ($author->affiliation)
@@ -261,7 +261,7 @@
 
                 <!-- Meta Info -->
                 <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 pb-6 border-b border-gray-200">
-                    <span>Published: {{ $submission->published_at?->format('F j, Y') }}</span>
+                    <span>{{ __('Published') }}: {{ $submission->published_at?->format('Y-m-d') }}</span>
                     @if ($submission->issue)
                         <span>•</span>
                         <span>{{ $submission->issue->identifier }}</span>
@@ -275,8 +275,8 @@
                     class="bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-6 mb-8 border border-primary-200">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-1">Full Text Available</h3>
-                            <p class="text-sm text-gray-600">Read or download the article in PDF format</p>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ __('Full Text Available') }}</h3>
+                            <p class="text-sm text-gray-600">{{ __('Read or download the article in PDF format') }}</p>
                         </div>
                         <div class="flex flex-wrap gap-3">
                             <!-- Read Full Text Button -->
@@ -286,7 +286,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                 </svg>
-                                Read Full Text
+                                {{ __('Read Full Text') }}
                             </a>
 
                             <!-- Download Buttons -->
@@ -297,7 +297,7 @@
                                         <path
                                             d="M14,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2H18a2,2,0,0,0,2-2V8ZM12,18,8,14l1.41-1.41L11,14.17V10h2v4.17l1.59-1.58L16,14ZM13,9V3.5L18.5,9Z" />
                                     </svg>
-                                    Download {{ strtoupper(pathinfo($file->file_name, PATHINFO_EXTENSION)) }}
+                                    {{ __('Download') }} {{ strtoupper(pathinfo($file->file_name, PATHINFO_EXTENSION)) }}
                                 </a>
                             @endforeach
                         </div>
@@ -307,7 +307,7 @@
 
             <!-- Abstract -->
             <section class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Abstract</h2>
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Abstract') }}</h2>
                 <div class="prose prose-lg max-w-none text-gray-600">
                     {!! nl2br(e($submission->abstract)) !!}
                 </div>
@@ -330,7 +330,7 @@
 
             <!-- Citation -->
             <section class="bg-gray-50 rounded-xl p-6 mb-8">
-                <h2 class="text-sm font-semibold text-gray-900 mb-3">How to Cite</h2>
+                <h2 class="text-sm font-semibold text-gray-900 mb-3">{{ __('How to Cite') }}</h2>
                 <p class="text-sm text-gray-600">
                     {{ $submission->authors->pluck('name')->join(', ') }} ({{ $submission->published_at?->year }}).
                     {{ $submission->title }}.
@@ -347,7 +347,7 @@
     @if ($relatedArticles->isNotEmpty())
         <section class="bg-gray-100 py-12">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-xl font-semibold text-gray-900 mb-6">Related Articles</h2>
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">{{ __('Related Articles') }}</h2>
                 <div class="grid md:grid-cols-3 gap-6">
                     @foreach ($relatedArticles as $related)
                         <article class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
@@ -356,7 +356,7 @@
                                     href="{{ route('journal.public.article', ['journal' => $journal->slug, 'submission' => $related]) }}">{{ $related->title }}</a>
                             </h3>
                             <p class="text-xs text-gray-500 mt-2">
-                                {{ $related->authors->pluck('name')->first() ?: 'Unknown Author' }}
+                                {{ $related->authors->pluck('name')->first() ?: __('Unknown Author') }}
                             </p>
                         </article>
                     @endforeach
