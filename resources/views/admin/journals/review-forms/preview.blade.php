@@ -90,14 +90,14 @@
                                 <div class="ml-11">
                                     @switch($element->element_type->value)
                                         @case('text')
-                                            <input type="text" disabled
-                                                class="w-full rounded-lg border-gray-300 bg-gray-50"
+                                            <input type="text"
+                                                class="w-full rounded-lg border-gray-300 bg-white"
                                                 placeholder="{{ $isId ? 'Masukkan jawaban Anda di sini...' : 'Enter your answer here...' }}">
                                         @break
 
                                         @case('textarea')
-                                            <textarea disabled rows="4"
-                                                class="w-full rounded-lg border-gray-300 bg-gray-50"
+                                            <textarea rows="4"
+                                                class="w-full rounded-lg border-gray-300 bg-white"
                                                 placeholder="{{ $isId ? 'Masukkan jawaban Anda di sini...' : 'Enter your answer here...' }}"></textarea>
                                         @break
 
@@ -106,7 +106,7 @@
                                                 <div class="space-y-3">
                                                     @foreach ($element->options as $option)
                                                         <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
-                                                            <input type="checkbox" disabled class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                            <input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                                                             <span class="text-sm text-gray-700">{{ $option['label'] ?? $option['value'] }}</span>
                                                         </label>
                                                     @endforeach
@@ -119,7 +119,7 @@
                                                 <div class="space-y-3">
                                                     @foreach ($element->options as $option)
                                                         <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 cursor-pointer transition-all">
-                                                            <input type="radio" disabled name="preview_{{ $element->id }}" class="border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                            <input type="radio" name="preview_{{ $element->id }}" class="border-gray-300 text-primary-600 focus:ring-primary-500">
                                                             <span class="text-sm text-gray-700">{{ $option['label'] ?? $option['value'] }}</span>
                                                         </label>
                                                     @endforeach
@@ -128,7 +128,7 @@
                                         @break
 
                                         @case('select')
-                                            <select disabled class="w-full rounded-lg border-gray-300 bg-gray-50">
+                                            <select class="w-full rounded-lg border-gray-300 bg-white">
                                                 <option>{{ $isId ? '-- Pilih salah satu --' : '-- Select one --' }}</option>
                                                 @if ($element->options && count($element->options) > 0)
                                                     @foreach ($element->options as $option)
@@ -139,13 +139,27 @@
                                         @break
 
                                         @case('rating')
-                                            <div class="flex items-center gap-2">
+                                            <div x-data="{ 
+                                                rating: 0, 
+                                                hoverRating: 0,
+                                                setRating(val) { this.rating = val },
+                                                setHover(val) { this.hoverRating = val }
+                                            }" 
+                                            @mouseleave="hoverRating = 0"
+                                            class="flex items-center gap-2">
+                                                <input type="hidden" name="answers[{{ $element->id }}]" :value="rating">
                                                 @for ($i = 1; $i <= 5; $i++)
-                                                    <button type="button" disabled class="text-3xl text-gray-300 hover:text-yellow-400 transition-colors">
+                                                    <button type="button" 
+                                                        @click="setRating({{ $i }})"
+                                                        @mouseover="setHover({{ $i }})"
+                                                        class="text-3xl transition-colors focus:outline-none"
+                                                        :class="(hoverRating ? {{ $i }} <= hoverRating : {{ $i }} <= rating) ? 'text-yellow-400' : 'text-gray-300'">
                                                         <i class="fa-solid fa-star"></i>
                                                     </button>
                                                 @endfor
-                                                <span class="text-sm text-gray-500 ml-3">{{ $isId ? '1 = Sangat Buruk, 5 = Sangat Baik' : '1 = Very Poor, 5 = Excellent' }}</span>
+                                                <span class="text-sm text-gray-500 ml-3" 
+                                                      x-text="rating > 0 ? rating + ' / 5' : '{{ $isId ? 'Pilih rating' : 'Select rating' }}'">
+                                                </span>
                                             </div>
                                         @break
                                     @endswitch
@@ -154,14 +168,16 @@
                         @endforeach
 
                         <!-- Form Actions (Preview Only) -->
-                        <div class="pt-6 border-t border-gray-200 flex justify-between">
-                            <button type="button" disabled
-                                class="px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                        <div class="pt-6 border-t border-gray-200 flex justify-between" x-data="{}">
+                            <button type="button"
+                                @click="alert('{{ $isId ? 'Simulasi: Draf ulasan Anda berhasil disimpan!' : 'Simulation: Your review draft has been successfully saved!' }}')"
+                                class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
                                 <i class="fa-solid fa-save mr-2"></i>
                                 {{ $isId ? 'Simpan Draft' : 'Save Draft' }}
                             </button>
-                            <button type="button" disabled
-                                class="px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed">
+                            <button type="button"
+                                @click="alert('{{ $isId ? 'Simulasi: Ulasan Anda berhasil dikirim!' : 'Simulation: Your review has been successfully submitted!' }}')"
+                                class="px-6 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors">
                                 {{ $isId ? 'Kirim Ulasan' : 'Submit Review' }}
                             </button>
                         </div>
