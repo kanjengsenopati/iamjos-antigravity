@@ -53,6 +53,94 @@
 
         // URL-like keys that should use type="url"
         $urlKeys = ['crossref_deposit_url_live', 'crossref_deposit_url_test', 'crossref_api_base_url', 'recaptcha_verify_url', 'google_scholar_search_url'];
+
+        // Indonesian translations for setting keys (labels)
+        $settingLabels = [
+            'pagination_submissions' => 'Submisi per Halaman',
+            'pagination_issues' => 'Isu per Halaman',
+            'pagination_journals' => 'Jurnal per Halaman',
+            'pagination_reviews' => 'Penugasan Review per Halaman',
+            'pagination_announcements' => 'Pengumuman per Halaman',
+            'pagination_notifications' => 'Notifikasi per Halaman',
+            'pagination_search_results' => 'Hasil Pencarian per Halaman',
+            'pagination_portal_journals' => 'Jurnal per Halaman di Portal',
+            'homepage_latest_articles_count' => 'Jumlah Artikel Terbaru di Beranda',
+            'homepage_featured_journals_count' => 'Jumlah Jurnal Unggulan di Beranda',
+            'homepage_announcements_count' => 'Jumlah Pengumuman di Beranda',
+            'homepage_editorial_team_count' => 'Jumlah Tim Redaksi di Beranda',
+            'portal_featured_journals_count' => 'Jumlah Jurnal Unggulan di Portal',
+            'portal_latest_articles_count' => 'Jumlah Artikel Terbaru di Portal',
+            'upload_max_size_manuscript' => 'Ukuran Maksimal Manuskrip',
+            'upload_max_size_galley' => 'Ukuran Maksimal Berkas Galley',
+            'upload_max_size_avatar' => 'Ukuran Maksimal Avatar',
+            'upload_max_size_image' => 'Ukuran Maksimal Gambar Umum',
+            'upload_allowed_extensions_manuscript' => 'Ekstensi Manuskrip yang Diperbolehkan',
+            'upload_allowed_extensions_galley' => 'Ekstensi Berkas Galley yang Diperbolehkan',
+            'upload_allowed_extensions_avatar' => 'Ekstensi Avatar yang Diperbolehkan',
+            'upload_allowed_extensions_image' => 'Ekstensi Gambar yang Diperbolehkan',
+            'reviewer_reminder_days_before' => 'Hari Pengingat Sebelum Batas Waktu',
+            'reviewer_reminder_overdue_interval_days' => 'Interval Pengingat Keterlambatan (Hari)',
+            'crossref_deposit_url_live' => 'URL Deposit Live Crossref',
+            'crossref_deposit_url_test' => 'URL Deposit Uji Coba Crossref',
+            'crossref_api_base_url' => 'URL Dasar API REST Crossref',
+            'recaptcha_verify_url' => 'URL Verifikasi Google reCAPTCHA',
+            'google_scholar_search_url' => 'URL Dasar Pencarian Google Scholar',
+            'maintenance_mode' => 'Mode Pemeliharaan',
+            'app_version' => 'Versi Aplikasi',
+            'mail_mailer' => 'Driver Email / Mailer',
+            'mail_host' => 'Alamat Host SMTP',
+            'mail_port' => 'Port SMTP',
+            'mail_username' => 'Username SMTP',
+            'mail_password' => 'Password SMTP',
+            'mail_encryption' => 'Protokol Enkripsi SMTP',
+            'mail_from_address' => 'Alamat Email Pengirim (From Address)',
+            'mail_from_name' => 'Nama Pengirim (From Name)',
+            'mail_queue_connection' => 'Koneksi Antrean Email',
+        ];
+
+        // Indonesian translations for setting descriptions
+        $settingDescriptions = [
+            'pagination_submissions' => 'Jumlah submisi/artikel yang ditampilkan per halaman di dashboard.',
+            'pagination_issues' => 'Jumlah terbitan/isu jurnal yang ditampilkan per halaman.',
+            'pagination_journals' => 'Jumlah jurnal yang ditampilkan per halaman pada kelola jurnal.',
+            'pagination_reviews' => 'Jumlah penugasan tinjauan sejawat (review) yang ditampilkan per halaman.',
+            'pagination_announcements' => 'Jumlah pengumuman yang ditampilkan per halaman.',
+            'pagination_notifications' => 'Jumlah notifikasi yang ditampilkan per halaman.',
+            'pagination_search_results' => 'Jumlah hasil pencarian yang ditampilkan per halaman.',
+            'pagination_portal_journals' => 'Jumlah daftar jurnal yang ditampilkan per halaman di portal utama.',
+            'homepage_latest_articles_count' => 'Jumlah artikel terbaru yang ditampilkan di halaman beranda.',
+            'homepage_featured_journals_count' => 'Jumlah jurnal unggulan yang ditampilkan di halaman beranda.',
+            'homepage_announcements_count' => 'Jumlah pengumuman yang ditampilkan di halaman beranda.',
+            'homepage_editorial_team_count' => 'Jumlah anggota tim redaksi yang ditampilkan di beranda.',
+            'portal_featured_journals_count' => 'Jumlah jurnal unggulan yang ditampilkan di daftar portal.',
+            'portal_latest_articles_count' => 'Jumlah artikel terbaru yang ditampilkan di portal utama.',
+            'upload_max_size_manuscript' => 'Ukuran maksimal berkas manuskrip yang dapat diunggah dalam byte (default: 50 MB = 52428800).',
+            'upload_max_size_galley' => 'Ukuran maksimal berkas produksi/galley yang dapat diunggah dalam byte (default: 100 MB = 104857600).',
+            'upload_max_size_avatar' => 'Ukuran maksimal gambar avatar profil dalam byte (default: 2 MB = 2097152).',
+            'upload_max_size_image' => 'Ukuran maksimal gambar umum dalam byte (default: 5 MB = 5242880).',
+            'upload_allowed_extensions_manuscript' => 'Daftar ekstensi berkas manuskrip yang diperbolehkan, dipisahkan dengan koma.',
+            'upload_allowed_extensions_galley' => 'Daftar ekstensi berkas galley yang diperbolehkan, dipisahkan dengan koma.',
+            'upload_allowed_extensions_avatar' => 'Daftar ekstensi gambar avatar yang diperbolehkan, dipisahkan dengan koma.',
+            'upload_allowed_extensions_image' => 'Daftar ekstensi gambar umum yang diperbolehkan, dipisahkan dengan koma.',
+            'reviewer_reminder_days_before' => 'Hari-hari sebelum batas waktu untuk mengirimkan email pengingat kepada reviewer (dipisahkan dengan koma, misal: 7,3,1,0).',
+            'reviewer_reminder_overdue_interval_days' => 'Interval dalam hari untuk mengirim kembali email pengingat reviewer setelah melewati batas waktu.',
+            'crossref_deposit_url_live' => 'URL endpoint resmi (live) Crossref untuk pendaftaran DOI.',
+            'crossref_deposit_url_test' => 'URL endpoint uji coba (sandbox/test) Crossref untuk pendaftaran DOI.',
+            'crossref_api_base_url' => 'URL dasar REST API Crossref untuk pencarian dan penarikan metadata DOI.',
+            'recaptcha_verify_url' => 'Endpoint verifikasi reCAPTCHA Google di sisi server.',
+            'google_scholar_search_url' => 'URL dasar pencarian Google Scholar.',
+            'maintenance_mode' => 'Jika diaktifkan, aplikasi akan menampilkan halaman pemeliharaan (maintenance) bagi pengunjung non-admin.',
+            'app_version' => 'String versi aplikasi saat ini.',
+            'mail_mailer' => 'Driver email yang akan digunakan (smtp, phpmail, atau log).',
+            'mail_host' => 'Alamat server SMTP (SMTP host).',
+            'mail_port' => 'Port server SMTP (contoh: 25, 465, 587, 1025, 2525).',
+            'mail_username' => 'Username SMTP (kosongkan jika tidak diperlukan otentikasi).',
+            'mail_password' => 'Password SMTP (kosongkan jika tidak diperlukan otentikasi).',
+            'mail_encryption' => 'Protokol enkripsi koneksi SMTP (none, tls, atau ssl).',
+            'mail_from_address' => 'Alamat email pengirim yang digunakan sebagai "From".',
+            'mail_from_name' => 'Nama pengirim yang digunakan sebagai "From Name".',
+            'mail_queue_connection' => 'Driver antrean email yang akan digunakan (sync = langsung dikirim/cPanel, database = antrean di database, redis = antrean di Redis).',
+        ];
     @endphp
 
     <div x-data="{ activeTab: localStorage.getItem('system_settings_active_tab') || 'email' }">
@@ -114,68 +202,77 @@
 
                         <div class="{{ $isTwoCol ? 'p-6 grid grid-cols-1 md:grid-cols-2 gap-6' : 'divide-y divide-gray-50' }}">
                             @foreach ($groupSettings as $setting)
+                                @php
+                                    $displayLabel = $isId && isset($settingLabels[$setting->key]) 
+                                        ? $settingLabels[$setting->key] 
+                                        : ucwords(str_replace('_', ' ', $setting->key));
+                                    
+                                    $displayDescription = $isId && isset($settingDescriptions[$setting->key]) 
+                                        ? $settingDescriptions[$setting->key] 
+                                        : $setting->description;
+                                @endphp
                                 <div class="{{ $isTwoCol ? ($setting->type === 'json' ? 'md:col-span-2 space-y-1.5' : 'space-y-1.5') : 'px-6 py-5' }}">
                                     @if ($setting->key === 'mail_mailer')
                                     {{-- Custom Mailer Dropdown --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        {{ ucwords(str_replace('_', ' ', $setting->key)) }}
+                                        {{ $displayLabel }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <select
                                         id="{{ $setting->key }}"
                                         name="{{ $setting->key }}"
-                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer"
                                     >
                                         <option value="smtp" {{ old($setting->key, $setting->value) === 'smtp' ? 'selected' : '' }}>{{ $isId ? 'Server SMTP (Direkomendasikan)' : 'SMTP Server (Recommended)' }}</option>
                                         <option value="phpmail" {{ old($setting->key, $setting->value) === 'phpmail' ? 'selected' : '' }}>{{ $isId ? 'Fungsi PHP mail()' : 'PHP mail() Function' }}</option>
                                         <option value="log" {{ old($setting->key, $setting->value) === 'log' ? 'selected' : '' }}>{{ $isId ? 'Log (Hanya untuk Dev/Uji coba)' : 'Log (Dev/Testing only)' }}</option>
                                     </select>
-                                    @if ($setting->description)
-                                        <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
+                                    @if ($displayDescription)
+                                        <p class="mt-1.5 text-xs text-gray-500">{{ $displayDescription }}</p>
                                     @endif
 
                                 @elseif ($setting->key === 'mail_encryption')
                                     {{-- Custom Encryption Dropdown --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        {{ ucwords(str_replace('_', ' ', $setting->key)) }}
+                                        {{ $displayLabel }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <select
                                         id="{{ $setting->key }}"
                                         name="{{ $setting->key }}"
-                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer"
                                     >
                                         <option value="none" {{ old($setting->key, $setting->value) === 'none' ? 'selected' : '' }}>{{ $isId ? 'Tidak ada (Teks biasa)' : 'None (Plain text)' }}</option>
                                         <option value="tls" {{ old($setting->key, $setting->value) === 'tls' ? 'selected' : '' }}>TLS (STARTTLS - port 587)</option>
                                         <option value="ssl" {{ old($setting->key, $setting->value) === 'ssl' ? 'selected' : '' }}>SSL (SMTPS - port 465)</option>
                                     </select>
-                                    @if ($setting->description)
-                                        <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
+                                    @if ($displayDescription)
+                                        <p class="mt-1.5 text-xs text-gray-500">{{ $displayDescription }}</p>
                                     @endif
 
                                 @elseif ($setting->key === 'mail_queue_connection')
                                     {{-- Custom Queue Connection Dropdown --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        {{ $isId ? 'Koneksi Antrean Email' : 'Mail Queue Connection' }}
+                                        {{ $displayLabel }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <select
                                         id="{{ $setting->key }}"
                                         name="{{ $setting->key }}"
-                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                        class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer"
                                     >
                                         <option value="sync" {{ old($setting->key, $setting->value) === 'sync' ? 'selected' : '' }}>{{ $isId ? 'Kirim Langsung (Tanpa Pengaturan Server / cPanel)' : 'Direct Send (No Server Setup / cPanel)' }}</option>
                                         <option value="database" {{ old($setting->key, $setting->value) === 'database' ? 'selected' : '' }}>{{ $isId ? 'Antrean Database (Direkomendasikan dengan Cron)' : 'Database Queue (Recommended with Cron)' }}</option>
                                         <option value="redis" {{ old($setting->key, $setting->value) === 'redis' ? 'selected' : '' }}>{{ $isId ? 'Antrean Redis (Performa Tinggi / Supervisor)' : 'Redis Queue (High Performance / Supervisor)' }}</option>
                                     </select>
-                                    @if ($setting->description)
-                                        <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
+                                    @if ($displayDescription)
+                                        <p class="mt-1.5 text-xs text-gray-500">{{ $displayDescription }}</p>
                                     @endif
 
                                 @elseif ($setting->key === 'mail_password')
                                     {{-- Custom Password Field with Show/Hide Toggle --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        {{ ucwords(str_replace('_', ' ', $setting->key)) }}
+                                        {{ $displayLabel }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <div class="relative w-full {{ $isTwoCol ? '' : 'sm:w-80' }}" x-data="{ show: false }">
@@ -189,13 +286,13 @@
                                         <button
                                             type="button"
                                             @click="show = !show"
-                                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                         >
                                             <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
                                         </button>
                                     </div>
-                                    @if ($setting->description)
-                                        <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
+                                    @if ($displayDescription)
+                                        <p class="mt-1.5 text-xs text-gray-500">{{ $displayDescription }}</p>
                                     @endif
 
                                 @elseif ($setting->type === 'boolean')
@@ -213,10 +310,10 @@
                                         </div>
                                         <label for="{{ $setting->key }}" class="cursor-pointer flex-1">
                                             <span class="block text-sm font-medium text-gray-900">
-                                                {{ ucwords(str_replace('_', ' ', $setting->key)) }}
+                                                {{ $displayLabel }}
                                             </span>
-                                            @if ($setting->description)
-                                                <span class="block text-xs text-gray-500 mt-0.5">{{ $setting->description }}</span>
+                                            @if ($displayDescription)
+                                                <span class="block text-xs text-gray-500 mt-0.5">{{ $displayDescription }}</span>
                                             @endif
                                             <span class="block text-xs text-gray-400 mt-1 font-mono">{{ $setting->key }}</span>
                                         </label>
@@ -225,7 +322,7 @@
                                 @elseif ($setting->type === 'integer')
                                     {{-- Integer: number input --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        {{ ucwords(str_replace('_', ' ', $setting->key)) }}
+                                        {{ $displayLabel }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <input
@@ -235,14 +332,14 @@
                                         value="{{ old($setting->key, $setting->value) }}"
                                         class="w-full {{ $isTwoCol ? '' : 'sm:w-64' }} px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     >
-                                    @if ($setting->description)
-                                        <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
+                                    @if ($displayDescription)
+                                        <p class="mt-1.5 text-xs text-gray-500">{{ $displayDescription }}</p>
                                     @endif
 
                                 @elseif ($setting->type === 'json')
                                     {{-- JSON: textarea --}}
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        {{ ucwords(str_replace('_', ' ', $setting->key)) }}
+                                        {{ $displayLabel }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <textarea
@@ -251,8 +348,8 @@
                                         rows="4"
                                         class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     >{{ old($setting->key, $setting->value) }}</textarea>
-                                    @if ($setting->description)
-                                        <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
+                                    @if ($displayDescription)
+                                        <p class="mt-1.5 text-xs text-gray-500">{{ $displayDescription }}</p>
                                     @endif
 
                                 @else
@@ -261,7 +358,7 @@
                                         $inputType = in_array($setting->key, $urlKeys) ? 'url' : 'text';
                                     @endphp
                                     <label for="{{ $setting->key }}" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        {{ ucwords(str_replace('_', ' ', $setting->key)) }}
+                                        {{ $displayLabel }}
                                         <span class="ml-1 text-xs font-normal text-gray-400 font-mono">({{ $setting->key }})</span>
                                     </label>
                                     <input
@@ -271,17 +368,18 @@
                                         value="{{ old($setting->key, $setting->value) }}"
                                         class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     >
-                                    @if ($setting->description)
-                                        <p class="mt-1.5 text-xs text-gray-500">{{ $setting->description }}</p>
+                                    @if ($displayDescription)
+                                        <p class="mt-1.5 text-xs text-gray-500">{{ $displayDescription }}</p>
                                     @endif
                                 @endif
-                            </div>
-                        @endforeach
+                                </div>
+                            @endforeach
+                        </div>
 
                         @if ($group === 'email')
                             {{-- Test Connection Section --}}
                             <div class="px-6 py-6 bg-slate-50 border-t border-gray-100" x-data="testEmailHandler()">
-                                <x-text.h2 class="mb-1 text-slate-800">{{ $isId ? 'Uji Konfigurasi SMTP' : 'Test SMTP Configuration' }}</x-text.h2>
+                                <h2 class="text-[16px] font-semibold text-slate-800 mb-1">{{ $isId ? 'Uji Konfigurasi SMTP' : 'Test SMTP Configuration' }}</h2>
                                 <p class="text-[13px] text-slate-500 mb-4 font-normal">{{ $isId ? 'Kirim email tes untuk memverifikasi bahwa server SMTP Anda dikonfigurasi dengan benar. Simpan pengaturan Anda sebelum menguji.' : 'Send a test email to verify that your SMTP server is configured correctly. Save your settings before testing.' }}</p>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3">
