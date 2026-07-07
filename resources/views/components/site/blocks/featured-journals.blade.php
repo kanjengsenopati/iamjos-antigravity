@@ -20,16 +20,16 @@ $journals = $data['journals'] ?? collect();
         <div class="text-center mb-12">
             <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full mb-4">
                 <i class="fa-solid fa-star mr-2"></i>
-                Featured
+                {{ __('Featured') }}
             </span>
             @if($title)
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                {{ $title }}
+                {{ __($title) }}
             </h2>
             @endif
             @if($subtitle)
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                {{ $subtitle }}
+                {{ __($subtitle) }}
             </p>
             @endif
         </div>
@@ -79,10 +79,10 @@ $journals = $data['journals'] ?? collect();
                         {{-- Footer Buttons --}}
                         <div class="mt-auto bg-slate-50 border-t border-slate-100 px-4 py-3 flex flex-row items-center justify-between gap-3">
                             <a href="{{ route('journal.public.home', $journal->path) }}" class="flex-1 text-center text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:underline underline-offset-2 transition-all">
-                                View Journal
+                                {{ __('View Journal') }}
                             </a>
                             <a href="{{ route('journal.public.current', $journal->path) }}" class="flex-1 text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors">
-                                Current Issue
+                                {{ __('Current Issue') }}
                             </a>
                         </div>
                     </div>
@@ -93,14 +93,14 @@ $journals = $data['journals'] ?? collect();
             <div class="text-center mt-12">
                 <a href="{{ route('portal.journals') }}"
                    class="inline-flex items-center px-8 py-4 bg-white border border-slate-300 text-slate-700 font-semibold rounded-sm hover:border-indigo-500 hover:text-indigo-600 shadow-sm hover:shadow transition-all group">
-                    View All Journals
+                    {{ __('View All Journals') }}
                     <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                 </a>
             </div>
         @else
             <div class="text-center py-12 bg-white rounded-xl border border-gray-200">
                 <i class="fa-solid fa-book text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500">No journals available yet.</p>
+                <p class="text-gray-500">{{ __('No journals available yet.') }}</p>
             </div>
         @endif
     </div>

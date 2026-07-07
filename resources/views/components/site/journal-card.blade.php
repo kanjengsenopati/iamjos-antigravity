@@ -71,7 +71,7 @@
                 </span>
             @endif
             @if(!$journal->issn_print && !$journal->issn_online)
-                <span class="flex items-center gap-1 italic opacity-60">No ISSN Listed</span>
+                <span class="flex items-center gap-1 italic opacity-60">{{ __('No ISSN Listed') }}</span>
             @endif
             <span class="w-1 h-1 rounded-full bg-slate-200"></span>
             <span class="text-indigo-500/60 transition-colors group-hover:text-indigo-600">
@@ -82,11 +82,11 @@
         {{-- Stats Grid --}}
         <div class="grid grid-cols-2 gap-4 mt-auto pt-6 border-t border-slate-50">
             <div class="px-3 py-2.5 bg-slate-50 rounded-2xl group-hover:bg-indigo-50/50 transition-colors border border-transparent group-hover:border-indigo-100/50">
-                <p class="text-[9px] font-black text-slate-400 tracking-tight mb-1">Issues</p>
+                <p class="text-[9px] font-black text-slate-400 tracking-tight mb-1">{{ __('Issues') }}</p>
                 <p class="text-sm font-black text-slate-900">{{ number_format($journal->issues_count ?? 0) }}</p>
             </div>
             <div class="px-3 py-2.5 bg-slate-50 rounded-2xl group-hover:bg-indigo-50/50 transition-colors border border-transparent group-hover:border-indigo-100/50">
-                <p class="text-[9px] font-black text-slate-400 tracking-tight mb-1">Articles</p>
+                <p class="text-[9px] font-black text-slate-400 tracking-tight mb-1">{{ __('Articles') }}</p>
                 <p class="text-sm font-black text-slate-900">{{ number_format($journal->submissions_count ?? 0) }}</p>
             </div>
         </div>
@@ -96,7 +96,7 @@
     <div class="px-6 pb-7">
         <a href="{{ route('journal.public.home', $journal->slug) }}"
            class="w-full h-14 flex items-center justify-center gap-3 bg-indigo-600 text-white text-xs font-bold tracking-tight rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:-translate-y-1 transition-all duration-300">
-            Explore Journal
+            {{ __('Explore Journal') }}
             <i class="fa-solid fa-arrow-right-long transition-transform group-hover:translate-x-1"></i>
         </a>
     </div>

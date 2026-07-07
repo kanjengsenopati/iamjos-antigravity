@@ -21,12 +21,12 @@ $journals = $data['journals'] ?? collect();
         <div class="text-center mb-12">
             @if($title)
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                {{ $title }}
+                {{ __($title) }}
             </h2>
             @endif
             @if($subtitle)
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                {{ $subtitle }}
+                {{ __($subtitle) }}
             </p>
             @endif
         </div>
@@ -40,7 +40,7 @@ $journals = $data['journals'] ?? collect();
                         <input type="text" 
                                x-model="searchQuery"
                                @input="filterJournals()"
-                               placeholder="Search journals..."
+                               placeholder="{{ __('Search journals...') }}"
                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                     </div>
                 @endif
@@ -50,9 +50,9 @@ $journals = $data['journals'] ?? collect();
                         <select x-model="sortBy" 
                                 @change="filterJournals()"
                                 class="rounded-xl border border-gray-200 py-3 px-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-                            <option value="name">Sort by Name</option>
-                            <option value="articles">Most Articles</option>
-                            <option value="newest">Newest</option>
+                            <option value="name">{{ __('Sort by Name') }}</option>
+                            <option value="articles">{{ __('Most Articles') }}</option>
+                            <option value="newest">{{ __('Newest') }}</option>
                         </select>
 
                         {{-- Layout Toggle --}}
@@ -115,20 +115,20 @@ $journals = $data['journals'] ?? collect();
 
                             {{-- Stats --}}
                             <div class="hidden md:flex items-center gap-6 text-sm text-gray-500">
-                                <span>{{ $journal->issues_count ?? 0 }} Issues</span>
-                                <span>{{ $journal->submissions_count ?? 0 }} Articles</span>
+                                <span>{{ $journal->issues_count ?? 0 }} {{ __('Issues') }}</span>
+                                <span>{{ $journal->submissions_count ?? 0 }} {{ __('Articles') }}</span>
                             </div>
 
                             {{-- Actions --}}
                             <div class="flex flex-col gap-2">
                                 <a href="{{ route('journal.public.home', $journal->slug) }}"
                                    class="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 text-center">
-                                    View Journal
+                                    {{ __('View Journal') }}
                                 </a>
                                 @if($journal->currentIssue)
                                     <a href="{{ route('journal.public.current', $journal->slug) }}"
                                        class="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 text-center">
-                                        Current Issue
+                                        {{ __('Current Issue') }}
                                     </a>
                                 @endif
                             </div>
@@ -141,14 +141,14 @@ $journals = $data['journals'] ?? collect();
             <div class="text-center mt-12">
                 <a href="{{ route('portal.journals') }}"
                    class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors">
-                    View All {{ $journals->count() }} Journals
+                    {{ __('View All') }} {{ $journals->count() }} {{ __('Journals') }}
                     <i class="fa-solid fa-arrow-right ml-2"></i>
                 </a>
             </div>
         @else
             <div class="text-center py-12 bg-gray-50 rounded-xl">
                 <i class="fa-solid fa-book text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500">No journals available.</p>
+                <p class="text-gray-500">{{ __('No journals available.') }}</p>
             </div>
         @endif
     </div>

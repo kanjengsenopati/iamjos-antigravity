@@ -16,7 +16,7 @@
     $articles = $data['latest_articles'] ?? collect();
 @endphp
 
-<section class="py-16 md:py-24 bg-gray-50">
+<section class="pt-0 pb-16 md:pb-24 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Section Header --}}
         <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
@@ -24,22 +24,22 @@
                 <span
                     class="inline-flex items-center px-3 py-1 text-sm font-medium text-green-600 bg-green-100 rounded-full mb-4">
                     <i class="fa-solid fa-clock mr-2"></i>
-                    Just Published
+                    {{ __('Just Published') }}
                 </span>
                 @if($title)
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                    {{ $title }}
+                    {{ __($title) }}
                 </h2>
                 @endif
                 @if($subtitle)
                 <p class="text-lg text-gray-600">
-                    {{ $subtitle }}
+                    {{ __($subtitle) }}
                 </p>
                 @endif
             </div>
             <a href="{{ route('portal.search', ['sort' => 'newest']) }}"
                 class="mt-4 md:mt-0 inline-flex items-center text-blue-600 font-semibold hover:text-blue-700">
-                View All
+                {{ __('View All') }}
                 <i class="fa-solid fa-arrow-right ml-2"></i>
             </a>
         </div>
@@ -118,7 +118,7 @@
                             {{-- Read More --}}
                             <a href="{{ route('journal.public.article', [$article->journal->slug ?? 'journal', $article->seq_id]) }}"
                                 class="text-xs font-medium text-blue-600 hover:text-blue-700">
-                                Read More →
+                                {{ __('Read More') }} →
                             </a>
                         </div>
                     </article>
@@ -127,7 +127,7 @@
         @else
             <div class="text-center py-12 bg-white rounded-xl border border-gray-200">
                 <i class="fa-solid fa-file-lines text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500">No articles published yet.</p>
+                <p class="text-gray-500">{{ __('No articles published yet.') }}</p>
             </div>
         @endif
     </div>

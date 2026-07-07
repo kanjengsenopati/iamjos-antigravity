@@ -71,14 +71,14 @@
         {{-- 2. HEADLINE --}}
         @if($headline)
         <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4 max-w-4xl leading-[1.1]">
-            {!! $headline !!}
+            {!! __($headline) !!}
         </h1>
         @endif
 
         {{-- 3. SUBTITLE --}}
         @if($subheadline)
         <p class="text-base md:text-lg text-slate-500 mb-6 max-w-2xl mx-auto leading-relaxed font-normal">
-            {{ $subheadline }}
+            {{ __($subheadline) }}
         </p>
         @endif
 

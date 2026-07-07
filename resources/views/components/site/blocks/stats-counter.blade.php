@@ -68,7 +68,7 @@ $colorMap = [
 
                     {{-- Label --}}
                     <div class="text-sm text-gray-500 font-medium">
-                        {{ $stat['label'] }}
+                        {{ __($stat['label']) }}
                     </div>
                 </div>
             @endforeach
