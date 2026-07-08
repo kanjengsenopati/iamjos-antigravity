@@ -16,7 +16,7 @@
     <div class="mb-6 p-4 rounded-[24px] bg-emerald-50 border border-emerald-200 text-emerald-800 shadow-custom">
         <div class="flex items-center gap-2">
             <i class="fa-solid fa-circle-check text-emerald-600"></i>
-            <x-text.body class="font-medium text-emerald-800">{{ session('success') }}</x-text.body>
+            <x-text.body class="font-medium text-emerald-800">{{ __(session('success')) }}</x-text.body>
         </div>
     </div>
     @endif

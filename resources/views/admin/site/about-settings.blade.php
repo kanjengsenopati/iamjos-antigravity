@@ -17,7 +17,7 @@
     @if (session('success'))
         <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 flex items-center gap-3">
             <i class="fas fa-check-circle"></i>
-            <span>{{ session('success') }}</span>
+            <span>{{ __(session('success')) }}</span>
         </div>
     @endif
 

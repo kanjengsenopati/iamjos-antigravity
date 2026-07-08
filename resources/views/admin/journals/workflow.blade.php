@@ -35,7 +35,7 @@
             <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-3"
                 x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
                 <i class="fa-solid fa-check-circle text-emerald-600"></i>
-                <span class="text-sm text-emerald-800">{{ session('success') }}</span>
+                <span class="text-sm text-emerald-800">{{ __(session('success')) }}</span>
                 <button @click="show = false" class="ml-auto text-emerald-600 hover:text-emerald-800">
                     <i class="fa-solid fa-times"></i>
                 </button>

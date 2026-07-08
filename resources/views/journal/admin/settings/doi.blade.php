@@ -38,7 +38,7 @@
              x-data="{ show: true }" x-show="show" x-transition>
             <i class="fa-solid fa-check-circle text-emerald-600 mt-0.5"></i>
             <div class="flex-1">
-                <p class="text-sm text-emerald-800">{{ session('success') }}</p>
+                <p class="text-sm text-emerald-800">{{ __(session('success')) }}</p>
             </div>
             <button @click="show = false" class="text-emerald-600 hover:text-emerald-800">
                 <i class="fa-solid fa-xmark"></i>

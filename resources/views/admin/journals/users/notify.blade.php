@@ -40,7 +40,7 @@
 <div class="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
     <div class="flex items-center gap-2">
         <i class="fa-solid fa-circle-check"></i>
-        <span>{{ session('success') }}</span>
+        <span>{{ __(session('success')) }}</span>
     </div>
 </div>
 @endif

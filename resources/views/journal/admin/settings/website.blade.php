@@ -57,7 +57,7 @@
             <div class="mb-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-sm">
                 <div class="flex items-center">
                     <i class="fa-solid fa-check-circle text-emerald-500 mr-3"></i>
-                    <span class="text-emerald-800 text-sm font-medium">{{ session('success') }}</span>
+                    <span class="text-emerald-800 text-sm font-medium">{{ __(session('success')) }}</span>
                 </div>
             </div>
         @endif

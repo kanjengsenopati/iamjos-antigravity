@@ -598,7 +598,7 @@
              class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
             <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-xl flex items-center gap-3 w-full">
                 <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
-                <p class="text-sm font-medium text-emerald-800 pr-4">{{ session('success') }}</p>
+                <p class="text-sm font-medium text-emerald-800 pr-4">{{ __(session('success')) }}</p>
                 <button @click="show = false" class="ml-auto text-emerald-500 hover:text-emerald-700">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
@@ -613,7 +613,7 @@
              class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
             <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-xl flex items-center gap-3 w-full">
                 <i class="fa-solid fa-circle-exclamation text-red-600 text-lg"></i>
-                <p class="text-sm font-medium text-red-800 pr-4">{{ session('error') }}</p>
+                <p class="text-sm font-medium text-red-800 pr-4">{{ __(session('error')) }}</p>
                 <button @click="show = false" class="ml-auto text-red-500 hover:text-red-700">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>

@@ -14,7 +14,7 @@
             <svg class="w-5 h-5 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            {{ session('success') }}
+            {{ __(session('success')) }}
         </div>
     @endif
 

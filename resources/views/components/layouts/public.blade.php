@@ -339,12 +339,12 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
                     {{-- Flash Messages --}}
                     @if(session('success'))
                     <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
-                        {{ session('success') }}
+                        {{ __(session('success')) }}
                     </div>
                     @endif
                     @if(session('error'))
                     <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-                        {{ session('error') }}
+                        {{ __(session('error')) }}
                     </div>
                     @endif
 

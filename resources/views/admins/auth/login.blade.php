@@ -213,7 +213,7 @@
                 @if (session('success'))
                     <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3">
                         <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
-                        <p class="text-sm text-emerald-700">{{ session('success') }}</p>
+                        <p class="text-sm text-emerald-700">{{ __(session('success')) }}</p>
                     </div>
                 @endif
 

@@ -344,5 +344,15 @@
     "Reset password for your IAMJOS account": "Setel ulang kata sandi untuk akun IAMJOS Anda",
     "Enter your registered email address to verify your account": "Masukkan alamat email terdaftar Anda untuk memverifikasi akun",
     "Send Link": "Kirim Tautan",
-    "Back to Login": "Kembali ke Login"
+    "Back to Login": "Kembali ke Login",
+    "Website settings updated successfully.": "Pengaturan situs web berhasil diperbarui.",
+    "Website settings updated.": "Pengaturan situs web diperbarui.",
+    "Distribution settings updated.": "Pengaturan distribusi diperbarui.",
+    "Journal settings updated successfully.": "Pengaturan jurnal berhasil diperbarui.",
+    "Contact settings saved successfully.": "Pengaturan kontak berhasil disimpan.",
+    "Masthead settings saved successfully.": "Pengaturan masthead berhasil disimpan.",
+    "Role updated successfully.": "Peran berhasil diperbarui.",
+    "Role deleted successfully.": "Peran berhasil dihapus.",
+    "User profile and roles updated successfully.": "Profil dan peran pengguna berhasil diperbarui.",
+    "Access settings updated successfully.": "Pengaturan akses berhasil diperbarui."
 }

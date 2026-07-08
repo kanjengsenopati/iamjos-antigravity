@@ -843,12 +843,11 @@ class SubmissionController extends Controller
             // Get all role names for this journal
             $roles = $user->journalRoles->map(fn($jr) => $jr->role->name)->toArray();
             
-            // Determine primary role for filtering (logic: Manager > Editor > Section Editor)
-            // But for display, we might want to show specific ones.
-            // Let's just join them for display and filtering
-            $user->role_names = $roles;
-            $user->role_display = implode(', ', $roles);
-            return $user;
+            // Konversi model ke array dan tambahkan properti dinamis agar ikut ter-serialize ke JSON
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
         });
 
         return view('submissions.show', array_merge(
