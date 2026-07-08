@@ -995,14 +995,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                                         {{-- Review Details --}}
                                                         @if ($assignment->status === 'completed' || $assignment->recommendation)
-                                                            <button type="button" @click='openReviewDetailsModal({{ json_encode($assignment) }})'
+                                                            <button type="button" @click='openReviewDetailsModal({{ json_encode($assignment, JSON_HEX_APOS | JSON_HEX_QUOT) }})'
                                                                 class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
                                                                 <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
                                                             </button>
                                                         @endif
 
                                                         {{-- Edit Assignment --}}
-                                                        <button type="button" @click='openEditReviewModal({{ json_encode($assignment) }})' {{ !$canPerformAction ? 'disabled' : '' }}
+                                                        <button type="button" @click='openEditReviewModal({{ json_encode($assignment, JSON_HEX_APOS | JSON_HEX_QUOT) }})' {{ !$canPerformAction ? 'disabled' : '' }}
                                                             class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
                                                             <i class="fa-solid fa-calendar-check {{ $canPerformAction ? 'text-indigo-500' : 'text-gray-400' }} mr-2"></i> {{ $isId ? 'Edit Penugasan' : 'Edit Assignment' }}
                                                         </button>
@@ -3323,7 +3323,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 'url_path' => $galley->url_path,
                                                                 'url_remote' => $galley->url_remote,
                                                                 'is_remote' => $galley->is_remote,
-                                                            ]) }})'
+                                                            ], JSON_HEX_APOS | JSON_HEX_QUOT) }})'
                                                             @if ($pubStatus == 3) disabled @endif
                                                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Edit">
