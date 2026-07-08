@@ -30,9 +30,28 @@
                     </div>
                 @endif
 
+                @php
+                    $teaserContent = $block->parsed_sidebar_content;
+                    if (app()->getLocale() === 'id') {
+                        $replacements = [
+                            'About This Journal' => 'Tentang Jurnal Ini',
+                            'About the Journal' => 'Tentang Jurnal Ini',
+                            'History' => 'Sejarah',
+                            'Focus & Scope' => 'Fokus & Ruang Lingkup',
+                            'Peer Review Process' => 'Proses Mitra Bestari',
+                            'Publication Ethics' => 'Etika Publikasi',
+                            'Open Access Policy' => 'Kebijakan Akses Terbuka',
+                            'Open Access Statement' => 'Pernyataan Akses Terbuka',
+                            'Repository Policy' => 'Kebijakan Repositori',
+                            'Indexing' => 'Indeksasi',
+                        ];
+                        $teaserContent = str_replace(array_keys($replacements), array_values($replacements), $teaserContent);
+                    }
+                @endphp
+
                 {{-- Render Sidebar Content (Teaser) --}}
                 <div class="p-4 prose prose-sm max-w-none text-slate-600 group-hover:text-slate-800 transition-colors">
-                    {!! $block->parsed_sidebar_content !!}
+                    {!! $teaserContent !!}
                 </div>
             </a>
         @elseif ($type === 'block')
@@ -43,9 +62,28 @@
                         {{ __($block->title) }}</h3>
                 @endif
 
+                @php
+                    $blockContent = $block->parsed_content;
+                    if (app()->getLocale() === 'id') {
+                        $replacements = [
+                            'About This Journal' => 'Tentang Jurnal Ini',
+                            'About the Journal' => 'Tentang Jurnal Ini',
+                            'History' => 'Sejarah',
+                            'Focus & Scope' => 'Fokus & Ruang Lingkup',
+                            'Peer Review Process' => 'Proses Mitra Bestari',
+                            'Publication Ethics' => 'Etika Publikasi',
+                            'Open Access Policy' => 'Kebijakan Akses Terbuka',
+                            'Open Access Statement' => 'Pernyataan Akses Terbuka',
+                            'Repository Policy' => 'Kebijakan Repositori',
+                            'Indexing' => 'Indeksasi',
+                        ];
+                        $blockContent = str_replace(array_keys($replacements), array_values($replacements), $blockContent);
+                    }
+                @endphp
+
                 {{-- Render Content RAW --}}
                 <div class="prose prose-sm max-w-none">
-                    {!! $block->parsed_content !!}
+                    {!! $blockContent !!}
                 </div>
             </div>
         @elseif ($type === 'system')

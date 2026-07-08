@@ -78,7 +78,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     <x-text.caption class="not-italic font-normal text-slate-500 flex items-center gap-1">
                         <span class="text-slate-700 text-sm font-medium">{{ $views }}</span>
-                        <span class="text-[11px] text-slate-400 lowercase">views</span>
+                        <span class="text-[11px] text-slate-400 lowercase">{{ __('views') }}</span>
                     </x-text.caption>
                 </div>
                 <div class="w-px h-3 bg-slate-200"></div>
@@ -86,7 +86,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     <x-text.caption class="not-italic font-normal text-slate-500 flex items-center gap-1">
                         <span class="text-slate-700 text-sm font-medium">{{ $downloads }}</span>
-                        <span class="text-[11px] text-slate-400 lowercase">downloads</span>
+                        <span class="text-[11px] text-slate-400 lowercase">{{ __('downloads') }}</span>
                     </x-text.caption>
                 </div>
             </div>

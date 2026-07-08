@@ -44,7 +44,7 @@
                     <rect width="3" height="1" fill="#FF0000"/>
                     <rect y="1" width="3" height="1" fill="#FFFFFF"/>
                 </svg>
-                <span class="flex-1 text-left">Bahasa Indonesia</span>
+                <span class="flex-1 text-left">Indonesia</span>
                 @if ($currentLoc === 'id')
                     <i class="fa-solid fa-check text-emerald-600 text-[10px]"></i>
                 @endif
@@ -108,7 +108,7 @@
                         <rect width="3" height="1" fill="#FF0000"/>
                         <rect y="1" width="3" height="1" fill="#FFFFFF"/>
                     </svg>
-                    <span class="flex-1 text-left">Bahasa Indonesia</span>
+                    <span class="flex-1 text-left">Indonesia</span>
                     @if ($currentLoc === 'id')
                         <i class="fa-solid fa-check text-emerald-600 text-[10px]"></i>
                     @endif

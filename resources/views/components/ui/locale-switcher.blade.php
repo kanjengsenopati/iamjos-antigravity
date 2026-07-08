@@ -11,8 +11,8 @@
     $loc = $currentLocale ?? session('app_locale', app()->getLocale());
     $isIdActive = in_array($loc, ['id', 'id_ID']);
     $locales = [
-        'en' => ['label' => 'English',          'tag' => 'en_US', 'flag' => 'EN'],
-        'id' => ['label' => 'Bahasa Indonesia',  'tag' => 'id_ID', 'flag' => 'ID'],
+        'en' => ['label' => 'English',   'tag' => 'en_US', 'flag' => 'EN'],
+        'id' => ['label' => 'Indonesia', 'tag' => 'id_ID', 'flag' => 'ID'],
     ];
     $activeKey   = $isIdActive ? 'id' : 'en';
 @endphp
@@ -75,7 +75,7 @@
         >
             <span class="flex items-center gap-2">
                 <i class="fa-solid fa-globe text-slate-400 text-sm"></i>
-                <span>{{ $isIdActive ? 'Bahasa Indonesia' : 'English' }}</span>
+                <span>{{ $isIdActive ? 'Indonesia' : 'English' }}</span>
             </span>
             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
         </button>
