@@ -440,14 +440,31 @@ class PublicController extends Controller
         $countryStats = collect();
         if (auth()->check() && auth()->user()->hasAnyRole(['admin', 'journal manager', 'editor'])) {
             $countryStats = DB::table('article_metrics')
-                ->select('country_code', DB::raw('count(*) as total'))
+                ->select('country_code', DB::raw('count(*) as views'))
                 ->where('submission_id', $article->id)
                 ->where('type', 'view')
                 ->whereNotNull('country_code')
                 ->groupBy('country_code')
-                ->orderByDesc('total')
+                ->orderByDesc('views')
                 ->limit(10)
                 ->get();
+
+            // Hitung persentase dari total views dengan negara yang valid
+            $totalCountryViews = DB::table('article_metrics')
+                ->where('submission_id', $article->id)
+                ->where('type', 'view')
+                ->whereNotNull('country_code')
+                ->count();
+
+            if ($totalCountryViews > 0) {
+                foreach ($countryStats as $stat) {
+                    $stat->percentage = ($stat->views / $totalCountryViews) * 100;
+                }
+            } else {
+                foreach ($countryStats as $stat) {
+                    $stat->percentage = 0;
+                }
+            }
         }
 
         // Related articles from same section in same journal
