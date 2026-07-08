@@ -79,9 +79,9 @@
                                     {{-- Avatar --}}
                                     <div
                                         class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm flex-shrink-0 mr-4">
-                                        <span x-text="editor.name.charAt(0).toUpperCase()"></span>
+                                        <span x-text="(editor.name || 'E').charAt(0).toUpperCase()"></span>
                                     </div>
-
+ 
                                     <div class="flex-1 min-w-0">
                                         <p class="font-semibold text-gray-900 truncate" x-text="editor.name"></p>
                                         <p class="text-xs text-gray-500 truncate" x-text="editor.email"></p>
@@ -91,7 +91,7 @@
                                                 <template x-for="role in editor.role_names">
                                                     <span
                                                         class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                                                        x-text="{'journal editor': '{{ $isId ? 'Editor Jurnal' : 'Journal Editor' }}', 'section editor': '{{ $isId ? 'Editor Bagian' : 'Section Editor' }}'}[role.toLowerCase()] || role"></span>
+                                                        x-text="{'journal editor': '{{ $isId ? 'Editor Jurnal' : 'Journal Editor' }}', 'section editor': '{{ $isId ? 'Editor Bagian' : 'Section Editor' }}'}[(role || '').toLowerCase()] || role"></span>
                                                 </template>
                                             </template>
                                         </div>

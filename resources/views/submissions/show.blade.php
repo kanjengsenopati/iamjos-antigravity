@@ -47,27 +47,31 @@
     <x-slot name="title">{{ $submission->title }}</x-slot>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
 
-    <div x-data="submissionWorkflow({
-        defaultStage: {{ json_encode($defaultStage) }},
-        stageId: {{ $submission->stage_id ?? 1 }},
-        currentReviewRound: {{ $submission->currentReviewRound()?->round ?? 1 }},
-        maxReviewRound: {{ $submission->reviewRounds()->max('round') ?? 1 }},
-        authorName: {{ json_encode($submission->author->name ?? 'Author') }},
-        journalName: {{ json_encode($journal->name) }},
-        submissionTitle: {{ json_encode($submission->title) }},
-        promotableFilesUrl: {{ json_encode(route('journal.workflow.promotable-files', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
-        revisionFilesUrl: {{ json_encode(route('journal.workflow.revision-files', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
-        searchReviewersUrl: {{ json_encode(route('journal.workflow.reviewers.search', $journal->slug)) }},
-        uploadImageUrl: {{ json_encode(route('journal.discussion.upload-image', ['journal' => $journal->slug])) }},
-        uploadFileUrl: {{ json_encode(route('journal.discussion.upload-file', $journal->slug)) }},
-        availableFilesUrl: {{ json_encode(route('journal.workflow.available-files', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
-        reviewerAttachmentsUrl: {{ json_encode(route('journal.workflow.reviewer-attachments', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
-        uploadDecisionFileUrl: {{ json_encode(route('journal.workflow.upload-decision-file', ['journal' => $journal->slug, 'submission' => $submission->slug])) }},
-        csrfToken: {{ json_encode(csrf_token()) }},
-        firstAuthorName: {{ json_encode($submission->authors?->first()?->name ?? 'Author') }},
-        submissionCode: {{ json_encode($submission->submission_code ?? '') }},
-        potentialEditors: {{ json_encode($potentialEditors) }}
-    })">
+    <script>
+        window.submissionWorkflowConfig = {
+            defaultStage: @js($defaultStage),
+            stageId: @js($submission->stage_id ?? 1),
+            currentReviewRound: @js($submission->currentReviewRound()?->round ?? 1),
+            maxReviewRound: @js($submission->reviewRounds()->max('round') ?? 1),
+            authorName: @js($submission->author->name ?? 'Author'),
+            journalName: @js($journal->name),
+            submissionTitle: @js($submission->title),
+            promotableFilesUrl: @js(route('journal.workflow.promotable-files', ['journal' => $journal->slug, 'submission' => $submission->slug])),
+            revisionFilesUrl: @js(route('journal.workflow.revision-files', ['journal' => $journal->slug, 'submission' => $submission->slug])),
+            searchReviewersUrl: @js(route('journal.workflow.reviewers.search', $journal->slug)),
+            uploadImageUrl: @js(route('journal.discussion.upload-image', ['journal' => $journal->slug])),
+            uploadFileUrl: @js(route('journal.discussion.upload-file', $journal->slug)),
+            availableFilesUrl: @js(route('journal.workflow.available-files', ['journal' => $journal->slug, 'submission' => $submission->slug])),
+            reviewerAttachmentsUrl: @js(route('journal.workflow.reviewer-attachments', ['journal' => $journal->slug, 'submission' => $submission->slug])),
+            uploadDecisionFileUrl: @js(route('journal.workflow.upload-decision-file', ['journal' => $journal->slug, 'submission' => $submission->slug])),
+            csrfToken: @js(csrf_token()),
+            firstAuthorName: @js($submission->authors?->first()?->name ?? 'Author'),
+            submissionCode: @js($submission->submission_code ?? ''),
+            potentialEditors: @js($potentialEditors)
+        };
+    </script>
+
+    <div x-data="submissionWorkflow(window.submissionWorkflowConfig)">
 
 
         {{-- Header Section --}}
