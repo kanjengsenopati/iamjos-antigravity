@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password | {{ config('app.name', 'IAMJOS') }}</title>
-    <meta name="description" content="Reset password for your IAMJOS account">
+    <title>{{ __('Forgot Password') }} | {{ config('app.name', 'IAMJOS') }}</title>
+    <meta name="description" content="{{ __('Reset password for your IAMJOS account') }}">
     <meta name="robots" content="noindex, nofollow">
 
     <!-- Fonts -->
@@ -99,19 +99,19 @@
                         <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
                             <i class="fas fa-paper-plane text-sm"></i>
                         </div>
-                        <span class="text-sm">Streamlined Submission Process</span>
+                        <span class="text-sm">{{ __('Streamlined Submission Process') }}</span>
                     </div>
                     <div class="flex items-center gap-4 text-indigo-100">
                         <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
                             <i class="fas fa-users text-sm"></i>
                         </div>
-                        <span class="text-sm">Collaborative Peer Review</span>
+                        <span class="text-sm">{{ __('Collaborative Peer Review') }}</span>
                     </div>
                     <div class="flex items-center gap-4 text-indigo-100">
                         <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
                             <i class="fas fa-chart-line text-sm"></i>
                         </div>
-                        <span class="text-sm">Editorial Workflow Management</span>
+                        <span class="text-sm">{{ __('Editorial Workflow Management') }}</span>
                     </div>
                 </div>
             </div>
@@ -132,8 +132,8 @@
                 </div>
 
                 <div class="mb-8">
-                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-2">Forgot Password</h2>
-                    <p class="text-slate-600 text-sm">Enter your registered email address to verify your account</p>
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mb-2">{{ __('Forgot Password') }}</h2>
+                    <p class="text-slate-600 text-sm">{{ __('Enter your registered email address to verify your account') }}</p>
                 </div>
 
                 <!-- Alert Messages -->
@@ -166,7 +166,7 @@
                     <!-- Email Field -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-slate-700 mb-1.5">
-                            Email Address
+                            {{ __('Email Address') }}
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -183,14 +183,14 @@
                     <div>
                         <button type="submit"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2">
-                            Send Link
+                            {{ __('Send Link') }}
                         </button>
                     </div>
 
                     <div class="mt-6 text-center">
                         <a href="{{ route('login') }}"
                             class="font-semibold text-blue-600 hover:text-blue-500 text-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-arrow-left text-xs"></i> Back to Login
+                            <i class="fas fa-arrow-left text-xs"></i> {{ __('Back to Login') }}
                         </a>
                     </div>
                 </form>

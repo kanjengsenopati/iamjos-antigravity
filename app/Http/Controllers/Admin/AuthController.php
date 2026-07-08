@@ -133,6 +133,9 @@ class AuthController extends Controller
             }
         }
 
+        // 4. Capture locale before session invalidation
+        $locale = session('app_locale');
+
         // Logout the user (Guard against null/already logged out)
         if (Auth::guard('web')->check()) {
             Auth::guard('web')->logout();
@@ -144,6 +147,11 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         } catch (\Exception $e) {
             // Silently ignore if session is already dead
+        }
+
+        // 5. Restore locale to the new session
+        if ($locale) {
+            session(['app_locale' => $locale]);
         }
 
         // Redirect based on context
