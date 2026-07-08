@@ -167,20 +167,6 @@
                             </div>
                         @endforeach
 
-                        <!-- Form Actions (Preview Only) -->
-                        <div class="pt-6 border-t border-gray-200 flex justify-between" x-data="{}">
-                            <button type="button"
-                                @click="alert('{{ $isId ? 'Simulasi: Draf ulasan Anda berhasil disimpan!' : 'Simulation: Your review draft has been successfully saved!' }}')"
-                                class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-                                <i class="fa-solid fa-save mr-2"></i>
-                                {{ $isId ? 'Simpan Draft' : 'Save Draft' }}
-                            </button>
-                            <button type="button"
-                                @click="alert('{{ $isId ? 'Simulasi: Ulasan Anda berhasil dikirim!' : 'Simulation: Your review has been successfully submitted!' }}')"
-                                class="px-6 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors">
-                                {{ $isId ? 'Kirim Ulasan' : 'Submit Review' }}
-                            </button>
-                        </div>
                     </form>
                 @endif
             </div>
