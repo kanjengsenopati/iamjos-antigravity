@@ -7,3 +7,8 @@
 ## Bahasa Respon
 - Selalu gunakan Bahasa Indonesia untuk setiap penjelasan, feedback, dan komunikasi dengan user.
 
+## Stabilitas Sistem & Keamanan Regresi (Aturan Ketat)
+- Dilarang keras mengubah, memodifikasi, atau merusak alur sistem, bisnis logik, atau modul UI lain yang sudah stabil sebelumnya.
+- Setiap perubahan, baik berupa penambahan fitur baru, perbaikan bug, atau enhancement UI, harus bersifat non-destructive dan terisolasi dengan baik.
+- Pertahankan kompatibilitas mundur (backwards compatibility) di semua komponen dan database schema.
+- Aturan ini bersifat permanen dan persistent untuk setiap pengerjaan tugas di workspace ini.

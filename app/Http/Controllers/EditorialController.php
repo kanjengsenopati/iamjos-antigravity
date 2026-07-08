@@ -142,13 +142,61 @@ class EditorialController extends Controller
             abort(404);
         }
 
-        // Update submission to in_review status
-        $submission->update([
-            'status' => Submission::STATUS_IN_REVIEW,
-            'stage' => Submission::STAGE_REVIEW,
-        ]);
+        $user = auth()->user();
 
-        return back()->with('success', 'Submission assigned to you for review.');
+        // Check if assignment record already exists (active or inactive)
+        $existing = \App\Models\EditorialAssignment::where('submission_id', $submission->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existing && $existing->is_active) {
+            return back()->with('error', 'Anda sudah ditugaskan sebagai editor untuk naskah ini.');
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            if ($existing) {
+                // Reactivate existing assignment
+                $existing->update([
+                    'is_active' => true,
+                    'assigned_by' => $user->id,
+                    'date_assigned' => now(),
+                ]);
+            } else {
+                // Create new active assignment
+                \App\Models\EditorialAssignment::create([
+                    'submission_id' => $submission->id,
+                    'user_id' => $user->id,
+                    'assigned_by' => $user->id,
+                    'role' => 'editor',
+                    'date_assigned' => now(),
+                ]);
+            }
+
+            // Update status (jangan ubah stage agar konsisten dengan submission workflow)
+            if ($submission->status === Submission::STATUS_SUBMITTED) {
+                $submission->update([
+                    'status' => Submission::STATUS_IN_REVIEW,
+                ]);
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            // Audit log the assignment event
+            \App\Models\SubmissionLog::log(
+                submission:  $submission,
+                eventType:   \App\Models\SubmissionLog::EVENT_EDITOR_ASSIGNED,
+                title:       'Editor Self-Assigned',
+                description: $user->name . " assigned themselves as Editor.",
+                metadata:    ['editor_id' => $user->id, 'role' => 'editor'],
+                stage:       $submission->stage,
+            );
+
+            return back()->with('success', 'Naskah berhasil ditugaskan kepada Anda.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->with('error', 'Gagal menugaskan naskah: ' . $e->getMessage());
+        }
     }
 
     /**

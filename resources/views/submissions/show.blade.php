@@ -169,7 +169,7 @@
         {{-- WARNING BANNERS --}}
         @php
             $isUnassigned = $submission->editorialAssignments->where('is_active', true)->isEmpty();
-            $isRejected = $submission->status == 3;
+            $isRejected = $submission->status === \App\Models\Submission::STATUS_REJECTED;
         @endphp
 
         {{-- REJECTED WARNING BANNER --}}
@@ -6188,6 +6188,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 get filteredEditors() {
                     let editors = this.allEditors;
 
+                    // Konversi object ke array jika key non-sequential ter-encode sebagai object
+                    if (editors && typeof editors === 'object' && !Array.isArray(editors)) {
+                        editors = Object.values(editors);
+                    }
+
+                    if (!Array.isArray(editors)) {
+                        return [];
+                    }
+
                     // Text Search
                     if (this.editorSearch) {
                         const search = this.editorSearch.toLowerCase();
@@ -6202,12 +6211,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     if (this.editorRoleFilter) {
                         const filterVal = this.editorRoleFilter.toLowerCase();
                         editors = editors.filter(e =>
-                            e.role_names && e.role_names.some(role => role && role.toLowerCase().includes(filterVal))
+                            e.role_names && Array.isArray(e.role_names) && e.role_names.some(role => role && role.toLowerCase().includes(filterVal))
                         );
                     }
 
                     return editors;
                 },
+
 
                 // Deprecated AJAX search (but kept just in case we need it later, or aliases to local filter)
                 async searchEditors() {

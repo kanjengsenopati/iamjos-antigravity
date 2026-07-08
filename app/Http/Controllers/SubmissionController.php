@@ -839,16 +839,17 @@ class SubmissionController extends Controller
             $q->where('journal_id', $journal->id)->with('role');
         }])
         ->get()
-        ->map(function ($user) {
+        ->map(function ($user) use ($journal) {
             // Get all role names for this journal
-            $roles = $user->journalRoles->map(fn($jr) => $jr->role->name)->toArray();
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
             
             // Konversi model ke array dan tambahkan properti dinamis agar ikut ter-serialize ke JSON
             $arr = $user->toArray();
             $arr['role_names'] = $roles;
             $arr['role_display'] = implode(', ', $roles);
             return $arr;
-        });
+        })
+        ->values();
 
         return view('submissions.show', array_merge(
             compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView', 'seoAnalysis', 'potentialEditors'),

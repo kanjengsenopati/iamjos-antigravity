@@ -30,7 +30,7 @@
 
             <div class="flex-1 overflow-hidden flex flex-col min-h-0">
                 <form id="assignEditorForm"
-                    action="{{ route('journal.workflow.assign-editor', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                    action="{{ route('journal.workflow.assign-editor', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) }}"
                     method="POST" class="flex-1 min-h-0 flex flex-col">
                     @csrf
                     <input type="hidden" name="user_id" :value="selectedEditor?.id">

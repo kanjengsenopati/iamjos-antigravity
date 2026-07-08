@@ -118,12 +118,14 @@ class SubmissionWorkflowController extends Controller
             $q->where('journal_id', $journal->id)->with('role');
         }])
         ->get()
-        ->map(function ($user) {
-            $roles = $user->journalRoles->map(fn($jr) => $jr->role->name)->toArray();
-            $user->role_names = $roles;
-            $user->role_display = implode(', ', $roles);
-            return $user;
-        });
+        ->map(function ($user) use ($journal) {
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
+        })
+        ->values();
 
         // SEO Analysis
         $validator = new \App\Services\GoogleScholarValidator();
@@ -140,6 +142,7 @@ class SubmissionWorkflowController extends Controller
             'seoAnalysis'
         ));
     }
+
 
     /**
      * Assign an editor to the submission.
@@ -232,13 +235,6 @@ class SubmissionWorkflowController extends Controller
                 metadata:    ['editor_id' => $user->id, 'role' => $role],
                 stage:       $submission->stage,
             );
-        }
-
-        // Update submission status if it was just submitted
-        if ($submission->status === Submission::STATUS_SUBMITTED && $submission->stage_id === 1) {
-            $submission->update([
-                'status' => Submission::STATUS_IN_REVIEW,
-            ]);
         }
 
         return back()->with('success', 'Editor assigned successfully.');
