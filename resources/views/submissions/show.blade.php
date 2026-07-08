@@ -1968,16 +1968,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             @endphp
             {{-- ==================== PRODUCTION STAGE ==================== --}}
             <div x-show="activeStage === 'production'" class="bg-gray-50/50 min-h-screen pt-6"
-                x-data="{
+                x-data='{
                     scheduleModalOpen: false,
                     issues: {{ json_encode($issueOptions) }},
-                    selectedIssueId: '{{ $submission->issue_id ?? '' }}',
+                    selectedIssueId: "{{ $submission->issue_id ?? '' }}",
                     isLoadingIssues: false,
                 
                     openScheduleModal() {
                         this.scheduleModalOpen = true;
                     }
-                }">
+                }'>
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
                     {{-- Main Panel Area --}}
@@ -2515,7 +2515,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         ],
                     )) ?? [];
         @endphp
-        <div x-show="activeTab === 'publication'" x-cloak x-data="{
+        <div x-show="activeTab === 'publication'" x-cloak x-data='{
             pubTab: (new URLSearchParams(window.location.search)).get('subtab') || 'title',
             contributorModalOpen: false,
             editingContributor: null,
@@ -2600,7 +2600,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 }
                 this.isSavingOrder = false;
             }
-        }">
+        }'>
 
             {{-- Status Bar Header --}}
             <div class="bg-white border-b border-gray-200 -mx-6 -mt-6 px-6 py-4 mb-6">
@@ -2958,7 +2958,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             method="POST" class="p-6">
                             @csrf
                             <fieldset class="space-y-5" @if ($pubStatus == 3) disabled @endif>
-                                <div x-data="keywordInputCustom({{ json_encode($submission->keywords->pluck('content')->toArray()) }})" class="relative">
+                                <div x-data='keywordInputCustom({{ json_encode($submission->keywords->pluck('content')->toArray()) }})' class="relative">
                                     <label class="flex items-center text-sm font-medium text-gray-700 mb-1">
                                         {{ $isId ? 'Kata Kunci' : 'Keywords' }}
                                         <i class="fa-solid fa-circle-question text-gray-400 cursor-pointer ml-1.5" 
@@ -3429,7 +3429,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </div>
 
                                 {{-- ── FUNDING INFORMATION ─────────────────────────────────── --}}
-                                <div x-data="fundingManager(@js($publication->funding_info ?? []))" class="pt-4 border-t border-gray-100">
+                                <div x-data='fundingManager(@js($publication->funding_info ?? []))' class="pt-4 border-t border-gray-100">
                                     <div class="flex items-center justify-between mb-3">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700">{{ $isId ? 'Informasi Pendanaan' : 'Funding Information' }}</label>
