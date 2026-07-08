@@ -32,6 +32,9 @@
 
                 @php
                     $teaserContent = $block->parsed_sidebar_content;
+                    if (str_contains($teaserContent, 'KODE_STATCOUNTER')) {
+                        $teaserContent = str_replace('KODE_STATCOUNTER', $journal->custom_headers ?? '', $teaserContent);
+                    }
                     if (app()->getLocale() === 'id') {
                         $replacements = [
                             'About This Journal' => 'Tentang Jurnal Ini',
@@ -57,6 +60,9 @@
                             'Template' => 'Templat',
                             'Contact Us' => 'Hubungi Kami',
                             'Visitors' => 'Pengunjung',
+                            'Author Guidelines' => 'Panduan Penulis',
+                            'Kontak Us' => 'Hubungi Kami',
+                            'Stat Counter' => 'Statistik Pengunjung',
                         ];
                         $teaserContent = str_replace(array_keys($replacements), array_values($replacements), $teaserContent);
                     }
@@ -77,6 +83,9 @@
 
                 @php
                     $blockContent = $block->parsed_content;
+                    if (str_contains($blockContent, 'KODE_STATCOUNTER')) {
+                        $blockContent = str_replace('KODE_STATCOUNTER', $journal->custom_headers ?? '', $blockContent);
+                    }
                     if (app()->getLocale() === 'id') {
                         $replacements = [
                             'About This Journal' => 'Tentang Jurnal Ini',
@@ -102,6 +111,9 @@
                             'Template' => 'Templat',
                             'Contact Us' => 'Hubungi Kami',
                             'Visitors' => 'Pengunjung',
+                            'Author Guidelines' => 'Panduan Penulis',
+                            'Kontak Us' => 'Hubungi Kami',
+                            'Stat Counter' => 'Statistik Pengunjung',
                         ];
                         $blockContent = str_replace(array_keys($replacements), array_values($replacements), $blockContent);
                     }
