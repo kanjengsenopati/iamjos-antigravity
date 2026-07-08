@@ -196,9 +196,9 @@
 
                 <!-- Header -->
                 <div class="mb-8">
-                    <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+                    <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">{{ __('Welcome back') }}</h2>
                     <p class="text-gray-500">
-                        Login to {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                        {{ __('Login to') }} {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
                     </p>
                 </div>
 
@@ -232,14 +232,14 @@
                     <!-- Email Field -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
-                            Email or Username
+                            {{ __('Email or Username') }}
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-envelope text-gray-400 text-sm"></i>
                             </div>
                             <input type="text" id="email" name="email" value="{{ old('email') }}"
-                                placeholder="Enter your email or username"
+                                placeholder="{{ __('Enter your email or username') }}"
                                 class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                 required autofocus>
                         </div>
@@ -252,11 +252,11 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label for="password" class="block text-sm font-medium text-gray-700">
-                                Password
+                                {{ __('Password') }}
                             </label>
                             <a href="{{ route('forgot-password') }}"
                                 class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
-                                Forgot password?
+                                {{ __('Forgot password?') }}
                             </a>
                         </div>
                         <div class="relative">
@@ -264,7 +264,7 @@
                                 <i class="fas fa-lock text-gray-400 text-sm"></i>
                             </div>
                             <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
-                                placeholder="Enter your password"
+                                placeholder="{{ __('Enter your password') }}"
                                 class="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                 required>
                             <button type="button" @click="showPassword = !showPassword"
@@ -282,7 +282,7 @@
                         <input type="checkbox" id="remember" name="remember" value="1"
                             class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                         <label for="remember" class="ml-2 text-sm text-gray-600">
-                            Remember me
+                            {{ __('Remember me') }}
                         </label>
                     </div>
 
@@ -297,18 +297,18 @@
                     <!-- Submit Button -->
                     <button type="submit"
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Login
+                        {{ __('Login') }}
                     </button>
                 </form>
 
                 <!-- Register Link -->
                 <div class="mt-8 text-center">
                     <p class="text-sm text-gray-500 mb-3">
-                        Don't have an account?
+                        {{ __("Don't have an account?") }}
                     </p>
                     <a href="{{ $journal ? route('journal.register', $journal->slug) : route('register') }}"
                         class="inline-block w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
-                        Register
+                        {{ __('Register') }}
                     </a>
                 </div>
 
@@ -317,7 +317,7 @@
                     <p class="mt-4 text-center text-sm text-gray-500">
                         <a href="{{ route('journal.public.home', $journal->slug) }}"
                             class="text-gray-600 hover:text-indigo-600 transition-colors">
-                            <i class="fas fa-arrow-left mr-1"></i> Back to
+                            <i class="fas fa-arrow-left mr-1"></i> {{ __('Back to') }}
                             {{ $journal->abbreviation ?? $journal->name }}
                         </a>
                     </p>
@@ -325,7 +325,7 @@
                     <p class="mt-4 text-center text-sm text-gray-500">
                         <a href="{{ route('portal.home') }}"
                             class="text-gray-600 hover:text-indigo-600 transition-colors">
-                            <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                            <i class="fas fa-arrow-left mr-1"></i> {{ __('Back to Home') }}
                         </a>
                     </p>
                 @endif

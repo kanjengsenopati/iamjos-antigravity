@@ -1,13 +1,12 @@
-<x-layouts.public :journal="$journal" title="Register | {{ $journal->name }}">
+<x-layouts.public :journal="$journal" title="{{ __('Register') }} | {{ $journal->name }}">
     <div class="max-w-3xl mx-auto" x-data="registerForm()">
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 lg:p-8">
 
                 <div class="text-center mb-8">
-                    <h1 class="text-2xl font-bold text-slate-900">Create Account</h1>
-                    <p class="text-slate-600 mt-2">Join <span class="font-semibold">{{ $journal->name }}</span> to submit
-                        articles and manage your publications.</p>
+                    <h1 class="text-2xl font-bold text-slate-900">{{ __('Create Account') }}</h1>
+                    <p class="text-slate-600 mt-2">{{ __('Join') }} <span class="font-semibold">{{ $journal->name }}</span> {{ __('to submit articles and manage your publications.') }}</p>
                 </div>
 
                 <!-- Alert Messages -->
@@ -16,7 +15,7 @@
                         <div class="flex items-start gap-3">
                             <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
                             <div>
-                                <p class="text-sm font-medium text-red-800">Please correct the following errors:</p>
+                                <p class="text-sm font-medium text-red-800">{{ __('Please correct the following errors:') }}</p>
                                 <ul class="mt-1 list-disc list-inside text-sm text-red-600">
                                     @foreach ($errors->all() as $error)
                                         <li>{{ $error }}</li>
@@ -34,9 +33,8 @@
                     <div class="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-lg flex gap-3 text-sm text-blue-800">
                         <i class="fas fa-info-circle mt-0.5 text-blue-500"></i>
                         <p>
-                            Already have an IAMJOS account with another journal?
-                            <span class="font-semibold">Simply enter your existing email and password below</span> to
-                            instantly link your account to {{ $journal->abbreviation ?? 'this journal' }}.
+                            {{ __('Already have an IAMJOS account with another journal?') }}
+                            <span class="font-semibold">{{ __('Simply enter your existing email and password below') }}</span> {{ __('to instantly link your account to') }} {{ $journal->abbreviation ?? __('this journal') }}.
                         </p>
                     </div>
 
@@ -45,14 +43,14 @@
                         <h2
                             class="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2 mb-5 flex items-center gap-2">
                             <i class="fas fa-user-circle text-slate-400"></i>
-                            Profile Information
+                            {{ __('Profile Information') }}
                         </h2>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <!-- First Name -->
                             <div>
                                 <label for="given_name" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    First Name <span class="text-red-500">*</span>
+                                    {{ __('First Name') }} <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" id="given_name" name="given_name" value="{{ old('given_name') }}"
                                     placeholder="John"
@@ -63,7 +61,7 @@
                             <!-- Last Name -->
                             <div>
                                 <label for="family_name" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Last Name <span class="text-red-500">*</span>
+                                    {{ __('Last Name') }} <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" id="family_name" name="family_name"
                                     value="{{ old('family_name') }}" placeholder="Doe"
@@ -74,14 +72,14 @@
                             <!-- Affiliation (Full Width) -->
                             <div class="md:col-span-2">
                                 <label for="affiliation" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Affiliation / Institution <span class="text-red-500">*</span>
+                                    {{ __('Affiliation / Institution') }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-university text-slate-400 text-sm"></i>
                                     </div>
                                     <input type="text" id="affiliation" name="affiliation"
-                                        value="{{ old('affiliation') }}" placeholder="University of Indonesia"
+                                        value="{{ old('affiliation') }}" placeholder="{{ __('University of Indonesia') }}"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                         required>
                                 </div>
@@ -90,7 +88,7 @@
                             <!-- Country (Full Width) -->
                             <div class="md:col-span-2">
                                 <label for="country" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Country <span class="text-red-500">*</span>
+                                    {{ __('Country') }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -99,7 +97,7 @@
                                     <select id="country" name="country"
                                         class="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none bg-white"
                                         required>
-                                        <option value="">Select your country</option>
+                                        <option value="">{{ __('Select your country') }}</option>
                                         @foreach (config('countries', []) as $code => $name)
                                             <option value="{{ $code }}"
                                                 {{ old('country') == $code ? 'selected' : '' }}>{{ $name }}
@@ -135,7 +133,7 @@
                             <!-- Phone Number (Full Width) -->
                             <div class="md:col-span-2">
                                 <label for="phone" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Phone Number (WhatsApp)
+                                    {{ __('Phone Number (WhatsApp)') }}
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -147,7 +145,7 @@
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500 flex items-center gap-1">
                                     <i class="fab fa-whatsapp text-green-500"></i>
-                                    Connected to WhatsApp for notifications.
+                                    {{ __('Connected to WhatsApp for notifications.') }}
                                 </p>
                             </div>
                         </div>
@@ -158,14 +156,14 @@
                         <h2
                             class="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2 mb-5 flex items-center gap-2">
                             <i class="fas fa-lock text-slate-400"></i>
-                            Account Credentials
+                            {{ __('Account Credentials') }}
                         </h2>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <!-- Email -->
                             <div>
                                 <label for="email" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Email Address <span class="text-red-500">*</span>
+                                    {{ __('Email Address') }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -181,7 +179,7 @@
                             <!-- Username -->
                             <div>
                                 <label for="username" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Username <span class="text-red-500">*</span>
+                                    {{ __('Username') }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -193,16 +191,16 @@
                                         :class="isUsernameInvalid ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'"
                                         required>
                                 </div>
-                                <p class="mt-1 text-xs text-slate-500" x-show="!isUsernameInvalid">Alphanumeric only (letters, numbers, underscores, and hyphens).</p>
+                                <p class="mt-1 text-xs text-slate-500" x-show="!isUsernameInvalid">{{ __('Alphanumeric only (letters, numbers, underscores, and hyphens).') }}</p>
                                 <p class="mt-1 text-xs text-red-600 font-medium flex items-center gap-1" x-show="isUsernameInvalid" x-cloak>
-                                    <i class="fas fa-exclamation-circle"></i> Only letters, numbers, hyphens (-), and underscores (_) are allowed.
+                                    <i class="fas fa-exclamation-circle"></i> {{ __('Only letters, numbers, hyphens (-), and underscores (_) are allowed.') }}
                                 </p>
                             </div>
 
                             <!-- Password -->
                             <div>
                                 <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Password <span class="text-red-500">*</span>
+                                    {{ __('Password') }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -224,14 +222,14 @@
                                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-1 gap-1">
                                     <span class="text-xs font-semibold" :class="{'text-red-500': passwordStrength.score === 1, 'text-yellow-500': passwordStrength.score === 2, 'text-emerald-500': passwordStrength.score === 3}" x-text="passwordStrength.text" x-show="password.length > 0" x-cloak></span>
                                 </div>
-                                <span class="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-circle-info text-slate-400"></i> Combination of lowercase, uppercase, numbers, and special characters.</span>
+                                <span class="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-circle-info text-slate-400"></i> {{ __('Combination of lowercase, uppercase, numbers, and special characters.') }}</span>
                             </div>
 
                             <!-- Confirm Password -->
                             <div>
                                 <label for="password_confirmation"
                                     class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Confirm Password <span class="text-red-500">*</span>
+                                    {{ __('Confirm Password') }} <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -249,10 +247,10 @@
                                     </button>
                                 </div>
                                 <p class="mt-1 text-xs text-red-600 font-medium flex items-center gap-1" x-show="isPasswordMismatch" x-cloak>
-                                    <i class="fas fa-exclamation-circle"></i> Passwords do not match.
+                                    <i class="fas fa-exclamation-circle"></i> {{ __('Passwords do not match.') }}
                                 </p>
                                 <p class="mt-1 text-xs text-emerald-600 font-semibold flex items-center gap-1" x-show="isPasswordMatched" x-cloak>
-                                    <i class="fas fa-check-circle"></i> Passwords match.
+                                    <i class="fas fa-check-circle"></i> {{ __('Passwords match.') }}
                                 </p>
                             </div>
                         </div>
@@ -263,7 +261,7 @@
                         <h2
                             class="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2 mb-5 flex items-center gap-2">
                             <i class="fas fa-check-square text-slate-400"></i>
-                            Consent & Roles
+                            {{ __('Consent & Roles') }}
                         </h2>
 
                         <div class="space-y-4">
@@ -273,8 +271,7 @@
                                     class="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                     required {{ old('privacy_consent') ? 'checked' : '' }}>
                                 <label for="privacy_consent" class="text-sm text-slate-700 cursor-pointer">
-                                    I agree to the <a href="#" class="text-blue-600 hover:underline">privacy
-                                        statement</a>.
+                                    {{ __('I agree to the') }} <a href="#" class="text-blue-600 hover:underline">{{ __('privacy statement') }}</a>.
                                 </label>
                             </div>
 
@@ -285,7 +282,7 @@
                                     class="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                     {{ old('email_notifications', true) ? 'checked' : '' }}>
                                 <label for="email_notifications" class="text-sm text-slate-700 cursor-pointer">
-                                    Notify me about new publications and announcements.
+                                    {{ __('Notify me about new publications and announcements.') }}
                                 </label>
                             </div>
 
@@ -299,9 +296,9 @@
                                 <div>
                                     <label for="reviewer_interest"
                                         class="text-sm font-medium text-purple-900 cursor-pointer">
-                                        Yes, I would like to safeguard the quality of this journal.
+                                        {{ __('Yes, I would like to safeguard the quality of this journal.') }}
                                     </label>
-                                    <p class="text-xs text-purple-700 mt-1">Register me as a Reviewer for
+                                    <p class="text-xs text-purple-700 mt-1">{{ __('Register me as a Reviewer for') }}
                                         {{ $journal->name }}.</p>
                                 </div>
                             </div>
@@ -314,15 +311,15 @@
                         <button type="submit"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2">
                             <i class="fas fa-user-plus"></i>
-                            Register
+                            {{ __('Register') }}
                         </button>
                     </div>
 
                     <div class="mt-6 text-center">
                         <p class="text-sm text-slate-600">
-                            Already have an account?
+                            {{ __('Already have an account?') }}
                             <a href="{{ route('journal.login', $journal->slug) }}"
-                                class="font-semibold text-blue-600 hover:text-blue-500">Login</a>
+                                class="font-semibold text-blue-600 hover:text-blue-500">{{ __('Login') }}</a>
                         </p>
                     </div>
                 </form>
@@ -354,15 +351,15 @@
                     if (hasSpecial) score++;
                     
                     if (this.password.length < 8) {
-                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: '{{ __('Weak') }}', isStrong: false };
                     }
                     
                     if (score <= 2) {
-                        return { score: 1, color: 'bg-red-500 w-1/3', text: 'Weak', isStrong: false };
+                        return { score: 1, color: 'bg-red-500 w-1/3', text: '{{ __('Weak') }}', isStrong: false };
                     } else if (score === 3) {
-                        return { score: 2, color: 'bg-yellow-500 w-2/3', text: 'Medium', isStrong: false };
+                        return { score: 2, color: 'bg-yellow-500 w-2/3', text: '{{ __('Medium') }}', isStrong: false };
                     } else {
-                        return { score: 3, color: 'bg-emerald-500 w-full', text: 'Strong', isStrong: true };
+                        return { score: 3, color: 'bg-emerald-500 w-full', text: '{{ __('Strong') }}', isStrong: true };
                     }
                 },
                 get isUsernameInvalid() {

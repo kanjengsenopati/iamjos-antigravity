@@ -44,6 +44,19 @@
                             'Open Access Statement' => 'Pernyataan Akses Terbuka',
                             'Repository Policy' => 'Kebijakan Repositori',
                             'Indexing' => 'Indeksasi',
+                            'Archive Policy' => 'Kebijakan Pengarsipan',
+                            'Journal License' => 'Lisensi Jurnal',
+                            'Policy of Plagiarism' => 'Kebijakan Plagiarisme',
+                            'Article Processing Charge' => 'Biaya Pemrosesan Artikel',
+                            'People' => 'Pengelola',
+                            'Peer-Reviewers' => 'Mitra Bestari',
+                            'Publisher' => 'Penerbit',
+                            'Contact' => 'Kontak',
+                            'For Author' => 'Untuk Penulis',
+                            'Publication Frequency' => 'Frekuensi Publikasi',
+                            'Template' => 'Templat',
+                            'Contact Us' => 'Hubungi Kami',
+                            'Visitors' => 'Pengunjung',
                         ];
                         $teaserContent = str_replace(array_keys($replacements), array_values($replacements), $teaserContent);
                     }
@@ -76,6 +89,19 @@
                             'Open Access Statement' => 'Pernyataan Akses Terbuka',
                             'Repository Policy' => 'Kebijakan Repositori',
                             'Indexing' => 'Indeksasi',
+                            'Archive Policy' => 'Kebijakan Pengarsipan',
+                            'Journal License' => 'Lisensi Jurnal',
+                            'Policy of Plagiarism' => 'Kebijakan Plagiarisme',
+                            'Article Processing Charge' => 'Biaya Pemrosesan Artikel',
+                            'People' => 'Pengelola',
+                            'Peer-Reviewers' => 'Mitra Bestari',
+                            'Publisher' => 'Penerbit',
+                            'Contact' => 'Kontak',
+                            'For Author' => 'Untuk Penulis',
+                            'Publication Frequency' => 'Frekuensi Publikasi',
+                            'Template' => 'Templat',
+                            'Contact Us' => 'Hubungi Kami',
+                            'Visitors' => 'Pengunjung',
                         ];
                         $blockContent = str_replace(array_keys($replacements), array_values($replacements), $blockContent);
                     }
