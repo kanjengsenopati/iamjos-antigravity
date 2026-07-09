@@ -65,9 +65,9 @@
 
             <div class="flex-1 overflow-hidden flex flex-col min-h-0">
                 <form id="assignParticipantForm"
-                    :action="participantModalStage === 'review' ? '{{ route('journal.workflow.assign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) }}' : 
-                             participantModalStage === 'copyediting' ? '{{ route('journal.workflow.assign-copyeditor', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) }}' :
-                             participantModalStage === 'production' ? '{{ route('journal.workflow.assign-production', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) }}' : ''"
+                    :action="participantModalStage === 'review' ? '{{ Route::has('journal.workflow.assign-reviewer') ? route('journal.workflow.assign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) : '' }}' : 
+                             participantModalStage === 'copyediting' ? '{{ Route::has('journal.workflow.assign-copyeditor') ? route('journal.workflow.assign-copyeditor', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) : '' }}' :
+                             participantModalStage === 'production' ? '{{ Route::has('journal.workflow.assign-production') ? route('journal.workflow.assign-production', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) : '' }}' : ''"
                     method="POST" class="flex-1 min-h-0 flex flex-col">
                     @csrf
                     <input type="hidden" name="user_id" :value="selectedParticipant?.id">
