@@ -1266,7 +1266,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                     </h4>
                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                        <button @click="openAssignEditorModal()"
+                                        <button @click="openParticipantModal('review')"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                             <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                         </button>
@@ -1770,7 +1770,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                 </h4>
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                    <button @click="openAssignEditorModal()"
+                                    <button @click="openParticipantModal('copyediting')"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                         <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                     </button>
@@ -2190,7 +2190,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                 </h4>
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                    <button @click="openAssignEditorModal()"
+                                    <button @click="openParticipantModal('production')"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                         <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                     </button>
@@ -4171,6 +4171,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
         {{-- ==================== ASSIGN EDITOR MODAL ==================== --}}
         @include('submissions.partials.modal-assign-editor')
+
+        {{-- ==================== ASSIGN PARTICIPANT MODAL ==================== --}}
+        @include('submissions.partials.modal-assign-participant')
 
         {{-- ==================== SEND TO REVIEW MODAL ==================== --}}
         <div x-show="sendToReviewModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
@@ -6168,6 +6171,37 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     this.assignEditorModalOpen = true;
                 },
 
+                openParticipantModal(stage) {
+                    this.participantModalStage = stage;
+                    this.resetParticipantModal();
+                    this.participantModalOpen = true;
+                },
+
+                resetParticipantModal() {
+                    this.selectedParticipant = null;
+                    this.participantSearch = '';
+                    this.participantRoleFilter = this.getDefaultRoleFilter(this.participantModalStage);
+                },
+
+                getDefaultRoleFilter(stage) {
+                    const defaults = {
+                        'review': 'Reviewer',
+                        'copyediting': 'Copyeditor',
+                        'production': 'Layout Editor'
+                    };
+                    return defaults[stage] || '';
+                },
+
+                selectParticipant(participant) {
+                    this.selectedParticipant = participant;
+                },
+
+                getParticipantsForStage(stage) {
+                    // Return appropriate participants based on stage
+                    // This data should be passed from backend controller
+                    return this.allParticipants[stage] || this.allParticipants;
+                },
+
                 openDraftFilesModal() {
                     this.draftFilesModalOpen = true;
                 },
@@ -6213,6 +6247,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 editorRole: 'editor',
                 isSearchingEditors: false, // kept for compatibility if needed
 
+                // Participant Assignment Modal State
+                participantModalOpen: false,
+                participantModalStage: null,
+                participantSearch: '',
+                participantRoleFilter: '',
+                allParticipants: config.potentialParticipants || {},
+                selectedParticipant: null,
+
                 get filteredEditors() {
                     let editors = this.allEditors;
 
@@ -6244,6 +6286,40 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     }
 
                     return editors;
+                },
+
+                get filteredParticipants() {
+                    let participants = this.getParticipantsForStage(this.participantModalStage);
+                    
+                    // Convert object to array if needed
+                    if (participants && typeof participants === 'object' && !Array.isArray(participants)) {
+                        participants = Object.values(participants);
+                    }
+                    
+                    if (!Array.isArray(participants)) {
+                        return [];
+                    }
+                    
+                    // Text search filter
+                    if (this.participantSearch) {
+                        const search = this.participantSearch.toLowerCase();
+                        participants = participants.filter(p => {
+                            const name = (p.name || '').toLowerCase();
+                            const email = (p.email || '').toLowerCase();
+                            return name.includes(search) || email.includes(search);
+                        });
+                    }
+                    
+                    // Role filter
+                    if (this.participantRoleFilter) {
+                        const filterVal = this.participantRoleFilter.toLowerCase();
+                        participants = participants.filter(p =>
+                            p.role_names && Array.isArray(p.role_names) && 
+                            p.role_names.some(role => role && role.toLowerCase().includes(filterVal))
+                        );
+                    }
+                    
+                    return participants;
                 },
 
 

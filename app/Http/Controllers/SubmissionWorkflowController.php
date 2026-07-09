@@ -127,6 +127,75 @@ class SubmissionWorkflowController extends Controller
         })
         ->values();
 
+        // Potential Participants for stage-specific assignment
+        $potentialParticipants = [];
+
+        // Review stage participants
+        $currentReviewRound = $submission->currentReviewRound();
+        $assignedReviewerIds = $currentReviewRound 
+            ? $currentReviewRound->reviewAssignments()->pluck('reviewer_id')->filter()->toArray()
+            : [];
+
+        $potentialParticipants['review'] = \App\Models\User::whereHas('journalRoles', function ($query) use ($journal) {
+            $query->where('journal_id', $journal->id)
+                  ->whereHas('role', function ($q) {
+                      $q->where('name', 'Reviewer');
+                  });
+        })
+        ->whereNotIn('id', $assignedReviewerIds)
+        ->with(['journalRoles' => function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)->with('role');
+        }])
+        ->get()
+        ->map(function ($user) use ($journal) {
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
+        })
+        ->values();
+
+        // Copyediting stage participants
+        $potentialParticipants['copyediting'] = \App\Models\User::whereHas('journalRoles', function ($query) use ($journal) {
+            $query->where('journal_id', $journal->id)
+                  ->whereHas('role', function ($q) {
+                      $q->whereIn('name', ['Copyeditor', 'Layout Editor']);
+                  });
+        })
+        ->with(['journalRoles' => function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)->with('role');
+        }])
+        ->get()
+        ->map(function ($user) use ($journal) {
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
+        })
+        ->values();
+
+        // Production stage participants
+        $potentialParticipants['production'] = \App\Models\User::whereHas('journalRoles', function ($query) use ($journal) {
+            $query->where('journal_id', $journal->id)
+                  ->whereHas('role', function ($q) {
+                      $q->whereIn('name', ['Layout Editor', 'Proofreader']);
+                  });
+        })
+        ->with(['journalRoles' => function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)->with('role');
+        }])
+        ->get()
+        ->map(function ($user) use ($journal) {
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
+        })
+        ->values();
+
         // SEO Analysis
         $validator = new \App\Services\GoogleScholarValidator();
         $seoAnalysis = $validator->validate($submission);
@@ -139,6 +208,7 @@ class SubmissionWorkflowController extends Controller
             'participants',
             'isAuthorView',
             'potentialEditors',
+            'potentialParticipants',
             'seoAnalysis'
         ));
     }

@@ -851,8 +851,78 @@ class SubmissionController extends Controller
         })
         ->values();
 
+        // 8. Potential Participants (for Assign Participant modal per stage)
+        // Load potential reviewers, copyeditors, and production staff
+        $potentialParticipants = [];
+
+        // Review stage: Load reviewers not already assigned to current review round
+        $currentReviewRound = $submission->currentReviewRound();
+        $assignedReviewerIds = $currentReviewRound 
+            ? $currentReviewRound->reviewAssignments()->pluck('reviewer_id')->filter()->toArray()
+            : [];
+
+        $potentialParticipants['review'] = User::whereHas('journalRoles', function ($query) use ($journal) {
+            $query->where('journal_id', $journal->id)
+                  ->whereHas('role', function ($q) {
+                      $q->where('name', 'Reviewer');
+                  });
+        })
+        ->whereNotIn('id', $assignedReviewerIds)
+        ->with(['journalRoles' => function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)->with('role');
+        }])
+        ->get()
+        ->map(function ($user) use ($journal) {
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
+        })
+        ->values();
+
+        // Copyediting stage: Load copyeditors and layout editors
+        $potentialParticipants['copyediting'] = User::whereHas('journalRoles', function ($query) use ($journal) {
+            $query->where('journal_id', $journal->id)
+                  ->whereHas('role', function ($q) {
+                      $q->whereIn('name', ['Copyeditor', 'Layout Editor']);
+                  });
+        })
+        ->with(['journalRoles' => function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)->with('role');
+        }])
+        ->get()
+        ->map(function ($user) use ($journal) {
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
+        })
+        ->values();
+
+        // Production stage: Load layout editors and proofreaders
+        $potentialParticipants['production'] = User::whereHas('journalRoles', function ($query) use ($journal) {
+            $query->where('journal_id', $journal->id)
+                  ->whereHas('role', function ($q) {
+                      $q->whereIn('name', ['Layout Editor', 'Proofreader']);
+                  });
+        })
+        ->with(['journalRoles' => function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)->with('role');
+        }])
+        ->get()
+        ->map(function ($user) use ($journal) {
+            $roles = $user->journalRoles->where('journal_id', $journal->id)->map(fn($jr) => $jr->role->name)->toArray();
+            $arr = $user->toArray();
+            $arr['role_names'] = $roles;
+            $arr['role_display'] = implode(', ', $roles);
+            return $arr;
+        })
+        ->values();
+
         return view('submissions.show', array_merge(
-            compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView', 'seoAnalysis', 'potentialEditors'),
+            compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView', 'seoAnalysis', 'potentialEditors', 'potentialParticipants'),
             $isAuthorView ? ['authorReviewData' => $authorReviewData] : []
         ));
     }
