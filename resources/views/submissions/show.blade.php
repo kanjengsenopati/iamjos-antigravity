@@ -1,3 +1,11 @@
+{{--
+    Submission Detail Workflow View
+    Alpine.js component: submissionWorkflow
+    Robustness updates:
+    - Merged duplicate init() methods
+    - Removed duplicate legacy search/select/reset editor methods
+    - Added null-safety check on filteredEditors getter
+--}}
 @php
     $isId = app()->getLocale() === 'id';
     $roleLabels = [
