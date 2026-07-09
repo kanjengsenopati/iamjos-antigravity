@@ -574,9 +574,8 @@
     </div>
 </div>
 
-{{-- Alpine.js Component Logic --}}
 <script>
-    document.addEventListener('alpine:init', () => {
+    function registerDiscussionComponents() {
         // Main Discussion Panel
         Alpine.data('discussionPanel', (config) => ({
             showAddModal: false,
@@ -763,5 +762,11 @@
                 });
             }
         }));
-    });
+    }
+
+    if (window.Alpine) {
+        registerDiscussionComponents();
+    } else {
+        document.addEventListener('alpine:init', registerDiscussionComponents);
+    }
 </script>

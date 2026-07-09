@@ -198,7 +198,7 @@
                                 <p class="text-red-600 text-sm">{{ $isId ? 'Tugaskan editor untuk mengaktifkan keputusan editorial.' : 'Assign an editor to enable editorial decisions.' }}</p>
                             </div>
                         </div>
-                        <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                        <button @click="openAssignEditorModal()"
                             class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">
                             {{ $isId ? 'Tugaskan Editor' : 'Assign Editor' }}
                         </button>
@@ -267,7 +267,7 @@
                                 <h3 class="text-base font-bold text-gray-900">{{ $isId ? 'File Naskah' : 'Submission Files' }}</h3>
                                 @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id) ||
                                         !$submission->submitted_at)
-                                    <button @click="fileModalOpen = true"
+                                    <button @click="openFileModal('submission')"
                                         class="text-sm text-indigo-600 font-medium hover:text-indigo-800">
                                         + {{ $isId ? 'Unggah File' : 'Upload File' }}
                                     </button>
@@ -496,7 +496,7 @@
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                     </h4>
                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                        <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                        <button @click="openAssignEditorModal()"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                             <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                         </button>
@@ -1266,7 +1266,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                     </h4>
                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                        <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                        <button @click="openAssignEditorModal()"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                             <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                         </button>
@@ -1476,7 +1476,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             </h3>
                                             <p class="text-xs text-gray-600 mt-1">{{ $isId ? 'File dari tahap ulasan, siap untuk penyuntingan' : 'Files from the review stage, ready for copyediting' }}</p>
                                         </div>
-                                        <button @click="draftFilesModalOpen = true"
+                                        <button @click="openDraftFilesModal()"
                                             class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             <i class="fa-solid fa-plus mr-1.5"></i>
                                             {{ $isId ? 'Unggah/Pilih File' : 'Upload/Select Files' }}
@@ -1604,7 +1604,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     {{-- Authors can also upload copyedited files --}}
                                     @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id) ||
                                             $submission->user_id === auth()->id())
-                                        <button @click="fileModalOpen = true; uploadStage = 'copyedited'"
+                                        <button @click="openFileModal('copyedited')"
                                             class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                             <i class="fa-solid fa-upload mr-1.5"></i>
                                             {{ $isId ? 'Unggah File Hasil Sunting' : 'Upload Copyedited File' }}
@@ -1770,7 +1770,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                 </h4>
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                    <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                    <button @click="openAssignEditorModal()"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                         <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                     </button>
@@ -2190,7 +2190,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                 </h4>
                                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                    <button @click="assignEditorModalOpen = true; resetEditorModal()"
+                                    <button @click="openAssignEditorModal()"
                                         class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                         <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
                                     </button>
@@ -4098,7 +4098,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
         </div>
 
         {{-- Original File Modal for main submission files (kept for reference or reuse) --}}
-        <div x-show="fileModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+        <div x-show="fileModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
             aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div @click="fileModalOpen = false"
@@ -6124,7 +6124,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
     </script>
 
     <script>
-        document.addEventListener('alpine:init', () => {
+        function registerSubmissionWorkflow() {
             Alpine.data('submissionWorkflow', (config) => ({
                 activeTab: (new URLSearchParams(window.location.search)).get('tab') || 'workflow',
                 activeStage: config.defaultStage,
@@ -6142,6 +6142,22 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     this.$watch('discussionModalOpen', value => {
                         if (value) setTimeout(() => this.initEditor(), 100);
                     });
+                },
+
+                openFileModal(stage = null) {
+                    if (stage) {
+                        this.uploadStage = stage;
+                    }
+                    this.fileModalOpen = true;
+                },
+
+                openAssignEditorModal() {
+                    this.resetEditorModal();
+                    this.assignEditorModalOpen = true;
+                },
+
+                openDraftFilesModal() {
+                    this.draftFilesModalOpen = true;
                 },
 
                 fileModalOpen: false,
@@ -6948,12 +6964,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     this.isSubmitting = false;
                 }
             }));
-        });
+        }
+
+        if (window.Alpine) {
+            registerSubmissionWorkflow();
+        } else {
+            document.addEventListener('alpine:init', registerSubmissionWorkflow);
+        }
     </script>
 
     {{-- Reviewer Selector Script --}}
     <script>
-        document.addEventListener('alpine:init', () => {
+        function registerReviewerSelector() {
             Alpine.data('reviewerSelector', (journalId, submissionId, assignUrl) => ({
                 showModal: false,
                 view: 'list', // list, config
@@ -7028,7 +7050,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         });
                 }
             }));
-        });
+        }
+
+        if (window.Alpine) {
+            registerReviewerSelector();
+        } else {
+            document.addEventListener('alpine:init', registerReviewerSelector);
+        }
     </script>
 
     {{-- Keyword Input (Tagify) for Publication Metadata --}}
