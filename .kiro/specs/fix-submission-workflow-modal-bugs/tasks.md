@@ -4,6 +4,23 @@
 
 This implementation plan addresses the modal display bugs where "+ Assign" buttons in PARTICIPANTS sections incorrectly open the Editor Assignment modal instead of stage-appropriate Participant Assignment modals. The fix involves creating a new reusable modal component, adding Alpine.js functions, updating button handlers, and ensuring backend integration for each workflow stage.
 
+## Task Dependency Graph
+
+```json
+{
+  "waves": [
+    ["7.1", "8.1"],
+    ["7.2", "8.2"],
+    ["9.1", "9.2", "9.3"],
+    ["10.1", "10.2", "10.3", "10.4"],
+    ["11.1", "11.2", "11.3", "12.1", "12.2", "12.3", "12.4", "12.5"],
+    ["13.1", "13.2", "13.3", "13.4"],
+    ["14.1", "14.2", "14.3", "14.4"],
+    ["15"]
+  ]
+}
+```
+
 ## Tasks
 
 - [x] 1. Create Participant Assignment Modal Component

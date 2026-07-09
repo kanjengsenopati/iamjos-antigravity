@@ -1266,10 +1266,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                     </h4>
                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                        <button @click="openParticipantModal('review')"
+                                        <a href="{{ route('journal.workflow.assign-reviewer-page', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) }}"
                                             class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
                                             <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
-                                        </button>
+                                        </a>
                                     @endjournalPermission
                                 </div>
 

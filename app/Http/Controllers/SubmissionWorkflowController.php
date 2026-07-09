@@ -8,6 +8,8 @@ use App\Models\DiscussionMessage;
 use App\Models\EditorialAssignment;
 use App\Models\Journal;
 use App\Http\Controllers\Controller;
+use App\Models\CopyeditingAssignment;
+use App\Models\ProductionAssignment;
 use App\Models\Submission;
 use App\Models\SubmissionFile;
 use App\Models\SubmissionLog;
@@ -356,6 +358,212 @@ class SubmissionWorkflowController extends Controller
         }
 
         return back()->with('success', 'Editor assignment removed.');
+    }
+
+    /**
+     * Assign a production staff member to a submission.
+     * 
+     * Requirements: 5.3, 5.4, 5.5, 8.4
+     */
+    public function assignProduction(Request $request, string $journalSlug, Submission $submission): RedirectResponse
+    {
+        $journal = $this->getJournal();
+
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        // Validate request data (modal sends 'user_id')
+        $validated = $request->validate([
+            'user_id' => 'required|uuid|exists:users,id',
+            'role' => 'nullable|string|max:255',
+        ]);
+
+        $productionUserId = $validated['user_id'];
+
+        // Check for duplicate assignment (exclude cancelled)
+        $existing = ProductionAssignment::where('submission_id', $submission->id)
+            ->where('production_user_id', $productionUserId)
+            ->where('status', '!=', ProductionAssignment::STATUS_CANCELLED)
+            ->exists();
+
+        if ($existing) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'user_id' => ['This production staff is already assigned to this submission.']
+            ]);
+        }
+
+        try {
+            DB::transaction(function () use ($productionUserId, $validated, $submission, $journal) {
+                // Create ProductionAssignment record
+                $assignment = ProductionAssignment::create([
+                    'submission_id' => $submission->id,
+                    'production_user_id' => $productionUserId,
+                    'assigned_by' => auth()->id(),
+                    'role' => $validated['role'] ?? null,
+                    'status' => ProductionAssignment::STATUS_ASSIGNED,
+                    'date_assigned' => now(),
+                ]);
+
+                // Send notification to assigned production staff
+                $productionUser = \App\Models\User::find($productionUserId);
+                
+                if ($productionUser) {
+                    try {
+                        $productionUser->notify(new \App\Notifications\WorkflowEventNotification(
+                            $submission,
+                            'Production Assignment',
+                            "You have been assigned to the production stage of the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
+                            url("/{$journal->slug}/submissions/{$submission->slug}")
+                        ));
+                        
+                        $assignment->update(['date_notified' => now()]);
+                    } catch (\Throwable $e) {
+                        Log::error('Production assignment notification failed', [
+                            'submission_id' => $submission->id,
+                            'production_user_id' => $productionUser->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+
+                    // Log the assignment action
+                    SubmissionLog::log(
+                        submission: $submission,
+                        eventType: SubmissionLog::EVENT_PARTICIPANT_ADDED,
+                        title: 'Production Staff Assigned',
+                        description: auth()->user()->name . " assigned {$productionUser->name} to the production stage" . 
+                                    ($validated['role'] ? " as {$validated['role']}" : "") . ".",
+                        metadata: [
+                            'production_user_id' => $productionUser->id,
+                            'role' => $validated['role'] ?? null,
+                            'assignment_id' => $assignment->id,
+                        ],
+                        stage: $submission->stage,
+                    );
+                }
+            });
+
+            // Return success response with redirect
+            return redirect()
+                ->route('journal.submissions.show', [
+                    'journal' => $journal->slug,
+                    'submission' => $submission->slug
+                ])
+                ->with('success', 'Production staff assigned successfully.');
+
+        } catch (\Throwable $e) {
+            Log::error('Assign production staff failed', [
+                'submission_id' => $submission->id,
+                'journal_id' => $submission->journal_id,
+                'production_user_id' => $productionUserId ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->with('error', 'Failed to assign production staff. Please check logs.');
+        }
+    }
+
+    /**
+     * Assign a copyeditor to a submission.
+     * 
+     * Requirements: 5.2, 5.4, 5.5, 8.4
+     */
+    public function assignCopyeditor(Request $request, string $journalSlug, Submission $submission): RedirectResponse
+    {
+        $journal = $this->getJournal();
+
+        if ($submission->journal_id !== $journal->id) {
+            abort(404);
+        }
+
+        // Validate request data (modal sends 'user_id')
+        $validated = $request->validate([
+            'user_id' => 'required|uuid|exists:users,id',
+        ]);
+
+        $copyeditorId = $validated['user_id'];
+
+        // Check for duplicate assignment (exclude cancelled)
+        $existing = CopyeditingAssignment::where('submission_id', $submission->id)
+            ->where('copyeditor_id', $copyeditorId)
+            ->where('status', '!=', CopyeditingAssignment::STATUS_CANCELLED)
+            ->exists();
+
+        if ($existing) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'user_id' => ['This copyeditor is already assigned to this submission.']
+            ]);
+        }
+
+        try {
+            DB::transaction(function () use ($copyeditorId, $submission, $journal) {
+                // Create CopyeditingAssignment record
+                $assignment = CopyeditingAssignment::create([
+                    'submission_id' => $submission->id,
+                    'copyeditor_id' => $copyeditorId,
+                    'assigned_by' => auth()->id(),
+                    'status' => CopyeditingAssignment::STATUS_PENDING,
+                    'assigned_at' => now(),
+                ]);
+
+                // Send notification to assigned copyeditor
+                $copyeditor = \App\Models\User::find($copyeditorId);
+                
+                if ($copyeditor) {
+                    try {
+                        $copyeditor->notify(new \App\Notifications\WorkflowEventNotification(
+                            $submission,
+                            'Copyediting Assignment',
+                            "You have been assigned to copyedit the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
+                            url("/{$journal->slug}/submissions/{$submission->slug}")
+                        ));
+                    } catch (\Throwable $e) {
+                        Log::error('Copyeditor assignment notification failed', [
+                            'submission_id' => $submission->id,
+                            'copyeditor_id' => $copyeditor->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+
+                    // Log the assignment action
+                    SubmissionLog::log(
+                        submission: $submission,
+                        eventType: SubmissionLog::EVENT_PARTICIPANT_ADDED,
+                        title: 'Copyeditor Assigned',
+                        description: auth()->user()->name . " assigned {$copyeditor->name} as copyeditor.",
+                        metadata: [
+                            'copyeditor_id' => $copyeditor->id,
+                            'assignment_id' => $assignment->id,
+                        ],
+                        stage: $submission->stage,
+                    );
+                }
+            });
+
+            // Return success response with redirect
+            return redirect()
+                ->route('journal.submissions.show', [
+                    'journal' => $journal->slug,
+                    'submission' => $submission->slug
+                ])
+                ->with('success', 'Copyeditor assigned successfully.');
+
+        } catch (\Throwable $e) {
+            Log::error('Assign copyeditor failed', [
+                'submission_id' => $submission->id,
+                'journal_id' => $submission->journal_id,
+                'copyeditor_id' => $copyeditorId ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->with('error', 'Failed to assign copyeditor. Please check logs.');
+        }
     }
 
     /**
