@@ -5,9 +5,9 @@ name: CI/CD Pipeline — IAMJOS
 # ============================================================
 on:
   push:
-    branches: [main, staging, dev]
+    branches: [main, staging, dev, isolation-ef30d0e]
   pull_request:
-    branches: [main, staging, dev]
+    branches: [main, staging, dev, isolation-ef30d0e]
 
 jobs:
   # ============================================================
@@ -250,7 +250,7 @@ jobs:
             echo "ENV_LABEL=STAGING" >> $GITHUB_ENV
           else
             echo "TARGET_PATH=${{ secrets.DEV_PATH }}" >> $GITHUB_ENV
-            echo "BRANCH_NAME=dev" >> $GITHUB_ENV
+            echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
             echo "APP_URL=https://dev.ejournal.apdesyi.or.id" >> $GITHUB_ENV
             echo "ENV_LABEL=DEVELOPMENT" >> $GITHUB_ENV
           fi
