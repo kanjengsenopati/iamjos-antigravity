@@ -2516,7 +2516,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     )) ?? [];
         @endphp
         <div x-show="activeTab === 'publication'" x-cloak x-data='{
-            pubTab: (new URLSearchParams(window.location.search)).get('subtab') || 'title',
+            pubTab: (new URLSearchParams(window.location.search)).get("subtab") || "title",
             contributorModalOpen: false,
             editingContributor: null,
             issues: {{ json_encode($issueOptions) }},
@@ -2527,7 +2527,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             async loadSections() {
                 this.isLoadingSections = true;
                 try {
-                    const res = await fetch('{{ route('journal.workflow.publication.sections.list', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}');
+                    const res = await fetch("{{ route('journal.workflow.publication.sections.list', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}");
                     this.sections = await res.json();
                 } catch (e) { console.error(e); }
                 this.isLoadingSections = false;
@@ -2540,10 +2540,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
         
             init() {
                 this.loadSections();
-                this.$watch('pubTab', (value) => {
+                this.$watch("pubTab", (value) => {
                     const url = new URL(window.location.href);
-                    url.searchParams.set('tab', 'publication');
-                    url.searchParams.set('subtab', value);
+                    url.searchParams.set("tab", "publication");
+                    url.searchParams.set("subtab", value);
                     window.history.replaceState({}, document.title, url.pathname + url.search);
                 });
             },
@@ -2580,11 +2580,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 this.isSavingOrder = true;
                 const order = this.reorderList.map(a => a.id);
                 try {
-                    const response = await fetch('{{ route('journal.workflow.publication.contributors.reorder', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}', {
-                        method: 'POST',
+                    const response = await fetch("{{ route('journal.workflow.publication.contributors.reorder', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}", {
+                        method: "POST",
                         headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
                         },
                         body: JSON.stringify({ order })
                     });
@@ -2592,11 +2592,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     if (response.ok) {
                         window.location.reload();
                     } else {
-                        alert('{{ $isId ? 'Gagal menyimpan urutan. Silakan coba lagi.' : 'Failed to save order. Please try again.' }}');
+                        alert("{{ $isId ? 'Gagal menyimpan urutan. Silakan coba lagi.' : 'Failed to save order. Please try again.' }}");
                     }
                 } catch (e) {
                     console.error(e);
-                    alert('{{ $isId ? 'Terjadi kesalahan.' : 'An error occurred.' }}');
+                    alert("{{ $isId ? 'Terjadi kesalahan.' : 'An error occurred.' }}");
                 }
                 this.isSavingOrder = false;
             }
@@ -4104,7 +4104,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 <div @click="fileModalOpen = false"
                     class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
                 <div
-                    class="relative z-50 inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                    class="relative z-50 inline-block align-bottom bg-white rounded-[24px] px-6 pt-6 pb-6 text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
 
                     <div class="mb-5">
                         <h3 class="text-lg leading-6 font-bold text-gray-900">{{ $isId ? 'Unggah File Naskah' : 'Upload Submission File' }}</h3>
@@ -5728,7 +5728,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="relative z-50 inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+                    class="relative z-50 inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
 
                     {{-- Header --}}
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
