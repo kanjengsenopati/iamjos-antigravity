@@ -99,7 +99,7 @@
 
                     {{-- Participant List --}}
                     <div class="flex-1 overflow-y-auto p-0 min-h-0">
-                        @if (isset($potentialParticipants) && $potentialParticipants->isEmpty())
+                        @if (isset($potentialParticipants) && (is_array($potentialParticipants) ? empty($potentialParticipants) : $potentialParticipants->isEmpty()))
                             <div class="p-8 text-center text-gray-500">
                                 <i class="fa-solid fa-users-slash text-4xl mb-3 text-gray-300"></i>
                                 <p>{{ $isId ? 'Tidak ada peserta yang memenuhi syarat.' : 'No eligible participants found.' }}</p>
