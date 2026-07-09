@@ -135,8 +135,6 @@
 
             {{-- Right Side: User Menu & Actions --}}
             <div class="hidden md:flex items-center space-x-4">
-                <x-language-switcher inline="true" />
-
                 {{-- Search Trigger --}}
                 <div x-data="{ searchOpen: false }" class="relative">
                     <button @click="searchOpen = !searchOpen; $nextTick(() => $refs.searchInput?.focus())"
@@ -297,10 +295,7 @@
         x-transition:leave-end="opacity-0 -translate-y-4"
         class="md:hidden border-t border-white/10 bg-white shadow-xl">
         <div class="px-4 py-4 space-y-1">
-            <div class="px-4 pb-3 mb-3 border-b border-slate-100 flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ __('Language') }}</span>
-                <x-language-switcher inline="true" />
-            </div>
+
             {{-- Search Box (Mobile) --}}
             <form action="{{ route('journal.public.search', $journal->slug) }}" method="GET" class="mb-4">
                 <div class="relative">

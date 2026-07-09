@@ -82,7 +82,6 @@ Dynamic Portal Navigation Component (OJS 3.3 Style)
  
             {{-- USER ACTION --}}
             <div class="flex items-center gap-3">
-                <x-language-switcher inline="true" />
                 @auth
                     {{-- Authenticated User Menu --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">

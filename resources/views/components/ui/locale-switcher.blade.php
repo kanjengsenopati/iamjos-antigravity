@@ -1,11 +1,9 @@
 {{--
-    Global Language Switcher Component
-    Usage: <x-ui.locale-switcher />  or  <x-ui.locale-switcher variant="sidebar" />
-    Props:
-      - variant: 'header' (default) | 'sidebar'
+    Global Language Switcher Component (Sidebar Variant Only)
+    Usage: <x-ui.locale-switcher />
     Depends on $currentLocale shared via AppServiceProvider View::composer('*')
 --}}
-@props(['variant' => 'header'])
+@props(['variant' => 'sidebar'])
 
 @php
     $loc = $currentLocale ?? session('app_locale', app()->getLocale());
@@ -17,103 +15,54 @@
     $activeKey   = $isIdActive ? 'id' : 'en';
 @endphp
 
-@if ($variant === 'header')
-    {{-- -- Header Variant: compact dropdown button -- --}}
-    <div class="relative" x-data="{ open: false }">
-        <button
-            type="button"
-            @click="open = !open"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all"
-            title="{{ $isIdActive ? 'Ganti Bahasa' : 'Switch Language' }}"
-        >
-            <i class="fa-solid fa-globe text-primary-500 text-[11px]"></i>
-            <span class="hidden sm:inline">{{ $isIdActive ? 'Indonesia' : 'English' }}</span>
-            <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
-        </button>
+<div class="relative" x-data="{ open: false }">
+    {{-- Expanded button --}}
+    <button
+        type="button"
+        @click="open = !open"
+        x-show="!sidebarCollapsed"
+        class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+    >
+        <span class="flex items-center gap-2">
+            <i class="fa-solid fa-globe text-slate-400 text-sm"></i>
+            <span>{{ $isIdActive ? 'Indonesia' : 'English' }}</span>
+        </span>
+        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+    </button>
 
-        <div
-            x-show="open"
-            @click.away="open = false"
-            x-cloak
-            x-transition:enter="transition ease-out duration-150"
-            x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
-            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-            x-transition:leave="transition ease-in duration-100"
-            x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-            x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-            class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50"
-        >
-            @foreach ($locales as $code => $info)
-                <a
-                    href="{{ route('locale.switch', $code) }}"
-                    class="flex items-center justify-between px-4 py-2.5 text-xs transition-colors {{ $code === $activeKey ? 'font-bold text-primary-600 bg-primary-50/60' : 'text-slate-700 hover:bg-slate-50' }}"
-                >
-                    <span class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-5 h-4 rounded text-[9px] font-bold bg-slate-100 text-slate-500">{{ $info['flag'] }}</span>
-                        <span>{{ $info['label'] }}</span>
-                    </span>
-                    <span class="flex items-center gap-1">
-                        <span class="font-mono text-[10px] text-slate-400">{{ $info['tag'] }}</span>
-                        @if ($code === $activeKey)
-                            <i class="fa-solid fa-check text-primary-500 text-[10px]"></i>
-                        @endif
-                    </span>
-                </a>
-            @endforeach
-        </div>
+    {{-- Collapsed icon-only --}}
+    <button
+        type="button"
+        @click="open = !open"
+        x-show="sidebarCollapsed"
+        class="w-full flex items-center justify-center p-2 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors"
+        title="{{ $isIdActive ? 'Ganti Bahasa' : 'Switch Language' }}"
+    >
+        <i class="fa-solid fa-globe text-sm"></i>
+    </button>
+
+    <div
+        x-show="open"
+        @click.away="open = false"
+        x-cloak
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        class="absolute bottom-full left-0 right-0 mb-1 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50"
+    >
+        @foreach ($locales as $code => $info)
+            <a
+                href="{{ route('locale.switch', $code) }}"
+                class="flex items-center justify-between px-3 py-2 text-xs transition-colors {{ $code === $activeKey ? 'font-bold text-primary-600 bg-primary-50/60' : 'text-slate-700 hover:bg-slate-50' }}"
+            >
+                <span class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-5 h-4 rounded text-[9px] font-bold bg-slate-100 text-slate-500">{{ $info['flag'] }}</span>
+                    <span>{{ $info['label'] }}</span>
+                </span>
+                @if ($code === $activeKey)
+                    <i class="fa-solid fa-check text-primary-500 text-[10px]"></i>
+                @endif
+            </a>
+        @endforeach
     </div>
-
-@else
-    {{-- -- Sidebar Variant: full-width row with collapsed icon-only -- --}}
-    <div class="relative" x-data="{ open: false }">
-        {{-- Expanded button --}}
-        <button
-            type="button"
-            @click="open = !open"
-            x-show="!sidebarCollapsed"
-            class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-        >
-            <span class="flex items-center gap-2">
-                <i class="fa-solid fa-globe text-slate-400 text-sm"></i>
-                <span>{{ $isIdActive ? 'Indonesia' : 'English' }}</span>
-            </span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
-        </button>
-
-        {{-- Collapsed icon-only --}}
-        <button
-            type="button"
-            @click="open = !open"
-            x-show="sidebarCollapsed"
-            class="w-full flex items-center justify-center p-2 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors"
-            title="{{ $isIdActive ? 'Ganti Bahasa' : 'Switch Language' }}"
-        >
-            <i class="fa-solid fa-globe text-sm"></i>
-        </button>
-
-        <div
-            x-show="open"
-            @click.away="open = false"
-            x-cloak
-            x-transition:enter="transition ease-out duration-150"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
-            class="absolute bottom-full left-0 right-0 mb-1 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50"
-        >
-            @foreach ($locales as $code => $info)
-                <a
-                    href="{{ route('locale.switch', $code) }}"
-                    class="flex items-center justify-between px-3 py-2 text-xs transition-colors {{ $code === $activeKey ? 'font-bold text-primary-600 bg-primary-50/60' : 'text-slate-700 hover:bg-slate-50' }}"
-                >
-                    <span class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-5 h-4 rounded text-[9px] font-bold bg-slate-100 text-slate-500">{{ $info['flag'] }}</span>
-                        <span>{{ $info['label'] }}</span>
-                    </span>
-                    @if ($code === $activeKey)
-                        <i class="fa-solid fa-check text-primary-500 text-[10px]"></i>
-                    @endif
-                </a>
-            @endforeach
-        </div>
-    </div>
-@endif
+</div>

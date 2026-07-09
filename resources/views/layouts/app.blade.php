@@ -727,9 +727,6 @@
                 <!-- Right: Notifications + User Dropdown -->
                 <div class="flex items-center space-x-4">
 
-                    <!-- Language Switcher -->
-                    <x-ui.locale-switcher />
-
                     <!-- Notifications Dropdown -->
                     <div x-data="{
                         open: false,
