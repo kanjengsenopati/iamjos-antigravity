@@ -17,13 +17,22 @@
              class="relative bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:max-w-lg w-full max-h-[90vh] flex flex-col z-50">
 
             {{-- Header --}}
-            <div
-                class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 flex-shrink-0">
-                <h3 class="text-lg font-bold text-gray-800 flex items-center" id="modal-title">
-                    {{ $isId ? 'Tugaskan Editor' : 'Assign Editor' }}
-                </h3>
+            <div class="px-6 pt-6 pb-4 flex items-start justify-between flex-shrink-0">
+                <div class="flex items-start space-x-4 flex-1">
+                    <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+                        <i class="fa-solid fa-user-shield text-blue-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg leading-6 font-semibold text-gray-900" id="modal-title">
+                            {{ $isId ? 'Tugaskan Editor' : 'Assign Editor' }}
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            {{ $isId ? 'Cari dan tugaskan editor atau pengelola untuk memproses naskah ini.' : 'Search and assign an editor or manager to process this submission.' }}
+                        </p>
+                    </div>
+                </div>
                 <button type="button" @click="assignEditorModalOpen = false"
-                    class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+                    class="text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-100 focus:outline-none">
                     <i class="fa-solid fa-times text-lg"></i>
                 </button>
             </div>

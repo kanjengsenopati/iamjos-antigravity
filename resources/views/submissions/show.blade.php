@@ -4106,12 +4106,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 <div
                     class="relative z-50 inline-block align-bottom bg-white rounded-[24px] px-6 pt-6 pb-6 text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
 
-                    <div class="mb-5">
-                        <h3 class="text-lg leading-6 font-bold text-gray-900">{{ $isId ? 'Unggah File Naskah' : 'Upload Submission File' }}</h3>
-                        <p class="text-sm text-gray-500 mt-1">
-                            {{ $isId ? 'Mengunggah file ke tahap' : 'Uploading file to' }} <strong class="text-indigo-600"><span
-                                    x-text="{submission: '{{ $isId ? 'Naskah' : 'Submission' }}', review: '{{ $isId ? 'Ulasan' : 'Review' }}', copyedited: '{{ $isId ? 'Hasil Penyuntingan' : 'Copyedited' }}', production: '{{ $isId ? 'Produksi' : 'Production' }}'}[uploadStage] || (uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1))"></span></strong>{{ $isId ? '.' : ' stage.' }}
-                        </p>
+                    <div class="sm:flex sm:items-start mb-5">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-emerald-100 sm:mx-0">
+                            <i class="fa-solid fa-file-arrow-up text-emerald-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                            <h3 class="text-lg leading-6 font-semibold text-gray-900">{{ $isId ? 'Unggah File Naskah' : 'Upload Submission File' }}</h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                {{ $isId ? 'Mengunggah file ke tahap' : 'Uploading file to' }} <strong class="text-indigo-600"><span
+                                        x-text="{submission: '{{ $isId ? 'Naskah' : 'Submission' }}', review: '{{ $isId ? 'Ulasan' : 'Review' }}', copyedited: '{{ $isId ? 'Hasil Penyuntingan' : 'Copyedited' }}', production: '{{ $isId ? 'Produksi' : 'Production' }}'}[uploadStage] || (uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1))"></span></strong>{{ $isId ? '.' : ' stage.' }}
+                            </p>
+                        </div>
                     </div>
 
                     <form
@@ -5731,17 +5736,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     class="relative z-50 inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
 
                     {{-- Header --}}
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-lg font-bold text-white flex items-center">
-                                <i class="fa-solid fa-file-import mr-2"></i>
-                                {{ $isId ? 'Kelola File Draf' : 'Manage Draft Files' }}
-                            </h3>
-                            <button @click="draftFilesModalOpen = false"
-                                class="text-blue-100 hover:text-white transition-colors">
-                                <i class="fa-solid fa-times text-xl"></i>
-                            </button>
+                    <div class="px-6 pt-6 pb-4 flex items-start justify-between flex-shrink-0">
+                        <div class="flex items-start space-x-4 flex-1">
+                            <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+                                <i class="fa-solid fa-file-import text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg leading-6 font-semibold text-gray-900">
+                                    {{ $isId ? 'Kelola File Draf' : 'Manage Draft Files' }}
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    {{ $isId ? 'Unggah file baru atau pilih file yang tersedia untuk dilanjutkan ke tahap penyuntingan.' : 'Upload a new file or select from available files to promote to the copyediting stage.' }}
+                                </p>
+                            </div>
                         </div>
+                        <button type="button" @click="draftFilesModalOpen = false"
+                            class="text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-100 focus:outline-none">
+                            <i class="fa-solid fa-times text-lg"></i>
+                        </button>
                     </div>
 
                     {{-- Tabs --}}

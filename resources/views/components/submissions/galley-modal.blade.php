@@ -41,37 +41,32 @@
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             class="relative inline-block w-full max-w-xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
 
-            {{-- Header (Explicit gradient styling) --}}
-            <div class="relative px-6 py-4 bg-blue-600 border-b border-blue-500/30 rounded-t-[24px]">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        {{-- Icon Container --}}
-                        <div class="flex items-center justify-center w-10 h-10 rounded-[12px] bg-white/20 backdrop-blur-sm shadow-inner border border-white/10">
-                            <i class="text-lg text-white fa-solid fa-file-circle-plus"></i>
-                        </div>
-                        
-                        {{-- Title & Subtitle --}}
-                        <div>
-                            <x-text.h1 id="galley-modal-title" class="text-white font-bold tracking-tight !text-[20px]"
-                                x-text="editingGalley ? 'Edit Galley' : 'Add Publication Galley'">
-                                Add Publication Galley
-                            </x-text.h1>
-                            <x-text.body class="!text-blue-100 font-medium">
-                                Upload a file or link to an external source
-                            </x-text.body>
-                        </div>
+            {{-- Header (Clean minimal styling) --}}
+            <div class="px-6 pt-6 pb-4 flex items-start justify-between">
+                <div class="flex items-start space-x-4 flex-1">
+                    {{-- Icon Container --}}
+                    <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-rose-100">
+                        <i class="text-lg text-rose-600 fa-solid fa-file-circle-plus"></i>
                     </div>
-
-                    {{-- Close Button --}}
-                    <button @click="galleyModalOpen = false"
-                        class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50">
-                        <i class="text-xl fa-solid fa-xmark"></i>
-                        <span class="sr-only">Close</span>
-                    </button>
+                    
+                    {{-- Title & Subtitle --}}
+                    <div class="flex-1">
+                        <x-text.h2 id="galley-modal-title" class="text-gray-900 font-semibold tracking-tight !text-lg"
+                            x-text="editingGalley ? 'Edit Galley' : 'Add Publication Galley'">
+                            Add Publication Galley
+                        </x-text.h2>
+                        <x-text.body class="text-gray-500 mt-1">
+                            Upload a file or link to an external source for reader download
+                        </x-text.body>
+                    </div>
                 </div>
 
-                {{-- Decorative pattern overlay --}}
-                <div class="absolute inset-0 opacity-10 pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz4KPC9zdmc+')]"></div>
+                {{-- Close Button --}}
+                <button @click="galleyModalOpen = false"
+                    class="text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-100 focus:outline-none">
+                    <i class="text-lg fa-solid fa-xmark"></i>
+                    <span class="sr-only">Close</span>
+                </button>
             </div>
 
             {{-- Form Body --}}
