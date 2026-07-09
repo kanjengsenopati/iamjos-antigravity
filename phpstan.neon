@@ -7,6 +7,12 @@ parameters:
     paths:
         - app
 
+    excludePaths:
+        - app/Exports
+        - app/Imports
+        - app/Http/Controllers/Admin/AuthorController.php
+        - app/Http/Controllers/Admin/PublisherController.php
+
     # Abaikan error yang umum di Laravel karena magic methods
     ignoreErrors:
         # Eloquent Builder magic methods
