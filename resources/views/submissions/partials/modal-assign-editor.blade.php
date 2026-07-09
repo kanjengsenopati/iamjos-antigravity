@@ -79,7 +79,7 @@
                                     {{-- Avatar --}}
                                     <div
                                         class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm flex-shrink-0 mr-4">
-                                        <span x-text="editor.name.charAt(0).toUpperCase()"></span>
+                                        <span x-text="editor.name ? editor.name.charAt(0).toUpperCase() : ''"></span>
                                     </div>
 
                                     <div class="flex-1 min-w-0">

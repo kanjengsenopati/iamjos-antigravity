@@ -6230,6 +6230,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                         }
                         window.history.replaceState({}, document.title, url.pathname + url.search);
                     });
+                    this.$watch('discussionModalOpen', value => {
+                        if (value) setTimeout(() => this.initEditor(), 100);
+                    });
                 },
 
                 fileModalOpen: false,
@@ -6280,8 +6283,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     if (this.editorSearch) {
                         const search = this.editorSearch.toLowerCase();
                         editors = editors.filter(e =>
-                            e.name.toLowerCase().includes(search) ||
-                            e.email.toLowerCase().includes(search)
+                            (e.name && e.name.toLowerCase().includes(search)) ||
+                            (e.email && e.email.toLowerCase().includes(search))
                         );
                     }
 
@@ -6289,7 +6292,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     if (this.editorRoleFilter) {
                         const filterVal = this.editorRoleFilter.toLowerCase();
                         editors = editors.filter(e =>
-                            e.role_names && e.role_names.some(role => role.toLowerCase().includes(filterVal))
+                            e.role_names && e.role_names.some(role => role && typeof role === 'string' && role.toLowerCase().includes(filterVal))
                         );
                     }
 
@@ -6424,11 +6427,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     this.editIsSubmitting = false;
                 },
 
-                init() {
-                    this.$watch('discussionModalOpen', value => {
-                        if (value) setTimeout(() => this.initEditor(), 100);
-                    });
-                },
+
 
                 toggleAcceptFile(fileId) {
                     const idx = this.acceptSelectedFiles.indexOf(fileId);
@@ -6616,36 +6615,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 },
 
 
-                async searchEditors() {
-                    if (this.editorSearch.length < 2) {
-                        this.editorResults = [];
-                        return;
-                    }
-                    this.isSearchingEditors = true;
-                    try {
-                        const url = new URL(config.searchReviewersUrl);
-                        url.searchParams.append('q', this.editorSearch);
-                        url.searchParams.append('role', 'editor');
-                        const res = await fetch(url.toString());
-                        this.editorResults = await res.json();
-                    } catch (e) {
-                        console.error(e);
-                    }
-                    this.isSearchingEditors = false;
-                },
-
-                selectEditor(editor) {
-                    this.selectedEditor = editor;
-                    this.editorSearch = editor.name;
-                    this.editorResults = [];
-                },
-
-                resetEditorModal() {
-                    this.selectedEditor = null;
-                    this.editorSearch = '';
-                    this.editorResults = [];
-                    this.editorRole = 'editor';
-                },
 
                 async searchReviewers() {
                     if (this.reviewerSearch.length < 2) {
