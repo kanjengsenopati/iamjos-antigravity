@@ -176,7 +176,6 @@ class InstallController extends Controller
         ]);
 
         try {
-            // 1. Update .env
             $dbConfig = session('install_db');
             $mailConfig = session('install_mail');
 
@@ -184,6 +183,43 @@ class InstallController extends Controller
                 return back()->with('error', 'Session expired. Please restart the installer.');
             }
 
+            // 1. Re-configure DB dynamically in-memory to run migrations
+            config()->set('database.connections.pgsql.host', $dbConfig['db_host']);
+            config()->set('database.connections.pgsql.port', $dbConfig['db_port']);
+            config()->set('database.connections.pgsql.database', $dbConfig['db_database']);
+            config()->set('database.connections.pgsql.username', $dbConfig['db_username']);
+            config()->set('database.connections.pgsql.password', $dbConfig['db_password']);
+            DB::purge('pgsql');
+
+            // 2. Migrate and Seed (using the dynamic connection config)
+            Artisan::call('migrate', ['--force' => true]);
+            Artisan::call('db:seed', ['--force' => true]);
+
+            // 3. Create or Update Super Admin User
+            $admin = User::updateOrCreate(
+                ['email' => $request->admin_email],
+                [
+                    'name' => $request->admin_name,
+                    'username' => strstr($request->admin_email, '@', true) ?: 'admin',
+                    'password' => Hash::make($request->admin_password),
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            // Using Spatie Roles (assuming Super Admin role exists from seeds)
+            try {
+                if (!$admin->hasRole('Super Admin')) {
+                    $admin->assignRole('Super Admin');
+                }
+            } catch (\Exception $e) {
+                // Ignore if role doesn't exist just in case
+            }
+
+            // 4. Create storage/installed file (so application knows it is installed)
+            File::put(storage_path('installed'), 'installed_at: ' . now());
+            File::put(storage_path('install.log'), 'installed_at: ' . now() . "\n" . Artisan::output());
+
+            // 5. Update .env (DO THIS LAST to prevent php artisan serve from killing the request process mid-way!)
             $envUpdates = [
                 'APP_URL' => $request->app_url,
                 'DB_HOST' => $dbConfig['db_host'],
@@ -199,42 +235,7 @@ class InstallController extends Controller
                 'MAIL_FROM_ADDRESS' => $mailConfig['mail_from_address'],
                 'MAIL_FROM_NAME' => '"' . $mailConfig['mail_from_name'] . '"',
             ];
-
             $this->updateEnvFile($envUpdates);
-
-            // Re-configure DB dynamically to run migrations
-            config()->set('database.connections.pgsql.host', $dbConfig['db_host']);
-            config()->set('database.connections.pgsql.port', $dbConfig['db_port']);
-            config()->set('database.connections.pgsql.database', $dbConfig['db_database']);
-            config()->set('database.connections.pgsql.username', $dbConfig['db_username']);
-            config()->set('database.connections.pgsql.password', $dbConfig['db_password']);
-            DB::purge('pgsql');
-
-            // 2. Migrate and Seed
-            Artisan::call('migrate', ['--force' => true]);
-            Artisan::call('db:seed', ['--force' => true]);
-
-            // 3. Create Super Admin User
-            $admin = User::firstOrCreate(
-                ['email' => $request->admin_email],
-                [
-                    'name' => $request->admin_name,
-                    'password' => Hash::make($request->admin_password),
-                ]
-            );
-
-            // Using Spatie Roles (assuming Super Admin role exists from seeds)
-            try {
-                if (!$admin->hasRole('Super Admin')) {
-                    $admin->assignRole('Super Admin');
-                }
-            } catch (\Exception $e) {
-                // Ignore if role doesn't exist just in case
-            }
-
-            // 4. Create storage/installed file
-            File::put(storage_path('installed'), 'installed_at: ' . now());
-            File::put(storage_path('install.log'), 'installed_at: ' . now() . "\n" . Artisan::output());
 
             // Clear cache
             Artisan::call('config:clear');
