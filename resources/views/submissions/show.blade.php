@@ -81,7 +81,7 @@
     </script>
 
     <script>
-        // Register alpine:init listener EARLY (before Alpine boots via @livewireScripts)
+        // Register alpine:init listener EARLY (before Alpine boots via livewireScripts)
         // so submissionWorkflow component is available when Alpine scans the DOM.
         document.addEventListener('alpine:init', () => {
             if (typeof registerSubmissionWorkflow === 'function' && !window._submissionWorkflowRegistered) {
