@@ -80,6 +80,20 @@
         };
     </script>
 
+    <script>
+        // Register alpine:init listener EARLY (before Alpine boots via @livewireScripts)
+        // so submissionWorkflow component is available when Alpine scans the DOM.
+        document.addEventListener('alpine:init', () => {
+            if (typeof registerSubmissionWorkflow === 'function' && !window._submissionWorkflowRegistered) {
+                registerSubmissionWorkflow();
+                window._submissionWorkflowRegistered = true;
+            }
+            if (typeof registerReviewerSelector === 'function') {
+                registerReviewerSelector();
+            }
+        });
+    </script>
+
     <div x-data="submissionWorkflow(window.submissionWorkflowConfig)">
 
 
@@ -7065,17 +7079,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 }
             }));
         }
-
-        function registerWorkflowSafe() {
-            if (window.Alpine) {
-                registerSubmissionWorkflow();
-            }
+        // Fallback: if Alpine already booted before alpine:init listener, register now
+        if (window.Alpine && !window._submissionWorkflowRegistered) {
+            registerSubmissionWorkflow();
+            window._submissionWorkflowRegistered = true;
         }
-        registerWorkflowSafe();
-        document.addEventListener('alpine:init', registerWorkflowSafe);
-        document.addEventListener('livewire:init', registerWorkflowSafe);
-        document.addEventListener('DOMContentLoaded', registerWorkflowSafe);
-        window.addEventListener('load', registerWorkflowSafe);
     </script>
 
     {{-- Reviewer Selector Script --}}
@@ -7156,17 +7164,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 }
             }));
         }
-
-        function registerReviewerSelectorSafe() {
-            if (window.Alpine) {
-                registerReviewerSelector();
-            }
+        // Guard: if not yet registered, try registering now (fallback)
+        if (window.Alpine && !window._reviewerSelectorRegistered) {
+            registerReviewerSelector();
+            window._reviewerSelectorRegistered = true;
         }
-        registerReviewerSelectorSafe();
-        document.addEventListener('alpine:init', registerReviewerSelectorSafe);
-        document.addEventListener('livewire:init', registerReviewerSelectorSafe);
-        document.addEventListener('DOMContentLoaded', registerReviewerSelectorSafe);
-        window.addEventListener('load', registerReviewerSelectorSafe);
     </script>
 
     {{-- Keyword Input (Tagify) for Publication Metadata --}}
