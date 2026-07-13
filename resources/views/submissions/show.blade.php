@@ -541,7 +541,7 @@
                                     // Add all authors as participants
                                     foreach ($submission->authors as $author) {
                                         $groupedParticipants['Author'][] = [
-                                            'user' => $author,
+                                            'user' => $author->user ?? \App\Models\User::where('email', $author->email)->first() ?? $author,
                                             'role' => 'Author',
                                             'type' => 'author',
                                         ];
@@ -641,7 +641,7 @@
                                                                             @endif
 
                                                                             {{-- Login As (Super Admin Only) --}}
-                                                                            @if ($userIsSuperAdmin && $user->exists)
+                                                                            @if ($userIsSuperAdmin && $user->exists && $user instanceof \App\Models\User)
                                                                                 <form
                                                                                     action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                     method="POST" class="inline">
@@ -1311,7 +1311,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     // Add all authors as participants
                                     foreach ($submission->authors as $author) {
                                         $groupedParticipants['Author'][] = [
-                                            'user' => $author,
+                                            'user' => $author->user ?? \App\Models\User::where('email', $author->email)->first() ?? $author,
                                             'role' => 'Author',
                                             'type' => 'author',
                                         ];
@@ -1412,7 +1412,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                             @endif
  
                                                                             {{-- Login As (Super Admin Only) --}}
-                                                                            @if ($userIsSuperAdmin && $user->exists)
+                                                                            @if ($userIsSuperAdmin && $user->exists && $user instanceof \App\Models\User)
                                                                                 <form
                                                                                     action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                     method="POST" class="inline">
@@ -1812,7 +1812,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 // Add all authors as participants
                                 foreach ($submission->authors as $author) {
                                     $groupedParticipants['Author'][] = [
-                                        'user' => $author,
+                                        'user' => $author->user ?? \App\Models\User::where('email', $author->email)->first() ?? $author,
                                         'role' => 'Author',
                                         'type' => 'author',
                                     ];
@@ -1911,7 +1911,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         @endif
 
                                                                         {{-- Login As (Super Admin Only) --}}
-                                                                        @if ($userIsSuperAdmin && $user->exists)
+                                                                        @if ($userIsSuperAdmin && $user->exists && $user instanceof \App\Models\User)
                                                                             <form
                                                                                 action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                 method="POST" class="inline">
@@ -2232,7 +2232,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 // Add all authors as participants
                                 foreach ($submission->authors as $author) {
                                     $groupedParticipants['Author'][] = [
-                                        'user' => $author,
+                                        'user' => $author->user ?? \App\Models\User::where('email', $author->email)->first() ?? $author,
                                         'role' => 'Author',
                                         'type' => 'author',
                                     ];
@@ -2331,7 +2331,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         @endif
 
                                                                         {{-- Login As (Super Admin Only) --}}
-                                                                        @if ($userIsSuperAdmin && $user->exists)
+                                                                        @if ($userIsSuperAdmin && $user->exists && $user instanceof \App\Models\User)
                                                                             <form
                                                                                 action="{{ route('journal.users.login-as', ['journal' => $journal->slug, 'user' => $user]) }}"
                                                                                 method="POST" class="inline">
