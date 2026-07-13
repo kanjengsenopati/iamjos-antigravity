@@ -6168,6 +6168,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 activeStage: config?.defaultStage || 'submission',
 
                 init() {
+                    console.log('[SW-DEBUG] submissionWorkflow Alpine component init() started');
                     this.$watch('activeTab', (value) => {
                         const url = new URL(window.location.href);
                         url.searchParams.set('tab', value);
@@ -6180,6 +6181,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     this.$watch('discussionModalOpen', value => {
                         if (value) setTimeout(() => this.initEditor(), 100);
                     });
+                    console.log('[SW-DEBUG] submissionWorkflow Alpine component init() finished successfully');
                 },
 
                 openFileModal(stage = null) {
