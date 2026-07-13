@@ -7066,11 +7066,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             }));
         }
 
-        if (window.Alpine) {
-            registerSubmissionWorkflow();
-        } else {
-            document.addEventListener('alpine:init', registerSubmissionWorkflow);
+        function registerWorkflowSafe() {
+            if (window.Alpine) {
+                registerSubmissionWorkflow();
+            }
         }
+        registerWorkflowSafe();
+        document.addEventListener('alpine:init', registerWorkflowSafe);
+        document.addEventListener('livewire:init', registerWorkflowSafe);
+        document.addEventListener('DOMContentLoaded', registerWorkflowSafe);
+        window.addEventListener('load', registerWorkflowSafe);
     </script>
 
     {{-- Reviewer Selector Script --}}
@@ -7152,11 +7157,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             }));
         }
 
-        if (window.Alpine) {
-            registerReviewerSelector();
-        } else {
-            document.addEventListener('alpine:init', registerReviewerSelector);
+        function registerReviewerSelectorSafe() {
+            if (window.Alpine) {
+                registerReviewerSelector();
+            }
         }
+        registerReviewerSelectorSafe();
+        document.addEventListener('alpine:init', registerReviewerSelectorSafe);
+        document.addEventListener('livewire:init', registerReviewerSelectorSafe);
+        document.addEventListener('DOMContentLoaded', registerReviewerSelectorSafe);
+        window.addEventListener('load', registerReviewerSelectorSafe);
     </script>
 
     {{-- Keyword Input (Tagify) for Publication Metadata --}}
