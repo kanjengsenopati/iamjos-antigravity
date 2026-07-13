@@ -3866,6 +3866,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
             {{-- NEW DISCUSSION MODAL --}}
         <div x-show="discussionModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
