@@ -6206,9 +6206,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 },
 
                 getParticipantsForStage(stage) {
+                    if (!stage) {
+                        return [];
+                    }
                     // Return appropriate participants based on stage
                     // This data should be passed from backend controller
-                    return this.allParticipants[stage] || this.allParticipants;
+                    return this.allParticipants[stage] || [];
                 },
 
                 openDraftFilesModal() {
