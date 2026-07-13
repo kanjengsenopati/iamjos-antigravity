@@ -75,7 +75,8 @@
             csrfToken: @js(csrf_token()),
             firstAuthorName: @js($submission->authors?->first()?->name ?? 'Author'),
             submissionCode: @js($submission->submission_code ?? ''),
-            potentialEditors: @js($potentialEditors)
+            potentialEditors: @js($potentialEditors),
+            potentialParticipants: @js($potentialParticipants)
         };
     </script>
 
@@ -6148,9 +6149,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
     <script>
         function registerSubmissionWorkflow() {
-            Alpine.data('submissionWorkflow', (config) => ({
+            Alpine.data('submissionWorkflow', (config = {}) => ({
                 activeTab: (new URLSearchParams(window.location.search)).get('tab') || 'workflow',
-                activeStage: config.defaultStage,
+                activeStage: config?.defaultStage || 'submission',
 
                 init() {
                     this.$watch('activeTab', (value) => {
@@ -6219,17 +6220,17 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 fileWizardOpen: false,
                 wizardUploadProgress: 0,
                 wizardIsUploading: false,
-                uploadStage: config.defaultStage,
-                discussionStageId: config.stageId,
+                uploadStage: config?.defaultStage || 'submission',
+                discussionStageId: config?.stageId || 1,
 
                 // Author Review View State
-                selectedAuthorRound: config.currentReviewRound,
+                selectedAuthorRound: config?.currentReviewRound || 1,
                 showDecisionModal: false,
                 selectedDecision: null,
                 revisionUploadModalOpen: false,
 
                 // Editor Review View State (Multi-Round)
-                selectedEditorRound: config.maxReviewRound,
+                selectedEditorRound: config?.maxReviewRound || 1,
                 newRoundModalOpen: false,
                 newRoundFiles: [],
                 newRoundSelectedFiles: [],
@@ -6249,8 +6250,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 // Assign Editor Modal State
                 assignEditorModalOpen: false,
                 editorSearch: '',
-                editorRoleFilter: 'Journal editor',
-                allEditors: config.potentialEditors || [],
+                editorRoleFilter: '',
+                allEditors: config?.potentialEditors || [],
                 selectedEditor: null,
                 editorRole: 'editor',
                 isSearchingEditors: false, // kept for compatibility if needed
@@ -6260,7 +6261,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 participantModalStage: null,
                 participantSearch: '',
                 participantRoleFilter: '',
-                allParticipants: config.potentialParticipants || {},
+                allParticipants: config?.potentialParticipants || {},
                 selectedParticipant: null,
 
                 get filteredEditors() {
@@ -6344,7 +6345,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 resetEditorModal() {
                     this.selectedEditor = null;
                     this.editorSearch = '';
-                    this.editorRoleFilter = 'Journal editor';
+                    this.editorRoleFilter = '';
                 },
                 selectedReviewer: null,
                 reviewerSearch: '',
