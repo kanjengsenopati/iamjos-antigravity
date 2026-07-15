@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Submission Detail Workflow View
     Alpine.js component: submissionWorkflow
     Robustness updates:
@@ -81,30 +81,1041 @@
     </script>
 
     <script>
-        // Pendaftaran aman dengan mendengarkan berbagai event inisialisasi Alpine/Livewire
+        function registerSubmissionWorkflow() {
+            Alpine.data('submissionWorkflow', (config = {}) => ({
+                activeTab: (new URLSearchParams(window.location.search)).get('tab') || 'workflow',
+                activeStage: config?.defaultStage || 'submission',
+
+                init() {
+                    console.log('[SW-DEBUG] submissionWorkflow Alpine component init() started');
+                    this.$watch('activeTab', (value) => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('tab', value);
+                        if (value !== 'publication') {
+                            url.searchParams.delete('subtab');
+                        }
+                        window.history.replaceState({}, document.title, url.pathname + url.search);
+                    });
+
+                    this.$watch('discussionModalOpen', value => {
+                        if (value) setTimeout(() => this.initEditor(), 100);
+                    });
+                    console.log('[SW-DEBUG] submissionWorkflow Alpine component init() finished successfully');
+                },
+
+                openFileModal(stage = null) {
+                    console.log('[SW-DEBUG] openFileModal called with stage:', stage);
+                    if (stage) {
+                        this.uploadStage = stage;
+                    }
+                    this.fileModalOpen = true;
+                    console.log('[SW-DEBUG] fileModalOpen set to:', this.fileModalOpen);
+                },
+
+                openAssignEditorModal() {
+                    console.log('[SW-DEBUG] openAssignEditorModal called');
+                    this.resetEditorModal();
+                    this.assignEditorModalOpen = true;
+                    console.log('[SW-DEBUG] assignEditorModalOpen set to:', this.assignEditorModalOpen);
+                },
+
+                openParticipantModal(stage) {
+                    console.log('[SW-DEBUG] openParticipantModal called with stage:', stage);
+                    this.participantModalStage = stage;
+                    this.resetParticipantModal();
+                    this.participantModalOpen = true;
+                    console.log('[SW-DEBUG] participantModalOpen set to:', this.participantModalOpen);
+                },
+
+                resetParticipantModal() {
+                    this.selectedParticipant = null;
+                    this.participantSearch = '';
+                    this.participantRoleFilter = this.getDefaultRoleFilter(this.participantModalStage);
+                },
+
+                getDefaultRoleFilter(stage) {
+                    const defaults = {
+                        'review': 'Reviewer',
+                        'copyediting': 'Copyeditor',
+                        'production': 'Layout Editor'
+                    };
+                    return defaults[stage] || '';
+                },
+
+                selectParticipant(participant) {
+                    this.selectedParticipant = participant;
+                },
+
+                getParticipantsForStage(stage) {
+                    if (!stage) {
+                        return [];
+                    }
+                    // Return appropriate participants based on stage
+                    // This data should be passed from backend controller
+                    return this.allParticipants[stage] || [];
+                },
+
+                openDraftFilesModal() {
+                    this.draftFilesModalOpen = true;
+                },
+
+                fileModalOpen: false,
+                discussionModalOpen: false,
+                fileWizardOpen: false,
+                wizardUploadProgress: 0,
+                wizardIsUploading: false,
+                uploadStage: config?.defaultStage || 'submission',
+                discussionStageId: config?.stageId || 1,
+
+                // Author Review View State
+                selectedAuthorRound: config?.currentReviewRound || 1,
+                showDecisionModal: false,
+                selectedDecision: null,
+                revisionUploadModalOpen: false,
+
+                // Editor Review View State (Multi-Round)
+                selectedEditorRound: config?.maxReviewRound || 1,
+                newRoundModalOpen: false,
+                newRoundFiles: [],
+                newRoundSelectedFiles: [],
+                newRoundIsLoading: false,
+                newRoundIsSubmitting: false,
+
+                // Accept Submission Modal State
+                acceptModalOpen: false,
+                acceptSendEmail: true,
+                acceptEmailBody: '',
+                acceptFiles: [],
+                acceptSelectedFiles: [],
+                acceptIsLoading: false,
+                acceptIsSubmitting: false,
+                acceptEditorInstance: null,
+
+                // Assign Editor Modal State
+                assignEditorModalOpen: false,
+                editorSearch: '',
+                editorRoleFilter: '',
+                allEditors: config?.potentialEditors || [],
+                selectedEditor: null,
+                editorRole: 'editor',
+                isSearchingEditors: false, // kept for compatibility if needed
+
+                // Participant Assignment Modal State
+                participantModalOpen: false,
+                participantModalStage: null,
+                participantSearch: '',
+                participantRoleFilter: '',
+                allParticipants: config?.potentialParticipants || {},
+                selectedParticipant: null,
+
+                get filteredEditors() {
+                    let editors = this.allEditors;
+
+                    // Konversi object ke array jika key non-sequential ter-encode sebagai object
+                    if (editors && typeof editors === 'object' && !Array.isArray(editors)) {
+                        editors = Object.values(editors);
+                    }
+
+                    if (!Array.isArray(editors)) {
+                        return [];
+                    }
+
+                    // Text Search
+                    if (this.editorSearch) {
+                        const search = this.editorSearch.toLowerCase();
+                        editors = editors.filter(e => {
+                            const name = (e.name || '').toLowerCase();
+                            const email = (e.email || '').toLowerCase();
+                            return name.includes(search) || email.includes(search);
+                        });
+                    }
+
+                    // Role Filter
+                    if (this.editorRoleFilter) {
+                        const filterVal = this.editorRoleFilter.toLowerCase();
+                        editors = editors.filter(e =>
+                            e.role_names && Array.isArray(e.role_names) && e.role_names.some(role => role && role.toLowerCase().includes(filterVal))
+                        );
+                    }
+
+                    return editors;
+                },
+
+                get filteredParticipants() {
+                    let participants = this.getParticipantsForStage(this.participantModalStage);
+                    
+                    // Convert object to array if needed
+                    if (participants && typeof participants === 'object' && !Array.isArray(participants)) {
+                        participants = Object.values(participants);
+                    }
+                    
+                    if (!Array.isArray(participants)) {
+                        return [];
+                    }
+                    
+                    // Text search filter
+                    if (this.participantSearch) {
+                        const search = this.participantSearch.toLowerCase();
+                        participants = participants.filter(p => {
+                            const name = (p.name || '').toLowerCase();
+                            const email = (p.email || '').toLowerCase();
+                            return name.includes(search) || email.includes(search);
+                        });
+                    }
+                    
+                    // Role filter
+                    if (this.participantRoleFilter) {
+                        const filterVal = this.participantRoleFilter.toLowerCase();
+                        participants = participants.filter(p =>
+                            p.role_names && Array.isArray(p.role_names) && 
+                            p.role_names.some(role => role && role.toLowerCase().includes(filterVal))
+                        );
+                    }
+                    
+                    return participants;
+                },
+
+
+                // Deprecated AJAX search (but kept just in case we need it later, or aliases to local filter)
+                async searchEditors() {
+                    // No-op: filtering is now computed local
+                },
+
+                selectEditor(editor) {
+                    this.selectedEditor = editor;
+                    // Dont clear search so list remains stable
+                },
+
+                resetEditorModal() {
+                    this.selectedEditor = null;
+                    this.editorSearch = '';
+                    this.editorRoleFilter = '';
+                },
+                selectedReviewer: null,
+                reviewerSearch: '',
+                reviewerResults: [],
+                reviewMethod: 'double_blind',
+                responseDueDate: '',
+                reviewDueDate: '',
+                isSearching: false,
+
+                // Discussion Wizard State
+                discussionFiles: [],
+                wizardStep: 1,
+                tempUploadedFile: null,
+
+                // CKEditor
+                editorInstance: null,
+                messageBody: '',
+
+                // Editorial Decision Modals
+                sendToReviewModalOpen: false,
+                availableFiles: [],
+                selectedFilesForPromotion: [],
+                isLoadingFiles: false,
+
+                // Copyediting Stage Modals
+                draftFilesModalOpen: false,
+                sendToProductionModalOpen: false,
+                productionSendEmail: true,
+                productionEmailBody: '',
+                productionSelectedFiles: [],
+                productionIsLoading: false,
+                productionIsSubmitting: false,
+                productionEditorInstance: null,
+
+                // Accept Skip Review Modal
+                skipReviewModalOpen: false,
+                skipReviewNotes: '',
+
+                // Decline Modal
+                declineModalOpen: false,
+                declineReason: '',
+                showActivityLog: false,
+                notifyAuthor: true,
+
+                // Request Revisions Modal (OJS 3.3 Style)
+                revisionModalOpen: false,
+                revisionNewRound: false,
+                revisionSendEmail: true,
+                revisionEmailBody: '',
+                revisionAttachments: [],
+                revisionSelectedFiles: [],
+                revisionIsLoadingFiles: false,
+                revisionIsSubmitting: false,
+                revisionEditorInstance: null,
+                revisionUploadedFiles: [],
+                
+                // Galley Modal State
+                galleyModalOpen: false,
+                isSubmitting: false,
+                editingGalley: null,
+                galleyLabel: '',
+                galleyLocale: 'en',
+                galleyUrlPath: '',
+                isRemote: false,
+                remoteUrl: '',
+                selectedFile: null,
+                selectedFileName: '',
+                errors: {},
+                
+                // Edit Review Assignment State
+                editReviewModalOpen: false,
+                editReviewAssignment: null,
+                editReviewMethod: 'double_blind',
+                editResponseDueDate: '',
+                editReviewDueDate: '',
+                editIsSubmitting: false,
+
+                openEditReviewModal(assignment) {
+                    this.editReviewAssignment = assignment;
+                    this.editReviewMethod = assignment.review_method;
+                    this.editResponseDueDate = assignment.response_due_date ? new Date(assignment.response_due_date).toISOString().split('T')[0] : '';
+                    this.editReviewDueDate = assignment.due_date ? new Date(assignment.due_date).toISOString().split('T')[0] : '';
+                    this.editReviewModalOpen = true;
+                },
+
+                async submitEditReview() {
+                    this.editIsSubmitting = true;
+                    try {
+                        const response = await fetch(`{{ route('journal.workflow.review-assignment.update', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', this.editReviewAssignment.id), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': config.csrfToken
+                            },
+                            body: JSON.stringify({
+                                due_date: this.editReviewDueDate,
+                                response_due_date: this.editResponseDueDate,
+                                review_method: this.editReviewMethod
+                            })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert(data.message || '{{ $isId ? 'Gagal memperbarui penugasan ulasan.' : 'Failed to update review assignment.' }}');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('{{ $isId ? 'Terjadi kesalahan saat memperbarui penugasan ulasan.' : 'An error occurred while updating the review assignment.' }}');
+                    }
+                    this.editIsSubmitting = false;
+                },
+
+
+
+                toggleAcceptFile(fileId) {
+                    const idx = this.acceptSelectedFiles.indexOf(fileId);
+                    if (idx > -1) {
+                        this.acceptSelectedFiles.splice(idx, 1);
+                    } else {
+                        this.acceptSelectedFiles.push(fileId);
+                    }
+                },
+
+                openAcceptModal() {
+                    this.acceptModalOpen = true;
+                    this.acceptSendEmail = true;
+                    this.acceptEmailBody = this.getAcceptEmailTemplate();
+                    this.loadAcceptFiles();
+                    this.$nextTick(() => this.initAcceptEditor());
+                },
+
+                getAcceptEmailTemplate() {
+                    @if($isId)
+                    return `<p>Yth. ${config.authorName},</p>
+                            <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong>${config.journalName}</strong>.</p>
+                            <p>Kami akan melanjutkan ke tahap Penyuntingan/Produksi.</p>
+                            <p>Terima kasih telah mengirimkan karya Anda kepada kami.</p>
+                            <p>Salam hormat,<br>Tim Editorial</p>`;
+                    @else
+                    return `<p>Dear ${config.authorName},</p>
+                            <p>We are pleased to inform you that your submission <strong>"${config.submissionTitle}"</strong> has been accepted for publication in <strong>${config.journalName}</strong>.</p>
+                            <p>We will now proceed to the Copyediting/Production stage.</p>
+                            <p>Thank you for submitting your work to us.</p>
+                            <p>Best regards,<br>The Editorial Team</p>`;
+                    @endif
+                },
+
+                async loadAcceptFiles() {
+                    this.acceptIsLoading = true;
+                    try {
+                        const res = await fetch(config.promotableFilesUrl);
+                        const data = await res.json();
+                        this.acceptFiles = data.files || [];
+                        this.acceptSelectedFiles = this.acceptFiles.map(f => f.id);
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    this.acceptIsLoading = false;
+                },
+
+                initAcceptEditor() {
+                    if (this.acceptEditorInstance) {
+                        this.acceptEditorInstance.setData(this.acceptEmailBody);
+                        return;
+                    }
+                    const editorEl = document.querySelector('#accept-email-editor');
+                    if (!editorEl) return;
+
+                    ClassicEditor
+                        .create(editorEl, {
+                            simpleUpload: {
+                                uploadUrl: config.uploadImageUrl,
+                                headers: {
+                                    'X-CSRF-TOKEN': config.csrfToken
+                                }
+                            }
+                        })
+                        .then(editor => {
+                            this.acceptEditorInstance = editor;
+                            editor.setData(this.acceptEmailBody);
+                            editor.model.document.on('change:data', () => {
+                                this.acceptEmailBody = editor.getData();
+                            });
+                        })
+                        .catch(err => console.error(err));
+                },
+
+                async loadRevisionFilesForNewRound() {
+                    this.newRoundIsLoading = true;
+                    try {
+                        const res = await fetch(config.revisionFilesUrl);
+                        this.newRoundFiles = await res.json();
+                        this.newRoundSelectedFiles = this.newRoundFiles.map(f => f.id);
+                    } catch (e) {
+                        console.error('Failed to load revision files:', e);
+                    }
+                    this.newRoundIsLoading = false;
+                },
+
+                toggleNewRoundFile(fileId) {
+                    const idx = this.newRoundSelectedFiles.indexOf(fileId);
+                    if (idx > -1) {
+                        this.newRoundSelectedFiles.splice(idx, 1);
+                    } else {
+                        this.newRoundSelectedFiles.push(fileId);
+                    }
+                },
+
+                isNewRoundFileSelected(fileId) {
+                    return this.newRoundSelectedFiles.includes(fileId);
+                },
+
+                openNewRoundModal() {
+                    this.newRoundModalOpen = true;
+                    this.loadRevisionFilesForNewRound();
+                },
+
+                resetNewRoundModal() {
+                    this.newRoundModalOpen = false;
+                    this.newRoundFiles = [];
+                    this.newRoundSelectedFiles = [];
+                    this.newRoundIsSubmitting = false;
+                },
+
+                // ==================== SEND TO PRODUCTION MODAL ====================
+                openSendToProductionModal() {
+                    this.sendToProductionModalOpen = true;
+                    this.productionSendEmail = true;
+                    this.productionEmailBody = this.getProductionEmailTemplate();
+                    this.$nextTick(() => this.initProductionEditor());
+                },
+
+                getProductionEmailTemplate() {
+                    const submissionUrl = window.location.href;
+                    @if($isId)
+                    return `<p>Yth. ${config.authorName},</p>
+                            <p>Penyuntingan naskah Anda, <strong>"${config.submissionTitle},"</strong> telah selesai. Kami sekarang akan mengirimkannya ke tahap produksi.</p>
+                            <p><strong>URL Naskah:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>
+                            <p>Jika Anda memiliki pertanyaan, silakan hubungi kami.</p>
+                            <p>Salam hormat,<br>Tim Editorial ${config.journalName}</p>`;
+                    @else
+                    return `<p>Dear ${config.authorName},</p>
+                            <p>The editing of your submission, <strong>"${config.submissionTitle},"</strong> is complete. We are now sending it to production.</p>
+                            <p><strong>Submission URL:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>
+                            <p>If you have any questions, please contact us.</p>
+                            <p>Best regards,<br>The ${config.journalName} Editorial Team</p>`;
+                    @endif
+                },
+
+                initProductionEditor() {
+                    if (this.productionEditorInstance) {
+                        this.productionEditorInstance.setData(this.productionEmailBody);
+                        return;
+                    }
+                    const editorEl = document.querySelector('#production-email-editor');
+                    if (!editorEl) return;
+
+                    ClassicEditor
+                        .create(editorEl, {
+                            simpleUpload: {
+                                uploadUrl: config.uploadImageUrl,
+                                headers: {
+                                    'X-CSRF-TOKEN': config.csrfToken
+                                }
+                            }
+                        })
+                        .then(editor => {
+                            this.productionEditorInstance = editor;
+                            editor.setData(this.productionEmailBody);
+                            editor.model.document.on('change:data', () => {
+                                this.productionEmailBody = editor.getData();
+                            });
+                        })
+                        .catch(err => console.error(err));
+                },
+
+                toggleProductionFile(fileId) {
+                    const idx = this.productionSelectedFiles.indexOf(fileId);
+                    if (idx > -1) {
+                        this.productionSelectedFiles.splice(idx, 1);
+                    } else {
+                        this.productionSelectedFiles.push(fileId);
+                    }
+                },
+
+                isProductionFileSelected(fileId) {
+                    return this.productionSelectedFiles.includes(fileId);
+                },
+
+                resetProductionModal() {
+                    this.sendToProductionModalOpen = false;
+                    this.productionSendEmail = true;
+                    this.productionEmailBody = '';
+                    this.productionSelectedFiles = [];
+                    this.productionIsSubmitting = false;
+                    if (this.productionEditorInstance) {
+                        this.productionEditorInstance.destroy();
+                        this.productionEditorInstance = null;
+                    }
+                },
+
+                // Review Details Modal State
+                reviewDetailsModalOpen: false,
+                selectedReview: null,
+
+                openReviewDetailsModal(review) {
+                    this.selectedReview = review;
+                    this.reviewDetailsModalOpen = true;
+                },
+
+                closeReviewDetailsModal() {
+                    this.reviewDetailsModalOpen = false;
+                    this.selectedReview = null;
+                },
+
+
+
+
+                async searchReviewers() {
+                    if (this.reviewerSearch.length < 2) {
+                        this.reviewerResults = [];
+                        return;
+                    }
+                    this.isSearching = true;
+                    try {
+                        const url = new URL(config.searchReviewersUrl);
+                        url.searchParams.append('q', this.reviewerSearch);
+                        const res = await fetch(url.toString());
+                        this.reviewerResults = await res.json();
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    this.isSearching = false;
+                },
+
+                selectReviewer(reviewer) {
+                    this.selectedReviewer = reviewer;
+                    this.reviewerSearch = reviewer.name;
+                    this.reviewerResults = [];
+                },
+
+                resetReviewerModal() {
+                    this.selectedReviewer = null;
+                    this.reviewerSearch = '';
+                    this.reviewerResults = [];
+                    this.reviewMethod = 'double_blind';
+                    this.responseDueDate = '';
+                    this.reviewDueDate = '';
+                },
+
+                initEditor() {
+                    if (this.editorInstance) return;
+                    ClassicEditor.create(document.querySelector('#discussion-editor'), {
+                            simpleUpload: {
+                                uploadUrl: config.uploadImageUrl,
+                                headers: {
+                                    'X-CSRF-TOKEN': config.csrfToken
+                                }
+                            }
+                        }).then(editor => {
+                            this.editorInstance = editor;
+                            editor.model.document.on('change:data', () => {
+                                this.messageBody = editor.getData();
+                            });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                },
+
+                resetDiscussionForm() {
+                    this.discussionFiles = [];
+                    this.messageBody = '';
+                    if (this.editorInstance) {
+                        this.editorInstance.setData('');
+                    }
+                },
+
+                submitDiscussion() {
+                    if (!this.messageBody || this.messageBody.trim() === '') {
+                        alert('{{ $isId ? 'Pesan wajib diisi' : 'Message is required' }}');
+                        return;
+                    }
+                    document.querySelector('#discussion-form').submit();
+                },
+
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    let formData = new FormData();
+                    formData.append('file', file);
+
+                    this.wizardIsUploading = true;
+                    this.wizardUploadProgress = 0;
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', config.uploadFileUrl);
+                    xhr.setRequestHeader('X-CSRF-TOKEN', config.csrfToken);
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            this.wizardUploadProgress = Math.round((e.loaded / e.total) * 100);
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        this.wizardIsUploading = false;
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                this.tempUploadedFile = data;
+                                this.wizardStep = 2;
+                            } catch (e) {
+                                alert('{{ $isId ? 'Unggahan gagal: Respons tidak valid' : 'Upload failed: Invalid response' }}');
+                            }
+                        } else {
+                            alert('{{ $isId ? 'Unggahan gagal: ' : 'Upload failed: ' }}' + xhr.statusText);
+                        }
+                    };
+
+                    xhr.onerror = () => {
+                        this.wizardIsUploading = false;
+                        alert('{{ $isId ? 'Unggahan gagal' : 'Upload failed' }}');
+                    };
+
+                    xhr.send(formData);
+                },
+
+                completeWizard() {
+                    if (this.tempUploadedFile) {
+                        this.discussionFiles.push(this.tempUploadedFile);
+                    }
+                    this.wizardStep = 1;
+                    this.tempUploadedFile = null;
+                    this.fileWizardOpen = false;
+                },
+
+                addAnotherFile() {
+                    if (this.tempUploadedFile) {
+                        this.discussionFiles.push(this.tempUploadedFile);
+                    }
+                    this.wizardStep = 1;
+                    this.tempUploadedFile = null;
+                },
+
+                async loadAvailableFiles() {
+                    this.isLoadingFiles = true;
+                    try {
+                        const res = await fetch(config.availableFilesUrl);
+                        const data = await res.json();
+                        this.availableFiles = data.files;
+                        // Pre-select all files by default
+                        this.selectedFilesForPromotion = data.files.map(f => ({
+                            id: f.id,
+                            type: f.type
+                        }));
+                    } catch (e) {
+                        console.error('Failed to load files:', e);
+                    }
+                    this.isLoadingFiles = false;
+                },
+
+                toggleFileSelection(file) {
+                    const index = this.selectedFilesForPromotion.findIndex(f => f.id === file.id);
+                    if (index > -1) {
+                        this.selectedFilesForPromotion.splice(index, 1);
+                    } else {
+                        this.selectedFilesForPromotion.push({
+                            id: file.id,
+                            type: file.type
+                        });
+                    }
+                },
+
+                isFileSelected(file) {
+                    return this.selectedFilesForPromotion.some(f => f.id === file.id);
+                },
+
+                openSendToReviewModal() {
+                    this.sendToReviewModalOpen = true;
+                    this.loadAvailableFiles();
+                },
+
+                openSkipReviewModal() {
+                    this.skipReviewModalOpen = true;
+                    this.loadAvailableFiles();
+                },
+
+                resetDeclineModal() {
+                    this.declineReason = '';
+                    this.notifyAuthor = true;
+                },
+
+                openRevisionModal() {
+                    this.revisionModalOpen = true;
+                    this.revisionNewRound = false;
+                    this.revisionSendEmail = true;
+                    this.revisionSelectedFiles = [];
+                    this.revisionUploadedFiles = [];
+                    this.loadRevisionAttachments();
+                    this.$nextTick(() => this.initRevisionEditor());
+                },
+
+                async loadRevisionAttachments() {
+                    this.revisionIsLoadingFiles = true;
+                    try {
+                        const res = await fetch(config.reviewerAttachmentsUrl);
+                        const data = await res.json();
+                        this.revisionAttachments = data.files || [];
+                    } catch (e) {
+                        console.error('Failed to load reviewer attachments:', e);
+                    }
+                    this.revisionIsLoadingFiles = false;
+                },
+
+                initRevisionEditor() {
+                    if (this.revisionEditorInstance) return;
+                    const editorEl = document.querySelector('#revision-email-editor');
+                    if (!editorEl) return;
+
+                    ClassicEditor
+                        .create(editorEl, {
+                            simpleUpload: {
+                                uploadUrl: config.uploadImageUrl,
+                                headers: {
+                                    'X-CSRF-TOKEN': config.csrfToken
+                                }
+                            }
+                        })
+                        .then(editor => {
+                            this.revisionEditorInstance = editor;
+                            // Pre-fill with default template
+                            const defaultBody = this.getDefaultRevisionEmailTemplate();
+                            editor.setData(defaultBody);
+                            this.revisionEmailBody = defaultBody;
+                            editor.model.document.on('change:data', () => {
+                                this.revisionEmailBody = editor.getData();
+                            });
+                        })
+                        .catch(err => console.error(err));
+                },
+
+                getDefaultRevisionEmailTemplate() {
+                    @if($isId)
+                    return `<p>Yth. ${config.firstAuthorName},</p>
+                    <p>Kami telah mencapai keputusan terkait naskah Anda di <strong>${config.journalName}</strong>:</p>
+                    <p><strong>Naskah:</strong> ${config.submissionTitle}</p>
+                    <p><strong>ID Naskah:</strong> ${config.submissionCode}</p>
+                    <hr>
+                    <p><strong>Keputusan Kami: Diperlukan Revisi</strong></p>
+                    <p>Berdasarkan umpan balik reviewer, kami meminta Anda untuk merevisi naskah Anda. Harap tanggapi setiap komentar reviewer dengan cermat dan kirimkan naskah revisi Anda melalui portal jurnal.</p>
+                    <p>Komentar reviewer terlampir atau disertakan di bawah ini untuk referensi Anda.</p>
+                    <hr>
+                    <p>Jika Anda memiliki pertanyaan, jangan ragu untuk menghubungi kami.</p>
+                    <p>Salam hormat,<br>Tim Editorial</p>`;
+                    @else
+                    return `<p>Dear ${config.firstAuthorName},</p>
+                    <p>We have reached a decision regarding your submission to <strong>${config.journalName}</strong>:</p>
+                    <p><strong>Submission:</strong> ${config.submissionTitle}</p>
+                    <p><strong>Manuscript ID:</strong> ${config.submissionCode}</p>
+                    <hr>
+                    <p><strong>Our Decision: Revisions Required</strong></p>
+                    <p>Based on the reviewers' feedback, we request that you revise your manuscript. Please address each
+                        reviewer comment carefully and submit your revised manuscript through the journal portal.</p>
+                    <p>The reviewer comments are attached or included below for your reference.</p>
+                    <hr>
+                    <p>If you have any questions, please do not hesitate to contact us.</p>
+                    <p>Best regards,<br>The Editorial Team</p>`;
+                    @endif
+                },
+
+                toggleRevisionFile(fileId) {
+                    const index = this.revisionSelectedFiles.indexOf(fileId);
+                    if (index > -1) {
+                        this.revisionSelectedFiles.splice(index, 1);
+                    } else {
+                        this.revisionSelectedFiles.push(fileId);
+                    }
+                },
+
+                isRevisionFileSelected(fileId) {
+                    return this.revisionSelectedFiles.includes(fileId);
+                },
+
+                async uploadRevisionFile(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    let formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const res = await fetch(config.uploadDecisionFileUrl, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': config.csrfToken
+                            },
+                            body: formData
+                        });
+                        const data = await res.json();
+                        this.revisionUploadedFiles.push(data);
+                        this.revisionSelectedFiles.push(data.id);
+                    } catch (err) {
+                        alert('{{ $isId ? 'Unggahan gagal' : 'Upload failed' }}');
+                    }
+                    event.target.value = '';
+                },
+
+                resetRevisionModal() {
+                    this.revisionModalOpen = false;
+                    this.revisionNewRound = false;
+                    this.revisionSendEmail = true;
+                    this.revisionEmailBody = '';
+                    this.revisionSelectedFiles = [];
+                    this.revisionUploadedFiles = [];
+                    if (this.revisionEditorInstance) {
+                        this.revisionEditorInstance.destroy();
+                        this.revisionEditorInstance = null;
+                    }
+                },
+
+                // Galley Methods
+                openAddGalley() {
+                    this.resetGalleyForm();
+                    this.galleyModalOpen = true;
+                },
+
+                openEditGalley(galley) {
+                    this.resetGalleyForm();
+                    this.editingGalley = galley;
+                    this.galleyLabel = galley.label;
+                    this.galleyLocale = galley.locale || 'en';
+                    this.galleyUrlPath = galley.url_path || '';
+                    this.isRemote = galley.is_remote || false;
+                    this.remoteUrl = galley.url_remote || '';
+                    this.galleyModalOpen = true;
+                },
+
+                resetGalleyForm() {
+                    this.editingGalley = null;
+                    this.galleyLabel = '';
+                    this.galleyLocale = 'en';
+                    this.galleyUrlPath = '';
+                    this.isRemote = false;
+                    this.remoteUrl = '';
+                    this.selectedFile = null;
+                    this.selectedFileName = '';
+                    this.errors = {};
+                    this.isSubmitting = false;
+                },
+
+                handleGalleyFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.selectedFile = file;
+                        this.selectedFileName = file.name;
+                    }
+                },
+
+                async submitGalley() {
+                    if (this.isSubmitting) return;
+                    this.isSubmitting = true;
+                    this.errors = {};
+
+                    const formData = new FormData();
+                    formData.append('label', this.galleyLabel);
+                    formData.append('locale', this.galleyLocale);
+                    formData.append('url_path', this.galleyUrlPath);
+                    formData.append('is_remote', this.isRemote ? '1' : '0');
+
+                    if (this.isRemote) {
+                        formData.append('url_remote', this.remoteUrl);
+                    } else if (this.selectedFile) {
+                        formData.append('file', this.selectedFile);
+                    }
+
+                    try {
+                        const url = this.editingGalley ?
+                            '{{ route('journal.workflow.galley.update', ['journal' => $journal->slug, 'submission' => $submission->slug, 'galley' => '__GALLEY_ID__']) }}'.replace('__GALLEY_ID__', this.editingGalley.id) :
+                            '{{ route('journal.workflow.galley.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}';
+
+                        if (this.editingGalley) {
+                            formData.append('_method', 'PUT');
+                        }
+
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            window.location.href = window.location.pathname + '?tab=publication&subtab=galleys';
+                        } else {
+                            const data = await response.json();
+                            if (data.errors) {
+                                this.errors = data.errors;
+                            } else {
+                                alert(data.message || '{{ $isId ? 'Terjadi kesalahan' : 'An error occurred' }}');
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('{{ $isId ? 'Terjadi kesalahan saat menyimpan' : 'An error occurred while saving' }}');
+                    }
+
+                    this.isSubmitting = false;
+                }
+            }));
+        }
+        // Fallback: if Alpine already booted before alpine:init listener, register now
+        if (window.Alpine && !window._submissionWorkflowRegistered) {
+            registerSubmissionWorkflow();
+            window._submissionWorkflowRegistered = true;
+        }
+    </script>
+
+    {{-- Reviewer Selector Script --}}
+    <script>
+        function registerReviewerSelector() {
+            Alpine.data('reviewerSelector', (journalId, submissionId, assignUrl) => ({
+                showModal: false,
+                view: 'list', // list, config
+                search: '',
+                reviewers: [],
+                isLoading: false,
+                // Config
+                selectedReviewer: null,
+                reviewMethod: 'double_blind',
+                responseDueDate: '',
+                reviewDueDate: '',
+
+                openModal() {
+                    this.showModal = true;
+                    this.view = 'list';
+                    this.fetchReviewers();
+                },
+
+                fetchReviewers() {
+                    this.isLoading = true;
+                    fetch(`/api/journal/${journalId}/reviewers?q=${this.search}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            this.reviewers = data;
+                            this.isLoading = false;
+                        });
+                },
+
+                selectReviewer(reviewer) {
+                    this.selectedReviewer = reviewer;
+                    // Default Dates
+                    const today = new Date();
+                    const response = new Date(today);
+                    response.setDate(today.getDate() + 7);
+                    const review = new Date(today);
+                    review.setDate(today.getDate() + 28);
+
+                    this.responseDueDate = response.toISOString().split('T')[0];
+                    this.reviewDueDate = review.toISOString().split('T')[0];
+                    this.reviewMethod = 'double_blind';
+
+                    this.view = 'config';
+                },
+
+                confirmAssignment() {
+                    if (!this.selectedReviewer) return;
+
+                    fetch(assignUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    .getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                reviewer_id: this.selectedReviewer.id,
+                                review_method: this.reviewMethod,
+                                response_due_date: this.responseDueDate,
+                                review_due_date: this.reviewDueDate
+                            })
+                        })
+                        .then(res => {
+                            if (res.ok) {
+                                window.location.reload();
+                            } else {
+                                res.json().then(data => {
+                                    alert(data.message || '{{ $isId ? 'Gagal menugaskan reviewer.' : 'Failed to assign reviewer.' }}');
+                                }).catch(() => {
+                                    alert('{{ $isId ? 'Gagal menugaskan reviewer.' : 'Failed to assign reviewer.' }}');
+                                });
+                            }
+                        });
+                }
+            }));
+        }
+        // Guard: if not yet registered, try registering now (fallback)
+        if (window.Alpine && !window._reviewerSelectorRegistered) {
+            registerReviewerSelector();
+            window._reviewerSelectorRegistered = true;
+        }
+    </script>
+    <script>
         function initSubmissionWorkflowComponents() {
-            if (typeof registerSubmissionWorkflow === 'function' && !window._submissionWorkflowRegistered) {
+            if (typeof registerSubmissionWorkflow === "function" && !window._submissionWorkflowRegistered) {
                 registerSubmissionWorkflow();
                 window._submissionWorkflowRegistered = true;
             }
-            if (typeof registerReviewerSelector === 'function' && !window._reviewerSelectorRegistered) {
+            if (typeof registerReviewerSelector === "function" && !window._reviewerSelectorRegistered) {
                 registerReviewerSelector();
                 window._reviewerSelectorRegistered = true;
             }
         }
 
-        // Coba registrasi langsung jika Alpine sudah siap
         if (window.Alpine) {
             initSubmissionWorkflowComponents();
+        } else {
+            document.addEventListener("alpine:init", initSubmissionWorkflowComponents);
+            document.addEventListener("livewire:init", initSubmissionWorkflowComponents);
         }
-
-        // Daftarkan listener pada event-event siklus hidup Alpine dan Livewire
-        document.addEventListener('alpine:init', initSubmissionWorkflowComponents);
-        document.addEventListener('livewire:init', initSubmissionWorkflowComponents);
-        document.addEventListener('DOMContentLoaded', initSubmissionWorkflowComponents);
-        window.addEventListener('load', initSubmissionWorkflowComponents);
     </script>
-
     <div x-data="submissionWorkflow(window.submissionWorkflowConfig)">
 
 
@@ -357,9 +1368,9 @@
                                                                 {{ $file->file_name }}
                                                             </div>
                                                             <div class="text-xs text-gray-500">
-                                                                {{ ucfirst($file->file_type) }} •
+                                                                {{ ucfirst($file->file_type) }} â€¢
                                                                 {{ number_format($file->file_size / 1024, 0) }} KB
-                                                                •
+                                                                â€¢
                                                                 v{{ $file->version ?? 1 }}
                                                             </div>
                                                         </div>
@@ -1131,7 +2142,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         @if (isset($file->metadata['promoted_from']))
                                                             <span class="text-purple-600"><i
                                                                     class="fa-solid fa-arrow-up-from-bracket mr-1"></i>{{ $isId ? 'Dipromosikan' : 'Promoted' }}</span>
-                                                            •
+                                                            â€¢
                                                         @endif
                                                         {{ number_format($file->file_size / 1024, 0) }} KB
                                                     </p>
@@ -1203,7 +2214,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <p class="text-xs text-gray-500">
                                                         {{ $isId ? 'Diunggah oleh' : 'Uploaded by' }} <span
                                                             class="font-medium">{{ $file->uploader?->name ?? ($isId ? 'Penulis' : 'Author') }}</span>
-                                                        • {{ $file->created_at->format($isId ? 'd M Y - H:i' : 'M d, Y - H:i') }}
+                                                        â€¢ {{ $file->created_at->format($isId ? 'd M Y - H:i' : 'M d, Y - H:i') }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -3462,7 +4473,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Lisensi umum: CC BY 4.0, CC BY-SA 4.0, CC BY-NC 4.0' : 'Common licenses: CC BY 4.0, CC BY-SA 4.0, CC BY-NC 4.0' }}</p>
                                 </div>
 
-                                {{-- ── FUNDING INFORMATION ─────────────────────────────────── --}}
+                                {{-- â”€â”€ FUNDING INFORMATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
                                 <div x-data='fundingManager(@js($publication->funding_info ?? []))' class="pt-4 border-t border-gray-100">
                                     <div class="flex items-center justify-between mb-3">
                                         <div>
@@ -4301,10 +5312,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <p class="text-sm font-medium text-gray-900 truncate"
                                                                 x-text="file.name"></p>
                                                             <p class="text-xs text-gray-500">
-                                                                <span x-text="file.source"></span> •
+                                                                <span x-text="file.source"></span> â€¢
                                                                 <span
                                                                     x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
-                                                                •
+                                                                â€¢
                                                                 <span x-text="file.created_at"></span>
                                                             </p>
                                                         </div>
@@ -4425,7 +5436,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <p class="text-sm font-medium text-gray-900 truncate"
                                                                 x-text="file.name"></p>
                                                             <p class="text-xs text-gray-500"
-                                                                x-text="file.source + ' • ' + (file.size / 1024).toFixed(0) + ' KB'">
+                                                                x-text="file.source + ' â€¢ ' + (file.size / 1024).toFixed(0) + ' KB'">
                                                             </p>
                                                         </div>
                                                     </label>
@@ -5199,7 +6210,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <p class="text-sm font-medium text-gray-900 truncate"
                                                     x-text="file.name"></p>
                                                 <p class="text-xs text-gray-500">
-                                                    <span x-text="file.uploader"></span> •
+                                                    <span x-text="file.uploader"></span> â€¢
                                                     <span x-text="file.uploaded_at"></span>
                                                 </p>
                                             </div>
@@ -5599,7 +6610,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <div class="flex-1 min-w-0">
                                                         <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
-                                                            {{ $file->created_at->format('M d, Y') }} •
+                                                            {{ $file->created_at->format('M d, Y') }} â€¢
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
                                                         </p>
                                                     </div>
@@ -5626,7 +6637,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <div class="flex-1 min-w-0">
                                                         <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
-                                                            {{ $file->created_at->format('M d, Y') }} •
+                                                            {{ $file->created_at->format('M d, Y') }} â€¢
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
                                                         </p>
                                                     </div>
@@ -6180,1023 +7191,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
         });
     </script>
 
-    <script>
-        function registerSubmissionWorkflow() {
-            Alpine.data('submissionWorkflow', (config = {}) => ({
-                activeTab: (new URLSearchParams(window.location.search)).get('tab') || 'workflow',
-                activeStage: config?.defaultStage || 'submission',
-
-                init() {
-                    console.log('[SW-DEBUG] submissionWorkflow Alpine component init() started');
-                    this.$watch('activeTab', (value) => {
-                        const url = new URL(window.location.href);
-                        url.searchParams.set('tab', value);
-                        if (value !== 'publication') {
-                            url.searchParams.delete('subtab');
-                        }
-                        window.history.replaceState({}, document.title, url.pathname + url.search);
-                    });
-
-                    this.$watch('discussionModalOpen', value => {
-                        if (value) setTimeout(() => this.initEditor(), 100);
-                    });
-                    console.log('[SW-DEBUG] submissionWorkflow Alpine component init() finished successfully');
-                },
-
-                openFileModal(stage = null) {
-                    console.log('[SW-DEBUG] openFileModal called with stage:', stage);
-                    if (stage) {
-                        this.uploadStage = stage;
-                    }
-                    this.fileModalOpen = true;
-                    console.log('[SW-DEBUG] fileModalOpen set to:', this.fileModalOpen);
-                },
-
-                openAssignEditorModal() {
-                    console.log('[SW-DEBUG] openAssignEditorModal called');
-                    this.resetEditorModal();
-                    this.assignEditorModalOpen = true;
-                    console.log('[SW-DEBUG] assignEditorModalOpen set to:', this.assignEditorModalOpen);
-                },
-
-                openParticipantModal(stage) {
-                    console.log('[SW-DEBUG] openParticipantModal called with stage:', stage);
-                    this.participantModalStage = stage;
-                    this.resetParticipantModal();
-                    this.participantModalOpen = true;
-                    console.log('[SW-DEBUG] participantModalOpen set to:', this.participantModalOpen);
-                },
-
-                resetParticipantModal() {
-                    this.selectedParticipant = null;
-                    this.participantSearch = '';
-                    this.participantRoleFilter = this.getDefaultRoleFilter(this.participantModalStage);
-                },
-
-                getDefaultRoleFilter(stage) {
-                    const defaults = {
-                        'review': 'Reviewer',
-                        'copyediting': 'Copyeditor',
-                        'production': 'Layout Editor'
-                    };
-                    return defaults[stage] || '';
-                },
-
-                selectParticipant(participant) {
-                    this.selectedParticipant = participant;
-                },
-
-                getParticipantsForStage(stage) {
-                    if (!stage) {
-                        return [];
-                    }
-                    // Return appropriate participants based on stage
-                    // This data should be passed from backend controller
-                    return this.allParticipants[stage] || [];
-                },
-
-                openDraftFilesModal() {
-                    this.draftFilesModalOpen = true;
-                },
-
-                fileModalOpen: false,
-                discussionModalOpen: false,
-                fileWizardOpen: false,
-                wizardUploadProgress: 0,
-                wizardIsUploading: false,
-                uploadStage: config?.defaultStage || 'submission',
-                discussionStageId: config?.stageId || 1,
-
-                // Author Review View State
-                selectedAuthorRound: config?.currentReviewRound || 1,
-                showDecisionModal: false,
-                selectedDecision: null,
-                revisionUploadModalOpen: false,
-
-                // Editor Review View State (Multi-Round)
-                selectedEditorRound: config?.maxReviewRound || 1,
-                newRoundModalOpen: false,
-                newRoundFiles: [],
-                newRoundSelectedFiles: [],
-                newRoundIsLoading: false,
-                newRoundIsSubmitting: false,
-
-                // Accept Submission Modal State
-                acceptModalOpen: false,
-                acceptSendEmail: true,
-                acceptEmailBody: '',
-                acceptFiles: [],
-                acceptSelectedFiles: [],
-                acceptIsLoading: false,
-                acceptIsSubmitting: false,
-                acceptEditorInstance: null,
-
-                // Assign Editor Modal State
-                assignEditorModalOpen: false,
-                editorSearch: '',
-                editorRoleFilter: '',
-                allEditors: config?.potentialEditors || [],
-                selectedEditor: null,
-                editorRole: 'editor',
-                isSearchingEditors: false, // kept for compatibility if needed
-
-                // Participant Assignment Modal State
-                participantModalOpen: false,
-                participantModalStage: null,
-                participantSearch: '',
-                participantRoleFilter: '',
-                allParticipants: config?.potentialParticipants || {},
-                selectedParticipant: null,
-
-                get filteredEditors() {
-                    let editors = this.allEditors;
-
-                    // Konversi object ke array jika key non-sequential ter-encode sebagai object
-                    if (editors && typeof editors === 'object' && !Array.isArray(editors)) {
-                        editors = Object.values(editors);
-                    }
-
-                    if (!Array.isArray(editors)) {
-                        return [];
-                    }
-
-                    // Text Search
-                    if (this.editorSearch) {
-                        const search = this.editorSearch.toLowerCase();
-                        editors = editors.filter(e => {
-                            const name = (e.name || '').toLowerCase();
-                            const email = (e.email || '').toLowerCase();
-                            return name.includes(search) || email.includes(search);
-                        });
-                    }
-
-                    // Role Filter
-                    if (this.editorRoleFilter) {
-                        const filterVal = this.editorRoleFilter.toLowerCase();
-                        editors = editors.filter(e =>
-                            e.role_names && Array.isArray(e.role_names) && e.role_names.some(role => role && role.toLowerCase().includes(filterVal))
-                        );
-                    }
-
-                    return editors;
-                },
-
-                get filteredParticipants() {
-                    let participants = this.getParticipantsForStage(this.participantModalStage);
-                    
-                    // Convert object to array if needed
-                    if (participants && typeof participants === 'object' && !Array.isArray(participants)) {
-                        participants = Object.values(participants);
-                    }
-                    
-                    if (!Array.isArray(participants)) {
-                        return [];
-                    }
-                    
-                    // Text search filter
-                    if (this.participantSearch) {
-                        const search = this.participantSearch.toLowerCase();
-                        participants = participants.filter(p => {
-                            const name = (p.name || '').toLowerCase();
-                            const email = (p.email || '').toLowerCase();
-                            return name.includes(search) || email.includes(search);
-                        });
-                    }
-                    
-                    // Role filter
-                    if (this.participantRoleFilter) {
-                        const filterVal = this.participantRoleFilter.toLowerCase();
-                        participants = participants.filter(p =>
-                            p.role_names && Array.isArray(p.role_names) && 
-                            p.role_names.some(role => role && role.toLowerCase().includes(filterVal))
-                        );
-                    }
-                    
-                    return participants;
-                },
-
-
-                // Deprecated AJAX search (but kept just in case we need it later, or aliases to local filter)
-                async searchEditors() {
-                    // No-op: filtering is now computed local
-                },
-
-                selectEditor(editor) {
-                    this.selectedEditor = editor;
-                    // Dont clear search so list remains stable
-                },
-
-                resetEditorModal() {
-                    this.selectedEditor = null;
-                    this.editorSearch = '';
-                    this.editorRoleFilter = '';
-                },
-                selectedReviewer: null,
-                reviewerSearch: '',
-                reviewerResults: [],
-                reviewMethod: 'double_blind',
-                responseDueDate: '',
-                reviewDueDate: '',
-                isSearching: false,
-
-                // Discussion Wizard State
-                discussionFiles: [],
-                wizardStep: 1,
-                tempUploadedFile: null,
-
-                // CKEditor
-                editorInstance: null,
-                messageBody: '',
-
-                // Editorial Decision Modals
-                sendToReviewModalOpen: false,
-                availableFiles: [],
-                selectedFilesForPromotion: [],
-                isLoadingFiles: false,
-
-                // Copyediting Stage Modals
-                draftFilesModalOpen: false,
-                sendToProductionModalOpen: false,
-                productionSendEmail: true,
-                productionEmailBody: '',
-                productionSelectedFiles: [],
-                productionIsLoading: false,
-                productionIsSubmitting: false,
-                productionEditorInstance: null,
-
-                // Accept Skip Review Modal
-                skipReviewModalOpen: false,
-                skipReviewNotes: '',
-
-                // Decline Modal
-                declineModalOpen: false,
-                declineReason: '',
-                showActivityLog: false,
-                notifyAuthor: true,
-
-                // Request Revisions Modal (OJS 3.3 Style)
-                revisionModalOpen: false,
-                revisionNewRound: false,
-                revisionSendEmail: true,
-                revisionEmailBody: '',
-                revisionAttachments: [],
-                revisionSelectedFiles: [],
-                revisionIsLoadingFiles: false,
-                revisionIsSubmitting: false,
-                revisionEditorInstance: null,
-                revisionUploadedFiles: [],
-                
-                // Galley Modal State
-                galleyModalOpen: false,
-                isSubmitting: false,
-                editingGalley: null,
-                galleyLabel: '',
-                galleyLocale: 'en',
-                galleyUrlPath: '',
-                isRemote: false,
-                remoteUrl: '',
-                selectedFile: null,
-                selectedFileName: '',
-                errors: {},
-                
-                // Edit Review Assignment State
-                editReviewModalOpen: false,
-                editReviewAssignment: null,
-                editReviewMethod: 'double_blind',
-                editResponseDueDate: '',
-                editReviewDueDate: '',
-                editIsSubmitting: false,
-
-                openEditReviewModal(assignment) {
-                    this.editReviewAssignment = assignment;
-                    this.editReviewMethod = assignment.review_method;
-                    this.editResponseDueDate = assignment.response_due_date ? new Date(assignment.response_due_date).toISOString().split('T')[0] : '';
-                    this.editReviewDueDate = assignment.due_date ? new Date(assignment.due_date).toISOString().split('T')[0] : '';
-                    this.editReviewModalOpen = true;
-                },
-
-                async submitEditReview() {
-                    this.editIsSubmitting = true;
-                    try {
-                        const response = await fetch(`{{ route('journal.workflow.review-assignment.update', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', this.editReviewAssignment.id), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': config.csrfToken
-                            },
-                            body: JSON.stringify({
-                                due_date: this.editReviewDueDate,
-                                response_due_date: this.editResponseDueDate,
-                                review_method: this.editReviewMethod
-                            })
-                        });
-                        const data = await response.json();
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            alert(data.message || '{{ $isId ? 'Gagal memperbarui penugasan ulasan.' : 'Failed to update review assignment.' }}');
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        alert('{{ $isId ? 'Terjadi kesalahan saat memperbarui penugasan ulasan.' : 'An error occurred while updating the review assignment.' }}');
-                    }
-                    this.editIsSubmitting = false;
-                },
-
-
-
-                toggleAcceptFile(fileId) {
-                    const idx = this.acceptSelectedFiles.indexOf(fileId);
-                    if (idx > -1) {
-                        this.acceptSelectedFiles.splice(idx, 1);
-                    } else {
-                        this.acceptSelectedFiles.push(fileId);
-                    }
-                },
-
-                openAcceptModal() {
-                    this.acceptModalOpen = true;
-                    this.acceptSendEmail = true;
-                    this.acceptEmailBody = this.getAcceptEmailTemplate();
-                    this.loadAcceptFiles();
-                    this.$nextTick(() => this.initAcceptEditor());
-                },
-
-                getAcceptEmailTemplate() {
-                    @if($isId)
-                    return `<p>Yth. ${config.authorName},</p>
-                            <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong>${config.journalName}</strong>.</p>
-                            <p>Kami akan melanjutkan ke tahap Penyuntingan/Produksi.</p>
-                            <p>Terima kasih telah mengirimkan karya Anda kepada kami.</p>
-                            <p>Salam hormat,<br>Tim Editorial</p>`;
-                    @else
-                    return `<p>Dear ${config.authorName},</p>
-                            <p>We are pleased to inform you that your submission <strong>"${config.submissionTitle}"</strong> has been accepted for publication in <strong>${config.journalName}</strong>.</p>
-                            <p>We will now proceed to the Copyediting/Production stage.</p>
-                            <p>Thank you for submitting your work to us.</p>
-                            <p>Best regards,<br>The Editorial Team</p>`;
-                    @endif
-                },
-
-                async loadAcceptFiles() {
-                    this.acceptIsLoading = true;
-                    try {
-                        const res = await fetch(config.promotableFilesUrl);
-                        const data = await res.json();
-                        this.acceptFiles = data.files || [];
-                        this.acceptSelectedFiles = this.acceptFiles.map(f => f.id);
-                    } catch (e) {
-                        console.error(e);
-                    }
-                    this.acceptIsLoading = false;
-                },
-
-                initAcceptEditor() {
-                    if (this.acceptEditorInstance) {
-                        this.acceptEditorInstance.setData(this.acceptEmailBody);
-                        return;
-                    }
-                    const editorEl = document.querySelector('#accept-email-editor');
-                    if (!editorEl) return;
-
-                    ClassicEditor
-                        .create(editorEl, {
-                            simpleUpload: {
-                                uploadUrl: config.uploadImageUrl,
-                                headers: {
-                                    'X-CSRF-TOKEN': config.csrfToken
-                                }
-                            }
-                        })
-                        .then(editor => {
-                            this.acceptEditorInstance = editor;
-                            editor.setData(this.acceptEmailBody);
-                            editor.model.document.on('change:data', () => {
-                                this.acceptEmailBody = editor.getData();
-                            });
-                        })
-                        .catch(err => console.error(err));
-                },
-
-                async loadRevisionFilesForNewRound() {
-                    this.newRoundIsLoading = true;
-                    try {
-                        const res = await fetch(config.revisionFilesUrl);
-                        this.newRoundFiles = await res.json();
-                        this.newRoundSelectedFiles = this.newRoundFiles.map(f => f.id);
-                    } catch (e) {
-                        console.error('Failed to load revision files:', e);
-                    }
-                    this.newRoundIsLoading = false;
-                },
-
-                toggleNewRoundFile(fileId) {
-                    const idx = this.newRoundSelectedFiles.indexOf(fileId);
-                    if (idx > -1) {
-                        this.newRoundSelectedFiles.splice(idx, 1);
-                    } else {
-                        this.newRoundSelectedFiles.push(fileId);
-                    }
-                },
-
-                isNewRoundFileSelected(fileId) {
-                    return this.newRoundSelectedFiles.includes(fileId);
-                },
-
-                openNewRoundModal() {
-                    this.newRoundModalOpen = true;
-                    this.loadRevisionFilesForNewRound();
-                },
-
-                resetNewRoundModal() {
-                    this.newRoundModalOpen = false;
-                    this.newRoundFiles = [];
-                    this.newRoundSelectedFiles = [];
-                    this.newRoundIsSubmitting = false;
-                },
-
-                // ==================== SEND TO PRODUCTION MODAL ====================
-                openSendToProductionModal() {
-                    this.sendToProductionModalOpen = true;
-                    this.productionSendEmail = true;
-                    this.productionEmailBody = this.getProductionEmailTemplate();
-                    this.$nextTick(() => this.initProductionEditor());
-                },
-
-                getProductionEmailTemplate() {
-                    const submissionUrl = window.location.href;
-                    @if($isId)
-                    return `<p>Yth. ${config.authorName},</p>
-                            <p>Penyuntingan naskah Anda, <strong>"${config.submissionTitle},"</strong> telah selesai. Kami sekarang akan mengirimkannya ke tahap produksi.</p>
-                            <p><strong>URL Naskah:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>
-                            <p>Jika Anda memiliki pertanyaan, silakan hubungi kami.</p>
-                            <p>Salam hormat,<br>Tim Editorial ${config.journalName}</p>`;
-                    @else
-                    return `<p>Dear ${config.authorName},</p>
-                            <p>The editing of your submission, <strong>"${config.submissionTitle},"</strong> is complete. We are now sending it to production.</p>
-                            <p><strong>Submission URL:</strong> <a href="${submissionUrl}">${submissionUrl}</a></p>
-                            <p>If you have any questions, please contact us.</p>
-                            <p>Best regards,<br>The ${config.journalName} Editorial Team</p>`;
-                    @endif
-                },
-
-                initProductionEditor() {
-                    if (this.productionEditorInstance) {
-                        this.productionEditorInstance.setData(this.productionEmailBody);
-                        return;
-                    }
-                    const editorEl = document.querySelector('#production-email-editor');
-                    if (!editorEl) return;
-
-                    ClassicEditor
-                        .create(editorEl, {
-                            simpleUpload: {
-                                uploadUrl: config.uploadImageUrl,
-                                headers: {
-                                    'X-CSRF-TOKEN': config.csrfToken
-                                }
-                            }
-                        })
-                        .then(editor => {
-                            this.productionEditorInstance = editor;
-                            editor.setData(this.productionEmailBody);
-                            editor.model.document.on('change:data', () => {
-                                this.productionEmailBody = editor.getData();
-                            });
-                        })
-                        .catch(err => console.error(err));
-                },
-
-                toggleProductionFile(fileId) {
-                    const idx = this.productionSelectedFiles.indexOf(fileId);
-                    if (idx > -1) {
-                        this.productionSelectedFiles.splice(idx, 1);
-                    } else {
-                        this.productionSelectedFiles.push(fileId);
-                    }
-                },
-
-                isProductionFileSelected(fileId) {
-                    return this.productionSelectedFiles.includes(fileId);
-                },
-
-                resetProductionModal() {
-                    this.sendToProductionModalOpen = false;
-                    this.productionSendEmail = true;
-                    this.productionEmailBody = '';
-                    this.productionSelectedFiles = [];
-                    this.productionIsSubmitting = false;
-                    if (this.productionEditorInstance) {
-                        this.productionEditorInstance.destroy();
-                        this.productionEditorInstance = null;
-                    }
-                },
-
-                // Review Details Modal State
-                reviewDetailsModalOpen: false,
-                selectedReview: null,
-
-                openReviewDetailsModal(review) {
-                    this.selectedReview = review;
-                    this.reviewDetailsModalOpen = true;
-                },
-
-                closeReviewDetailsModal() {
-                    this.reviewDetailsModalOpen = false;
-                    this.selectedReview = null;
-                },
-
-
-
-
-                async searchReviewers() {
-                    if (this.reviewerSearch.length < 2) {
-                        this.reviewerResults = [];
-                        return;
-                    }
-                    this.isSearching = true;
-                    try {
-                        const url = new URL(config.searchReviewersUrl);
-                        url.searchParams.append('q', this.reviewerSearch);
-                        const res = await fetch(url.toString());
-                        this.reviewerResults = await res.json();
-                    } catch (e) {
-                        console.error(e);
-                    }
-                    this.isSearching = false;
-                },
-
-                selectReviewer(reviewer) {
-                    this.selectedReviewer = reviewer;
-                    this.reviewerSearch = reviewer.name;
-                    this.reviewerResults = [];
-                },
-
-                resetReviewerModal() {
-                    this.selectedReviewer = null;
-                    this.reviewerSearch = '';
-                    this.reviewerResults = [];
-                    this.reviewMethod = 'double_blind';
-                    this.responseDueDate = '';
-                    this.reviewDueDate = '';
-                },
-
-                initEditor() {
-                    if (this.editorInstance) return;
-                    ClassicEditor.create(document.querySelector('#discussion-editor'), {
-                            simpleUpload: {
-                                uploadUrl: config.uploadImageUrl,
-                                headers: {
-                                    'X-CSRF-TOKEN': config.csrfToken
-                                }
-                            }
-                        }).then(editor => {
-                            this.editorInstance = editor;
-                            editor.model.document.on('change:data', () => {
-                                this.messageBody = editor.getData();
-                            });
-                        })
-                        .catch(error => {
-                            console.error(error);
-                        });
-                },
-
-                resetDiscussionForm() {
-                    this.discussionFiles = [];
-                    this.messageBody = '';
-                    if (this.editorInstance) {
-                        this.editorInstance.setData('');
-                    }
-                },
-
-                submitDiscussion() {
-                    if (!this.messageBody || this.messageBody.trim() === '') {
-                        alert('{{ $isId ? 'Pesan wajib diisi' : 'Message is required' }}');
-                        return;
-                    }
-                    document.querySelector('#discussion-form').submit();
-                },
-
-                handleFileUpload(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    let formData = new FormData();
-                    formData.append('file', file);
-
-                    this.wizardIsUploading = true;
-                    this.wizardUploadProgress = 0;
-
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', config.uploadFileUrl);
-                    xhr.setRequestHeader('X-CSRF-TOKEN', config.csrfToken);
-
-                    xhr.upload.onprogress = (e) => {
-                        if (e.lengthComputable) {
-                            this.wizardUploadProgress = Math.round((e.loaded / e.total) * 100);
-                        }
-                    };
-
-                    xhr.onload = () => {
-                        this.wizardIsUploading = false;
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                const data = JSON.parse(xhr.responseText);
-                                this.tempUploadedFile = data;
-                                this.wizardStep = 2;
-                            } catch (e) {
-                                alert('{{ $isId ? 'Unggahan gagal: Respons tidak valid' : 'Upload failed: Invalid response' }}');
-                            }
-                        } else {
-                            alert('{{ $isId ? 'Unggahan gagal: ' : 'Upload failed: ' }}' + xhr.statusText);
-                        }
-                    };
-
-                    xhr.onerror = () => {
-                        this.wizardIsUploading = false;
-                        alert('{{ $isId ? 'Unggahan gagal' : 'Upload failed' }}');
-                    };
-
-                    xhr.send(formData);
-                },
-
-                completeWizard() {
-                    if (this.tempUploadedFile) {
-                        this.discussionFiles.push(this.tempUploadedFile);
-                    }
-                    this.wizardStep = 1;
-                    this.tempUploadedFile = null;
-                    this.fileWizardOpen = false;
-                },
-
-                addAnotherFile() {
-                    if (this.tempUploadedFile) {
-                        this.discussionFiles.push(this.tempUploadedFile);
-                    }
-                    this.wizardStep = 1;
-                    this.tempUploadedFile = null;
-                },
-
-                async loadAvailableFiles() {
-                    this.isLoadingFiles = true;
-                    try {
-                        const res = await fetch(config.availableFilesUrl);
-                        const data = await res.json();
-                        this.availableFiles = data.files;
-                        // Pre-select all files by default
-                        this.selectedFilesForPromotion = data.files.map(f => ({
-                            id: f.id,
-                            type: f.type
-                        }));
-                    } catch (e) {
-                        console.error('Failed to load files:', e);
-                    }
-                    this.isLoadingFiles = false;
-                },
-
-                toggleFileSelection(file) {
-                    const index = this.selectedFilesForPromotion.findIndex(f => f.id === file.id);
-                    if (index > -1) {
-                        this.selectedFilesForPromotion.splice(index, 1);
-                    } else {
-                        this.selectedFilesForPromotion.push({
-                            id: file.id,
-                            type: file.type
-                        });
-                    }
-                },
-
-                isFileSelected(file) {
-                    return this.selectedFilesForPromotion.some(f => f.id === file.id);
-                },
-
-                openSendToReviewModal() {
-                    this.sendToReviewModalOpen = true;
-                    this.loadAvailableFiles();
-                },
-
-                openSkipReviewModal() {
-                    this.skipReviewModalOpen = true;
-                    this.loadAvailableFiles();
-                },
-
-                resetDeclineModal() {
-                    this.declineReason = '';
-                    this.notifyAuthor = true;
-                },
-
-                openRevisionModal() {
-                    this.revisionModalOpen = true;
-                    this.revisionNewRound = false;
-                    this.revisionSendEmail = true;
-                    this.revisionSelectedFiles = [];
-                    this.revisionUploadedFiles = [];
-                    this.loadRevisionAttachments();
-                    this.$nextTick(() => this.initRevisionEditor());
-                },
-
-                async loadRevisionAttachments() {
-                    this.revisionIsLoadingFiles = true;
-                    try {
-                        const res = await fetch(config.reviewerAttachmentsUrl);
-                        const data = await res.json();
-                        this.revisionAttachments = data.files || [];
-                    } catch (e) {
-                        console.error('Failed to load reviewer attachments:', e);
-                    }
-                    this.revisionIsLoadingFiles = false;
-                },
-
-                initRevisionEditor() {
-                    if (this.revisionEditorInstance) return;
-                    const editorEl = document.querySelector('#revision-email-editor');
-                    if (!editorEl) return;
-
-                    ClassicEditor
-                        .create(editorEl, {
-                            simpleUpload: {
-                                uploadUrl: config.uploadImageUrl,
-                                headers: {
-                                    'X-CSRF-TOKEN': config.csrfToken
-                                }
-                            }
-                        })
-                        .then(editor => {
-                            this.revisionEditorInstance = editor;
-                            // Pre-fill with default template
-                            const defaultBody = this.getDefaultRevisionEmailTemplate();
-                            editor.setData(defaultBody);
-                            this.revisionEmailBody = defaultBody;
-                            editor.model.document.on('change:data', () => {
-                                this.revisionEmailBody = editor.getData();
-                            });
-                        })
-                        .catch(err => console.error(err));
-                },
-
-                getDefaultRevisionEmailTemplate() {
-                    @if($isId)
-                    return `<p>Yth. ${config.firstAuthorName},</p>
-                    <p>Kami telah mencapai keputusan terkait naskah Anda di <strong>${config.journalName}</strong>:</p>
-                    <p><strong>Naskah:</strong> ${config.submissionTitle}</p>
-                    <p><strong>ID Naskah:</strong> ${config.submissionCode}</p>
-                    <hr>
-                    <p><strong>Keputusan Kami: Diperlukan Revisi</strong></p>
-                    <p>Berdasarkan umpan balik reviewer, kami meminta Anda untuk merevisi naskah Anda. Harap tanggapi setiap komentar reviewer dengan cermat dan kirimkan naskah revisi Anda melalui portal jurnal.</p>
-                    <p>Komentar reviewer terlampir atau disertakan di bawah ini untuk referensi Anda.</p>
-                    <hr>
-                    <p>Jika Anda memiliki pertanyaan, jangan ragu untuk menghubungi kami.</p>
-                    <p>Salam hormat,<br>Tim Editorial</p>`;
-                    @else
-                    return `<p>Dear ${config.firstAuthorName},</p>
-                    <p>We have reached a decision regarding your submission to <strong>${config.journalName}</strong>:</p>
-                    <p><strong>Submission:</strong> ${config.submissionTitle}</p>
-                    <p><strong>Manuscript ID:</strong> ${config.submissionCode}</p>
-                    <hr>
-                    <p><strong>Our Decision: Revisions Required</strong></p>
-                    <p>Based on the reviewers' feedback, we request that you revise your manuscript. Please address each
-                        reviewer comment carefully and submit your revised manuscript through the journal portal.</p>
-                    <p>The reviewer comments are attached or included below for your reference.</p>
-                    <hr>
-                    <p>If you have any questions, please do not hesitate to contact us.</p>
-                    <p>Best regards,<br>The Editorial Team</p>`;
-                    @endif
-                },
-
-                toggleRevisionFile(fileId) {
-                    const index = this.revisionSelectedFiles.indexOf(fileId);
-                    if (index > -1) {
-                        this.revisionSelectedFiles.splice(index, 1);
-                    } else {
-                        this.revisionSelectedFiles.push(fileId);
-                    }
-                },
-
-                isRevisionFileSelected(fileId) {
-                    return this.revisionSelectedFiles.includes(fileId);
-                },
-
-                async uploadRevisionFile(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    let formData = new FormData();
-                    formData.append('file', file);
-
-                    try {
-                        const res = await fetch(config.uploadDecisionFileUrl, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': config.csrfToken
-                            },
-                            body: formData
-                        });
-                        const data = await res.json();
-                        this.revisionUploadedFiles.push(data);
-                        this.revisionSelectedFiles.push(data.id);
-                    } catch (err) {
-                        alert('{{ $isId ? 'Unggahan gagal' : 'Upload failed' }}');
-                    }
-                    event.target.value = '';
-                },
-
-                resetRevisionModal() {
-                    this.revisionModalOpen = false;
-                    this.revisionNewRound = false;
-                    this.revisionSendEmail = true;
-                    this.revisionEmailBody = '';
-                    this.revisionSelectedFiles = [];
-                    this.revisionUploadedFiles = [];
-                    if (this.revisionEditorInstance) {
-                        this.revisionEditorInstance.destroy();
-                        this.revisionEditorInstance = null;
-                    }
-                },
-
-                // Galley Methods
-                openAddGalley() {
-                    this.resetGalleyForm();
-                    this.galleyModalOpen = true;
-                },
-
-                openEditGalley(galley) {
-                    this.resetGalleyForm();
-                    this.editingGalley = galley;
-                    this.galleyLabel = galley.label;
-                    this.galleyLocale = galley.locale || 'en';
-                    this.galleyUrlPath = galley.url_path || '';
-                    this.isRemote = galley.is_remote || false;
-                    this.remoteUrl = galley.url_remote || '';
-                    this.galleyModalOpen = true;
-                },
-
-                resetGalleyForm() {
-                    this.editingGalley = null;
-                    this.galleyLabel = '';
-                    this.galleyLocale = 'en';
-                    this.galleyUrlPath = '';
-                    this.isRemote = false;
-                    this.remoteUrl = '';
-                    this.selectedFile = null;
-                    this.selectedFileName = '';
-                    this.errors = {};
-                    this.isSubmitting = false;
-                },
-
-                handleGalleyFileSelect(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        this.selectedFile = file;
-                        this.selectedFileName = file.name;
-                    }
-                },
-
-                async submitGalley() {
-                    if (this.isSubmitting) return;
-                    this.isSubmitting = true;
-                    this.errors = {};
-
-                    const formData = new FormData();
-                    formData.append('label', this.galleyLabel);
-                    formData.append('locale', this.galleyLocale);
-                    formData.append('url_path', this.galleyUrlPath);
-                    formData.append('is_remote', this.isRemote ? '1' : '0');
-
-                    if (this.isRemote) {
-                        formData.append('url_remote', this.remoteUrl);
-                    } else if (this.selectedFile) {
-                        formData.append('file', this.selectedFile);
-                    }
-
-                    try {
-                        const url = this.editingGalley ?
-                            '{{ route('journal.workflow.galley.update', ['journal' => $journal->slug, 'submission' => $submission->slug, 'galley' => '__GALLEY_ID__']) }}'.replace('__GALLEY_ID__', this.editingGalley.id) :
-                            '{{ route('journal.workflow.galley.store', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}';
-
-                        if (this.editingGalley) {
-                            formData.append('_method', 'PUT');
-                        }
-
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                            },
-                            body: formData
-                        });
-
-                        if (response.ok) {
-                            window.location.href = window.location.pathname + '?tab=publication&subtab=galleys';
-                        } else {
-                            const data = await response.json();
-                            if (data.errors) {
-                                this.errors = data.errors;
-                            } else {
-                                alert(data.message || '{{ $isId ? 'Terjadi kesalahan' : 'An error occurred' }}');
-                            }
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        alert('{{ $isId ? 'Terjadi kesalahan saat menyimpan' : 'An error occurred while saving' }}');
-                    }
-
-                    this.isSubmitting = false;
-                }
-            }));
-        }
-        // Fallback: if Alpine already booted before alpine:init listener, register now
-        if (window.Alpine && !window._submissionWorkflowRegistered) {
-            registerSubmissionWorkflow();
-            window._submissionWorkflowRegistered = true;
-        }
-    </script>
-
-    {{-- Reviewer Selector Script --}}
-    <script>
-        function registerReviewerSelector() {
-            Alpine.data('reviewerSelector', (journalId, submissionId, assignUrl) => ({
-                showModal: false,
-                view: 'list', // list, config
-                search: '',
-                reviewers: [],
-                isLoading: false,
-                // Config
-                selectedReviewer: null,
-                reviewMethod: 'double_blind',
-                responseDueDate: '',
-                reviewDueDate: '',
-
-                openModal() {
-                    this.showModal = true;
-                    this.view = 'list';
-                    this.fetchReviewers();
-                },
-
-                fetchReviewers() {
-                    this.isLoading = true;
-                    fetch(`/api/journal/${journalId}/reviewers?q=${this.search}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            this.reviewers = data;
-                            this.isLoading = false;
-                        });
-                },
-
-                selectReviewer(reviewer) {
-                    this.selectedReviewer = reviewer;
-                    // Default Dates
-                    const today = new Date();
-                    const response = new Date(today);
-                    response.setDate(today.getDate() + 7);
-                    const review = new Date(today);
-                    review.setDate(today.getDate() + 28);
-
-                    this.responseDueDate = response.toISOString().split('T')[0];
-                    this.reviewDueDate = review.toISOString().split('T')[0];
-                    this.reviewMethod = 'double_blind';
-
-                    this.view = 'config';
-                },
-
-                confirmAssignment() {
-                    if (!this.selectedReviewer) return;
-
-                    fetch(assignUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                    .getAttribute('content')
-                            },
-                            body: JSON.stringify({
-                                reviewer_id: this.selectedReviewer.id,
-                                review_method: this.reviewMethod,
-                                response_due_date: this.responseDueDate,
-                                review_due_date: this.reviewDueDate
-                            })
-                        })
-                        .then(res => {
-                            if (res.ok) {
-                                window.location.reload();
-                            } else {
-                                res.json().then(data => {
-                                    alert(data.message || '{{ $isId ? 'Gagal menugaskan reviewer.' : 'Failed to assign reviewer.' }}');
-                                }).catch(() => {
-                                    alert('{{ $isId ? 'Gagal menugaskan reviewer.' : 'Failed to assign reviewer.' }}');
-                                });
-                            }
-                        });
-                }
-            }));
-        }
-        // Guard: if not yet registered, try registering now (fallback)
-        if (window.Alpine && !window._reviewerSelectorRegistered) {
-            registerReviewerSelector();
-            window._reviewerSelectorRegistered = true;
-        }
-    </script>
 
     {{-- Keyword Input (Tagify) for Publication Metadata --}}
     <script>
