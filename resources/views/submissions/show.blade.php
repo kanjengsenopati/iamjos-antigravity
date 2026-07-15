@@ -5223,6 +5223,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
 
         {{-- ==================== ASSIGN EDITOR MODAL ==================== --}}
+        </div></div></div></div>
+
         <div style="background-color: red; color: white; padding: 10px; text-align: center; font-weight: bold; position: fixed; bottom: 10px; left: 10px; z-index: 9999;">DEBUG TEST: MODALS AREA IS RENDERED</div>
         @include('submissions.partials.modal-assign-editor')
 
