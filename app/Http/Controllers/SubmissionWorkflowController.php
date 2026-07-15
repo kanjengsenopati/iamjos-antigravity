@@ -242,31 +242,40 @@ class SubmissionWorkflowController extends Controller
         }
 
         // Check if assignment record already exists (active or inactive)
-        $assignment = EditorialAssignment::where('submission_id', $submission->id)
-            ->where('user_id', $validated['user_id'])
-            ->first();
+        try {
+            $assignment = EditorialAssignment::where('submission_id', $submission->id)
+                ->where('user_id', $validated['user_id'])
+                ->first();
 
-        if ($assignment) {
-            if ($assignment->is_active) {
-                return back()->with('error', 'This user is already assigned to this submission.');
+            if ($assignment) {
+                if ($assignment->is_active) {
+                    return back()->with('error', 'This user is already assigned to this submission.');
+                }
+                
+                // Reactivate and update the existing assignment record
+                $assignment->update([
+                    'is_active' => true,
+                    'assigned_by' => auth()->id(),
+                    'role' => $role,
+                    'date_assigned' => now(),
+                ]);
+            } else {
+                // Create a new assignment record
+                EditorialAssignment::create([
+                    'submission_id' => $submission->id,
+                    'user_id' => $validated['user_id'],
+                    'assigned_by' => auth()->id(),
+                    'role' => $role,
+                    'date_assigned' => now(),
+                ]);
             }
-            
-            // Reactivate and update the existing assignment record
-            $assignment->update([
-                'is_active' => true,
-                'assigned_by' => auth()->id(),
-                'role' => $role,
-                'date_assigned' => now(),
-            ]);
-        } else {
-            // Create a new assignment record
-            EditorialAssignment::create([
-                'submission_id' => $submission->id,
-                'user_id' => $validated['user_id'],
-                'assigned_by' => auth()->id(),
-                'role' => $role,
-                'date_assigned' => now(),
-            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            // Already created by a parallel request, ignore and continue
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() != 23505) {
+                throw $e;
+            }
+            // Already created by a parallel request, ignore and continue
         }
 
         // Notify the assigned editor
