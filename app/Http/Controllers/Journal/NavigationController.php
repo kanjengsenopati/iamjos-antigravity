@@ -264,6 +264,7 @@ class NavigationController extends Controller
             'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'target' => 'nullable|in:_self,_blank',
+            'is_active' => 'nullable|boolean',
         ]);
 
         NavigationMenuItem::create([
@@ -276,7 +277,7 @@ class NavigationController extends Controller
             'content' => $validated['content'] ?? null,
             'icon' => $validated['icon'] ?? null,
             'target' => $validated['target'] ?? '_self',
-            'is_active' => true,
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         // Check if request is AJAX
@@ -305,6 +306,7 @@ class NavigationController extends Controller
             'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'target' => 'nullable|in:_self,_blank',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $item->update([
@@ -316,6 +318,7 @@ class NavigationController extends Controller
             'content' => $validated['content'] ?? null,
             'icon' => $validated['icon'] ?? null,
             'target' => $validated['target'] ?? '_self',
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         // Check if request is AJAX

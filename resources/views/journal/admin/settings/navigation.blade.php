@@ -752,10 +752,10 @@ function navigationManager(initialData) {
             @php
                 $isSystemItem = !empty($item->is_system) || str_starts_with((string)$item->id, 'system_');
             @endphp
-            <div class="flex justify-between items-center p-4 {{ $isSystemItem ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200' }} border rounded-xl hover:bg-slate-100 transition-colors group">
+            <div class="flex justify-between items-center p-4 {{ $item->is_active ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200' }} border rounded-xl hover:bg-slate-100 transition-colors group">
                 <div class="flex items-center gap-3">
                     @if($item->icon)
-                    <i class="{{ $item->icon }} {{ $isSystemItem ? 'text-blue-500' : 'text-slate-400' }}"></i>
+                    <i class="{{ $item->icon }} {{ $item->is_active ? 'text-blue-500' : 'text-slate-400' }}"></i>
                     @else
                     <i class="fa-solid fa-link text-slate-300"></i>
                     @endif
@@ -764,6 +764,9 @@ function navigationManager(initialData) {
                             {{ $isId && isset($systemLabels[$item->title]) ? $systemLabels[$item->title] : $item->title }}
                             @if($isSystemItem)
                                 <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{{ $isId ? 'Sistem' : 'System' }}</span>
+                            @endif
+                            @if(!$item->is_active)
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-600">{{ $isId ? 'Nonaktif' : 'Inactive' }}</span>
                             @endif
                         </span>
                         <span class="text-xs text-slate-400">
@@ -995,11 +998,16 @@ function navigationManager(initialData) {
                                             </div>
                                         </div>
                                         @if($item->icon)
-                                            <i class="{{ $item->icon }} {{ $isSystemItem ? 'text-blue-500' : 'text-slate-400' }} text-sm"></i>
+                                            <i class="{{ $item->icon }} {{ $item->is_active ? 'text-blue-500' : 'text-slate-400' }} text-sm"></i>
                                         @endif
                                         <div class="flex-1 min-w-0">
-                                            <span class="text-sm font-medium text-slate-700 block truncate">{{ $isId && isset($systemLabels[$item->title]) ? $systemLabels[$item->title] : $item->title }}</span>
-                                            <span class="text-xs {{ $isSystemItem ? 'text-blue-500' : 'text-slate-400' }}">
+                                            <span class="text-sm font-medium text-slate-700 block truncate">
+                                                {{ $isId && isset($systemLabels[$item->title]) ? $systemLabels[$item->title] : $item->title }}
+                                                @if(!$item->is_active)
+                                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-600">{{ $isId ? 'Nonaktif' : 'Inactive' }}</span>
+                                                @endif
+                                            </span>
+                                            <span class="text-xs {{ $item->is_active ? 'text-blue-500' : 'text-slate-400' }}">
                                                 @if($isSystemItem)
                                                     {{ $isId ? 'Sistem' : 'System' }}
                                                 @else

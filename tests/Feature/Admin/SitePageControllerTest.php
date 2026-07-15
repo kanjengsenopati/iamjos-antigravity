@@ -5,7 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Models\SitePage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
+use App\Models\Permission;
 use Tests\TestCase;
 
 class SitePageControllerTest extends TestCase

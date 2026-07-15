@@ -9,7 +9,7 @@ use App\Models\SitePage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Models\Permission;
+use App\Models\Permission;
 use Tests\TestCase;
 
 class NavigationMenuItemRequestTest extends TestCase

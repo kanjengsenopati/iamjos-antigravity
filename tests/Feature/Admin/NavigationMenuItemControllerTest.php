@@ -9,7 +9,7 @@ use App\Models\NavigationMenuItemAssignment;
 use App\Models\SitePage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
+use App\Models\Permission;
 use Tests\TestCase;
 
 class NavigationMenuItemControllerTest extends TestCase
@@ -24,14 +24,25 @@ class NavigationMenuItemControllerTest extends TestCase
     {
         parent::setUp();
 
+        // Reset cached roles and permissions
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
         // Create the manage-navigation permission
         Permission::findOrCreate('manage-navigation', 'web');
+
+        // Re-register permissions
+        app(\Spatie\Permission\PermissionRegistrar::class)->registerPermissions(app(\Illuminate\Contracts\Auth\Access\Gate::class));
 
         // Create a journal
         $this->journal = Journal::factory()->create();
 
         // Create a user with permission
         $this->user = User::factory()->create();
+        
+        // Assign Super Admin role to bypass middleware
+        $superAdminRole = \App\Models\Role::findOrCreate('Super Admin', 'web');
+        $this->user->assignRole($superAdminRole);
+        
         $this->user->givePermissionTo('manage-navigation');
 
         // Create a test menu

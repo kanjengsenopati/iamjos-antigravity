@@ -7,7 +7,7 @@ use App\Models\NavigationMenuItem;
 use App\Models\NavigationMenuItemAssignment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
+use App\Models\Permission;
 use Tests\TestCase;
 
 class NavigationMenuControllerTest extends TestCase

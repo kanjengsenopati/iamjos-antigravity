@@ -178,6 +178,18 @@
                 @enderror
             </div>
 
+            {{-- Active Status --}}
+            <div>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $item->is_active ?? true) ? 'checked' : '' }}
+                        class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-sm text-slate-700">{{ $isId ? 'Aktif (Tampilkan di menu)' : 'Active (Show in menu)' }}</span>
+                </label>
+                @error('is_active')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             {{-- Submit Buttons --}}
             <div class="flex justify-end gap-3 pt-6 border-t border-slate-200">
                 <a href="{{ route('journal.settings.navigation.index', $journal->slug) }}"
