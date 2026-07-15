@@ -27,44 +27,48 @@ class SubmissionFileController extends Controller
         $file = $request->file('file');
         $user = auth()->user();
 
-        // Determine version number
-        $version = SubmissionFile::where('submission_id', $submission->id)
-            ->where('file_type', $validated['file_type'])
-            ->max('version') + 1;
+        $submissionFile = \Illuminate\Support\Facades\DB::transaction(function () use ($submission, $validated, $file, $user) {
+            // Determine version number
+            $version = SubmissionFile::where('submission_id', $submission->id)
+                ->where('file_type', $validated['file_type'])
+                ->max('version') + 1;
 
-        // Store file
-        $path = $file->store("submissions/{$submission->id}", 'local');
+            // Store file
+            $path = $file->store("submissions/{$submission->id}", 'local');
 
-        // Use submitted stage if provided, otherwise use submission's current stage
-        $fileStage = $validated['stage'] ?? $submission->stage;
+            // Use submitted stage if provided, otherwise use submission's current stage
+            $fileStage = $validated['stage'] ?? $submission->stage;
 
-        $submissionFile = SubmissionFile::create([
-            'submission_id' => $submission->id,
-            'uploaded_by' => $user->id,
-            'file_path' => $path,
-            'file_name' => $file->getClientOriginalName(),
-            'file_type' => $validated['file_type'],
-            'mime_type' => $file->getMimeType(),
-            'file_size' => $file->getSize(),
-            'version' => $version,
-            'stage' => $fileStage,
-        ]);
-
-        // Audit log — attach file_id so History tab can show download link
-        \App\Models\SubmissionLog::log(
-            submission:  $submission,
-            eventType:   \App\Models\SubmissionLog::EVENT_FILE_UPLOADED,
-            title:       'File Uploaded: ' . $file->getClientOriginalName(),
-            description: $user->name . ' uploaded a ' . $validated['file_type'] . ' file (v' . $version . ') to the ' . $fileStage . ' stage.',
-            metadata:    [
+            $submissionFile = SubmissionFile::create([
+                'submission_id' => $submission->id,
+                'uploaded_by' => $user->id,
+                'file_path' => $path,
+                'file_name' => $file->getClientOriginalName(),
                 'file_type' => $validated['file_type'],
+                'mime_type' => $file->getMimeType(),
                 'file_size' => $file->getSize(),
-                'version'   => $version,
-            ],
-            user:        $user,
-            fileIds:     [$submissionFile->id],
-            stage:       $fileStage,
-        );
+                'version' => $version,
+                'stage' => $fileStage,
+            ]);
+
+            // Audit log — attach file_id so History tab can show download link
+            \App\Models\SubmissionLog::log(
+                submission:  $submission,
+                eventType:   \App\Models\SubmissionLog::EVENT_FILE_UPLOADED,
+                title:       'File Uploaded: ' . $file->getClientOriginalName(),
+                description: $user->name . ' uploaded a ' . $validated['file_type'] . ' file (v' . $version . ') to the ' . $fileStage . ' stage.',
+                metadata:    [
+                    'file_type' => $validated['file_type'],
+                    'file_size' => $file->getSize(),
+                    'version'   => $version,
+                ],
+                user:        $user,
+                fileIds:     [$submissionFile->id],
+                stage:       $fileStage,
+            );
+
+            return $submissionFile;
+        });
 
         if ($request->wantsJson()) {
             return response()->json([

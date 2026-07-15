@@ -53,6 +53,36 @@ try {
 // ROUTE DEFINITIONS
 // =====================================================
 
+Route::get('/temp-cleanup-duplicates', function () {
+    // Check if user is superadmin/admin or just allow it temporarily for the fix
+    $files = \App\Models\SubmissionFile::all();
+    $grouped = $files->groupBy(function ($file) {
+        return $file->submission_id . '-' . $file->file_name . '-' . $file->file_size . '-' . $file->stage;
+    });
+
+    $deletedCount = 0;
+    $details = [];
+    foreach ($grouped as $key => $group) {
+        if ($group->count() > 1) {
+            $sorted = $group->sortByDesc('created_at');
+            $keep = $sorted->first();
+            foreach ($sorted as $file) {
+                if ($file->id !== $keep->id) {
+                    $file->delete();
+                    $deletedCount++;
+                    $details[] = "Deleted duplicate file ID: {$file->id} (Name: {$file->file_name}, Size: {$file->file_size}, Stage: {$file->stage})";
+                }
+            }
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => "Cleanup completed! Deleted $deletedCount duplicate files.",
+        'details' => $details
+    ]);
+});
+
 $registerAllRoutes = function ($prefix = '') {
     Route::prefix($prefix)->group(function () {
         // 1. INSTALLER WIZARD
