@@ -1,393 +1,692 @@
 @php
     $journal = current_journal();
     $isId = app()->getLocale() === 'id';
+    $status = $assignment->status; // pending, accepted, completed, declined, cancelled
 @endphp
 
 <x-app-layout>
     <x-slot name="title">{{ $isId ? 'Ulasan Naskah' : 'Review Submission' }}</x-slot>
     <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
 
-    <x-slot name="header">
-        <div class="flex items-center space-x-4">
-            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
-                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Ulasan Naskah' : 'Review Submission' }}</h1>
-                <p class="mt-1 text-sm text-gray-500">{{ $isId ? 'Putaran' : 'Round' }} {{ $assignment->round }} • {{ $isId ? 'Batas Waktu' : 'Due' }}
-                    {{ $assignment->due_date?->translatedFormat($isId ? 'j M Y' : 'M j, Y') ?? ($isId ? 'Tanpa batas waktu' : 'No deadline') }}
-                </p>
+    <div class="max-w-7xl mx-auto py-8 px-5">
+        <!-- Breadcrumb / Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div class="flex items-center space-x-4">
+                <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
+                    class="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <div>
+                    <x-text.h1 class="text-slate-900">{{ $isId ? 'Ulasan Naskah' : 'Review Submission' }}</x-text.h1>
+                    <x-text.caption class="mt-1 text-slate-400 block">
+                        {{ $isId ? 'Putaran' : 'Round' }} {{ $assignment->round }} • 
+                        {{ $isId ? 'Batas Waktu Ulasan' : 'Review Due' }}: 
+                        <span class="font-medium text-slate-600">{{ $assignment->due_date?->translatedFormat($isId ? 'j M Y' : 'M j, Y') ?? ($isId ? 'Tanpa batas waktu' : 'No deadline') }}</span>
+                    </x-text.caption>
+                </div>
+            </div>
+            
+            <!-- Quick Status Badge -->
+            <div class="flex items-center gap-2">
+                @if($status === 'pending')
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-100">
+                        <i class="fa-solid fa-hourglass-half mr-1.5"></i>{{ $isId ? 'Menunggu Tanggapan' : 'Pending Response' }}
+                    </span>
+                @elseif($status === 'accepted')
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                        <i class="fa-solid fa-spinner fa-spin mr-1.5"></i>{{ $isId ? 'Sedang Berjalan' : 'In Progress' }}
+                    </span>
+                @elseif($status === 'completed')
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        <i class="fa-solid fa-circle-check mr-1.5"></i>{{ $isId ? 'Selesai' : 'Completed' }}
+                    </span>
+                @elseif($status === 'declined')
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-100">
+                        <i class="fa-solid fa-circle-xmark mr-1.5"></i>{{ $isId ? 'Ditolak' : 'Declined' }}
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-700 border border-slate-100">
+                        {{ ucfirst($status) }}
+                    </span>
+                @endif
             </div>
         </div>
-    </x-slot>
 
-    <div class="max-w-7xl mx-auto py-6">
+        <!-- AlpineJS Tabs Wrapper -->
+        <div x-data="{ 
+            status: '{{ $status }}',
+            activeStep: {{ $status === 'completed' ? 4 : ($status === 'accepted' ? 3 : 1) }},
+            declineReason: '',
+            showDeclineModal: false,
+            
+            isTabDisabled(step) {
+                if (this.status === 'pending') {
+                    return step > 1;
+                }
+                if (this.status === 'accepted') {
+                    return step > 3;
+                }
+                return false; // completed or declined can click all
+            },
+            
+            setStep(step) {
+                if (!this.isTabDisabled(step)) {
+                    this.activeStep = step;
+                }
+            }
+        }" class="space-y-6">
 
-        <div class="grid lg:grid-cols-3 gap-6">
-            <!-- Left Column: Manuscript Details -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Submission Info (Blind Review) -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                            {{ $submission->section->name ?? ($isId ? 'Tanpa Kategori' : 'Uncategorized') }}
-                        </span>
-                        <span class="text-sm text-gray-500">
-                            {{ $isId ? 'Dikirim' : 'Submitted' }} {{ $submission->submitted_at?->translatedFormat($isId ? 'j M Y' : 'M j, Y') }}
-                        </span>
-                    </div>
+            <!-- 4-Step Navigation Tab Bar -->
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-2">
+                <nav class="flex flex-col md:flex-row gap-1" aria-label="Steps">
+                    <!-- Step 1: Request -->
+                    <button type="button" @click="setStep(1)"
+                        :class="{ 
+                            'bg-blue-50 text-blue-700 font-bold': activeStep === 1,
+                            'text-slate-500 hover:text-slate-700 hover:bg-slate-50': activeStep !== 1,
+                            'opacity-50 cursor-not-allowed': isTabDisabled(1)
+                        }"
+                        class="flex-1 inline-flex items-center justify-center py-3.5 px-4 rounded-2xl text-sm font-semibold transition-all">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center bg-current bg-opacity-10 mr-2 text-xs">1</span>
+                        {{ $isId ? '1. Permintaan' : '1. Request' }}
+                    </button>
 
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">{{ $submission->title }}</h2>
+                    <!-- Step 2: Guidelines -->
+                    <button type="button" @click="setStep(2)"
+                        :disabled="isTabDisabled(2)"
+                        :class="{ 
+                            'bg-blue-50 text-blue-700 font-bold': activeStep === 2,
+                            'text-slate-500 hover:text-slate-700 hover:bg-slate-50': activeStep !== 2,
+                            'opacity-50 cursor-not-allowed': isTabDisabled(2)
+                        }"
+                        class="flex-1 inline-flex items-center justify-center py-3.5 px-4 rounded-2xl text-sm font-semibold transition-all">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center bg-current bg-opacity-10 mr-2 text-xs">2</span>
+                        {{ $isId ? '2. Panduan' : '2. Guidelines' }}
+                    </button>
 
-                    <!-- Additional Info Table -->
-                    <div class="mb-6 bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span
-                                class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">{{ $isId ? 'Bahasa' : 'Language' }}</span>
-                            <span class="text-gray-900">{{ $submission->metadata['language'] ?? 'English' }}</span>
-                        </div>
-                        <div>
-                            <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">{{ $isId ? 'Tipe Naskah' : 'Submission Type' }}</span>
-                            <span class="text-gray-900">{{ $submission->section->name ?? ($isId ? 'Artikel' : 'Article') }}</span>
-                        </div>
-                        <div>
-                            <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">{{ $isId ? 'ID Naskah' : 'Manuscript ID' }}</span>
-                            <span class="text-gray-900">{{ $submission->submission_code ?? 'N/A' }}</span>
-                        </div>
-                        <div>
-                            <span
-                                class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">{{ $isId ? 'Hak Cipta' : 'Copyright' }}</span>
-                            <span class="text-gray-900">© {{ now()->year }} {{ $journal->name }}</span>
-                        </div>
-                    </div>
+                    <!-- Step 3: Download & Review -->
+                    <button type="button" @click="setStep(3)"
+                        :disabled="isTabDisabled(3)"
+                        :class="{ 
+                            'bg-blue-50 text-blue-700 font-bold': activeStep === 3,
+                            'text-slate-500 hover:text-slate-700 hover:bg-slate-50': activeStep !== 3,
+                            'opacity-50 cursor-not-allowed': isTabDisabled(3)
+                        }"
+                        class="flex-1 inline-flex items-center justify-center py-3.5 px-4 rounded-2xl text-sm font-semibold transition-all">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center bg-current bg-opacity-10 mr-2 text-xs">3</span>
+                        {{ $isId ? '3. Unduh & Ulas' : '3. Download & Review' }}
+                    </button>
 
-                    <!-- Abstract -->
-                    <div class="mb-6">
-                        <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-2">{{ $isId ? 'Abstrak' : 'Abstract' }}</h3>
-                        <div class="prose prose-sm max-w-none text-gray-600">
-                            {!! clean($submission->abstract) !!}
-                        </div>
-                    </div>
+                    <!-- Step 4: Completion -->
+                    <button type="button" @click="setStep(4)"
+                        :disabled="isTabDisabled(4)"
+                        :class="{ 
+                            'bg-blue-50 text-blue-700 font-bold': activeStep === 4,
+                            'text-slate-500 hover:text-slate-700 hover:bg-slate-50': activeStep !== 4,
+                            'opacity-50 cursor-not-allowed': isTabDisabled(4)
+                        }"
+                        class="flex-1 inline-flex items-center justify-center py-3.5 px-4 rounded-2xl text-sm font-semibold transition-all">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center bg-current bg-opacity-10 mr-2 text-xs">4</span>
+                        {{ $isId ? '4. Selesai' : '4. Completion' }}
+                    </button>
+                </nav>
+            </div>
 
-                    <!-- Keywords -->
-                    @if ($submission->keywords)
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-2">{{ $isId ? 'Kata Kunci' : 'Keywords' }}</h3>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach ($submission->keywords_array as $keyword)
-                                    <span
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
-                                        {{ $keyword }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                </div>
+            <!-- Tab Panels -->
+            <div class="space-y-6">
 
-                <!-- Review Discussions -->
-                <div class="mb-6">
-                    <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
-                        :participants="$participants" :journal="$journal" />
-                </div>
-
-                <!-- Review Files -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $isId ? 'File Ulasan' : 'Review Files' }}</h3>
-
-                    @if ($manuscriptFiles->isEmpty())
-                        <p class="text-gray-500">{{ $isId ? 'Tidak ada file ulasan tersedia.' : 'No review files available.' }}</p>
-                    @else
-                        <div class="space-y-3">
-                            @foreach ($manuscriptFiles as $file)
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                    <div class="flex items-center min-w-0 flex-1 mr-4">
-                                        <div
-                                            class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <i class="fa-solid fa-file-pdf text-red-500"></i>
-                                        </div>
-                                        <div class="ml-3 min-w-0 flex-1">
-                                            <p class="font-medium text-gray-900 truncate"
-                                                title="{{ $file->file_name }}">
-                                                {{ $file->file_name }}
-                                            </p>
-                                            <p class="text-sm text-gray-500 truncate">
-                                                {{ $file->file_type_label }} • {{ $isId ? 'Versi' : 'Version' }} {{ $file->version }} •
-                                                {{ $file->file_size_formatted }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="flex-shrink-0 flex items-center space-x-2">
-                                        @php
-                                            $extension = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
-                                            $viewableExtensions = [
-                                                'pdf',
-                                                'doc',
-                                                'docx',
-                                                'xls',
-                                                'xlsx',
-                                                'ppt',
-                                                'pptx',
-                                                'odt',
-                                            ];
-                                            $isViewable = in_array($extension, $viewableExtensions);
-                                        @endphp
-                                        <a href="{{ route('files.download', $file) }}"
-                                            class="inline-flex items-center px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-                                            <i class="fa-solid fa-download mr-1.5"></i>
-                                            {{ $isId ? 'Unduh' : 'Download' }}
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Review Form (only if not completed) -->
-                @if ($assignment->status !== 'completed')
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-6">{{ $isId ? 'Kirim Ulasan Anda' : 'Submit Your Review' }}</h3>
-
-                        <form
-                            action="{{ route('journal.reviewer.submit', ['journal' => $journal->slug, 'assignment' => $assignment]) }}"
-                            method="POST" x-data="{ recommendation: '{{ old('recommendation') }}' }">
-                            @csrf
-
-                            <!-- Recommendation -->
-                            <div class="mb-6">
-                                <label for="recommendation" class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ $isId ? 'Rekomendasi' : 'Recommendation' }} <span class="text-red-500">*</span>
-                                </label>
-                                <select name="recommendation" id="recommendation" x-model="recommendation" required
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                    <option value="">{{ $isId ? 'Pilih rekomendasi Anda...' : 'Select your recommendation...' }}</option>
-                                    <option value="accept">{{ $isId ? 'Terima - Siap untuk publikasi' : 'Accept - Ready for publication' }}</option>
-                                    <option value="minor_revision">{{ $isId ? 'Revisi Minor - Terima dengan perubahan kecil' : 'Minor Revision - Accept with minor changes' }}</option>
-                                    <option value="major_revision">{{ $isId ? 'Revisi Mayor - Perubahan signifikan diperlukan' : 'Major Revision - Significant changes required' }}</option>
-                                    <option value="resubmit">{{ $isId ? 'Kirim Ulang untuk Ulasan - Butuh pengerjaan ulang yang substansial' : 'Resubmit for Review - Needs substantial rework' }}</option>
-                                    <option value="reject">{{ $isId ? 'Tolak - Tidak cocok untuk publikasi' : 'Reject - Not suitable for publication' }}</option>
-                                </select>
-                                @error('recommendation')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <!-- Comments for Author -->
-                            <div class="mb-6">
-                                <label for="comments_for_author" class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }} <span class="text-red-500">*</span>
-                                </label>
-                                <textarea name="comments_for_author" id="comments_for_author" rows="8" placeholder="{{ $isId ? 'Berikan umpan balik terperinci...' : 'Provide detailed feedback...' }}"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ old('comments_for_author') }}</textarea>
-                                @error('comments_for_author')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                                <p class="mt-1 text-xs text-gray-500">{{ $isId ? 'Komentar ini akan dapat dilihat oleh penulis.' : 'These comments will be visible to the author.' }}</p>
-                            </div>
-
-                            <!-- Comments for Editor (Confidential) -->
-                            <div class="mb-6">
-                                <label for="comments_for_editor" class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}
-                                </label>
-                                <textarea name="comments_for_editor" id="comments_for_editor" rows="4"
-                                    placeholder="{{ $isId ? 'Opsional: Bagikan pengamatan rahasia apa pun...' : 'Optional: Share any confidential observations...' }}"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ old('comments_for_editor') }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500 flex items-center">
-                                    <svg class="w-4 h-4 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                    {{ $isId ? 'Komentar ini rahasia dan hanya akan dapat dilihat oleh editor.' : 'These comments are confidential and will only be visible to the editor.' }}
-                                </p>
-                            </div>
-
-                            <!-- Reviewer Attachments -->
-                            <div class="mb-6" x-data="reviewerAttachments()">
-                                <h4 class="text-sm font-medium text-gray-900 mb-1">{{ $isId ? 'Lampiran Reviewer' : 'Reviewer Attachments' }}</h4>
-                                <p class="text-xs text-gray-500 mb-4">
-                                    {{ $isId ? 'Unggah file yang ingin Anda konsultasikan dengan editor dan/atau penulis, termasuk versi revisi dari file ulasan asli.' : 'Upload files you would like the editor and/or author to consult, including revised versions of the original review file(s).' }}
-                                </p>
-                                
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors"
-                                    @dragover.prevent="$el.classList.add('border-primary-500', 'bg-primary-50')"
-                                    @dragleave.prevent="$el.classList.remove('border-primary-500', 'bg-primary-50')"
-                                    @drop.prevent="handleDrop($event); $el.classList.remove('border-primary-500', 'bg-primary-50')">
-                                    
-                                    <input type="file" id="attachmentInput" class="hidden" @change="handleFileSelect($event)" accept=".doc,.docx,.pdf,.rtf">
-                                    
-                                    <label for="attachmentInput" class="cursor-pointer">
-                                        <div class="text-gray-500 mb-2">
-                                            <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-primary-500"></i>
-                                            <p class="font-medium text-gray-900">{{ $isId ? 'Klik untuk mengunggah atau seret dan lepas' : 'Click to upload or drag and drop' }}</p>
-                                            <p class="text-xs">DOC, DOCX, PDF, RTF (Max 10MB)</p>
-                                        </div>
-                                    </label>
-
-                                    <!-- Upload Progress -->
-                                    <div x-show="isUploading" class="mt-4" style="display: none;">
-                                        <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
-                                            <div class="h-full bg-primary-600 transition-all duration-300" :style="`width: ${uploadProgress}%`"></div>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-1" x-text="isId ? `Mengunggah... ${uploadProgress}%` : `Uploading... ${uploadProgress}%`"></p>
-                                    </div>
-                                </div>
-
-                                <!-- Uploaded Files List -->
-                                <div class="mt-4 space-y-2" x-show="files.length > 0" style="display: none;">
-                                    <h5 class="text-sm font-medium text-gray-700">{{ $isId ? 'File Terunggah' : 'Uploaded Files' }}</h5>
-                                    <template x-for="file in files" :key="file.id">
-                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                            <div class="flex items-center space-x-3">
-                                                <i class="fa-solid fa-file text-gray-400"></i>
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900" x-text="file.name"></p>
-                                                    <p class="text-xs text-gray-500" x-text="file.size"></p>
-                                                </div>
-                                            </div>
-                                            <button type="button" @click="deleteFile(file.id)" class="text-red-500 hover:text-red-700 p-1" :title="isId ? 'Hapus File' : 'Delete File'">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
-                                <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
-                                    class="text-sm font-medium text-gray-600 hover:text-gray-900">
-                                    {{ $isId ? 'Simpan sebagai Draf' : 'Save as Draft' }}
-                                </a>
-                                <button type="submit"
-                                    class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {{ $isId ? 'Kirim Ulasan' : 'Submit Review' }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                @else
-                    <!-- Completed Review Summary -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Ulasan Anda' : 'Your Review' }}</h3>
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                {{ $isId ? 'Selesai' : 'Completed' }} {{ $assignment->completed_at?->translatedFormat($isId ? 'j M Y' : 'M j, Y') }}
-                            </span>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-500 mb-1">{{ $isId ? 'Rekomendasi' : 'Recommendation' }}</h4>
-                                <span
-                                    class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-{{ $assignment->recommendation_color }}-100 text-{{ $assignment->recommendation_color }}-800">
-                                    {{ $assignment->recommendation_label }}
+                <!-- STEP 1: REQUEST PANEL -->
+                <div x-show="activeStep === 1" x-cloak class="grid lg:grid-cols-3 gap-6">
+                    <!-- Left: Manuscript Details -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+                            <div class="flex items-center justify-between mb-5">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600">
+                                    {{ $submission->section->name ?? ($isId ? 'Tanpa Kategori' : 'Uncategorized') }}
                                 </span>
+                                <x-text.caption>
+                                    {{ $isId ? 'Dikirim' : 'Submitted' }} {{ $submission->submitted_at?->translatedFormat($isId ? 'j M Y' : 'M j, Y') }}
+                                </x-text.caption>
                             </div>
 
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-500 mb-1">{{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}</h4>
-                                <div class="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4">
-                                    {!! clean($assignment->comments_for_author) !!}
+                            <x-text.h2 class="text-slate-900 mb-5">{{ $submission->title }}</x-text.h2>
+
+                            <!-- Meta Info Box -->
+                            <div class="mb-6 bg-slate-50 rounded-[20px] p-5 grid grid-cols-2 gap-4">
+                                <div>
+                                    <x-text.label class="block mb-1">{{ $isId ? 'Bahasa' : 'Language' }}</x-text.label>
+                                    <x-text.body class="text-slate-800 font-semibold">{{ $submission->metadata['language'] ?? 'English' }}</x-text.body>
+                                </div>
+                                <div>
+                                    <x-text.label class="block mb-1">{{ $isId ? 'Tipe Naskah' : 'Submission Type' }}</x-text.label>
+                                    <x-text.body class="text-slate-800 font-semibold">{{ $submission->section->name ?? ($isId ? 'Artikel' : 'Article') }}</x-text.body>
+                                </div>
+                                <div>
+                                    <x-text.label class="block mb-1">{{ $isId ? 'ID Naskah' : 'Manuscript ID' }}</x-text.label>
+                                    <x-text.body class="text-slate-800 font-semibold font-mono">{{ $submission->submission_code ?? 'N/A' }}</x-text.body>
+                                </div>
+                                <div>
+                                    <x-text.label class="block mb-1">{{ $isId ? 'Hak Cipta' : 'Copyright' }}</x-text.label>
+                                    <x-text.body class="text-slate-800 font-semibold">© {{ now()->year }} {{ $journal->name }}</x-text.body>
                                 </div>
                             </div>
 
-                            @if ($assignment->comments_for_editor)
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-500 mb-1">{{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}
-                                    </h4>
-                                    <div
-                                        class="prose prose-sm max-w-none text-gray-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                                        {!! clean($assignment->comments_for_editor) !!}
-                                    </div>
+                            <!-- Abstract -->
+                            <div class="mb-6">
+                                <x-text.label class="block mb-2">{{ $isId ? 'Abstrak' : 'Abstract' }}</x-text.label>
+                                <div class="prose prose-slate text-sm max-w-none text-slate-600 leading-relaxed">
+                                    {!! clean($submission->abstract) !!}
                                 </div>
-                            @endif
+                            </div>
 
-                            @if ($reviewerAttachments->isNotEmpty())
+                            <!-- Keywords -->
+                            @if ($submission->keywords)
                                 <div>
-                                    <h4 class="text-sm font-medium text-gray-500 mb-2">{{ $isId ? 'Lampiran Reviewer' : 'Reviewer Attachments' }}</h4>
-                                    <div class="space-y-2">
-                                        @foreach($reviewerAttachments as $file)
-                                            <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                                <div class="flex items-center space-x-3">
-                                                    <i class="fa-solid fa-file text-gray-400"></i>
-                                                    <div>
-                                                        <p class="text-sm font-medium text-gray-900">{{ $file->file_name }}</p>
-                                                        <p class="text-xs text-gray-500">{{ $file->file_size_formatted }}</p>
-                                                    </div>
-                                                </div>
-                                                <a href="{{ route('files.download', ['file' => $file->id]) }}" class="text-primary-600 hover:text-primary-800 text-sm font-medium flex items-center">
-                                                    <i class="fa-solid fa-download mr-1"></i> {{ $isId ? 'Unduh' : 'Download' }}
-                                                </a>
-                                            </div>
+                                    <x-text.label class="block mb-2">{{ $isId ? 'Kata Kunci' : 'Keywords' }}</x-text.label>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach ($submission->keywords_array as $keyword)
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                                                {{ $keyword }}
+                                            </span>
                                         @endforeach
                                     </div>
                                 </div>
                             @endif
                         </div>
+
+                        <!-- Accept / Decline Action Section (if pending) -->
+                        @if($status === 'pending')
+                            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+                                <x-text.h2 class="text-slate-900 mb-2">{{ $isId ? 'Tanggapan Undangan Ulasan' : 'Response to Review Invitation' }}</x-text.h2>
+                                <x-text.body class="text-slate-500 mb-6 block">
+                                    {{ $isId ? 'Silakan tentukan apakah Anda bersedia mengulas naskah ini. Anda dapat menerima undangan untuk masuk ke langkah berikutnya, atau menolaknya.' 
+                                             : 'Please indicate whether you are willing to review this manuscript. You can accept the invitation to proceed to the next step, or decline it.' }}
+                                </x-text.body>
+
+                                <div class="flex flex-col sm:flex-row items-center gap-3">
+                                    <form action="{{ route('journal.reviewer.accept', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST" class="w-full sm:w-auto">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-blue-100">
+                                            <i class="fa-solid fa-check mr-2"></i>
+                                            {{ $isId ? 'Terima Undangan, Lanjut ke Step 2' : 'Accept Invitation, Go to Step 2' }}
+                                        </button>
+                                    </form>
+                                    
+                                    <button type="button" @click="showDeclineModal = true"
+                                        class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-2xl transition-all border border-rose-100">
+                                        <i class="fa-solid fa-xmark mr-2"></i>
+                                        {{ $isId ? 'Tolak Undangan Ulasan' : 'Decline Review Invitation' }}
+                                    </button>
+                                </div>
+                            </div>
+                        @else
+                            <div class="bg-emerald-50/60 border border-emerald-100 rounded-[24px] p-6 md:p-8 flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-circle-check text-lg"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <x-text.h2 class="text-emerald-800 font-bold">{{ $isId ? 'Undangan Disetujui' : 'Invitation Accepted' }}</x-text.h2>
+                                    <x-text.body class="text-emerald-700 block">
+                                        {{ $isId ? 'Anda telah menyetujui untuk mengulas naskah ini. Silakan lanjutkan ke panduan pengulas.' 
+                                                 : 'You have agreed to review this manuscript. Please proceed to the reviewer guidelines.' }}
+                                    </x-text.body>
+                                    <div class="pt-3">
+                                        <button type="button" @click="setStep(2)"
+                                            class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all">
+                                            {{ $isId ? 'Lanjut ke Step 2: Panduan' : 'Go to Step 2: Guidelines' }} <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
-                @endif
-            </div>
 
-            <!-- Right Column: Review Guidelines & Tools -->
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <i class="fa-solid fa-scale-balanced mr-2 text-primary-600"></i>
-                        {{ $isId ? 'Panduan Ulasan' : 'Review Guidelines' }}
-                    </h3>
+                    <!-- Right: Schedule & Info -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+                            <x-text.h2 class="text-slate-900 mb-4 flex items-center">
+                                <i class="fa-solid fa-calendar-days text-slate-400 mr-2"></i>
+                                {{ $isId ? 'Jadwal Ulasan' : 'Review Schedule' }}
+                            </x-text.h2>
+                            
+                            <div class="space-y-4">
+                                <div class="p-3.5 bg-slate-50 rounded-2xl flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-100/60 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </div>
+                                    <div>
+                                        <x-text.caption class="block">{{ $isId ? 'Tanggal Penugasan' : 'Assigned Date' }}</x-text.caption>
+                                        <x-text.body class="font-bold text-slate-800">{{ $assignment->assigned_at?->translatedFormat('M j, Y') ?? '-' }}</x-text.body>
+                                    </div>
+                                </div>
 
-                    <div class="space-y-4 text-sm text-gray-600">
-                        <div class="flex items-start space-x-3">
-                            <div
-                                class="w-6 h-6 bg-primary-50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 border border-primary-100">
-                                <span class="text-primary-700 font-bold text-xs">1</span>
-                            </div>
-                            <p>{{ $isId ? 'Baca naskah secara menyeluruh dan nilai kualitas serta kontribusi ilmiahnya.' : 'Read the manuscript thoroughly and assess its scientific quality and contribution.' }}</p>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <div
-                                class="w-6 h-6 bg-primary-50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 border border-primary-100">
-                                <span class="text-primary-700 font-bold text-xs">2</span>
-                            </div>
-                            <p>{{ $isId ? 'Evaluasi metodologi, hasil, dan kesimpulan untuk validitas dan kejelasan.' : 'Evaluate methodology, results, and conclusions for validity and clarity.' }}</p>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <div
-                                class="w-6 h-6 bg-primary-50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 border border-primary-100">
-                                <span class="text-primary-700 font-bold text-xs">3</span>
-                            </div>
-                            <p>{{ $isId ? 'Berikan umpan balik yang konstruktif. Bersikaplah hormat dan membantu dalam kritik Anda.' : 'Provide constructive feedback. Be respectful and helpful in your critique.' }}</p>
-                        </div>
-                    </div>
+                                <div class="p-3.5 bg-slate-50 rounded-2xl flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-amber-100/60 text-amber-600 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-reply"></i>
+                                    </div>
+                                    <div>
+                                        <x-text.caption class="block">{{ $isId ? 'Batas Waktu Respon' : 'Response Due Date' }}</x-text.caption>
+                                        <x-text.body class="font-bold text-slate-800">{{ $assignment->response_due_date?->translatedFormat('M j, Y') ?? '-' }}</x-text.body>
+                                    </div>
+                                </div>
 
-                    <div class="mt-6 pt-6 border-t border-gray-200">
-                        <h4 class="font-medium text-gray-900 mb-2 flex items-center">
-                            <i class="fa-regular fa-circle-question mr-2 text-gray-400"></i>
-                            {{ $isId ? 'Butuh Bantuan?' : 'Need Help?' }}
-                        </h4>
-                        <p class="text-sm text-gray-500">{{ $isId ? 'Hubungi tim redaksi jika Anda memiliki konflik kepentingan atau masalah teknis.' : 'Contact the editorial team if you have conflict of interest or technical issues.' }}</p>
+                                <div class="p-3.5 bg-slate-50 rounded-2xl flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-rose-100/60 text-rose-600 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-clock"></i>
+                                    </div>
+                                    <div>
+                                        <x-text.caption class="block">{{ $isId ? 'Batas Waktu Ulasan' : 'Review Due Date' }}</x-text.caption>
+                                        <x-text.body class="font-bold text-slate-800 {{ $assignment->isOverdue() ? 'text-rose-600' : '' }}">
+                                            {{ $assignment->due_date?->translatedFormat('M j, Y') ?? '-' }}
+                                        </x-text.body>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Need Help Box -->
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+                            <h4 class="font-bold text-slate-900 mb-2 flex items-center">
+                                <i class="fa-regular fa-circle-question text-slate-400 mr-2"></i>
+                                {{ $isId ? 'Butuh Bantuan?' : 'Need Help?' }}
+                            </h4>
+                            <x-text.caption class="text-slate-500 block leading-relaxed mb-4">
+                                {{ $isId ? 'Hubungi tim redaksi jika Anda memiliki konflik kepentingan atau masalah teknis.' : 'Contact the editorial team if you have conflict of interest or technical issues.' }}
+                            </x-text.caption>
+                        </div>
                     </div>
                 </div>
+
+                <!-- STEP 2: GUIDELINES PANEL -->
+                <div x-show="activeStep === 2" x-cloak class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
+                        <x-text.h2 class="text-slate-900 flex items-center pb-4 border-b border-slate-100">
+                            <i class="fa-solid fa-scale-balanced mr-3 text-blue-600"></i>
+                            {{ $isId ? 'Panduan Penilaian / Ulasan' : 'Reviewer Guidelines' }}
+                        </x-text.h2>
+
+                        <div class="space-y-5 text-slate-600 leading-relaxed">
+                            <div class="flex items-start space-x-3.5">
+                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">1</div>
+                                <x-text.body>{{ $isId ? 'Baca naskah secara menyeluruh dan nilai kualitas serta kontribusi ilmiahnya.' : 'Read the manuscript thoroughly and assess its scientific quality and contribution.' }}</x-text.body>
+                            </div>
+                            <div class="flex items-start space-x-3.5">
+                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">2</div>
+                                <x-text.body>{{ $isId ? 'Evaluasi metodologi, hasil, dan kesimpulan untuk validitas dan kejelasan.' : 'Evaluate methodology, results, and conclusions for validity and clarity.' }}</x-text.body>
+                            </div>
+                            <div class="flex items-start space-x-3.5">
+                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">3</div>
+                                <x-text.body>{{ $isId ? 'Berikan umpan balik yang konstruktif. Bersikaplah hormat dan membantu dalam kritik Anda.' : 'Provide constructive feedback. Be respectful and helpful in your critique.' }}</x-text.body>
+                            </div>
+                            <div class="flex items-start space-x-3.5">
+                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">4</div>
+                                <x-text.body>{{ $isId ? 'Pastikan Anda menjaga kerahasiaan naskah ini dan tidak menggunakannya untuk kepentingan pribadi sebelum diterbitkan.' : 'Ensure you maintain the confidentiality of this manuscript and do not use it for personal interests before publication.' }}</x-text.body>
+                            </div>
+                        </div>
+
+                        <!-- Policy Checkbox and Navigation Button -->
+                        <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4" x-data="{ checked: false }">
+                            <label class="flex items-center gap-3 cursor-pointer select-none">
+                                <input type="checkbox" x-model="checked" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-5 h-5 transition-all">
+                                <x-text.body class="text-slate-500">{{ $isId ? 'Saya telah membaca dan memahami panduan ini.' : 'I have read and understood these guidelines.' }}</x-text.body>
+                            </label>
+
+                            <button type="button" @click="setStep(3)" :disabled="!checked"
+                                :class="checked ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 font-bold rounded-2xl transition-all">
+                                {{ $isId ? 'Lanjutkan ke Step 3' : 'Continue to Step 3' }} <i class="fa-solid fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: DOWNLOAD & REVIEW PANEL -->
+                <div x-show="activeStep === 3" x-cloak class="grid lg:grid-cols-3 gap-6">
+                    <!-- Left: Manuscript File & Form Submission -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Review Manuscript Download -->
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+                            <x-text.h2 class="text-slate-900 mb-4">{{ $isId ? 'File Naskah Ulasan' : 'Manuscript Files to Review' }}</x-text.h2>
+
+                            @if ($manuscriptFiles->isEmpty())
+                                <p class="text-slate-500 text-sm">{{ $isId ? 'Tidak ada file ulasan tersedia.' : 'No review files available.' }}</p>
+                            @else
+                                <div class="space-y-3">
+                                    @foreach ($manuscriptFiles as $file)
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 rounded-[20px] gap-3">
+                                            <div class="flex items-center min-w-0 flex-1 mr-4">
+                                                <div class="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center flex-shrink-0 text-rose-600">
+                                                    <i class="fa-solid fa-file-lines text-lg"></i>
+                                                </div>
+                                                <div class="ml-3 min-w-0 flex-1">
+                                                    <p class="font-bold text-slate-800 truncate text-sm" title="{{ $file->file_name }}">
+                                                        {{ $file->file_name }}
+                                                    </p>
+                                                    <x-text.caption class="block text-slate-400">
+                                                        {{ $file->file_type_label }} • {{ $isId ? 'Versi' : 'Version' }} {{ $file->version }} • {{ $file->file_size_formatted }}
+                                                    </x-text.caption>
+                                                </div>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <a href="{{ route('files.download', $file) }}"
+                                                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm">
+                                                    <i class="fa-solid fa-download mr-1.5"></i>
+                                                    {{ $isId ? 'Unduh File' : 'Download File' }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Review Form Input (Active only if Accepted status) -->
+                        @if ($status !== 'completed')
+                            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+                                <x-text.h2 class="text-slate-900 mb-6">{{ $isId ? 'Formulir Ulasan Anda' : 'Your Review' }}</x-text.h2>
+
+                                <form action="{{ route('journal.reviewer.submit', ['journal' => $journal->slug, 'assignment' => $assignment]) }}"
+                                    method="POST" x-data="{ recommendation: '{{ old('recommendation') }}' }">
+                                    @csrf
+
+                                    <!-- Recommendation -->
+                                    <div class="mb-6">
+                                        <label for="recommendation" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                            {{ $isId ? 'Rekomendasi' : 'Recommendation' }} <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select name="recommendation" id="recommendation" x-model="recommendation" required
+                                            class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                            <option value="">{{ $isId ? 'Pilih rekomendasi Anda...' : 'Select your recommendation...' }}</option>
+                                            <option value="accept">{{ $isId ? 'Terima - Siap untuk publikasi' : 'Accept - Ready for publication' }}</option>
+                                            <option value="minor_revision">{{ $isId ? 'Revisi Minor - Terima dengan perubahan kecil' : 'Minor Revision - Accept with minor changes' }}</option>
+                                            <option value="major_revision">{{ $isId ? 'Revisi Mayor - Perubahan signifikan diperlukan' : 'Major Revision - Significant changes required' }}</option>
+                                            <option value="resubmit">{{ $isId ? 'Kirim Ulang untuk Ulasan - Butuh pengerjaan ulang yang substansial' : 'Resubmit for Review - Needs substantial rework' }}</option>
+                                            <option value="reject">{{ $isId ? 'Tolak - Tidak cocok untuk publikasi' : 'Reject - Not suitable for publication' }}</option>
+                                        </select>
+                                        @error('recommendation')
+                                            <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    <!-- Comments for Author -->
+                                    <div class="mb-6">
+                                        <label for="comments_for_author" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                            {{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }} <span class="text-rose-500">*</span>
+                                        </label>
+                                        <textarea name="comments_for_author" id="comments_for_author" rows="8" placeholder="{{ $isId ? 'Berikan umpan balik terperinci...' : 'Provide detailed feedback...' }}"
+                                            class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">{{ old('comments_for_author') }}</textarea>
+                                        @error('comments_for_author')
+                                            <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p>
+                                        @enderror
+                                        <x-text.caption class="mt-1.5 block text-slate-400">
+                                            {{ $isId ? 'Komentar ini akan dapat dilihat oleh penulis naskah.' : 'These comments will be visible to the submission author.' }}
+                                        </x-text.caption>
+                                    </div>
+
+                                    <!-- Comments for Editor (Confidential) -->
+                                    <div class="mb-6">
+                                        <label for="comments_for_editor" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                            {{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}
+                                        </label>
+                                        <textarea name="comments_for_editor" id="comments_for_editor" rows="4"
+                                            placeholder="{{ $isId ? 'Opsional: Bagikan pengamatan rahasia apa pun...' : 'Optional: Share any confidential observations...' }}"
+                                            class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">{{ old('comments_for_editor') }}</textarea>
+                                        <x-text.caption class="mt-1.5 text-slate-400 flex items-center">
+                                            <svg class="w-4 h-4 mr-1 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                            </svg>
+                                            {{ $isId ? 'Komentar ini rahasia dan hanya akan dapat dilihat oleh tim editor.' : 'These comments are confidential and will only be visible to the editorial team.' }}
+                                        </x-text.caption>
+                                    </div>
+
+                                    <!-- Reviewer Attachments (Uploader) -->
+                                    <div class="mb-6" x-data="reviewerAttachments()">
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                            {{ $isId ? 'Lampiran Reviewer' : 'Reviewer Attachments' }}
+                                        </label>
+                                        <p class="text-xs text-slate-400 mb-3 leading-relaxed">
+                                            {{ $isId ? 'Unggah file yang ingin Anda konsultasikan dengan editor dan/atau penulis, termasuk versi revisi dari file ulasan asli.' 
+                                                     : 'Upload files you would like the editor and/or author to consult, including revised versions of the original review file(s).' }}
+                                        </p>
+                                        
+                                        <div class="border-2 border-dashed border-slate-200 rounded-[20px] p-6 text-center hover:bg-slate-50 transition-colors"
+                                            @dragover.prevent="$el.classList.add('border-blue-500', 'bg-blue-50/50')"
+                                            @dragleave.prevent="$el.classList.remove('border-blue-500', 'bg-blue-50/50')"
+                                            @drop.prevent="handleDrop($event); $el.classList.remove('border-blue-500', 'bg-blue-50/50')">
+                                            
+                                            <input type="file" id="attachmentInput" class="hidden" @change="handleFileSelect($event)" accept=".doc,.docx,.pdf,.rtf">
+                                            
+                                            <label for="attachmentInput" class="cursor-pointer block">
+                                                <div class="text-slate-400">
+                                                    <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-blue-500"></i>
+                                                    <p class="font-bold text-slate-800 text-sm">{{ $isId ? 'Klik untuk mengunggah atau seret file ke sini' : 'Click to upload or drag and drop' }}</p>
+                                                    <p class="text-[11px] mt-1">DOC, DOCX, PDF, RTF (Max 10MB)</p>
+                                                </div>
+                                            </label>
+
+                                            <!-- Upload Progress -->
+                                            <div x-show="isUploading" class="mt-4" style="display: none;">
+                                                <div class="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                    <div class="h-full bg-blue-600 transition-all duration-300" :style="`width: ${uploadProgress}%`"></div>
+                                                </div>
+                                                <p class="text-[11px] text-slate-500 mt-1.5" x-text="isId ? `Mengunggah... ${uploadProgress}%` : `Uploading... ${uploadProgress}%`"></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Uploaded Files List -->
+                                        <div class="mt-4 space-y-2" x-show="files.length > 0" style="display: none;">
+                                            <x-text.label class="block mb-2">{{ $isId ? 'File Terunggah' : 'Uploaded Files' }}</x-text.label>
+                                            <template x-for="file in files" :key="file.id">
+                                                <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                                                    <div class="flex items-center space-x-3 min-w-0">
+                                                        <i class="fa-solid fa-file-arrow-up text-slate-400 text-base"></i>
+                                                        <div class="min-w-0">
+                                                            <p class="text-xs font-bold text-slate-800 truncate" x-text="file.name"></p>
+                                                            <p class="text-[10px] text-slate-400" x-text="file.size"></p>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" @click="deleteFile(file.id)" class="text-rose-500 hover:text-rose-700 p-1" :title="isId ? 'Hapus File' : 'Delete File'">
+                                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit & Action Buttons -->
+                                    <div class="flex items-center justify-end space-x-4 pt-5 border-t border-slate-100">
+                                        <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
+                                            class="text-sm font-bold text-slate-500 hover:text-slate-700 transition-all">
+                                            {{ $isId ? 'Simpan sebagai Draf' : 'Save as Draft' }}
+                                        </a>
+                                        <button type="submit"
+                                            class="inline-flex items-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-blue-100">
+                                            <i class="fa-solid fa-paper-plane mr-2"></i>
+                                            {{ $isId ? 'Kirim Ulasan' : 'Submit Review' }}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        @else
+                            <!-- Completed Review Summary Read-only -->
+                            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
+                                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                                    <x-text.h2 class="text-slate-900">{{ $isId ? 'Rangkuman Ulasan Anda' : 'Summary of Your Review' }}</x-text.h2>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        {{ $isId ? 'Selesai' : 'Completed' }}
+                                    </span>
+                                </div>
+
+                                <div class="space-y-5">
+                                    <div>
+                                        <x-text.label class="block mb-2">{{ $isId ? 'Rekomendasi Ulasan' : 'Your Recommendation' }}</x-text.label>
+                                        <span class="inline-flex items-center px-3.5 py-2 rounded-xl text-sm font-bold bg-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-50 text-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-700 border border-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-100">
+                                            <i class="fa-solid fa-circle-nodes mr-1.5"></i>
+                                            {{ $assignment->recommendation_label }}
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        <x-text.label class="block mb-2">{{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}</x-text.label>
+                                        <div class="prose prose-slate text-sm max-w-none text-slate-700 bg-slate-50/50 rounded-2xl p-5 border border-slate-100/60 leading-relaxed">
+                                            {!! clean($assignment->comments_for_author) !!}
+                                        </div>
+                                    </div>
+
+                                    @if ($assignment->comments_for_editor)
+                                        <div>
+                                            <x-text.label class="block mb-2">{{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}</x-text.label>
+                                            <div class="prose prose-slate text-sm max-w-none text-slate-700 bg-amber-50/40 rounded-2xl p-5 border border-amber-100 leading-relaxed">
+                                                {!! clean($assignment->comments_for_editor) !!}
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if ($reviewerAttachments->isNotEmpty())
+                                        <div>
+                                            <x-text.label class="block mb-2.5">{{ $isId ? 'Lampiran Ulasan Anda' : 'Your Attachments' }}</x-text.label>
+                                            <div class="space-y-2">
+                                                @foreach($reviewerAttachments as $file)
+                                                    <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                                                        <div class="flex items-center space-x-3">
+                                                            <i class="fa-solid fa-paperclip text-slate-400 text-base"></i>
+                                                            <div>
+                                                                <p class="text-xs font-bold text-slate-800">{{ $file->file_name }}</p>
+                                                                <p class="text-[10px] text-slate-400">{{ $file->file_size_formatted }}</p>
+                                                            </div>
+                                                        </div>
+                                                        <a href="{{ route('files.download', ['file' => $file->id]) }}" 
+                                                            class="text-blue-600 hover:text-blue-800 text-xs font-bold flex items-center">
+                                                            <i class="fa-solid fa-download mr-1"></i> {{ $isId ? 'Unduh' : 'Download' }}
+                                                        </a>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Review Discussions (Put it inside step 3 as requested by workflow) -->
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+                            <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
+                                :participants="$participants" :journal="$journal" />
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Sidebar info for Step 3 -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <!-- Guidelines Quick Check -->
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
+                            <x-text.h2 class="text-slate-900 mb-4 flex items-center">
+                                <i class="fa-solid fa-circle-info text-slate-400 mr-2"></i>
+                                {{ $isId ? 'Bantuan Cepat' : 'Quick Reference' }}
+                            </x-text.h2>
+                            <x-text.caption class="text-slate-500 block leading-relaxed mb-4">
+                                {{ $isId ? 'Jika Anda memerlukan koreksi langsung pada file manuskrip, silakan unggah naskah yang dikomentari di bagian Lampiran Reviewer.' 
+                                         : 'If you require direct corrections on the manuscript file, please upload the annotated manuscript in the Reviewer Attachments section.' }}
+                            </x-text.caption>
+                            
+                            <button type="button" @click="setStep(2)"
+                                class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+                                <i class="fa-solid fa-book-open mr-1.5"></i> {{ $isId ? 'Lihat Panduan Ulasan' : 'View Guidelines' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4: COMPLETION PANEL -->
+                <div x-show="activeStep === 4" x-cloak class="max-w-2xl mx-auto">
+                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center space-y-6">
+                        <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100 shadow-inner">
+                            <i class="fa-solid fa-circle-check text-4xl"></i>
+                        </div>
+
+                        <div class="space-y-2">
+                            <x-text.h1 class="text-slate-900">{{ $isId ? 'Ulasan Berhasil Dikirim!' : 'Review Submitted Successfully!' }}</x-text.h1>
+                            <x-text.body class="text-slate-500 max-w-md mx-auto block">
+                                {{ $isId ? 'Terima kasih banyak atas kontribusi dan dedikasi Anda dalam meninjau naskah ini. Ulasan Anda sangat berharga bagi tim redaksi dan penulis.' 
+                                         : 'Thank you very much for your contribution and dedication in reviewing this manuscript. Your review is invaluable to the editorial team and the author.' }}
+                            </x-text.body>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 rounded-2xl max-w-sm mx-auto text-left space-y-2 text-xs">
+                            <p class="text-slate-400 font-semibold uppercase tracking-wider">{{ $isId ? 'Ringkasan Informasi' : 'Review Summary' }}</p>
+                            <p class="text-slate-700"><span class="font-bold">{{ $isId ? 'Naskah:' : 'Manuscript:' }}</span> {{ $submission->title }}</p>
+                            <p class="text-slate-700"><span class="font-bold">{{ $isId ? 'Metode Ulasan:' : 'Review Method:' }}</span> {{ ucfirst(str_replace('_', ' ', $assignment->review_method)) }}</p>
+                            <p class="text-slate-700"><span class="font-bold">{{ $isId ? 'Rekomendasi Anda:' : 'Your Recommendation:' }}</span> <span class="font-bold text-emerald-600">{{ $assignment->recommendation_label }}</span></p>
+                        </div>
+
+                        <div class="pt-4 flex items-center justify-center gap-3">
+                            <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
+                                class="inline-flex items-center justify-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-blue-100 text-sm">
+                                <i class="fa-solid fa-list mr-2"></i>
+                                {{ $isId ? 'Kembali ke Ulasan Saya' : 'Back to My Reviews' }}
+                            </a>
+                            
+                            <button type="button" @click="setStep(3)"
+                                class="inline-flex items-center justify-center px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all text-sm">
+                                <i class="fa-solid fa-file-invoice mr-2"></i>
+                                {{ $isId ? 'Lihat Lembar Ulasan' : 'View Submitted Review' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
+            <!-- Decline Review Modal (Pending State Only) -->
+            <div x-show="showDeclineModal" x-cloak
+                class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0">
+                
+                <div @click.away="showDeclineModal = false"
+                    class="bg-white w-full max-w-lg rounded-[24px] shadow-2xl p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200 space-y-6">
+                    
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <x-text.h2 class="text-slate-900">{{ $isId ? 'Tolak Undangan Ulasan' : 'Decline Review Request' }}</x-text.h2>
+                        <button type="button" @click="showDeclineModal = false" class="text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+
+                    <form action="{{ route('journal.reviewer.decline', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST" class="space-y-4">
+                        @csrf
+                        <div>
+                            <label for="reason" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                {{ $isId ? 'Alasan Penolakan (Opsional)' : 'Reason for Decline (Optional)' }}
+                            </label>
+                            <textarea name="reason" id="reason" rows="4" x-model="declineReason"
+                                placeholder="{{ $isId ? 'Berikan alasan mengapa Anda tidak dapat mengulas naskah ini...' : 'Provide a reason why you cannot review this manuscript...' }}"
+                                class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-end space-x-3 pt-4">
+                            <button type="button" @click="showDeclineModal = false"
+                                class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-xs">
+                                {{ $isId ? 'Batal' : 'Cancel' }}
+                            </button>
+                            <button type="submit"
+                                class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition-all shadow-md shadow-rose-100 text-xs">
+                                {{ $isId ? 'Tolak Undangan' : 'Decline Request' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
-
-
-
     </div>
+
     @push('scripts')
         <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
         <script>
@@ -471,7 +770,6 @@
                     },
 
                     uploadFile(file) {
-                        // Validate file type
                         const allowedTypes = ['.doc', '.docx', '.pdf', '.rtf'];
                         const extension = '.' + file.name.split('.').pop().toLowerCase();
                         
@@ -485,7 +783,6 @@
                             return;
                         }
 
-                        // Validate file size (10MB)
                         if (file.size > 10 * 1024 * 1024) {
                             Swal.fire({
                                 icon: 'error',
@@ -517,10 +814,8 @@
                                 size: (response.data.file.file_size / 1024).toFixed(2) + ' KB'
                             });
                             
-                            // Reset input
                             document.getElementById('attachmentInput').value = '';
                             
-                            // Success toast
                             const Toast = Swal.mixin({
                                 toast: true,
                                 position: 'top-end',
