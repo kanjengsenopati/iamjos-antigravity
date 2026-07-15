@@ -48,7 +48,7 @@ class ReviewInvitation extends Notification
             ->line('You have been invited to review a manuscript for our journal.')
             ->line('**Manuscript Details:**')
             ->line('- **Title:** ' . $submission->title)
-            ->line('- **Abstract:** ' . \Str::limit($submission->abstract, 200))
+            ->line('- **Abstract:** ' . \Str::limit(strip_tags($submission->abstract ?? ''), 200))
             ->line('- **Due Date:** ' . $dueDate)
             ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
             ->line('')
