@@ -5223,13 +5223,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
 
         {{-- ==================== ASSIGN EDITOR MODAL ==================== --}}
-        </div></div></div></div>
 
-        <div style="background-color: red; color: white; padding: 10px; text-align: center; font-weight: bold; position: fixed; bottom: 10px; left: 10px; z-index: 9999;">DEBUG TEST: MODALS AREA IS RENDERED</div>
-        @include('submissions.partials.modal-assign-editor')
+        
 
         {{-- ==================== ASSIGN PARTICIPANT MODAL ==================== --}}
-        @include('submissions.partials.modal-assign-participant')
+        
 
         {{-- ==================== SEND TO REVIEW MODAL ==================== --}}
         <div x-show="sendToReviewModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"
@@ -7137,6 +7135,11 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
         </div>
     {{-- ========== ADD/EDIT GALLEY MODAL (Extracted Component) ========== --}}
     <x-submissions.galley-modal :journal="$journal" :submission="$submission" :pubStatus="$pubStatus" />
+
+        <div style="background-color: red; color: white; padding: 10px; text-align: center; font-weight: bold; position: fixed; bottom: 10px; left: 10px; z-index: 9999;">DEBUG TEST: MODALS AREA IS RENDERED</div>
+
+        @include('submissions.partials.modal-assign-editor')
+        @include('submissions.partials.modal-assign-participant')
     </div>
     <style>
         .ck-editor__editable {
