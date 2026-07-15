@@ -6204,21 +6204,27 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                 },
 
                 openFileModal(stage = null) {
+                    console.log('[SW-DEBUG] openFileModal called with stage:', stage);
                     if (stage) {
                         this.uploadStage = stage;
                     }
                     this.fileModalOpen = true;
+                    console.log('[SW-DEBUG] fileModalOpen set to:', this.fileModalOpen);
                 },
 
                 openAssignEditorModal() {
+                    console.log('[SW-DEBUG] openAssignEditorModal called');
                     this.resetEditorModal();
                     this.assignEditorModalOpen = true;
+                    console.log('[SW-DEBUG] assignEditorModalOpen set to:', this.assignEditorModalOpen);
                 },
 
                 openParticipantModal(stage) {
+                    console.log('[SW-DEBUG] openParticipantModal called with stage:', stage);
                     this.participantModalStage = stage;
                     this.resetParticipantModal();
                     this.participantModalOpen = true;
+                    console.log('[SW-DEBUG] participantModalOpen set to:', this.participantModalOpen);
                 },
 
                 resetParticipantModal() {
