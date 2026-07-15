@@ -81,17 +81,28 @@
     </script>
 
     <script>
-        // Register alpine:init listener EARLY (before Alpine boots via livewireScripts)
-        // so submissionWorkflow component is available when Alpine scans the DOM.
-        document.addEventListener('alpine:init', () => {
+        // Pendaftaran aman dengan mendengarkan berbagai event inisialisasi Alpine/Livewire
+        function initSubmissionWorkflowComponents() {
             if (typeof registerSubmissionWorkflow === 'function' && !window._submissionWorkflowRegistered) {
                 registerSubmissionWorkflow();
                 window._submissionWorkflowRegistered = true;
             }
-            if (typeof registerReviewerSelector === 'function') {
+            if (typeof registerReviewerSelector === 'function' && !window._reviewerSelectorRegistered) {
                 registerReviewerSelector();
+                window._reviewerSelectorRegistered = true;
             }
-        });
+        }
+
+        // Coba registrasi langsung jika Alpine sudah siap
+        if (window.Alpine) {
+            initSubmissionWorkflowComponents();
+        }
+
+        // Daftarkan listener pada event-event siklus hidup Alpine dan Livewire
+        document.addEventListener('alpine:init', initSubmissionWorkflowComponents);
+        document.addEventListener('livewire:init', initSubmissionWorkflowComponents);
+        document.addEventListener('DOMContentLoaded', initSubmissionWorkflowComponents);
+        window.addEventListener('load', initSubmissionWorkflowComponents);
     </script>
 
     <div x-data="submissionWorkflow(window.submissionWorkflowConfig)">
