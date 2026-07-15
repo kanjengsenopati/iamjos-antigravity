@@ -62,7 +62,7 @@ class SubmissionFileController extends Controller
                 'version'   => $version,
             ],
             user:        $user,
-            fileId:      $submissionFile->id,
+            fileIds:     [$submissionFile->id],
             stage:       $fileStage,
         );
 
