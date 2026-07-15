@@ -1,4 +1,4 @@
-﻿{{--
+{{--
     Submission Detail Workflow View
     Alpine.js component: submissionWorkflow
     Robustness updates:
@@ -5080,10 +5080,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <i class="fa-solid fa-cloud-arrow-up text-gray-400 text-3xl"></i>
                                     <div class="flex text-sm text-gray-600 justify-center">
                                         <label
-                                            class="relative cursor-pointer rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                                            class="relative cursor-pointer rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                                             <span>{{ $isId ? 'Unggah file' : 'Upload a file' }}</span>
                                             <input type="file" class="sr-only" @change="handleFileUpload">
-                                              <p class="text-xs text-gray-500">{{ $isId ? 'Seret dan lepas atau pilih file' : 'Drag and drop or select file' }}</p>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">{{ $isId ? 'Seret dan lepas atau pilih file' : 'Drag and drop or select file' }}</p>
                                 </div>
                             </div>
                             <div x-show="wizardIsUploading" class="mt-2 p-6 border-2 border-gray-200 rounded-md bg-gray-50 space-y-3">
