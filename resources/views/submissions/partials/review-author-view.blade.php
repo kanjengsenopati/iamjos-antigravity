@@ -169,6 +169,85 @@
         </div>
     </div>
 
+    {{-- Section B2: Peer Reviews --}}
+    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden" 
+         x-data="{ 
+             hasReviewsForRound(round) {
+                 const reviews = @json($authorReviewData['reviewAssignments'] ?? []);
+                 return reviews.some(r => r.round === round);
+             }
+         }">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <x-text.h2 class="flex items-center text-gray-900 font-semibold">
+                <i class="fa-solid fa-user-shield text-indigo-500 mr-2"></i>{{ $isId ? 'Ulasan Sejawat' : 'Peer Reviews' }}
+            </x-text.h2>
+        </div>
+        <div class="p-6">
+            @if (empty($authorReviewData['reviewAssignments']) || count($authorReviewData['reviewAssignments']) === 0)
+                <div class="text-center py-6">
+                    <i class="fa-solid fa-clipboard-check text-gray-300 text-3xl"></i>
+                    <x-text.body class="text-slate-500 mt-3">{{ $isId ? 'Belum ada hasil ulasan yang tersedia.' : 'No review results available yet.' }}</x-text.body>
+                </div>
+            @else
+                {{-- Placeholder if active round has no reviews --}}
+                <div x-show="!hasReviewsForRound(selectedAuthorRound)" class="text-center py-6" style="display: none;">
+                    <i class="fa-solid fa-clipboard-check text-gray-300 text-3xl"></i>
+                    <x-text.body class="text-slate-500 mt-3">{{ $isId ? 'Belum ada hasil ulasan untuk putaran ini.' : 'No review results available for this round.' }}</x-text.body>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach ($authorReviewData['reviewAssignments'] as $assignment)
+                        <div x-show="selectedAuthorRound === {{ $assignment['round'] }}" 
+                             class="p-4 border border-gray-50 rounded-[16px] bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                             style="display: none;">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                        <i class="fa-solid fa-user-ninja"></i>
+                                    </div>
+                                    <div>
+                                        <x-text.body class="font-semibold text-gray-900">{{ $assignment['pseudonym'] }}</x-text.body>
+                                        <x-text.caption class="text-slate-400 block mt-0.5">
+                                            {{ $isId ? 'Diselesaikan pada: ' : 'Completed at: ' }}
+                                            @if ($assignment['completed_at'])
+                                                {{ \Carbon\Carbon::parse($assignment['completed_at'])->format($isId ? 'd M Y' : 'M d, Y') }}
+                                            @else
+                                                -
+                                            @endif
+                                        </x-text.caption>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-3 self-end sm:self-center">
+                                    @if ($assignment['recommendation'])
+                                        @php
+                                            $accentColor = match ($assignment['recommendation_color']) {
+                                                'green' => 'emerald',
+                                                'red' => 'red',
+                                                'yellow' => 'amber',
+                                                'orange' => 'orange',
+                                                default => 'slate'
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-{{ $accentColor }}-50 text-{{ $accentColor }}-600 border border-{{ $accentColor }}-100">
+                                            {{ $assignment['recommendation_label'] }}
+                                        </span>
+                                    @endif
+
+                                    <button type="button" 
+                                            @click='openReviewDetailsModal({{ json_encode($assignment, JSON_HEX_APOS | JSON_HEX_QUOT) }})'
+                                            class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-indigo-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                                        <i class="fa-solid fa-eye mr-1.5"></i> {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+
     {{-- Section C: Reviewer's Attachments (Shared Files) --}}
     <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">

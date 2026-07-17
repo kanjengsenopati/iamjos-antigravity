@@ -811,6 +811,33 @@ class SubmissionController extends Controller
             $authorReviewData['reviewRounds'] = $submission->reviewRounds()
                 ->orderBy('round')
                 ->get();
+
+            // 6. Sanitized Review Assignments for Peer Review (blind review protocol)
+            $authorReviewData['reviewAssignments'] = $submission->reviewAssignments()
+                ->where(function ($query) {
+                    $query->where('status', 'completed')
+                          ->orWhereNotNull('recommendation');
+                })
+                ->get()
+                ->groupBy('round')
+                ->flatMap(function ($roundAssignments, $roundNumber) {
+                    // Sort by completed_at to maintain consistent ordering (Reviewer A, Reviewer B, etc.)
+                    $sorted = $roundAssignments->sortBy('completed_at')->values();
+                    return $sorted->map(function ($assignment, $index) {
+                        $pseudonym = 'Reviewer ' . chr(65 + $index); // Reviewer A, Reviewer B, etc.
+                        return [
+                            'id' => $assignment->id,
+                            'round' => $assignment->round,
+                            'pseudonym' => $pseudonym,
+                            'recommendation' => $assignment->recommendation,
+                            'recommendation_label' => $assignment->recommendation_label,
+                            'recommendation_color' => $assignment->recommendation_color,
+                            'comments_for_author' => $assignment->comments_for_author,
+                            'completed_at' => $assignment->completed_at,
+                        ];
+                    });
+                })
+                ->values();
         }
 
         // 6. Google Scholar SEO Analysis
