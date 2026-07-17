@@ -254,7 +254,8 @@ class ReviewerController extends Controller
             ->whereIn('file_type', ['manuscript', 'revision'])
             ->where('stage', 'review')
             ->orderBy('version', 'desc')
-            ->get();
+            ->get()
+            ->unique('file_name');
 
         // Prepare participants for discussion (Editors and Authors)
         $participants = collect();

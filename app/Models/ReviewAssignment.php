@@ -182,6 +182,27 @@ class ReviewAssignment extends Model
     }
 
     /**
+     * Get review attachments uploaded by the reviewer (supports in-memory eager loading)
+     */
+    public function attachments()
+    {
+        if ($this->relationLoaded('submission') && $this->submission->relationLoaded('files')) {
+            return $this->submission->files
+                ->where('file_type', 'review_attachment')
+                ->filter(function ($file) {
+                    $assignmentId = $file->metadata['review_assignment_id'] ?? null;
+                    return $assignmentId === $this->id;
+                })
+                ->values();
+        }
+
+        return SubmissionFile::where('submission_id', $this->submission_id)
+            ->where('file_type', 'review_attachment')
+            ->where('metadata->review_assignment_id', $this->id)
+            ->get();
+    }
+
+    /**
      * Get the review form assigned to this assignment
      */
     public function reviewForm(): BelongsTo

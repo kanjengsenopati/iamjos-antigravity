@@ -2052,7 +2052,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 "comments_for_editor" => $assignment->comments_for_editor,
                                                                 "quality_rating" => $assignment->quality_rating,
                                                                 "completed_at" => $assignment->completed_at ? $assignment->completed_at->toIso8601String() : null,
-                                                                "files" => $assignment->reviewAttachments->map(function ($file) {
+                                                                "files" => $assignment->attachments()->map(function ($file) {
                                                                     return [
                                                                         "id" => $file->id,
                                                                         "file_name" => $file->file_name,
