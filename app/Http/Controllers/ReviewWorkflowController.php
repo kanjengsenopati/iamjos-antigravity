@@ -1188,4 +1188,38 @@ public function searchReviewers(Request $request, string $journalSlug)
             'rating' => $request->quality_rating
         ]);
     }
+
+    /**
+     * Send/Record thank you to reviewer.
+     */
+    public function thankReviewer(Request $request, string $journalSlug, ReviewAssignment $reviewAssignment)
+    {
+        $journal = $this->getJournal();
+        
+        if ($reviewAssignment->submission->journal_id !== $journal->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!auth()->user()->hasAnyRole(['Editor', 'Section Editor', 'Journal Manager', 'Admin', 'Super Admin'])) {
+            abort(403, 'Insufficient permissions.');
+        }
+
+        $metadata = $reviewAssignment->metadata ?? [];
+        $metadata['thanked_at'] = now()->toIso8601String();
+        $reviewAssignment->update(['metadata' => $metadata]);
+
+        // Log the thank you
+        \App\Models\SubmissionLog::log(
+            $reviewAssignment->submission,
+            'reviewer_thanked',
+            'Reviewer Thanked',
+            auth()->user()->name . " thanked reviewer {$reviewAssignment->reviewer->name}.",
+            [
+                'reviewer_id' => $reviewAssignment->reviewer_id,
+                'assignment_id' => $reviewAssignment->id
+            ]
+        );
+
+        return back()->with('success', app()->getLocale() === 'id' ? 'Ucapan terima kasih berhasil dikirim ke reviewer.' : 'Thank you message successfully sent to reviewer.');
+    }
 }

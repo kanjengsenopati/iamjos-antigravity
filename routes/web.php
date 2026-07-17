@@ -460,6 +460,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::post('/{submission}/assign-copyeditor', [SubmissionWorkflowController::class, 'assignCopyeditor'])->name('assign-copyeditor');
                     Route::post('/{submission}/assign-production', [SubmissionWorkflowController::class, 'assignProduction'])->name('assign-production');
                     Route::post('/review-assignment/{reviewAssignment}/rate', [ReviewWorkflowController::class, 'rateReviewer'])->name('review-assignment.rate');
+                    Route::post('/review-assignment/{reviewAssignment}/thank', [ReviewWorkflowController::class, 'thankReviewer'])->name('review-assignment.thank');
                     Route::post('/review-assignment/{reviewAssignment}/update', [ReviewWorkflowController::class, 'updateReviewAssignment'])->name('review-assignment.update');
                     Route::post('/{submission}/record-decision', [ReviewWorkflowController::class, 'recordDecision'])->name('record-decision');
                     Route::post('/{submission}/promote-to-copyediting', [ReviewWorkflowController::class, 'promoteToCopyediting'])->name('promote-copyediting');

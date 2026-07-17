@@ -1972,9 +1972,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div @click="expanded = !expanded" 
                                                  class="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
                                                 <div class="flex items-center flex-1 min-w-0">
-                                                    <i class="fa-solid fa-chevron-right text-xs text-gray-400 mr-4 transition-transform duration-200"
-                                                       :class="expanded ? 'rotate-90' : ''"></i>
-                                                    
                                                     <div class="flex items-center">
                                                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm border border-indigo-200 shadow-sm">
                                                             {{ strtoupper(mb_substr($assignment->reviewer->name ?? 'R', 0, 1)) }}
@@ -2022,6 +2019,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             </span>
                                                         </div>
                                                     @endif
+
+                                                    {{-- Expandable Chevron Icon (V shape) on the right --}}
+                                                    <div class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center bg-white text-gray-400 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-colors shadow-sm">
+                                                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
+                                                           :class="expanded ? 'rotate-180 text-indigo-500' : ''"></i>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -2051,6 +2054,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
                                                             <i class="fa-solid fa-calendar-check {{ $canPerformAction ? 'text-indigo-500' : 'text-gray-400' }} mr-2"></i> {{ $isId ? 'Edit Penugasan' : 'Edit Assignment' }}
                                                         </button>
+
+                                                        {{-- Thank Reviewer (Only when Completed) --}}
+                                                        @if ($assignment->status === 'completed')
+                                                            @if (isset($assignment->metadata['thanked_at']))
+                                                                <button type="button" disabled
+                                                                    class="flex items-center justify-center px-4 py-2.5 bg-green-50 border border-green-200 text-green-700 text-xs font-bold rounded-lg cursor-not-allowed shadow-sm w-full">
+                                                                    <i class="fa-solid fa-envelope-circle-check text-green-600 mr-2"></i> {{ $isId ? 'Terima Kasih Terkirim' : 'Reviewer Thanked' }}
+                                                                </button>
+                                                            @else
+                                                                <form action="{{ route('journal.workflow.review-assignment.thank', ['journal' => $journal->slug, 'reviewAssignment' => $assignment->id]) }}" method="POST" class="w-full">
+                                                                    @csrf
+                                                                    <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
+                                                                        class="w-full flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                                        <i class="fa-solid fa-envelope-open-text text-indigo-500 mr-2"></i> {{ $isId ? 'Kirim Terima Kasih' : 'Thank Reviewer' }}
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                        @endif
 
                                                         {{-- Unassign --}}
                                                         @if (!in_array($assignment->status, ['completed', 'declined', 'cancelled']))
