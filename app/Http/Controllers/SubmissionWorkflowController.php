@@ -70,6 +70,7 @@ class SubmissionWorkflowController extends Controller
             'discussions.participants',
             'editorialAssignments.user',
             'reviewAssignments.reviewer',
+            'reviewAssignments.reviewAttachments',
         ]);
 
         $issues = \App\Models\Issue::where('journal_id', $journal->id)

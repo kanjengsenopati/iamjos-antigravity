@@ -172,6 +172,16 @@ class ReviewAssignment extends Model
     }
 
     /**
+     * Get review attachments uploaded by the reviewer
+     */
+    public function reviewAttachments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SubmissionFile::class, 'submission_id', 'submission_id')
+            ->where('file_type', 'review_attachment')
+            ->where('metadata->review_assignment_id', $this->id);
+    }
+
+    /**
      * Get the review form assigned to this assignment
      */
     public function reviewForm(): BelongsTo

@@ -728,6 +728,7 @@ class SubmissionController extends Controller
             // Editor/Admin view: Load reviewers and all review data
             $submission->load([
                 'reviewAssignments.reviewer',
+                'reviewAssignments.reviewAttachments',
             ]);
         }
 
@@ -814,6 +815,7 @@ class SubmissionController extends Controller
 
             // 6. Sanitized Review Assignments for Peer Review (blind review protocol)
             $authorReviewData['reviewAssignments'] = $submission->reviewAssignments()
+                ->with('reviewAttachments')
                 ->where(function ($query) {
                     $query->where('status', 'completed')
                           ->orWhereNotNull('recommendation');
@@ -834,6 +836,14 @@ class SubmissionController extends Controller
                             'recommendation_color' => $assignment->recommendation_color,
                             'comments_for_author' => $assignment->comments_for_author,
                             'completed_at' => $assignment->completed_at,
+                            'files' => $assignment->reviewAttachments->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'file_name' => $file->file_name,
+                                    'download_url' => route('files.download', $file),
+                                    'created_at' => $file->created_at->toIso8601String(),
+                                ];
+                            })->toArray(),
                         ];
                     });
                 })

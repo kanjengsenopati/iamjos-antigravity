@@ -2043,7 +2043,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                                         {{-- Review Details --}}
                                                         @if ($assignment->status === 'completed' || $assignment->recommendation)
-                                                            <button type="button" @click='openReviewDetailsModal({{ json_encode($assignment, JSON_HEX_APOS | JSON_HEX_QUOT) }})'
+                                                            <button type="button" @click='openReviewDetailsModal({{ json_encode([
+                                                                "id" => $assignment->id,
+                                                                "recommendation" => $assignment->recommendation,
+                                                                "recommendation_label" => $assignment->recommendation_label,
+                                                                "recommendation_color" => $assignment->recommendation_color,
+                                                                "comments_for_author" => $assignment->comments_for_author,
+                                                                "comments_for_editor" => $assignment->comments_for_editor,
+                                                                "quality_rating" => $assignment->quality_rating,
+                                                                "completed_at" => $assignment->completed_at ? $assignment->completed_at->toIso8601String() : null,
+                                                                "files" => $assignment->reviewAttachments->map(function ($file) {
+                                                                    return [
+                                                                        "id" => $file->id,
+                                                                        "file_name" => $file->file_name,
+                                                                        "download_url" => route("files.download", $file),
+                                                                        "created_at" => $file->created_at->toIso8601String(),
+                                                                    ];
+                                                                })->toArray()
+                                                            ], JSON_HEX_APOS | JSON_HEX_QUOT) }})'
                                                                 class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
                                                                 <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
                                                             </button>
@@ -7090,6 +7107,38 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <p class="mt-1 text-xs text-gray-400">{{ $isId ? 'Beri penilaian kualitas ulasan ini untuk catatan editorial internal.' : 'Rate the quality of this review for internal editorial records.' }}</p>
                                             </div>
                                         @endif
+
+                                        {{-- Reviewer Files Section (Gambar 3 OJS style) --}}
+                                        <div class="mt-6 pt-6 border-t border-gray-100 mb-4">
+                                            <h4 class="text-sm font-semibold text-gray-700 mb-3">{{ $isId ? 'Berkas Mitra Bestari' : 'Reviewer Files' }}</h4>
+                                            
+                                            <template x-if="!selectedReview?.files || selectedReview?.files.length === 0">
+                                                <p class="text-xs text-gray-400 italic">{{ $isId ? 'Tidak ada berkas yang diunggah.' : 'No files uploaded.' }}</p>
+                                            </template>
+                                            
+                                            <template x-if="selectedReview?.files && selectedReview?.files.length > 0">
+                                                <div class="space-y-2">
+                                                    <template x-for="file in selectedReview.files" :key="file.id">
+                                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-[12px] hover:bg-gray-100 transition-colors">
+                                                            <div class="flex items-center gap-3 min-w-0">
+                                                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                                                    <i class="fa-solid fa-file-word text-sm"></i>
+                                                                </div>
+                                                                <div class="min-w-0">
+                                                                    <a :href="file.download_url" 
+                                                                       class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline truncate block"
+                                                                       x-text="file.file_name"></a>
+                                                                    <span class="text-[10px] text-gray-400" x-text="`ID: ${file.id}`"></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <span class="text-[11px] text-gray-400" x-text="new Date(file.created_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
 
                                         <div class="mt-2 text-xs text-gray-400">
                                             {{ $isId ? 'Diselesaikan pada:' : 'Completed at:' }} <span

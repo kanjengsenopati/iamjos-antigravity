@@ -171,12 +171,12 @@
 
     {{-- Section B2: Peer Reviews --}}
     <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden" 
-         x-data="{ 
+         x-data='{ 
+             reviews: {{ json_encode($authorReviewData["reviewAssignments"] ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) }},
              hasReviewsForRound(round) {
-                 const reviews = @json($authorReviewData['reviewAssignments'] ?? []);
-                 return reviews.some(r => r.round === round);
+                 return this.reviews.some(r => r.round === round);
              }
-         }">
+         }'>
         <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
             <x-text.h2 class="flex items-center text-gray-900 font-semibold">
                 <i class="fa-solid fa-user-shield text-indigo-500 mr-2"></i>{{ $isId ? 'Ulasan Sejawat' : 'Peer Reviews' }}
