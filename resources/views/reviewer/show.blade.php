@@ -684,88 +684,217 @@
                             </div>
                         </form>
                     @else
-                        <!-- Completed Review Summary Read-only -->
+                        <!-- Completed Review (Form Review State Locked - Read-Only) -->
                         <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
-                            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                                <x-text.h2 class="text-slate-900">{{ $isId ? 'Rangkuman Ulasan Anda' : 'Summary of Your Review' }}</x-text.h2>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                    {{ $isId ? 'Selesai' : 'Completed' }}
-                                </span>
+                            
+                            <!-- Header & Locked Status Badge -->
+                            <div class="border-b border-slate-100 pb-4 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <x-text.h2 class="text-slate-900">{{ $isId ? 'Formulir Ulasan Anda (Terkunci)' : 'Summary of Your Review' }}</x-text.h2>
+                                        @if($reviewForm)
+                                            <p class="text-xs text-blue-600 font-bold mt-1 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-clipboard-list"></i>
+                                                {{ $reviewForm->title }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 gap-1.5">
+                                        <i class="fa-solid fa-lock text-slate-500"></i>
+                                        {{ $isId ? 'Terkunci / Selesai' : 'Locked / Completed' }}
+                                    </span>
+                                </div>
+
+                                @if($reviewForm && $reviewForm->description)
+                                    <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-500 leading-relaxed block w-full">
+                                        {{ $reviewForm->description }}
+                                    </div>
+                                @endif
                             </div>
 
-                            <div class="space-y-5">
+                            <!-- Recommendation Badge -->
+                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100/80 flex items-center justify-between">
                                 <div>
-                                    <x-text.label class="block mb-2">{{ $isId ? 'Rekomendasi Ulasan' : 'Your Recommendation' }}</x-text.label>
-                                    <span class="inline-flex items-center px-3.5 py-2 rounded-xl text-sm font-bold bg-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-50 text-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-700 border border-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-100">
+                                    <x-text.label class="block mb-1">{{ $isId ? 'Rekomendasi Ulasan Anda' : 'Your Recommendation' }}</x-text.label>
+                                    <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-bold bg-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-50 text-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-700 border border-{{ $assignment->recommendation_color === 'green' ? 'emerald' : ($assignment->recommendation_color === 'red' ? 'rose' : $assignment->recommendation_color) }}-100">
                                         <i class="fa-solid fa-circle-nodes mr-1.5"></i>
                                         {{ $assignment->recommendation_label }}
                                     </span>
                                 </div>
+                                <span class="text-xs text-slate-400">
+                                    {{ $assignment->date_completed?->translatedFormat('d M Y H:i') ?? '' }}
+                                </span>
+                            </div>
 
+                            <!-- Active Review Form Questions (State Locked / Read-Only Elements) -->
+                            @if($reviewForm && $reviewForm->elements->isNotEmpty())
+                                <div class="space-y-6 pb-6 border-b border-slate-100">
+                                    <x-text.label class="block text-slate-400 font-bold uppercase tracking-wider text-[11px] mb-3">
+                                        {{ $isId ? 'Hasil Formulir Evaluasi' : 'Evaluation Form Answers' }}
+                                    </x-text.label>
+
+                                    @foreach($reviewForm->elements as $index => $element)
+                                        @php
+                                            $existingValue = $existingResponses->get($element->id)?->response_value;
+                                        @endphp
+                                        <div class="p-5 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-3">
+                                            <div class="flex items-start gap-3">
+                                                <span class="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-xl bg-slate-700 text-white text-xs font-bold shadow-sm">
+                                                    {{ $index + 1 }}
+                                                </span>
+                                                <div class="flex-1">
+                                                    <label class="text-sm font-bold text-slate-900 block leading-snug">
+                                                        {{ $element->question }}
+                                                        @if($element->required)
+                                                            <span class="text-rose-500">*</span>
+                                                        @endif
+                                                    </label>
+                                                    @if($element->description)
+                                                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ $element->description }}</p>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="pl-10">
+                                                @switch($element->element_type->value)
+                                                    @case('text')
+                                                        <input type="text" disabled readonly 
+                                                            value="{{ $existingValue }}"
+                                                            class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed">
+                                                        @break
+
+                                                    @case('textarea')
+                                                        <textarea disabled readonly rows="4"
+                                                            class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed leading-relaxed">{{ $existingValue }}</textarea>
+                                                        @break
+
+                                                    @case('checkbox')
+                                                        @php
+                                                            $selectedValues = json_decode($existingValue, true) ?? (is_string($existingValue) ? [$existingValue] : []);
+                                                        @endphp
+                                                        @if($element->options)
+                                                            <div class="space-y-2">
+                                                                @foreach($element->options as $option)
+                                                                    @php
+                                                                        $isSelected = in_array($option['value'], (array)$selectedValues);
+                                                                    @endphp
+                                                                    <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
+                                                                        <input type="checkbox" disabled {{ $isSelected ? 'checked' : '' }}
+                                                                            class="rounded border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed">
+                                                                        <span class="text-sm font-medium">{{ $option['label'] }}</span>
+                                                                        @if($isSelected)
+                                                                            <span class="ml-auto text-xs text-blue-600 font-bold flex items-center gap-1">
+                                                                                <i class="fa-solid fa-check"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
+                                                                            </span>
+                                                                        @endif
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
+                                                        @break
+
+                                                    @case('radio')
+                                                        @if($element->options)
+                                                            <div class="space-y-2">
+                                                                @foreach($element->options as $option)
+                                                                    @php
+                                                                        $isSelected = ($existingValue == $option['value']);
+                                                                    @endphp
+                                                                    <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
+                                                                        <input type="radio" disabled {{ $isSelected ? 'checked' : '' }}
+                                                                            class="border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed">
+                                                                        <span class="text-sm font-medium">{{ $option['label'] }}</span>
+                                                                        @if($isSelected)
+                                                                            <span class="ml-auto text-xs text-blue-600 font-bold flex items-center gap-1">
+                                                                                <i class="fa-solid fa-check"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
+                                                                            </span>
+                                                                        @endif
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
+                                                        @break
+
+                                                    @case('select')
+                                                        @php
+                                                            $selectedLabel = '-';
+                                                            if($element->options) {
+                                                                foreach($element->options as $opt) {
+                                                                    if($opt['value'] == $existingValue) {
+                                                                        $selectedLabel = $opt['label'];
+                                                                    }
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        <div class="p-3 bg-slate-100/80 border border-slate-200 rounded-xl text-sm font-bold text-slate-800">
+                                                            {{ $selectedLabel }}
+                                                        </div>
+                                                        @break
+
+                                                    @case('rating')
+                                                        @php
+                                                            $config = $element->getRatingConfig();
+                                                            $selectedRating = (int)$existingValue;
+                                                        @endphp
+                                                        <div class="flex items-center gap-2 p-3 bg-slate-100/80 border border-slate-200 rounded-xl">
+                                                            @for($i = $config['min']; $i <= $config['max']; $i++)
+                                                                <i class="fa-solid fa-star text-xl {{ $selectedRating >= $i ? 'text-amber-400' : 'text-slate-300' }}"></i>
+                                                            @endfor
+                                                            <span class="text-xs font-bold text-slate-700 ml-2">
+                                                                {{ $selectedRating > 0 ? $selectedRating . '/' . $config['max'] : '-' }}
+                                                            </span>
+                                                        </div>
+                                                        @break
+                                                @endswitch
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <!-- Comments for Author (State Locked) -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                    {{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}
+                                </label>
+                                <textarea disabled readonly rows="6"
+                                    class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed leading-relaxed">{{ $assignment->comments_for_author }}</textarea>
+                            </div>
+
+                            <!-- Comments for Editor (State Locked) -->
+                            @if ($assignment->comments_for_editor)
                                 <div>
-                                    <x-text.label class="block mb-2">{{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}</x-text.label>
-                                    <div class="prose prose-slate text-sm max-w-none text-slate-700 bg-slate-50/50 rounded-2xl p-5 border border-slate-100/60 leading-relaxed">
-                                        {!! clean($assignment->comments_for_author) !!}
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                        {{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}
+                                    </label>
+                                    <textarea disabled readonly rows="4"
+                                        class="w-full rounded-xl border-amber-200/80 shadow-sm text-sm bg-amber-50/50 text-amber-900 font-medium cursor-not-allowed leading-relaxed">{{ $assignment->comments_for_editor }}</textarea>
+                                </div>
+                            @endif
+
+                            <!-- Reviewer Attachments -->
+                            @if ($reviewerAttachments->isNotEmpty())
+                                <div>
+                                    <x-text.label class="block mb-2.5">{{ $isId ? 'Lampiran Ulasan Anda' : 'Your Attachments' }}</x-text.label>
+                                    <div class="space-y-2">
+                                        @foreach($reviewerAttachments as $file)
+                                            <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                                                <div class="flex items-center space-x-3">
+                                                    <i class="fa-solid fa-paperclip text-slate-400 text-base"></i>
+                                                    <div>
+                                                        <p class="text-xs font-bold text-slate-800">{{ $file->file_name }}</p>
+                                                        <p class="text-[10px] text-slate-400">{{ $file->file_size_formatted }}</p>
+                                                    </div>
+                                                </div>
+                                                <a href="{{ route('files.download', ['file' => $file->id]) }}" 
+                                                    class="text-blue-600 hover:text-blue-800 text-xs font-bold flex items-center">
+                                                    <i class="fa-solid fa-download mr-1"></i> {{ $isId ? 'Unduh' : 'Download' }}
+                                                </a>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
-
-                                @if ($reviewForm && $existingResponses->isNotEmpty())
-                                    <div>
-                                        <x-text.label class="block mb-3">{{ $isId ? 'Hasil Formulir Evaluasi (' . $reviewForm->title . ')' : 'Review Form Responses (' . $reviewForm->title . ')' }}</x-text.label>
-                                        <div class="space-y-3">
-                                            @foreach($reviewForm->elements as $index => $element)
-                                                @php
-                                                    $responseVal = $existingResponses->get($element->id)?->response_value;
-                                                    if (is_string($responseVal) && (str_starts_with($responseVal, '[') || str_starts_with($responseVal, '{'))) {
-                                                        $decoded = json_decode($responseVal, true);
-                                                        if (is_array($decoded)) {
-                                                            $responseVal = implode(', ', $decoded);
-                                                        }
-                                                    }
-                                                @endphp
-                                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                                    <p class="text-xs font-bold text-slate-800">{{ $index + 1 }}. {{ $element->question }}</p>
-                                                    <p class="text-xs font-medium text-blue-700 mt-1.5 bg-blue-50/60 inline-block px-3 py-1 rounded-lg border border-blue-100/50">
-                                                        {{ $responseVal ?: '-' }}
-                                                    </p>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if ($assignment->comments_for_editor)
-                                    <div>
-                                        <x-text.label class="block mb-2">{{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}</x-text.label>
-                                        <div class="prose prose-slate text-sm max-w-none text-slate-700 bg-amber-50/40 rounded-2xl p-5 border border-amber-100 leading-relaxed">
-                                            {!! clean($assignment->comments_for_editor) !!}
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if ($reviewerAttachments->isNotEmpty())
-                                    <div>
-                                        <x-text.label class="block mb-2.5">{{ $isId ? 'Lampiran Ulasan Anda' : 'Your Attachments' }}</x-text.label>
-                                        <div class="space-y-2">
-                                            @foreach($reviewerAttachments as $file)
-                                                <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
-                                                    <div class="flex items-center space-x-3">
-                                                        <i class="fa-solid fa-paperclip text-slate-400 text-base"></i>
-                                                        <div>
-                                                            <p class="text-xs font-bold text-slate-800">{{ $file->file_name }}</p>
-                                                            <p class="text-[10px] text-slate-400">{{ $file->file_size_formatted }}</p>
-                                                        </div>
-                                                    </div>
-                                                    <a href="{{ route('files.download', ['file' => $file->id]) }}" 
-                                                        class="text-blue-600 hover:text-blue-800 text-xs font-bold flex items-center">
-                                                        <i class="fa-solid fa-download mr-1"></i> {{ $isId ? 'Unduh' : 'Download' }}
-                                                    </a>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
+                            @endif
                         </div>
                     @endif
 
