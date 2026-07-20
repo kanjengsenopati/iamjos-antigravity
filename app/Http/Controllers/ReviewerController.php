@@ -348,6 +348,8 @@ class ReviewerController extends Controller
                     ->where('journal_id', $journal->id)
                     ->first();
             }
+        }
+
         if ($reviewForm) {
             $assignment->setRelation('reviewForm', $reviewForm);
             if ($assignment->review_form_id !== $reviewForm->id) {
