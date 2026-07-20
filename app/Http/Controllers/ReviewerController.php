@@ -348,7 +348,9 @@ class ReviewerController extends Controller
                     ->where('journal_id', $journal->id)
                     ->first();
             }
-            if ($reviewForm) {
+        if ($reviewForm) {
+            $assignment->setRelation('reviewForm', $reviewForm);
+            if ($assignment->review_form_id !== $reviewForm->id) {
                 $assignment->update(['review_form_id' => $reviewForm->id]);
             }
         }
@@ -362,22 +364,18 @@ class ReviewerController extends Controller
         $messages = [];
 
         // If assignment has a review form, validate required elements
-        if ($assignment->hasReviewForm()) {
-            $assignment->load('reviewForm.elements');
-            $reviewForm = $assignment->reviewForm;
-            if ($reviewForm) {
-                foreach ($reviewForm->elements as $element) {
-                    $fieldName = "responses.{$element->id}";
-                    if ($element->required) {
-                        $rules[$fieldName] = 'required';
-                        $messages["{$fieldName}.required"] = "Pertanyaan \"{$element->question}\" wajib diisi.";
-                    }
-                    if ($element->element_type->value === 'checkbox') {
-                        $rules[$fieldName] = ($element->required ? 'required|' : '') . 'array';
-                    } elseif ($element->element_type->value === 'rating') {
-                        $config = $element->getRatingConfig();
-                        $rules[$fieldName] = ($element->required ? 'required|' : '') . "integer|min:{$config['min']}|max:{$config['max']}";
-                    }
+        if ($reviewForm && $reviewForm->elements->isNotEmpty()) {
+            foreach ($reviewForm->elements as $element) {
+                $fieldName = "responses.{$element->id}";
+                if ($element->required) {
+                    $rules[$fieldName] = 'required';
+                    $messages["{$fieldName}.required"] = "Pertanyaan \"{$element->question}\" wajib diisi.";
+                }
+                if ($element->element_type->value === 'checkbox') {
+                    $rules[$fieldName] = ($element->required ? 'required|' : '') . 'array';
+                } elseif ($element->element_type->value === 'rating') {
+                    $config = $element->getRatingConfig();
+                    $rules[$fieldName] = ($element->required ? 'required|' : '') . "integer|min:{$config['min']}|max:{$config['max']}";
                 }
             }
         }
@@ -385,8 +383,7 @@ class ReviewerController extends Controller
         $validated = $request->validate($rules, $messages);
 
         // Save ReviewFormResponses if form exists
-        if ($assignment->hasReviewForm() && $assignment->reviewForm) {
-            $reviewForm = $assignment->reviewForm;
+        if ($reviewForm && $reviewForm->elements->isNotEmpty()) {
             foreach ($reviewForm->elements as $element) {
                 $value = $request->input("responses.{$element->id}");
                 if (is_null($value) && !$element->required) {
@@ -395,7 +392,7 @@ class ReviewerController extends Controller
                 if ($element->element_type->value === 'checkbox' && is_array($value)) {
                     $value = json_encode($value);
                 } else {
-                    $value = is_array($value) ? json_encode($value) : $value;
+                    $value = is_array($value) ? json_encode($value) : (is_null($value) ? '' : (string)$value);
                 }
                 \App\Models\ReviewFormResponse::updateOrCreate(
                     [
@@ -403,7 +400,7 @@ class ReviewerController extends Controller
                         'review_form_element_id' => $element->id,
                     ],
                     [
-                        'response_value' => $value ?? '',
+                        'response_value' => $value,
                     ]
                 );
             }

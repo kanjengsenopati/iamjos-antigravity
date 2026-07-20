@@ -735,7 +735,10 @@
 
                                     @foreach($reviewForm->elements as $index => $element)
                                         @php
-                                            $existingValue = $existingResponses->get($element->id)?->response_value;
+                                            $resp = $existingResponses->first(function($r) use ($element) {
+                                                return (string)$r->review_form_element_id === (string)$element->id;
+                                            });
+                                            $existingValue = $resp ? $resp->response_value : $existingResponses->get($element->id)?->response_value;
                                         @endphp
                                         <div class="p-5 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-3">
                                             <div class="flex items-start gap-3">
@@ -772,13 +775,16 @@
 
                                                     @case('checkbox')
                                                         @php
-                                                            $selectedValues = json_decode($existingValue, true) ?? (is_string($existingValue) ? [$existingValue] : []);
+                                                            $selectedValues = json_decode($existingValue, true);
+                                                            if (!is_array($selectedValues)) {
+                                                                $selectedValues = is_null($existingValue) || $existingValue === '' ? [] : [$existingValue];
+                                                            }
                                                         @endphp
                                                         @if($element->options)
                                                             <div class="space-y-2">
                                                                 @foreach($element->options as $option)
                                                                     @php
-                                                                        $isSelected = in_array($option['value'], (array)$selectedValues);
+                                                                        $isSelected = in_array((string)$option['value'], array_map('strval', (array)$selectedValues));
                                                                     @endphp
                                                                     <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
                                                                         <input type="checkbox" disabled {{ $isSelected ? 'checked' : '' }}
@@ -800,7 +806,7 @@
                                                             <div class="space-y-2">
                                                                 @foreach($element->options as $option)
                                                                     @php
-                                                                        $isSelected = ($existingValue == $option['value']);
+                                                                        $isSelected = !is_null($existingValue) && $existingValue !== '' && ((string)$existingValue === (string)$option['value'] || $existingValue == $option['value']);
                                                                     @endphp
                                                                     <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
                                                                         <input type="radio" disabled {{ $isSelected ? 'checked' : '' }}
