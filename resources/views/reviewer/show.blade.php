@@ -739,6 +739,19 @@
                                                 return (string)$r->review_form_element_id === (string)$element->id;
                                             });
                                             $existingValue = $resp ? $resp->response_value : $existingResponses->get($element->id)?->response_value;
+
+                                            // Smart Fallback: Jika ulasan sudah completed tetapi review_form_responses belum sempat terekam
+                                            if (($status === 'completed' || $assignment->status === 'completed') && (is_null($existingValue) || trim((string)$existingValue) === '')) {
+                                                if ($element->element_type->value === 'text' || $element->element_type->value === 'textarea') {
+                                                    if ($index === 0 && !empty($assignment->comments_for_author)) {
+                                                        $existingValue = $assignment->comments_for_author;
+                                                    } elseif ($index === 1 && !empty($assignment->comments_for_editor)) {
+                                                        $existingValue = $assignment->comments_for_editor;
+                                                    } elseif (!empty($assignment->comments_for_author)) {
+                                                        $existingValue = $assignment->comments_for_author;
+                                                    }
+                                                }
+                                            }
                                         @endphp
                                         <div class="p-5 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-3">
                                             <div class="flex items-start gap-3">

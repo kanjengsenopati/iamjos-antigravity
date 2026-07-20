@@ -386,8 +386,9 @@ class ReviewerController extends Controller
 
         // Save ReviewFormResponses if form exists
         if ($reviewForm && $reviewForm->elements->isNotEmpty()) {
+            $responsesInput = $request->input('responses', []);
             foreach ($reviewForm->elements as $element) {
-                $value = $request->input("responses.{$element->id}");
+                $value = data_get($responsesInput, $element->id, $request->input("responses.{$element->id}"));
                 if (is_null($value) && !$element->required) {
                     continue;
                 }
