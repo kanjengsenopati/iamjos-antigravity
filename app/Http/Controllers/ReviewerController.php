@@ -389,9 +389,6 @@ class ReviewerController extends Controller
             $responsesInput = $request->input('responses', []);
             foreach ($reviewForm->elements as $element) {
                 $value = data_get($responsesInput, $element->id, $request->input("responses.{$element->id}"));
-                if (is_null($value) && !$element->required) {
-                    continue;
-                }
                 if ($element->element_type->value === 'checkbox' && is_array($value)) {
                     $value = json_encode($value);
                 } else {
