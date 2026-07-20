@@ -1202,6 +1202,24 @@
 
                 {{-- Header Actions --}}
                 <div class="flex items-center gap-3 pt-1">
+                    @if ($submission->status == 2 || $submission->status === 'published')
+                        {{-- Button View untuk Artikel Published --}}
+                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->id]) }}"
+                            target="_blank"
+                            class="flex items-center justify-center px-4 py-2 border border-blue-600 rounded-lg text-sm font-bold text-blue-600 bg-white hover:bg-blue-50 transition-all shadow-sm">
+                            <i class="fa-solid fa-eye mr-2 text-blue-600"></i>
+                            {{ $isId ? 'Lihat' : 'View' }}
+                        </a>
+                    @else
+                        {{-- Button Preview untuk Artikel Unpublished --}}
+                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->id, 'preview' => 1]) }}"
+                            target="_blank"
+                            class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm">
+                            <i class="fa-solid fa-eye mr-2 text-gray-500"></i>
+                            {{ $isId ? 'Pratinjau' : 'Preview' }}
+                        </a>
+                    @endif
+
                     <button @click="showActivityLog = true"
                         class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm">
                         <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500"></i>

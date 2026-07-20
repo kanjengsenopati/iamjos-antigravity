@@ -318,37 +318,31 @@ class PublicController extends Controller
         // 1. Resolve Journal Terlebih Dahulu (Penting untuk validasi)
         $journal = $this->resolveJournal($journalSlug);
 
+        $isPreview = request()->boolean('preview') || request()->has('preview');
+        $query = Submission::where('journal_id', $journal->id);
+        if (!$isPreview) {
+            $query->published();
+        }
+
         // =============================================
-        // LOGIKA BARU: HANDLER SEQ_ID, UUID, AND SLUG
+        // LOGIKA HANDLER SEQ_ID, UUID, AND SLUG (Support Preview)
         // =============================================
         $article = null;
 
         if (Str::isUuid($slug)) {
             // Cari artikel berdasarkan ID (UUID)
-            $article = Submission::published()
-                ->where('id', $slug)
-                ->where('journal_id', $journal->id)
-                ->first();
+            $article = (clone $query)->where('id', $slug)->first();
         } elseif (is_numeric($slug)) {
             // Cari artikel berdasarkan seq_id
-            $article = Submission::published()
-                ->where('seq_id', $slug)
-                ->where('journal_id', $journal->id)
-                ->first();
+            $article = (clone $query)->where('seq_id', $slug)->first();
                 
-            // Fallback jika ternyata slug dibuat dari angka (jarang terjadi tapi mungkin)
+            // Fallback jika ternyata slug dibuat dari angka
             if (!$article) {
-                $article = Submission::published()
-                    ->where('slug', $slug)
-                    ->where('journal_id', $journal->id)
-                    ->first();
+                $article = (clone $query)->where('slug', $slug)->first();
             }
         } else {
             // Cari artikel berdasarkan Slug
-            $article = Submission::published()
-                ->where('slug', $slug)
-                ->where('journal_id', $journal->id)
-                ->first();
+            $article = (clone $query)->where('slug', $slug)->first();
         }
 
         if (!$article) {
