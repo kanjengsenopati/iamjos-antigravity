@@ -239,37 +239,42 @@ class ReviewerController extends Controller
     /**
      * Show review form for a specific submission.
      */
-    /**
-     * Show review form for a specific submission.
-     */
     public function show(string $journalSlug, string $identifier): View
     {
         $journal = $this->getJournal();
         $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
 
-        // Auto-associate active Review Form from Journal if assignment has no review_form_id
-        if (!$assignment->hasReviewForm()) {
-            $activeForm = \App\Models\ReviewForm::where('journal_id', $journal->id)
-                ->active()
-                ->first();
-            if ($activeForm) {
-                $assignment->update(['review_form_id' => $activeForm->id]);
-                $assignment->unsetRelation('reviewForm');
+        // Auto-associate active Review Form from Journal if assignment has no review_form_id or invalid review_form_id
+        $reviewForm = null;
+        if ($assignment->review_form_id) {
+            $reviewForm = \App\Models\ReviewForm::with(['elements' => function ($query) {
+                $query->ordered();
+            }])->find($assignment->review_form_id);
+        }
+
+        if (!$reviewForm) {
+            // Find active form in journal
+            $reviewForm = \App\Models\ReviewForm::with(['elements' => function ($query) {
+                $query->ordered();
+            }])->where('journal_id', $journal->id)
+               ->active()
+               ->first();
+
+            // Fallback: any review form in journal
+            if (!$reviewForm) {
+                $reviewForm = \App\Models\ReviewForm::with(['elements' => function ($query) {
+                    $query->ordered();
+                }])->where('journal_id', $journal->id)->first();
+            }
+
+            if ($reviewForm) {
+                $assignment->update(['review_form_id' => $reviewForm->id]);
             }
         }
 
-        // Load Review Form with elements and form responses
-        $reviewForm = null;
         $existingResponses = collect();
-        if ($assignment->hasReviewForm()) {
-            $assignment->load([
-                'reviewForm.elements' => function ($query) {
-                    $query->ordered();
-                },
-                'formResponses'
-            ]);
-            $reviewForm = $assignment->reviewForm;
+        if ($assignment->formResponses()->exists()) {
             $existingResponses = $assignment->formResponses->keyBy('review_form_element_id');
         }
 
@@ -330,14 +335,23 @@ class ReviewerController extends Controller
             return back()->with('error', 'This review cannot be submitted.');
         }
 
-        // Auto-associate active Review Form from Journal if assignment has no review_form_id
-        if (!$assignment->hasReviewForm()) {
-            $activeForm = \App\Models\ReviewForm::where('journal_id', $journal->id)
+        // Auto-associate active Review Form from Journal if assignment has no review_form_id or invalid review_form_id
+        $reviewForm = null;
+        if ($assignment->review_form_id) {
+            $reviewForm = \App\Models\ReviewForm::with('elements')->find($assignment->review_form_id);
+        }
+        if (!$reviewForm) {
+            $reviewForm = \App\Models\ReviewForm::with('elements')
+                ->where('journal_id', $journal->id)
                 ->active()
                 ->first();
-            if ($activeForm) {
-                $assignment->update(['review_form_id' => $activeForm->id]);
-                $assignment->unsetRelation('reviewForm');
+            if (!$reviewForm) {
+                $reviewForm = \App\Models\ReviewForm::with('elements')
+                    ->where('journal_id', $journal->id)
+                    ->first();
+            }
+            if ($reviewForm) {
+                $assignment->update(['review_form_id' => $reviewForm->id]);
             }
         }
 
