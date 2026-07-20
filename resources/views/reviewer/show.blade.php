@@ -820,8 +820,9 @@
                 </div>
 
                 <!-- STEP 4: COMPLETION PANEL -->
-                <div x-show="activeStep === 4" x-cloak class="max-w-2xl mx-auto">
-                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center space-y-6">
+                <div x-show="activeStep === 4" x-cloak class="space-y-6 max-w-none">
+                    <!-- Thank You & Review Summary Card -->
+                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center space-y-6 max-w-3xl mx-auto">
                         <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100 shadow-inner">
                             <i class="fa-solid fa-circle-check text-4xl"></i>
                         </div>
@@ -841,7 +842,7 @@
                             <p class="text-slate-700"><span class="font-bold">{{ $isId ? 'Rekomendasi Anda:' : 'Your Recommendation:' }}</span> <span class="font-bold text-emerald-600">{{ $assignment->recommendation_label }}</span></p>
                         </div>
 
-                        <div class="pt-4 flex items-center justify-center gap-3">
+                        <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
                             <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
                                 class="inline-flex items-center justify-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-blue-100 text-sm">
                                 <i class="fa-solid fa-list mr-2"></i>
@@ -854,6 +855,12 @@
                                 {{ $isId ? 'Lihat Lembar Ulasan' : 'View Submitted Review' }}
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Review Discussions Panel (Urutan di bawah Completion Card - Sesuai OJS Gambar 2) -->
+                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+                        <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
+                            :participants="$participants" :journal="$journal" />
                     </div>
                 </div>
 
