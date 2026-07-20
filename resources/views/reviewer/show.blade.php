@@ -461,7 +461,7 @@
 
                             <!-- 1. bagian review form (Review Form / Comments) -->
                             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
-                                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                                <div class="border-b border-slate-100 pb-4 space-y-2">
                                     <div>
                                         <x-text.h2 class="text-slate-900">{{ $isId ? 'Formulir Ulasan Anda' : 'Your Review' }}</x-text.h2>
                                         @if($reviewForm)
@@ -472,9 +472,9 @@
                                         @endif
                                     </div>
                                     @if($reviewForm && $reviewForm->description)
-                                        <span class="text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 hidden sm:inline-block">
+                                        <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-500 leading-relaxed block w-full">
                                             {{ $reviewForm->description }}
-                                        </span>
+                                        </div>
                                     @endif
                                 </div>
 
