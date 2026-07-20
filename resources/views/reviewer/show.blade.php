@@ -337,11 +337,11 @@
                             <button type="button" @click="setStep(3)" :disabled="!checked"
                                 :class="checked ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
                                 class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 font-bold rounded-2xl transition-all">
-                                {{ $isId ? 'Lanjutkan ke Step 3' : 'Continue to Step 3' }} <i class="fa-solid fa-arrow-right ml-2"></i>
-                            </button>
                         </div>
                     </div>
-                </div                <!-- STEP 3: DOWNLOAD & REVIEW PANEL -->
+                </div>
+
+                <!-- STEP 3: DOWNLOAD & REVIEW PANEL -->
                 <div x-show="activeStep === 3" x-cloak class="space-y-6 max-w-none">
                     <!-- SECTION 1: Review Files (OJS Data Table dengan Fitur Search) -->
                     <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-4"
