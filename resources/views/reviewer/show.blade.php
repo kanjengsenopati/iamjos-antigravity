@@ -724,9 +724,16 @@
                                 <span class="text-xs text-slate-400">
                                     {{ $assignment->date_completed?->translatedFormat('d M Y H:i') ?? '' }}
                                 </span>
-                            </div>
+                            </d                             <!-- Active Review Form Questions (State Locked / Read-Only Elements) -->
+                            @php
+                                $cleanHtml = function($val) {
+                                    if (empty($val)) return '';
+                                    $str = html_entity_decode((string)$val, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                                    $str = strip_tags($str);
+                                    return trim($str);
+                                };
+                            @endphp
 
-                            <!-- Active Review Form Questions (State Locked / Read-Only Elements) -->
                             @if($reviewForm && $reviewForm->elements->isNotEmpty())
                                 <div class="space-y-6 pb-6 border-b border-slate-100">
                                     <x-text.label class="block text-slate-400 font-bold uppercase tracking-wider text-[11px] mb-3">
@@ -775,7 +782,7 @@
                                                 @switch($element->element_type->value)
                                                     @case('text')
                                                         <input type="text" disabled readonly 
-                                                            value="{{ $existingValue }}"
+                                                            value="{{ $cleanHtml($existingValue) }}"
                                                             placeholder="{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}"
                                                             class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed">
                                                         @break
@@ -783,7 +790,7 @@
                                                     @case('textarea')
                                                         <textarea disabled readonly rows="4"
                                                             placeholder="{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}"
-                                                            class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed leading-relaxed">{{ $existingValue }}</textarea>
+                                                            class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed leading-relaxed">{{ $cleanHtml($existingValue) }}</textarea>
                                                         @break
 
                                                     @case('checkbox')
@@ -797,7 +804,18 @@
                                                             <div class="space-y-2">
                                                                 @foreach($element->options as $option)
                                                                     @php
-                                                                        $isSelected = in_array((string)$option['value'], array_map('strval', (array)$selectedValues));
+                                                                        $isSelected = false;
+                                                                        if (!empty($selectedValues)) {
+                                                                            foreach ((array)$selectedValues as $sv) {
+                                                                                $svStr = strtolower(trim((string)$sv));
+                                                                                $optValStr = strtolower(trim((string)$option['value']));
+                                                                                $optLabelStr = strtolower(trim((string)$option['label']));
+                                                                                if ($svStr !== '' && ($svStr === $optValStr || $svStr === $optLabelStr || str_contains($optLabelStr, $svStr) || str_contains($svStr, $optValStr))) {
+                                                                                    $isSelected = true;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                        }
                                                                     @endphp
                                                                     <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
                                                                         <input type="checkbox" disabled {{ $isSelected ? 'checked' : '' }}
@@ -819,7 +837,14 @@
                                                             <div class="space-y-2">
                                                                 @foreach($element->options as $option)
                                                                     @php
-                                                                        $isSelected = !is_null($existingValue) && $existingValue !== '' && ((string)$existingValue === (string)$option['value'] || $existingValue == $option['value']);
+                                                                        $exStr = strtolower(trim((string)$existingValue));
+                                                                        $optValStr = strtolower(trim((string)$option['value']));
+                                                                        $optLabelStr = strtolower(trim((string)$option['label']));
+                                                                        $isSelected = !is_null($existingValue) && $existingValue !== '' && (
+                                                                            $exStr === $optValStr || 
+                                                                            $exStr === $optLabelStr || 
+                                                                            ($exStr !== '' && (str_contains($optLabelStr, $exStr) || str_contains($exStr, $optValStr)))
+                                                                        );
                                                                     @endphp
                                                                     <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
                                                                         <input type="radio" disabled {{ $isSelected ? 'checked' : '' }}
@@ -841,7 +866,9 @@
                                                             $selectedLabel = '-';
                                                             if($element->options) {
                                                                 foreach($element->options as $opt) {
-                                                                    if($opt['value'] == $existingValue) {
+                                                                    $exStr = strtolower(trim((string)$existingValue));
+                                                                    $optValStr = strtolower(trim((string)$opt['value']));
+                                                                    if($exStr === $optValStr || str_contains(strtolower($opt['label']), $exStr)) {
                                                                         $selectedLabel = $opt['label'];
                                                                     }
                                                                 }
@@ -855,7 +882,8 @@
                                                     @case('rating')
                                                         @php
                                                             $config = $element->getRatingConfig();
-                                                            $selectedRating = (int)$existingValue;
+                                                            preg_match('/\d+/', (string)$existingValue, $matches);
+                                                            $selectedRating = isset($matches[0]) ? (int)$matches[0] : (int)$existingValue;
                                                         @endphp
                                                         <div class="flex items-center gap-2 p-3 bg-slate-100/80 border border-slate-200 rounded-xl">
                                                             @for($i = $config['min']; $i <= $config['max']; $i++)
@@ -879,7 +907,7 @@
                                     {{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}
                                 </label>
                                 <textarea disabled readonly rows="6"
-                                    class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed leading-relaxed">{{ $assignment->comments_for_author }}</textarea>
+                                    class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed leading-relaxed">{{ $cleanHtml($assignment->comments_for_author) }}</textarea>
                             </div>
 
                             <!-- Comments for Editor (State Locked) -->
@@ -889,7 +917,7 @@
                                         {{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}
                                     </label>
                                     <textarea disabled readonly rows="4"
-                                        class="w-full rounded-xl border-amber-200/80 shadow-sm text-sm bg-amber-50/50 text-amber-900 font-medium cursor-not-allowed leading-relaxed">{{ $assignment->comments_for_editor }}</textarea>
+                                        class="w-full rounded-xl border-amber-200/80 shadow-sm text-sm bg-amber-50/50 text-amber-900 font-medium cursor-not-allowed leading-relaxed">{{ $cleanHtml($assignment->comments_for_editor) }}</textarea>
                                 </div>
                             @endif
 
