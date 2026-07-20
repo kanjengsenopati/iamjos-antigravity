@@ -820,29 +820,41 @@
                 </div>
 
                 <!-- STEP 4: COMPLETION PANEL -->
-                <div x-show="activeStep === 4" x-cloak class="space-y-6 max-w-none">
-                    <!-- Thank You & Review Summary Card -->
-                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center space-y-6 max-w-3xl mx-auto">
-                        <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100 shadow-inner">
-                            <i class="fa-solid fa-circle-check text-4xl"></i>
+                <div x-show="activeStep === 4" x-cloak class="w-full">
+                    <!-- Integrated Completion & Discussions Card (Full Width) -->
+                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-8 w-full">
+                        
+                        <!-- 1. Header Ucapan Apresiasi -->
+                        <div class="text-center space-y-4 max-w-2xl mx-auto">
+                            <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100 shadow-inner">
+                                <i class="fa-solid fa-circle-check text-4xl"></i>
+                            </div>
+
+                            <div class="space-y-2">
+                                <x-text.h1 class="text-slate-900">{{ $isId ? 'Ulasan Berhasil Dikirim!' : 'Review Submitted Successfully!' }}</x-text.h1>
+                                <x-text.body class="text-slate-500 max-w-md mx-auto block leading-relaxed">
+                                    {{ $isId ? 'Terima kasih banyak atas kontribusi dan dedikasi Anda dalam meninjau naskah ini. Ulasan Anda sangat berharga bagi tim redaksi dan penulis.' 
+                                             : 'Thank you very much for your contribution and dedication in reviewing this manuscript. Your review is invaluable to the editorial team and the author.' }}
+                                </x-text.body>
+                            </div>
                         </div>
 
-                        <div class="space-y-2">
-                            <x-text.h1 class="text-slate-900">{{ $isId ? 'Ulasan Berhasil Dikirim!' : 'Review Submitted Successfully!' }}</x-text.h1>
-                            <x-text.body class="text-slate-500 max-w-md mx-auto block">
-                                {{ $isId ? 'Terima kasih banyak atas kontribusi dan dedikasi Anda dalam meninjau naskah ini. Ulasan Anda sangat berharga bagi tim redaksi dan penulis.' 
-                                         : 'Thank you very much for your contribution and dedication in reviewing this manuscript. Your review is invaluable to the editorial team and the author.' }}
-                            </x-text.body>
-                        </div>
-
-                        <div class="p-4 bg-slate-50 rounded-2xl max-w-sm mx-auto text-left space-y-2 text-xs">
-                            <p class="text-slate-400 font-semibold uppercase tracking-wider">{{ $isId ? 'Ringkasan Informasi' : 'Review Summary' }}</p>
+                        <!-- 2. Box Ringkasan Informasi (Review Summary) -->
+                        <div class="p-4 md:p-5 bg-slate-50 rounded-2xl max-w-md mx-auto text-left space-y-2 text-xs border border-slate-100/80">
+                            <p class="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">{{ $isId ? 'Ringkasan Informasi' : 'Review Summary' }}</p>
                             <p class="text-slate-700"><span class="font-bold">{{ $isId ? 'Naskah:' : 'Manuscript:' }}</span> {{ $submission->title }}</p>
                             <p class="text-slate-700"><span class="font-bold">{{ $isId ? 'Metode Ulasan:' : 'Review Method:' }}</span> {{ ucfirst(str_replace('_', ' ', $assignment->review_method)) }}</p>
                             <p class="text-slate-700"><span class="font-bold">{{ $isId ? 'Rekomendasi Anda:' : 'Your Recommendation:' }}</span> <span class="font-bold text-emerald-600">{{ $assignment->recommendation_label }}</span></p>
                         </div>
 
-                        <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
+                        <!-- 3. Panel Review Discussions (Di bawah Review Summary & di atas Button) -->
+                        <div class="text-left pt-2 border-t border-slate-100">
+                            <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
+                                :participants="$participants" :journal="$journal" />
+                        </div>
+
+                        <!-- 4. Tombol Aksi Navigasi (At bottom) -->
+                        <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-3">
                             <a href="{{ route('journal.reviewer.index', ['journal' => $journal->slug]) }}"
                                 class="inline-flex items-center justify-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-blue-100 text-sm">
                                 <i class="fa-solid fa-list mr-2"></i>
@@ -855,12 +867,6 @@
                                 {{ $isId ? 'Lihat Lembar Ulasan' : 'View Submitted Review' }}
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Review Discussions Panel (Urutan di bawah Completion Card - Sesuai OJS Gambar 2) -->
-                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
-                        <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
-                            :participants="$participants" :journal="$journal" />
                     </div>
                 </div>
 
