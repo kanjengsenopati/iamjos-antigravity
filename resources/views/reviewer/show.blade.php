@@ -947,11 +947,13 @@
                         </div>
                     @endif
 
-                    <!-- SECTION 4: Review Discussions -->
-                    <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
-                        <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
-                            :participants="$participants" :journal="$journal" />
-                    </div>
+                    <!-- SECTION 4: Review Discussions (Active Review State Only) -->
+                    @if ($status !== 'completed')
+                        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+                            <x-discussion-panel :submission="$submission" :stageId="2" stageName="Review" :discussions="$submission->discussions"
+                                :participants="$participants" :journal="$journal" />
+                        </div>
+                    @endif
 
                     <!-- SECTION 5: Keputusan Review (Recommendation) -->
                     @if ($status !== 'completed')
