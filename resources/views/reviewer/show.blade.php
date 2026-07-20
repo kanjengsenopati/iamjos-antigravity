@@ -760,11 +760,13 @@
                                                     @case('text')
                                                         <input type="text" disabled readonly 
                                                             value="{{ $existingValue }}"
+                                                            placeholder="{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}"
                                                             class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed">
                                                         @break
 
                                                     @case('textarea')
                                                         <textarea disabled readonly rows="4"
+                                                            placeholder="{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}"
                                                             class="w-full rounded-xl border-slate-200 shadow-sm text-sm bg-slate-100/80 text-slate-800 font-medium cursor-not-allowed leading-relaxed">{{ $existingValue }}</textarea>
                                                         @break
 

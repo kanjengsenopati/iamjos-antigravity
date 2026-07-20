@@ -273,10 +273,8 @@ class ReviewerController extends Controller
             }
         }
 
-        $existingResponses = collect();
-        if ($assignment->formResponses()->exists()) {
-            $existingResponses = $assignment->formResponses->keyBy('review_form_element_id');
-        }
+        $assignment->load('formResponses');
+        $existingResponses = $assignment->formResponses->keyBy('review_form_element_id');
 
         // Load submission with blind review (hide author info)
         $submission = $assignment->submission;
