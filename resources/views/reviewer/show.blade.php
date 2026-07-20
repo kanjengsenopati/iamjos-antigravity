@@ -390,15 +390,151 @@
                                 @csrf
 
                                 <!-- 1. bagian review form (Review Form / Comments) -->
-                                <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
-                                    <x-text.h2 class="text-slate-900 mb-6">{{ $isId ? 'Formulir Ulasan Anda' : 'Your Review' }}</x-text.h2>
+                                <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
+                                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                                        <div>
+                                            <x-text.h2 class="text-slate-900">{{ $isId ? 'Formulir Ulasan Anda' : 'Your Review' }}</x-text.h2>
+                                            @if($reviewForm)
+                                                <p class="text-xs text-blue-600 font-bold mt-1 flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-clipboard-list"></i>
+                                                    {{ $reviewForm->title }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                        @if($reviewForm && $reviewForm->description)
+                                            <span class="text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 hidden sm:inline-block">
+                                                {{ $reviewForm->description }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Active Review Form Elements (Structured Questions) -->
+                                    @if($reviewForm && $reviewForm->elements->isNotEmpty())
+                                        <div class="space-y-6 pb-6 border-b border-slate-100">
+                                            @foreach($reviewForm->elements as $index => $element)
+                                                <div class="p-5 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-3">
+                                                    <div class="flex items-start gap-3">
+                                                        <span class="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-sm shadow-blue-200">
+                                                            {{ $index + 1 }}
+                                                        </span>
+                                                        <div class="flex-1">
+                                                            <label class="text-sm font-bold text-slate-900 block leading-snug">
+                                                                {{ $element->question }}
+                                                                @if($element->required)
+                                                                    <span class="text-rose-500">*</span>
+                                                                @endif
+                                                            </label>
+                                                            @if($element->description)
+                                                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ $element->description }}</p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="pl-10">
+                                                        @php
+                                                            $existingValue = $existingResponses->get($element->id)?->response_value;
+                                                            $fieldName = "responses[{$element->id}]";
+                                                        @endphp
+
+                                                        @switch($element->element_type->value)
+                                                            @case('text')
+                                                                <input type="text" name="{{ $fieldName }}" 
+                                                                    value="{{ old($fieldName, $existingValue) }}"
+                                                                    {{ $element->required ? 'required' : '' }}
+                                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white"
+                                                                    placeholder="{{ $isId ? 'Masukkan jawaban Anda...' : 'Enter your answer...' }}">
+                                                                @break
+
+                                                            @case('textarea')
+                                                                <textarea name="{{ $fieldName }}" rows="4"
+                                                                    {{ $element->required ? 'required' : '' }}
+                                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white"
+                                                                    placeholder="{{ $isId ? 'Masukkan jawaban Anda...' : 'Enter your answer...' }}">{{ old($fieldName, $existingValue) }}</textarea>
+                                                                @break
+
+                                                            @case('checkbox')
+                                                                @php
+                                                                    $selectedValues = old($fieldName, json_decode($existingValue, true) ?? []);
+                                                                @endphp
+                                                                @if($element->options)
+                                                                    <div class="space-y-2">
+                                                                        @foreach($element->options as $option)
+                                                                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/20 cursor-pointer transition-all">
+                                                                                <input type="checkbox" name="{{ $fieldName }}[]" value="{{ $option['value'] }}"
+                                                                                    {{ in_array($option['value'], (array)$selectedValues) ? 'checked' : '' }}
+                                                                                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                                                                <span class="text-sm font-medium text-slate-700">{{ $option['label'] }}</span>
+                                                                            </label>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endif
+                                                                @break
+
+                                                            @case('radio')
+                                                                @if($element->options)
+                                                                    <div class="space-y-2">
+                                                                        @foreach($element->options as $option)
+                                                                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/20 cursor-pointer transition-all">
+                                                                                <input type="radio" name="{{ $fieldName }}" value="{{ $option['value'] }}"
+                                                                                    {{ old($fieldName, $existingValue) == $option['value'] ? 'checked' : '' }}
+                                                                                    {{ $element->required ? 'required' : '' }}
+                                                                                    class="border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                                                                <span class="text-sm font-medium text-slate-700">{{ $option['label'] }}</span>
+                                                                            </label>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endif
+                                                                @break
+
+                                                            @case('select')
+                                                                <select name="{{ $fieldName }}" {{ $element->required ? 'required' : '' }}
+                                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white">
+                                                                    <option value="">{{ $isId ? '-- Pilih Jawaban --' : '-- Select Answer --' }}</option>
+                                                                    @if($element->options)
+                                                                        @foreach($element->options as $option)
+                                                                            <option value="{{ $option['value'] }}" 
+                                                                                {{ old($fieldName, $existingValue) == $option['value'] ? 'selected' : '' }}>
+                                                                                {{ $option['label'] }}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    @endif
+                                                                </select>
+                                                                @break
+
+                                                            @case('rating')
+                                                                @php
+                                                                    $config = $element->getRatingConfig();
+                                                                    $selectedRating = old($fieldName, $existingValue);
+                                                                @endphp
+                                                                <div class="flex items-center gap-2" x-data="{ rating: {{ $selectedRating ?? 0 }} }">
+                                                                    @for($i = $config['min']; $i <= $config['max']; $i++)
+                                                                        <button type="button" @click="rating = {{ $i }}"
+                                                                            class="text-2xl transition-colors"
+                                                                            :class="rating >= {{ $i }} ? 'text-amber-400' : 'text-slate-300'">
+                                                                            <i class="fa-solid fa-star"></i>
+                                                                        </button>
+                                                                    @endfor
+                                                                    <input type="hidden" name="{{ $fieldName }}" :value="rating" {{ $element->required ? 'required' : '' }}>
+                                                                    <span class="text-xs font-bold text-slate-500 ml-2" x-text="rating > 0 ? rating + '/{{ $config['max'] }}' : '{{ $isId ? 'Belum dinilai' : 'Not rated' }}'"></span>
+                                                                </div>
+                                                                @break
+                                                        @endswitch
+
+                                                        @error($fieldName)
+                                                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
 
                                     <!-- Comments for Author -->
-                                    <div class="mb-6">
+                                    <div>
                                         <label for="comments_for_author" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
                                             {{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }} <span class="text-rose-500">*</span>
                                         </label>
-                                        <textarea name="comments_for_author" id="comments_for_author" rows="8" placeholder="{{ $isId ? 'Berikan umpan balik terperinci...' : 'Provide detailed feedback...' }}"
+                                        <textarea name="comments_for_author" id="comments_for_author" rows="6" placeholder="{{ $isId ? 'Berikan umpan balik terperinci...' : 'Provide detailed feedback...' }}"
                                             class="w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">{{ old('comments_for_author') }}</textarea>
                                         @error('comments_for_author')
                                             <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p>
@@ -502,6 +638,31 @@
                                             {!! clean($assignment->comments_for_author) !!}
                                         </div>
                                     </div>
+
+                                     @if ($reviewForm && $existingResponses->isNotEmpty())
+                                        <div>
+                                            <x-text.label class="block mb-3">{{ $isId ? 'Hasil Formulir Evaluasi (' . $reviewForm->title . ')' : 'Review Form Responses (' . $reviewForm->title . ')' }}</x-text.label>
+                                            <div class="space-y-3">
+                                                @foreach($reviewForm->elements as $index => $element)
+                                                    @php
+                                                        $responseVal = $existingResponses->get($element->id)?->response_value;
+                                                        if (is_string($responseVal) && (str_starts_with($responseVal, '[') || str_starts_with($responseVal, '{'))) {
+                                                            $decoded = json_decode($responseVal, true);
+                                                            if (is_array($decoded)) {
+                                                                $responseVal = implode(', ', $decoded);
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                                        <p class="text-xs font-bold text-slate-800">{{ $index + 1 }}. {{ $element->question }}</p>
+                                                        <p class="text-xs font-medium text-blue-700 mt-1.5 bg-blue-50/60 inline-block px-3 py-1 rounded-lg border border-blue-100/50">
+                                                            {{ $responseVal ?: '-' }}
+                                                        </p>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
 
                                     @if ($assignment->comments_for_editor)
                                         <div>

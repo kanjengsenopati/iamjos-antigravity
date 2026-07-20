@@ -103,10 +103,15 @@ class ReviewWorkflowController extends Controller
                     ]);
                 }
 
+                $activeReviewForm = \App\Models\ReviewForm::where('journal_id', $submission->journal_id)
+                    ->active()
+                    ->first();
+
                 $assignment = ReviewAssignment::create([
                     'submission_id' => $submission->id,
                     'review_round_id' => $reviewRound->id,
                     'reviewer_id' => $request->reviewer_id,
+                    'review_form_id' => $request->review_form_id ?? $activeReviewForm?->id,
                     'review_method' => $request->review_method,
                     // Parse and format to Y-m-d H:i:s for precise email reminders later
                     'response_due_date' => \Carbon\Carbon::parse($request->response_due_date)->endOfDay()->format('Y-m-d H:i:s'),

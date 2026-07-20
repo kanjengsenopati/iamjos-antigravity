@@ -239,11 +239,39 @@ class ReviewerController extends Controller
     /**
      * Show review form for a specific submission.
      */
+    /**
+     * Show review form for a specific submission.
+     */
     public function show(string $journalSlug, string $identifier): View
     {
         $journal = $this->getJournal();
         $assignment = ReviewAssignment::findByIdentifier($identifier);
         $this->authorizeReviewer($assignment, $journal);
+
+        // Auto-associate active Review Form from Journal if assignment has no review_form_id
+        if (!$assignment->hasReviewForm()) {
+            $activeForm = \App\Models\ReviewForm::where('journal_id', $journal->id)
+                ->active()
+                ->first();
+            if ($activeForm) {
+                $assignment->update(['review_form_id' => $activeForm->id]);
+                $assignment->unsetRelation('reviewForm');
+            }
+        }
+
+        // Load Review Form with elements and form responses
+        $reviewForm = null;
+        $existingResponses = collect();
+        if ($assignment->hasReviewForm()) {
+            $assignment->load([
+                'reviewForm.elements' => function ($query) {
+                    $query->ordered();
+                },
+                'formResponses'
+            ]);
+            $reviewForm = $assignment->reviewForm;
+            $existingResponses = $assignment->formResponses->keyBy('review_form_element_id');
+        }
 
         // Load submission with blind review (hide author info)
         $submission = $assignment->submission;
@@ -278,7 +306,16 @@ class ReviewerController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('reviewer.show', compact('assignment', 'submission', 'manuscriptFiles', 'journal', 'participants', 'reviewerAttachments'));
+        return view('reviewer.show', compact(
+            'assignment',
+            'submission',
+            'manuscriptFiles',
+            'journal',
+            'participants',
+            'reviewerAttachments',
+            'reviewForm',
+            'existingResponses'
+        ));
     }
 
     /**
@@ -293,11 +330,73 @@ class ReviewerController extends Controller
             return back()->with('error', 'This review cannot be submitted.');
         }
 
-        $validated = $request->validate([
+        // Auto-associate active Review Form from Journal if assignment has no review_form_id
+        if (!$assignment->hasReviewForm()) {
+            $activeForm = \App\Models\ReviewForm::where('journal_id', $journal->id)
+                ->active()
+                ->first();
+            if ($activeForm) {
+                $assignment->update(['review_form_id' => $activeForm->id]);
+                $assignment->unsetRelation('reviewForm');
+            }
+        }
+
+        // Build validation rules
+        $rules = [
             'recommendation' => 'required|in:accept,minor_revision,major_revision,resubmit,reject',
             'comments_for_author' => 'required|string|min:10',
             'comments_for_editor' => 'nullable|string',
-        ]);
+        ];
+        $messages = [];
+
+        // If assignment has a review form, validate required elements
+        if ($assignment->hasReviewForm()) {
+            $assignment->load('reviewForm.elements');
+            $reviewForm = $assignment->reviewForm;
+            if ($reviewForm) {
+                foreach ($reviewForm->elements as $element) {
+                    $fieldName = "responses.{$element->id}";
+                    if ($element->required) {
+                        $rules[$fieldName] = 'required';
+                        $messages["{$fieldName}.required"] = "Pertanyaan \"{$element->question}\" wajib diisi.";
+                    }
+                    if ($element->element_type->value === 'checkbox') {
+                        $rules[$fieldName] = ($element->required ? 'required|' : '') . 'array';
+                    } elseif ($element->element_type->value === 'rating') {
+                        $config = $element->getRatingConfig();
+                        $rules[$fieldName] = ($element->required ? 'required|' : '') . "integer|min:{$config['min']}|max:{$config['max']}";
+                    }
+                }
+            }
+        }
+
+        $validated = $request->validate($rules, $messages);
+
+        // Save ReviewFormResponses if form exists
+        if ($assignment->hasReviewForm() && $assignment->reviewForm) {
+            $reviewForm = $assignment->reviewForm;
+            foreach ($reviewForm->elements as $element) {
+                $value = $request->input("responses.{$element->id}");
+                if (is_null($value) && !$element->required) {
+                    continue;
+                }
+                if ($element->element_type->value === 'checkbox' && is_array($value)) {
+                    $value = json_encode($value);
+                } else {
+                    $value = is_array($value) ? json_encode($value) : $value;
+                }
+                \App\Models\ReviewFormResponse::updateOrCreate(
+                    [
+                        'review_assignment_id' => $assignment->id,
+                        'review_form_element_id' => $element->id,
+                    ],
+                    [
+                        'response_value' => $value ?? '',
+                    ]
+                );
+            }
+            $reviewForm->increment('response_count');
+        }
 
         $assignment->update([
             'status' => ReviewAssignment::STATUS_COMPLETED,

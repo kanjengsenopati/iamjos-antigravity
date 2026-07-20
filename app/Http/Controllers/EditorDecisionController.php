@@ -95,10 +95,15 @@ class EditorDecisionController extends Controller
         // Determine current round
         $currentRound = $submission->reviewAssignments()->max('round') ?? 1;
 
+        $activeReviewForm = \App\Models\ReviewForm::where('journal_id', $submission->journal_id)
+            ->active()
+            ->first();
+
         // Create assignment
         $assignment = ReviewAssignment::create([
             'submission_id' => $submission->id,
             'reviewer_id' => $validated['reviewer_id'],
+            'review_form_id' => $activeReviewForm?->id,
             'round' => $currentRound,
             'status' => ReviewAssignment::STATUS_PENDING,
             'assigned_at' => now(),
