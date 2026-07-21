@@ -218,6 +218,41 @@ class ReviewAssignment extends Model
         return $this->hasMany(ReviewFormResponse::class, 'review_assignment_id');
     }
 
+    /**
+     * Get formatted form responses with questions and elements for review details modal display
+     */
+    public function getFormattedFormResponses(): array
+    {
+        $form = $this->reviewForm;
+        if (!$form && $this->submission) {
+            $form = \App\Models\ReviewForm::with(['elements' => fn($q) => $q->ordered()])
+                ->where('journal_id', $this->submission->journal_id)
+                ->first();
+        }
+
+        if (!$form || $form->elements->isEmpty()) {
+            return [];
+        }
+
+        $responses = $this->formResponses->keyBy('review_form_element_id');
+
+        return $form->elements->map(function ($element) use ($responses) {
+            $resp = $responses->first(function($r) use ($element) {
+                return (string)$r->review_form_element_id === (string)$element->id;
+            });
+            $val = $resp ? $resp->response_value : $responses->get($element->id)?->response_value;
+
+            return [
+                'id' => $element->id,
+                'question' => $element->question,
+                'description' => $element->description,
+                'element_type' => $element->element_type->value ?? (string)$element->element_type,
+                'options' => $element->options ?? [],
+                'response_value' => $val,
+            ];
+        })->values()->toArray();
+    }
+
     // =====================================================
     // SCOPES
     // =====================================================

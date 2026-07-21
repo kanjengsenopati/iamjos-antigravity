@@ -836,6 +836,7 @@ class SubmissionController extends Controller
                             'recommendation_color' => $assignment->recommendation_color,
                             'comments_for_author' => $assignment->comments_for_author,
                             'completed_at' => $assignment->completed_at,
+                            'form_responses' => $assignment->getFormattedFormResponses(),
                             'files' => $assignment->attachments()->map(function ($file) {
                                 return [
                                     'id' => $file->id,

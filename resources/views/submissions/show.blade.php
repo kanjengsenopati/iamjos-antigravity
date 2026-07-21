@@ -2070,6 +2070,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 "comments_for_editor" => $assignment->comments_for_editor,
                                                                 "quality_rating" => $assignment->quality_rating,
                                                                 "completed_at" => $assignment->completed_at ? $assignment->completed_at->toIso8601String() : null,
+                                                                "form_responses" => $assignment->getFormattedFormResponses(),
                                                                 "files" => $assignment->attachments()->map(function ($file) {
                                                                     return [
                                                                         "id" => $file->id,
@@ -7065,6 +7066,86 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 x-html="selectedReview?.comments_for_author || '<em>{{ $isId ? 'Tidak ada komentar yang diberikan.' : 'No comments provided.' }}</em>'">
                                             </div>
                                         </div>
+
+                                        {{-- Evaluation Form Answers Section (Form Review Terisi) --}}
+                                        <template x-if="selectedReview?.form_responses && selectedReview.form_responses.length > 0">
+                                            <div class="mt-6 pt-6 border-t border-gray-100">
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-3">{{ $isId ? 'Hasil Formulir Evaluasi' : 'Evaluation Form Answers' }}</h4>
+                                                <div class="space-y-4">
+                                                    <template x-for="(item, idx) in selectedReview.form_responses" :key="item.id || idx">
+                                                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
+                                                            <div class="flex items-start gap-2.5">
+                                                                <span class="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-lg bg-slate-700 text-white text-[11px] font-bold shadow-sm" x-text="idx + 1"></span>
+                                                                <div class="flex-1">
+                                                                    <h5 class="text-xs font-bold text-slate-900 leading-snug" x-text="item.question"></h5>
+                                                                    <template x-if="item.description">
+                                                                        <p class="text-[11px] text-slate-500 mt-0.5" x-text="item.description"></p>
+                                                                    </template>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="pl-8">
+                                                                {{-- Text / Textarea --}}
+                                                                <template x-if="item.element_type === 'text' || item.element_type === 'textarea'">
+                                                                    <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 font-medium leading-relaxed"
+                                                                         x-text="item.response_value && item.response_value.trim() !== '' ? item.response_value.replace(/<[^>]*>?/gm, '') : '{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}'"></div>
+                                                                </template>
+
+                                                                {{-- Checkbox --}}
+                                                                <template x-if="item.element_type === 'checkbox'">
+                                                                    <div class="space-y-1.5">
+                                                                        <template x-for="opt in (item.options || [])" :key="opt.value">
+                                                                            <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
+                                                                                 :class="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label))) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
+                                                                                <input type="checkbox" disabled :checked="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label)))" class="rounded border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
+                                                                                <span x-text="opt.label"></span>
+                                                                                <template x-if="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label)))">
+                                                                                    <span class="ml-auto text-[10px] text-blue-600 font-bold"><i class="fa-solid fa-check"></i> {{ $isId ? 'Dipilih' : 'Selected' }}</span>
+                                                                                </template>
+                                                                            </div>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+
+                                                                {{-- Radio --}}
+                                                                <template x-if="item.element_type === 'radio'">
+                                                                    <div class="space-y-1.5">
+                                                                        <template x-for="opt in (item.options || [])" :key="opt.value">
+                                                                            <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
+                                                                                 :class="Boolean(item.response_value && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase() || String(opt.label).trim().toLowerCase().includes(String(item.response_value).trim().toLowerCase()))) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
+                                                                                <input type="radio" disabled :checked="Boolean(item.response_value && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase() || String(opt.label).trim().toLowerCase().includes(String(item.response_value).trim().toLowerCase())))" class="border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
+                                                                                <span x-text="opt.label"></span>
+                                                                                <template x-if="Boolean(item.response_value && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase() || String(opt.label).trim().toLowerCase().includes(String(item.response_value).trim().toLowerCase())))">
+                                                                                    <span class="ml-auto text-[10px] text-blue-600 font-bold"><i class="fa-solid fa-check"></i> {{ $isId ? 'Dipilih' : 'Selected' }}</span>
+                                                                                </template>
+                                                                            </div>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+
+                                                                {{-- Select --}}
+                                                                <template x-if="item.element_type === 'select'">
+                                                                    <div class="p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
+                                                                         x-text="item.response_value || '-'"></div>
+                                                                </template>
+
+                                                                {{-- Rating --}}
+                                                                <template x-if="item.element_type === 'rating'">
+                                                                    <div class="flex items-center gap-1.5 p-2.5 bg-white border border-slate-200 rounded-xl"
+                                                                         x-data="{ numRating: parseInt((String(item.response_value || '').match(/\d+/) || [0])[0]) || 0 }">
+                                                                        <template x-for="starIdx in 5" :key="starIdx">
+                                                                            <i class="fa-solid fa-star text-base transition-colors"
+                                                                               :class="numRating >= starIdx ? 'text-amber-400' : 'text-slate-300'"></i>
+                                                                        </template>
+                                                                        <span class="text-xs font-bold text-slate-700 ml-2" x-text="numRating > 0 ? numRating + '/5' : '-'"></span>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
 
                                         @if (!$isAuthorView)
                                             <div class="mb-4">
