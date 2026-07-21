@@ -259,7 +259,7 @@
                                         </td>
                                         <td class="p-4">
                                             <div class="font-medium text-blue-600 mb-1">
-                                                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $sub->slug]) }}"
+                                                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $sub->url_slug]) }}"
                                                     target="_blank" class="hover:underline">
                                                     {{ $sub->title }}
                                                 </a>

@@ -19,7 +19,7 @@
                 <li>
                     <div class="flex items-center">
                         <i class="fa-solid fa-chevron-right flex-shrink-0 h-5 w-5 text-gray-300" aria-hidden="true"></i>
-                        <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                        <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->url_slug]) }}"
                             class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Submission
                             #{{ $submission->submission_code ?? $submission->id }}</a>
                     </div>
@@ -47,7 +47,7 @@
         <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6">
                 <form
-                    action="{{ route('journal.workflow.assign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                    action="{{ route('journal.workflow.assign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->url_slug]) }}"
                     method="POST" x-data="{
                         reviewerSearch: '',
                         isSearching: false,
@@ -373,7 +373,7 @@
 
                         {{-- Action Buttons --}}
                         <div class="pt-5 border-t border-gray-200 flex justify-end gap-3">
-                            <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
+                            <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->url_slug]) }}"
                                 class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:text-sm">
                                 Cancel
                             </a>

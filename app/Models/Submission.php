@@ -173,23 +173,11 @@ class Submission extends Model
     }
 
     /**
-     * Get the formatted public URL slug (e.g. title-slug-seq_id or seq_id).
+     * Get the sequential article ID for URL generation (e.g. /submissions/42).
+     * Hides title slug completely in favor of numeric sequential article ID.
      */
     public function getUrlSlugAttribute(): string
     {
-        if (!empty($this->slug)) {
-            // If slug ends with UUID, strip UUID and append seq_id
-            if (preg_match('/-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $this->slug)) {
-                $cleanSlug = preg_replace('/-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', '', $this->slug);
-                return $this->seq_id ? ($cleanSlug . '-' . $this->seq_id) : $cleanSlug;
-            }
-            // If seq_id exists and slug doesn't end with seq_id and isn't numeric
-            if ($this->seq_id && !Str::endsWith($this->slug, '-' . $this->seq_id) && $this->slug !== (string)$this->seq_id) {
-                return $this->slug . '-' . $this->seq_id;
-            }
-            return $this->slug;
-        }
-
         return (string)($this->seq_id ?? $this->id);
     }
 

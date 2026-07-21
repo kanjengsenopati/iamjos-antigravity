@@ -278,7 +278,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="max-w-md">
-                                    <a href="{{ route('journal.submissions.show', ['journal' => current_journal()->slug, 'submission' => $article->slug]) }}"
+                                    <a href="{{ route('journal.submissions.show', ['journal' => current_journal()->slug, 'submission' => $article->url_slug]) }}"
                                         class="font-semibold text-slate-800 hover:text-indigo-600 line-clamp-2">
                                         {{ $article->title }}
                                     </a>

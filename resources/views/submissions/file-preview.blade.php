@@ -12,7 +12,7 @@
                 <a href="{{ route('journal.submissions.index', $journal->slug) }}"
                     class="hover:text-blue-600 transition-colors">Submissions</a>
                 <span class="mx-2 text-gray-300">/</span>
-                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $file->submission->slug]) }}"
+                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $file->submission->url_slug]) }}"
                     class="hover:text-blue-600 transition-colors">Submission Detail</a>
                 <span class="mx-2 text-gray-300">/</span>
                 <span class="text-gray-700">File Preview</span>
@@ -37,7 +37,7 @@
                         <i class="fa-solid fa-download mr-1.5 text-slate-400"></i>
                         Download
                     </a>
-                    <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $file->submission->slug]) }}"
+                    <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $file->submission->url_slug]) }}"
                         class="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none whitespace-nowrap transition-colors">
                         <i class="fa-solid fa-arrow-left mr-1.5"></i>
                         Back to Submission
