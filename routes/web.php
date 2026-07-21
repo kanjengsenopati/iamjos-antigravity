@@ -665,6 +665,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::controller(\App\Http\Controllers\Admin\Stats\ArticleStatsController::class)->prefix('statistics')->name('statistics.')->group(function () {
                         Route::get('/articles', 'index')->name('articles');
                         Route::get('/articles/data', 'getData')->name('articles.data');
+                        Route::get('/articles/export-csv', 'exportCsv')->name('articles.export-csv');
                     });
                     Route::controller(\App\Http\Controllers\Admin\Stats\EditorialStatsController::class)->prefix('statistics')->name('statistics.')->group(function () {
                         Route::get('/editorial', 'index')->name('editorial');
