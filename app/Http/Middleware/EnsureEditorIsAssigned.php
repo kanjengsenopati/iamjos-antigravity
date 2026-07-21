@@ -36,16 +36,11 @@ class EnsureEditorIsAssigned
         $submission = $request->route('submission');
         if ($submission) {
             if (!$submission instanceof Submission) {
-                $query = Submission::query();
-                if (is_numeric($submission)) {
-                    $query->where('seq_id', $submission);
-                } else {
-                    $query->where('slug', $submission);
-                    if (\Illuminate\Support\Str::isUuid($submission)) {
-                        $query->orWhere('id', $submission);
-                    }
+                try {
+                    $submission = (new Submission)->resolveRouteBinding($submission);
+                } catch (\Exception $e) {
+                    $submission = null;
                 }
-                $submission = $query->first();
             }
 
             if ($submission) {

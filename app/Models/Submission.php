@@ -92,40 +92,65 @@ class Submission extends Model
 
     /**
      * Retrieve the model for a bound value.
-     * Handles backward compatibility for slugs and UUIDs via 301 Redirect.
+     * Handles backward compatibility for seq_id, primary key id, slugs, and UUIDs.
      */
     public function resolveRouteBinding($value, $field = null)
     {
-        if (!is_numeric($value)) {
-            $query = $this->where('slug', $value);
-            if (\Illuminate\Support\Str::isUuid($value)) {
-                $query->orWhere('id', $value);
-            }
-            $submission = $query->first();
-            
-            if ($submission && $submission->seq_id && request()->isMethod('GET')) {
-                $currentUrl = request()->url();
-                
-                // Replace the slug/uuid with the new seq_id
-                $newUrl = preg_replace('/\/'.preg_quote($value, '/').'(?=\/|$)/', '/' . $submission->seq_id, $currentUrl, 1);
-                
-                if ($newUrl === $currentUrl) {
-                     $newUrl = str_replace($value, $submission->seq_id, $currentUrl);
-                }
-                
-                if (request()->getQueryString()) {
-                    $newUrl .= '?' . request()->getQueryString();
-                }
+        $currentJournal = function_exists('current_journal') ? current_journal() : null;
 
-                throw new HttpResponseException(redirect($newUrl, 301));
+        $findSubmission = function ($journalId = null) use ($value) {
+            $query = $this->newQuery();
+            if ($journalId) {
+                $query->where('journal_id', $journalId);
             }
-            
-            if ($submission) {
-               return $submission;
+
+            if (is_numeric($value)) {
+                return $query->where(function ($q) use ($value) {
+                    $q->where('seq_id', $value)
+                      ->orWhere('id', $value)
+                      ->orWhere('slug', (string) $value);
+                })->first();
+            } else {
+                return $query->where(function ($q) use ($value) {
+                    $q->where('slug', $value);
+                    if (\Illuminate\Support\Str::isUuid($value)) {
+                        $q->orWhere('id', $value);
+                    }
+                })->first();
             }
+        };
+
+        // 1. Try finding in current journal context first
+        $submission = $currentJournal ? $findSubmission($currentJournal->id) : null;
+
+        // 2. Fallback to global search if not found in current journal
+        if (!$submission) {
+            $submission = $findSubmission(null);
         }
 
-        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
+        if (!$submission) {
+            throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel(get_class($this), [$value]);
+        }
+
+        // Handle 301 redirect if value is slug/UUID but seq_id exists and value != seq_id
+        if (!is_numeric($value) && $submission->seq_id && request()->isMethod('GET')) {
+            $currentUrl = request()->url();
+            
+            // Replace the slug/uuid with the new seq_id
+            $newUrl = preg_replace('/\/'.preg_quote($value, '/').'(?=\/|$)/', '/' . $submission->seq_id, $currentUrl, 1);
+            
+            if ($newUrl === $currentUrl) {
+                 $newUrl = str_replace($value, $submission->seq_id, $currentUrl);
+            }
+            
+            if (request()->getQueryString()) {
+                $newUrl .= '?' . request()->getQueryString();
+            }
+
+            throw new HttpResponseException(redirect($newUrl, 301));
+        }
+
+        return $submission;
     }
 
     // =====================================================

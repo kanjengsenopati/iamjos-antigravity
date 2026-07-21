@@ -54,15 +54,11 @@ class ReviewWorkflowController extends Controller
     /**
      * Assign a reviewer to the submission.
      */
-    public function assignReviewer(Request $request, string $journalSlug, $id)
+    public function assignReviewer(Request $request, string $journalSlug, $submission)
     {
-        $submission = Submission::query()
-        ->when(
-            Str::isUuid($id),
-            fn ($q) => $q->where('id', $id),
-            fn ($q) => $q->where('slug', $id)
-        )
-        ->firstOrFail();
+        if (!$submission instanceof Submission) {
+            $submission = (new Submission)->resolveRouteBinding($submission);
+        }
         $journal = $this->getJournal();
         if ($submission->journal_id !== $journal->id) abort(404);
 
