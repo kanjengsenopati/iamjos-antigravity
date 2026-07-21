@@ -757,7 +757,7 @@
             </div>
 
             {{-- LICENSE --}}
-            <x-public.article-license :journal="$journal" :publication="$article->currentPublication" />
+            <x-public.article-license :journal="$journal" :publication="$article->currentPublication ?? $article" />
 
             {{-- FUNDING INFORMATION --}}
             @php
