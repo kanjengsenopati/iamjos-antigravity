@@ -815,7 +815,7 @@ class SubmissionController extends Controller
 
             // 6. Sanitized Review Assignments for Peer Review (blind review protocol)
             $authorReviewData['reviewAssignments'] = $submission->reviewAssignments()
-                ->with('reviewAttachments')
+                ->with(['reviewAttachments', 'reviewer'])
                 ->where(function ($query) {
                     $query->where('status', 'completed')
                           ->orWhereNotNull('recommendation');
@@ -826,11 +826,17 @@ class SubmissionController extends Controller
                     // Sort by completed_at to maintain consistent ordering (Reviewer A, Reviewer B, etc.)
                     $sorted = $roundAssignments->sortBy('completed_at')->values();
                     return $sorted->map(function ($assignment, $index) {
-                        $pseudonym = 'Reviewer ' . chr(65 + $index); // Reviewer A, Reviewer B, etc.
+                        $reviewMethod = strtolower((string)($assignment->review_method ?? 'blind'));
+                        $isOpenReview = ($reviewMethod === 'open');
+                        $displayName = ($isOpenReview && $assignment->reviewer) 
+                            ? $assignment->reviewer->name 
+                            : ('Reviewer ' . chr(65 + $index));
+
                         return [
                             'id' => $assignment->id,
                             'round' => $assignment->round,
-                            'pseudonym' => $pseudonym,
+                            'pseudonym' => $displayName,
+                            'review_method' => $reviewMethod,
                             'recommendation' => $assignment->recommendation,
                             'recommendation_label' => $assignment->recommendation_label,
                             'recommendation_color' => $assignment->recommendation_color,

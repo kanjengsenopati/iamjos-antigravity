@@ -202,11 +202,18 @@
                              style="display: none;">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                        <i class="fa-solid fa-user-ninja"></i>
+                                    <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold">
+                                        <i class="fa-solid {{ ($assignment['review_method'] ?? '') === 'open' ? 'fa-user-check' : 'fa-user-ninja' }}"></i>
                                     </div>
                                     <div>
-                                        <x-text.body class="font-semibold text-gray-900">{{ $assignment['pseudonym'] }}</x-text.body>
+                                        <div class="flex items-center gap-2">
+                                            <x-text.body class="font-semibold text-gray-900">{{ $assignment['pseudonym'] }}</x-text.body>
+                                            @if(($assignment['review_method'] ?? '') === 'open')
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                                                    Open Review
+                                                </span>
+                                            @endif
+                                        </div>
                                         <x-text.caption class="text-slate-400 block mt-0.5">
                                             {{ $isId ? 'Diselesaikan pada: ' : 'Completed at: ' }}
                                             @if ($assignment['completed_at'])
