@@ -104,16 +104,20 @@ class Submission extends Model
                 $query->where('journal_id', $journalId);
             }
 
+            $isUuid = \Illuminate\Support\Str::isUuid($value);
+
             if (is_numeric($value)) {
-                return $query->where(function ($q) use ($value) {
+                return $query->where(function ($q) use ($value, $isUuid) {
                     $q->where('seq_id', $value)
-                      ->orWhere('id', $value)
                       ->orWhere('slug', (string) $value);
+                    if ($isUuid) {
+                        $q->orWhere('id', $value);
+                    }
                 })->first();
             } else {
-                return $query->where(function ($q) use ($value) {
+                return $query->where(function ($q) use ($value, $isUuid) {
                     $q->where('slug', $value);
-                    if (\Illuminate\Support\Str::isUuid($value)) {
+                    if ($isUuid) {
                         $q->orWhere('id', $value);
                     }
                 })->first();
