@@ -810,11 +810,6 @@
                                                                         <input type="checkbox" disabled {{ $isSelected ? 'checked' : '' }}
                                                                             class="rounded border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed {{ $isSelected ? 'accent-blue-600' : 'opacity-40' }}">
                                                                         <span class="text-sm leading-snug {{ $isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400 font-normal' }}">{{ $option['label'] }}</span>
-                                                                        @if($isSelected)
-                                                                            <span class="ml-auto text-xs text-blue-700 bg-blue-100/90 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 flex-shrink-0">
-                                                                                <i class="fa-solid fa-check text-[11px]"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
-                                                                            </span>
-                                                                        @endif
                                                                     </div>
                                                                 @endforeach
                                                             </div>
@@ -829,7 +824,7 @@
                                                                         $exStr = strtolower(trim((string)$existingValue));
                                                                         $optValStr = strtolower(trim((string)($option['value'] ?? '')));
                                                                         $optLabelStr = strtolower(trim((string)($option['label'] ?? '')));
-                                                                        $isSelected = !is_null($existingValue) && $existingValue !== '' && (
+                                                                        $isSelected = !is_null($existingValue) && $existingValue !== '' && $exStr !== '' && (
                                                                             $exStr === $optValStr || 
                                                                             $exStr === $optLabelStr
                                                                         );
@@ -838,11 +833,6 @@
                                                                         <input type="radio" disabled {{ $isSelected ? 'checked' : '' }}
                                                                             class="border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed {{ $isSelected ? 'accent-blue-600' : 'opacity-40' }}">
                                                                         <span class="text-sm leading-snug {{ $isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400 font-normal' }}">{{ $option['label'] }}</span>
-                                                                        @if($isSelected)
-                                                                            <span class="ml-auto text-xs text-blue-700 bg-blue-100/90 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 flex-shrink-0">
-                                                                                <i class="fa-solid fa-check text-[11px]"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
-                                                                            </span>
-                                                                        @endif
                                                                     </div>
                                                                 @endforeach
                                                             </div>
