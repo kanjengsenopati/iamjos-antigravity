@@ -797,22 +797,22 @@
                                                                         if (!empty($selectedValues)) {
                                                                             foreach ((array)$selectedValues as $sv) {
                                                                                 $svStr = strtolower(trim((string)$sv));
-                                                                                $optValStr = strtolower(trim((string)$option['value']));
-                                                                                $optLabelStr = strtolower(trim((string)$option['label']));
-                                                                                if ($svStr !== '' && ($svStr === $optValStr || $svStr === $optLabelStr || str_contains($optLabelStr, $svStr) || str_contains($svStr, $optValStr))) {
+                                                                                $optValStr = strtolower(trim((string)($option['value'] ?? '')));
+                                                                                $optLabelStr = strtolower(trim((string)($option['label'] ?? '')));
+                                                                                if ($svStr !== '' && ($svStr === $optValStr || $svStr === $optLabelStr)) {
                                                                                     $isSelected = true;
                                                                                     break;
                                                                                 }
                                                                             }
                                                                         }
                                                                     @endphp
-                                                                    <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
+                                                                    <div class="flex items-center gap-3 p-3.5 rounded-xl border transition-all {{ $isSelected ? 'border-blue-500 bg-blue-50/70 text-slate-900 shadow-xs ring-1 ring-blue-500/20' : 'border-slate-200 bg-slate-50/50 text-slate-400' }}">
                                                                         <input type="checkbox" disabled {{ $isSelected ? 'checked' : '' }}
-                                                                            class="rounded border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed">
-                                                                        <span class="text-sm font-medium">{{ $option['label'] }}</span>
+                                                                            class="rounded border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed {{ $isSelected ? 'accent-blue-600' : 'opacity-40' }}">
+                                                                        <span class="text-sm leading-snug {{ $isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400 font-normal' }}">{{ $option['label'] }}</span>
                                                                         @if($isSelected)
-                                                                            <span class="ml-auto text-xs text-blue-600 font-bold flex items-center gap-1">
-                                                                                <i class="fa-solid fa-check"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
+                                                                            <span class="ml-auto text-xs text-blue-700 bg-blue-100/90 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 flex-shrink-0">
+                                                                                <i class="fa-solid fa-check text-[11px]"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
                                                                             </span>
                                                                         @endif
                                                                     </div>
@@ -827,21 +827,20 @@
                                                                 @foreach($element->options as $option)
                                                                     @php
                                                                         $exStr = strtolower(trim((string)$existingValue));
-                                                                        $optValStr = strtolower(trim((string)$option['value']));
-                                                                        $optLabelStr = strtolower(trim((string)$option['label']));
+                                                                        $optValStr = strtolower(trim((string)($option['value'] ?? '')));
+                                                                        $optLabelStr = strtolower(trim((string)($option['label'] ?? '')));
                                                                         $isSelected = !is_null($existingValue) && $existingValue !== '' && (
                                                                             $exStr === $optValStr || 
-                                                                            $exStr === $optLabelStr || 
-                                                                            ($exStr !== '' && (str_contains($optLabelStr, $exStr) || str_contains($exStr, $optValStr)))
+                                                                            $exStr === $optLabelStr
                                                                         );
                                                                     @endphp
-                                                                    <div class="flex items-center gap-3 p-3 rounded-xl border {{ $isSelected ? 'border-blue-400 bg-blue-50/40 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60' }}">
+                                                                    <div class="flex items-center gap-3 p-3.5 rounded-xl border transition-all {{ $isSelected ? 'border-blue-500 bg-blue-50/70 text-slate-900 shadow-xs ring-1 ring-blue-500/20' : 'border-slate-200 bg-slate-50/50 text-slate-400' }}">
                                                                         <input type="radio" disabled {{ $isSelected ? 'checked' : '' }}
-                                                                            class="border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed">
-                                                                        <span class="text-sm font-medium">{{ $option['label'] }}</span>
+                                                                            class="border-slate-300 text-blue-600 w-4 h-4 cursor-not-allowed {{ $isSelected ? 'accent-blue-600' : 'opacity-40' }}">
+                                                                        <span class="text-sm leading-snug {{ $isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400 font-normal' }}">{{ $option['label'] }}</span>
                                                                         @if($isSelected)
-                                                                            <span class="ml-auto text-xs text-blue-600 font-bold flex items-center gap-1">
-                                                                                <i class="fa-solid fa-check"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
+                                                                            <span class="ml-auto text-xs text-blue-700 bg-blue-100/90 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 flex-shrink-0">
+                                                                                <i class="fa-solid fa-check text-[11px]"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
                                                                             </span>
                                                                         @endif
                                                                     </div>
@@ -856,15 +855,22 @@
                                                             if($element->options) {
                                                                 foreach($element->options as $opt) {
                                                                     $exStr = strtolower(trim((string)$existingValue));
-                                                                    $optValStr = strtolower(trim((string)$opt['value']));
-                                                                    if($exStr === $optValStr || str_contains(strtolower($opt['label']), $exStr)) {
+                                                                    $optValStr = strtolower(trim((string)($opt['value'] ?? '')));
+                                                                    $optLabelStr = strtolower(trim((string)($opt['label'] ?? '')));
+                                                                    if($exStr !== '' && ($exStr === $optValStr || $exStr === $optLabelStr)) {
                                                                         $selectedLabel = $opt['label'];
+                                                                        break;
                                                                     }
                                                                 }
                                                             }
                                                         @endphp
-                                                        <div class="p-3 bg-slate-100/80 border border-slate-200 rounded-xl text-sm font-bold text-slate-800">
-                                                            {{ $selectedLabel }}
+                                                        <div class="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl text-sm font-semibold text-slate-900 flex items-center justify-between">
+                                                            <span>{{ $selectedLabel }}</span>
+                                                            @if($selectedLabel !== '-')
+                                                                <span class="text-xs text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
+                                                                    <i class="fa-solid fa-check text-[11px]"></i> {{ $isId ? 'Dipilih' : 'Selected' }}
+                                                                </span>
+                                                            @endif
                                                         </div>
                                                         @break
 
