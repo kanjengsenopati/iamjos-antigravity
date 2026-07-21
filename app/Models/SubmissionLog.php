@@ -195,7 +195,7 @@ class SubmissionLog extends Model
             $triggerUserId = $triggerUser?->id ?? auth()->id();
             $actionUrl = route('journal.submissions.show', [
                 'journal' => $journal->slug,
-                'submission' => $submission->seq_id
+                'submission' => $submission->url_slug,
             ]);
 
             // 1. Ambil Editor & Manager Jurnal (Aktif & Global) berdasarkan permission_level

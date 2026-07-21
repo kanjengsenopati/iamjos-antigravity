@@ -57,9 +57,9 @@ class NewDiscussionMessageNotification extends Notification
             $assignment = ReviewAssignment::where('submission_id', $submission->id)
                 ->where('reviewer_id', $notifiable->id)
                 ->first();
-            $url = $assignment ? route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->id]) : route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]);
+            $url = $assignment ? route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->id]) : route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->url_slug]);
         } else {
-            $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]);
+            $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->url_slug]);
         }
 
         $mailMessage = (new MailMessage)
@@ -101,9 +101,9 @@ class NewDiscussionMessageNotification extends Notification
             $assignment = ReviewAssignment::where('submission_id', $submission->id)
                 ->where('reviewer_id', $notifiable->id)
                 ->first();
-            $url = $assignment ? "/{$journal->slug}/reviewer/{$assignment->id}" : "/{$journal->slug}/submissions/{$submission->slug}?open_discussion={$this->discussion->id}";
+            $url = $assignment ? "/{$journal->slug}/reviewer/{$assignment->id}" : "/{$journal->slug}/submissions/{$submission->url_slug}?open_discussion={$this->discussion->id}";
         } else {
-            $url = "/{$journal->slug}/submissions/{$submission->slug}?open_discussion={$this->discussion->id}";
+            $url = "/{$journal->slug}/submissions/{$submission->url_slug}?open_discussion={$this->discussion->id}";
         }
 
         return [

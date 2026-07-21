@@ -358,7 +358,7 @@ class ProductionWorkflowController extends Controller
                     $submission,
                     'Submission Published',
                     "The submission \"{$submission->title}\" has been published in " . ($submission->issue?->identifier ?? 'the journal') . ".",
-                    url("/{$journalModel->slug}/submissions/{$submission->slug}")
+                    url("/{$journalModel->slug}/submissions/{$submission->url_slug}")
                 ));
             }
         } catch (\Exception $e) {

@@ -88,7 +88,7 @@ class RevisionRequestMail extends Mailable implements ShouldQueue
                 'authorName' => $this->submission->authors->first()?->name ?? $this->submission->author?->name ?? 'Author',
                 'submissionUrl' => route('journal.submissions.show', [
                     'journal' => $this->journal?->slug ?? 'default',
-                    'submission' => $this->submission->slug,
+                    'submission' => $this->submission->url_slug,
                 ]),
             ],
         );

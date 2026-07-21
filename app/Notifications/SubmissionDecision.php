@@ -42,7 +42,7 @@ class SubmissionDecision extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug]);
 
         $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
         $principalEmail = $journal->getSetting('contact.principal.email');
@@ -145,7 +145,7 @@ class SubmissionDecision extends Notification
             'type' => 'submission_decision',
             'title' => $titles[$this->decision] ?? 'Submission Update',
             'message' => $messages[$this->decision] ?? 'There is an update on your submission.',
-            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug], false),
             'notification_type' => $types[$this->decision] ?? 'info',
             'icon' => $icons[$this->decision] ?? 'fa-gavel',
             'submission_id' => $this->submission->id,

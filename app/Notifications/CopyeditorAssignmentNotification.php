@@ -46,7 +46,7 @@ class CopyeditorAssignmentNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug]);
         $assignedBy = $this->assignedBy;
 
         $mailMessage = (new MailMessage)
@@ -90,7 +90,7 @@ class CopyeditorAssignmentNotification extends Notification
             'type' => 'copyeditor_assignment',
             'title' => 'Copyediting Assignment',
             'message' => "You have been assigned as copyeditor for \"{$this->submission->title}\".",
-            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug], false),
             'notification_type' => 'info',
             'icon' => 'fa-pen-to-square',
             'submission_id' => $this->submission->id,

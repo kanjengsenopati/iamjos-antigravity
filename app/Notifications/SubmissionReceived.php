@@ -40,7 +40,7 @@ class SubmissionReceived extends Notification
             return $author->first_name . ' ' . $author->last_name;
         })->implode(', ');
 
-        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug]);
 
         $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
         $principalEmail = $journal->getSetting('contact.principal.email');
@@ -82,7 +82,7 @@ class SubmissionReceived extends Notification
             'type' => 'submission_received',
             'title' => 'Submission Received',
             'message' => "Your submission \"{$this->submission->title}\" has been received.",
-            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug], false),
             'notification_type' => 'success',
             'icon' => 'fa-check-circle',
             'submission_id' => $this->submission->id,

@@ -149,16 +149,48 @@ class Submission extends Model
             }
         });
 
-        // Update slug if title changes (optional, can be removed if slugs should be permanent)
-        static::updating(function (Submission $submission) {
-            if ($submission->isDirty('title') && !empty($submission->title)) {
-                // Only update slug if it hasn't been manually changed
-                $oldSlug = Str::slug($submission->getOriginal('title'));
-                if ($submission->slug === $oldSlug || Str::startsWith($submission->slug, $oldSlug . '-')) {
-                    $submission->slug = static::generateUniqueSlug($submission->title, $submission->id);
+        static::created(function (Submission $submission) {
+            if ($submission->seq_id && !empty($submission->title)) {
+                $baseSlug = Str::slug($submission->title) ?: 'submission';
+                $targetSlug = $baseSlug . '-' . $submission->seq_id;
+                if ($submission->slug !== $targetSlug && !static::withTrashed()->where('slug', $targetSlug)->where('id', '!=', $submission->id)->exists()) {
+                    static::where('id', $submission->id)->update(['slug' => $targetSlug]);
                 }
             }
         });
+
+        // Update slug if title changes
+        static::updating(function (Submission $submission) {
+            if ($submission->isDirty('title') && !empty($submission->title)) {
+                $oldSlug = Str::slug($submission->getOriginal('title'));
+                if ($submission->slug === $oldSlug || Str::startsWith($submission->slug, $oldSlug . '-')) {
+                    $baseSlug = Str::slug($submission->title) ?: 'submission';
+                    $targetSlug = $submission->seq_id ? ($baseSlug . '-' . $submission->seq_id) : static::generateUniqueSlug($submission->title, $submission->id);
+                    $submission->slug = $targetSlug;
+                }
+            }
+        });
+    }
+
+    /**
+     * Get the formatted public URL slug (e.g. title-slug-seq_id or seq_id).
+     */
+    public function getUrlSlugAttribute(): string
+    {
+        if (!empty($this->slug)) {
+            // If slug ends with UUID, strip UUID and append seq_id
+            if (preg_match('/-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $this->slug)) {
+                $cleanSlug = preg_replace('/-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', '', $this->slug);
+                return $this->seq_id ? ($cleanSlug . '-' . $this->seq_id) : $cleanSlug;
+            }
+            // If seq_id exists and slug doesn't end with seq_id and isn't numeric
+            if ($this->seq_id && !Str::endsWith($this->slug, '-' . $this->seq_id) && $this->slug !== (string)$this->seq_id) {
+                return $this->slug . '-' . $this->seq_id;
+            }
+            return $this->slug;
+        }
+
+        return (string)($this->seq_id ?? $this->id);
     }
 
     /**

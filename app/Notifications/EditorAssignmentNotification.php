@@ -43,7 +43,7 @@ class EditorAssignmentNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug]);
         $assignedBy = $this->assignedBy;
 
         $mailMessage = (new MailMessage)

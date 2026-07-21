@@ -39,7 +39,7 @@ class NewSubmissionNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug]);
 
         $submitter = $this->submission->author;
         $submitterName = $submitter ? $submitter->name : ($this->submission->authors->first()->name ?? 'Author');
@@ -86,7 +86,7 @@ class NewSubmissionNotification extends Notification
             'type' => 'new_submission',
             'title' => 'New Submission Received',
             'message' => "A new submission has been submitted: \"{$this->submission->title}\".",
-            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug], false),
             'notification_type' => 'info',
             'icon' => 'fa-file-circle-plus',
             'submission_id' => $this->submission->id,

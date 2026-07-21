@@ -44,7 +44,7 @@ class SubmissionDeclinedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug]);
+        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug]);
         $declinedBy = $this->declinedBy;
 
         $mailMessage = (new MailMessage)
@@ -86,7 +86,7 @@ class SubmissionDeclinedNotification extends Notification
             'declined_by_name' => $this->declinedBy->name,
             'title' => $this->submission->title,
             'message' => 'Your submission "' . $this->submission->title . '" has been declined.',
-            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->slug], false),
+            'url' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug], false),
         ];
     }
 }

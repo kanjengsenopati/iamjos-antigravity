@@ -301,7 +301,7 @@ class SubmissionWorkflowController extends Controller
                         $submission,
                         'New Editor Assigned',
                         "{$user->name} has been assigned as an editor to the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
-                        url("/{$journal->slug}/submissions/{$submission->slug}")
+                        url("/{$journal->slug}/submissions/{$submission->url_slug}")
                     ));
                 }
             } catch (\Exception $e) {
@@ -343,7 +343,7 @@ class SubmissionWorkflowController extends Controller
                     $submission,
                     'Editor Unassigned',
                     "You have been unassigned from the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
-                    url("/{$journal->slug}/submissions/{$submission->slug}")
+                    url("/{$journal->slug}/submissions/{$submission->url_slug}")
                 ));
 
                 // Notify other assigned editors
@@ -359,7 +359,7 @@ class SubmissionWorkflowController extends Controller
                         $submission,
                         'Editor Unassigned',
                         "{$removedUser->name} has been unassigned from the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
-                        url("/{$journal->slug}/submissions/{$submission->slug}")
+                        url("/{$journal->slug}/submissions/{$submission->url_slug}")
                     ));
                 }
             } catch (\Exception $e) {
@@ -424,7 +424,7 @@ class SubmissionWorkflowController extends Controller
                             $submission,
                             'Production Assignment',
                             "You have been assigned to the production stage of the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
-                            url("/{$journal->slug}/submissions/{$submission->slug}")
+                            url("/{$journal->slug}/submissions/{$submission->url_slug}")
                         ));
                         
                         $assignment->update(['date_notified' => now()]);
@@ -528,7 +528,7 @@ class SubmissionWorkflowController extends Controller
                             $submission,
                             'Copyediting Assignment',
                             "You have been assigned to copyedit the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
-                            url("/{$journal->slug}/submissions/{$submission->slug}")
+                            url("/{$journal->slug}/submissions/{$submission->url_slug}")
                         ));
                     } catch (\Throwable $e) {
                         Log::error('Copyeditor assignment notification failed', [

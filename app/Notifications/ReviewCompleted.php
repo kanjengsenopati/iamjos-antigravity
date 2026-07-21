@@ -75,7 +75,7 @@ class ReviewCompleted extends Notification
             'type' => 'review_completed',
             'title' => 'Review Submitted',
             'message' => "A review has been completed for \"{$submission->title}\".",
-            'url' => "/{$journal->slug}/submissions/{$submission->slug}?tab=review",
+            'url' => "/{$journal->slug}/submissions/{$submission->url_slug}?tab=review",
             'notification_type' => 'success',
             'icon' => 'fa-check-circle',
             'review_id' => $this->review->id,

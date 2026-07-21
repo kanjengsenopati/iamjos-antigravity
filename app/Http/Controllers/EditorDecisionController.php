@@ -135,7 +135,7 @@ class EditorDecisionController extends Controller
                         $submission,
                         'Reviewer Assigned',
                         "Reviewer {$reviewer->name} has been assigned to review the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
-                        url("/{$journal->slug}/submissions/{$submission->slug}")
+                        url("/{$journal->slug}/submissions/{$submission->url_slug}")
                     ));
                 }
             } catch (\Exception $e) {
@@ -204,7 +204,7 @@ class EditorDecisionController extends Controller
                     $submission,
                     'Reviewer Assignment Cancelled',
                     "The review assignment for {$reviewer->name} on \"{$submission->title}\" has been cancelled by " . auth()->user()->name . ".",
-                    url("/{$journal->slug}/submissions/{$submission->slug}")
+                    url("/{$journal->slug}/submissions/{$submission->url_slug}")
                 ));
             }
         } catch (\Exception $e) {
@@ -372,7 +372,7 @@ class EditorDecisionController extends Controller
                     $submission,
                     'Submission Sent to Review',
                     "Submission \"{$submission->title}\" has been sent to the Review stage by " . auth()->user()->name . ".",
-                    url("/{$journal->slug}/submissions/{$submission->slug}")
+                    url("/{$journal->slug}/submissions/{$submission->url_slug}")
                 ));
             }
         } catch (\Exception $e) {

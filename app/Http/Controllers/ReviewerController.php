@@ -160,7 +160,7 @@ class ReviewerController extends Controller
                     $assignment->submission,
                     'Review Invitation Accepted',
                     "Reviewer {$assignment->reviewer->name} has accepted the invitation to review the submission: \"{$assignment->submission->title}\".",
-                    url("/{$journal->slug}/submissions/{$assignment->submission->slug}?tab=review")
+                    url("/{$journal->slug}/submissions/{$assignment->submission->url_slug}?tab=review")
                 ));
             }
         } catch (\Exception $e) {
@@ -225,7 +225,7 @@ class ReviewerController extends Controller
                     $assignment->submission,
                     'Review Invitation Declined',
                     "Reviewer {$assignment->reviewer->name} has declined the invitation to review the submission: \"{$assignment->submission->title}\".\n\n{$declineReason}",
-                    url("/{$journal->slug}/submissions/{$assignment->submission->slug}?tab=review")
+                    url("/{$journal->slug}/submissions/{$assignment->submission->url_slug}?tab=review")
                 ));
             }
         } catch (\Exception $e) {

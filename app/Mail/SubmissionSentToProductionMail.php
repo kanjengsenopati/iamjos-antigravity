@@ -57,7 +57,7 @@ class SubmissionSentToProductionMail extends Mailable implements ShouldQueue
                 'body' => $this->emailBody,
                 'submissionUrl' => route('journal.submissions.show', [
                     'journal' => $this->submission->journal->slug,
-                    'submission' => $this->submission->slug,
+                    'submission' => $this->submission->url_slug,
                 ]),
             ],
         );
