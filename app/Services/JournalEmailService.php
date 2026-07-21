@@ -11,60 +11,68 @@ use Illuminate\Mail\Message;
 
 class JournalEmailService
 {
-    /**
-     * Send a notification email to a user using specific template logic.
-     *
-     * @param Journal $journal
-     * @param User $recipient
-     * @param string $key Template identifier key
-     * @param array $variables Variables to replace in the subject and body
-     * @return bool
-     */
-    public static function sendNotification(Journal $journal, User $recipient, string $key, array $variables = []): bool
+    public static function sendNotification(Journal $journal, $recipient, string $key, array $variables = []): bool
     {
         try {
             // 1. Resolve Template (Custom or Default)
             $templateData = self::resolveTemplate($journal, $key);
 
             if (!$templateData) {
-                Log::error("Email template not found for key: {$key} in journal: {$journal->slug}");
+                Log::info("Email template not found or disabled for key: {$key} in journal: {$journal->slug}");
+                return false;
+            }
+
+            // Prepare recipient info
+            $recipientEmail = '';
+            $recipientName = '';
+
+            if (is_string($recipient)) {
+                $recipientEmail = $recipient;
+                $recipientName = $variables['recipientName'] ?? $recipient;
+            } elseif (is_array($recipient)) {
+                $recipientEmail = $recipient['email'] ?? '';
+                $recipientName = $recipient['name'] ?? $recipient['full_name'] ?? $recipientEmail;
+            } elseif (is_object($recipient)) {
+                $recipientEmail = $recipient->email ?? '';
+                if (isset($recipient->full_name)) {
+                    $recipientName = $recipient->full_name;
+                } elseif (isset($recipient->name)) {
+                    $recipientName = $recipient->name;
+                } else {
+                    $firstName = $recipient->first_name ?? '';
+                    $lastName = $recipient->last_name ?? '';
+                    $recipientName = trim($firstName . ' ' . $lastName);
+                    if (empty($recipientName)) {
+                        $recipientName = $recipientEmail;
+                    }
+                }
+            }
+
+            if (empty($recipientEmail)) {
+                Log::warning("JournalEmailService: Recipient email is empty for key: {$key}");
                 return false;
             }
 
             // 2. Prepare Variables
-            $variables = array_merge($variables, [
-                'recipientName' => $recipient->full_name,
-                'recipientEmail' => $recipient->email,
+            $variables = array_merge([
+                'recipientName' => $recipientName,
+                'recipientEmail' => $recipientEmail,
                 'journalName' => $journal->name,
                 'journalUrl' => route('journal.home', $journal->slug),
-            ]);
+            ], $variables);
 
             // Add signature if not present
             if (!isset($variables['signature'])) {
-                // Determine signature source. 
-                // Priority: Journal Settings "email_signature" -> Default Site Signature
-                // Assuming journal settings are stored in json column or separate table, 
-                // for now fallback to simple journal name signature if no setting.
-                 
-                // If the journal model has a settings relation or similar:
-                // $signature = $journal->getSetting('email_signature') ?? $journal->name . ' Editorial Team';
-                
-                // For this implementation, let's use a placeholder logic until settings are confirmed.
-                // If passed variables have signature use it, else default.
-                $variables['signature'] = $journal->title ?? $journal->name . "\nEditorial Team"; 
+                $variables['signature'] = $journal->email_signature ?: ($journal->name . "\nEditorial Team"); 
             }
 
             // 3. Parse Content
-            $subject = self::parseVariables($templateData['subject'], $variables);
-            $body = self::parseVariables($templateData['body'], $variables);
+            $subject = $variables['customSubject'] ?? self::parseVariables($templateData['subject'], $variables);
+            $body = $variables['customBody'] ?? self::parseVariables($templateData['body'], $variables);
 
             // 4. Send Email
-            
-            // Convert newline to br for HTML emails if needed, or send raw text
-            // Laravel Mail uses Markdown or View. Simple text sending:
-            
-            Mail::send([], [], function (Message $message) use ($recipient, $subject, $body, $journal, $templateData) {
-                $message->to($recipient->email, $recipient->full_name)
+            Mail::send([], [], function (Message $message) use ($recipientEmail, $recipientName, $subject, $body, $journal) {
+                $message->to($recipientEmail, $recipientName)
                     ->subject($subject);
                 
                 $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
@@ -73,14 +81,13 @@ class JournalEmailService
                 $message->from($principalEmail, $principalName);
                 $message->replyTo($principalEmail, $principalName);
                 
-                // Content is HTML from WYSIWYG, so render directly
                 $message->html($body);
             });
 
             return true;
 
         } catch (\Exception $e) {
-            Log::error("Failed to send email '{$key}' to {$recipient->email}: " . $e->getMessage());
+            Log::error("Failed to send email '{$key}': " . $e->getMessage());
             return false;
         }
     }

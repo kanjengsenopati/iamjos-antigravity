@@ -173,16 +173,20 @@ class EmailTemplate extends Model
     public static function seedForJournal(string $journalId): void
     {
         foreach (self::getDefaultTemplates() as $template) {
-            self::create([
-                'journal_id' => $journalId,
-                'key' => $template['key'],
-                'name' => $template['name'],
-                'subject' => $template['subject'],
-                'body' => $template['body'],
-                'description' => $template['description'],
-                'is_enabled' => true,
-                'is_custom' => false,
-            ]);
+            self::firstOrCreate(
+                [
+                    'journal_id' => $journalId,
+                    'key' => $template['key'],
+                ],
+                [
+                    'name' => $template['name'],
+                    'subject' => $template['subject'],
+                    'body' => $template['body'],
+                    'description' => $template['description'],
+                    'is_enabled' => true,
+                    'is_custom' => false,
+                ]
+            );
         }
     }
 

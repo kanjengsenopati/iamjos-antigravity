@@ -22,11 +22,20 @@ class ReviewInvitation extends Notification
         $this->review = $review;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     */
     public function via(object $notifiable): array
     {
+        $submission = $this->review->submission;
+        $journal = $submission?->journal;
+        if ($journal) {
+            $disabled = \App\Models\EmailTemplate::where('journal_id', $journal->id)
+                ->where('key', 'REVIEW_REQUEST')
+                ->where('is_enabled', false)
+                ->exists();
+            if ($disabled) {
+                return ['database'];
+            }
+        }
+
         return ['mail', 'database'];
     }
 

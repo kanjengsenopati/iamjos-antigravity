@@ -16,8 +16,7 @@
         this.showEditModal = true;
     },
 
-    async updateStatus(templateId, event) {
-        const newStatus = event.target.value;
+    async updateTemplateStatus(templateId, enabled) {
         const url = `/{{ $journalSlug }}/settings/workflow/email-templates/${templateId}/toggle`;
 
         try {
@@ -32,11 +31,12 @@
 
             if (!response.ok) {
                 alert('{{ $isId ? "Gagal memperbarui status. Silakan coba lagi." : "Failed to update status. Please try again." }}');
-                event.target.value = newStatus == '1' ? '0' : '1';
+                window.location.reload();
             }
         } catch (e) {
             console.error(e);
             alert('{{ $isId ? "Terjadi kesalahan." : "An error occurred." }}');
+            window.location.reload();
         }
     }
 }">
@@ -170,15 +170,24 @@
                                         <span class="text-xs text-gray-500 truncate max-w-md mt-1">{{ Str::limit($template->description, 70) }}</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <select @change="updateStatus({{ $template->id }}, $event)"
-                                        class="block w-32 pl-3 pr-8 py-1.5 text-xs border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 font-medium rounded-md cursor-pointer transition-colors"
-                                        :class="$el.value == 1 ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-red-50 border-red-200'">
-                                        <option value="1" {{ $template->is_enabled ? 'selected' : '' }}
-                                            class="text-gray-900 bg-white">{{ $isId ? 'Aktif' : 'Enabled' }}</option>
-                                        <option value="0" {{ !$template->is_enabled ? 'selected' : '' }}
-                                            class="text-gray-900 bg-white">{{ $isId ? 'Tidak Aktif' : 'Disabled' }}</option>
-                                    </select>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex items-center gap-2" x-data="{ enabled: {{ $template->is_enabled ? 'true' : 'false' }} }">
+                                        <button type="button" 
+                                            @click="enabled = !enabled; updateTemplateStatus({{ $template->id }}, enabled)"
+                                            :class="enabled ? 'bg-emerald-500' : 'bg-gray-300'"
+                                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                            role="switch" 
+                                            :aria-checked="enabled">
+                                            <span class="sr-only">Toggle email template status</span>
+                                            <span :class="enabled ? 'translate-x-5' : 'translate-x-0'"
+                                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                                            </span>
+                                        </button>
+                                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                            :class="enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'"
+                                            x-text="enabled ? '{{ $isId ? 'ON' : 'ON' }}' : '{{ $isId ? 'OFF' : 'OFF' }}'">
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-3">

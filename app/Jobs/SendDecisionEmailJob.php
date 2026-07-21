@@ -48,20 +48,45 @@ class SendDecisionEmailJob implements ShouldQueue
                 return;
             }
 
-            if ($this->decisionType === 'accepted') {
-                Mail::to($recipient->email)->send(new \App\Mail\SubmissionAcceptedMail($this->submission, $this->emailBody));
-            } elseif ($this->decisionType === 'declined') {
-                $editor = $this->madeBy ?? $recipient;
-                $recipient->notify(new \App\Notifications\SubmissionDeclinedNotification($this->submission, $editor, $this->emailBody));
-            } elseif ($this->decisionType === 'revisions') {
-                // Mail::to($recipient->email)->send(new \App\Mail\RevisionRequestMail($this->submission, $this->emailBody));
-            } elseif ($this->decisionType === 'send_to_production') {
-                Mail::to($recipient->email)->send(new \App\Mail\SubmissionSentToProductionMail($this->submission, $this->emailBody));
+            $journal = $this->submission->journal;
+            if (!$journal) {
+                Log::warning("SendDecisionEmailJob: Journal not found for submission {$this->submission->id}.");
+                return;
             }
 
-            Log::info("Decision email sent successfully " . $this->decisionType);
+            // Map decision types to database template keys
+            $key = match ($this->decisionType) {
+                'accepted' => 'EDITOR_DECISION_ACCEPT',
+                'declined' => 'EDITOR_DECISION_DECLINE',
+                'revisions' => 'EDITOR_DECISION_REVISIONS',
+                'send_to_production' => 'LAYOUT_REQUEST',
+                default => null,
+            };
+
+            if ($key) {
+                $customSubject = match ($this->decisionType) {
+                    'accepted' => 'Editor Decision: Submission Accepted',
+                    'declined' => 'Editor Decision: Submission Declined',
+                    'revisions' => 'Editor Decision: Revisions Required',
+                    'send_to_production' => 'Editor Decision: Sent to Production',
+                    default => 'Editor Decision Update',
+                };
+
+                // Use centralized dynamic email service which checks is_enabled and resolves the template
+                $sent = \App\Services\JournalEmailService::sendNotification($journal, $recipient, $key, [
+                    'customSubject' => $customSubject,
+                    'customBody' => $this->emailBody,
+                ]);
+
+                if ($sent) {
+                    Log::info("Decision email sent successfully via JournalEmailService: " . $this->decisionType);
+                } else {
+                    Log::info("Decision email skipped or failed to send via JournalEmailService: " . $this->decisionType);
+                }
+            } else {
+                Log::warning("SendDecisionEmailJob: Unmapped decision type: " . $this->decisionType);
+            }
         } catch (\Exception $e) {
-            // Log error but do not fail the job/workflow
             Log::error("Failed to send decision email for submission {$this->submission->id}: " . $e->getMessage());
         }
     }

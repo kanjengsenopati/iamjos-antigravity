@@ -22,11 +22,19 @@ class SubmissionReceived extends Notification
         $this->submission = $submission;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     */
     public function via(object $notifiable): array
     {
+        $journal = $this->submission->journal;
+        if ($journal) {
+            $disabled = \App\Models\EmailTemplate::where('journal_id', $journal->id)
+                ->where('key', 'SUBMISSION_ACK')
+                ->where('is_enabled', false)
+                ->exists();
+            if ($disabled) {
+                return ['database'];
+            }
+        }
+
         return ['mail', 'database'];
     }
 

@@ -33,6 +33,26 @@ class SubmissionDecision extends Notification
      */
     public function via(object $notifiable): array
     {
+        $key = match ($this->decision) {
+            'accepted' => 'EDITOR_DECISION_ACCEPT',
+            'rejected', 'declined' => 'EDITOR_DECISION_DECLINE',
+            'revision_required', 'revisions' => 'EDITOR_DECISION_REVISIONS',
+            default => null,
+        };
+
+        if ($key) {
+            $journal = $this->submission->journal;
+            if ($journal) {
+                $disabled = \App\Models\EmailTemplate::where('journal_id', $journal->id)
+                    ->where('key', $key)
+                    ->where('is_enabled', false)
+                    ->exists();
+                if ($disabled) {
+                    return ['database'];
+                }
+            }
+        }
+
         return ['mail', 'database'];
     }
 
