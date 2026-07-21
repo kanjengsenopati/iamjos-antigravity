@@ -8,7 +8,19 @@
 <x-app-layout :journal="$journal" :journalSlug="$journalSlug">
     <x-slot name="title">{{ $isId ? 'Pengaturan Website' : 'Website Settings' }} - {{ $journal->name }}</x-slot>
 
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'setup') }}', setupSubTab: new URLSearchParams(window.location.search).get('setup_tab') || '{{ request('setup_tab', 'languages') }}', appearanceSubTab: new URLSearchParams(window.location.search).get('appearance_tab') || '{{ request('appearance_tab', 'theme') }}', showNavModal: false, showSidebarModal: false }">
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" 
+        x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '{{ request('tab', 'setup') }}', setupSubTab: new URLSearchParams(window.location.search).get('setup_tab') || '{{ request('setup_tab', 'languages') }}', appearanceSubTab: new URLSearchParams(window.location.search).get('appearance_tab') || '{{ request('appearance_tab', 'theme') }}', showNavModal: false, showSidebarModal: false }"
+        x-init="
+            $watch('activeTab', value => {
+                history.replaceState(null, '', '?tab=' + value + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab);
+            });
+            $watch('setupSubTab', value => {
+                history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + value + '&appearance_tab=' + appearanceSubTab);
+            });
+            $watch('appearanceSubTab', value => {
+                history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + value);
+            });
+        ">
         {{-- Page Header --}}
         <div class="mb-8">
             <nav class="text-sm text-gray-500 mb-2">
@@ -82,25 +94,25 @@
         {{-- Primary Top Tabs Navigation (OJS Standard) --}}
         <div class="border-b border-slate-200 mb-8">
             <nav class="flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
-                <button type="button" @click="activeTab = 'appearance'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
+                <button type="button" @click="activeTab = 'appearance'"
                     :class="activeTab === 'appearance' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
                     class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-palette text-base transition-colors" :class="activeTab === 'appearance' ? 'text-primary-600' : 'text-slate-400'"></i>
                     {{ $isId ? 'Tampilan (Appearance)' : 'Appearance' }}
                 </button>
-                <button type="button" @click="activeTab = 'setup'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
+                <button type="button" @click="activeTab = 'setup'"
                     :class="activeTab === 'setup' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
                     class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-sliders text-base transition-colors" :class="activeTab === 'setup' ? 'text-primary-600' : 'text-slate-400'"></i>
                     {{ $isId ? 'Pengaturan (Setup)' : 'Setup' }}
                 </button>
-                <button type="button" @click="activeTab = 'plugins'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
+                <button type="button" @click="activeTab = 'plugins'"
                     :class="activeTab === 'plugins' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
                     class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plug text-base transition-colors" :class="activeTab === 'plugins' ? 'text-primary-600' : 'text-slate-400'"></i>
                     Plugins
                 </button>
-                <button type="button" @click="activeTab = 'static_pages'; history.replaceState(null, '', '?tab=' + activeTab + '&setup_tab=' + setupSubTab + '&appearance_tab=' + appearanceSubTab)"
+                <button type="button" @click="activeTab = 'static_pages'"
                     :class="activeTab === 'static_pages' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
                     class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-file-code text-base transition-colors" :class="activeTab === 'static_pages' ? 'text-primary-600' : 'text-slate-400'"></i>
