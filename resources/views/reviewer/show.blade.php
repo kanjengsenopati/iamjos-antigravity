@@ -335,8 +335,11 @@
                             </label>
 
                             <button type="button" @click="setStep(3)" :disabled="!checked"
-                                :class="checked ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                                class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 font-bold rounded-2xl transition-all">
+                                :class="checked ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 font-bold text-sm rounded-2xl transition-all gap-2">
+                                <span>{{ $isId ? 'Lanjut' : 'Next' }}</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
