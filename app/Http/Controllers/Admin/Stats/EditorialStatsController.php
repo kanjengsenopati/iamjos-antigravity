@@ -92,39 +92,62 @@ class EditorialStatsController extends Controller
 
 
         // =====================================================
-        // TREND DATA (Monthly)
+        // TREND DATA (Granularity: daily, weekly, monthly)
         // =====================================================
-        $period = CarbonPeriod::create(Carbon::parse($startStr)->startOfMonth(), '1 month', Carbon::parse($endStr)->endOfMonth());
+        $granularity = strtolower((string)$request->get('granularity', 'monthly'));
+
+        switch ($granularity) {
+            case 'daily':
+                $period = CarbonPeriod::create($startDate->copy()->startOfDay(), '1 day', $endDate->copy()->endOfDay());
+                break;
+            case 'weekly':
+                $period = CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate->copy()->endOfWeek());
+                break;
+            case 'monthly':
+            default:
+                $period = CarbonPeriod::create($startDate->copy()->startOfMonth(), '1 month', $endDate->copy()->endOfMonth());
+                break;
+        }
 
         $trendCategories = [];
         $trendReceived = [];
         $trendAccepted = [];
         $trendDeclined = [];
 
-        foreach ($period as $month) {
-            $monthStart = $month->copy()->startOfMonth();
-            $monthEnd = $month->copy()->endOfMonth();
-            $monthLabel = $month->format('M Y');
+        foreach ($period as $date) {
+            if ($granularity === 'daily') {
+                $itemStart = $date->copy()->startOfDay();
+                $itemEnd = $date->copy()->endOfDay();
+                $itemLabel = $date->format('d M');
+            } elseif ($granularity === 'weekly') {
+                $itemStart = $date->copy()->startOfWeek();
+                $itemEnd = $date->copy()->endOfWeek();
+                $itemLabel = $date->format('d M') . ' - ' . $itemEnd->format('d M');
+            } else {
+                $itemStart = $date->copy()->startOfMonth();
+                $itemEnd = $date->copy()->endOfMonth();
+                $itemLabel = $date->format('M Y');
+            }
 
-            $trendCategories[] = $monthLabel;
+            $trendCategories[] = $itemLabel;
 
-            // Received this month
+            // Received this period
             $received = Submission::where('journal_id', $journal->id)
-                ->whereBetween('submitted_at', [$monthStart, $monthEnd])
+                ->whereBetween('submitted_at', [$itemStart, $itemEnd])
                 ->whereNotNull('submitted_at')
                 ->count();
             $trendReceived[] = $received;
 
-            // Accepted this month (by accepted_at date)
+            // Accepted this period (by accepted_at date)
             $accepted = Submission::where('journal_id', $journal->id)
-                ->whereBetween('accepted_at', [$monthStart, $monthEnd])
+                ->whereBetween('accepted_at', [$itemStart, $itemEnd])
                 ->count();
             $trendAccepted[] = $accepted;
 
-            // Declined this month (by updated_at when status became rejected)
+            // Declined this period (by updated_at when status became rejected)
             $declined = Submission::where('journal_id', $journal->id)
                 ->where('status', Submission::STATUS_REJECTED)
-                ->whereBetween('updated_at', [$monthStart, $monthEnd])
+                ->whereBetween('updated_at', [$itemStart, $itemEnd])
                 ->count();
             $trendDeclined[] = $declined;
         }

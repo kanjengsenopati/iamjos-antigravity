@@ -21,16 +21,38 @@
                     {{ $isId ? 'Pantau alur pengajuan, keputusan, dan efisiensi editorial.' : 'Monitor submission flow, decisions, and editorial efficiency.' }}
                 </p>
             </div>
-            <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-calendar text-slate-400 text-sm"></i>
-                    <input type="date" x-model="dateStart" @change="fetchData()"
-                        class="bg-transparent border-none text-sm focus:ring-0 text-slate-700 font-medium w-32">
+            <div class="flex flex-wrap items-center gap-3">
+                {{-- Granularity Buttons --}}
+                <div class="flex items-center bg-slate-100 rounded-lg p-1">
+                    <button type="button" @click="setGranularity('daily')"
+                        :class="granularity === 'daily' ? 'bg-white text-indigo-600 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                        class="px-3 py-1.5 text-xs rounded-md transition-all">
+                        {{ $isId ? 'Harian' : 'Daily' }}
+                    </button>
+                    <button type="button" @click="setGranularity('weekly')"
+                        :class="granularity === 'weekly' ? 'bg-white text-indigo-600 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                        class="px-3 py-1.5 text-xs rounded-md transition-all">
+                        {{ $isId ? 'Mingguan' : 'Weekly' }}
+                    </button>
+                    <button type="button" @click="setGranularity('monthly')"
+                        :class="granularity === 'monthly' ? 'bg-white text-indigo-600 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                        class="px-3 py-1.5 text-xs rounded-md transition-all">
+                        {{ $isId ? 'Bulanan' : 'Monthly' }}
+                    </button>
                 </div>
-                <span class="text-slate-300">—</span>
-                <div class="flex items-center gap-2">
-                    <input type="date" x-model="dateEnd" @change="fetchData()"
-                        class="bg-transparent border-none text-sm focus:ring-0 text-slate-700 font-medium w-32">
+
+                {{-- Date Range Picker --}}
+                <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-calendar text-slate-400 text-sm"></i>
+                        <input type="date" x-model="dateStart" @change="fetchData()"
+                            class="bg-transparent border-none text-sm focus:ring-0 text-slate-700 font-medium w-32">
+                    </div>
+                    <span class="text-slate-300">—</span>
+                    <div class="flex items-center gap-2">
+                        <input type="date" x-model="dateEnd" @change="fetchData()"
+                            class="bg-transparent border-none text-sm focus:ring-0 text-slate-700 font-medium w-32">
+                    </div>
                 </div>
             </div>
         </div>
@@ -306,6 +328,7 @@
                 isId: @json($isId),
                 dateStart: new URLSearchParams(window.location.search).get('start') || '{{ now()->subYear()->format('Y-m-d') }}',
                 dateEnd: new URLSearchParams(window.location.search).get('end') || '{{ now()->format('Y-m-d') }}',
+                granularity: new URLSearchParams(window.location.search).get('granularity') || 'monthly',
                 loading: true,
                 kpi: {},
                 trends: {},
@@ -319,6 +342,11 @@
                     this.fetchData();
                 },
 
+                setGranularity(g) {
+                    this.granularity = g;
+                    this.fetchData();
+                },
+
                 async fetchData() {
                     this.loading = true;
 
@@ -326,11 +354,12 @@
                     const url = new URL(window.location.href);
                     url.searchParams.set('start', this.dateStart);
                     url.searchParams.set('end', this.dateEnd);
+                    url.searchParams.set('granularity', this.granularity);
                     window.history.replaceState({}, '', url.toString());
 
                     try {
                         const response = await fetch(
-                            `{{ route('journal.settings.statistics.editorial.data', ['journal' => $journal->slug]) }}?start=${this.dateStart}&end=${this.dateEnd}`
+                            `{{ route('journal.settings.statistics.editorial.data', ['journal' => $journal->slug]) }}?start=${this.dateStart}&end=${this.dateEnd}&granularity=${this.granularity}`
                         );
                         const data = await response.json();
 
