@@ -80,23 +80,23 @@
                     <div class="flex flex-wrap items-center gap-3">
                         {{-- Granularity Buttons --}}
                         <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                            <button @click="setGranularity('daily')"
-                                :class="granularity === 'daily' ? 'bg-white text-indigo-600 shadow-sm' :
-                                    'text-slate-500 hover:text-slate-700'"
-                                class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all">
-                                {{ $isId ? 'Harian' : 'Daily' }}
-                            </button>
-                            <button @click="setGranularity('weekly')"
-                                :class="granularity === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' :
-                                    'text-slate-500 hover:text-slate-700'"
-                                class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all">
+                            <button type="button" @click="setGranularity('weekly')"
+                                :class="granularity === 'weekly' ? 'bg-white text-indigo-600 shadow-sm font-bold' :
+                                    'text-slate-500 hover:text-slate-700 font-medium'"
+                                class="px-3 py-1.5 text-xs rounded-md transition-all">
                                 {{ $isId ? 'Mingguan' : 'Weekly' }}
                             </button>
-                            <button @click="setGranularity('monthly')"
-                                :class="granularity === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' :
-                                    'text-slate-500 hover:text-slate-700'"
-                                class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all">
+                            <button type="button" @click="setGranularity('monthly')"
+                                :class="granularity === 'monthly' ? 'bg-white text-indigo-600 shadow-sm font-bold' :
+                                    'text-slate-500 hover:text-slate-700 font-medium'"
+                                class="px-3 py-1.5 text-xs rounded-md transition-all">
                                 {{ $isId ? 'Bulanan' : 'Monthly' }}
+                            </button>
+                            <button type="button" @click="setGranularity('yearly')"
+                                :class="granularity === 'yearly' ? 'bg-white text-indigo-600 shadow-sm font-bold' :
+                                    'text-slate-500 hover:text-slate-700 font-medium'"
+                                class="px-3 py-1.5 text-xs rounded-md transition-all">
+                                {{ $isId ? 'Tahunan' : 'Yearly' }}
                             </button>
                         </div>
 
@@ -404,9 +404,9 @@
             return {
                 // State
                 isId: @json($isId),
-                dateStart: '{{ now()->subDays(30)->format('Y-m-d') }}',
-                dateEnd: '{{ now()->format('Y-m-d') }}',
-                granularity: 'daily',
+                dateStart: new URLSearchParams(window.location.search).get('start') || '{{ now()->subDays(30)->format('Y-m-d') }}',
+                dateEnd: new URLSearchParams(window.location.search).get('end') || '{{ now()->format('Y-m-d') }}',
+                granularity: new URLSearchParams(window.location.search).get('granularity') || 'monthly',
                 isLoading: false,
 
                 // Data

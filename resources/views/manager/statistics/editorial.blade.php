@@ -24,11 +24,6 @@
             <div class="flex flex-wrap items-center gap-3">
                 {{-- Granularity Buttons --}}
                 <div class="flex items-center bg-slate-100 rounded-lg p-1">
-                    <button type="button" @click="setGranularity('daily')"
-                        :class="granularity === 'daily' ? 'bg-white text-indigo-600 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
-                        class="px-3 py-1.5 text-xs rounded-md transition-all">
-                        {{ $isId ? 'Harian' : 'Daily' }}
-                    </button>
                     <button type="button" @click="setGranularity('weekly')"
                         :class="granularity === 'weekly' ? 'bg-white text-indigo-600 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
                         class="px-3 py-1.5 text-xs rounded-md transition-all">
@@ -38,6 +33,11 @@
                         :class="granularity === 'monthly' ? 'bg-white text-indigo-600 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
                         class="px-3 py-1.5 text-xs rounded-md transition-all">
                         {{ $isId ? 'Bulanan' : 'Monthly' }}
+                    </button>
+                    <button type="button" @click="setGranularity('yearly')"
+                        :class="granularity === 'yearly' ? 'bg-white text-indigo-600 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                        class="px-3 py-1.5 text-xs rounded-md transition-all">
+                        {{ $isId ? 'Tahunan' : 'Yearly' }}
                     </button>
                 </div>
 

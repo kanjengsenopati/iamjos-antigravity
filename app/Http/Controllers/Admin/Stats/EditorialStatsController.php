@@ -92,19 +92,20 @@ class EditorialStatsController extends Controller
 
 
         // =====================================================
-        // TREND DATA (Granularity: daily, weekly, monthly)
+        // TREND DATA (Granularity: weekly, monthly, yearly)
         // =====================================================
         $granularity = strtolower((string)$request->get('granularity', 'monthly'));
 
         switch ($granularity) {
-            case 'daily':
-                $period = CarbonPeriod::create($startDate->copy()->startOfDay(), '1 day', $endDate->copy()->endOfDay());
-                break;
             case 'weekly':
                 $period = CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate->copy()->endOfWeek());
                 break;
+            case 'yearly':
+                $period = CarbonPeriod::create($startDate->copy()->startOfYear(), '1 year', $endDate->copy()->endOfYear());
+                break;
             case 'monthly':
             default:
+                $granularity = 'monthly';
                 $period = CarbonPeriod::create($startDate->copy()->startOfMonth(), '1 month', $endDate->copy()->endOfMonth());
                 break;
         }
@@ -115,14 +116,14 @@ class EditorialStatsController extends Controller
         $trendDeclined = [];
 
         foreach ($period as $date) {
-            if ($granularity === 'daily') {
-                $itemStart = $date->copy()->startOfDay();
-                $itemEnd = $date->copy()->endOfDay();
-                $itemLabel = $date->format('d M');
-            } elseif ($granularity === 'weekly') {
+            if ($granularity === 'weekly') {
                 $itemStart = $date->copy()->startOfWeek();
                 $itemEnd = $date->copy()->endOfWeek();
                 $itemLabel = $date->format('d M') . ' - ' . $itemEnd->format('d M');
+            } elseif ($granularity === 'yearly') {
+                $itemStart = $date->copy()->startOfYear();
+                $itemEnd = $date->copy()->endOfYear();
+                $itemLabel = $date->format('Y');
             } else {
                 $itemStart = $date->copy()->startOfMonth();
                 $itemEnd = $date->copy()->endOfMonth();

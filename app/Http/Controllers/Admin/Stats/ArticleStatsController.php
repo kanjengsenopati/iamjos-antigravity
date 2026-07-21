@@ -31,7 +31,7 @@ class ArticleStatsController extends Controller
 
         $start = $request->get('start', now()->subDays(30)->toDateString());
         $end = $request->get('end', now()->toDateString());
-        $granularity = $request->get('granularity', 'daily');
+        $granularity = $request->get('granularity', 'monthly');
 
         $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
         if ($driver === 'pgsql') {
@@ -167,24 +167,27 @@ class ArticleStatsController extends Controller
     /**
      * Get chart data with granularity support
      */
-    protected function getChartData($journalId, $start, $end, $granularity = 'daily')
+    protected function getChartData($journalId, $start, $end, $granularity = 'monthly')
     {
         $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
         if ($driver === 'pgsql') {
             $dateFormat = match ($granularity) {
                 'weekly' => "TO_CHAR(date, 'IYYY-IW')",
+                'yearly' => "TO_CHAR(date, 'YYYY')",
                 'monthly' => "TO_CHAR(date, 'YYYY-MM')",
                 default => "TO_CHAR(date, 'YYYY-MM-DD')",
             };
         } elseif ($driver === 'sqlite') {
             $dateFormat = match ($granularity) {
                 'weekly' => "strftime('%Y-%W', date)",
+                'yearly' => "strftime('%Y', date)",
                 'monthly' => "strftime('%Y-%m', date)",
                 default => "strftime('%Y-%m-%d', date)",
             };
         } else {
             $dateFormat = match ($granularity) {
                 'weekly' => "DATE_FORMAT(date, '%Y-%u')",
+                'yearly' => "DATE_FORMAT(date, '%Y')",
                 'monthly' => "DATE_FORMAT(date, '%Y-%m')",
                 default => "DATE_FORMAT(date, '%Y-%m-%d')",
             };
@@ -233,19 +236,28 @@ class ArticleStatsController extends Controller
         $startDate = Carbon::parse($start);
         $endDate = Carbon::parse($end);
 
-        if ($granularity === 'daily') {
-            $period = CarbonPeriod::create($startDate, '1 day', $endDate);
-            foreach ($period as $date) {
-                $periods[] = $date->format('Y-m-d');
-            }
-            return $periods;
-        }
-
         if ($granularity === 'weekly') {
             $current = $startDate->copy()->startOfWeek();
             while ($current <= $endDate) {
                 $periods[] = $current->format('o-W');
                 $current->addWeek();
+            }
+            return $periods;
+        }
+
+        if ($granularity === 'yearly') {
+            $current = $startDate->copy()->startOfYear();
+            while ($current <= $endDate) {
+                $periods[] = $current->format('Y');
+                $current->addYear();
+            }
+            return $periods;
+        }
+
+        if ($granularity === 'daily') {
+            $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+            foreach ($period as $date) {
+                $periods[] = $date->format('Y-m-d');
             }
             return $periods;
         }
