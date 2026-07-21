@@ -469,75 +469,78 @@
         <nav class="flex-1 px-3 py-4 space-y-2 overflow-y-auto sidebar-scroll">
 
             @if ($journalSlug)
+                @php
+                    $navActiveClass = 'bg-slate-700 text-white border border-slate-600/60 shadow-sm shadow-slate-900/10 rounded-xl font-medium';
+                    $navInactiveClass = 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 border border-transparent rounded-xl font-medium';
+                @endphp
+
                 <!-- Group: Workflow -->
                 <div class="space-y-1">
                     <div class="px-3 mb-2" x-show="!sidebarCollapsed">
-                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
                     </div>
 
-                    <!-- Submissions (Single Menu - OJS 3.3 Style, tabs are in content page) -->
+                    <!-- Submissions -->
                     @journalRole([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR, \App\Models\Role::LEVEL_AUTHOR], $journal->id)
+                        @php $isSubmissionsActive = request()->routeIs('journal.submissions.*'); @endphp
                         <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
-                            {{ request()->routeIs('journal.submissions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isSubmissionsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Naskah' : 'Submissions') : ''">
 
-                            @if (request()->routeIs('journal.submissions.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
-
-                            <i
-                                class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 
-                                {{ request()->routeIs('journal.submissions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-inbox w-5 text-center transition-transform group-hover:scale-110 {{ $isSubmissionsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Naskah' : 'Submissions' }}</span>
+
+                            @if ($isSubmissionsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
                     @endjournalRole
 
                     <!-- Reviewer: My Reviews -->
                     @journalPermission([\App\Models\Role::LEVEL_REVIEWER], $journal->id)
+                        @php $isReviewerActive = request()->routeIs('journal.reviewer.*'); @endphp
                         <a href="{{ route('journal.reviewer.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
-                   {{ request()->routeIs('journal.reviewer.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isReviewerActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Ulasan Saya' : 'My Reviews') : ''">
 
-                            @if (request()->routeIs('journal.reviewer.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
-
-                            <i
-                                class="fa-solid fa-clipboard-check w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.reviewer.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-clipboard-check w-5 text-center transition-transform group-hover:scale-110 {{ $isReviewerActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">{{ $isId ? 'Ulasan Saya' : 'My Reviews' }}</span>
+
+                            @if ($isReviewerActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
                     @endjournalPermission
 
                     <!-- Issues -->
                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
+                        @php $isIssuesActive = request()->routeIs('journal.issues.*'); @endphp
                         <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative
-                        {{ request()->routeIs('journal.issues.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isIssuesActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Terbitan' : 'Issues') : ''">
 
-                            @if (request()->routeIs('journal.issues.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
-
-                            <i
-                                class="fa-solid fa-layer-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.issues.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-layer-group w-5 text-center transition-transform group-hover:scale-110 {{ $isIssuesActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">{{ $isId ? 'Terbitan' : 'Issues' }}</span>
+
+                            @if ($isIssuesActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
                     @endjournalPermission
 
                     <!-- Announcements -->
                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
+                        @php $isAnnouncementsActive = request()->routeIs('journal.announcements.*'); @endphp
                         <a href="{{ route('journal.announcements.index', ['journal' => $journalSlug]) }}"
-                            class="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.announcements.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="w-full group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isAnnouncementsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Pengumuman' : 'Announcements') : ''">
-                            <i
-                                class="fa-solid fa-bullhorn w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.announcements.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+
+                            <i class="fa-solid fa-bullhorn w-5 text-center transition-transform group-hover:scale-110 {{ $isAnnouncementsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Pengumuman' : 'Announcements' }}</span>
+
+                            @if ($isAnnouncementsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
                     @endjournalPermission
                 </div>
@@ -546,97 +549,147 @@
                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
                         </div>
 
                         <!-- Journal -->
+                        @php $isJournalSettingsActive = request()->routeIs('journal.settings.index') || request()->routeIs('*.settings.index'); @endphp
                         <a href="{{ route('journal.settings.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.index') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isJournalSettingsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Jurnal' : 'Journal') : ''">
-                            <i
-                                class="fa-solid fa-book w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.index') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-book w-5 text-center transition-transform group-hover:scale-110 {{ $isJournalSettingsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Jurnal' : 'Journal' }}</span>
+
+                            @if ($isJournalSettingsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
 
                         <!-- Website -->
+                        @php $isWebsiteSettingsActive = request()->routeIs('*settings.website*'); @endphp
                         <a href="{{ route('journal.settings.website.edit', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.website*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isWebsiteSettingsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? 'Website' : ''">
-                            <i
-                                class="fa-solid fa-desktop w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.website*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-desktop w-5 text-center transition-transform group-hover:scale-110 {{ $isWebsiteSettingsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Situs Web' : 'Website' }}</span>
+
+                            @if ($isWebsiteSettingsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
 
                         <!-- Workflow -->
+                        @php $isWorkflowSettingsActive = request()->routeIs('*settings.workflow*'); @endphp
                         <a href="{{ route('journal.settings.workflow.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.workflow*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isWorkflowSettingsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Alur Kerja' : 'Workflow') : ''">
-                            <i
-                                class="fa-solid fa-sliders w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.workflow*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-sliders w-5 text-center transition-transform group-hover:scale-110 {{ $isWorkflowSettingsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
+
+                            @if ($isWorkflowSettingsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
 
                         <!-- Distribution -->
+                        @php $isDistributionSettingsActive = request()->routeIs('*settings.distribution*'); @endphp
                         <a href="{{ route('journal.settings.distribution.edit', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('journal.settings.distribution*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isDistributionSettingsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Distribusi' : 'Distribution') : ''">
-                            <i
-                                class="fa-solid fa-globe w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('journal.settings.distribution*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-globe w-5 text-center transition-transform group-hover:scale-110 {{ $isDistributionSettingsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Distribusi' : 'Distribution' }}</span>
+
+                            @if ($isDistributionSettingsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
 
                         <!-- Users & Roles -->
+                        @php $isUsersRolesActive = (request()->routeIs($usersRoutePrefix . '.*') || request()->routeIs('*users*')) && !request()->routeIs('*statistics.users*'); @endphp
                         <a href="{{ route($usersRoutePrefix . '.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs($usersRoutePrefix . '.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isUsersRolesActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Pengguna & Peran' : 'Users & Roles') : ''">
-                            <i
-                                class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs($usersRoutePrefix . '.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-users w-5 text-center transition-transform group-hover:scale-110 {{ $isUsersRolesActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Pengguna & Peran' : 'Users & Roles' }}</span>
+
+                            @if ($isUsersRolesActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
 
-                        <!-- Statistics -->
+                        <!-- Statistics Header -->
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Statistik' : 'Statistics' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Statistik' : 'Statistics' }}</span>
                         </div>
+
+                        <!-- Articles Stats -->
+                        @php $isArticlesStatsActive = request()->routeIs('*statistics.articles*'); @endphp
                         <a href="{{ route('journal.settings.statistics.articles', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('statistics.articles') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isArticlesStatsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Artikel' : 'Articles') : ''">
-                            <i
-                                class="fa-solid fa-chart-line w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.articles') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-chart-line w-5 text-center transition-transform group-hover:scale-110 {{ $isArticlesStatsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Artikel' : 'Articles' }}</span>
-                        </a>
-                        <a href="{{ route('journal.settings.statistics.editorial', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('statistics.editorial') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? ($isId ? 'Editorial' : 'Editorial') : ''">
-                            <i
-                                class="fa-solid fa-users-gear w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.editorial') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Editorial' : 'Editorial' }}</span>
-                        </a>
-                        <a href="{{ route('journal.settings.statistics.users', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('statistics.users') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? ($isId ? 'Pengguna' : 'Users') : ''">
-                            <i
-                                class="fa-solid fa-user-group w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.users') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Pengguna' : 'Users' }}</span>
-                        </a>
-                        <a href="{{ route('journal.settings.statistics.reports', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('statistics.reports') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
-                            :title="sidebarCollapsed ? ($isId ? 'Laporan' : 'Reports') : ''">
-                            <i
-                                class="fa-solid fa-file-export w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('statistics.reports') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Laporan' : 'Reports' }}</span>
+
+                            @if ($isArticlesStatsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
 
-                        <!-- Maintenance -->
+                        <!-- Editorial Stats -->
+                        @php $isEditorialStatsActive = request()->routeIs('*statistics.editorial*'); @endphp
+                        <a href="{{ route('journal.settings.statistics.editorial', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isEditorialStatsActive ? $navActiveClass : $navInactiveClass }}"
+                            :title="sidebarCollapsed ? ($isId ? 'Editorial' : 'Editorial') : ''">
+                            <i class="fa-solid fa-users-gear w-5 text-center transition-transform group-hover:scale-110 {{ $isEditorialStatsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Editorial' : 'Editorial' }}</span>
+
+                            @if ($isEditorialStatsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
+                        </a>
+
+                        <!-- Users Stats -->
+                        @php $isUserStatsActive = request()->routeIs('*statistics.users*'); @endphp
+                        <a href="{{ route('journal.settings.statistics.users', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isUserStatsActive ? $navActiveClass : $navInactiveClass }}"
+                            :title="sidebarCollapsed ? ($isId ? 'Pengguna' : 'Users') : ''">
+                            <i class="fa-solid fa-user-group w-5 text-center transition-transform group-hover:scale-110 {{ $isUserStatsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Pengguna' : 'Users' }}</span>
+
+                            @if ($isUserStatsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
+                        </a>
+
+                        <!-- Reports Stats -->
+                        @php $isReportsStatsActive = request()->routeIs('*statistics.reports*'); @endphp
+                        <a href="{{ route('journal.settings.statistics.reports', ['journal' => $journalSlug]) }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isReportsStatsActive ? $navActiveClass : $navInactiveClass }}"
+                            :title="sidebarCollapsed ? ($isId ? 'Laporan' : 'Reports') : ''">
+                            <i class="fa-solid fa-file-export w-5 text-center transition-transform group-hover:scale-110 {{ $isReportsStatsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Laporan' : 'Reports' }}</span>
+
+                            @if ($isReportsStatsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
+                        </a>
+
+                        <!-- Maintenance Header -->
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Pemeliharaan' : 'Maintenance' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Pemeliharaan' : 'Maintenance' }}</span>
                         </div>
+
+                        <!-- Tools -->
+                        @php $isToolsActive = request()->routeIs('*tools.*'); @endphp
                         <a href="{{ route('journal.settings.tools.index', ['journal' => $journalSlug]) }}"
-                            class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('tools.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isToolsActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Alat' : 'Tools') : ''">
-                            <i
-                                class="fa-solid fa-screwdriver-wrench w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('tools.*') ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                            <i class="fa-solid fa-screwdriver-wrench w-5 text-center transition-transform group-hover:scale-110 {{ $isToolsActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap">{{ $isId ? 'Alat' : 'Tools' }}</span>
+
+                            @if ($isToolsActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
                     </div>
                 @endjournalPermission
@@ -645,23 +698,21 @@
                 @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span
-                                class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Administrasi' : 'Administration' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Administrasi' : 'Administration' }}</span>
                         </div>
 
                         <!-- Site Administration -->
+                        @php $isSiteAdminActive = request()->routeIs('admin.site.*'); @endphp
                         <a href="{{ route('admin.site.index') }}"
-                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative {{ request()->routeIs('admin.site.*') ? 'bg-red-50 text-red-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}"
+                            class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isSiteAdminActive ? $navActiveClass : $navInactiveClass }}"
                             :title="sidebarCollapsed ? ($isId ? 'Administrasi Situs' : 'Site Administration') : ''">
 
-                            @if (request()->routeIs('admin.site.*'))
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-red-600 rounded-r-full"
-                                    x-show="!sidebarCollapsed"></div>
-                            @endif
+                            <i class="fa-solid fa-cog w-5 text-center transition-transform group-hover:scale-110 {{ $isSiteAdminActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700' }}"></i>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">{{ $isSiteAdminActive ? 'Administrasi Situs' : 'Site Administration' }}</span>
 
-                            <i
-                                class="fa-solid fa-cog w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('admin.site.*') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity">{{ $isId ? 'Administrasi Situs' : 'Site Administration' }}</span>
+                            @if ($isSiteAdminActive)
+                                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" x-show="!sidebarCollapsed"></span>
+                            @endif
                         </a>
                     </div>
                 @endjournalPermission
