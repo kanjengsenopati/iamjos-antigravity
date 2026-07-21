@@ -38,13 +38,32 @@ class ScholarCheckerService
             // Using a generic route helper for now, adjust based on actual route.
             $url = route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id]);
 
+            // Local Environment Mocking Strategy
+            $targetUrl = $submission->indexStat->scholar_url ?? $url;
+            $host = parse_url($targetUrl, PHP_URL_HOST);
+            
+            $isLocalHost = in_array($host, ['localhost', '127.0.0.1']) || 
+                            str_ends_with($host, '.test') || 
+                            str_ends_with($host, '.local') || 
+                            app()->environment('local');
+
+            if ($isLocalHost) {
+                // Mock index check: return true if the submission is published and has at least one PDF galley
+                $hasPdfGalley = $submission->galleys()->where(function($query) {
+                    $query->where('label', 'like', '%pdf%')
+                          ->orWhere('file_type', 'like', '%pdf%');
+                })->exists();
+
+                Log::info("ScholarCheckerService [MOCK]: Simulating check for local domain {$host}. Result: " . ($hasPdfGalley ? 'true' : 'false'));
+                return $hasPdfGalley;
+            }
+
             // SCHOLAR CHECK STRATEGY:
             // 1. If 'scholar_url' is monitored, use it as a PUBLIC ARTICLE URL to search.
             //    Query: q="https://journal.com/..." (Exact URL search)
             // 2. Fallback to Title + Journal Name search.
 
             if ($submission->indexStat && !empty($submission->indexStat->scholar_url)) {
-                 $targetUrl = $submission->indexStat->scholar_url;
                  Log::info("ScholarCheckerService: Searching by Public URL: {$targetUrl}");
                  
                  // Construct Query with URL wrapped in quotes for exact match
@@ -68,15 +87,13 @@ class ScholarCheckerService
                      // Check for blocking
                      if (str_contains($content, 'recaptcha') || str_contains($content, 'unusual traffic')) {
                         Log::warning('ScholarCheckerService: Blocking detected on URL search.');
-                        // If blocked, we can't determine status, return false or throw exception?
-                        // Return false conservatively.
-                        return false;
+                        throw new \Exception('Google Scholar rate-limiting / blocking detected (recaptcha/unusual traffic).');
                      }
                      
                      // Check "did not match any articles"
                      if (str_contains($content, 'did not match any articles')) {
-                         Log::info("ScholarCheckerService: URL not found in index.");
-                         return false;
+                          Log::info("ScholarCheckerService: URL not found in index.");
+                          return false;
                      }
                      
                      // Validation: Check if the Title appears in the snippet?
@@ -85,7 +102,7 @@ class ScholarCheckerService
                      // Normalize title for check (remove special chars if needed)
                      // Simple check:
                      if (stripos($content, $title) !== false) {
-                         return true;
+                          return true;
                      }
 
                      // If title is not found but we got results, it's ambiguous.
@@ -96,7 +113,7 @@ class ScholarCheckerService
 
                 } else {
                      Log::warning("ScholarCheckerService: URL Search Request failed: " . $response->status());
-                     return false;
+                     throw new \Exception("Scholar URL Search request failed with status: " . $response->status());
                 }
             }
 
@@ -119,7 +136,7 @@ class ScholarCheckerService
 
             if ($response->failed()) {
                 Log::warning('ScholarCheckerService: HTTP Request failed.', ['status' => $response->status()]);
-                return false;
+                throw new \Exception("Scholar search request failed with status: " . $response->status());
             }
 
             $content = $response->body();
@@ -127,7 +144,7 @@ class ScholarCheckerService
             // Check for Captcha / Blocking
             if (str_contains($content, 'recaptcha') || str_contains($content, 'unusual traffic')) {
                 Log::warning('ScholarCheckerService: Google Scholar blocking detected.');
-                return false;
+                throw new \Exception('Google Scholar rate-limiting / blocking detected (recaptcha/unusual traffic).');
             }
 
             // Simple check: if we find the title or "No results", determine status.
@@ -142,7 +159,7 @@ class ScholarCheckerService
 
         } catch (\Exception $e) {
             Log::error('ScholarCheckerService: Error checking index.', ['error' => $e->getMessage(), 'submission_id' => $submission->id]);
-            return false; // Default to false on error, or maybe rethrow?
+            throw $e;
         }
     }
 

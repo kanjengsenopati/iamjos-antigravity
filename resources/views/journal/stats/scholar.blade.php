@@ -3,23 +3,23 @@
 @section('title', 'Scholar IAMJOS Monitor - ' . $journal->name)
 
 @section('content')
-    <div class="space-y-6">
+    <div class="space-y-6 px-5">
         {{-- Header --}}
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <a href="{{ route('journal.settings.tools.index', ['journal' => $journal->slug]) }}"
-                    class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all shadow-sm"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-[24px] bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                     title="Back to Tools">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Scholar IAMJOS Monitor</h1>
-                    <p class="text-sm text-gray-500 mt-1">Real-time monitoring of article visibility on Google Scholar.</p>
+                    <x-text.h1>Scholar IAMJOS Monitor</x-text.h1>
+                    <x-text.body class="mt-1">Real-time monitoring of article visibility on Google Scholar.</x-text.body>
                 </div>
             </div>
             <div>
                 <span
-                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                    class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest bg-blue-600/10 text-blue-600">
                     <i class="fa-solid fa-robot mr-1.5"></i> Auto-checking enabled (Every 7 days)
                 </span>
             </div>
@@ -28,73 +28,73 @@
         {{-- Stats Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             {{-- Total Monitored --}}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between">
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Monitored</p>
+                    <x-text.label>Total Monitored</x-text.label>
                     <div class="flex items-baseline mt-1">
-                        <span class="text-2xl font-bold text-gray-900">{{ number_format($totalMonitored) }}</span>
-                        <span class="ml-2 text-xs text-gray-500">articles</span>
+                        <span class="text-[22px] font-bold text-slate-900 leading-tight">{{ number_format($totalMonitored) }}</span>
+                        <x-text.caption class="ml-2">articles</x-text.caption>
                     </div>
                 </div>
-                <div class="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+                <div class="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-600">
                     <i class="fa-solid fa-list-check text-lg"></i>
                 </div>
             </div>
 
             {{-- Indexed --}}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between">
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Indexed</p>
+                    <x-text.label>Indexed</x-text.label>
                     <div class="flex items-baseline mt-1">
-                        <span class="text-2xl font-bold text-emerald-600">{{ number_format($indexedCount) }}</span>
-                        <span class="ml-2 text-xs text-gray-500">found</span>
+                        <x-text.amount>{{ number_format($indexedCount) }}</x-text.amount>
+                        <x-text.caption class="ml-2">found</x-text.caption>
                     </div>
                 </div>
-                <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
+                <div class="w-10 h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center text-emerald-600">
                     <i class="fa-solid fa-check-circle text-lg"></i>
                 </div>
             </div>
 
             {{-- Issues --}}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between">
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Issues</p>
+                    <x-text.label>Issues</x-text.label>
                     <div class="flex items-baseline mt-1">
-                        <span class="text-2xl font-bold text-rose-600">{{ number_format($issuesCount) }}</span>
-                        <span class="ml-2 text-xs text-gray-500">missing</span>
+                        <span class="text-[18px] font-bold text-red-600 leading-tight">{{ number_format($issuesCount) }}</span>
+                        <x-text.caption class="ml-2">missing</x-text.caption>
                     </div>
                 </div>
-                <div class="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center text-rose-600">
+                <div class="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center text-red-600">
                     <i class="fa-solid fa-triangle-exclamation text-lg"></i>
                 </div>
             </div>
 
             {{-- Success Rate --}}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between">
+            <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Indexed Rate</p>
+                    <x-text.label>Indexed Rate</x-text.label>
                     <div class="flex items-baseline mt-1">
-                        <span class="text-2xl font-bold text-gray-900">{{ $successRate }}%</span>
+                        <span class="text-[22px] font-bold text-slate-900 leading-tight">{{ $successRate }}%</span>
                     </div>
                 </div>
                 <div
-                    class="w-10 h-10 rounded-lg flex items-center justify-center
-                {{ $successRate >= 90 ? 'bg-emerald-50 text-emerald-600' : ($successRate >= 70 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600') }}">
+                    class="w-10 h-10 rounded-xl flex items-center justify-center
+                {{ $successRate >= 90 ? 'bg-emerald-600/10 text-emerald-600' : ($successRate >= 70 ? 'bg-amber-600/10 text-amber-600' : 'bg-red-600/10 text-red-600') }}">
                     <i class="fa-solid fa-chart-pie text-lg"></i>
                 </div>
             </div>
         </div>
 
         {{-- Main Monitor List --}}
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="text-base font-semibold text-gray-900">Monitor List</h3>
+        <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+                <x-text.h2>Monitor List</x-text.h2>
                 <div class="flex items-center gap-2">
                     {{-- Optional Filter Buttons could go here --}}
                 </div>
             </div>
 
-            <div class="divide-y divide-gray-100">
+            <div class="divide-y divide-slate-50">
                 @forelse ($submissions as $submission)
                     @php
                         $stat = $submission->indexStat;
@@ -117,19 +117,19 @@
 
                         // Colors based on status
                         $borderClass = match ($status) {
-                            'indexed' => 'bg-emerald-500',
-                            'missing' => 'bg-rose-500',
-                            'error' => 'bg-amber-500',
-                            'not_monitored' => 'bg-gray-300',
-                            default => 'bg-blue-400',
+                            'indexed' => 'bg-emerald-600',
+                            'missing' => 'bg-red-600',
+                            'error' => 'bg-amber-600',
+                            'not_monitored' => 'bg-slate-300',
+                            default => 'bg-blue-600',
                         };
 
                         $badgeClass = match ($status) {
-                            'indexed' => 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20',
-                            'missing' => 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/20',
-                            'error' => 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20',
-                            'not_monitored' => 'bg-gray-100 text-gray-600 ring-1 ring-gray-600/20',
-                            default => 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20',
+                            'indexed' => 'bg-emerald-600/10 text-emerald-600',
+                            'missing' => 'bg-red-600/10 text-red-600',
+                            'error' => 'bg-amber-600/10 text-amber-600',
+                            'not_monitored' => 'bg-slate-400/10 text-slate-400',
+                            default => 'bg-blue-600/10 text-blue-600',
                         };
 
                         $badgeLabel = match ($status) {
@@ -141,7 +141,7 @@
                         };
                     @endphp
 
-                    <div class="group relative flex items-center justify-between p-4 hover:bg-gray-50/80 transition-colors">
+                    <div class="group relative flex items-center justify-between p-4 hover:bg-slate-50/50 transition-colors">
                         {{-- Left Color Indicator --}}
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 {{ $borderClass }}"></div>
 
@@ -149,37 +149,36 @@
                         <div class="flex items-center gap-4 pl-3 flex-1 min-w-0">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-3 mb-1">
-                                    <h4
-                                        class="text-sm font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
+                                    <x-text.body class="font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
                                         {{ $submission->title }}
-                                    </h4>
+                                    </x-text.body>
                                     <span
-                                        class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium {{ $badgeClass }}">
+                                        class="inline-flex items-center rounded-md px-2 py-1 text-xs font-bold {{ $badgeClass }}">
                                         {{ $badgeLabel }}
                                     </span>
                                 </div>
-                                <div class="flex items-center gap-4 text-xs text-gray-500">
-                                    <span class="flex items-center truncate max-w-[200px]">
-                                        <i class="fa-regular fa-user mr-1.5 text-gray-400"></i>
+                                <div class="flex items-center gap-4">
+                                    <x-text.caption class="flex items-center truncate max-w-[200px]">
+                                        <i class="fa-regular fa-user mr-1.5 text-slate-400"></i>
                                         {{ $submission->author->name ?? 'Unknown Author' }}
-                                    </span>
+                                    </x-text.caption>
                                     @if ($isMonitored && $stat && $stat->last_checked_at)
-                                        <span class="flex items-center"
+                                        <x-text.caption class="flex items-center"
                                             title="{{ $stat->last_checked_at->format('d M Y H:i') }}">
-                                            <i class="fa-regular fa-clock mr-1.5 text-gray-400"></i>
+                                            <i class="fa-regular fa-clock mr-1.5 text-slate-400"></i>
                                             Checked {{ $stat->last_checked_at->diffForHumans() }}
-                                        </span>
+                                        </x-text.caption>
                                     @elseif($isMonitored)
-                                        <span class="flex items-center">
-                                            <i class="fa-regular fa-clock mr-1.5 text-gray-400"></i>
+                                        <x-text.caption class="flex items-center">
+                                            <i class="fa-regular fa-clock mr-1.5 text-slate-400"></i>
                                             In Queue
-                                        </span>
+                                        </x-text.caption>
                                     @endif
 
                                     @if ($isMonitored && $stat && $stat->scholar_url)
-                                        <span class="flex items-center text-blue-600" title="Manual URL Configured">
+                                        <x-text.caption class="flex items-center text-blue-600 font-medium" title="Manual URL Configured">
                                             <i class="fa-solid fa-link mr-1"></i> Public URL
-                                        </span>
+                                        </x-text.caption>
                                     @endif
                                 </div>
                             </div>
@@ -189,7 +188,7 @@
                         <div class="flex items-center gap-2 ml-4">
                             @if ($stat && $stat->scholar_url)
                                 <a href="{{ $stat->scholar_url }}" target="_blank"
-                                    class="p-2 text-gray-400 hover:text-blue-600 transition-colors rounded-full hover:bg-blue-50"
+                                    class="p-2 text-slate-400 hover:text-blue-600 transition-colors rounded-full hover:bg-blue-50"
                                     title="View on Google Scholar">
                                     <i class="fa-brands fa-google-scholar text-base"></i>
                                 </a>
@@ -203,8 +202,8 @@
                                             url: '{{ $stat->scholar_url ?? route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}',
                                             isMonitored: false
                                         })"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm">
-                                    <i class="fa-solid fa-plus text-gray-400"></i>
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+                                    <i class="fa-solid fa-plus text-slate-400"></i>
                                     Add to Watchlist
                                 </button>
                             @else
@@ -216,8 +215,8 @@
                                             url: '{{ $stat->scholar_url ?? route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->seq_id]) }}',
                                             isMonitored: true
                                         })"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm">
-                                        <i class="fa-solid fa-gear text-gray-400"></i>
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+                                        <i class="fa-solid fa-gear text-slate-400"></i>
                                         Config
                                     </button>
 
@@ -227,7 +226,7 @@
                                         method="POST">
                                         @csrf
                                         <button type="submit"
-                                            class="p-2 text-gray-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-indigo-50"
+                                            class="p-2 text-slate-400 hover:text-blue-600 transition-colors rounded-full hover:bg-blue-50"
                                             title="Check Now">
                                             <i class="fa-solid fa-rotate-right"></i>
                                         </button>
@@ -239,19 +238,18 @@
                 @empty
                     <div class="p-12 text-center">
                         <div
-                            class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                            class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
                             <i class="fa-solid fa-robot text-2xl"></i>
                         </div>
-                        <h3 class="text-sm font-medium text-gray-900">No Articles Monitored Yet</h3>
-                        <p class="text-sm text-gray-500 mt-1">Once you publish articles, they will appear here
-                            automatically.</p>
+                        <x-text.h2 class="mb-1">No Articles Monitored Yet</x-text.h2>
+                        <x-text.body>Once you publish articles, they will appear here automatically.</x-text.body>
                     </div>
                 @endforelse
             </div>
 
             {{-- Pagination --}}
             @if ($submissions->hasPages())
-                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                <div class="px-6 py-4 border-t border-slate-50 bg-slate-50/50">
                     {{ $submissions->links() }}
                 </div>
             @endif
@@ -274,44 +272,41 @@
         @open-scholar-modal.window="initModal($event.detail.title, $event.detail.id, $event.detail.url, $event.detail.isMonitored)"
         x-show="open" class="relative z-50" style="display: none;">
 
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm transition-opacity"></div>
 
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <div
-                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    class="relative transform overflow-hidden rounded-[24px] bg-white text-left shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all sm:my-8 sm:w-full sm:max-w-lg">
                     <form method="POST"
                         :action="'{{ route('journal.settings.stats.scholar.index', ['journal' => $journal->slug]) }}/' +
                         submissionId">
                         @csrf
                         @method('PUT')
-                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                            <h3 class="text-base font-semibold leading-6 text-gray-900"
-                                x-text="'Configure Monitoring: ' + title"></h3>
+                        <div class="bg-white px-6 pb-6 pt-6">
+                            <x-text.h2 x-text="'Configure Monitoring: ' + title"></x-text.h2>
                             <div class="mt-4">
-                                <label for="scholar_url" class="block text-sm font-medium leading-6 text-gray-900">Article
-                                    Public URL</label>
-                                <div class="mt-2">
+                                <x-text.label for="scholar_url" class="block mb-2">Article Public URL</x-text.label>
+                                <div class="mt-1">
                                     <input type="url" name="scholar_url" id="scholar_url" x-model="url"
-                                        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        class="block w-full rounded-lg border-slate-200 py-2 px-3 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] focus:border-blue-500 focus:ring-blue-500 text-sm leading-6"
                                         placeholder="https://journal.com/index.php/abc/article/view/100">
                                 </div>
-                                <p class="mt-2 text-sm text-gray-500">Enter the full URL of this article on your journal
-                                    website. We will search Google Scholar for this exact link.</p>
+                                <x-text.caption class="block mt-2">Enter the full URL of this article on your journal website. We will search Google Scholar for this exact link.</x-text.caption>
                             </div>
                         </div>
-                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 justify-between">
+                        <div class="bg-slate-50/50 px-6 py-4 sm:flex sm:flex-row-reverse justify-between gap-2 border-t border-slate-50">
                             <div class="flex flex-row-reverse gap-2">
                                 <button type="submit" name="action" value="monitor"
-                                    class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto">
+                                    class="inline-flex w-full justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto transition-colors">
                                     Save & Monitor
                                 </button>
                                 <button type="button" @click="open = false"
-                                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancel</button>
+                                    class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">Cancel</button>
                             </div>
 
                             <button type="submit" name="action" value="pause"
-                                class="inline-flex w-full justify-center rounded-md bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 shadow-sm hover:bg-rose-100 sm:w-auto border border-rose-200"
+                                class="inline-flex w-full justify-center rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 shadow-sm hover:bg-red-100 sm:w-auto border border-red-100 transition-colors"
                                 onclick="return confirm('Are you sure you want to pause monitoring for this article?')">
                                 Pause Monitoring
                             </button>

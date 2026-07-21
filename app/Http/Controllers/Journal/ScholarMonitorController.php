@@ -29,14 +29,13 @@ class ScholarMonitorController extends Controller
             ->paginate(20);
 
         // 2. Calculate Stats
-        // We use a separate query or aggregate to get full counts (ignoring pagination)
-        $totalMonitored = Submission::where('journal_id', $journal->id)
-            ->where('status', 'published')
-            ->count();
-        
-        // Count stats from valid published submissions
+        // Count stats from valid published submissions that are actively monitored
         $statsQuery = SubmissionIndexStat::where('journal_id', $journal->id)
+            ->where('is_monitored', true)
             ->whereHas('submission', fn($q) => $q->where('status', 'published'));
+
+        // Total articles actively monitored in the watchlist
+        $totalMonitored = (clone $statsQuery)->count();
             
         $indexedCount = (clone $statsQuery)->where('is_indexed', true)->count();
         $issuesCount = (clone $statsQuery)->where('is_indexed', false)->count();
