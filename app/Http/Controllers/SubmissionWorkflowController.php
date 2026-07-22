@@ -918,45 +918,63 @@ class SubmissionWorkflowController extends Controller
                         // Copy submission file
                         $originalFile = SubmissionFile::find($fileData['id']);
                         if ($originalFile) {
-                            $submissionFile = SubmissionFile::create([
-                                'id' => (string) Str::uuid(),
-                                'submission_id' => $submission->id,
-                                'uploaded_by' => auth()->id(),
-                                'file_path' => $originalFile->file_path,
-                                'file_name' => $originalFile->file_name,
-                                'file_type' => $originalFile->file_type,
-                                'mime_type' => $originalFile->mime_type,
-                                'file_size' => $originalFile->file_size,
-                                'stage' => 'review',
-                                'version' => 1,
-                                'metadata' => [
-                                    'copied_from' => $originalFile->id,
-                                    'copied_at' => now()->toISOString(),
-                                ],
-                            ]);
-                            $submissionFileIds[] = $submissionFile->id;
+                            $existingFile = SubmissionFile::where('submission_id', $submission->id)
+                                ->where('stage', 'review')
+                                ->where('file_path', $originalFile->file_path)
+                                ->first();
+
+                            if ($existingFile) {
+                                $submissionFileIds[] = $existingFile->id;
+                            } else {
+                                $submissionFile = SubmissionFile::create([
+                                    'id' => (string) Str::uuid(),
+                                    'submission_id' => $submission->id,
+                                    'uploaded_by' => auth()->id(),
+                                    'file_path' => $originalFile->file_path,
+                                    'file_name' => $originalFile->file_name,
+                                    'file_type' => $originalFile->file_type,
+                                    'mime_type' => $originalFile->mime_type,
+                                    'file_size' => $originalFile->file_size,
+                                    'stage' => 'review',
+                                    'version' => 1,
+                                    'metadata' => [
+                                        'copied_from' => $originalFile->id,
+                                        'copied_at' => now()->toISOString(),
+                                    ],
+                                ]);
+                                $submissionFileIds[] = $submissionFile->id;
+                            }
                         }
                     } elseif ($fileData['type'] === 'discussion_file') {
                         // Copy discussion file to submission files
                         $discussionFile = DiscussionFile::find($fileData['id']);
                         if ($discussionFile) {
-                            $submissionFile = SubmissionFile::create([
-                                'id' => (string) Str::uuid(),
-                                'submission_id' => $submission->id,
-                                'uploaded_by' => auth()->id(),
-                                'file_path' => $discussionFile->file_path,
-                                'file_name' => $discussionFile->original_name,
-                                'file_type' => $discussionFile->file_type ?? 'document',
-                                'mime_type' => 'application/octet-stream',
-                                'file_size' => $discussionFile->file_size,
-                                'stage' => 'review',
-                                'version' => 1,
-                                'metadata' => [
-                                    'copied_from_discussion' => $discussionFile->id,
-                                    'copied_at' => now()->toISOString(),
-                                ],
-                            ]);
-                            $submissionFileIds[] = $submissionFile->id;
+                            $existingFile = SubmissionFile::where('submission_id', $submission->id)
+                                ->where('stage', 'review')
+                                ->where('file_path', $discussionFile->file_path)
+                                ->first();
+
+                            if ($existingFile) {
+                                $submissionFileIds[] = $existingFile->id;
+                            } else {
+                                $submissionFile = SubmissionFile::create([
+                                    'id' => (string) Str::uuid(),
+                                    'submission_id' => $submission->id,
+                                    'uploaded_by' => auth()->id(),
+                                    'file_path' => $discussionFile->file_path,
+                                    'file_name' => $discussionFile->original_name,
+                                    'file_type' => $discussionFile->file_type ?? 'document',
+                                    'mime_type' => 'application/octet-stream',
+                                    'file_size' => $discussionFile->file_size,
+                                    'stage' => 'review',
+                                    'version' => 1,
+                                    'metadata' => [
+                                        'copied_from_discussion' => $discussionFile->id,
+                                        'copied_at' => now()->toISOString(),
+                                    ],
+                                ]);
+                                $submissionFileIds[] = $submissionFile->id;
+                            }
                         }
                     }
                 }

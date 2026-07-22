@@ -1904,6 +1904,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                         // Default: show in Round 1 if no round data
                                         return $selectedRoundNumber == 1;
+                                    })
+                                    ->unique(function ($file) {
+                                        return $file->file_name . '_' . $file->file_size;
                                     });
                                 $hasAuthorRevisions = $authorRevisionFiles->isNotEmpty();
                             @endphp
@@ -2225,6 +2228,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         }
                                         // Original files (no round metadata) - show for Round 1 only
                                         return $selectedRoundNumber == 1;
+                                    })
+                                    ->unique(function ($file) {
+                                        return $file->file_name . '_' . $file->file_size;
                                     });
                             @endphp
                             <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">

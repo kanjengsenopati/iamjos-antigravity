@@ -696,25 +696,34 @@ public function searchReviewers(Request $request, string $journalSlug)
                 foreach ($validated['selected_files'] as $fileId) {
                     $originalFile = SubmissionFile::find($fileId);
                     if ($originalFile && $originalFile->submission_id === $submission->id) {
-                        // Create a copy with 'revision' stage for author visibility
-                        $submissionFile = SubmissionFile::create([
-                            'submission_id' => $submission->id,
-                            'uploaded_by' => auth()->id(),
-                            'file_path' => $originalFile->file_path,
-                            'file_name' => $originalFile->file_name,
-                            'file_type' => SubmissionFile::TYPE_REVISION,
-                            'mime_type' => $originalFile->mime_type,
-                            'file_size' => $originalFile->file_size,
-                            'version' => 1,
-                            'stage' => 'revision', // Author-visible revision stage
-                            'metadata' => [
-                                'source_file_id' => $originalFile->id,
-                                'shared_at' => now()->toISOString(),
-                                'shared_by' => auth()->id(),
-                                'decision_type' => 'revision_request',
-                            ],
-                        ]);
-                        $submissionFileIds[] = $submissionFile->id;
+                        $existingFile = SubmissionFile::where('submission_id', $submission->id)
+                            ->where('stage', 'revision')
+                            ->where('file_path', $originalFile->file_path)
+                            ->first();
+
+                        if ($existingFile) {
+                            $submissionFileIds[] = $existingFile->id;
+                        } else {
+                            // Create a copy with 'revision' stage for author visibility
+                            $submissionFile = SubmissionFile::create([
+                                'submission_id' => $submission->id,
+                                'uploaded_by' => auth()->id(),
+                                'file_path' => $originalFile->file_path,
+                                'file_name' => $originalFile->file_name,
+                                'file_type' => SubmissionFile::TYPE_REVISION,
+                                'mime_type' => $originalFile->mime_type,
+                                'file_size' => $originalFile->file_size,
+                                'version' => 1,
+                                'stage' => 'revision', // Author-visible revision stage
+                                'metadata' => [
+                                    'source_file_id' => $originalFile->id,
+                                    'shared_at' => now()->toISOString(),
+                                    'shared_by' => auth()->id(),
+                                    'decision_type' => 'revision_request',
+                                ],
+                            ]);
+                            $submissionFileIds[] = $submissionFile->id;
+                        }
                     }
                 }
             }
@@ -933,26 +942,36 @@ public function searchReviewers(Request $request, string $journalSlug)
                 foreach ($validated['selected_files'] as $fileId) {
                     $originalFile = SubmissionFile::find($fileId);
                     if ($originalFile && $originalFile->submission_id === $submission->id) {
-                        // Create a copy as a review file for the new round
-                        $submissionFile = SubmissionFile::create([
-                            'submission_id' => $submission->id,
-                            'uploaded_by'   => auth()->id(),
-                            'file_path'     => $originalFile->file_path,
-                            'file_name'     => $originalFile->file_name,
-                            'file_type'     => SubmissionFile::TYPE_MANUSCRIPT, // Now it's a manuscript for review
-                            'mime_type'     => $originalFile->mime_type,
-                            'file_size'     => $originalFile->file_size,
-                            'version'       => $originalFile->version,
-                            'stage'         => 'review', // Review stage files
-                            'metadata'      => [
-                                'source_file_id' => $originalFile->id,
-                                'promoted_from'   => $originalFile->stage,
-                                'promoted_at'     => now()->toISOString(),
-                                'promoted_by'     => auth()->id(),
-                                'review_round'    => $newRoundNumber,
-                            ],
-                        ]);
-                        $submissionFileIds[] = $submissionFile->id;
+                        $existingFile = SubmissionFile::where('submission_id', $submission->id)
+                            ->where('stage', 'review')
+                            ->where('file_path', $originalFile->file_path)
+                            ->where('metadata->review_round', $newRoundNumber)
+                            ->first();
+
+                        if ($existingFile) {
+                            $submissionFileIds[] = $existingFile->id;
+                        } else {
+                            // Create a copy as a review file for the new round
+                            $submissionFile = SubmissionFile::create([
+                                'submission_id' => $submission->id,
+                                'uploaded_by'   => auth()->id(),
+                                'file_path'     => $originalFile->file_path,
+                                'file_name'     => $originalFile->file_name,
+                                'file_type'     => SubmissionFile::TYPE_MANUSCRIPT, // Now it's a manuscript for review
+                                'mime_type'     => $originalFile->mime_type,
+                                'file_size'     => $originalFile->file_size,
+                                'version'       => $originalFile->version,
+                                'stage'         => 'review', // Review stage files
+                                'metadata'      => [
+                                    'source_file_id' => $originalFile->id,
+                                    'promoted_from'   => $originalFile->stage,
+                                    'promoted_at'     => now()->toISOString(),
+                                    'promoted_by'     => auth()->id(),
+                                    'review_round'    => $newRoundNumber,
+                                ],
+                            ]);
+                            $submissionFileIds[] = $submissionFile->id;
+                        }
                     }
                 }
             }
@@ -1078,7 +1097,9 @@ public function searchReviewers(Request $request, string $journalSlug)
             });
 
         return response()->json([
-            'files' => $reviewerFiles->merge($revisionFiles)->values(),
+            'files' => $reviewerFiles->merge($revisionFiles)->unique(function ($file) {
+                return $file['name'] . '_' . $file['size'];
+            })->values(),
         ]);
     }
 
@@ -1104,7 +1125,11 @@ public function searchReviewers(Request $request, string $journalSlug)
                     'uploaded_at' => $file->created_at->format('M d, Y'),
                     'type' => $file->file_type,
                 ];
-            });
+            })
+            ->unique(function ($file) {
+                return $file['name'] . '_' . $file['size'];
+            })
+            ->values();
 
         return response()->json(['files' => $reviewFiles]);
     }
