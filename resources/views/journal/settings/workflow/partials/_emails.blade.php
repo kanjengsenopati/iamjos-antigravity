@@ -14,6 +14,108 @@
     editTemplate(template) {
         this.editingTemplate = template;
         this.showEditModal = true;
+        this.$nextTick(() => {
+            this.initEmailBodyTinyMCE();
+        });
+    },
+
+    closeEditModal() {
+        this.destroyEmailBodyTinyMCE();
+        this.showEditModal = false;
+    },
+
+    initEmailBodyTinyMCE() {
+        const selector = '#editing_template_body';
+        if (typeof tinymce !== 'undefined' && tinymce.get('editing_template_body')) {
+            tinymce.get('editing_template_body').remove();
+        }
+
+        const self = this;
+        if (typeof tinymce !== 'undefined') {
+            tinymce.init({
+                selector: selector,
+                height: 320,
+                menubar: false,
+                plugins: 'lists link image table code autoresize',
+                toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat | code',
+                branding: false,
+                license_key: 'gpl',
+                setup: function(editor) {
+                    editor.on('init', function() {
+                        if (self.editingTemplate && self.editingTemplate.body) {
+                            editor.setContent(self.editingTemplate.body);
+                        }
+                    });
+                    editor.on('change keyup blur NodeChange', function() {
+                        if (self.editingTemplate) {
+                            self.editingTemplate.body = editor.getContent();
+                        }
+                    });
+                },
+                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.withCredentials = false;
+                    xhr.open('POST', '{{ route('profile.upload.image') }}');
+                    xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                    xhr.upload.onprogress = (e) => {
+                        progress(e.loaded / e.total * 100);
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status === 403) {
+                            reject({
+                                message: 'HTTP Error: ' + xhr.status,
+                                remove: true
+                            });
+                            return;
+                        }
+
+                        if (xhr.status < 200 || xhr.status >= 300) {
+                            reject('HTTP Error: ' + xhr.status);
+                            return;
+                        }
+
+                        const json = JSON.parse(xhr.responseText);
+
+                        if (!json || typeof json.location != 'string') {
+                            reject('Invalid JSON: ' + xhr.responseText);
+                            return;
+                        }
+
+                        resolve(json.location);
+                    };
+
+                    xhr.onerror = () => {
+                        reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                    };
+
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                    xhr.send(formData);
+                })
+            });
+        }
+    },
+
+    destroyEmailBodyTinyMCE() {
+        if (typeof tinymce !== 'undefined' && tinymce.get('editing_template_body')) {
+            tinymce.get('editing_template_body').remove();
+        }
+    },
+
+    insertVariable(varTag) {
+        if (typeof tinymce !== 'undefined' && tinymce.get('editing_template_body')) {
+            tinymce.get('editing_template_body').execCommand('mceInsertContent', false, varTag);
+            if (this.editingTemplate) {
+                this.editingTemplate.body = tinymce.get('editing_template_body').getContent();
+            }
+        } else {
+            if (this.editingTemplate) {
+                this.editingTemplate.body = (this.editingTemplate.body || '') + varTag;
+            }
+        }
     },
 
     async updateTemplateStatus(templateId, enabled) {
@@ -226,7 +328,7 @@
                     x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
                     class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true"
-                    @click="showEditModal = false">
+                    @click="closeEditModal()">
                 </div>
 
                 {{-- Modal Panel --}}
@@ -236,11 +338,12 @@
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="relative bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden transform transition-all z-[100]">
+                    class="relative bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden transform transition-all z-[100]">
 
                     <template x-if="editingTemplate">
                         <form :action="'/{{ $journalSlug }}/settings/workflow/email-templates/' + editingTemplate?.id"
-                            method="POST">
+                            method="POST"
+                            @submit="if (typeof tinymce !== 'undefined' && tinymce.get('editing_template_body')) { tinymce.get('editing_template_body').triggerSave(); }">
                             @csrf
                             @method('PUT')
 
@@ -256,8 +359,8 @@
                                                 x-text="editingTemplate.key" class="font-mono text-xs"></span>
                                         </p>
                                     </div>
-                                    <button type="button" @click="showEditModal = false"
-                                        class="text-gray-400 hover:text-gray-500">
+                                    <button type="button" @click="closeEditModal()"
+                                        class="text-gray-400 hover:text-gray-500 cursor-pointer">
                                         <i class="fa-solid fa-xmark text-xl"></i>
                                     </button>
                                 </div>
@@ -278,24 +381,42 @@
 
                                     {{-- Body --}}
                                     <div>
-                                        <label for="body"
+                                        <label for="editing_template_body"
                                             class="block text-sm font-semibold text-gray-700 mb-1">{{ $isId ? 'Badan Surel' : 'Email Body' }}</label>
-                                        <textarea name="body" id="body" rows="12"
+                                        <textarea name="body" id="editing_template_body" rows="10"
                                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm leading-relaxed"
                                             x-model="editingTemplate.body" required></textarea>
                                     </div>
 
                                     {{-- Variables Hint --}}
-                                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-3">
-                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                                            {{ $isId ? 'Variabel yang Tersedia' : 'Available Variables' }}</p>
+                                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-3.5">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                {{ $isId ? 'Variabel yang Tersedia' : 'Available Variables' }}
+                                            </p>
+                                            <span class="text-[11px] text-gray-400 font-normal">
+                                                {{ $isId ? 'Klik untuk menyisipkan ke editor' : 'Click to insert into editor' }}
+                                            </span>
+                                        </div>
                                         <div class="flex flex-wrap gap-2 text-xs font-mono text-gray-600">
-                                            <span class="bg-white border border-gray-200 px-1.5 py-0.5 rounded">{$authorName}</span>
-                                            <span class="bg-white border border-gray-200 px-1.5 py-0.5 rounded">{$recipientName}</span>
-                                            <span class="bg-white border border-gray-200 px-1.5 py-0.5 rounded">{$submissionTitle}</span>
-                                            <span class="bg-white border border-gray-200 px-1.5 py-0.5 rounded">{$journalName}</span>
-                                            <span class="bg-white border border-gray-200 px-1.5 py-0.5 rounded">{$submissionUrl}</span>
-                                            <span class="bg-white border border-gray-200 px-1.5 py-0.5 rounded">{$signature}</span>
+                                            <button type="button" @click="insertVariable('{$authorName}')" title="{{ $isId ? 'Sisipkan {$authorName}' : 'Insert {$authorName}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
+                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$authorName}
+                                            </button>
+                                            <button type="button" @click="insertVariable('{$recipientName}')" title="{{ $isId ? 'Sisipkan {$recipientName}' : 'Insert {$recipientName}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
+                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$recipientName}
+                                            </button>
+                                            <button type="button" @click="insertVariable('{$submissionTitle}')" title="{{ $isId ? 'Sisipkan {$submissionTitle}' : 'Insert {$submissionTitle}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
+                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$submissionTitle}
+                                            </button>
+                                            <button type="button" @click="insertVariable('{$journalName}')" title="{{ $isId ? 'Sisipkan {$journalName}' : 'Insert {$journalName}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
+                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$journalName}
+                                            </button>
+                                            <button type="button" @click="insertVariable('{$submissionUrl}')" title="{{ $isId ? 'Sisipkan {$submissionUrl}' : 'Insert {$submissionUrl}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
+                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$submissionUrl}
+                                            </button>
+                                            <button type="button" @click="insertVariable('{$signature}')" title="{{ $isId ? 'Sisipkan {$signature}' : 'Insert {$signature}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
+                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$signature}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -303,11 +424,11 @@
 
                             <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-gray-100">
                                 <button type="submit"
-                                    class="inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                                    class="inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm cursor-pointer">
                                     {{ $isId ? 'Simpan Perubahan' : 'Save Changes' }}
                                 </button>
-                                <button type="button" @click="showEditModal = false"
-                                    class="inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                                <button type="button" @click="closeEditModal()"
+                                    class="inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm cursor-pointer">
                                     {{ $isId ? 'Batal' : 'Cancel' }}
                                 </button>
                             </div>
