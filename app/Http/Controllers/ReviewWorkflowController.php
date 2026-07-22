@@ -841,8 +841,9 @@ public function searchReviewers(Request $request, string $journalSlug)
         }
 
         $validated = $request->validate([
-            'selected_files' => 'nullable|array',
+            'selected_files'   => 'nullable|array',
             'selected_files.*' => 'exists:submission_files,id',
+            'new_file'         => 'nullable|file|max:30720',
         ]);
 
         $currentRound = $submission->currentReviewRound();
@@ -855,7 +856,7 @@ public function searchReviewers(Request $request, string $journalSlug)
 
         $newRound = null;
 
-        DB::transaction(function () use ($validated, $submission, $currentRound, $existingPendingRound, &$newRound) {
+        DB::transaction(function () use ($request, $validated, $submission, $currentRound, $existingPendingRound, &$newRound) {
             // If there's already a pending new round, use it
             if ($existingPendingRound) {
                 $newRound = $existingPendingRound;
@@ -877,8 +878,34 @@ public function searchReviewers(Request $request, string $journalSlug)
                 ]);
             }
 
-            // 3. Promote selected revision files to review files for new round
             $submissionFileIds = [];
+
+            // 3a. Handle uploaded new file (if provided)
+            if ($request->hasFile('new_file')) {
+                $this->uploadSecurity->validate($request->file('new_file'), 'manuscript', $request);
+                $file = $request->file('new_file');
+                $path = $file->store("submissions/{$submission->id}/review-files", 'local');
+
+                $newSubmissionFile = SubmissionFile::create([
+                    'submission_id' => $submission->id,
+                    'uploaded_by'   => auth()->id(),
+                    'file_path'     => $path,
+                    'file_name'     => $file->getClientOriginalName(),
+                    'file_type'     => SubmissionFile::TYPE_MANUSCRIPT,
+                    'mime_type'     => $file->getMimeType(),
+                    'file_size'     => $file->getSize(),
+                    'version'       => 1,
+                    'stage'         => 'review',
+                    'metadata'      => [
+                        'review_round'           => $newRoundNumber,
+                        'uploaded_for_new_round' => true,
+                        'uploaded_at'            => now()->toISOString(),
+                    ],
+                ]);
+                $submissionFileIds[] = $newSubmissionFile->id;
+            }
+
+            // 3b. Promote selected revision files / previous review files for new round
             if (!empty($validated['selected_files'])) {
                 foreach ($validated['selected_files'] as $fileId) {
                     $originalFile = SubmissionFile::find($fileId);
@@ -886,20 +913,20 @@ public function searchReviewers(Request $request, string $journalSlug)
                         // Create a copy as a review file for the new round
                         $submissionFile = SubmissionFile::create([
                             'submission_id' => $submission->id,
-                            'uploaded_by' => auth()->id(),
-                            'file_path' => $originalFile->file_path,
-                            'file_name' => $originalFile->file_name,
-                            'file_type' => SubmissionFile::TYPE_MANUSCRIPT, // Now it's a manuscript for review
-                            'mime_type' => $originalFile->mime_type,
-                            'file_size' => $originalFile->file_size,
-                            'version' => $originalFile->version,
-                            'stage' => 'review', // Review stage files
-                            'metadata' => [
+                            'uploaded_by'   => auth()->id(),
+                            'file_path'     => $originalFile->file_path,
+                            'file_name'     => $originalFile->file_name,
+                            'file_type'     => SubmissionFile::TYPE_MANUSCRIPT, // Now it's a manuscript for review
+                            'mime_type'     => $originalFile->mime_type,
+                            'file_size'     => $originalFile->file_size,
+                            'version'       => $originalFile->version,
+                            'stage'         => 'review', // Review stage files
+                            'metadata'      => [
                                 'source_file_id' => $originalFile->id,
-                                'promoted_from' => 'revision',
-                                'promoted_at' => now()->toISOString(),
-                                'promoted_by' => auth()->id(),
-                                'review_round' => $newRoundNumber,
+                                'promoted_from'   => $originalFile->stage,
+                                'promoted_at'     => now()->toISOString(),
+                                'promoted_by'     => auth()->id(),
+                                'review_round'    => $newRoundNumber,
                             ],
                         ]);
                         $submissionFileIds[] = $submissionFile->id;
@@ -919,20 +946,20 @@ public function searchReviewers(Request $request, string $journalSlug)
                 title:       'New Review Round Created',
                 description: "Round {$newRound->round} has been created. The submission is now queued for review.",
                 metadata:    [
-                    'round' => $newRound->round,
+                    'round'          => $newRound->round,
                     'files_promoted' => count($validated['selected_files'] ?? []),
-                    'created_by' => auth()->id(),
+                    'new_file_added' => $request->hasFile('new_file'),
+                    'created_by'     => auth()->id(),
                 ],
                 fileIds:     $submissionFileIds
             );
         });
 
-        return back()->with('success', "Review Round {$newRound->round} has been created successfully.");
+        return back()->with('success', "Putaran Ulasan {$newRound->round} berhasil dibuat.");
     }
 
     /**
-     * Get revision files for the new round modal.
-     * Returns files uploaded by the author as revisions.
+     * Get revision files & previous review files for the new round modal.
      */
     public function getRevisionFiles(Request $request, string $journalSlug, Submission $submission)
     {
@@ -941,22 +968,42 @@ public function searchReviewers(Request $request, string $journalSlug)
             abort(404);
         }
 
-        // Get revision files uploaded by the author
-        $files = SubmissionFile::where('submission_id', $submission->id)
+        // 1. Revision files uploaded by the author
+        $revisionFiles = SubmissionFile::where('submission_id', $submission->id)
             ->where('stage', 'revision')
             ->where('file_type', 'revision')
             ->with('uploader:id,name')
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($file) {
-                return [
-                    'id' => $file->id,
-                    'name' => $file->file_name,
-                    'size' => $file->file_size,
-                    'uploaded_at' => $file->created_at->format('M d, Y'),
-                    'uploader' => $file->uploader?->name ?? 'Unknown',
-                ];
-            });
+            ->get();
+
+        // 2. Review manuscript files from previous rounds
+        $reviewFiles = SubmissionFile::where('submission_id', $submission->id)
+            ->where('stage', 'review')
+            ->where('file_type', SubmissionFile::TYPE_MANUSCRIPT)
+            ->with('uploader:id,name')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Combine and keep unique files
+        $allFiles = $revisionFiles->concat($reviewFiles)->unique('id');
+
+        $files = $allFiles->map(function ($file) {
+            $isRevision = $file->stage === 'revision';
+            $roundMeta = $file->metadata['review_round'] ?? null;
+            $typeLabel = $isRevision
+                ? 'Revisi Penulis'
+                : ($roundMeta ? "File Ulasan (Round {$roundMeta})" : 'File Ulasan');
+
+            return [
+                'id'          => $file->id,
+                'name'        => $file->file_name,
+                'size'        => $file->file_size,
+                'uploaded_at' => $file->created_at->format('M d, Y'),
+                'uploader'    => $file->uploader?->name ?? 'System',
+                'type_label'  => $typeLabel,
+                'stage'       => $file->stage,
+            ];
+        })->values();
 
         return response()->json($files);
     }

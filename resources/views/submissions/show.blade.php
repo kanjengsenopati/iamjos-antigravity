@@ -179,6 +179,7 @@
                 newRoundModalOpen: false,
                 newRoundFiles: [],
                 newRoundSelectedFiles: [],
+                newRoundHasUploadedFile: false,
                 newRoundIsLoading: false,
                 newRoundIsSubmitting: false,
 
@@ -576,6 +577,7 @@
                     this.newRoundModalOpen = false;
                     this.newRoundFiles = [];
                     this.newRoundSelectedFiles = [];
+                    this.newRoundHasUploadedFile = false;
                     this.newRoundIsSubmitting = false;
                 },
 
@@ -6302,34 +6304,34 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     </div>
 
                     {{-- Modal Body --}}
-                    <form method="POST"
+                    <form method="POST" enctype="multipart/form-data"
                         action="{{ route('journal.workflow.create-new-round', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
                         @submit="newRoundIsSubmitting = true">
                         @csrf
                         <div class="px-6 py-6 space-y-4">
                             <p class="text-sm text-gray-600">
-                                {{ $isId ? 'Anda akan membuat ronde ulasan baru untuk naskah ini. Pilih file revisi yang ingin dikirim ke reviewer.' : 'You are about to create a new review round for this submission. Select the revision files you want to send to reviewers.' }}
+                                {{ $isId ? 'Anda akan membuat ronde ulasan baru untuk naskah ini. Pilih file ulasan/revisi eksisting atau unggah file baru untuk dikirim ke reviewer.' : 'You are about to create a new review round for this submission. Select existing review/revision files or upload a new file to send to reviewers.' }}
                             </p>
 
                             {{-- File Selection --}}
                             <div class="space-y-2">
                                 <label class="block text-sm font-medium text-gray-700">
-                                    {{ $isId ? 'Pilih File untuk Ulasan' : 'Select Files for Review' }}
+                                    {{ $isId ? 'Pilih File Eksisting untuk Ulasan' : 'Select Existing Files for Review' }}
                                 </label>
 
                                 {{-- Loading State --}}
                                 <div x-show="newRoundIsLoading" class="flex items-center justify-center py-8">
                                     <i class="fa-solid fa-spinner fa-spin text-indigo-500 text-2xl"></i>
-                                    <span class="ml-3 text-sm text-gray-500">{{ $isId ? 'Memuat file revisi...' : 'Loading revision files...' }}</span>
+                                    <span class="ml-3 text-sm text-gray-500">{{ $isId ? 'Memuat file ulasan...' : 'Loading review files...' }}</span>
                                 </div>
 
                                 {{-- File List --}}
                                 <div x-show="!newRoundIsLoading"
-                                    class="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                                    class="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-56 overflow-y-auto">
                                     <template x-if="newRoundFiles.length === 0">
                                         <div class="text-center py-6 px-4">
                                             <i class="fa-solid fa-folder-open text-gray-300 text-2xl"></i>
-                                            <p class="text-sm text-gray-500 mt-2">{{ $isId ? 'Tidak ada file revisi yang tersedia.' : 'No revision files available.' }}</p>
+                                            <p class="text-sm text-gray-500 mt-2">{{ $isId ? 'Tidak ada file eksisting yang ditemukan.' : 'No existing files found.' }}</p>
                                         </div>
                                     </template>
                                     <template x-for="file in newRoundFiles" :key="file.id">
@@ -6339,10 +6341,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 @change="toggleNewRoundFile(file.id)"
                                                 class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                                             <div class="ml-3 flex-1 min-w-0">
-                                                <p class="text-sm font-medium text-gray-900 truncate"
-                                                    x-text="file.name"></p>
-                                                <p class="text-xs text-gray-500">
-                                                    <span x-text="file.uploader"></span> â€¢
+                                                <div class="flex items-center justify-between">
+                                                    <p class="text-sm font-medium text-gray-900 truncate"
+                                                        x-text="file.name"></p>
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100"
+                                                        x-text="file.type_label"></span>
+                                                </div>
+                                                <p class="text-xs text-gray-500 mt-0.5">
+                                                    <span x-text="file.uploader"></span> •
                                                     <span x-text="file.uploaded_at"></span>
                                                 </p>
                                             </div>
@@ -6356,11 +6362,25 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 </p>
                             </div>
 
+                            {{-- Optional File Upload Section --}}
+                            <div class="space-y-2 pt-2 border-t border-gray-100">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    {{ $isId ? 'Unggah File Baru (Opsional)' : 'Upload New File (Optional)' }}
+                                </label>
+                                <div class="flex items-center gap-3">
+                                    <input type="file" name="new_file" @change="newRoundHasUploadedFile = $event.target.files.length > 0"
+                                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer border border-gray-200 rounded-lg">
+                                </div>
+                                <p class="text-xs text-gray-400">
+                                    {{ $isId ? 'Format yang didukung: PDF, DOC, DOCX (Maks. 30MB)' : 'Supported formats: PDF, DOC, DOCX (Max 30MB)' }}
+                                </p>
+                            </div>
+
                             {{-- Info Box --}}
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                 <p class="text-xs text-blue-700">
                                     <i class="fa-solid fa-lightbulb mr-1"></i>
-                                    {{ $isId ? 'File yang dipilih akan disalin ke ronde ulasan baru sebagai file ulasan. Anda kemudian dapat menugaskan reviewer baru.' : 'Selected files will be copied to the new review round as review files. You can then assign new reviewers.' }}
+                                    {{ $isId ? 'File yang dipilih dan/atau diunggah akan dijadikan file ulasan untuk ronde baru. Anda kemudian dapat menugaskan reviewer baru.' : 'Selected and/or uploaded files will be set as review files for the new round. You can then assign new reviewers.' }}
                                 </p>
                             </div>
                         </div>
@@ -6372,8 +6392,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                 {{ $isId ? 'Batal' : 'Cancel' }}
                             </button>
                             <button type="submit"
-                                :disabled="newRoundIsSubmitting || newRoundSelectedFiles.length === 0"
-                                :class="(newRoundIsSubmitting || newRoundSelectedFiles.length === 0) ?
+                                :disabled="newRoundIsSubmitting || (newRoundSelectedFiles.length === 0 && !newRoundHasUploadedFile)"
+                                :class="(newRoundIsSubmitting || (newRoundSelectedFiles.length === 0 && !newRoundHasUploadedFile)) ?
                                 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'"
                                 class="flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors">
                                 <i class="fa-solid fa-rotate mr-2"
