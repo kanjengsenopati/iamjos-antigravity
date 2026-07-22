@@ -175,7 +175,8 @@
                 revisionUploadModalOpen: false,
 
                 // Editor Review View State (Multi-Round)
-                selectedEditorRound: config?.maxReviewRound || 1,
+                selectedRoundNumber: new URLSearchParams(window.location.search).get('round') || config?.maxReviewRound || 1,
+                selectedEditorRound: new URLSearchParams(window.location.search).get('round') || config?.maxReviewRound || 1,
                 newRoundModalOpen: false,
                 newRoundFiles: [],
                 newRoundSelectedFiles: [],
@@ -326,7 +327,7 @@
                 async searchReviewersForAssign() {
                     this.assignReviewerIsSearching = true;
                     try {
-                        const roundNum = this.selectedRoundNumber || {{ $selectedRoundNumber }};
+                        const roundNum = new URLSearchParams(window.location.search).get('round') || this.selectedRoundNumber || this.selectedEditorRound || config?.maxReviewRound || 1;
                         let url = `${config.searchReviewersUrl}?submission_id={{ $submission->id }}&round=${roundNum}`;
                         if (this.assignReviewerSearch && this.assignReviewerSearch.length > 0) {
                             url += `&q=${encodeURIComponent(this.assignReviewerSearch)}`;
