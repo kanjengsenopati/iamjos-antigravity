@@ -209,6 +209,17 @@
                 allParticipants: config?.potentialParticipants || {},
                 selectedParticipant: null,
 
+                // Assign Reviewer Modal State (Wide Modal)
+                assignReviewerModalOpen: false,
+                assignReviewerSearch: '',
+                assignReviewerIsSearching: false,
+                assignReviewerResults: [],
+                selectedReviewerForAssign: null,
+                assignReviewMethod: '{{ $journal->review_mode ?? "double_blind" }}',
+                assignResponseDueDate: '{{ \Carbon\Carbon::now()->addWeeks((int) ($journal->review_response_weeks ?? 2))->format("Y-m-d") }}',
+                assignReviewDueDate: '{{ \Carbon\Carbon::now()->addWeeks((int) ($journal->review_completion_weeks ?? 4))->format("Y-m-d") }}',
+                assignReviewerSubmitting: false,
+
                 get filteredEditors() {
                     let editors = this.allEditors;
 
@@ -291,6 +302,54 @@
                     this.selectedEditor = null;
                     this.editorSearch = '';
                     this.editorRoleFilter = 'Editor';
+                },
+
+                openAssignReviewerModal() {
+                    console.log('[SW-DEBUG] openAssignReviewerModal called');
+                    this.resetAssignReviewerModal();
+                    this.assignReviewerModalOpen = true;
+                    this.searchReviewersForAssign();
+                },
+
+                resetAssignReviewerModal() {
+                    this.selectedReviewerForAssign = null;
+                    this.assignReviewerSearch = '';
+                    this.assignReviewerResults = [];
+                    this.assignReviewerIsSearching = false;
+                    this.assignReviewerSubmitting = false;
+                    this.assignReviewMethod = '{{ $journal->review_mode ?? "double_blind" }}';
+                    this.assignResponseDueDate = '{{ \Carbon\Carbon::now()->addWeeks((int) ($journal->review_response_weeks ?? 2))->format("Y-m-d") }}';
+                    this.assignReviewDueDate = '{{ \Carbon\Carbon::now()->addWeeks((int) ($journal->review_completion_weeks ?? 4))->format("Y-m-d") }}';
+                },
+
+                async searchReviewersForAssign() {
+                    this.assignReviewerIsSearching = true;
+                    try {
+                        let url = `${config.searchReviewersUrl}?submission_id={{ $submission->id }}`;
+                        if (this.assignReviewerSearch && this.assignReviewerSearch.length > 0) {
+                            url += `&q=${encodeURIComponent(this.assignReviewerSearch)}`;
+                        }
+                        const response = await fetch(url, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+                        if (!response.ok) {
+                            console.error('Reviewer search failed:', response.status, response.statusText);
+                            this.assignReviewerResults = [];
+                            return;
+                        }
+                        this.assignReviewerResults = await response.json();
+                    } catch (error) {
+                        console.error('Search failed:', error);
+                    } finally {
+                        this.assignReviewerIsSearching = false;
+                    }
+                },
+
+                selectReviewerForAssign(reviewer) {
+                    this.selectedReviewerForAssign = reviewer;
                 },
                 selectedReviewer: null,
                 reviewerSearch: '',
@@ -1982,10 +2041,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     </h3>
                                     @if (auth()->user()->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id))
                                         @if ($canPerformAction)
-                                            <a href="{{ route('journal.workflow.assign-reviewer-page', ['journal' => $journal->slug, 'submission' => $submission->slug]) }}"
-                                                class="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
-                                                <i class="fa-solid fa-plus mr-1"></i> {{ $isId ? 'Tambah Reviewer' : 'Add Reviewer' }}
-                                            </a>
+                                            <button type="button" @click="openAssignReviewerModal()"
+                                                class="text-sm text-indigo-600 font-semibold hover:text-indigo-800 flex items-center bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors">
+                                                <i class="fa-solid fa-plus mr-1.5 text-xs"></i> {{ $isId ? 'Tambah Reviewer' : 'Add Reviewer' }}
+                                            </button>
                                         @else
                                             <span class="text-sm text-gray-400 font-medium cursor-not-allowed flex items-center" title="Anda tidak ditugaskan ke naskah ini">
                                                 <i class="fa-solid fa-plus mr-1"></i> {{ $isId ? 'Tambah Reviewer' : 'Add Reviewer' }}
@@ -2378,10 +2437,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Partisipan' : 'Participants' }}
                                     </h4>
                                     @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                        <a href="{{ route('journal.workflow.assign-reviewer-page', ['journal' => $journal->slug, 'submission' => $submission->seq_id]) }}"
-                                            class="text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                                            <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
-                                        </a>
+                                         <button type="button" @click="openAssignReviewerModal()"
+                                             class="text-xs font-semibold px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors flex items-center">
+                                             <i class="fa-solid fa-plus text-xs mr-1"></i> {{ $isId ? 'Tugaskan' : 'Assign' }}
+                                         </button>
                                     @endjournalPermission
                                 </div>
 
@@ -7314,6 +7373,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
         @include('submissions.partials.modal-assign-editor')
         @include('submissions.partials.modal-assign-participant')
+        @include('submissions.partials.modal-assign-reviewer')
     </div>
     <style>
         .ck-editor__editable {
