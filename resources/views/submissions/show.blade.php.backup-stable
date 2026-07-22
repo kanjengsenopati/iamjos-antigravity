@@ -76,7 +76,8 @@
             firstAuthorName: @js($submission->authors?->first()?->name ?? 'Author'),
             submissionCode: @js($submission->submission_code ?? ''),
             potentialEditors: @js($potentialEditors),
-            potentialParticipants: @js($potentialParticipants)
+            potentialParticipants: @js($potentialParticipants),
+            emailTemplates: @js($renderedEmailTemplates ?? [])
         };
     </script>
 
@@ -424,6 +425,9 @@
                 },
 
                 getAcceptEmailTemplate() {
+                    if (config?.emailTemplates?.EDITOR_DECISION_ACCEPT?.body_html) {
+                        return config.emailTemplates.EDITOR_DECISION_ACCEPT.body_html;
+                    }
                     @if($isId)
                     return `<p>Yth. ${config.authorName},</p>
                             <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong>${config.journalName}</strong>.</p>
@@ -525,6 +529,9 @@
                 },
 
                 getProductionEmailTemplate() {
+                    if (config?.emailTemplates?.LAYOUT_REQUEST?.body_html) {
+                        return config.emailTemplates.LAYOUT_REQUEST.body_html;
+                    }
                     const submissionUrl = window.location.href;
                     @if($isId)
                     return `<p>Yth. ${config.authorName},</p>
@@ -836,6 +843,9 @@
                 },
 
                 getDefaultRevisionEmailTemplate() {
+                    if (config?.emailTemplates?.EDITOR_DECISION_REVISIONS?.body_html) {
+                        return config.emailTemplates.EDITOR_DECISION_REVISIONS.body_html;
+                    }
                     @if($isId)
                     return `<p>Yth. ${config.firstAuthorName},</p>
                     <p>Kami telah mencapai keputusan terkait naskah Anda di <strong>${config.journalName}</strong>:</p>
@@ -1202,6 +1212,24 @@
 
                 {{-- Header Actions --}}
                 <div class="flex items-center gap-3 pt-1">
+                    @if ($submission->status == 2 || $submission->status === 'published')
+                        {{-- Button View untuk Artikel Published --}}
+                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->id]) }}"
+                            target="_blank"
+                            class="flex items-center justify-center px-4 py-2 border border-blue-600 rounded-lg text-sm font-bold text-blue-600 bg-white hover:bg-blue-50 transition-all shadow-sm">
+                            <i class="fa-solid fa-eye mr-2 text-blue-600"></i>
+                            {{ $isId ? 'Lihat' : 'View' }}
+                        </a>
+                    @else
+                        {{-- Button Preview untuk Artikel Unpublished --}}
+                        <a href="{{ route('journal.public.article', ['journal' => $journal->slug, 'article' => $submission->id, 'preview' => 1]) }}"
+                            target="_blank"
+                            class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm">
+                            <i class="fa-solid fa-eye mr-2 text-gray-500"></i>
+                            {{ $isId ? 'Pratinjau' : 'Preview' }}
+                        </a>
+                    @endif
+
                     <button @click="showActivityLog = true"
                         class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm">
                         <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500"></i>
@@ -1972,9 +2000,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <div @click="expanded = !expanded" 
                                                  class="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
                                                 <div class="flex items-center flex-1 min-w-0">
-                                                    <i class="fa-solid fa-chevron-right text-xs text-gray-400 mr-4 transition-transform duration-200"
-                                                       :class="expanded ? 'rotate-90' : ''"></i>
-                                                    
                                                     <div class="flex items-center">
                                                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm border border-indigo-200 shadow-sm">
                                                             {{ strtoupper(mb_substr($assignment->reviewer->name ?? 'R', 0, 1)) }}
@@ -2022,6 +2047,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             </span>
                                                         </div>
                                                     @endif
+
+                                                    {{-- Expandable Chevron Icon (V shape) on the right --}}
+                                                    <div class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center bg-white text-gray-400 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-colors shadow-sm">
+                                                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
+                                                           :class="expanded ? 'rotate-180 text-indigo-500' : ''"></i>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -2040,7 +2071,25 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
                                                         {{-- Review Details --}}
                                                         @if ($assignment->status === 'completed' || $assignment->recommendation)
-                                                            <button type="button" @click='openReviewDetailsModal({{ json_encode($assignment, JSON_HEX_APOS | JSON_HEX_QUOT) }})'
+                                                            <button type="button" @click='openReviewDetailsModal({{ json_encode([
+                                                                "id" => $assignment->id,
+                                                                "recommendation" => $assignment->recommendation,
+                                                                "recommendation_label" => $assignment->recommendation_label,
+                                                                "recommendation_color" => $assignment->recommendation_color,
+                                                                "comments_for_author" => $assignment->comments_for_author,
+                                                                "comments_for_editor" => $assignment->comments_for_editor,
+                                                                "quality_rating" => $assignment->quality_rating,
+                                                                "completed_at" => $assignment->completed_at ? $assignment->completed_at->toIso8601String() : null,
+                                                                "form_responses" => $assignment->getFormattedFormResponses(),
+                                                                "files" => $assignment->attachments()->map(function ($file) {
+                                                                    return [
+                                                                        "id" => $file->id,
+                                                                        "file_name" => $file->file_name,
+                                                                        "download_url" => route("files.download", $file),
+                                                                        "created_at" => $file->created_at->toIso8601String(),
+                                                                    ];
+                                                                })->toArray()
+                                                            ], JSON_HEX_APOS | JSON_HEX_QUOT) }})'
                                                                 class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
                                                                 <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
                                                             </button>
@@ -2051,6 +2100,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             class="flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
                                                             <i class="fa-solid fa-calendar-check {{ $canPerformAction ? 'text-indigo-500' : 'text-gray-400' }} mr-2"></i> {{ $isId ? 'Edit Penugasan' : 'Edit Assignment' }}
                                                         </button>
+
+                                                        {{-- Thank Reviewer (Only when Completed) --}}
+                                                        @if ($assignment->status === 'completed')
+                                                            @if (isset($assignment->metadata['thanked_at']))
+                                                                <button type="button" disabled
+                                                                    class="flex items-center justify-center px-4 py-2.5 bg-green-50 border border-green-200 text-green-700 text-xs font-bold rounded-lg cursor-not-allowed shadow-sm w-full">
+                                                                    <i class="fa-solid fa-envelope-circle-check text-green-600 mr-2"></i> {{ $isId ? 'Terima Kasih Terkirim' : 'Reviewer Thanked' }}
+                                                                </button>
+                                                            @else
+                                                                <form action="{{ route('journal.workflow.review-assignment.thank', ['journal' => $journal->slug, 'reviewAssignment' => $assignment->id]) }}" method="POST" class="w-full">
+                                                                    @csrf
+                                                                    <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
+                                                                        class="w-full flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                                        <i class="fa-solid fa-envelope-open-text text-indigo-500 mr-2"></i> {{ $isId ? 'Kirim Terima Kasih' : 'Thank Reviewer' }}
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                        @endif
 
                                                         {{-- Unassign --}}
                                                         @if (!in_array($assignment->status, ['completed', 'declined', 'cancelled']))
@@ -6982,7 +7049,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="relative z-50 inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                    class="relative z-50 inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
 
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
@@ -7009,6 +7076,80 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 x-html="selectedReview?.comments_for_author || '<em>{{ $isId ? 'Tidak ada komentar yang diberikan.' : 'No comments provided.' }}</em>'">
                                             </div>
                                         </div>
+
+                                        {{-- Evaluation Form Answers Section (Form Review Terisi) --}}
+                                        <template x-if="selectedReview?.form_responses && selectedReview.form_responses.length > 0">
+                                            <div class="mt-6 pt-6 border-t border-gray-100">
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-3">{{ $isId ? 'Hasil Formulir Evaluasi' : 'Evaluation Form Answers' }}</h4>
+                                                <div class="space-y-4">
+                                                    <template x-for="(item, idx) in selectedReview.form_responses" :key="item.id || idx">
+                                                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
+                                                            <div class="flex items-start gap-2.5">
+                                                                <span class="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-lg bg-slate-700 text-white text-[11px] font-bold shadow-sm" x-text="idx + 1"></span>
+                                                                <div class="flex-1">
+                                                                    <h5 class="text-xs font-bold text-slate-900 leading-snug" x-text="item.question"></h5>
+                                                                    <template x-if="item.description">
+                                                                        <p class="text-[11px] text-slate-500 mt-0.5" x-text="item.description"></p>
+                                                                    </template>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="pl-8">
+                                                                {{-- Text / Textarea --}}
+                                                                <template x-if="item.element_type === 'text' || item.element_type === 'textarea'">
+                                                                    <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 font-medium leading-relaxed"
+                                                                         x-text="item.response_value && item.response_value.trim() !== '' ? item.response_value.replace(/<[^>]*>?/gm, '') : '{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}'"></div>
+                                                                </template>
+
+                                                                {{-- Checkbox --}}
+                                                                <template x-if="item.element_type === 'checkbox'">
+                                                                    <div class="space-y-1.5">
+                                                                        <template x-for="opt in (item.options || [])" :key="opt.value">
+                                                                            <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
+                                                                                 :class="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label))) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
+                                                                                <input type="checkbox" disabled :checked="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label)))" class="rounded border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
+                                                                                <span x-text="opt.label"></span>
+                                                                            </div>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+
+                                                                {{-- Radio --}}
+                                                                <template x-if="item.element_type === 'radio'">
+                                                                    <div class="space-y-1.5">
+                                                                        <template x-for="opt in (item.options || [])" :key="opt.value">
+                                                                            <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
+                                                                                 :class="Boolean(item.response_value && String(item.response_value).trim() !== '' && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase())) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
+                                                                                <input type="radio" disabled :checked="Boolean(item.response_value && String(item.response_value).trim() !== '' && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase()))" class="border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
+                                                                                <span x-text="opt.label"></span>
+                                                                            </div>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+
+                                                                {{-- Select --}}
+                                                                <template x-if="item.element_type === 'select'">
+                                                                    <div class="p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
+                                                                         x-text="item.response_value || '-'"></div>
+                                                                </template>
+
+                                                                {{-- Rating --}}
+                                                                <template x-if="item.element_type === 'rating'">
+                                                                    <div class="flex items-center gap-1.5 p-2.5 bg-white border border-slate-200 rounded-xl"
+                                                                         x-data="{ numRating: parseInt((String(item.response_value || '').match(/\d+/) || [0])[0]) || 0 }">
+                                                                        <template x-for="starIdx in 5" :key="starIdx">
+                                                                            <i class="fa-solid fa-star text-base transition-colors"
+                                                                               :class="numRating >= starIdx ? 'text-amber-400' : 'text-slate-300'"></i>
+                                                                        </template>
+                                                                        <span class="text-xs font-bold text-slate-700 ml-2" x-text="numRating > 0 ? numRating + '/5' : '-'"></span>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
 
                                         @if (!$isAuthorView)
                                             <div class="mb-4">
@@ -7069,6 +7210,38 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <p class="mt-1 text-xs text-gray-400">{{ $isId ? 'Beri penilaian kualitas ulasan ini untuk catatan editorial internal.' : 'Rate the quality of this review for internal editorial records.' }}</p>
                                             </div>
                                         @endif
+
+                                        {{-- Reviewer Files Section (Gambar 3 OJS style) --}}
+                                        <div class="mt-6 pt-6 border-t border-gray-100 mb-4">
+                                            <h4 class="text-sm font-semibold text-gray-700 mb-3">{{ $isId ? 'Berkas Mitra Bestari' : 'Reviewer Files' }}</h4>
+                                            
+                                            <template x-if="!selectedReview?.files || selectedReview?.files.length === 0">
+                                                <p class="text-xs text-gray-400 italic">{{ $isId ? 'Tidak ada berkas yang diunggah.' : 'No files uploaded.' }}</p>
+                                            </template>
+                                            
+                                            <template x-if="selectedReview?.files && selectedReview?.files.length > 0">
+                                                <div class="space-y-2">
+                                                    <template x-for="file in selectedReview.files" :key="file.id">
+                                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-[12px] hover:bg-gray-100 transition-colors">
+                                                            <div class="flex items-center gap-3 min-w-0">
+                                                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                                                    <i class="fa-solid fa-file-word text-sm"></i>
+                                                                </div>
+                                                                <div class="min-w-0">
+                                                                    <a :href="file.download_url" 
+                                                                       class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline truncate block"
+                                                                       x-text="file.file_name"></a>
+                                                                    <span class="text-[10px] text-gray-400" x-text="`ID: ${file.id}`"></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <span class="text-[11px] text-gray-400" x-text="new Date(file.created_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
 
                                         <div class="mt-2 text-xs text-gray-400">
                                             {{ $isId ? 'Diselesaikan pada:' : 'Completed at:' }} <span

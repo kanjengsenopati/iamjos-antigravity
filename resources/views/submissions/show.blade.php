@@ -76,7 +76,8 @@
             firstAuthorName: @js($submission->authors?->first()?->name ?? 'Author'),
             submissionCode: @js($submission->submission_code ?? ''),
             potentialEditors: @js($potentialEditors),
-            potentialParticipants: @js($potentialParticipants)
+            potentialParticipants: @js($potentialParticipants),
+            emailTemplates: @js($renderedEmailTemplates ?? [])
         };
     </script>
 
@@ -424,6 +425,9 @@
                 },
 
                 getAcceptEmailTemplate() {
+                    if (config?.emailTemplates?.EDITOR_DECISION_ACCEPT?.body_html) {
+                        return config.emailTemplates.EDITOR_DECISION_ACCEPT.body_html;
+                    }
                     @if($isId)
                     return `<p>Yth. ${config.authorName},</p>
                             <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong>${config.journalName}</strong>.</p>
@@ -525,6 +529,9 @@
                 },
 
                 getProductionEmailTemplate() {
+                    if (config?.emailTemplates?.LAYOUT_REQUEST?.body_html) {
+                        return config.emailTemplates.LAYOUT_REQUEST.body_html;
+                    }
                     const submissionUrl = window.location.href;
                     @if($isId)
                     return `<p>Yth. ${config.authorName},</p>
@@ -836,6 +843,9 @@
                 },
 
                 getDefaultRevisionEmailTemplate() {
+                    if (config?.emailTemplates?.EDITOR_DECISION_REVISIONS?.body_html) {
+                        return config.emailTemplates.EDITOR_DECISION_REVISIONS.body_html;
+                    }
                     @if($isId)
                     return `<p>Yth. ${config.firstAuthorName},</p>
                     <p>Kami telah mencapai keputusan terkait naskah Anda di <strong>${config.journalName}</strong>:</p>

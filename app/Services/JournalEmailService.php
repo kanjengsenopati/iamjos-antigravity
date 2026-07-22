@@ -155,15 +155,123 @@ class JournalEmailService
      * Parse and replace variables in the text.
      * Supports {$variableName} syntax.
      */
-    protected static function parseVariables(string $text, array $variables): string
+    public static function parseVariables(string $text, array $variables): string
     {
         foreach ($variables as $key => $value) {
-            // Simple string replacement
-            // Ensure value is string
             $val = is_scalar($value) ? (string)$value : '';
             $text = str_replace('{$' . $key . '}', $val, $text);
         }
 
+        // Clean up remaining un-replaced {$variable} tags if any
+        $text = preg_replace('/\{\$[a-zA-Z0-9_]+\}/', '', $text);
+
         return $text;
     }
+
+    /**
+     * Convert plain text email body to HTML paragraphs if not already HTML.
+     */
+    public static function formatEmailBodyHtml(string $body): string
+    {
+        if (preg_match('/<(p|div|br|table|ul|ol|h[1-6])\b[^>]*>/i', $body)) {
+            return $body;
+        }
+
+        $paragraphs = array_filter(array_map('trim', explode("\n\n", $body)));
+        if (empty($paragraphs)) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($paragraphs as $p) {
+            $html .= '<p>' . nl2br($p) . '</p>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Get parsed template array for a given key and journal.
+     */
+    public static function getParsedTemplate(Journal $journal, string $key, array $variables = []): ?array
+    {
+        $templateData = self::resolveTemplate($journal, $key);
+        if (!$templateData) {
+            return null;
+        }
+
+        $defaultVars = [
+            'journalName' => $journal->name,
+            'journalUrl' => route('journal.home', $journal->slug),
+            'signature' => $journal->email_signature ?: ($journal->name . "\nEditorial Team"),
+            'editorComments' => '',
+        ];
+
+        $mergedVars = array_merge($defaultVars, $variables);
+
+        $subject = self::parseVariables($templateData['subject'], $mergedVars);
+        $body = self::parseVariables($templateData['body'], $mergedVars);
+        $bodyHtml = self::formatEmailBodyHtml($body);
+
+        return [
+            'subject' => $subject,
+            'body' => $body,
+            'body_html' => $bodyHtml,
+        ];
+    }
+
+    /**
+     * Get all parsed email templates relevant for a submission workflow modal.
+     */
+    public static function getSubmissionEmailTemplates(Journal $journal, $submission): array
+    {
+        $authorName = '';
+        if (isset($submission->user) && $submission->user) {
+            $authorName = $submission->user->full_name ?: trim(($submission->user->first_name ?? '') . ' ' . ($submission->user->last_name ?? ''));
+        }
+        if (empty($authorName) && isset($submission->authors) && count($submission->authors) > 0) {
+            $first = $submission->authors->first();
+            if ($first) {
+                $authorName = trim(($first->given_name ?? '') . ' ' . ($first->family_name ?? ''));
+            }
+        }
+        if (empty($authorName)) {
+            $authorName = 'Author';
+        }
+
+        $submissionUrl = route('journal.submissions.show', [
+            'journal' => $journal->slug,
+            'submission' => $submission->url_slug ?? $submission->slug ?? $submission->id
+        ]);
+
+        $vars = [
+            'authorName' => $authorName,
+            'firstAuthorName' => $authorName,
+            'recipientName' => $authorName,
+            'submissionTitle' => $submission->title ?? '',
+            'submissionCode' => $submission->submission_code ?? ('#' . ($submission->id ?? '')),
+            'submissionUrl' => $submissionUrl,
+            'journalName' => $journal->name,
+            'signature' => $journal->email_signature ?: ($journal->name . "\nEditorial Team"),
+        ];
+
+        $keys = [
+            'EDITOR_DECISION_ACCEPT',
+            'EDITOR_DECISION_REVISIONS',
+            'EDITOR_DECISION_DECLINE',
+            'LAYOUT_REQUEST',
+            'COPYEDIT_REQUEST',
+        ];
+
+        $result = [];
+        foreach ($keys as $key) {
+            $parsed = self::getParsedTemplate($journal, $key, $vars);
+            if ($parsed) {
+                $result[$key] = $parsed;
+            }
+        }
+
+        return $result;
+    }
 }
+

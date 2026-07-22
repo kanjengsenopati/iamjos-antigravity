@@ -203,6 +203,8 @@ class SubmissionWorkflowController extends Controller
         $validator = new \App\Services\GoogleScholarValidator();
         $seoAnalysis = $validator->validate($submission);
 
+        $renderedEmailTemplates = \App\Services\JournalEmailService::getSubmissionEmailTemplates($journal, $submission);
+
         return view('submissions.show', compact(
             'submission',
             'journal',
@@ -212,7 +214,8 @@ class SubmissionWorkflowController extends Controller
             'isAuthorView',
             'potentialEditors',
             'potentialParticipants',
-            'seoAnalysis'
+            'seoAnalysis',
+            'renderedEmailTemplates'
         ));
     }
 

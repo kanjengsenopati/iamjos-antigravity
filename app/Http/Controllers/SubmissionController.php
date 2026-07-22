@@ -965,8 +965,10 @@ class SubmissionController extends Controller
         })
         ->values();
 
+        $renderedEmailTemplates = \App\Services\JournalEmailService::getSubmissionEmailTemplates($journal, $submission);
+
         return view('submissions.show', array_merge(
-            compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView', 'seoAnalysis', 'potentialEditors', 'potentialParticipants'),
+            compact('submission', 'journal', 'issues', 'issueOptions', 'participants', 'isAuthorView', 'seoAnalysis', 'potentialEditors', 'potentialParticipants', 'renderedEmailTemplates'),
             $isAuthorView ? ['authorReviewData' => $authorReviewData] : []
         ));
     }
