@@ -1906,38 +1906,51 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
                                 <div class="border-b border-gray-200 bg-gray-50">
                                     <nav class="flex items-center justify-between px-4" aria-label="Tabs">
-                                        <div class="flex -mb-px">
+                                        <div class="flex items-center space-x-1 -mb-px overflow-x-auto py-1">
                                             @foreach ($allRounds as $round)
                                                 @php
                                                     $isSelected = $round->round == $selectedRoundNumber;
                                                     $isCompleted = $round->status === 'completed';
                                                 @endphp
                                                 <a href="{{ request()->fullUrlWithQuery(['round' => $round->round]) }}"
-                                                    class="whitespace-nowrap py-3 px-5 border-b-2 font-semibold text-sm transition-colors
+                                                    class="whitespace-nowrap py-2.5 px-4 border-b-2 font-semibold text-sm transition-colors rounded-t-lg
                                                     {{ $isSelected
-                                                        ? 'border-indigo-500 text-indigo-600 bg-white'
-                                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                                                        ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs font-bold'
+                                                        : 'border-transparent text-gray-600 hover:text-indigo-600 hover:border-gray-300 hover:bg-gray-100/50' }}">
                                                     <i
-                                                        class="fa-solid fa-rotate mr-1.5 {{ $isSelected ? 'text-indigo-500' : 'text-gray-400' }}"></i>
+                                                        class="fa-solid fa-rotate mr-1.5 {{ $isSelected ? 'text-indigo-600' : 'text-gray-400' }}"></i>
                                                     {{ $isId ? 'Putaran' : 'Round' }} {{ $round->round }}
                                                     @if ($isCompleted)
-                                                        <i class="fa-solid fa-check text-green-500 ml-1 text-xs"></i>
+                                                        <i class="fa-solid fa-check text-emerald-500 ml-1 text-xs"></i>
                                                     @elseif ($round->round == $latestRoundNumber)
                                                         <span
-                                                            class="ml-1 text-xs font-normal {{ $isSelected ? 'text-indigo-500' : 'text-gray-400' }}">({{ $isId ? 'Terbaru' : 'Latest' }})</span>
+                                                            class="ml-1 text-xs font-medium {{ $isSelected ? 'text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded' : 'text-gray-400' }}">({{ $isId ? 'Terbaru' : 'Latest' }})</span>
                                                     @endif
                                                 </a>
                                             @endforeach
                                             @if ($allRounds->isEmpty())
                                                 <span class="py-3 px-5 text-sm text-gray-500 italic">{{ $isId ? 'Belum ada putaran ulasan' : 'No review rounds yet' }}</span>
                                             @endif
+
+                                            {{-- Prominent New Round Tab (Always visible by default in Review Stage unless a pending new round is already created) --}}
+                                            @if (!$hasPendingNewRound)
+                                                <button type="button" @click="openNewRoundModal()"
+                                                    class="whitespace-nowrap ml-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-sm hover:shadow transition-all duration-150 cursor-pointer transform hover:-translate-y-0.5 my-1"
+                                                    title="{{ $isId ? 'Buat Putaran Ulasan Baru (New Round)' : 'Create New Review Round' }}">
+                                                    <i class="fa-solid fa-plus-circle text-xs"></i>
+                                                    <span>{{ $isId ? 'Putaran Baru' : 'New Round' }}</span>
+                                                </button>
+                                            @endif
                                         </div>
-                                        {{-- New Review Round Button (only show if author has revisions AND no pending new round exists) --}}
-                                        @if ($hasAuthorRevisions && $submission->status === 'revision_required' && !$hasPendingNewRound)
-                                            <button type="button" @click="openNewRoundModal()"
-                                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors my-2">
-                                                <i class="fa-solid fa-plus mr-1.5"></i> {{ $isId ? 'Putaran Ulasan Baru' : 'New Review Round' }}
-                                            </button>
+
+                                        {{-- Right Action Cluster --}}
+                                        @if (!$hasPendingNewRound)
+                                            <div class="hidden md:flex items-center py-2">
+                                                <button type="button" @click="openNewRoundModal()"
+                                                    class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all shadow-2xs">
+                                                    <i class="fa-solid fa-plus mr-1.5 text-indigo-600"></i> {{ $isId ? 'Putaran Ulasan Baru' : 'New Review Round' }}
+                                                </button>
+                                            </div>
                                         @endif
                                     </nav>
                                 </div>
