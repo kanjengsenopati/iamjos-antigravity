@@ -1455,9 +1455,9 @@
                                                                 {{ $file->file_name }}
                                                             </div>
                                                             <div class="text-xs text-gray-500">
-                                                                {{ ucfirst($file->file_type) }} â€¢
+                                                                {{ ucfirst($file->file_type) }} &bull;
                                                                 {{ number_format($file->file_size / 1024, 0) }} KB
-                                                                â€¢
+                                                                &bull;
                                                                 v{{ $file->version ?? 1 }}
                                                             </div>
                                                         </div>
@@ -2268,7 +2268,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         @if (isset($file->metadata['promoted_from']))
                                                             <span class="text-purple-600"><i
                                                                     class="fa-solid fa-arrow-up-from-bracket mr-1"></i>{{ $isId ? 'Dipromosikan' : 'Promoted' }}</span>
-                                                            â€¢
+                                                            &bull;
                                                         @endif
                                                         {{ number_format($file->file_size / 1024, 0) }} KB
                                                     </p>
@@ -2340,7 +2340,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <p class="text-xs text-gray-500">
                                                         {{ $isId ? 'Diunggah oleh' : 'Uploaded by' }} <span
                                                             class="font-medium">{{ $file->uploader?->name ?? ($isId ? 'Penulis' : 'Author') }}</span>
-                                                        â€¢ {{ $file->created_at->format($isId ? 'd M Y - H:i' : 'M d, Y - H:i') }}
+                                                        &bull; {{ $file->created_at->format($isId ? 'd M Y - H:i' : 'M d, Y - H:i') }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -5441,10 +5441,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <p class="text-sm font-medium text-gray-900 truncate"
                                                                 x-text="file.name"></p>
                                                             <p class="text-xs text-gray-500">
-                                                                <span x-text="file.source"></span> â€¢
+                                                                <span x-text="file.source"></span> &bull;
                                                                 <span
                                                                     x-text="(file.size / 1024).toFixed(0) + ' KB'"></span>
-                                                                â€¢
+                                                                &bull;
                                                                 <span x-text="file.created_at"></span>
                                                             </p>
                                                         </div>
@@ -5565,7 +5565,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <p class="text-sm font-medium text-gray-900 truncate"
                                                                 x-text="file.name"></p>
                                                             <p class="text-xs text-gray-500"
-                                                                x-text="file.source + ' â€¢ ' + (file.size / 1024).toFixed(0) + ' KB'">
+                                                                x-text="file.source + ' &bull; ' + (file.size / 1024).toFixed(0) + ' KB'">
                                                             </p>
                                                         </div>
                                                     </label>
@@ -6339,7 +6339,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 <p class="text-sm font-medium text-gray-900 truncate"
                                                     x-text="file.name"></p>
                                                 <p class="text-xs text-gray-500">
-                                                    <span x-text="file.uploader"></span> â€¢
+                                                    <span x-text="file.uploader"></span> &bull;
                                                     <span x-text="file.uploaded_at"></span>
                                                 </p>
                                             </div>
@@ -6739,7 +6739,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <div class="flex-1 min-w-0">
                                                         <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
-                                                            {{ $file->created_at->format('M d, Y') }} â€¢
+                                                            {{ $file->created_at->format('M d, Y') }} &bull;
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
                                                         </p>
                                                     </div>
@@ -6766,7 +6766,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <div class="flex-1 min-w-0">
                                                         <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
                                                         <p class="text-xs text-gray-500">
-                                                            {{ $file->created_at->format('M d, Y') }} â€¢
+                                                            {{ $file->created_at->format('M d, Y') }} &bull;
                                                             {{ number_format($file->file_size / 1024, 0) }} KB
                                                         </p>
                                                     </div>
