@@ -1931,23 +1931,13 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             @if ($allRounds->isEmpty())
                                                 <span class="py-3 px-5 text-sm text-gray-500 italic">{{ $isId ? 'Belum ada putaran ulasan' : 'No review rounds yet' }}</span>
                                             @endif
-
-                                            {{-- Prominent New Round Tab (Always visible by default in Review Stage unless a pending new round is already created) --}}
-                                            @if (!$hasPendingNewRound)
-                                                <button type="button" @click="openNewRoundModal()"
-                                                    class="whitespace-nowrap ml-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-sm hover:shadow transition-all duration-150 cursor-pointer transform hover:-translate-y-0.5 my-1"
-                                                    title="{{ $isId ? 'Buat Putaran Ulasan Baru (New Round)' : 'Create New Review Round' }}">
-                                                    <i class="fa-solid fa-plus-circle text-xs"></i>
-                                                    <span>{{ $isId ? 'Putaran Baru' : 'New Round' }}</span>
-                                                </button>
-                                            @endif
                                         </div>
 
-                                        {{-- Right Action Cluster --}}
+                                        {{-- Right Action Area: New Review Round Button (Visible by default unless a pending new round exists) --}}
                                         @if (!$hasPendingNewRound)
-                                            <div class="hidden md:flex items-center py-2">
+                                            <div class="flex items-center py-2">
                                                 <button type="button" @click="openNewRoundModal()"
-                                                    class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all shadow-2xs">
+                                                    class="inline-flex items-center px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 rounded-lg transition-all shadow-2xs">
                                                     <i class="fa-solid fa-plus mr-1.5 text-indigo-600"></i> {{ $isId ? 'Putaran Ulasan Baru' : 'New Review Round' }}
                                                 </button>
                                             </div>
