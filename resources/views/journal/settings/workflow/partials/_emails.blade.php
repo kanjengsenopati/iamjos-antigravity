@@ -6,7 +6,7 @@
 @endphp
 
 <div x-data="{
-    emailSubTab: 'config',
+    emailSubTab: '{{ session('email_subtab', request('subtab', 'config')) }}',
     showEditModal: false,
     editingTemplate: null,
     searchQuery: '',
@@ -346,6 +346,7 @@
                             @submit="if (typeof tinymce !== 'undefined' && tinymce.get('editing_template_body')) { tinymce.get('editing_template_body').triggerSave(); }">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="subtab" value="templates">
 
                             <div class="bg-white px-6 py-6">
                                 <div class="flex items-center justify-between mb-5">

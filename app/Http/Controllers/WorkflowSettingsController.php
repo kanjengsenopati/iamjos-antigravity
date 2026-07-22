@@ -623,7 +623,7 @@ class WorkflowSettingsController extends Controller
             'is_custom' => true,
         ]);
 
-        return back()->with('success', 'Email template updated successfully.');
+        return back()->with('success', 'Email template updated successfully.')->with('email_subtab', 'templates');
     }
 
     /**
@@ -658,7 +658,7 @@ class WorkflowSettingsController extends Controller
         }
 
         $status = $emailTemplate->is_enabled ? 'enabled' : 'disabled';
-        return back()->with('success', "Email template {$status} successfully.");
+        return back()->with('success', "Email template {$status} successfully.")->with('email_subtab', 'templates');
     }
 
     /**
@@ -679,10 +679,10 @@ class WorkflowSettingsController extends Controller
         }
 
         if ($emailTemplate->resetToDefault()) {
-            return back()->with('success', 'Email template reset to default.');
+            return back()->with('success', 'Email template reset to default.')->with('email_subtab', 'templates');
         }
 
-        return back()->with('error', 'Could not find default template.');
+        return back()->with('error', 'Could not find default template.')->with('email_subtab', 'templates');
     }
 
     // =====================================================
