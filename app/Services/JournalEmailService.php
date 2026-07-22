@@ -58,7 +58,7 @@ class JournalEmailService
                 'recipientName' => $recipientName,
                 'recipientEmail' => $recipientEmail,
                 'journalName' => $journal->name,
-                'journalUrl' => route('journal.home', $journal->slug),
+                'journalUrl' => route('journal.public.home', $journal->slug),
             ], $variables);
 
             // Add signature if not present
@@ -202,7 +202,7 @@ class JournalEmailService
 
         $defaultVars = [
             'journalName' => $journal->name,
-            'journalUrl' => route('journal.home', $journal->slug),
+            'journalUrl' => route('journal.public.home', $journal->slug),
             'signature' => $journal->email_signature ?: ($journal->name . "\nEditorial Team"),
             'editorComments' => '',
         ];
