@@ -326,7 +326,8 @@
                 async searchReviewersForAssign() {
                     this.assignReviewerIsSearching = true;
                     try {
-                        let url = `${config.searchReviewersUrl}?submission_id={{ $submission->id }}`;
+                        const roundNum = this.selectedRoundNumber || {{ $selectedRoundNumber }};
+                        let url = `${config.searchReviewersUrl}?submission_id={{ $submission->id }}&round=${roundNum}`;
                         if (this.assignReviewerSearch && this.assignReviewerSearch.length > 0) {
                             url += `&q=${encodeURIComponent(this.assignReviewerSearch)}`;
                         }

@@ -67,34 +67,47 @@ class ReviewWorkflowController extends Controller
             'review_method' => 'required',
             'response_due_date' => 'required|date',
             'review_due_date' => 'required|date',
+            'round' => 'nullable|integer',
         ]);
 
-        // Prevent duplicate assignment
-        $currentRound = $submission->currentReviewRound();
-        if ($currentRound) {
+        $roundNumber = $request->input('round');
+        $targetRound = null;
+        if ($roundNumber) {
+            $targetRound = $submission->reviewRounds()->where('round', $roundNumber)->first();
+        }
+        if (!$targetRound) {
+            $targetRound = $submission->currentReviewRound();
+        }
+
+        // Prevent duplicate assignment in target round
+        if ($targetRound) {
             $existing = ReviewAssignment::where('submission_id', $submission->id)
-                ->where('review_round_id', $currentRound->id)
+                ->where(function ($q) use ($targetRound) {
+                    $q->where('review_round_id', $targetRound->id)
+                      ->orWhere('round', $targetRound->round);
+                })
                 ->where('reviewer_id', $request->reviewer_id)
                 ->whereNotIn('status', [ReviewAssignment::STATUS_CANCELLED, ReviewAssignment::STATUS_DECLINED])
                 ->exists();
 
             if ($existing) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'reviewer_id' => ['This reviewer is already assigned to this submission in the current round.']
+                    'reviewer_id' => ['This reviewer is already assigned to this submission in the selected round.']
                 ]);
             }
         }
 
         try {
-            DB::transaction(function () use ($request, $submission) {
+            DB::transaction(function () use ($request, $submission, $targetRound, $roundNumber) {
 
-                // Ensure a review round exists
-                $reviewRound = $submission->currentReviewRound();
+                // Ensure a review round exists for target round
+                $reviewRound = $targetRound;
 
                 if (!$reviewRound) {
+                    $targetRoundNum = $roundNumber ?? 1;
                     $reviewRound = ReviewRound::create([
                         'submission_id' => $submission->id,
-                        'round' => 1,
+                        'round' => $targetRoundNum,
                         'status' => ReviewRound::STATUS_PENDING,
                     ]);
                 }
@@ -521,21 +534,31 @@ public function searchReviewers(Request $request, string $journalSlug)
     */
     $excludeIds = [];
     $submissionId = $request->get('submission_id');
+    $targetRoundNumber = $request->get('round');
+
     if ($submissionId) {
         $submission = Submission::find($submissionId);
         if ($submission) {
-            $currentRound = $submission->currentReviewRound();
-            $roundId = $currentRound ? $currentRound->id : null;
-            
-            if ($roundId) {
+            $targetRound = null;
+            if ($targetRoundNumber) {
+                $targetRound = $submission->reviewRounds()->where('round', $targetRoundNumber)->first();
+            }
+            if (!$targetRound) {
+                $targetRound = $submission->currentReviewRound();
+            }
+
+            if ($targetRound) {
                 $excludeIds = ReviewAssignment::where('submission_id', $submission->id)
-                    ->where('review_round_id', $roundId)
+                    ->where(function ($query) use ($targetRound) {
+                        $query->where('review_round_id', $targetRound->id)
+                              ->orWhere('round', $targetRound->round);
+                    })
                     ->whereNotIn('status', ['cancelled', 'declined'])
                     ->pluck('reviewer_id')
                     ->toArray();
-            } else {
+            } elseif ($targetRoundNumber) {
                 $excludeIds = ReviewAssignment::where('submission_id', $submission->id)
-                    ->where('round', 1)
+                    ->where('round', $targetRoundNumber)
                     ->whereNotIn('status', ['cancelled', 'declined'])
                     ->pluck('reviewer_id')
                     ->toArray();

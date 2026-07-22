@@ -52,6 +52,7 @@
                     method="POST" @submit="assignReviewerSubmitting = true">
                     @csrf
                     <input type="hidden" name="reviewer_id" :value="selectedReviewerForAssign?.id || ''">
+                    <input type="hidden" name="round" :value="selectedRoundNumber || {{ $selectedRoundNumber }}">
 
                     {{-- Reviewer Selection Section --}}
                     <div class="space-y-4">
