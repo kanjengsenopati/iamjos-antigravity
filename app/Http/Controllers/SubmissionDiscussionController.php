@@ -43,9 +43,16 @@ class SubmissionDiscussionController extends Controller
         }
 
         // Check if user is assigned as editor
-        return $submission->editorialAssignments()
+        if ($submission->editorialAssignments()
             ->where('user_id', $user->id)
             ->where('is_active', true)
+            ->exists()) {
+            return true;
+        }
+
+        // Check if user is assigned as reviewer
+        return $submission->reviewAssignments()
+            ->where('reviewer_id', $user->id)
             ->exists();
     }
 

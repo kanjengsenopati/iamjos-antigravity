@@ -11,6 +11,58 @@
     $stageDiscussions = $discussions->where('stage_id', $stageId);
     $isId = app()->getLocale() === 'id';
 
+    // Helper untuk menentukan Role label dan styling badge partisipan / pengirim pesan
+    $assignedReviewerIds = $submission->relationLoaded('reviewAssignments') 
+        ? $submission->reviewAssignments->pluck('reviewer_id')->filter()->toArray() 
+        : \App\Models\ReviewAssignment::where('submission_id', $submission->id)->pluck('reviewer_id')->filter()->toArray();
+
+    $getParticipantRole = function ($user) use ($submission, $journal, $isId, $assignedReviewerIds) {
+        if (!$user) {
+            return [
+                'label' => $isId ? 'Pengguna' : 'User',
+                'class' => 'bg-slate-50 text-slate-700',
+                'style' => '',
+                'textClass' => 'text-slate-700'
+            ];
+        }
+
+        if ($user->id === $submission->user_id) {
+            return [
+                'label' => $isId ? 'Penulis' : 'Author',
+                'class' => 'bg-amber-55 text-amber-750',
+                'style' => 'background-color: rgba(245, 158, 11, 0.1); color: #D97706;',
+                'textClass' => 'text-amber-700'
+            ];
+        }
+
+        $isReviewer = in_array($user->id, $assignedReviewerIds) 
+            || (method_exists($user, 'hasJournalRole') && $user->hasJournalRole('Reviewer', $journal->id))
+            || (method_exists($user, 'hasRole') && $user->hasRole('Reviewer'));
+
+        $isEditorUser = method_exists($user, 'hasJournalPermission') && $user->hasJournalPermission([
+            \App\Models\Role::LEVEL_EDITOR,
+            \App\Models\Role::LEVEL_SECTION_EDITOR,
+            \App\Models\Role::LEVEL_MANAGER,
+            \App\Models\Role::LEVEL_ADMIN
+        ], $journal->id);
+
+        if ($isReviewer && !$isEditorUser) {
+            return [
+                'label' => 'Reviewer',
+                'class' => 'bg-purple-50 text-purple-700',
+                'style' => 'background-color: rgba(147, 51, 234, 0.1); color: #7E22CE;',
+                'textClass' => 'text-purple-700'
+            ];
+        }
+
+        return [
+            'label' => $isId ? 'Editor' : 'Editor',
+            'class' => 'bg-blue-50 text-blue-700',
+            'style' => '',
+            'textClass' => 'text-blue-700'
+        ];
+    };
+
     // Stage names for display
     $stageLabels = [
         1 => $isId ? 'Naskah' : 'Pre-Review',
@@ -144,11 +196,11 @@
                             <div class="flex flex-wrap gap-1.5">
                                 @foreach ($discussionParticipants as $participant)
                                     @php
-                                        $role = $participant->id === $submission->user_id ? ($isId ? 'Penulis' : 'Author') : ($isId ? 'Editor' : 'Editor');
+                                        $pRoleData = $getParticipantRole($participant);
                                     @endphp
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-55 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === ($isId ? 'Penulis' : 'Author') ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === ($isId ? 'Penulis' : 'Author') ? '#D97706' : '' }}">
-                                        <x-text.caption class="not-italic font-medium {{ $role === ($isId ? 'Penulis' : 'Author') ? 'text-amber-700' : 'text-blue-700' }}">
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $pRoleData['class'] }}" style="{{ $pRoleData['style'] }}">
+                                        <x-text.caption class="not-italic font-medium {{ $pRoleData['textClass'] }}">
                                             {{ $participant->name }}
                                         </x-text.caption>
                                     </span>
@@ -184,12 +236,15 @@
                                 @endif
                             </div>
                         @endif
-                    </div>                    {{-- Messages Thread --}}
+                    </div>
+
+                    {{-- Messages Thread --}}
                     <div class="space-y-3">
                         @foreach ($discussion->messages as $message)
                             @php
                                 $isOwner = $message->user_id === $currentUser->id;
-                                $messageRole = $message->user_id === $submission->user_id ? ($isId ? 'Penulis' : 'Author') : ($isId ? 'Editor' : 'Editor');
+                                $msgRoleData = $getParticipantRole($message->user);
+                                $messageRole = $msgRoleData['label'];
                                 
                                 // Highlight if not owner and (never read OR newer than last read)
                                 $isNew = !$isOwner && (is_null($lastReadAt) || $message->created_at->gt($lastReadAt));
@@ -198,45 +253,89 @@
                                 <div class="flex-shrink-0 mt-0.5">
                                     <div
                                         class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold">
-                                        {{ strtoupper(substr($message->user->name, 0, 1)) }}
+                                        {{ strtoupper(substr($message->user->name ?? 'U', 0, 1)) }}
                                     </div>
                                 </div>
                                 <div class="{{ $isNew ? 'bg-blue-50/30 border-blue-200' : 'bg-white border-gray-200' }} py-2.5 px-3 rounded-lg shadow-sm border flex-1">
                                     {{-- Message Header --}}
                                     <div class="flex justify-between items-start mb-1.5">
                                         <div class="flex items-center gap-2">
-                                            <x-text.body class="font-semibold text-slate-900 inline">{{ $message->user->name }}</x-text.body>
+                                            <x-text.body class="font-semibold text-slate-900 inline">{{ $message->user->name ?? 'User' }}</x-text.body>
                                             <span
-                                                class="inline-flex items-center px-1.5 py-0.5 rounded {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-55 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? '#D97706' : '' }}">
-                                                <x-text.caption class="not-italic font-medium text-[10px] {{ $messageRole === ($isId ? 'Penulis' : 'Author') ? 'text-amber-700' : 'text-blue-700' }}">
+                                                class="inline-flex items-center px-1.5 py-0.5 rounded {{ $msgRoleData['class'] }}" style="{{ $msgRoleData['style'] }}">
+                                                <x-text.caption class="not-italic font-medium text-[10px] {{ $msgRoleData['textClass'] }}">
                                                     {{ $messageRole }}
                                                 </x-text.caption>
                                             </span>
                                             <x-text.caption class="text-slate-400">{{ $message->created_at->format('M d, Y \a\t H:i') }}</x-text.caption>
+                                            @if ($message->created_at != $message->updated_at)
+                                                <x-text.caption class="text-slate-400 italic text-[11px]">({{ $isId ? 'diubah' : 'edited' }})</x-text.caption>
+                                            @endif
                                         </div>
+
+                                        {{-- Aksi Edit: hanya untuk pesan milik user sendiri --}}
+                                        @if ($isOwner)
+                                            <button type="button" @click="startEdit('{{ $message->id }}')"
+                                                class="inline-flex items-center text-slate-400 hover:text-blue-600 transition-colors text-xs font-medium ml-2">
+                                                <i class="fa-solid fa-pen-to-square mr-1 text-[11px]"></i>
+                                                <x-text.caption class="not-italic text-inherit font-medium hover:underline">{{ $isId ? 'Edit' : 'Edit' }}</x-text.caption>
+                                            </button>
+                                        @endif
                                     </div>
 
-                                    {{-- Message Body --}}
-                                    <div class="prose prose-sm text-gray-700 max-w-none">
-                                        {!! $message->body !!}
-                                    </div>
+                                    {{-- Display Mode --}}
+                                    <div x-show="editingMessageId !== '{{ $message->id }}'">
+                                        {{-- Message Body --}}
+                                        <div class="prose prose-sm text-gray-700 max-w-none">
+                                            {!! $message->body !!}
+                                        </div>
 
-                                    {{-- Attachments --}}
-                                    @if ($message->files && $message->files->count() > 0)
-                                        <div class="mt-2.5 pt-2.5 border-t border-gray-100">
-                                            <x-text.caption class="block font-medium text-slate-500 mb-1.5">
-                                                <i class="fa-solid fa-paperclip mr-1"></i>
-                                                {{ $isId ? 'Lampiran' : 'Attachments' }}
-                                            </x-text.caption>
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach ($message->files as $file)
-                                                    <a href="{{ route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->id]) }}"
-                                                        class="inline-flex items-center px-2 py-1 bg-slate-50 hover:bg-slate-100 rounded text-slate-700 transition-colors">
-                                                        <i class="fa-regular fa-file mr-1.5 text-[12px]"></i>
-                                                        <x-text.caption class="not-italic text-slate-700">{{ Str::limit($file->original_name, 20) }}</x-text.caption>
-                                                    </a>
-                                                @endforeach
+                                        {{-- Attachments --}}
+                                        @if ($message->files && $message->files->count() > 0)
+                                            <div class="mt-2.5 pt-2.5 border-t border-gray-100">
+                                                <x-text.caption class="block font-medium text-slate-500 mb-1.5">
+                                                    <i class="fa-solid fa-paperclip mr-1"></i>
+                                                    {{ $isId ? 'Lampiran' : 'Attachments' }}
+                                                </x-text.caption>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach ($message->files as $file)
+                                                        <a href="{{ route('journal.discussion.file.download', ['journal' => $journal->slug, 'file' => $file->id]) }}"
+                                                            class="inline-flex items-center px-2 py-1 bg-slate-50 hover:bg-slate-100 rounded text-slate-700 transition-colors">
+                                                            <i class="fa-regular fa-file mr-1.5 text-[12px]"></i>
+                                                            <x-text.caption class="not-italic text-slate-700">{{ Str::limit($file->original_name, 20) }}</x-text.caption>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
                                             </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Edit Mode (Hanya untuk owner) --}}
+                                    @if ($isOwner)
+                                        <div x-show="editingMessageId === '{{ $message->id }}'" x-cloak class="mt-2 pt-2 border-t border-gray-100">
+                                            <form action="{{ route('journal.discussion.message.update', ['journal' => $journal->slug, 'submission' => $submission, 'discussion' => $discussion->id, 'message' => $message->id]) }}"
+                                                method="POST" class="space-y-3" @submit="submittingEdit = true">
+                                                @csrf
+                                                @method('PUT')
+
+                                                <div>
+                                                    <textarea name="body" id="edit-editor-{{ $message->id }}" class="hidden">{!! $message->body !!}</textarea>
+                                                </div>
+
+                                                <div class="flex justify-end gap-2 pt-1">
+                                                    <button type="button" @click="cancelEdit('{{ $message->id }}')"
+                                                        class="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 rounded bg-slate-100 hover:bg-slate-200 transition-colors font-medium">
+                                                        <x-text.caption class="not-italic font-medium text-inherit">{{ $isId ? 'Batal' : 'Cancel' }}</x-text.caption>
+                                                    </button>
+                                                    <button type="submit" :disabled="submittingEdit"
+                                                        class="inline-flex items-center px-3 py-1.5 text-xs bg-blue-600 text-white font-medium rounded hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                                                        <i class="fa-solid fa-check mr-1 text-[11px]"></i>
+                                                        <x-text.caption class="not-italic font-medium text-white inline">
+                                                            <span x-text="submittingEdit ? '{{ $isId ? 'Menyimpan...' : 'Saving...' }}' : '{{ $isId ? 'Simpan' : 'Save' }}'"></span>
+                                                        </x-text.caption>
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
                                     @endif
                                 </div>
@@ -465,9 +564,10 @@
                             {{-- Other Participants --}}
                             @foreach ($participants->reject(fn($p) => $p->id === $currentUser->id) as $participant)
                                 @php
-                                    $role = $participant->id === $submission->user_id ? ($isId ? 'Penulis' : 'Author') : ($isId ? 'Editor' : 'Editor');
+                                    $pRoleData = $getParticipantRole($participant);
+                                    $role = $pRoleData['label'];
                                     $isOtherParty =
-                                        ($currentUser->id === $submission->user_id && $role === ($isId ? 'Editor' : 'Editor')) ||
+                                        ($currentUser->id === $submission->user_id && $role !== ($isId ? 'Penulis' : 'Author')) ||
                                         ($currentUser->id !== $submission->user_id && $role === ($isId ? 'Penulis' : 'Author'));
                                 @endphp
                                 <label
@@ -477,7 +577,7 @@
                                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                     <div class="flex items-center gap-2 flex-1 min-w-0">
                                         <div
-                                            class="w-8 h-8 rounded-full {{ $role === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }} flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                            class="w-8 h-8 rounded-full {{ $role === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-100 text-amber-700' : ($role === 'Reviewer' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700') }} flex items-center justify-center font-bold text-xs flex-shrink-0">
                                             {{ strtoupper(substr($participant->name, 0, 1)) }}
                                         </div>
                                         <div class="min-w-0">
@@ -486,8 +586,8 @@
                                         </div>
                                     </div>
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $role === ($isId ? 'Penulis' : 'Author') ? 'bg-amber-50 text-amber-750' : 'bg-blue-50 text-blue-700' }}" style="background-color: {{ $role === ($isId ? 'Penulis' : 'Author') ? 'rgba(245, 158, 11, 0.1)' : '' }}; color: {{ $role === ($isId ? 'Penulis' : 'Author') ? '#D97706' : '' }}">
-                                        <x-text.caption class="not-italic font-semibold {{ $role === ($isId ? 'Penulis' : 'Author') ? 'text-amber-700' : 'text-blue-700' }}">{{ $role }}</x-text.caption>
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full {{ $pRoleData['class'] }}" style="{{ $pRoleData['style'] }}">
+                                        <x-text.caption class="not-italic font-semibold {{ $pRoleData['textClass'] }}">{{ $role }}</x-text.caption>
                                     </span>
                                 </label>
                             @endforeach
@@ -664,8 +764,45 @@
             submitting: false,
             replyUploadProgress: 0,
             replyIsUploading: false,
+            editingMessageId: null,
+            editEditorInstances: {},
+            submittingEdit: false,
 
             ...config,
+
+            startEdit(messageId) {
+                this.editingMessageId = messageId;
+                this.$nextTick(() => {
+                    this.initEditEditor(messageId);
+                });
+            },
+
+            initEditEditor(messageId) {
+                const editorEl = document.querySelector(`#edit-editor-${messageId}`);
+                if (!editorEl || this.editEditorInstances[messageId]) return;
+
+                ClassicEditor
+                    .create(editorEl, {
+                        simpleUpload: {
+                            uploadUrl: this.uploadImageUrl,
+                            headers: {
+                                'X-CSRF-TOKEN': this.csrfToken
+                            }
+                        }
+                    })
+                    .then(editor => {
+                        this.editEditorInstances[messageId] = editor;
+                    })
+                    .catch(err => console.error(err));
+            },
+
+            cancelEdit(messageId) {
+                this.editingMessageId = null;
+                if (this.editEditorInstances[messageId]) {
+                    this.editEditorInstances[messageId].destroy();
+                    delete this.editEditorInstances[messageId];
+                }
+            },
 
             initReplyEditor() {
                 const editorEl = document.querySelector(`#reply-editor-${this.discussionId}`);
