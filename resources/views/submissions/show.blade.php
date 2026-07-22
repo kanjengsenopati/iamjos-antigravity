@@ -2186,6 +2186,16 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                     </button>
                                                                 </form>
                                                             @endif
+
+                                                            {{-- ReAssign (Only when Completed) --}}
+                                                            <form action="{{ route('journal.workflow.reassign-reviewer', ['journal' => $journal->slug, 'submission' => $submission->slug, 'assignment' => $assignment->id]) }}"
+                                                                method="POST" class="w-full" @if($canPerformAction) onsubmit="return confirm('{{ $isId ? 'Tugaskan ulang reviewer ini untuk melanjutkan ulasan?' : 'Reassign this reviewer to continue their review?' }}')" @endif>
+                                                                @csrf
+                                                                <button type="submit" {{ !$canPerformAction ? 'disabled' : '' }}
+                                                                    class="w-full flex items-center justify-center px-4 py-2.5 {{ $canPerformAction ? 'bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50' : 'bg-gray-50 border border-gray-200 text-gray-400 cursor-not-allowed' }} text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                                    <i class="fa-solid fa-rotate-left text-indigo-600 mr-2"></i> {{ $isId ? 'Tugaskan Ulang' : 'ReAssign' }}
+                                                                </button>
+                                                            </form>
                                                         @endif
 
                                                         {{-- Unassign --}}

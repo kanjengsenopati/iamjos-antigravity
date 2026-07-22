@@ -210,6 +210,54 @@ class ReviewWorkflowController extends Controller
     }
 
     /**
+     * Reassign a completed reviewer so they can continue their review.
+     */
+    public function reassignReviewer(string $journalSlug, Submission $submission, ReviewAssignment $assignment)
+    {
+        $journal = $this->getJournal();
+        if ($submission->journal_id !== $journal->id) abort(404);
+        if ($assignment->submission_id !== $submission->id) abort(404);
+
+        if ($assignment->status !== ReviewAssignment::STATUS_COMPLETED) {
+            return back()->with('error', 'Only completed review assignments can be reassigned.');
+        }
+
+        $metadata = $assignment->metadata ?? [];
+        $metadata['reassigned_at'] = now()->toIso8601String();
+        if ($assignment->completed_at) {
+            $metadata['previous_completed_at'] = $assignment->completed_at->toIso8601String();
+        }
+
+        $assignment->update([
+            'status' => ReviewAssignment::STATUS_PENDING,
+            'completed_at' => null,
+            'metadata' => $metadata,
+        ]);
+
+        SubmissionLog::log(
+            $submission,
+            SubmissionLog::EVENT_REVIEWER_ASSIGNED,
+            'Reviewer Reassigned',
+            auth()->user()->name . " reassigned {$assignment->reviewer->name} to continue review (Round {$assignment->round}).",
+            [
+                'reviewer_id' => $assignment->reviewer_id,
+                'round' => $assignment->round,
+                'assignment_id' => $assignment->id,
+            ]
+        );
+
+        if ($assignment->reviewer) {
+            try {
+                $assignment->reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
+            } catch (\Throwable $e) {
+                Log::error('Reassign reviewer notification failed: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', 'Reviewer reassigned successfully.');
+    }
+
+    /**
      * Record the editor's decision.
      */
     public function recordDecision(Request $request, string $journalSlug, Submission $submission)

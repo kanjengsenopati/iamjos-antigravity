@@ -457,6 +457,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::get('/reviewers/search', [ReviewWorkflowController::class, 'searchReviewers'])->name('reviewers.search');
                     Route::post('/{submission}/assign-reviewer', [ReviewWorkflowController::class, 'assignReviewer'])->name('assign-reviewer');
                     Route::delete('/{submission}/unassign-reviewer/{assignment}', [ReviewWorkflowController::class, 'unassignReviewer'])->name('unassign-reviewer');
+                    Route::post('/{submission}/reassign-reviewer/{assignment}', [ReviewWorkflowController::class, 'reassignReviewer'])->name('reassign-reviewer');
                     Route::post('/{submission}/assign-copyeditor', [SubmissionWorkflowController::class, 'assignCopyeditor'])->name('assign-copyeditor');
                     Route::post('/{submission}/assign-production', [SubmissionWorkflowController::class, 'assignProduction'])->name('assign-production');
                     Route::post('/review-assignment/{reviewAssignment}/rate', [ReviewWorkflowController::class, 'rateReviewer'])->name('review-assignment.rate');
