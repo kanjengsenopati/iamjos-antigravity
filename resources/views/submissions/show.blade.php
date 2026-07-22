@@ -218,6 +218,7 @@
                 assignReviewerResults: [],
                 selectedReviewerForAssign: null,
                 assignReviewMethod: '{{ $journal->review_mode ?? "double_blind" }}',
+                assignReviewFormId: '',
                 assignResponseDueDate: '{{ \Carbon\Carbon::now()->addWeeks((int) ($journal->review_response_weeks ?? 2))->format("Y-m-d") }}',
                 assignReviewDueDate: '{{ \Carbon\Carbon::now()->addWeeks((int) ($journal->review_completion_weeks ?? 4))->format("Y-m-d") }}',
                 assignReviewerSubmitting: false,
@@ -426,6 +427,7 @@
                 editReviewModalOpen: false,
                 editReviewAssignment: null,
                 editReviewMethod: 'double_blind',
+                editReviewFormId: '',
                 editResponseDueDate: '',
                 editReviewDueDate: '',
                 editIsSubmitting: false,
@@ -433,6 +435,7 @@
                 openEditReviewModal(assignment) {
                     this.editReviewAssignment = assignment;
                     this.editReviewMethod = assignment.review_method;
+                    this.editReviewFormId = assignment.review_form_id || '';
                     this.editResponseDueDate = assignment.response_due_date ? new Date(assignment.response_due_date).toISOString().split('T')[0] : '';
                     this.editReviewDueDate = assignment.due_date ? new Date(assignment.due_date).toISOString().split('T')[0] : '';
                     this.editReviewModalOpen = true;
@@ -451,7 +454,8 @@
                             body: JSON.stringify({
                                 due_date: this.editReviewDueDate,
                                 response_due_date: this.editResponseDueDate,
-                                review_method: this.editReviewMethod
+                                review_method: this.editReviewMethod,
+                                review_form_id: this.editReviewFormId
                             })
                         });
                         const data = await response.json();
@@ -7384,6 +7388,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <option value="blind">{{ $isId ? 'Buta Tunggal' : 'Blind' }}</option>
                                     <option value="double_blind">{{ $isId ? 'Buta Ganda' : 'Double Blind' }}</option>
                                     <option value="open">{{ $isId ? 'Terbuka' : 'Open' }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Bentuk Ulasan (Review Form)' : 'Review Form' }}</label>
+                                <select x-model="editReviewFormId" class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                    <option value="">{{ $isId ? 'None / Free Form Review' : 'None / Free Form Review' }}</option>
+                                    @php
+                                        $activeReviewForms = $journal->reviewForms()->active()->get();
+                                    @endphp
+                                    @foreach ($activeReviewForms as $form)
+                                        <option value="{{ $form->id }}">{{ $form->title }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="grid grid-cols-2 gap-4">

@@ -112,15 +112,13 @@ class ReviewWorkflowController extends Controller
                     ]);
                 }
 
-                $activeReviewForm = \App\Models\ReviewForm::where('journal_id', $submission->journal_id)
-                    ->active()
-                    ->first();
+                $reviewFormId = $request->filled('review_form_id') ? $request->review_form_id : null;
 
                 $assignment = ReviewAssignment::create([
                     'submission_id' => $submission->id,
                     'review_round_id' => $reviewRound->id,
                     'reviewer_id' => $request->reviewer_id,
-                    'review_form_id' => $request->review_form_id ?? $activeReviewForm?->id,
+                    'review_form_id' => $reviewFormId,
                     'review_method' => $request->review_method,
                     // Parse and format to Y-m-d H:i:s for precise email reminders later
                     'response_due_date' => \Carbon\Carbon::parse($request->response_due_date)->endOfDay()->format('Y-m-d H:i:s'),
@@ -1264,7 +1262,10 @@ public function searchReviewers(Request $request, string $journalSlug)
             'due_date' => 'required|date|after_or_equal:today',
             'response_due_date' => 'required|date|after_or_equal:today|before_or_equal:due_date',
             'review_method' => 'required|in:blind,double_blind,open',
+            'review_form_id' => 'nullable',
         ]);
+
+        $validated['review_form_id'] = !empty($validated['review_form_id']) ? $validated['review_form_id'] : null;
 
         $reviewAssignment->update($validated);
 

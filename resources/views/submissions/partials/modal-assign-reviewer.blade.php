@@ -262,6 +262,23 @@
                         </div>
                     </div>
 
+                    {{-- Review Form Selection --}}
+                    <div class="pt-4 border-t border-gray-100">
+                        <label class="block text-sm font-bold text-gray-700 mb-1.5">
+                            {{ $isId ? 'Bentuk Ulasan (Review Form)' : 'Review Form' }}
+                        </label>
+                        <select name="review_form_id" x-model="assignReviewFormId"
+                            class="block w-full px-3 py-2.5 border border-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                            <option value="">{{ $isId ? 'None / Free Form Review' : 'None / Free Form Review' }}</option>
+                            @php
+                                $activeReviewForms = $journal->reviewForms()->active()->get();
+                            @endphp
+                            @foreach ($activeReviewForms as $form)
+                                <option value="{{ $form->id }}">{{ $form->title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     {{-- Due Dates Section --}}
                     <div class="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
