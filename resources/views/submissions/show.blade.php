@@ -1847,7 +1847,7 @@
                                 $allRounds = $submission->reviewRounds()->orderBy('round')->get()->unique('round'); // Prevent duplicate round numbers
 
                                 $currentRound = $submission->currentReviewRound();
-                                $latestRoundNumber = $currentRound?->round ?? 1;
+                                $latestRoundNumber = $allRounds->max('round') ?? ($currentRound?->round ?? 1);
 
                                 // Check if there's already a pending new round
 $hasPendingNewRound = $allRounds->contains(function ($r) use ($currentRound) {
