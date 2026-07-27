@@ -414,11 +414,6 @@
         <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">{{ $isId ? 'Putaran Ulasan' : 'Review Round' }}</h4>
         <div class="text-center">
             <span class="text-3xl font-bold text-indigo-600" x-text="selectedAuthorRound"></span>
-            @foreach ($visibleRounds as $rObj)
-                <p x-show="selectedAuthorRound === {{ $rObj->round }}" class="text-sm text-gray-500 mt-1" style="display: none;">
-                    {{ $rObj->status_label }}
-                </p>
-            @endforeach
         </div>
     </div>
 

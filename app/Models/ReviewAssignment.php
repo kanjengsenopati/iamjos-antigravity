@@ -36,6 +36,7 @@ class ReviewAssignment extends Model
     protected $fillable = [
         'submission_id',
         'review_round_id',
+        'review_form_id',
         'reviewer_id',
         'status',
         'recommendation',

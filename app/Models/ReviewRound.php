@@ -30,7 +30,7 @@ class ReviewRound extends Model
     protected $casts = [
         'round' => 'integer',
         'stage_id' => 'integer',
-        'status' => 'integer',
+        'status' => 'string',
     ];
 
     // =====================================================
