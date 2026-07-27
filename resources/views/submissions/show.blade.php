@@ -190,7 +190,13 @@
                 discussionStageId: config?.stageId || 1,
 
                 // Author Review View State
-                selectedAuthorRound: config?.currentReviewRound || 1,
+                selectedAuthorRound: parseInt(new URLSearchParams(window.location.search).get('round')) || config?.currentReviewRound || config?.maxReviewRound || 1,
+                setAuthorRound(roundNum) {
+                    this.selectedAuthorRound = parseInt(roundNum);
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('round', roundNum);
+                    window.history.replaceState({}, '', url);
+                },
                 showDecisionModal: false,
                 selectedDecision: null,
                 revisionUploadModalOpen: false,

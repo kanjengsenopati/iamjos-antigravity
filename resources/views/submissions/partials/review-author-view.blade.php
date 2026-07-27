@@ -36,7 +36,7 @@
             <div class="border-b border-gray-200 bg-gray-50">
                 <nav class="flex -mb-px" aria-label="Tabs">
                     @foreach ($visibleRounds as $round)
-                        <button type="button" @click="selectedAuthorRound = {{ $round->round }}"
+                        <button type="button" @click="setAuthorRound({{ $round->round }})"
                             :class="selectedAuthorRound === {{ $round->round }} ?
                                 'border-indigo-500 text-indigo-600 bg-white' :
                                 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
@@ -51,9 +51,6 @@
         {{-- Status Banner --}}
         <div class="p-6">
             @php
-                $currentRound = $authorReviewData['currentRound'];
-                $hasUploadedRevision = $authorReviewData['revisionFiles']->isNotEmpty();
-
                 $statusMessages = [
                     'pending' => [
                         'class' => 'border-blue-400 bg-blue-50',
@@ -98,36 +95,45 @@
                         'message' => $isId ? 'Mohon maaf, naskah Anda telah ditolak.' : 'Unfortunately, your submission has been declined.',
                     ],
                 ];
-
-                $roundStatus = $currentRound?->status ?? 'pending';
-
-                // If author has uploaded revision and round status is still "revisions_requested" or "resubmit_for_review",
-                // show "revision_submitted" status
-                if ($hasUploadedRevision && in_array($roundStatus, ['revisions_requested', 'resubmit_for_review'])) {
-                    $roundStatus = 'revision_submitted';
-                }
-
-                $statusInfo = $statusMessages[$roundStatus] ?? $statusMessages['pending'];
             @endphp
 
-            <div class="border-l-4 {{ $statusInfo['class'] }} p-4 rounded-r-lg">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <i class="fa-solid {{ $statusInfo['icon'] }} text-lg"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-semibold text-gray-900">
-                            {{ $isId ? 'Status Putaran ' : 'Round ' }}{{ $currentRound?->round ?? 1 }}{{ $isId ? ': ' : ' Status: ' }}{{ $statusInfo['title'] }}
-                        </h3>
-                        <p class="mt-1 text-sm text-gray-600">{{ $statusInfo['message'] }}</p>
+            @foreach ($visibleRounds as $round)
+                @php
+                    $roundRevisionFiles = $authorReviewData['revisionFiles']->where('file_round', $round->round);
+                    $hasUploadedRevision = $roundRevisionFiles->isNotEmpty();
+                    $roundStatus = $round->status ?? 'pending';
+
+                    if ($hasUploadedRevision && in_array($roundStatus, ['revisions_requested', 'resubmit_for_review'])) {
+                        $roundStatus = 'revision_submitted';
+                    }
+
+                    $statusInfo = $statusMessages[$roundStatus] ?? $statusMessages['pending'];
+                @endphp
+                <div x-show="selectedAuthorRound === {{ $round->round }}" class="border-l-4 {{ $statusInfo['class'] }} p-4 rounded-r-lg" style="display: none;">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fa-solid {{ $statusInfo['icon'] }} text-lg"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-semibold text-gray-900">
+                                {{ $isId ? 'Status Putaran ' : 'Round ' }}{{ $round->round }}{{ $isId ? ': ' : ' Status: ' }}{{ $statusInfo['title'] }}
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-600">{{ $statusInfo['message'] }}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endforeach
         </div>
     </div>
 
     {{-- Section B: Notifications (Decision History) --}}
-    <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+    <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden"
+         x-data='{ 
+             decisions: {{ json_encode($authorReviewData["decisionHistory"] ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) }},
+             hasDecisionsForRound(round) {
+                 return this.decisions.some(d => (parseInt(d.round) || 1) === parseInt(round));
+             }
+         }'>
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h3 class="text-base font-bold text-gray-900">
                 <i class="fa-solid fa-bell text-indigo-500 mr-2"></i>{{ $isId ? 'Notifikasi' : 'Notifications' }}
@@ -140,9 +146,16 @@
                     <p class="text-sm text-gray-500 mt-3">{{ $isId ? 'Belum ada keputusan editorial yang disampaikan.' : 'No editorial decisions have been communicated yet.' }}</p>
                 </div>
             @else
+                <div x-show="!hasDecisionsForRound(selectedAuthorRound)" class="text-center py-6" style="display: none;">
+                    <i class="fa-solid fa-envelope-open text-gray-300 text-3xl"></i>
+                    <p class="text-sm text-gray-500 mt-3">{{ $isId ? 'Belum ada keputusan editorial yang disampaikan untuk putaran ini.' : 'No editorial decisions have been communicated yet for this round.' }}</p>
+                </div>
+
                 <div class="divide-y divide-gray-100">
                     @foreach ($authorReviewData['decisionHistory'] as $index => $decision)
-                        <div class="py-3 flex items-center justify-between hover:bg-gray-50 rounded-lg px-3 -mx-3 cursor-pointer transition-colors"
+                        <div x-show="selectedAuthorRound === {{ $decision['round'] ?? 1 }}"
+                            class="py-3 flex items-center justify-between hover:bg-gray-50 rounded-lg px-3 -mx-3 cursor-pointer transition-colors"
+                            style="display: none;"
                             @click="showDecisionModal = true; selectedDecision = {{ json_encode($decision) }}">
                             <div class="flex items-center gap-3">
                                 <div
@@ -154,7 +167,7 @@
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ $decision['type_label'] }}</p>
                                     <p class="text-xs text-gray-500">
-                                        {{ $isId ? 'Putaran' : 'Round' }} {{ $decision['round'] }} •
+                                        {{ $isId ? 'Putaran' : 'Round' }} {{ $decision['round'] ?? 1 }} •
                                         @if ($decision['made_at'])
                                             {{ \Carbon\Carbon::parse($decision['made_at'])->format($isId ? 'd M Y - H:i' : 'M d, Y - H:i') }}
                                         @endif
@@ -256,7 +269,13 @@
     </div>
 
     {{-- Section C: Reviewer's Attachments (Shared Files) --}}
-    <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+    <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden"
+         x-data='{
+             promotedFiles: {{ json_encode($authorReviewData["promotedFiles"]->map(fn($f) => ["id" => $f->id, "round" => $f->file_round ?? 1])->values(), JSON_HEX_APOS | JSON_HEX_QUOT) }},
+             hasPromotedFilesForRound(round) {
+                 return this.promotedFiles.some(f => f.round === round);
+             }
+         }'>
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h3 class="text-base font-bold text-gray-900">
                 <i class="fa-solid fa-paperclip text-purple-500 mr-2"></i>{{ $isId ? 'Lampiran Reviewer' : "Reviewer's Attachments" }}
@@ -269,10 +288,16 @@
                     <p class="text-sm text-gray-500 mt-3">{{ $isId ? 'Tidak ada file yang dilampirkan untuk Anda tinjau.' : 'No files have been attached for you to review.' }}</p>
                 </div>
             @else
+                <div x-show="!hasPromotedFilesForRound(selectedAuthorRound)" class="text-center py-6" style="display: none;">
+                    <i class="fa-solid fa-folder-open text-gray-300 text-3xl"></i>
+                    <p class="text-sm text-gray-500 mt-3">{{ $isId ? 'Tidak ada lampiran reviewer untuk putaran ini.' : 'No reviewer attachments available for this round.' }}</p>
+                </div>
+
                 <div class="space-y-2">
                     @foreach ($authorReviewData['promotedFiles'] as $file)
-                        <div
-                            class="flex items-center justify-between py-3 px-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div x-show="selectedAuthorRound === {{ $file->file_round ?? 1 }}"
+                            class="flex items-center justify-between py-3 px-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                            style="display: none;">
                             <div class="flex items-center gap-3">
                                 @php
                                     $ext = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
@@ -300,7 +325,13 @@
     </div>
 
     {{-- Section D: Revisions (Upload Area) --}}
-    <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+    <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden"
+         x-data='{
+             revisionFiles: {{ json_encode($authorReviewData["revisionFiles"]->map(fn($f) => ["id" => $f->id, "round" => $f->file_round ?? 1])->values(), JSON_HEX_APOS | JSON_HEX_QUOT) }},
+             hasRevisionFilesForRound(round) {
+                 return this.revisionFiles.some(f => f.round === round);
+             }
+         }'>
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h3 class="text-base font-bold text-gray-900">
                 <i class="fa-solid fa-file-arrow-up text-teal-500 mr-2"></i>{{ $isId ? 'Revisi' : 'Revisions' }}
@@ -325,10 +356,22 @@
                     @endif
                 </div>
             @else
+                <div x-show="!hasRevisionFilesForRound(selectedAuthorRound)" class="text-center py-6" style="display: none;">
+                    <i class="fa-solid fa-cloud-arrow-up text-gray-300 text-3xl"></i>
+                    <p class="text-sm text-gray-500 mt-3">{{ $isId ? 'Belum ada file revisi yang diunggah untuk putaran ini.' : 'No revision files uploaded yet for this round.' }}</p>
+                    @if ($submission->status === 'revision_required')
+                        <button type="button" @click="revisionUploadModalOpen = true"
+                            class="mt-3 inline-flex items-center px-4 py-2 text-sm font-medium text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">
+                            <i class="fa-solid fa-upload mr-2"></i> {{ $isId ? 'Unggah Naskah Revisi Anda' : 'Upload Your Revised Manuscript' }}
+                        </button>
+                    @endif
+                </div>
+
                 <div class="space-y-2">
                     @foreach ($authorReviewData['revisionFiles'] as $file)
-                        <div
-                            class="flex items-center justify-between py-3 px-4 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors">
+                        <div x-show="selectedAuthorRound === {{ $file->file_round ?? 1 }}"
+                            class="flex items-center justify-between py-3 px-4 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors"
+                            style="display: none;">
                             <div class="flex items-center gap-3">
                                 @php
                                     $ext = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
@@ -369,15 +412,14 @@
     {{-- Review Round Info --}}
     <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
         <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">{{ $isId ? 'Putaran Ulasan' : 'Review Round' }}</h4>
-        @php $currentRound = $submission->currentReviewRound(); @endphp
-        @if ($currentRound)
-            <div class="text-center">
-                <span class="text-3xl font-bold text-indigo-600">{{ $currentRound->round }}</span>
-                <p class="text-sm text-gray-500 mt-1">{{ $currentRound->status_label }}</p>
-            </div>
-        @else
-            <p class="text-sm text-gray-500 italic text-center">{{ $isId ? 'Belum ada putaran ulasan yang dimulai.' : 'No review round started.' }}</p>
-        @endif
+        <div class="text-center">
+            <span class="text-3xl font-bold text-indigo-600" x-text="selectedAuthorRound"></span>
+            @foreach ($visibleRounds as $rObj)
+                <p x-show="selectedAuthorRound === {{ $rObj->round }}" class="text-sm text-gray-500 mt-1" style="display: none;">
+                    {{ $rObj->status_label }}
+                </p>
+            @endforeach
+        </div>
     </div>
 
     {{-- Submission Status --}}

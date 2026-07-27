@@ -768,22 +768,53 @@ class SubmissionController extends Controller
         // ========== AUTHOR-SPECIFIC DATA ==========
         $authorReviewData = [];
         if ($isAuthorView) {
+            $allRoundsForAuthor = $submission->reviewRounds()->orderBy('round')->get()->unique('round');
+            
+            $getFileRound = function ($file) use ($allRoundsForAuthor) {
+                $metadata = $file->metadata ?? [];
+                if (isset($metadata['revision_for_round'])) {
+                    return (int) $metadata['revision_for_round'];
+                }
+                if (isset($metadata['assoc_type']) && $metadata['assoc_type'] === 'round' && isset($metadata['assoc_id'])) {
+                    return (int) $metadata['assoc_id'];
+                }
+                if (isset($metadata['round'])) {
+                    return (int) $metadata['round'];
+                }
+
+                $uploadedAt = $file->created_at;
+                foreach ($allRoundsForAuthor as $roundObj) {
+                    $rNum = (int) $roundObj->round;
+                    $nextR = $allRoundsForAuthor->firstWhere('round', $rNum + 1);
+                    if ($uploadedAt >= $roundObj->created_at) {
+                        if (!$nextR || $uploadedAt < $nextR->created_at) {
+                            return $rNum;
+                        }
+                    }
+                }
+                return 1;
+            };
+
             // 1. Promoted/Shared Files (Files the Editor shared with Author)
-            // Only files that have the decision_type metadata (promoted by editor)
-            // and NOT uploaded by the author themselves
             $authorReviewData['promotedFiles'] = SubmissionFile::where('submission_id', $submission->id)
                 ->where('stage', 'revision')
                 ->where('uploaded_by', '!=', $user->id) // Exclude author's own uploads
                 ->whereJsonContains('metadata->decision_type', 'revision_request') // Only editor-promoted files
                 ->orderBy('created_at', 'desc')
-                ->get();
+                ->get()
+                ->each(function ($file) use ($getFileRound) {
+                    $file->file_round = $getFileRound($file);
+                });
 
             // 2. Author's Revision Files (uploaded by the author)
             $authorReviewData['revisionFiles'] = SubmissionFile::where('submission_id', $submission->id)
                 ->where('stage', 'revision')
                 ->where('uploaded_by', $user->id)
                 ->orderBy('created_at', 'desc')
-                ->get();
+                ->get()
+                ->each(function ($file) use ($getFileRound) {
+                    $file->file_round = $getFileRound($file);
+                });
 
             // 3. Decision History (from submission metadata)
             $authorReviewData['decisionHistory'] = collect($submission->metadata['decisions'] ?? [])
