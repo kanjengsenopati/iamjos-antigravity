@@ -7186,210 +7186,216 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     class="relative z-50 inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
 
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div
-                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <i class="fa-solid fa-clipboard-check text-indigo-600"></i>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    <div class="bg-white p-6 sm:p-8">
+                        {{-- Modal Header --}}
+                        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold flex-shrink-0">
+                                    <i class="fa-solid fa-clipboard-check text-lg"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900" id="modal-title">
                                     {{ $isId ? 'Detail Ulasan' : 'Review Details' }}
                                 </h3>
-                                <template x-if="selectedReview">
-                                    <div class="mt-4">
-                                        <div class="mb-4">
-                                            <h4 class="text-sm font-semibold text-gray-700">{{ $isId ? 'Rekomendasi' : 'Recommendation' }}</h4>
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                                                x-text="selectedReview?.recommendation_label || selectedReview?.recommendation"></span>
-                                        </div>
+                            </div>
+                            <button type="button" @click="closeReviewDetailsModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-lg hover:bg-gray-100">
+                                <i class="fa-solid fa-times text-lg"></i>
+                            </button>
+                        </div>
 
-                                        <div class="mb-4">
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-1">{{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}</h4>
-                                            <div class="bg-gray-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none"
-                                                x-html="selectedReview?.comments_for_author || '<em>{{ $isId ? 'Tidak ada komentar yang diberikan.' : 'No comments provided.' }}</em>'">
-                                            </div>
-                                        </div>
+                        {{-- Modal Body Content --}}
+                        <template x-if="selectedReview">
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ $isId ? 'Rekomendasi' : 'Recommendation' }}</h4>
+                                    <span
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100"
+                                        x-text="selectedReview?.recommendation_label || selectedReview?.recommendation"></span>
+                                </div>
 
-                                        {{-- Evaluation Form Answers Section (Form Review Terisi) --}}
-                                        <template x-if="selectedReview?.form_responses && selectedReview.form_responses.length > 0">
-                                            <div class="mt-6 pt-6 border-t border-gray-100">
-                                                <h4 class="text-sm font-semibold text-gray-700 mb-3">{{ $isId ? 'Hasil Formulir Evaluasi' : 'Evaluation Form Answers' }}</h4>
-                                                <div class="space-y-4">
-                                                    <template x-for="(item, idx) in selectedReview.form_responses" :key="item.id || idx">
-                                                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
-                                                            <div class="flex items-start gap-2.5">
-                                                                <span class="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-lg bg-slate-700 text-white text-[11px] font-bold shadow-sm" x-text="idx + 1"></span>
-                                                                <div class="flex-1">
-                                                                    <h5 class="text-xs font-bold text-slate-900 leading-snug" x-text="item.question"></h5>
-                                                                    <template x-if="item.description">
-                                                                        <p class="text-[11px] text-slate-500 mt-0.5" x-text="item.description"></p>
-                                                                    </template>
-                                                                </div>
-                                                            </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}</h4>
+                                    <div class="bg-slate-50 border border-slate-200/80 p-4 rounded-xl text-sm text-slate-700 prose prose-sm max-w-none leading-relaxed"
+                                        x-html="selectedReview?.comments_for_author || '<em>{{ $isId ? 'Tidak ada komentar yang diberikan.' : 'No comments provided.' }}</em>'">
+                                    </div>
+                                </div>
 
-                                                            <div class="pl-8">
-                                                                {{-- Text / Textarea --}}
-                                                                <template x-if="item.element_type === 'text' || item.element_type === 'textarea'">
-                                                                    <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 font-medium leading-relaxed"
-                                                                         x-text="item.response_value && item.response_value.trim() !== '' ? item.response_value.replace(/<[^>]*>?/gm, '') : '{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}'"></div>
-                                                                </template>
-
-                                                                {{-- Checkbox --}}
-                                                                <template x-if="item.element_type === 'checkbox'">
-                                                                    <div class="space-y-1.5">
-                                                                        <template x-for="opt in (item.options || [])" :key="opt.value">
-                                                                            <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
-                                                                                 :class="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label))) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
-                                                                                <input type="checkbox" disabled :checked="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label)))" class="rounded border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
-                                                                                <span x-text="opt.label"></span>
-                                                                            </div>
-                                                                        </template>
-                                                                    </div>
-                                                                </template>
-
-                                                                {{-- Radio --}}
-                                                                <template x-if="item.element_type === 'radio'">
-                                                                    <div class="space-y-1.5">
-                                                                        <template x-for="opt in (item.options || [])" :key="opt.value">
-                                                                            <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
-                                                                                 :class="Boolean(item.response_value && String(item.response_value).trim() !== '' && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase())) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
-                                                                                <input type="radio" disabled :checked="Boolean(item.response_value && String(item.response_value).trim() !== '' && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase()))" class="border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
-                                                                                <span x-text="opt.label"></span>
-                                                                            </div>
-                                                                        </template>
-                                                                    </div>
-                                                                </template>
-
-                                                                {{-- Select --}}
-                                                                <template x-if="item.element_type === 'select'">
-                                                                    <div class="p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
-                                                                         x-text="item.response_value || '-'"></div>
-                                                                </template>
-
-                                                                {{-- Rating --}}
-                                                                <template x-if="item.element_type === 'rating'">
-                                                                    <div class="flex items-center gap-1.5 p-2.5 bg-white border border-slate-200 rounded-xl"
-                                                                         x-data="{ numRating: parseInt((String(item.response_value || '').match(/\d+/) || [0])[0]) || 0 }">
-                                                                        <template x-for="starIdx in 5" :key="starIdx">
-                                                                            <i class="fa-solid fa-star text-base transition-colors"
-                                                                               :class="numRating >= starIdx ? 'text-amber-400' : 'text-slate-300'"></i>
-                                                                        </template>
-                                                                        <span class="text-xs font-bold text-slate-700 ml-2" x-text="numRating > 0 ? numRating + '/5' : '-'"></span>
-                                                                    </div>
-                                                                </template>
-                                                            </div>
+                                {{-- Evaluation Form Answers Section (Form Review Terisi) --}}
+                                <template x-if="selectedReview?.form_responses && selectedReview.form_responses.length > 0">
+                                    <div class="pt-6 border-t border-gray-100">
+                                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">{{ $isId ? 'Hasil Formulir Evaluasi' : 'Evaluation Form Answers' }}</h4>
+                                        <div class="space-y-4">
+                                            <template x-for="(item, idx) in selectedReview.form_responses" :key="item.id || idx">
+                                                <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+                                                    <div class="flex items-start gap-2.5">
+                                                        <span class="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-lg bg-slate-700 text-white text-[11px] font-bold shadow-sm" x-text="idx + 1"></span>
+                                                        <div class="flex-1">
+                                                            <h5 class="text-xs font-bold text-slate-900 leading-snug" x-text="item.question"></h5>
+                                                            <template x-if="item.description">
+                                                                <p class="text-[11px] text-slate-500 mt-0.5" x-text="item.description"></p>
+                                                            </template>
                                                         </div>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
+                                                    </div>
 
-                                        @if (!$isAuthorView)
-                                            <div class="mb-4">
-                                                <h4 class="text-sm font-semibold text-gray-700 mb-1">{{ $isId ? 'Komentar untuk Editor (Internal)' : 'Comments for Editor (Internal)' }}</h4>
-                                                <div class="bg-yellow-50 p-3 rounded-md text-sm text-gray-600 prose prose-sm max-w-none border border-yellow-200"
-                                                    x-html="selectedReview?.comments_for_editor || '<em>{{ $isId ? 'Tidak ada komentar rahasia yang diberikan.' : 'No confidential comments provided.' }}</em>'">
-                                                </div>
-                                            </div>
+                                                    <div class="pl-8">
+                                                        {{-- Text / Textarea --}}
+                                                        <template x-if="item.element_type === 'text' || item.element_type === 'textarea'">
+                                                            <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 font-medium leading-relaxed"
+                                                                 x-text="item.response_value && item.response_value.trim() !== '' ? item.response_value.replace(/<[^>]*>?/gm, '') : '{{ $isId ? '(Tidak ada jawaban)' : '(No response provided)' }}'"></div>
+                                                        </template>
 
-                                            {{-- Reviewer Rating Section --}}
-                                            <div class="mt-6 pt-6 border-t border-gray-100" x-data="{ 
-                                                hoverRating: 0,
-                                                isSaving: false,
-                                                showSaved: false,
-                                                async saveRating(val) {
-                                                    this.isSaving = true;
-                                                    try {
-                                                        const response = await fetch(`{{ route('journal.workflow.review-assignment.rate', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', selectedReview.id), {
-                                                            method: 'POST',
-                                                            headers: {
-                                                                'Content-Type': 'application/json',
-                                                                'Accept': 'application/json',
-                                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                                            },
-                                                            body: JSON.stringify({ quality_rating: val })
-                                                        });
-                                                        if (response.ok) {
-                                                            this.showSaved = true;
-                                                            selectedReview.quality_rating = val;
-                                                            setTimeout(() => this.showSaved = false, 2000);
-                                                        }
-                                                    } catch (e) {
-                                                        console.error(e);
-                                                    }
-                                                    this.isSaving = false;
-                                                }
-                                            }">
-                                                <h4 class="text-sm font-semibold text-gray-700 mb-2">{{ $isId ? 'Penilaian Kualitas Reviewer' : 'Reviewer Quality Rating' }}</h4>
-                                                <div class="flex items-center gap-1">
-                                                    <template x-for="i in 5">
-                                                        <button @click="saveRating(i)" 
-                                                                @mouseenter="hoverRating = i" 
-                                                                @mouseleave="hoverRating = 0"
-                                                                type="button"
-                                                                class="text-2xl transition-all duration-150 focus:outline-none hover:scale-110"
-                                                                :class="(hoverRating || selectedReview?.quality_rating || 0) >= i ? 'text-yellow-400' : 'text-gray-300'">
-                                                            <i class="fa-solid fa-star"></i>
-                                                        </button>
-                                                    </template>
-                                                    <span x-show="isSaving" class="ml-2 text-xs text-gray-400">
-                                                        <i class="fa-solid fa-spinner fa-spin"></i>
-                                                    </span>
-                                                    <span x-show="showSaved" x-cloak x-transition class="ml-2 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-100">
-                                                        <i class="fa-solid fa-check"></i> {{ $isId ? 'Tersimpan!' : 'Saved!' }}
-                                                    </span>
-                                                    </span>
-                                                </div>
-                                                <p class="mt-1 text-xs text-gray-400">{{ $isId ? 'Beri penilaian kualitas ulasan ini untuk catatan editorial internal.' : 'Rate the quality of this review for internal editorial records.' }}</p>
-                                            </div>
-                                        @endif
-
-                                        {{-- Reviewer Files Section (Gambar 3 OJS style) --}}
-                                        <div class="mt-6 pt-6 border-t border-gray-100 mb-4">
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-3">{{ $isId ? 'Berkas Mitra Bestari' : 'Reviewer Files' }}</h4>
-                                            
-                                            <template x-if="!selectedReview?.files || selectedReview?.files.length === 0">
-                                                <p class="text-xs text-gray-400 italic">{{ $isId ? 'Tidak ada berkas yang diunggah.' : 'No files uploaded.' }}</p>
-                                            </template>
-                                            
-                                            <template x-if="selectedReview?.files && selectedReview?.files.length > 0">
-                                                <div class="space-y-2">
-                                                    <template x-for="file in selectedReview.files" :key="file.id">
-                                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-[12px] hover:bg-gray-100 transition-colors">
-                                                            <div class="flex items-center gap-3 min-w-0">
-                                                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                                                                    <i class="fa-solid fa-file-word text-sm"></i>
-                                                                </div>
-                                                                <div class="min-w-0">
-                                                                    <a :href="file.download_url" 
-                                                                       class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline truncate block"
-                                                                       x-text="file.file_name"></a>
-                                                                    <span class="text-[10px] text-gray-400" x-text="`ID: ${file.id}`"></span>
-                                                                </div>
+                                                        {{-- Checkbox --}}
+                                                        <template x-if="item.element_type === 'checkbox'">
+                                                            <div class="space-y-1.5">
+                                                                <template x-for="opt in (item.options || [])" :key="opt.value">
+                                                                    <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
+                                                                         :class="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label))) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
+                                                                        <input type="checkbox" disabled :checked="Boolean(item.response_value && (item.response_value.includes(opt.value) || item.response_value.includes(opt.label)))" class="rounded border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
+                                                                        <span x-text="opt.label"></span>
+                                                                    </div>
+                                                                </template>
                                                             </div>
-                                                            <div class="text-right">
-                                                                <span class="text-[11px] text-gray-400" x-text="new Date(file.created_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></span>
+                                                        </template>
+
+                                                        {{-- Radio --}}
+                                                        <template x-if="item.element_type === 'radio'">
+                                                            <div class="space-y-1.5">
+                                                                <template x-for="opt in (item.options || [])" :key="opt.value">
+                                                                    <div class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-medium"
+                                                                         :class="Boolean(item.response_value && String(item.response_value).trim() !== '' && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase())) ? 'border-blue-400 bg-blue-50/50 text-blue-900 font-bold' : 'border-slate-200 bg-slate-100/50 text-slate-400 opacity-60'">
+                                                                        <input type="radio" disabled :checked="Boolean(item.response_value && String(item.response_value).trim() !== '' && (String(item.response_value).trim().toLowerCase() === String(opt.value).trim().toLowerCase() || String(item.response_value).trim().toLowerCase() === String(opt.label).trim().toLowerCase()))" class="border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-not-allowed">
+                                                                        <span x-text="opt.label"></span>
+                                                                    </div>
+                                                                </template>
                                                             </div>
-                                                        </div>
-                                                    </template>
+                                                        </template>
+
+                                                        {{-- Select --}}
+                                                        <template x-if="item.element_type === 'select'">
+                                                            <div class="p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
+                                                                 x-text="item.response_value || '-'"></div>
+                                                        </template>
+
+                                                        {{-- Rating --}}
+                                                        <template x-if="item.element_type === 'rating'">
+                                                            <div class="flex items-center gap-1.5 p-2.5 bg-white border border-slate-200 rounded-xl"
+                                                                 x-data="{ numRating: parseInt((String(item.response_value || '').match(/\d+/) || [0])[0]) || 0 }">
+                                                                <template x-for="starIdx in 5" :key="starIdx">
+                                                                    <i class="fa-solid fa-star text-base transition-colors"
+                                                                       :class="numRating >= starIdx ? 'text-amber-400' : 'text-slate-300'"></i>
+                                                                </template>
+                                                                <span class="text-xs font-bold text-slate-700 ml-2" x-text="numRating > 0 ? numRating + '/5' : '-'"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
                                                 </div>
                                             </template>
-                                        </div>
-
-                                        <div class="mt-2 text-xs text-gray-400">
-                                            {{ $isId ? 'Diselesaikan pada:' : 'Completed at:' }} <span
-                                                x-text="new Date(selectedReview?.completed_at).toLocaleDateString()"></span>
                                         </div>
                                     </div>
                                 </template>
+
+                                @if (!$isAuthorView)
+                                    <div class="pt-6 border-t border-gray-100">
+                                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{{ $isId ? 'Komentar untuk Editor (Internal)' : 'Comments for Editor (Internal)' }}</h4>
+                                        <div class="bg-amber-50/70 border border-amber-200/80 p-4 rounded-xl text-sm text-slate-700 prose prose-sm max-w-none leading-relaxed"
+                                            x-html="selectedReview?.comments_for_editor || '<em>{{ $isId ? 'Tidak ada komentar rahasia yang diberikan.' : 'No confidential comments provided.' }}</em>'">
+                                        </div>
+                                    </div>
+
+                                    {{-- Reviewer Rating Section --}}
+                                    <div class="pt-6 border-t border-gray-100" x-data="{ 
+                                        hoverRating: 0,
+                                        isSaving: false,
+                                        showSaved: false,
+                                        async saveRating(val) {
+                                            this.isSaving = true;
+                                            try {
+                                                const response = await fetch(`{{ route('journal.workflow.review-assignment.rate', ['journal' => $journal->slug, 'reviewAssignment' => '__ID__']) }}`.replace('__ID__', selectedReview.id), {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Accept': 'application/json',
+                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                    },
+                                                    body: JSON.stringify({ quality_rating: val })
+                                                });
+                                                if (response.ok) {
+                                                    this.showSaved = true;
+                                                    selectedReview.quality_rating = val;
+                                                    setTimeout(() => this.showSaved = false, 2000);
+                                                }
+                                            } catch (e) {
+                                                console.error(e);
+                                            }
+                                            this.isSaving = false;
+                                        }
+                                    }">
+                                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{{ $isId ? 'Penilaian Kualitas Reviewer' : 'Reviewer Quality Rating' }}</h4>
+                                        <div class="flex items-center gap-1">
+                                            <template x-for="i in 5">
+                                                <button @click="saveRating(i)" 
+                                                        @mouseenter="hoverRating = i" 
+                                                        @mouseleave="hoverRating = 0"
+                                                        type="button"
+                                                        class="text-2xl transition-all duration-150 focus:outline-none hover:scale-110"
+                                                        :class="(hoverRating || selectedReview?.quality_rating || 0) >= i ? 'text-yellow-400' : 'text-gray-300'">
+                                                    <i class="fa-solid fa-star"></i>
+                                                </button>
+                                            </template>
+                                            <span x-show="isSaving" class="ml-2 text-xs text-gray-400">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </span>
+                                            <span x-show="showSaved" x-cloak x-transition class="ml-2 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-100">
+                                                <i class="fa-solid fa-check"></i> {{ $isId ? 'Tersimpan!' : 'Saved!' }}
+                                            </span>
+                                        </div>
+                                        <p class="mt-1 text-xs text-gray-400">{{ $isId ? 'Beri penilaian kualitas ulasan ini untuk catatan editorial internal.' : 'Rate the quality of this review for internal editorial records.' }}</p>
+                                    </div>
+                                @endif
+
+                                {{-- Reviewer Files Section (Gambar 3 OJS style) --}}
+                                <div class="pt-6 border-t border-gray-100">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">{{ $isId ? 'Berkas Mitra Bestari' : 'Reviewer Files' }}</h4>
+                                    
+                                    <template x-if="!selectedReview?.files || selectedReview?.files.length === 0">
+                                        <p class="text-xs text-gray-400 italic">{{ $isId ? 'Tidak ada berkas yang diunggah.' : 'No files uploaded.' }}</p>
+                                    </template>
+                                    
+                                    <template x-if="selectedReview?.files && selectedReview?.files.length > 0">
+                                        <div class="space-y-2">
+                                            <template x-for="file in selectedReview.files" :key="file.id">
+                                                <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100 transition-colors">
+                                                    <div class="flex items-center gap-3 min-w-0">
+                                                        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                                            <i class="fa-solid fa-file-word text-sm"></i>
+                                                        </div>
+                                                        <div class="min-w-0">
+                                                            <a :href="file.download_url" 
+                                                               class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline truncate block"
+                                                               x-text="file.file_name"></a>
+                                                            <span class="text-[10px] text-gray-400" x-text="`ID: ${file.id}`"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <span class="text-[11px] text-gray-400" x-text="new Date(file.created_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="pt-4 border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
+                                    <span>
+                                        {{ $isId ? 'Diselesaikan pada:' : 'Completed at:' }} <span class="font-bold text-gray-600"
+                                            x-text="new Date(selectedReview?.completed_at).toLocaleDateString(undefined, {month: 'long', day: 'numeric', year: 'numeric'})"></span>
+                                    </span>
+                                </div>
                             </div>
-                        </div>
+                        </template>
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <div class="bg-slate-50 px-6 py-4 flex justify-end border-t border-slate-100">
                         <button type="button" @click="closeReviewDetailsModal()"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            class="px-5 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm">
                             {{ $isId ? 'Tutup' : 'Close' }}
                         </button>
                     </div>
