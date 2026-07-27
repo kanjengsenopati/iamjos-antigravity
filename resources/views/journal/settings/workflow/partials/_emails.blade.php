@@ -411,8 +411,8 @@
                                             <button type="button" @click="insertVariable('{$authorName}')" title="{{ $isId ? 'Sisipkan {$authorName}' : 'Insert {$authorName}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
                                                 <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$authorName}
                                             </button>
-                                            <button type="button" @click="insertVariable('{$recipientName}')" title="{{ $isId ? 'Sisipkan {$recipientName}' : 'Insert {$recipientName}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
-                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$recipientName}
+                                            <button type="button" @click="insertVariable('{$editorName}')" title="{{ $isId ? 'Sisipkan {$editorName}' : 'Insert {$editorName}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
+                                                <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$editorName}
                                             </button>
                                             <button type="button" @click="insertVariable('{$submissionTitle}')" title="{{ $isId ? 'Sisipkan {$submissionTitle}' : 'Insert {$submissionTitle}' }}" class="bg-white hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 border border-gray-200 px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1.5 font-mono shadow-xs">
                                                 <i class="fa-solid fa-plus text-[10px] text-indigo-500"></i> {$submissionTitle}

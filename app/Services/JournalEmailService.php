@@ -55,11 +55,16 @@ class JournalEmailService
 
             // 2. Prepare Variables
             $journalHomeUrl = route('journal.public.home', $journal->slug);
+            $editorName = auth()->check()
+                ? (auth()->user()->full_name ?: auth()->user()->name)
+                : ($journal->getSetting('contact.principal.name') ?? 'Editor');
+
             $variables = array_merge([
                 'recipientName' => $recipientName,
                 'recipientEmail' => $recipientEmail,
                 'journalName' => $journal->name,
                 'journalUrl' => $journalHomeUrl,
+                'editorName' => $editorName,
             ], $variables);
 
             // Add signature if not present
@@ -208,10 +213,14 @@ class JournalEmailService
         }
 
         $journalHomeUrl = route('journal.public.home', $journal->slug);
+        $editorName = auth()->check()
+            ? (auth()->user()->full_name ?: auth()->user()->name)
+            : ($journal->getSetting('contact.principal.name') ?? 'Editor');
 
         $defaultVars = [
             'journalName' => $journal->name,
             'journalUrl' => $journalHomeUrl,
+            'editorName' => $editorName,
             'signature' => $journal->email_signature ?: ('<p><a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team</p>'),
             'editorComments' => '',
         ];
@@ -257,11 +266,15 @@ class JournalEmailService
         ]);
 
         $journalHomeUrl = route('journal.public.home', $journal->slug);
+        $editorName = auth()->check()
+            ? (auth()->user()->full_name ?: auth()->user()->name)
+            : ($journal->getSetting('contact.principal.name') ?? 'Editor');
 
         $vars = [
             'authorName' => $authorName,
             'firstAuthorName' => $authorName,
             'recipientName' => $authorName,
+            'editorName' => $editorName,
             'submissionTitle' => $submission->title ?? '',
             'submissionCode' => $submission->submission_code ?? ('#' . ($submission->id ?? '')),
             'submissionUrl' => $submissionUrl,
