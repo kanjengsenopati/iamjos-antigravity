@@ -201,8 +201,18 @@ class ReviewWorkflowController extends Controller
             return back()->with('error', 'Cannot unassign a reviewer who has already completed or declined the review.');
         }
 
+        $reviewer = $assignment->reviewer;
         $assignment->update(['status' => ReviewAssignment::STATUS_CANCELLED]);
         $assignment->delete();
+
+        SubmissionLog::log(
+            submission:  $submission,
+            eventType:   SubmissionLog::EVENT_REVIEWER_UNASSIGNED,
+            title:       'Reviewer Unassigned',
+            description: auth()->user()->name . " unassigned " . ($reviewer ? $reviewer->name : 'peer reviewer') . " (Round {$assignment->round}).",
+            metadata:    ['reviewer_id' => $reviewer?->id, 'round' => $assignment->round],
+            stage:       $submission->stage,
+        );
 
         return back()->with('success', 'Reviewer unassigned.');
     }

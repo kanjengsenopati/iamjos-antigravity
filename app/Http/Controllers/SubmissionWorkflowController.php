@@ -370,6 +370,16 @@ class SubmissionWorkflowController extends Controller
             }
         }
 
+        // Log the unassign event
+        SubmissionLog::log(
+            submission:  $submission,
+            eventType:   SubmissionLog::EVENT_EDITOR_UNASSIGNED,
+            title:       'Editor Unassigned',
+            description: auth()->user()->name . " unassigned " . ($removedUser ? $removedUser->name : 'Editor') . ".",
+            metadata:    ['editor_id' => $removedUser?->id],
+            stage:       $submission->stage,
+        );
+
         return back()->with('success', 'Editor assignment removed.');
     }
 

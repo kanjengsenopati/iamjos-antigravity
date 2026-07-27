@@ -6,6 +6,7 @@ use App\Models\Journal;
 use App\Models\Submission;
 use App\Models\User;
 use App\Models\ReviewAssignment;
+use App\Models\SubmissionLog;
 use App\Notifications\SubmissionDecision;
 use App\Notifications\ReviewInvitation;
 use App\Services\WaGateway;
@@ -210,6 +211,16 @@ class EditorDecisionController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to notify other editors of reviewer cancellation: ' . $e->getMessage());
         }
+
+        // Log the unassign event
+        SubmissionLog::log(
+            submission:  $submission,
+            eventType:   SubmissionLog::EVENT_REVIEWER_UNASSIGNED,
+            title:       'Reviewer Assignment Cancelled',
+            description: auth()->user()->name . " cancelled review assignment for " . ($reviewer ? $reviewer->name : 'peer reviewer') . " (Round {$assignment->round}).",
+            metadata:    ['reviewer_id' => $reviewer?->id, 'round' => $assignment->round],
+            stage:       $submission->stage,
+        );
 
         return back()->with('success', 'Reviewer assignment cancelled.');
     }

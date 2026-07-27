@@ -89,6 +89,7 @@ class CorrespondenceController extends Controller
             SubmissionLog::EVENT_EDITOR_ASSIGNED => 'Editor ditugaskan (Editor Assigned)',
             SubmissionLog::EVENT_EDITOR_UNASSIGNED => 'Penugasan Editor dibatalkan (Editor Unassigned)',
             SubmissionLog::EVENT_REVIEWER_ASSIGNED => 'Reviewer ditugaskan (Reviewer Assigned)',
+            SubmissionLog::EVENT_REVIEWER_UNASSIGNED => 'Penugasan Reviewer dibatalkan (Reviewer Unassigned)',
             SubmissionLog::EVENT_REVIEW_SUBMITTED => 'Hasil review diterima (Review Result Received)',
             SubmissionLog::EVENT_DECISION_MADE => 'Keputusan Editor (Editor Decision): ' . strip_tags($title),
             SubmissionLog::EVENT_STAGE_CHANGED => 'Tahap proses naskah berubah (Stage Changed)',

@@ -34,6 +34,7 @@ class SubmissionLog extends Model
     public const EVENT_EDITOR_ASSIGNED       = 'editor_assigned';
     public const EVENT_EDITOR_UNASSIGNED     = 'editor_unassigned';
     public const EVENT_REVIEWER_ASSIGNED     = 'reviewer_assigned';
+    public const EVENT_REVIEWER_UNASSIGNED   = 'reviewer_unassigned';
     public const EVENT_REVIEW_SUBMITTED      = 'review_submitted';
     public const EVENT_DECISION_MADE         = 'decision_made';
     public const EVENT_STAGE_CHANGED         = 'stage_changed';
@@ -88,6 +89,7 @@ class SubmissionLog extends Model
             self::EVENT_EDITOR_ASSIGNED     => 'fa-user-tie',
             self::EVENT_EDITOR_UNASSIGNED   => 'fa-user-minus',
             self::EVENT_REVIEWER_ASSIGNED   => 'fa-clipboard-check',
+            self::EVENT_REVIEWER_UNASSIGNED => 'fa-user-xmark',
             self::EVENT_REVIEW_SUBMITTED    => 'fa-check-circle',
             self::EVENT_DECISION_MADE       => 'fa-gavel',
             self::EVENT_STAGE_CHANGED       => 'fa-arrow-right-arrow-left',
@@ -105,7 +107,9 @@ class SubmissionLog extends Model
         return match ($this->event_type) {
             self::EVENT_SUBMITTED           => 'indigo',
             self::EVENT_EDITOR_ASSIGNED     => 'purple',
+            self::EVENT_EDITOR_UNASSIGNED   => 'amber',
             self::EVENT_REVIEWER_ASSIGNED   => 'blue',
+            self::EVENT_REVIEWER_UNASSIGNED => 'red',
             self::EVENT_REVIEW_SUBMITTED    => 'emerald',
             self::EVENT_DECISION_MADE       => 'amber',
             self::EVENT_DISCUSSION_CREATED,
