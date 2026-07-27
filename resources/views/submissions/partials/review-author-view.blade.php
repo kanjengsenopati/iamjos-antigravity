@@ -18,19 +18,9 @@
 
     {{-- Section A: Round Tabs & Status --}}
     <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-        {{-- Round Tabs - Only show rounds that have activity (not pending new rounds) --}}
+        {{-- Round Tabs --}}
         @php
-            // Filter rounds to only show ones that the author should see:
-            // - Completed rounds (revisions_requested, resubmit_for_review, approved, declined)
-            // - OR the first/current round
-            $visibleRounds = $authorReviewData['reviewRounds']->filter(function ($round) use ($authorReviewData) {
-                // Always show round 1
-                if ($round->round === 1) {
-                    return true;
-                }
-                // Show if round has decisions/activity (not just created as pending)
-                return !in_array($round->status, ['pending']);
-            });
+            $visibleRounds = $authorReviewData['reviewRounds']->unique('round');
         @endphp
         @if ($visibleRounds->count() > 1)
             <div class="border-b border-gray-200 bg-gray-50">
@@ -414,6 +404,11 @@
         <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">{{ $isId ? 'Putaran Ulasan' : 'Review Round' }}</h4>
         <div class="text-center">
             <span class="text-3xl font-bold text-indigo-600" x-text="selectedAuthorRound"></span>
+            @foreach ($visibleRounds as $rObj)
+                <p x-show="selectedAuthorRound === {{ $rObj->round }}" class="text-xs font-semibold text-gray-500 mt-1" style="display: none;">
+                    {{ $rObj->status_label }}
+                </p>
+            @endforeach
         </div>
     </div>
 
