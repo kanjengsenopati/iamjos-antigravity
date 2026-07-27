@@ -40,6 +40,12 @@
                 toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat | code',
                 branding: false,
                 license_key: 'gpl',
+                relative_urls: false,
+                remove_script_host: false,
+                convert_urls: false,
+                link_assume_external_targets: 'https',
+                link_default_target: '_blank',
+                default_link_target: '_blank',
                 setup: function(editor) {
                     editor.on('init', function() {
                         if (self.editingTemplate && self.editingTemplate.body) {
@@ -169,7 +175,8 @@
 
     {{-- SUB-TAB 1: EMAIL CONFIGURATION --}}
     <div x-show="emailSubTab === 'config'" x-cloak class="space-y-6">
-        <form action="{{ route('journal.settings.workflow.update', ['journal' => $journal->slug]) }}" method="POST">
+        <form action="{{ route('journal.settings.workflow.update', ['journal' => $journal->slug]) }}" method="POST"
+            @submit="if (typeof tinymce !== 'undefined' && tinymce.get('email_signature')) { tinymce.get('email_signature').triggerSave(); }">
             @csrf
             @method('PUT')
             <input type="hidden" name="tab" value="emails">
@@ -452,6 +459,12 @@
             toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link image | code',
             branding: false,
             license_key: 'gpl',
+            relative_urls: false,
+            remove_script_host: false,
+            convert_urls: false,
+            link_assume_external_targets: 'https',
+            link_default_target: '_blank',
+            default_link_target: '_blank',
             images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.withCredentials = false;

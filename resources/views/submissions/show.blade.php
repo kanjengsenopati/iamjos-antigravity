@@ -494,18 +494,19 @@
                     if (config?.emailTemplates?.EDITOR_DECISION_ACCEPT?.body_html) {
                         return config.emailTemplates.EDITOR_DECISION_ACCEPT.body_html;
                     }
+                    const jUrl = config.journalUrl || '#';
                     @if($isId)
                     return `<p>Yth. ${config.authorName},</p>
-                            <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong>${config.journalName}</strong>.</p>
+                            <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a></strong>.</p>
                             <p>Kami akan melanjutkan ke tahap Penyuntingan/Produksi.</p>
                             <p>Terima kasih telah mengirimkan karya Anda kepada kami.</p>
-                            <p>Salam hormat,<br>Tim Editorial</p>`;
+                            <p>Salam hormat,<br><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a><br>Tim Editorial</p>`;
                     @else
                     return `<p>Dear ${config.authorName},</p>
-                            <p>We are pleased to inform you that your submission <strong>"${config.submissionTitle}"</strong> has been accepted for publication in <strong>${config.journalName}</strong>.</p>
+                            <p>We are pleased to inform you that your submission <strong>"${config.submissionTitle}"</strong> has been accepted for publication in <strong><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a></strong>.</p>
                             <p>We will now proceed to the Copyediting/Production stage.</p>
                             <p>Thank you for submitting your work to us.</p>
-                            <p>Best regards,<br>The Editorial Team</p>`;
+                            <p>Best regards,<br><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a><br>The Editorial Team</p>`;
                     @endif
                 },
 

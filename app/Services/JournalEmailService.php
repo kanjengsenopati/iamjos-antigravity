@@ -54,24 +54,27 @@ class JournalEmailService
             }
 
             // 2. Prepare Variables
+            $journalHomeUrl = route('journal.public.home', $journal->slug);
             $variables = array_merge([
                 'recipientName' => $recipientName,
                 'recipientEmail' => $recipientEmail,
                 'journalName' => $journal->name,
-                'journalUrl' => route('journal.public.home', $journal->slug),
+                'journalUrl' => $journalHomeUrl,
             ], $variables);
 
             // Add signature if not present
             if (!isset($variables['signature'])) {
-                $variables['signature'] = $journal->email_signature ?: ($journal->name . "\nEditorial Team"); 
+                $variables['signature'] = $journal->email_signature 
+                    ?: ('<p><a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team</p>'); 
             }
 
             // 3. Parse Content
             $subject = $variables['customSubject'] ?? self::parseVariables($templateData['subject'], $variables);
             $body = $variables['customBody'] ?? self::parseVariables($templateData['body'], $variables);
+            $bodyHtml = self::formatEmailBodyHtml($body);
 
             // 4. Send Email
-            Mail::send([], [], function (Message $message) use ($recipientEmail, $recipientName, $subject, $body, $journal) {
+            Mail::send([], [], function (Message $message) use ($recipientEmail, $recipientName, $subject, $bodyHtml, $journal) {
                 $message->to($recipientEmail, $recipientName)
                     ->subject($subject);
                 
@@ -81,7 +84,7 @@ class JournalEmailService
                 $message->from($principalEmail, $principalName);
                 $message->replyTo($principalEmail, $principalName);
                 
-                $message->html($body);
+                $message->html($bodyHtml);
             });
 
             return true;
@@ -113,17 +116,6 @@ class JournalEmailService
             ];
         }
 
-        // Step 2: Fallback to Model Defaults (in case DB entry is missing or disabled? 
-        // User prompt says "If not found" - implies if DB record doesn't exist.
-        // If it exists but is disabled, should we send?
-        // Prompt Check 1: "Look in email_templates table where ... is_enabled = true"
-        // Prompt Check 2: "If not found, look in getDefaultTemplates()"
-        // So if disabled in DB, we fall back to Code Default? Or do we not send?
-        // Usually if "Disabled" in UI, it means "Don't send this email". 
-        // BUT the Prompt requirement says Step 2 is fallback. 
-        // Let's assume optimization: If DB record exists and is_enabled=false, we return NULL (don't send).
-        // If DB record DOES NOT exist, we check defaults.
-        
         $existingDisabled = EmailTemplate::where('journal_id', $journal->id)
             ->where('key', $key)
             ->where('is_enabled', false)
@@ -169,12 +161,27 @@ class JournalEmailService
     }
 
     /**
+     * Automatically convert plain text URLs into HTML hyperlinked <a> tags.
+     */
+    public static function autoLinkUrls(string $html): string
+    {
+        $pattern = '/(?<!href="|href=\'|>)(https?:\/\/[^\s<]+)/i';
+        return preg_replace_callback($pattern, function ($matches) {
+            $url = $matches[1];
+            $cleanUrl = rtrim($url, '.,;)');
+            $trailing = substr($url, strlen($cleanUrl));
+            return '<a href="' . $cleanUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline;">' . $cleanUrl . '</a>' . $trailing;
+        }, $html);
+    }
+
+    /**
      * Convert plain text email body to HTML paragraphs if not already HTML.
      */
     public static function formatEmailBodyHtml(string $body): string
     {
-        if (preg_match('/<(p|div|br|table|ul|ol|h[1-6])\b[^>]*>/i', $body)) {
-            return $body;
+        $hasTags = preg_match('/<(p|div|br|table|ul|ol|h[1-6]|a)\b[^>]*>/i', $body);
+        if ($hasTags) {
+            return self::autoLinkUrls($body);
         }
 
         $paragraphs = array_filter(array_map('trim', explode("\n\n", $body)));
@@ -187,7 +194,7 @@ class JournalEmailService
             $html .= '<p>' . nl2br($p) . '</p>';
         }
 
-        return $html;
+        return self::autoLinkUrls($html);
     }
 
     /**
@@ -200,10 +207,12 @@ class JournalEmailService
             return null;
         }
 
+        $journalHomeUrl = route('journal.public.home', $journal->slug);
+
         $defaultVars = [
             'journalName' => $journal->name,
-            'journalUrl' => route('journal.public.home', $journal->slug),
-            'signature' => $journal->email_signature ?: ($journal->name . "\nEditorial Team"),
+            'journalUrl' => $journalHomeUrl,
+            'signature' => $journal->email_signature ?: ('<p><a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team</p>'),
             'editorComments' => '',
         ];
 
@@ -244,6 +253,8 @@ class JournalEmailService
             'submission' => $submission->url_slug ?? $submission->slug ?? $submission->id
         ]);
 
+        $journalHomeUrl = route('journal.public.home', $journal->slug);
+
         $vars = [
             'authorName' => $authorName,
             'firstAuthorName' => $authorName,
@@ -252,7 +263,8 @@ class JournalEmailService
             'submissionCode' => $submission->submission_code ?? ('#' . ($submission->id ?? '')),
             'submissionUrl' => $submissionUrl,
             'journalName' => $journal->name,
-            'signature' => $journal->email_signature ?: ($journal->name . "\nEditorial Team"),
+            'journalUrl' => $journalHomeUrl,
+            'signature' => $journal->email_signature ?: ('<p><a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team</p>'),
         ];
 
         $keys = [
