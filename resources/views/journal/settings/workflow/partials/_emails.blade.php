@@ -46,6 +46,7 @@
                 link_assume_external_targets: 'https',
                 link_default_target: '_blank',
                 default_link_target: '_blank',
+                content_style: 'a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; } a:hover { color: #1d4ed8 !important; }',
                 setup: function(editor) {
                     editor.on('init', function() {
                         if (self.editingTemplate && self.editingTemplate.body) {
@@ -465,6 +466,7 @@
             link_assume_external_targets: 'https',
             link_default_target: '_blank',
             default_link_target: '_blank',
+            content_style: 'a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; } a:hover { color: #1d4ed8 !important; }',
             images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.withCredentials = false;

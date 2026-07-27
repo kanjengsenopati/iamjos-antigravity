@@ -54,6 +54,22 @@
 <x-app-layout>
     <x-slot name="title">{{ $submission->title }}</x-slot>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <style>
+        .ck-content a,
+        .ck-editor__editable a,
+        .tox-edit-area a,
+        .prose a {
+            color: #2563eb !important;
+            text-decoration: underline !important;
+            font-weight: 500;
+        }
+        .ck-content a:hover,
+        .ck-editor__editable a:hover,
+        .tox-edit-area a:hover,
+        .prose a:hover {
+            color: #1d4ed8 !important;
+        }
+    </style>
 
     <script>
         window.submissionWorkflowConfig = {
@@ -495,18 +511,21 @@
                         return config.emailTemplates.EDITOR_DECISION_ACCEPT.body_html;
                     }
                     const jUrl = config.journalUrl || '#';
+                    const subUrl = config.submissionUrl || '#';
                     @if($isId)
                     return `<p>Yth. ${config.authorName},</p>
                             <p>Dengan senang hati kami informasikan bahwa naskah Anda <strong>"${config.submissionTitle}"</strong> telah diterima untuk diterbitkan di <strong><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a></strong>.</p>
                             <p>Kami akan melanjutkan ke tahap Penyuntingan/Produksi.</p>
                             <p>Terima kasih telah mengirimkan karya Anda kepada kami.</p>
-                            <p>Salam hormat,<br><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a><br>Tim Editorial</p>`;
+                            <p><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a></p>
+                            <p><a href="${subUrl}" target="_blank" style="color: #2563eb; text-decoration: underline;">${subUrl}</a></p>`;
                     @else
                     return `<p>Dear ${config.authorName},</p>
                             <p>We are pleased to inform you that your submission <strong>"${config.submissionTitle}"</strong> has been accepted for publication in <strong><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a></strong>.</p>
                             <p>We will now proceed to the Copyediting/Production stage.</p>
                             <p>Thank you for submitting your work to us.</p>
-                            <p>Best regards,<br><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a><br>The Editorial Team</p>`;
+                            <p><a href="${jUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">${config.journalName}</a></p>
+                            <p><a href="${subUrl}" target="_blank" style="color: #2563eb; text-decoration: underline;">${subUrl}</a></p>`;
                     @endif
                 },
 
