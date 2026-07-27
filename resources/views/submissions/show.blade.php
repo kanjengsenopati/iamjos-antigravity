@@ -49,6 +49,11 @@
 
     $hasEditor = $submission->editorialAssignments()->where('is_active', true)->exists();
     $canPerformAction = $isManagerOrAdmin || $isAssignedEditor;
+
+    $primaryAuthorObj = $submission->authors->where('is_primary_contact', true)->first() ?? $submission->authors->first();
+    $resolvedAuthorName = $primaryAuthorObj?->name 
+        ?: (trim(($primaryAuthorObj?->given_name ?? '') . ' ' . ($primaryAuthorObj?->family_name ?? '')) 
+        ?: ($submission->author?->full_name ?? 'Author'));
 @endphp
 
 <x-app-layout>
@@ -77,7 +82,7 @@
             stageId: @js($submission->stage_id ?? 1),
             currentReviewRound: @js($submission->currentReviewRound()?->round ?? 1),
             maxReviewRound: @js($submission->reviewRounds()->max('round') ?? 1),
-            authorName: @js($submission->author->name ?? 'Author'),
+            authorName: @js($resolvedAuthorName),
             journalName: @js($journal->name),
             submissionTitle: @js($submission->title),
             promotableFilesUrl: @js(route('journal.workflow.promotable-files', ['journal' => $journal->slug, 'submission' => $submission->slug])),
@@ -89,7 +94,7 @@
             reviewerAttachmentsUrl: @js(route('journal.workflow.reviewer-attachments', ['journal' => $journal->slug, 'submission' => $submission->slug])),
             uploadDecisionFileUrl: @js(route('journal.workflow.upload-decision-file', ['journal' => $journal->slug, 'submission' => $submission->slug])),
             csrfToken: @js(csrf_token()),
-            firstAuthorName: @js($submission->authors?->first()?->name ?? 'Author'),
+            firstAuthorName: @js($resolvedAuthorName),
             submissionCode: @js($submission->submission_code ?? ''),
             potentialEditors: @js($potentialEditors),
             potentialParticipants: @js($potentialParticipants),

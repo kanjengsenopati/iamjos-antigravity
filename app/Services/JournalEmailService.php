@@ -235,14 +235,17 @@ class JournalEmailService
     public static function getSubmissionEmailTemplates(Journal $journal, $submission): array
     {
         $authorName = '';
-        if (isset($submission->user) && $submission->user) {
-            $authorName = $submission->user->full_name ?: trim(($submission->user->first_name ?? '') . ' ' . ($submission->user->last_name ?? ''));
-        }
-        if (empty($authorName) && isset($submission->authors) && count($submission->authors) > 0) {
-            $first = $submission->authors->first();
+        if (isset($submission->authors) && count($submission->authors) > 0) {
+            $first = $submission->authors->where('is_primary_contact', true)->first() ?: $submission->authors->first();
             if ($first) {
-                $authorName = trim(($first->given_name ?? '') . ' ' . ($first->family_name ?? ''));
+                $authorName = $first->name ?: trim(($first->given_name ?? '') . ' ' . ($first->family_name ?? ''));
             }
+        }
+        if (empty($authorName) && isset($submission->author) && $submission->author) {
+            $authorName = $submission->author->full_name;
+        }
+        if (empty($authorName) && isset($submission->user) && $submission->user) {
+            $authorName = $submission->user->full_name ?: trim(($submission->user->first_name ?? '') . ' ' . ($submission->user->last_name ?? ''));
         }
         if (empty($authorName)) {
             $authorName = 'Author';
