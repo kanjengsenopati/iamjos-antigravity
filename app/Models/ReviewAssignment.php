@@ -224,12 +224,11 @@ class ReviewAssignment extends Model
      */
     public function getFormattedFormResponses(): array
     {
-        $form = $this->reviewForm;
-        if (!$form && $this->submission) {
-            $form = \App\Models\ReviewForm::with(['elements' => fn($q) => $q->ordered()])
-                ->where('journal_id', $this->submission->journal_id)
-                ->first();
+        if (!$this->review_form_id) {
+            return [];
         }
+
+        $form = $this->reviewForm;
 
         if (!$form || $form->elements->isEmpty()) {
             return [];
