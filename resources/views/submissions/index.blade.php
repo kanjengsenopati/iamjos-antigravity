@@ -57,9 +57,12 @@
         <!-- Tab Navigation (OJS 3.3 Style) -->
         <div class="border-b border-gray-200 bg-gray-50/50">
             <nav class="flex overflow-x-auto" aria-label="Tabs">
+                @php
+                    $perPageParam = request()->has('per_page') ? ['per_page' => request('per_page')] : [];
+                @endphp
                 @if ($isEditor)
                     {{-- Editor+ Tab Navigation --}}
-                    <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=queue"
+                    <a href="{{ route('journal.submissions.index', array_merge(['journal' => $journal->slug, 'filter' => 'queue'], $perPageParam)) }}"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'queue' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         {{ $isId ? 'Antrean Saya' : 'My Queue' }}
@@ -69,7 +72,7 @@
                             {{ $statusCounts['queue'] ?? 0 }}
                         </span>
                     </a>
-                    <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=unassigned"
+                    <a href="{{ route('journal.submissions.index', array_merge(['journal' => $journal->slug, 'filter' => 'unassigned'], $perPageParam)) }}"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'unassigned' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         {{ $isId ? 'Belum Ditugaskan' : 'Unassigned' }}
@@ -79,7 +82,7 @@
                             {{ $statusCounts['unassigned'] ?? 0 }}
                         </span>
                     </a>
-                    <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=active"
+                    <a href="{{ route('journal.submissions.index', array_merge(['journal' => $journal->slug, 'filter' => 'active'], $perPageParam)) }}"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'active' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         {{ $isId ? 'Semua Aktif' : 'All Active' }}
@@ -89,7 +92,7 @@
                             {{ $statusCounts['active'] ?? 0 }}
                         </span>
                     </a>
-                    <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=archives"
+                    <a href="{{ route('journal.submissions.index', array_merge(['journal' => $journal->slug, 'filter' => 'archives'], $perPageParam)) }}"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         {{ $isId ? 'Arsip' : 'Archives' }}
@@ -101,7 +104,7 @@
                     </a>
                 @else
                     {{-- Author Tab Navigation --}}
-                    <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=active"
+                    <a href="{{ route('journal.submissions.index', array_merge(['journal' => $journal->slug, 'filter' => 'active'], $perPageParam)) }}"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter !== 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         {{ $isId ? 'Antrean Saya' : 'My Queue' }}
@@ -111,7 +114,7 @@
                             {{ $statusCounts['active'] ?? 0 }}
                         </span>
                     </a>
-                    <a href="{{ route('journal.submissions.index', ['journal' => $journal->slug]) }}?filter=archives"
+                    <a href="{{ route('journal.submissions.index', array_merge(['journal' => $journal->slug, 'filter' => 'archives'], $perPageParam)) }}"
                         class="relative py-4 px-6 text-center text-sm font-medium whitespace-nowrap transition-colors
                        {{ $filter === 'archives' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300' }}">
                         {{ $isId ? 'Arsip' : 'Archives' }}
@@ -150,6 +153,9 @@
                 <!-- Filter Form Wrapper -->
                 <form x-ref="filterForm" action="{{ url()->current() }}" method="GET" class="flex items-center gap-3">
                     <input type="hidden" name="filter" value="{{ $filter }}">
+                    @if(request()->has('per_page'))
+                        <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+                    @endif
                     
                     @if(request()->has('sections'))
                         @foreach(request('sections') as $sid)
