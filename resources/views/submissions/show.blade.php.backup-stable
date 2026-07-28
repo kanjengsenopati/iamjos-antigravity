@@ -3406,12 +3406,12 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             </p>
                                                             {{-- OJS 3 Sub-File Action Links (More Information | Edit | Delete) --}}
                                                             <div class="flex items-center gap-2 mt-1 text-xs font-medium">
-                                                                <button type="button" @click="openFileInformationModal({{ $file->id }}, '{{ addslashes($file->file_name) }}')"
+                                                                <button type="button" @click="openFileInformationModal('{{ $file->id }}', @js($file->file_name))"
                                                                     class="text-indigo-600 hover:text-indigo-800 hover:underline focus:outline-none">
                                                                     {{ $isId ? 'Informasi Lebih Lanjut' : 'More Information' }}
                                                                 </button>
                                                                 <span class="text-gray-300">|</span>
-                                                                <button type="button" @click="openEditFileModal({{ $file->id }}, '{{ addslashes($file->file_name) }}')"
+                                                                <button type="button" @click="openEditFileModal('{{ $file->id }}', @js($file->file_name))"
                                                                     class="text-indigo-600 hover:text-indigo-800 hover:underline focus:outline-none">
                                                                     {{ $isId ? 'Edit' : 'Edit' }}
                                                                 </button>
