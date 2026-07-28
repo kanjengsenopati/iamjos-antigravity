@@ -26,8 +26,8 @@
             @endif
         </div>
 
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3 flex-wrap">
                 <p class="text-sm text-gray-700 leading-5">
                     {!! __('Showing') !!}
                     @if ($paginator->firstItem())
@@ -41,6 +41,17 @@
                     <span class="font-medium">{{ $paginator->total() }}</span>
                     {!! __('results') !!}
                 </p>
+
+                {{-- Rows Per Page Select (Kotak Merah) --}}
+                <div class="inline-flex items-center ml-2 border-l border-gray-200 pl-3">
+                    <select onchange="(function(v){ const u = new URL(window.location.href); u.searchParams.set('per_page', v); u.searchParams.delete('page'); window.location.href = u.toString(); })(this.value)"
+                        class="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-semibold text-gray-700 shadow-sm cursor-pointer hover:border-gray-400 transition-colors">
+                        <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="75" {{ request('per_page') == 75 ? 'selected' : '' }}>75</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                </div>
             </div>
 
             <div>

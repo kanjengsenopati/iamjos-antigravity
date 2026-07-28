@@ -147,7 +147,12 @@ class SubmissionController extends Controller
             }
         }
 
-        $submissions = $query->latest('submitted_at')->paginate(10);
+        $perPage = (int) $request->input('per_page', 25);
+        if (!in_array($perPage, [25, 50, 75, 100])) {
+            $perPage = 25;
+        }
+
+        $submissions = $query->latest('submitted_at')->paginate($perPage)->withQueryString();
 
         // Status counts for sidebar badges
         $statusCounts = $this->getStatusCounts($journal, $user, $isEditor);

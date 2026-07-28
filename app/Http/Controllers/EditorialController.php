@@ -76,7 +76,12 @@ class EditorialController extends Controller
             });
         }
 
-        $submissions = $query->latest('submitted_at')->paginate(15);
+        $perPage = (int) $request->input('per_page', 25);
+        if (!in_array($perPage, [25, 50, 75, 100])) {
+            $perPage = 25;
+        }
+
+        $submissions = $query->latest('submitted_at')->paginate($perPage)->withQueryString();
 
         // Queue type counts for tabs
         $queueCounts = [
@@ -125,7 +130,12 @@ class EditorialController extends Controller
             $query->where('title', 'like', "%{$search}%");
         }
 
-        $submissions = $query->latest()->paginate(15);
+        $perPage = (int) $request->input('per_page', 25);
+        if (!in_array($perPage, [25, 50, 75, 100])) {
+            $perPage = 25;
+        }
+
+        $submissions = $query->latest()->paginate($perPage)->withQueryString();
 
         return view('editorial.archives', compact('submissions', 'status', 'year', 'search', 'journal'));
     }
