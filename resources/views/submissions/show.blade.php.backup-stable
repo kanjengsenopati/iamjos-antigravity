@@ -440,6 +440,23 @@
                 // Galley Modal State
                 galleyModalOpen: false,
                 isSubmitting: false,
+
+                // Edit File Name Modal (OJS 3 Style)
+                editFileModalOpen: false,
+                editFileId: null,
+                editFileName: '',
+                editFileSubmitting: false,
+
+                // Information Center Modal (History & Notes - OJS 3 Style)
+                fileInfoModalOpen: false,
+                fileInfoFileId: null,
+                fileInfoFileName: '',
+                fileInfoTab: 'history',
+                fileInfoLoading: false,
+                fileInfoHistory: [],
+                fileInfoNotes: [],
+                newNoteText: '',
+                newNoteSubmitting: false,
                 editingGalley: null,
                 galleyLabel: '',
                 galleyLocale: 'en',
@@ -710,6 +727,94 @@
                 closeReviewDetailsModal() {
                     this.reviewDetailsModalOpen = false;
                     this.selectedReview = null;
+                },
+
+                // OJS 3 Sub-File Action Helper Methods
+                openEditFileModal(fileId, fileName) {
+                    this.editFileId = fileId;
+                    this.editFileName = fileName;
+                    this.editFileModalOpen = true;
+                },
+
+                async submitEditFileName() {
+                    if (!this.editFileName.trim()) return;
+                    this.editFileSubmitting = true;
+                    try {
+                        const response = await fetch(`/journal/${config.journalSlug || '{{ $journal->slug }}'}/files/${this.editFileId}/name`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': config.csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ file_name: this.editFileName })
+                        });
+                        const res = await response.json();
+                        if (res.success) {
+                            window.location.reload();
+                        } else {
+                            alert(res.message || 'Failed to update file name.');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('An error occurred while updating file name.');
+                    } finally {
+                        this.editFileSubmitting = false;
+                    }
+                },
+
+                async openFileInformationModal(fileId, fileName) {
+                    this.fileInfoFileId = fileId;
+                    this.fileInfoFileName = fileName;
+                    this.fileInfoTab = 'history';
+                    this.fileInfoModalOpen = true;
+                    this.fileInfoLoading = true;
+                    this.fileInfoHistory = [];
+                    this.fileInfoNotes = [];
+                    this.newNoteText = '';
+                    
+                    try {
+                        const response = await fetch(`/journal/${config.journalSlug || '{{ $journal->slug }}'}/files/${fileId}/info`, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            this.fileInfoHistory = data.history || [];
+                            this.fileInfoNotes = data.notes || [];
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        this.fileInfoLoading = false;
+                    }
+                },
+
+                async submitFileNote() {
+                    if (!this.newNoteText.trim()) return;
+                    this.newNoteSubmitting = true;
+                    try {
+                        const response = await fetch(`/journal/${config.journalSlug || '{{ $journal->slug }}'}/files/${this.fileInfoFileId}/notes`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': config.csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ note: this.newNoteText })
+                        });
+                        const res = await response.json();
+                        if (res.success && res.note) {
+                            this.fileInfoNotes.unshift(res.note);
+                            this.newNoteText = '';
+                        } else {
+                            alert(res.message || 'Failed to add note.');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('An error occurred while adding note.');
+                    } finally {
+                        this.newNoteSubmitting = false;
+                    }
                 },
 
 
@@ -3299,6 +3404,27 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <p class="text-xs text-gray-500">
                                                                 {{ $file->file_type_label ?? ucfirst($file->file_type ?? 'Document') }}
                                                             </p>
+                                                            {{-- OJS 3 Sub-File Action Links (More Information | Edit | Delete) --}}
+                                                            <div class="flex items-center gap-2 mt-1 text-xs font-medium">
+                                                                <button type="button" @click="openFileInformationModal({{ $file->id }}, '{{ addslashes($file->file_name) }}')"
+                                                                    class="text-indigo-600 hover:text-indigo-800 hover:underline focus:outline-none">
+                                                                    {{ $isId ? 'Informasi Lebih Lanjut' : 'More Information' }}
+                                                                </button>
+                                                                <span class="text-gray-300">|</span>
+                                                                <button type="button" @click="openEditFileModal({{ $file->id }}, '{{ addslashes($file->file_name) }}')"
+                                                                    class="text-indigo-600 hover:text-indigo-800 hover:underline focus:outline-none">
+                                                                    {{ $isId ? 'Edit' : 'Edit' }}
+                                                                </button>
+                                                                <span class="text-gray-300">|</span>
+                                                                <form action="{{ route('journal.files.destroy', ['journal' => $journal->slug, 'file' => $file->id]) }}"
+                                                                    method="POST" class="inline" onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus file ini?' : 'Are you sure you want to delete this file?' }}')">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="text-rose-600 hover:text-rose-800 hover:underline focus:outline-none">
+                                                                        {{ $isId ? 'Hapus' : 'Delete' }}
+                                                                    </button>
+                                                                </form>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -6945,6 +7071,168 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             </div>
         </div>
 
+        {{-- ==================== EDIT FILE NAME MODAL (OJS 3 Style) ==================== --}}
+        <div x-show="editFileModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="edit-file-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="editFileModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="editFileModalOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div x-show="editFileModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative z-50 inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-gray-900" id="edit-file-modal-title">
+                            {{ $isId ? 'Edit File' : 'Edit a file' }}
+                        </h3>
+                        <button @click="editFileModalOpen = false" type="button" class="text-gray-400 hover:text-gray-500">
+                            <i class="fa-solid fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <form @submit.prevent="submitEditFileName()">
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                                    {{ $isId ? 'Nama file (misal: Naskah; Tabel 1) *' : 'Name the file (e.g., Manuscript; Table 1) *' }}
+                                </label>
+                                <input type="text" x-model="editFileName" required
+                                    class="w-full text-sm border border-gray-300 rounded-lg px-3.5 py-2.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
+                            <button type="button" @click="editFileModalOpen = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                {{ $isId ? 'Batal' : 'Cancel' }}
+                            </button>
+                            <button type="submit" :disabled="editFileSubmitting"
+                                class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none flex items-center">
+                                <template x-if="editFileSubmitting">
+                                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+                                </template>
+                                {{ $isId ? 'Simpan' : 'Save' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ==================== INFORMATION CENTER MODAL (OJS 3 Style) ==================== --}}
+        <div x-show="fileInfoModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="file-info-modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="fileInfoModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="fileInfoModalOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div x-show="fileInfoModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative z-50 inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+                    {{-- Modal Header --}}
+                    <div class="bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h3 class="text-base font-bold text-gray-900 truncate max-w-xl" id="file-info-modal-title">
+                            {{ $isId ? 'Pusat Informasi: ' : 'Information Center: ' }} <span class="text-indigo-600" x-text="fileInfoFileName"></span>
+                        </h3>
+                        <button @click="fileInfoModalOpen = false" type="button" class="text-gray-400 hover:text-gray-500">
+                            <i class="fa-solid fa-times text-lg"></i>
+                        </button>
+                    </div>
+
+                    {{-- Tabs: History / Notes --}}
+                    <div class="border-b border-gray-200 px-6 bg-gray-50/50">
+                        <nav class="flex gap-6 -mb-px">
+                            <button @click="fileInfoTab = 'history'" type="button"
+                                :class="fileInfoTab === 'history' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                                class="py-3 px-1 border-b-2 text-sm transition-colors">
+                                {{ $isId ? 'Riwayat' : 'History' }}
+                            </button>
+                            <button @click="fileInfoTab = 'notes'" type="button"
+                                :class="fileInfoTab === 'notes' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                                class="py-3 px-1 border-b-2 text-sm transition-colors">
+                                {{ $isId ? 'Catatan' : 'Notes' }}
+                            </button>
+                        </nav>
+                    </div>
+
+                    {{-- Modal Body --}}
+                    <div class="p-6 max-h-[60vh] overflow-y-auto">
+                        {{-- Loading Spinner --}}
+                        <template x-if="fileInfoLoading">
+                            <div class="flex items-center justify-center py-12">
+                                <i class="fa-solid fa-spinner fa-spin text-indigo-600 text-2xl mr-3"></i>
+                                <span class="text-sm text-gray-500">{{ $isId ? 'Memuat data...' : 'Loading data...' }}</span>
+                            </div>
+                        </template>
+
+                        <template x-if="!fileInfoLoading">
+                            <div>
+                                {{-- TAB 1: HISTORY --}}
+                                <div x-show="fileInfoTab === 'history'">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">{{ $isId ? 'Tanggal' : 'Date' }}</th>
+                                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">{{ $isId ? 'Pengguna' : 'User' }}</th>
+                                                <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">{{ $isId ? 'Peristiwa' : 'Event' }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-100">
+                                            <template x-for="(item, idx) in fileInfoHistory" :key="idx">
+                                                <tr class="hover:bg-gray-50/50">
+                                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500" x-text="item.date"></td>
+                                                    <td class="px-4 py-3 whitespace-nowrap text-xs font-medium text-gray-900" x-text="item.user"></td>
+                                                    <td class="px-4 py-3 text-xs text-gray-700">
+                                                        <p x-text="item.event"></p>
+                                                        <template x-if="item.download_url">
+                                                            <a :href="item.download_url" class="inline-block mt-1 text-xs text-indigo-600 hover:underline font-semibold">
+                                                                <i class="fa-solid fa-download mr-1"></i>{{ $isId ? 'Unduh' : 'Download' }}
+                                                            </a>
+                                                        </template>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {{-- TAB 2: NOTES --}}
+                                <div x-show="fileInfoTab === 'notes'" class="space-y-6">
+                                    {{-- Notes List --}}
+                                    <div>
+                                        <template x-if="fileInfoNotes.length === 0">
+                                            <p class="text-sm text-gray-500 italic py-4 text-center">
+                                                {{ $isId ? 'Tidak ada catatan untuk ditampilkan.' : 'There are no notes to display.' }}
+                                            </p>
+                                        </template>
+                                        <div class="space-y-3">
+                                            <template x-for="(note, nIdx) in fileInfoNotes" :key="note.id || nIdx">
+                                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3.5">
+                                                    <div class="flex items-center justify-between mb-1.5">
+                                                        <span class="text-xs font-bold text-gray-900" x-text="note.user_name"></span>
+                                                        <span class="text-[11px] text-gray-400" x-text="note.created_at"></span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-700 whitespace-pre-line" x-text="note.note"></p>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    {{-- Form Add Note --}}
+                                    <form @submit.prevent="submitFileNote()" class="pt-4 border-t border-gray-200">
+                                        <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">
+                                            {{ $isId ? 'Tambah Catatan' : 'Add Note' }}
+                                        </h4>
+                                        <textarea x-model="newNoteText" rows="3" required
+                                            placeholder="{{ $isId ? 'Tulis catatan untuk file ini...' : 'Write note for this file...' }}"
+                                            class="w-full text-xs border border-gray-300 rounded-lg p-3 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                                        <div class="mt-2 flex justify-end">
+                                            <button type="submit" :disabled="newNoteSubmitting"
+                                                class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition-colors">
+                                                <template x-if="newNoteSubmitting">
+                                                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+                                                </template>
+                                                {{ $isId ? 'Tambah Catatan' : 'Add Note' }}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- ==================== MANAGE DRAFT FILES MODAL (Copyediting) ==================== --}}
         <div x-show="draftFilesModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto"

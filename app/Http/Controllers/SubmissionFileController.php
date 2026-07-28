@@ -249,4 +249,127 @@ class SubmissionFileController extends Controller
 
         return back()->with('success', 'File deleted successfully.');
     }
+
+    /**
+     * Update file name (Edit a file modal).
+     */
+    public function updateName(Request $request, string $journalSlug, SubmissionFile $file): RedirectResponse|JsonResponse
+    {
+        $this->authorize('update', $file->submission);
+
+        $validated = $request->validate([
+            'file_name' => 'required|string|max:255',
+        ]);
+
+        $oldName = $file->file_name;
+        $file->update(['file_name' => $validated['file_name']]);
+
+        // Audit Log
+        \App\Models\SubmissionLog::log(
+            submission:  $file->submission,
+            eventType:   \App\Models\SubmissionLog::EVENT_FILE_UPLOADED,
+            title:       'File Metadata Updated',
+            description: 'The metadata for file "' . $file->file_name . '" was edited by ' . auth()->user()->name . '.',
+            metadata:    ['old_name' => $oldName, 'new_name' => $file->file_name],
+            user:        auth()->user(),
+            fileIds:     [$file->id],
+            stage:       $file->stage
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'File name updated successfully.',
+                'file_name' => $file->file_name,
+            ]);
+        }
+
+        return back()->with('success', 'File name updated successfully.');
+    }
+
+    /**
+     * Get information (History & Notes) for Information Center modal.
+     */
+    public function getInformation(string $journalSlug, SubmissionFile $file): JsonResponse
+    {
+        $submission = $file->submission;
+
+        // Fetch logs associated with this file or general file uploads/promotions for this submission
+        $logs = \App\Models\SubmissionLog::where('submission_id', $submission->id)
+            ->where(function($q) use ($file) {
+                $q->whereJsonContains('file_ids', (string)$file->id)
+                  ->orWhereJsonContains('file_ids', (int)$file->id)
+                  ->orWhere('title', 'like', '%' . $file->file_name . '%')
+                  ->orWhere('description', 'like', '%' . $file->file_name . '%');
+            })
+            ->latest('created_at')
+            ->get();
+
+        // Build history array
+        $history = [];
+        if ($logs->count() > 0) {
+            foreach ($logs as $log) {
+                $history[] = [
+                    'date'        => $log->created_at->format('Y-m-d'),
+                    'user'        => $log->user->name ?? 'System',
+                    'event'       => $log->description,
+                    'download_url' => route('files.download', $file->id),
+                ];
+            }
+        } else {
+            // Default upload event if log not found
+            $history[] = [
+                'date'        => $file->created_at->format('Y-m-d'),
+                'user'        => $file->uploader->name ?? 'User',
+                'event'       => 'A file "' . $file->file_name . '" was uploaded for submission ' . ($submission->submission_code ?? $submission->id) . ' by ' . ($file->uploader->name ?? 'user') . '.',
+                'download_url' => route('files.download', $file->id),
+            ];
+        }
+
+        // Fetch notes from metadata
+        $metadata = $file->metadata ?? [];
+        $notes = $metadata['notes'] ?? [];
+
+        return response()->json([
+            'success'   => true,
+            'file_id'   => $file->id,
+            'file_name' => $file->file_name,
+            'history'   => $history,
+            'notes'     => array_reverse($notes), // latest first
+        ]);
+    }
+
+    /**
+     * Add a note to file (Information Center -> Notes tab).
+     */
+    public function addNote(Request $request, string $journalSlug, SubmissionFile $file): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'note' => 'required|string|max:2000',
+        ]);
+
+        $metadata = $file->metadata ?? [];
+        $notes = $metadata['notes'] ?? [];
+
+        $newNote = [
+            'id'         => uniqid(),
+            'user_name'  => auth()->user()->name,
+            'note'       => $validated['note'],
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ];
+
+        $notes[] = $newNote;
+        $metadata['notes'] = $notes;
+        $file->update(['metadata' => $metadata]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Note added successfully.',
+                'note'    => $newNote,
+            ]);
+        }
+
+        return back()->with('success', 'Note added successfully.');
+    }
 }
