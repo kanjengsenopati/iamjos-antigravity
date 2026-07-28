@@ -740,7 +740,7 @@
                     if (!this.editFileName.trim()) return;
                     this.editFileSubmitting = true;
                     try {
-                        const response = await fetch(`/journal/${config.journalSlug || '{{ $journal->slug }}'}/files/${this.editFileId}/name`, {
+                        const response = await fetch(`/${config.journalSlug || '{{ $journal->slug }}'}/files/${this.editFileId}/name`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -774,7 +774,7 @@
                     this.newNoteText = '';
                     
                     try {
-                        const response = await fetch(`/journal/${config.journalSlug || '{{ $journal->slug }}'}/files/${fileId}/info`, {
+                        const response = await fetch(`/${config.journalSlug || '{{ $journal->slug }}'}/files/${fileId}/info`, {
                             headers: { 'Accept': 'application/json' }
                         });
                         const data = await response.json();
@@ -793,7 +793,7 @@
                     if (!this.newNoteText.trim()) return;
                     this.newNoteSubmitting = true;
                     try {
-                        const response = await fetch(`/journal/${config.journalSlug || '{{ $journal->slug }}'}/files/${this.fileInfoFileId}/notes`, {
+                        const response = await fetch(`/${config.journalSlug || '{{ $journal->slug }}'}/files/${this.fileInfoFileId}/notes`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

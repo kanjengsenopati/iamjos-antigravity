@@ -293,6 +293,7 @@ class SubmissionFileController extends Controller
     public function getInformation(string $journalSlug, SubmissionFile $file): JsonResponse
     {
         $submission = $file->submission;
+        $file->loadMissing('uploader');
 
         // Fetch logs associated with this file or general file uploads/promotions for this submission
         $logs = \App\Models\SubmissionLog::where('submission_id', $submission->id)
@@ -310,18 +311,21 @@ class SubmissionFileController extends Controller
         if ($logs->count() > 0) {
             foreach ($logs as $log) {
                 $history[] = [
-                    'date'        => $log->created_at->format('Y-m-d'),
-                    'user'        => $log->user->name ?? 'System',
-                    'event'       => $log->description,
+                    'date'         => $log->created_at->format('Y-m-d'),
+                    'user'         => $log->user->name ?? ($file->uploader->name ?? 'System'),
+                    'event'        => $log->description ?? $log->title,
                     'download_url' => route('files.download', $file->id),
                 ];
             }
-        } else {
-            // Default upload event if log not found
+        }
+        
+        // Always include initial upload event if no log specifically matched
+        if (empty($history)) {
+            $uploaderName = $file->uploader->name ?? 'User';
             $history[] = [
-                'date'        => $file->created_at->format('Y-m-d'),
-                'user'        => $file->uploader->name ?? 'User',
-                'event'       => 'A file "' . $file->file_name . '" was uploaded for submission ' . ($submission->submission_code ?? $submission->id) . ' by ' . ($file->uploader->name ?? 'user') . '.',
+                'date'         => $file->created_at->format('Y-m-d'),
+                'user'         => $uploaderName,
+                'event'        => 'A file "' . $file->file_name . '" was uploaded by ' . $uploaderName . '.',
                 'download_url' => route('files.download', $file->id),
             ];
         }
