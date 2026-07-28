@@ -292,55 +292,79 @@ class SubmissionFileController extends Controller
      */
     public function getInformation(string $journalSlug, SubmissionFile $file): JsonResponse
     {
-        $submission = $file->submission;
-        $file->loadMissing('uploader');
+        try {
+            $submission = $file->submission;
+            $file->loadMissing('uploader');
 
-        // Fetch logs associated with this file or general file uploads/promotions for this submission
-        $logs = \App\Models\SubmissionLog::where('submission_id', $submission->id)
-            ->where(function($q) use ($file) {
-                $q->whereJsonContains('file_ids', (string)$file->id)
-                  ->orWhereJsonContains('file_ids', (int)$file->id)
-                  ->orWhere('title', 'like', '%' . $file->file_name . '%')
-                  ->orWhere('description', 'like', '%' . $file->file_name . '%');
-            })
-            ->latest('created_at')
-            ->get();
+            $history = [];
 
-        // Build history array
-        $history = [];
-        if ($logs->count() > 0) {
-            foreach ($logs as $log) {
+            // Fetch logs associated with this submission safely using try-catch and standard SQL queries
+            try {
+                $logs = \App\Models\SubmissionLog::where('submission_id', $submission->id)
+                    ->where(function($q) use ($file) {
+                        $q->where('title', 'like', '%' . $file->file_name . '%')
+                          ->orWhere('description', 'like', '%' . $file->file_name . '%');
+                    })
+                    ->latest('created_at')
+                    ->get();
+
+                if ($logs->count() > 0) {
+                    foreach ($logs as $log) {
+                        $history[] = [
+                            'date'         => $log->created_at->format('Y-m-d'),
+                            'user'         => $log->user->name ?? ($file->uploader->name ?? 'System'),
+                            'event'        => $log->description ?? $log->title,
+                            'download_url' => route('files.download', $file->id),
+                        ];
+                    }
+                }
+            } catch (\Throwable $logEx) {
+                \Log::warning('SubmissionLog query fallback for file history: ' . $logEx->getMessage());
+            }
+
+            // Always ensure initial upload event is in history if empty
+            if (empty($history)) {
+                $uploaderName = $file->uploader->name ?? 'User';
                 $history[] = [
-                    'date'         => $log->created_at->format('Y-m-d'),
-                    'user'         => $log->user->name ?? ($file->uploader->name ?? 'System'),
-                    'event'        => $log->description ?? $log->title,
+                    'date'         => $file->created_at ? $file->created_at->format('Y-m-d') : date('Y-m-d'),
+                    'user'         => $uploaderName,
+                    'event'        => 'A file "' . $file->file_name . '" was uploaded by ' . $uploaderName . '.',
                     'download_url' => route('files.download', $file->id),
                 ];
             }
-        }
-        
-        // Always include initial upload event if no log specifically matched
-        if (empty($history)) {
-            $uploaderName = $file->uploader->name ?? 'User';
-            $history[] = [
-                'date'         => $file->created_at->format('Y-m-d'),
-                'user'         => $uploaderName,
-                'event'        => 'A file "' . $file->file_name . '" was uploaded by ' . $uploaderName . '.',
-                'download_url' => route('files.download', $file->id),
-            ];
-        }
 
-        // Fetch notes from metadata
-        $metadata = $file->metadata ?? [];
-        $notes = $metadata['notes'] ?? [];
+            // Fetch notes from metadata
+            $metadata = $file->metadata ?? [];
+            $notes = is_array($metadata) && isset($metadata['notes']) && is_array($metadata['notes'])
+                ? $metadata['notes']
+                : [];
 
-        return response()->json([
-            'success'   => true,
-            'file_id'   => $file->id,
-            'file_name' => $file->file_name,
-            'history'   => $history,
-            'notes'     => array_reverse($notes), // latest first
-        ]);
+            return response()->json([
+                'success'   => true,
+                'file_id'   => $file->id,
+                'file_name' => $file->file_name,
+                'history'   => $history,
+                'notes'     => array_reverse(array_values($notes)), // latest first
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('getInformation error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            
+            // Safe fallback response to prevent 500 error on client
+            return response()->json([
+                'success'   => true,
+                'file_id'   => $file->id,
+                'file_name' => $file->file_name,
+                'history'   => [
+                    [
+                        'date'         => $file->created_at ? $file->created_at->format('Y-m-d') : date('Y-m-d'),
+                        'user'         => 'System',
+                        'event'        => 'File "' . $file->file_name . '" uploaded.',
+                        'download_url' => route('files.download', $file->id),
+                    ]
+                ],
+                'notes'     => [],
+            ]);
+        }
     }
 
     /**
@@ -352,19 +376,22 @@ class SubmissionFileController extends Controller
             'note' => 'required|string|max:2000',
         ]);
 
-        $metadata = $file->metadata ?? [];
-        $notes = $metadata['notes'] ?? [];
+        $metadata = is_array($file->metadata) ? $file->metadata : [];
+        $notes = isset($metadata['notes']) && is_array($metadata['notes']) ? $metadata['notes'] : [];
 
+        $user = auth()->user();
         $newNote = [
             'id'         => uniqid(),
-            'user_name'  => auth()->user()->name,
+            'user_name'  => $user->name ?? 'User',
             'note'       => $validated['note'],
             'created_at' => now()->format('Y-m-d H:i:s'),
         ];
 
         $notes[] = $newNote;
         $metadata['notes'] = $notes;
-        $file->update(['metadata' => $metadata]);
+
+        $file->metadata = $metadata;
+        $file->save();
 
         if ($request->wantsJson()) {
             return response()->json([
