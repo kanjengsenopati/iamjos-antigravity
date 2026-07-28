@@ -223,7 +223,7 @@ class SubmissionFileController extends Controller
     /**
      * Delete a file.
      */
-    public function destroy(SubmissionFile $file): RedirectResponse|JsonResponse
+    public function destroy(string $journalSlug, SubmissionFile $file): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $file->submission);
 
