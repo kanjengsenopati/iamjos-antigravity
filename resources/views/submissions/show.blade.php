@@ -2972,14 +2972,47 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white {{ $canPerformAction ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500 focus:ring-2 focus:ring-offset-2' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} transition-colors focus:outline-none">
                                         <i class="fa-solid fa-arrow-right mr-2"></i> {{ $isId ? 'Kirim ke Produksi' : 'Send to Production' }}
                                     </button>
+                                @elseif($submission->stage_id > 3 && $submission->status != 3)
+                                    <div x-data="{ changingDecision: false }">
+                                        <div x-show="!changingDecision" class="space-y-3">
+                                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                                <p class="text-sm text-gray-600 flex items-center">
+                                                    <i class="fa-solid fa-check-circle text-emerald-500 mr-2"></i>
+                                                    {{ $isId ? 'Dikirim ke produksi.' : 'Sent to production.' }}
+                                                </p>
+                                            </div>
+                                            <button @click="changingDecision = true"
+                                                class="text-sm text-indigo-600 font-medium hover:underline focus:outline-none block">
+                                                {{ $isId ? 'Ubah keputusan' : 'Change decision' }}
+                                            </button>
+                                        </div>
+
+                                        <div x-show="changingDecision" style="display: none;" class="space-y-3">
+                                            <div class="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-2">
+                                                <div class="flex items-start">
+                                                    <i class="fa-solid fa-info-circle text-teal-500 mt-0.5 mr-2"></i>
+                                                    <p class="text-xs text-teal-700">
+                                                        {{ $isId ? 'Lanjutkan file Hasil Penyuntingan ke tahap Produksi setelah proses penyuntingan selesai.' : 'Promote Copyedited files to Production stage when editing is complete.' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button @click="openSendToProductionModal()"
+                                                {{ !$canPerformAction ? 'disabled' : '' }}
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white {{ $canPerformAction ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500 focus:ring-2 focus:ring-offset-2' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }} transition-colors focus:outline-none">
+                                                <i class="fa-solid fa-arrow-right mr-2"></i> {{ $isId ? 'Kirim ke Produksi' : 'Send to Production' }}
+                                            </button>
+                                            <button @click="changingDecision = false"
+                                                class="text-xs text-gray-500 hover:text-gray-700 underline focus:outline-none w-full text-center block pt-1">
+                                                {{ $isId ? 'Batal' : 'Cancel' }}
+                                            </button>
+                                        </div>
+                                    </div>
                                 @else
                                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
                                         <p class="text-sm text-gray-600 flex items-center">
                                             <i class="fa-solid fa-check-circle text-gray-400 mr-2"></i>
                                             @if ($submission->status == 3)
                                                 {{ $isId ? 'Naskah telah ditolak.' : 'Submission has been declined.' }}
-                                            @elseif($submission->stage_id > 3)
-                                                {{ $isId ? 'Penyuntingan selesai. Dipindahkan ke Produksi.' : 'Copyediting complete. Moved to Production.' }}
                                             @else
                                                 {{ $isId ? 'Menunggu tahap penyuntingan.' : 'Awaiting copyediting stage.' }}
                                             @endif
