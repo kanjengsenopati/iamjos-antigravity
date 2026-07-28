@@ -492,11 +492,13 @@ class ReviewWorkflowController extends Controller
         if ($submission->journal_id !== $journal->id) abort(404);
 
         $validated = $request->validate([
-            'send_email' => 'sometimes|boolean',
-            'email_body' => 'nullable|required_if:send_email,true|string',
+            'send_email'     => 'sometimes|boolean',
+            'email_body'     => 'nullable|required_if:send_email,true|string',
+            'selected_files' => 'nullable|array',
+            'selected_files.*' => 'integer|exists:submission_files,id',
         ]);
 
-        DB::transaction(function () use ($validated, $submission) {
+        DB::transaction(function () use ($validated, $submission, $request) {
             // 1. Update submission stage to Production
             $submission->update([
                 'stage'    => Submission::STAGE_PRODUCTION,
@@ -504,13 +506,19 @@ class ReviewWorkflowController extends Controller
                 'status'   => Submission::STATUS_IN_PRODUCTION ?? 'in_production',
             ]);
 
-            // 2. Auto-promote ALL Draft and Copyedited files to Production stage
-            $filesToPromote = SubmissionFile::where('submission_id', $submission->id)
+            // 2. Promote selected (or all if unspecified) Draft and Copyedited files to Production stage
+            $filesQuery = SubmissionFile::where('submission_id', $submission->id)
                 ->whereIn('stage', [
                     SubmissionFile::STAGE_COPYEDIT_DRAFT,
                     SubmissionFile::STAGE_COPYEDITED,
-                ])
-                ->get();
+                ]);
+
+            if ($request->has('selected_files')) {
+                $selectedIds = $request->input('selected_files', []);
+                $filesQuery->whereIn('id', $selectedIds);
+            }
+
+            $filesToPromote = $filesQuery->get();
 
             $promotedIds = [];
             foreach ($filesToPromote as $file) {

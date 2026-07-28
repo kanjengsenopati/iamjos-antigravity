@@ -6843,7 +6843,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 </span>
                                             </div>
                                             @foreach ($copyeditedFiles as $file)
-                                                <div class="flex items-center px-4 py-3 border-b border-teal-100 last:border-b-0 bg-white">
+                                                <div class="flex items-center px-4 py-3 border-b border-teal-100 last:border-b-0 bg-white hover:bg-teal-50/50 transition-colors">
+                                                    <input type="checkbox" name="selected_files[]" value="{{ $file->id }}" checked
+                                                        class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded mr-3 cursor-pointer">
                                                     <i class="fa-regular fa-file-lines text-teal-500 flex-shrink-0 mr-3"></i>
                                                     <div class="flex-1 min-w-0">
                                                         <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
@@ -6870,7 +6872,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 </span>
                                             </div>
                                             @foreach ($draftFiles as $file)
-                                                <div class="flex items-center px-4 py-3 border-b border-blue-100 last:border-b-0 bg-white">
+                                                <div class="flex items-center px-4 py-3 border-b border-blue-100 last:border-b-0 bg-white hover:bg-blue-50/50 transition-colors">
+                                                    <input type="checkbox" name="selected_files[]" value="{{ $file->id }}" checked
+                                                        class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded mr-3 cursor-pointer">
                                                     <i class="fa-regular fa-file text-blue-500 flex-shrink-0 mr-3"></i>
                                                     <div class="flex-1 min-w-0">
                                                         <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">{{ $file->file_name }}</p>
@@ -6906,9 +6910,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <div class="flex">
                                         <i class="fa-solid fa-circle-info text-teal-500 mt-0.5 mr-3 flex-shrink-0"></i>
                                         <div>
-                                            <p class="text-sm font-medium text-teal-800">{{ $isId ? 'Penerusan File Otomatis' : 'Automatic File Forwarding' }}</p>
+                                            <p class="text-sm font-medium text-teal-800">{{ $isId ? 'Penerusan File' : 'File Forwarding' }}</p>
                                             <p class="text-xs text-teal-700 mt-1">
-                                                {{ $isId ? 'Semua ' . ($copyeditedFiles->count() + $draftFiles->count()) . ' file yang tercantum di atas akan disalin secara otomatis ke tahap Produksi. Status naskah akan berubah menjadi "Dalam Produksi".' : 'All ' . ($copyeditedFiles->count() + $draftFiles->count()) . ' file(s) listed above will be automatically copied to the Production stage. The submission status will change to "In Production".' }}
+                                                {{ $isId ? 'File yang dipilih di atas akan disalin secara otomatis ke tahap Produksi. Status naskah akan berubah menjadi "Dalam Produksi".' : 'Selected file(s) listed above will be automatically copied to the Production stage. The submission status will change to "In Production".' }}
                                             </p>
                                         </div>
                                     </div>
