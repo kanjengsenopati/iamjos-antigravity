@@ -490,6 +490,15 @@ class Submission extends Model
     }
 
     /**
+     * Get timeline logs ensuring published log exists if submission is published.
+     */
+    public function getTimelineLogs()
+    {
+        SubmissionLog::ensurePublishedLog($this);
+        return $this->logs()->with('user')->orderBy('created_at', 'desc')->get();
+    }
+
+    /**
      * Get publication galleys for this submission
      */
     public function galleys(): HasMany

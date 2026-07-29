@@ -34,6 +34,7 @@
 
             @php
                 // Eager-load user + file to prevent N+1 queries
+                \App\Models\SubmissionLog::ensurePublishedLog($submission);
                 $logs = $submission->activityLogs()->with(['user', 'files'])->get();
             @endphp
 

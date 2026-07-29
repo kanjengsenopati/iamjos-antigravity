@@ -6669,7 +6669,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     {{-- Modal Body --}}
                     <div class="bg-white px-6 py-6 max-h-[calc(100vh-16rem)] overflow-y-auto">
                         @php
-                            $allLogs = $submission->logs()->with('user')->orderBy('created_at', 'desc')->get();
+                            $allLogs = $submission->getTimelineLogs();
                         @endphp
 
                         @if ($allLogs->count() > 0)

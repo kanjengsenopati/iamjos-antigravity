@@ -476,4 +476,42 @@ class SubmissionLog extends Model
     {
         return self::STAGE_MAP[$stageId] ?? null;
     }
+
+    /**
+     * Ensure a published log entry exists for a published submission.
+     */
+    public static function ensurePublishedLog(Submission $submission): void
+    {
+        $isPublished = $submission->status === Submission::STATUS_PUBLISHED
+            || $submission->published_at !== null
+            || ($submission->currentPublication && $submission->currentPublication->status === \App\Models\Publication::STATUS_PUBLISHED);
+
+        if ($isPublished) {
+            $hasLog = self::where('submission_id', $submission->id)
+                ->where('event_type', self::EVENT_PUBLISHED)
+                ->exists();
+
+            if (!$hasLog) {
+                $publishedAt = $submission->published_at 
+                    ?? $submission->currentPublication?->date_published 
+                    ?? $submission->updated_at 
+                    ?? now();
+
+                $issueId = $submission->issue_id ?? $submission->currentPublication?->issue_id;
+                $issue = $submission->issue ?? ($issueId ? \App\Models\Issue::find($issueId) : null);
+                $issueIdentifier = $issue?->identifier ?? 'the journal';
+
+                self::create([
+                    'submission_id' => $submission->id,
+                    'user_id'       => $submission->user_id ?? auth()->id(),
+                    'event_type'    => self::EVENT_PUBLISHED,
+                    'title'         => 'Article Published',
+                    'description'   => "This submission was published in {$issueIdentifier}.",
+                    'stage'         => 'production',
+                    'created_at'    => $publishedAt,
+                    'updated_at'    => $publishedAt,
+                ]);
+            }
+        }
+    }
 }
