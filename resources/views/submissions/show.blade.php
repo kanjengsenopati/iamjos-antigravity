@@ -4233,7 +4233,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                             #
-                                                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                             {{ $isId ? 'Nama' : 'Name' }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                             {{ $isId ? 'Email' : 'Email' }}</th>
@@ -4243,8 +4244,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             {{ $isId ? 'Utama' : 'Primary' }}</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                             {{ $isId ? 'Daftar Telusur' : 'In Browse' }}</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                                            {{ $isId ? 'Aksi' : 'Actions' }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -4256,7 +4255,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center">
                                                     <div
-                                                        class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold mr-3">
+                                                        class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold mr-3 flex-shrink-0">
                                                         {{ strtoupper(substr($author['name'], 0, 1)) }}
                                                     </div>
                                                     <div>
@@ -4265,10 +4264,44 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                         </p>
                                                         @if ($author['orcid'])
                                                             <a href="{{ $author['orcid_url'] }}" target="_blank"
-                                                                class="text-xs text-green-600 hover:underline">
+                                                                class="text-xs text-green-600 hover:underline block">
                                                                 <i class="fa-brands fa-orcid mr-0.5"></i> ORCID
                                                             </a>
                                                         @endif
+                                                        @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
+                                                            <div class="flex items-center gap-1 mt-1">
+                                                                <button type="button"
+                                                                    :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
+                                                                    @click="openContributorModal({
+                                                                        id: '{{ $author['id'] }}',
+                                                                        given_name: '{{ $author['given_name'] ?? '' }}',
+                                                                        family_name: '{{ $author['family_name'] ?? '' }}',
+                                                                        email: '{{ $author['email'] }}',
+                                                                        affiliation: '{{ $author['affiliation'] ?? '' }}',
+                                                                        country: '{{ $author['country'] ?? '' }}',
+                                                                        orcid: '{{ $author['orcid'] ?? '' }}',
+                                                                        is_corresponding: {{ $author['is_corresponding'] ? 'true' : 'false' }},
+                                                                        include_in_browse: {{ $author['include_in_browse'] ?? true ? 'true' : 'false' }}
+                                                                    })"
+                                                                    class="inline-flex items-center justify-center w-7 h-7 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                    title="{{ $isId ? 'Edit Kontributor' : 'Edit Contributor' }}">
+                                                                    <i class="fa-solid fa-pen text-xs"></i>
+                                                                </button>
+                                                                <form
+                                                                    action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'author' => $author['id']]) }}"
+                                                                    method="POST" class="inline"
+                                                                    onsubmit="return confirm('{{ $isId ? 'Hapus kontributor ini?' : 'Remove this contributor?' }}')">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit"
+                                                                        @if ($pubStatus == 3) disabled @endif
+                                                                        class="inline-flex items-center justify-center w-7 h-7 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                        title="{{ $isId ? 'Hapus Kontributor' : 'Remove Contributor' }}">
+                                                                        <i class="fa-solid fa-trash text-xs"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        @endjournalPermission
                                                     </div>
                                                 </div>
                                             </td>
@@ -4292,44 +4325,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                     <span class="text-gray-300">-</span>
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                                    <div class="flex items-center justify-end gap-1">
-                                                        <button type="button"
-                                                            :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
-                                                            @click="openContributorModal({
-                                                                id: '{{ $author['id'] }}',
-                                                                given_name: '{{ $author['given_name'] ?? '' }}',
-                                                                family_name: '{{ $author['family_name'] ?? '' }}',
-                                                                email: '{{ $author['email'] }}',
-                                                                affiliation: '{{ $author['affiliation'] ?? '' }}',
-                                                                country: '{{ $author['country'] ?? '' }}',
-                                                                orcid: '{{ $author['orcid'] ?? '' }}',
-                                                                is_corresponding: {{ $author['is_corresponding'] ? 'true' : 'false' }},
-                                                                include_in_browse: {{ $author['include_in_browse'] ?? true ? 'true' : 'false' }}
-                                                            })"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                            <i class="fa-solid fa-pen"></i>
-                                                        </button>
-                                                        <form
-                                                            action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'author' => $author['id']]) }}"
-                                                            method="POST" class="inline"
-                                                            onsubmit="return confirm('{{ $isId ? 'Hapus kontributor ini?' : 'Remove this contributor?' }}')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                @if ($pubStatus == 3) disabled @endif
-                                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                                <i class="fa-solid fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                @endjournalPermission
-                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="px-6 py-12 text-center">
+                                            <td colspan="6" class="px-6 py-12 text-center">
                                                 <div class="flex flex-col items-center">
                                                     <div
                                                         class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
