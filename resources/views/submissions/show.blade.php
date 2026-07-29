@@ -25,7 +25,10 @@
         3 => 'copyediting',
         4 => 'production',
     ];
-    $defaultStage = $stageMap[$submission->stage_id] ?? 'submission';
+    $reqStage = request('stage') ?? request('subtab');
+    $defaultStage = ($reqStage && in_array($reqStage, ['submission', 'review', 'copyediting', 'production']))
+        ? $reqStage
+        : ($stageMap[$submission->stage_id] ?? 'submission');
 
     // Otorisasi Workflow Editor
     $isAssignedEditor = false;
@@ -106,7 +109,7 @@
         function registerSubmissionWorkflow() {
             Alpine.data('submissionWorkflow', (config = {}) => ({
                 activeTab: (new URLSearchParams(window.location.search)).get('tab') || 'workflow',
-                activeStage: config?.defaultStage || 'submission',
+                activeStage: (new URLSearchParams(window.location.search)).get('stage') || (new URLSearchParams(window.location.search)).get('subtab') || config?.defaultStage || 'submission',
 
                 init() {
                     console.log('[SW-DEBUG] submissionWorkflow Alpine component init() started');
@@ -116,6 +119,12 @@
                         if (value !== 'publication') {
                             url.searchParams.delete('subtab');
                         }
+                        window.history.replaceState({}, document.title, url.pathname + url.search);
+                    });
+
+                    this.$watch('activeStage', (value) => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('stage', value);
                         window.history.replaceState({}, document.title, url.pathname + url.search);
                     });
 

@@ -463,7 +463,14 @@ class ReviewWorkflowController extends Controller
             'decline' => 'Submission declined.',
         ];
 
-        return back()->with('success', $messages[$request->decision] ?? 'Decision recorded.');
+        $targetStage = match ($request->decision) {
+            'accept' => 'copyediting',
+            'resubmit_for_review', 'request_revisions' => 'review',
+            default => ($submission->stage ?? 'submission'),
+        };
+
+        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission->slug]) . '?tab=workflow&stage=' . $targetStage)
+            ->with('success', $messages[$request->decision] ?? 'Decision recorded.');
     }
 
     /**
@@ -479,7 +486,8 @@ class ReviewWorkflowController extends Controller
             'stage_id' => 3,
         ]);
 
-        return back()->with('success', 'Submission moved to Copyediting.');
+        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission->slug]) . '?tab=workflow&stage=copyediting')
+            ->with('success', 'Submission moved to Copyediting.');
     }
 
     /**
@@ -575,7 +583,8 @@ class ReviewWorkflowController extends Controller
             );
         }
 
-        return back()->with('success', 'Submission moved to Production stage.');
+        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission->slug]) . '?tab=workflow&stage=production')
+            ->with('success', 'Submission moved to Production stage.');
     }
 
 

@@ -1003,7 +1003,8 @@ class SubmissionWorkflowController extends Controller
                 stage:       Submission::STAGE_REVIEW,
             );
 
-            return back()->with('success', 'Submission sent to Review stage. ' . count($validated['selected_files'] ?? []) . ' file(s) promoted.');
+            return redirect(route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]) . '?tab=workflow&stage=review')
+                ->with('success', 'Submission sent to Review stage. ' . count($validated['selected_files'] ?? []) . ' file(s) promoted.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to promote to review: ' . $e->getMessage());
@@ -1125,7 +1126,8 @@ class SubmissionWorkflowController extends Controller
                 stage:       Submission::STAGE_COPYEDITING,
             );
 
-            return back()->with('success', 'Submission accepted and moved directly to Copyediting.');
+            return redirect(route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $submission->slug]) . '?tab=workflow&stage=copyediting')
+                ->with('success', 'Submission accepted and moved directly to Copyediting.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to skip review: ' . $e->getMessage());
