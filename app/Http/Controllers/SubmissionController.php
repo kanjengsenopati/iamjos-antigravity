@@ -415,14 +415,16 @@ class SubmissionController extends Controller
                 if (!empty($validated['keywords'])) {
                     $keywordIds = [];
                     foreach ($validated['keywords'] as $content) {
-                        $content = trim($content);
-                        if (empty($content)) {
-                            continue;
+                        $splitContents = preg_split('/[,;\n]+/', (string) $content, -1, PREG_SPLIT_NO_EMPTY);
+                        foreach ($splitContents as $rawTag) {
+                            $cleanTag = trim($rawTag);
+                            if ($cleanTag !== '') {
+                                $keyword = \App\Models\Keyword::firstOrCreate(['content' => $cleanTag]);
+                                $keywordIds[] = $keyword->id;
+                            }
                         }
-                        $keyword = \App\Models\Keyword::firstOrCreate(['content' => $content]);
-                        $keywordIds[] = $keyword->id;
                     }
-                    $submission->keywords()->sync($keywordIds);
+                    $submission->keywords()->sync(array_unique($keywordIds));
                 }
 
                 // 2. Upload File
@@ -1083,14 +1085,16 @@ class SubmissionController extends Controller
         if (isset($validated['keywords'])) {
             $keywordIds = [];
             foreach ($validated['keywords'] as $content) {
-                $content = trim($content);
-                if (empty($content)) {
-                    continue;
+                $splitContents = preg_split('/[,;\n]+/', (string) $content, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($splitContents as $rawTag) {
+                    $cleanTag = trim($rawTag);
+                    if ($cleanTag !== '') {
+                        $keyword = \App\Models\Keyword::firstOrCreate(['content' => $cleanTag]);
+                        $keywordIds[] = $keyword->id;
+                    }
                 }
-                $keyword = \App\Models\Keyword::firstOrCreate(['content' => $content]);
-                $keywordIds[] = $keyword->id;
             }
-            $submission->keywords()->sync($keywordIds);
+            $submission->keywords()->sync(array_unique($keywordIds));
         }
 
         // Log metadata diff if any tracked field changed

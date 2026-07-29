@@ -226,6 +226,7 @@
                                 x-model="newTag"
                                 @keydown.enter.prevent="handleEnter()"
                                 @keydown.comma.prevent="addTag()"
+                                @paste="handlePaste($event)"
                                 @input="fetchSuggestions()"
                                 @keydown.arrow-down.prevent="highlightDown()"
                                 @keydown.arrow-up.prevent="highlightUp()"
@@ -850,17 +851,29 @@
                 controller: null,
 
                 addTag() {
-                    let tag = this.newTag.trim();
-                    if (tag.endsWith(',')) {
-                        tag = tag.slice(0, -1).trim();
-                    }
-                    if (tag && !this.tags.includes(tag)) {
-                        this.tags.push(tag);
-                    }
+                    let text = this.newTag;
+                    if (!text) return;
+
+                    let items = text.split(/[,;\n]+/).map(item => item.trim()).filter(item => item.length > 0);
+                    items.forEach(item => {
+                        if (!this.tags.includes(item)) {
+                            this.tags.push(item);
+                        }
+                    });
+
                     this.newTag = '';
                     this.suggestions = [];
                     this.showSuggestions = false;
                     this.highlightedIndex = -1;
+                },
+
+                handlePaste(e) {
+                    const pastedText = (e.clipboardData || window.clipboardData)?.getData('text');
+                    if (pastedText && (pastedText.includes(',') || pastedText.includes(';') || pastedText.includes('\n'))) {
+                        e.preventDefault();
+                        this.newTag = (this.newTag ? this.newTag + ' ' : '') + pastedText;
+                        this.addTag();
+                    }
                 },
 
                 removeTag(index) {

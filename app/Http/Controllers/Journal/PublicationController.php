@@ -61,18 +61,22 @@ class PublicationController extends Controller
         // Sync keywords (many-to-many)
         if (isset($validated['keywords'])) {
             $keywordIds = [];
+            $cleanKeywords = [];
             foreach ($validated['keywords'] as $content) {
-                $content = trim($content);
-                if (empty($content)) {
-                    continue;
+                $splitContents = preg_split('/[,;\n]+/', (string) $content, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($splitContents as $rawTag) {
+                    $cleanTag = trim($rawTag);
+                    if ($cleanTag !== '') {
+                        $keyword = \App\Models\Keyword::firstOrCreate(['content' => $cleanTag]);
+                        $keywordIds[] = $keyword->id;
+                        $cleanKeywords[] = $cleanTag;
+                    }
                 }
-                $keyword = \App\Models\Keyword::firstOrCreate(['content' => $content]);
-                $keywordIds[] = $keyword->id;
             }
-            $submission->keywords()->sync($keywordIds);
+            $submission->keywords()->sync(array_unique($keywordIds));
             
             // Update publication keywords as comma-separated string for backward compatibility
-            $publication->update(['keywords' => implode(', ', $validated['keywords'])]);
+            $publication->update(['keywords' => implode(', ', array_unique($cleanKeywords))]);
         }
 
         return back()->with('success', 'Metadata updated successfully.');
