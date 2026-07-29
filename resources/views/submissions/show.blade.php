@@ -4269,7 +4269,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             </a>
                                                         @endif
                                                         @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
-                                                            <div class="flex items-center gap-1 mt-1">
+                                                            <div class="flex items-center gap-1.5 mt-2 flex-wrap">
                                                                 <button type="button"
                                                                     :disabled="{{ $pubStatus == 3 ? 'true' : 'false' }}"
                                                                     @click="openContributorModal({
@@ -4283,9 +4283,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         is_corresponding: {{ $author['is_corresponding'] ? 'true' : 'false' }},
                                                                         include_in_browse: {{ $author['include_in_browse'] ?? true ? 'true' : 'false' }}
                                                                     })"
-                                                                    class="inline-flex items-center justify-center w-7 h-7 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                    title="{{ $isId ? 'Edit Kontributor' : 'Edit Contributor' }}">
-                                                                    <i class="fa-solid fa-pen text-xs"></i>
+                                                                    class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 border border-slate-200/60 transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed">
+                                                                    <i class="fa-solid fa-pen-to-square mr-1.5 text-amber-500 text-[10px]"></i>
+                                                                    {{ $isId ? 'Edit' : 'Edit' }}
                                                                 </button>
                                                                 <form
                                                                     action="{{ route('journal.workflow.publication.contributor.destroy', ['journal' => $journal->slug, 'submission' => $submission->slug, 'author' => $author['id']]) }}"
@@ -4295,9 +4295,9 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                     @method('DELETE')
                                                                     <button type="submit"
                                                                         @if ($pubStatus == 3) disabled @endif
-                                                                        class="inline-flex items-center justify-center w-7 h-7 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                        title="{{ $isId ? 'Hapus Kontributor' : 'Remove Contributor' }}">
-                                                                        <i class="fa-solid fa-trash text-xs"></i>
+                                                                        class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200/60 transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed">
+                                                                        <i class="fa-solid fa-trash-can mr-1.5 text-rose-500 text-[10px]"></i>
+                                                                        {{ $isId ? 'Hapus' : 'Delete' }}
                                                                     </button>
                                                                 </form>
                                                             </div>
