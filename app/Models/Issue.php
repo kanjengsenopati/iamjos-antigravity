@@ -196,19 +196,59 @@ class Issue extends Model
     // =====================================================
 
     /**
-     * Get formatted issue identifier (Vol. X No. Y, Year)
+     * Get formatted issue volume/number/year identifier (e.g. "Vol. 4 No. 2 (2026)")
      */
     public function getIdentifierAttribute(): string
     {
-        return "Vol. {$this->volume} No. {$this->number}, {$this->year}";
+        $parts = [];
+        if ($this->volume && ($this->show_volume ?? true)) {
+            $parts[] = "Vol. {$this->volume}";
+        }
+        if ($this->number && ($this->show_number ?? true)) {
+            $parts[] = "No. {$this->number}";
+        }
+        if ($this->year && ($this->show_year ?? true)) {
+            $parts[] = "({$this->year})";
+        }
+        return implode(' ', $parts);
     }
 
     /**
-     * Get display title (custom title or identifier)
+     * Get full issue identification string in OJS 3 format:
+     * e.g. "Vol. 4 No. 2 (2026): Mel: Riset Ilmu Manajemen Bisnis dan Akuntansi"
+     * or "Vol. 1 No. 2 (2026): TAWAZUN: Journal of Islamic Finance and Digital Innovation"
+     */
+    public function getIssueIdentificationAttribute(): string
+    {
+        $identifier = $this->identifier;
+        $title = trim($this->title ?? '');
+
+        // Fallback to journal name if title is empty
+        if (empty($title)) {
+            if ($this->relationLoaded('journal') && $this->journal) {
+                $title = $this->journal->name;
+            } elseif ($this->journal_id) {
+                $title = Journal::where('id', $this->journal_id)->value('name') ?? '';
+            }
+        }
+
+        if (!empty($identifier) && !empty($title)) {
+            // Check if title already starts with identifier to prevent duplication
+            if (Str::startsWith($title, $identifier)) {
+                return $title;
+            }
+            return "{$identifier}: {$title}";
+        }
+
+        return !empty($identifier) ? $identifier : $title;
+    }
+
+    /**
+     * Get display title (uses full OJS 3 issue identification)
      */
     public function getDisplayTitleAttribute(): string
     {
-        return $this->title ?: $this->identifier;
+        return $this->issue_identification;
     }
 
     /**
