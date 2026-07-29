@@ -43,6 +43,7 @@ class SubmissionLog extends Model
     public const EVENT_FILE_UPLOADED         = 'file_uploaded';
     public const EVENT_METADATA_UPDATED      = 'metadata_updated';
     public const EVENT_PUBLISHED             = 'published';
+    public const EVENT_UNPUBLISHED           = 'unpublished';
 
     // =====================================================
     // STAGE NAME MAP (integer stage_id → string)
@@ -98,6 +99,7 @@ class SubmissionLog extends Model
             self::EVENT_FILE_UPLOADED       => 'fa-file-arrow-up',
             self::EVENT_METADATA_UPDATED    => 'fa-pen-to-square',
             self::EVENT_PUBLISHED           => 'fa-globe',
+            self::EVENT_UNPUBLISHED         => 'fa-globe-slash',
             default                         => 'fa-circle',
         };
     }
@@ -117,6 +119,7 @@ class SubmissionLog extends Model
             self::EVENT_FILE_UPLOADED       => 'teal',
             self::EVENT_METADATA_UPDATED    => 'orange',
             self::EVENT_PUBLISHED           => 'green',
+            self::EVENT_UNPUBLISHED         => 'amber',
             default                         => 'gray',
         };
     }

@@ -7,6 +7,7 @@ use App\Models\Issue;
 use App\Models\PublicationGalley;
 use App\Models\Submission;
 use App\Models\SubmissionFile;
+use App\Models\SubmissionLog;
 use App\Services\FileUploadSecurityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -337,6 +338,14 @@ class ProductionWorkflowController extends Controller
             'published_at' => now(),
         ]);
 
+        SubmissionLog::log(
+            submission: $submission,
+            eventType: SubmissionLog::EVENT_PUBLISHED,
+            title: 'Article Published',
+            description: "This submission was published in " . ($submission->issue?->identifier ?? 'the journal') . ".",
+            stage: 'production'
+        );
+
         // Notify author via email
         if ($submission->author) {
             try {
@@ -380,6 +389,14 @@ class ProductionWorkflowController extends Controller
             'status'       => Submission::STATUS_ACCEPTED, // Revert to accepted
             'published_at' => null,
         ]);
+
+        SubmissionLog::log(
+            submission: $submission,
+            eventType: SubmissionLog::EVENT_UNPUBLISHED,
+            title: 'Article Unpublished',
+            description: "This submission publication was withdrawn and reverted to accepted status.",
+            stage: 'production'
+        );
 
         return back()->with('success', 'Submission has been unpublished.');
     }

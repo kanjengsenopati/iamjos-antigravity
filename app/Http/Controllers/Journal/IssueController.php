@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Journal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Issue;
+use App\Models\Submission;
+use App\Models\SubmissionLog;
 use Illuminate\Http\Request;
 
 class IssueController extends Controller
@@ -228,6 +230,20 @@ class IssueController extends Controller
 
         $issue->update($issueData);
 
+        foreach ($issue->submissions as $sub) {
+            $sub->update([
+                'status' => Submission::STATUS_PUBLISHED,
+                'published_at' => now(),
+            ]);
+            SubmissionLog::log(
+                submission: $sub,
+                eventType: SubmissionLog::EVENT_PUBLISHED,
+                title: 'Article Published',
+                description: "Published via issue publication ({$issue->identifier}).",
+                stage: $sub->stage
+            );
+        }
+
         return back()->with('success', "Issue {$issue->identifier} has been published.");
     }
 
@@ -243,6 +259,20 @@ class IssueController extends Controller
             'is_published' => false,
             'published_at' => null,
         ]);
+
+        foreach ($issue->submissions as $sub) {
+            $sub->update([
+                'status' => Submission::STATUS_ACCEPTED,
+                'published_at' => null,
+            ]);
+            SubmissionLog::log(
+                submission: $sub,
+                eventType: SubmissionLog::EVENT_UNPUBLISHED,
+                title: 'Article Unpublished',
+                description: "Unpublished due to issue unpublish ({$issue->identifier}).",
+                stage: $sub->stage
+            );
+        }
 
         return back()->with('success', "Issue {$issue->identifier} has been unpublished.");
     }

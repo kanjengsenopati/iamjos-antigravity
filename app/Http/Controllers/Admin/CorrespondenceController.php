@@ -96,6 +96,7 @@ class CorrespondenceController extends Controller
             SubmissionLog::EVENT_DISCUSSION_CREATED => 'Diskusi editorial baru (New Editorial Discussion)',
             SubmissionLog::EVENT_FILE_UPLOADED => 'File revisi/pendukung diunggah (File Uploaded)',
             SubmissionLog::EVENT_PUBLISHED => 'Artikel diterbitkan (Article Published)',
+            SubmissionLog::EVENT_UNPUBLISHED => 'Artikel dibatalkan terbit (Article Unpublished)',
             default => $title ?? 'Aktivitas Sistem (System Activity)',
         };
     }
@@ -109,6 +110,7 @@ class CorrespondenceController extends Controller
             SubmissionLog::EVENT_SUBMITTED => 'Submitted',
             SubmissionLog::EVENT_DECISION_MADE => 'Decision',
             SubmissionLog::EVENT_PUBLISHED => 'Published',
+            SubmissionLog::EVENT_UNPUBLISHED => 'Unpublished',
             default => 'Process',
         };
     }

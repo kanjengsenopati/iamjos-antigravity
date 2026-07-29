@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Issue;
 use App\Models\Journal;
 use App\Models\Submission;
+use App\Models\SubmissionLog;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -297,11 +298,20 @@ class IssueController extends Controller
             'published_at' => now(),
         ]);
 
-        // Also publish all assigned submissions
-        $issue->submissions()->update([
-            'status' => Submission::STATUS_PUBLISHED,
-            'published_at' => now(),
-        ]);
+        // Also publish all assigned submissions and log activity
+        foreach ($issue->submissions as $sub) {
+            $sub->update([
+                'status' => Submission::STATUS_PUBLISHED,
+                'published_at' => now(),
+            ]);
+            SubmissionLog::log(
+                submission: $sub,
+                eventType: SubmissionLog::EVENT_PUBLISHED,
+                title: 'Article Published',
+                description: "Published via issue publication ({$issue->identifier}).",
+                stage: $sub->stage
+            );
+        }
 
         return back()->with('success', 'Issue published successfully. ' . $issue->submissions()->count() . ' article(s) are now live.');
     }
@@ -323,11 +333,20 @@ class IssueController extends Controller
             'published_at' => null,
         ]);
 
-        // Optionally revert submissions to accepted status
-        $issue->submissions()->update([
-            'status' => Submission::STATUS_ACCEPTED,
-            'published_at' => null,
-        ]);
+        // Revert submissions to accepted status and log activity
+        foreach ($issue->submissions as $sub) {
+            $sub->update([
+                'status' => Submission::STATUS_ACCEPTED,
+                'published_at' => null,
+            ]);
+            SubmissionLog::log(
+                submission: $sub,
+                eventType: SubmissionLog::EVENT_UNPUBLISHED,
+                title: 'Article Unpublished',
+                description: "Unpublished due to issue unpublish ({$issue->identifier}).",
+                stage: $sub->stage
+            );
+        }
 
         return back()->with('success', 'Issue unpublished. Articles have been reverted to accepted status.');
     }

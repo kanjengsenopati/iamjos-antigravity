@@ -7,6 +7,7 @@ use App\Models\Publication;
 use App\Models\Section;
 use App\Models\Submission;
 use App\Models\SubmissionAuthor;
+use App\Models\SubmissionLog;
 use App\Services\DoiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -315,34 +316,13 @@ class PublicationController extends Controller
             'published_at' => $publication->date_published ?? now(),
         ]);
 
-        // Notify author via email
-        if ($submission->author) {
-            // Send email notification (Now handled globally by SubmissionLog::log)
-            // try {
-            //     $submission->author->notify(new \App\Notifications\ArticlePublished($submission, $publication->issue));
-            // } catch (\Exception $e) {
-            //     \Illuminate\Support\Facades\Log::error('Failed to send article published email to author: ' . $e->getMessage());
-            // }
-        }
-
-        // Notify assigned editors via email (Now handled globally by SubmissionLog::log)
-        // try {
-        //     $assignedEditors = $submission->activeEditors()
-        //         ->with('user')->get()
-        //         ->map(fn($a) => $a->user)
-        //         ->filter();
-
-        //     foreach ($assignedEditors as $assignedEditor) {
-        //         $assignedEditor->notify(new \App\Notifications\WorkflowEventNotification(
-        //             $submission,
-        //             'Submission Published',
-        //             "The submission \"{$submission->title}\" has been published in " . ($publication->issue?->identifier ?? 'the journal') . ".",
-        //             url("/{$journal}/submissions/{$submission->slug}")
-        //         ));
-        //     }
-        // } catch (\Exception $e) {
-        //     \Illuminate\Support\Facades\Log::error('Failed to notify editors of publication: ' . $e->getMessage());
-        // }
+        SubmissionLog::log(
+            submission: $submission,
+            eventType: SubmissionLog::EVENT_PUBLISHED,
+            title: 'Article Published',
+            description: "Article version was published in " . ($publication->issue?->identifier ?? 'the journal') . ".",
+            stage: $submission->stage
+        );
 
         return back()->with('success', 'Publication is now live!');
     }
@@ -359,6 +339,15 @@ class PublicationController extends Controller
             'status' => Submission::STATUS_ACCEPTED,
             'published_at' => null,
         ]);
+
+        SubmissionLog::log(
+            submission: $submission,
+            eventType: SubmissionLog::EVENT_UNPUBLISHED,
+            title: 'Article Unpublished',
+            description: "Article version was unpublished.",
+            stage: $submission->stage
+        );
+
         return back()->with('success', 'Publication has been unpublished.');
     }
     /**
