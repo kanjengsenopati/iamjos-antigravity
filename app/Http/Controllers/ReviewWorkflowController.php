@@ -469,7 +469,7 @@ class ReviewWorkflowController extends Controller
             default => ($submission->stage ?? 'submission'),
         };
 
-        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission->slug]) . '?tab=workflow&stage=' . $targetStage)
+        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission]) . '?tab=workflow&stage=' . $targetStage)
             ->with('success', $messages[$request->decision] ?? 'Decision recorded.');
     }
 
@@ -486,7 +486,7 @@ class ReviewWorkflowController extends Controller
             'stage_id' => 3,
         ]);
 
-        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission->slug]) . '?tab=workflow&stage=copyediting')
+        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission]) . '?tab=workflow&stage=copyediting')
             ->with('success', 'Submission moved to Copyediting.');
     }
 
@@ -503,7 +503,7 @@ class ReviewWorkflowController extends Controller
             'send_email'     => 'sometimes|boolean',
             'email_body'     => 'nullable|required_if:send_email,true|string',
             'selected_files' => 'nullable|array',
-            'selected_files.*' => 'integer|exists:submission_files,id',
+            'selected_files.*' => 'uuid|exists:submission_files,id',
         ]);
 
         DB::transaction(function () use ($validated, $submission, $request) {
@@ -583,7 +583,7 @@ class ReviewWorkflowController extends Controller
             );
         }
 
-        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission->slug]) . '?tab=workflow&stage=production')
+        return redirect(route('journal.submissions.show', ['journal' => $journalSlug, 'submission' => $submission]) . '?tab=workflow&stage=production')
             ->with('success', 'Submission moved to Production stage.');
     }
 
