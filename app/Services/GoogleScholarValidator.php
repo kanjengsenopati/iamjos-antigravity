@@ -194,14 +194,24 @@ class GoogleScholarValidator
         $singleNameAuthors = [];
 
         foreach ($authors as $author) {
-            if (empty($author->affiliation)) {
-                $missingAffiliation[] = $author->first_name . ' ' . $author->last_name;
+            $fullName = trim($author->name ?? '');
+            if (empty($fullName)) {
+                $fullName = trim(($author->given_name ?? '') . ' ' . ($author->family_name ?? ''));
             }
-            // Simple check for single name (no space check if name field used, but we split logic usually)
-            // Assuming accessors or properties
-            $nameParts = explode(' ', trim($author->first_name . ' ' . $author->last_name));
+            if (empty($fullName)) {
+                $fullName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? ''));
+            }
+            if (empty($fullName)) {
+                $fullName = $author->email ?? 'Unknown Author';
+            }
+
+            if (empty(trim($author->affiliation ?? ''))) {
+                $missingAffiliation[] = $fullName;
+            }
+
+            $nameParts = array_filter(explode(' ', $fullName));
             if (count($nameParts) < 2) {
-                $singleNameAuthors[] = $author->first_name;
+                $singleNameAuthors[] = $fullName;
             }
         }
 
