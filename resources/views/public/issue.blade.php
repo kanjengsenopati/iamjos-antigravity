@@ -33,10 +33,13 @@
         <div class="lg:col-span-3 space-y-8">
             <div>
                 <nav class="text-sm text-gray-500 mb-4">
+                    <a href="{{ route('journal.public.home', ['journal' => $journal->slug]) }}"
+                        class="hover:text-primary-600">{{ __('Home') }}</a>
+                    <span class="mx-2">/</span>
                     <a href="{{ route('journal.public.archives', ['journal' => $journal->slug]) }}"
                         class="hover:text-primary-600">{{ __('Archives') }}</a>
                     <span class="mx-2">/</span>
-                    <span class="text-gray-900">{{ $issue->year }}</span>
+                    <span class="text-gray-900">{{ $issue->display_title }}</span>
                 </nav>
 
                 <x-text.h1 class="mb-4">
