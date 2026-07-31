@@ -205,6 +205,18 @@ class SubmissionLog extends Model
                 'submission' => $submission->url_slug,
             ]);
 
+            // Ambil data author target (Primary Contact -> Corresponding -> First Author)
+            $authorRecipient = null;
+            if ($submission->authors()->exists()) {
+                $authorRecipient = $submission->authors()->where('is_primary_contact', true)->first()
+                    ?? $submission->authors()->where('is_corresponding', true)->first()
+                    ?? $submission->authors()->first();
+            }
+
+            // Dapatkan user account jika terdaftar (atau fallback ke submitter $submission->author)
+            $authorUser = $authorRecipient?->user ?? $submission->author;
+            $authorEmail = $authorRecipient?->email ?? $submission->author?->email;
+
             // 1. Ambil Editor & Manager Jurnal (Aktif & Global) berdasarkan permission_level
             // OJS 3.3 default: Super Admin (0), Admin/Manager (1), Editor/Section Editor (2)
             $editorRoles = Role::withoutGlobalScope('journal')
@@ -239,14 +251,22 @@ class SubmissionLog extends Model
             // Logika Distribusi Berdasarkan Tipe Event
             switch ($log->event_type) {
                 case self::EVENT_SUBMITTED:
-                    // Notify Author
-                    if ($submission->author) {
+                    // Notify Author (User Terdaftar atau On-Demand Email)
+                    if ($authorUser) {
                         try {
-                            $submission->author->notify(new \App\Notifications\SubmissionReceived($submission));
+                            $authorUser->notify(new \App\Notifications\SubmissionReceived($submission));
                         } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Failed to notify author on submission: " . $e->getMessage());
+                            \Illuminate\Support\Facades\Log::error("Failed to notify author on submission (registered): " . $e->getMessage());
+                        }
+                    } elseif ($authorEmail) {
+                        try {
+                            \Illuminate\Support\Facades\Notification::route('mail', $authorEmail)
+                                ->notify(new \App\Notifications\SubmissionReceived($submission));
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error("Failed to notify author on submission (on-demand): " . $e->getMessage());
                         }
                     }
+
                     // Notify All Journal Editors
                     foreach ($allJournalEditors as $editor) {
                         if ($editor->id !== $triggerUserId) {
@@ -314,8 +334,9 @@ class SubmissionLog extends Model
                     break;
 
                 case self::EVENT_DECISION_MADE:
-                    // Notify Author
-                    if ($submission->author && $submission->author->id !== $triggerUserId) {
+                    // Notify Author (User Terdaftar atau On-Demand Email)
+                    $isSender = $authorUser && $authorUser->id === $triggerUserId;
+                    if (!$isSender && ($authorUser || $authorEmail)) {
                         try {
                             $log->load('files');
                             $attachments = [];
@@ -337,7 +358,12 @@ class SubmissionLog extends Model
 
                             $notifyAuthor = $lastDecision['notify_author'] ?? $log->metadata['notify_author'] ?? true;
                             if ($notifyAuthor) {
-                                $submission->author->notify(new \App\Notifications\SubmissionDecision($submission, $decision, $comments, $attachments));
+                                if ($authorUser) {
+                                    $authorUser->notify(new \App\Notifications\SubmissionDecision($submission, $decision, $comments, $attachments));
+                                } else {
+                                    \Illuminate\Support\Facades\Notification::route('mail', $authorEmail)
+                                        ->notify(new \App\Notifications\SubmissionDecision($submission, $decision, $comments, $attachments));
+                                }
                             }
                         } catch (\Exception $e) {
                             \Illuminate\Support\Facades\Log::error("Failed to notify author on decision: " . $e->getMessage());
@@ -346,10 +372,16 @@ class SubmissionLog extends Model
                     break;
 
                 case self::EVENT_PUBLISHED:
-                    // Notify Author
-                    if ($submission->author && $submission->author->id !== $triggerUserId) {
+                    // Notify Author (User Terdaftar atau On-Demand Email)
+                    $isSender = $authorUser && $authorUser->id === $triggerUserId;
+                    if (!$isSender && ($authorUser || $authorEmail)) {
                         try {
-                            $submission->author->notify(new \App\Notifications\ArticlePublished($submission, $submission->issue));
+                            if ($authorUser) {
+                                $authorUser->notify(new \App\Notifications\ArticlePublished($submission, $submission->issue));
+                            } else {
+                                \Illuminate\Support\Facades\Notification::route('mail', $authorEmail)
+                                    ->notify(new \App\Notifications\ArticlePublished($submission, $submission->issue));
+                            }
                         } catch (\Exception $e) {
                             \Illuminate\Support\Facades\Log::error("Failed to notify author on publish: " . $e->getMessage());
                         }

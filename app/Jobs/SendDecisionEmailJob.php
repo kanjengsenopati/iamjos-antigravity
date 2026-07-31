@@ -42,7 +42,19 @@ class SendDecisionEmailJob implements ShouldQueue
                 return;
             }
 
-            $recipient = $this->submission->author;
+            // Prioritaskan mengambil author utama dari data submission_authors (Primary Contact -> Corresponding -> First Author)
+            $recipient = null;
+            if ($this->submission->authors()->exists()) {
+                $recipient = $this->submission->authors()->where('is_primary_contact', true)->first()
+                    ?? $this->submission->authors()->where('is_corresponding', true)->first()
+                    ?? $this->submission->authors()->first();
+            }
+
+            // Fallback ke submission submitter (user yang men-submit) jika data authors kosong
+            if (!$recipient || empty($recipient->email)) {
+                $recipient = $this->submission->author;
+            }
+
             if (!$recipient) {
                 Log::warning("SendDecisionEmailJob: No author found for submission {$this->submission->id}.");
                 return;
@@ -76,6 +88,7 @@ class SendDecisionEmailJob implements ShouldQueue
                 $sent = \App\Services\JournalEmailService::sendNotification($journal, $recipient, $key, [
                     'customSubject' => $customSubject,
                     'customBody' => $this->emailBody,
+                    'authorName' => $recipient->name ?? 'Author',
                 ]);
 
                 if ($sent) {
