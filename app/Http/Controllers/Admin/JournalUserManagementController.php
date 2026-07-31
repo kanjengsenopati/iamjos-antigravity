@@ -96,7 +96,7 @@ class JournalUserManagementController extends Controller
             'journalRoles' => function ($q) use ($journal) {
                 $q->where('journal_id', $journal->id)->with('role');
             }
-        ])->paginate(10);
+        ])->paginate(request('per_page', 25))->withQueryString();
 
         // Get roles for filtering dropdown
         $roles = Role::where('journal_id', $journal->id)->pluck('name')->toArray() ?? [];
