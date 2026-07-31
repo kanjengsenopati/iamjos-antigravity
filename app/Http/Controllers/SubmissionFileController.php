@@ -229,7 +229,14 @@ class SubmissionFileController extends Controller
 
         // Only allow deletion of own uploads or by editor/admin of the journal
         $user = auth()->user();
-        if ($file->uploaded_by !== $user->id && !$user->hasJournalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_EDITOR], $file->submission->journal_id)) {
+        $isEditorOrAdmin = $user->hasJournalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_EDITOR], $file->submission->journal_id);
+
+        // Prevent non-editors from modifying production files
+        if (in_array($file->stage, ['production', 'production_ready']) && !$isEditorOrAdmin) {
+            abort(403, 'You cannot delete production ready files.');
+        }
+
+        if ($file->uploaded_by !== $user->id && !$isEditorOrAdmin) {
             abort(403, 'You cannot delete this file.');
         }
 
@@ -256,6 +263,14 @@ class SubmissionFileController extends Controller
     public function updateName(Request $request, string $journalSlug, SubmissionFile $file): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $file->submission);
+
+        $user = auth()->user();
+        $isEditorOrAdmin = $user->hasJournalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN, \App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_EDITOR], $file->submission->journal_id);
+
+        // Prevent non-editors from modifying production files
+        if (in_array($file->stage, ['production', 'production_ready']) && !$isEditorOrAdmin) {
+            abort(403, 'You cannot edit production ready files.');
+        }
 
         $validated = $request->validate([
             'file_name' => 'required|string|max:255',

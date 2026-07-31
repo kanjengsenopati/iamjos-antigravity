@@ -2872,11 +2872,38 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                 <i class="fa-solid {{ $iconClass }} text-lg"></i>
                                                             </div>
                                                             <div class="min-w-0 flex-1">
-                                                                <div class="text-sm font-medium text-gray-900 break-all whitespace-normal">
+                                                                <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">
                                                                     {{ $file->file_name }}
-                                                                </div>
-                                                                <div class="text-xs text-gray-500">
+                                                                </p>
+                                                                <p class="text-xs text-gray-500 mt-1">
                                                                     {{ number_format($file->file_size / 1024, 0) }} KB
+                                                                </p>
+                                                                {{-- OJS 3 Modern Sub-File Action Badges (More Information | Edit | Delete) --}}
+                                                                <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                                                                    <button type="button" @click="openFileInformationModal('{{ $file->id }}', @js($file->file_name))"
+                                                                        class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                        <i class="fa-solid fa-circle-info mr-1.5 text-indigo-500 text-[10px]"></i>
+                                                                        {{ $isId ? 'Informasi' : 'More Information' }}
+                                                                    </button>
+
+                                                                    @if (!$isAuthorView)
+                                                                        <button type="button" @click="openEditFileModal('{{ $file->id }}', @js($file->file_name))"
+                                                                            class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                            <i class="fa-solid fa-pen-to-square mr-1.5 text-amber-500 text-[10px]"></i>
+                                                                            {{ $isId ? 'Edit' : 'Edit' }}
+                                                                        </button>
+
+                                                                        <form action="{{ route('journal.files.destroy', ['journal' => $journal->slug, 'file' => $file->id]) }}"
+                                                                            method="POST" class="inline" onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus file ini?' : 'Are you sure you want to delete this file?' }}')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit"
+                                                                                class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                                <i class="fa-solid fa-trash-can mr-1.5 text-rose-500 text-[10px]"></i>
+                                                                                {{ $isId ? 'Hapus' : 'Delete' }}
+                                                                            </button>
+                                                                        </form>
+                                                                    @endif
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -2999,13 +3026,40 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                             <i class="fa-solid {{ $iconClass }} text-lg"></i>
                                                         </div>
                                                         <div class="min-w-0 flex-1">
-                                                            <div class="text-sm font-medium text-gray-900 break-all whitespace-normal">
-                                                                {{ $file->file_name }}
+                                                                <p class="text-sm font-medium text-gray-900 break-all whitespace-normal">
+                                                                    {{ $file->file_name }}
+                                                                </p>
+                                                                <p class="text-xs text-gray-500 mt-1">
+                                                                    {{ number_format($file->file_size / 1024, 0) }} KB
+                                                                </p>
+                                                                {{-- OJS 3 Modern Sub-File Action Badges (More Information | Edit | Delete) --}}
+                                                                <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                                                                    <button type="button" @click="openFileInformationModal('{{ $file->id }}', @js($file->file_name))"
+                                                                        class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                        <i class="fa-solid fa-circle-info mr-1.5 text-indigo-500 text-[10px]"></i>
+                                                                        {{ $isId ? 'Informasi' : 'More Information' }}
+                                                                    </button>
+
+                                                                    @if (!$isAuthorView)
+                                                                        <button type="button" @click="openEditFileModal('{{ $file->id }}', @js($file->file_name))"
+                                                                            class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                            <i class="fa-solid fa-pen-to-square mr-1.5 text-amber-500 text-[10px]"></i>
+                                                                            {{ $isId ? 'Edit' : 'Edit' }}
+                                                                        </button>
+
+                                                                        <form action="{{ route('journal.files.destroy', ['journal' => $journal->slug, 'file' => $file->id]) }}"
+                                                                            method="POST" class="inline" onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus file ini?' : 'Are you sure you want to delete this file?' }}')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit"
+                                                                                class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                                <i class="fa-solid fa-trash-can mr-1.5 text-rose-500 text-[10px]"></i>
+                                                                                {{ $isId ? 'Hapus' : 'Delete' }}
+                                                                            </button>
+                                                                        </form>
+                                                                    @endif
+                                                                </div>
                                                             </div>
-                                                            <div class="text-xs text-gray-500">
-                                                                {{ number_format($file->file_size / 1024, 0) }} KB
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -3421,22 +3475,24 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                     {{ $isId ? 'Informasi' : 'More Information' }}
                                                                 </button>
 
-                                                                <button type="button" @click="openEditFileModal('{{ $file->id }}', @js($file->file_name))"
-                                                                    class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 border border-slate-200/60 transition-all shadow-2xs">
-                                                                    <i class="fa-solid fa-pen-to-square mr-1.5 text-amber-500 text-[10px]"></i>
-                                                                    {{ $isId ? 'Edit' : 'Edit' }}
-                                                                </button>
-
-                                                                <form action="{{ route('journal.files.destroy', ['journal' => $journal->slug, 'file' => $file->id]) }}"
-                                                                    method="POST" class="inline" onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus file ini?' : 'Are you sure you want to delete this file?' }}')">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit"
-                                                                        class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200/60 transition-all shadow-2xs">
-                                                                        <i class="fa-solid fa-trash-can mr-1.5 text-rose-500 text-[10px]"></i>
-                                                                        {{ $isId ? 'Hapus' : 'Delete' }}
+                                                                @if (!$isAuthorView)
+                                                                    <button type="button" @click="openEditFileModal('{{ $file->id }}', @js($file->file_name))"
+                                                                        class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                        <i class="fa-solid fa-pen-to-square mr-1.5 text-amber-500 text-[10px]"></i>
+                                                                        {{ $isId ? 'Edit' : 'Edit' }}
                                                                     </button>
-                                                                </form>
+
+                                                                    <form action="{{ route('journal.files.destroy', ['journal' => $journal->slug, 'file' => $file->id]) }}"
+                                                                        method="POST" class="inline" onsubmit="return confirm('{{ $isId ? 'Apakah Anda yakin ingin menghapus file ini?' : 'Are you sure you want to delete this file?' }}')">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit"
+                                                                            class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200/60 transition-all shadow-2xs">
+                                                                            <i class="fa-solid fa-trash-can mr-1.5 text-rose-500 text-[10px]"></i>
+                                                                            {{ $isId ? 'Hapus' : 'Delete' }}
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     </div>
