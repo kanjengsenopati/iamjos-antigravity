@@ -55,7 +55,6 @@ class WelcomeUserNotification extends Notification implements ShouldQueue
         }
 
         $message->line('**Your Account Details:**')
-            ->line('- **User ID:** #' . $notifiable->id)
             ->line('- **Username:** ' . $notifiable->username)
             ->line('- **Email:** ' . $notifiable->email)
             ->line('*(For security reasons, your password has been securely encrypted and is not displayed here. If you forget your password, you can use the "Forgot Password" feature on the login page.)*')
