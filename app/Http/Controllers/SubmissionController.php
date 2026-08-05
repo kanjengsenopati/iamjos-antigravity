@@ -469,10 +469,12 @@ class SubmissionController extends Controller
                     $authorEmail = strtolower(trim($authorData['email']));
                     $isPrimary = ($index === $primaryContactIndex);
 
+                    $existingAuthorUser = $authorEmail ? User::where('email', $authorEmail)->first() : null;
+
                     SubmissionAuthor::create([
                         'submission_id' => $submission->id,
                         'email' => $authorEmail,
-                        'user_id' => ($authorEmail === strtolower(trim($user->email))) ? $user->id : null,
+                        'user_id' => $existingAuthorUser?->id ?? (($authorEmail === strtolower(trim($user->email))) ? $user->id : null),
                         'first_name' => $authorData['first_name'],
                         'last_name' => $authorData['last_name'],
                         'name' => $authorData['first_name'] . ' ' . $authorData['last_name'],
@@ -657,10 +659,12 @@ class SubmissionController extends Controller
                     $authorEmail = strtolower(trim($authorData['email'] ?? ''));
                     $isPrimary = ($index === $primaryContactIndex);
 
+                    $existingAuthorUser = $authorEmail ? User::where('email', $authorEmail)->first() : null;
+
                     SubmissionAuthor::create([
                         'submission_id' => $submission->id,
                         'email' => $authorEmail ?: null,
-                        'user_id' => ($authorEmail && $authorEmail === strtolower(trim($user->email))) ? $user->id : null,
+                        'user_id' => $existingAuthorUser?->id ?? (($authorEmail && $authorEmail === strtolower(trim($user->email))) ? $user->id : null),
                         'first_name' => $authorData['first_name'],
                         'last_name' => $authorData['last_name'] ?? '',
                         'name' => $authorData['first_name'] . ' ' . ($authorData['last_name'] ?? ''),

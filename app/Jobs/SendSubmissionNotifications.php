@@ -48,11 +48,30 @@ class SendSubmissionNotifications
                   });
             })->get();
 
-            // 1. Send WhatsApp notification to author
-            WaGateway::sendTemplate($this->author, 'submission_received', [
-                'name' => $this->author->name,
-                'title' => $this->submission->title,
-            ], $this->submission->journal_id);
+            // 1. Send WhatsApp notification to all registered authors (submitter + co-authors)
+            $authorUsers = collect();
+            if ($this->author) {
+                $authorUsers->push($this->author);
+            }
+            if ($this->submission->authors()->exists()) {
+                foreach ($this->submission->authors as $subAuthor) {
+                    $u = $subAuthor->user;
+                    if (!$u && $subAuthor->email) {
+                        $u = User::where('email', strtolower(trim($subAuthor->email)))->first();
+                    }
+                    if ($u) {
+                        $authorUsers->push($u);
+                    }
+                }
+            }
+            $uniqueAuthorUsers = $authorUsers->unique('id');
+
+            foreach ($uniqueAuthorUsers as $authorUser) {
+                WaGateway::sendTemplate($authorUser, 'submission_received', [
+                    'name'  => $authorUser->name,
+                    'title' => $this->submission->title,
+                ], $this->submission->journal_id);
+            }
 
             // 2. Send WhatsApp notification to Journal Managers and Editors
             foreach ($editorsAndManagers as $editor) {

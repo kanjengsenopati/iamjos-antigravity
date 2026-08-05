@@ -8,6 +8,7 @@ use App\Models\Section;
 use App\Models\Submission;
 use App\Models\SubmissionAuthor;
 use App\Models\SubmissionLog;
+use App\Models\User;
 use App\Services\DoiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -156,9 +157,13 @@ class PublicationController extends Controller
         $publication = $submission->getOrCreatePublication();
         // Get the next sort order
         $maxOrder = $publication->authors()->max('sort_order') ?? 0;
+        $authorEmail = strtolower(trim($validated['email']));
+        $existingUser = User::where('email', $authorEmail)->first();
+
         $author = SubmissionAuthor::create([
             'submission_id' => $submission->id,
             'publication_id' => $publication->id,
+            'user_id' => $existingUser?->id,
             'name' => "{$validated['given_name']} {$validated['family_name']}",
             'given_name' => $validated['given_name'],
             'family_name' => $validated['family_name'],

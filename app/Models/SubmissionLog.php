@@ -251,19 +251,67 @@ class SubmissionLog extends Model
             // Logika Distribusi Berdasarkan Tipe Event
             switch ($log->event_type) {
                 case self::EVENT_SUBMITTED:
-                    // Notify Author (User Terdaftar atau On-Demand Email)
-                    if ($authorUser) {
-                        try {
-                            $authorUser->notify(new \App\Notifications\SubmissionReceived($submission));
-                        } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Failed to notify author on submission (registered): " . $e->getMessage());
+                    // Notify All Authors (Penulis Utama + seluruh Co-Author)
+                    $authorTargets = collect();
+
+                    if ($submission->authors()->exists()) {
+                        foreach ($submission->authors as $subAuthor) {
+                            $email = strtolower(trim($subAuthor->email ?? ''));
+                            if (empty($email)) continue;
+
+                            $user = $subAuthor->user ?? User::where('email', $email)->first();
+                            $authorTargets->push([
+                                'email' => $email,
+                                'user'  => $user,
+                            ]);
                         }
-                    } elseif ($authorEmail) {
-                        try {
-                            \Illuminate\Support\Facades\Notification::route('mail', $authorEmail)
-                                ->notify(new \App\Notifications\SubmissionReceived($submission));
-                        } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error("Failed to notify author on submission (on-demand): " . $e->getMessage());
+                    }
+
+                    // Tambahkan submitter jika belum ada di daftar target
+                    if ($submission->author) {
+                        $submitterEmail = strtolower(trim($submission->author->email));
+                        if ($submitterEmail && !$authorTargets->contains('email', $submitterEmail)) {
+                            $authorTargets->push([
+                                'email' => $submitterEmail,
+                                'user'  => $submission->author,
+                            ]);
+                        }
+                    }
+
+                    // Fallback jika belum ada authorTarget sama sekali
+                    if ($authorTargets->isEmpty() && ($authorUser || $authorEmail)) {
+                        $authorTargets->push([
+                            'email' => $authorEmail ? strtolower(trim($authorEmail)) : null,
+                            'user'  => $authorUser,
+                        ]);
+                    }
+
+                    // Deduplikasi berdasarkan email
+                    $uniqueAuthorTargets = $authorTargets->filter(fn($t) => !empty($t['email']))->unique('email');
+
+                    foreach ($uniqueAuthorTargets as $target) {
+                        $targetUser = $target['user'];
+                        $targetEmail = $target['email'];
+
+                        if (in_array($targetEmail, $globalEmailsSent)) {
+                            continue;
+                        }
+
+                        if ($targetUser) {
+                            try {
+                                $targetUser->notify(new \App\Notifications\SubmissionReceived($submission));
+                                $globalEmailsSent[] = $targetEmail;
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to notify author on submission (registered: {$targetEmail}): " . $e->getMessage());
+                            }
+                        } elseif ($targetEmail) {
+                            try {
+                                \Illuminate\Support\Facades\Notification::route('mail', $targetEmail)
+                                    ->notify(new \App\Notifications\SubmissionReceived($submission));
+                                $globalEmailsSent[] = $targetEmail;
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to notify author on submission (on-demand: {$targetEmail}): " . $e->getMessage());
+                            }
                         }
                     }
 
