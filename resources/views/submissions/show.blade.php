@@ -3940,8 +3940,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
             \App\Models\SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
             $publication = $submission->currentPublication ?? $submission->getOrCreatePublication();
             $pubStatus = $publication->status ?? 1;
-            $pubAuthorsList = $publication->authors?->isNotEmpty() ? $publication->authors : $submission->authors;
-            $pubAuthors = $pubAuthorsList->map(
+            // Query fresh from DB to avoid stale Eloquent relationship cache after ensureSinglePrimaryAuthor
+            $freshAuthors = \App\Models\SubmissionAuthor::where('publication_id', $publication->id)
+                ->orderBy('sort_order')->get();
+            if ($freshAuthors->isEmpty()) {
+                $freshAuthors = \App\Models\SubmissionAuthor::where('submission_id', $submission->id)
+                    ->orderBy('sort_order')->get();
+            }
+            $pubAuthors = $freshAuthors->map(
                 fn($a) => [
                     'id' => $a->id,
                     'name' => $a->name,
