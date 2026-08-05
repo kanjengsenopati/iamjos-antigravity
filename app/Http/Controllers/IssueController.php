@@ -42,19 +42,35 @@ class IssueController extends Controller
 
         // Separate into future (unpublished) and back (published) issues
         $futureIssues = $allIssues->where('is_published', false);
-        $backIssues = Issue::where('journal_id', $journal->id)
+        // Available years for Back Issues filter
+        $availableYears = Issue::where('journal_id', $journal->id)
             ->where('is_published', true)
-            ->withCount('submissions')
-            ->latest()
-            ->paginate(12);
+            ->distinct()
+            ->pluck('year')
+            ->filter()
+            ->sortDesc()
+            ->values();
 
-        // Stats
-        $totalIssues = $allIssues->count();
-        $publishedCount = $allIssues->where('is_published', true)->count();
-        $upcomingCount = $allIssues->where('is_published', false)->count();
-        $totalArticles = Submission::where('journal_id', $journal->id)
-            ->whereNotNull('issue_id')
-            ->count();
+        $selectedYear = $request->query('year');
+
+        // Back Issues (Published, paginated)
+        $backIssuesQuery = Issue::where('journal_id', $journal->id)
+            ->where('is_published', true);
+
+        if (!empty($selectedYear)) {
+            $backIssuesQuery->where('year', $selectedYear);
+        }
+
+        $backIssues = $backIssuesQuery
+            ->orderBy('published_at', 'desc')
+            ->orderBy('year', 'desc')
+            ->orderBy('volume', 'desc')
+            ->orderBy('number', 'desc')
+            ->withCount('submissions')
+            ->paginate(12)
+            ->withQueryString();
+
+        $currentIssue = $journal->currentIssue;
 
         return view('editor.issues.index', compact(
             'futureIssues',
@@ -63,7 +79,10 @@ class IssueController extends Controller
             'totalIssues',
             'publishedCount',
             'upcomingCount',
-            'totalArticles'
+            'totalArticles',
+            'availableYears',
+            'selectedYear',
+            'currentIssue'
         ));
     }
 
@@ -468,5 +487,21 @@ class IssueController extends Controller
 
         return redirect()->route('journal.issues.index', ['journal' => $journal->slug])
             ->with('success', 'Issue deleted successfully.');
+    }
+
+    /**
+     * Set a published issue as the Current Issue for the journal.
+     */
+    public function setCurrent(Request $request, string $journalSlug, Issue $issue): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+        if (!$issue->is_published) {
+            return back()->with('error', 'Only published issues can be set as current issue.');
+        }
+
+        $issue->update(['published_at' => now()]);
+
+        return back()->with('success', "Issue {$issue->identifier} is now designated as the Current Issue.");
     }
 }
