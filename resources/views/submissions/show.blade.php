@@ -3952,8 +3952,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             'country' => $a->country ?? '',
                             'is_corresponding' => $a->is_corresponding ?? false,
                             'include_in_browse' => $a->include_in_browse ?? true,
-                            'given_name' => $a->given_name ?? '',
-                            'family_name' => $a->family_name ?? '',
+                            'given_name' => $a->given_name ?? $a->first_name ?? '',
+                            'family_name' => $a->family_name ?? $a->last_name ?? '',
+                            'first_name' => $a->first_name ?? $a->given_name ?? '',
+                            'last_name' => $a->last_name ?? $a->family_name ?? '',
                         ],
                     )
                     : $submission->authors->map(
@@ -3967,8 +3969,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             'country' => $a->country ?? '',
                             'is_corresponding' => $a->is_corresponding ?? false,
                             'include_in_browse' => $a->include_in_browse ?? true,
-                            'given_name' => $a->given_name ?? '',
-                            'family_name' => $a->family_name ?? '',
+                            'given_name' => $a->given_name ?? $a->first_name ?? '',
+                            'family_name' => $a->family_name ?? $a->last_name ?? '',
+                            'first_name' => $a->first_name ?? $a->given_name ?? '',
+                            'last_name' => $a->last_name ?? $a->family_name ?? '',
                         ],
                     )) ?? [];
         @endphp
@@ -5145,14 +5149,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Depan' : 'First Name' }} <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" name="given_name" required
-                                        :value="editingContributor?.given_name || ''"
+                                        :value="editingContributor?.given_name || editingContributor?.first_name || ''"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Nama Belakang' : 'Last Name' }} <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" name="family_name" required
-                                        :value="editingContributor?.family_name || ''"
+                                        :value="editingContributor?.family_name || editingContributor?.last_name || ''"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                 </div>
                             </div>

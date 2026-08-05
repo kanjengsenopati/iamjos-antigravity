@@ -114,6 +114,78 @@ class SubmissionAuthor extends Model
     }
 
     /**
+     * Get given_name with fallbacks to first_name or first word of name
+     */
+    public function getGivenNameAttribute($value): ?string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+        if (!empty($this->attributes['first_name'])) {
+            return $this->attributes['first_name'];
+        }
+        if (!empty($this->attributes['name'])) {
+            $parts = explode(' ', trim($this->attributes['name']), 2);
+            return $parts[0] ?? null;
+        }
+        return null;
+    }
+
+    /**
+     * Get family_name with fallbacks to last_name or remaining words of name
+     */
+    public function getFamilyNameAttribute($value): ?string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+        if (!empty($this->attributes['last_name'])) {
+            return $this->attributes['last_name'];
+        }
+        if (!empty($this->attributes['name'])) {
+            $parts = explode(' ', trim($this->attributes['name']), 2);
+            return $parts[1] ?? null;
+        }
+        return null;
+    }
+
+    /**
+     * Get first_name with fallbacks to given_name or first word of name
+     */
+    public function getFirstNameAttribute($value): ?string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+        if (!empty($this->attributes['given_name'])) {
+            return $this->attributes['given_name'];
+        }
+        if (!empty($this->attributes['name'])) {
+            $parts = explode(' ', trim($this->attributes['name']), 2);
+            return $parts[0] ?? null;
+        }
+        return null;
+    }
+
+    /**
+     * Get last_name with fallbacks to family_name or remaining words of name
+     */
+    public function getLastNameAttribute($value): ?string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+        if (!empty($this->attributes['family_name'])) {
+            return $this->attributes['family_name'];
+        }
+        if (!empty($this->attributes['name'])) {
+            $parts = explode(' ', trim($this->attributes['name']), 2);
+            return $parts[1] ?? null;
+        }
+        return null;
+    }
+
+    /**
      * Get display name with affiliation
      */
     public function getDisplayNameAttribute(): string
