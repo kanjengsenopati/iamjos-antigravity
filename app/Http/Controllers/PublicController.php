@@ -483,7 +483,8 @@ class PublicController extends Controller
             'chartLabels',
             'viewsData',
             'downloadsData',
-            'countryStats'
+            'countryStats',
+            'isPreview'
         ));
     }
 

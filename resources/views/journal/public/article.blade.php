@@ -22,7 +22,14 @@
     $pubDoi      = $pub->doi ?? $article->doi;
     $pubKeywords = $pub->keywords ?? $article->keywords;
     $pubAbstract = $pub->abstract ?? $article->abstract;
-    $pubAuthors  = $pub->authors ?? $article->authors;
+    
+    // Fetch ALL authors across both submission_id and publication_id scopes
+    $pubAuthors  = \App\Models\SubmissionAuthor::where(function ($q) use ($article, $pub) {
+        $q->where('submission_id', $article->id);
+        if (isset($pub->id)) {
+            $q->orWhere('publication_id', $pub->id);
+        }
+    })->orderBy('sort_order')->orderBy('created_at')->get()->unique('id')->values();
 
     // BCP47 locale (id_ID → id, en_US → en)
     $rawLocale   = $article->locale ?? app()->getLocale() ?? 'en';
@@ -227,11 +234,11 @@
             'name' => $article->title,
             'description' => Str::limit(strip_tags($article->abstract ?? ''), 300),
             'author' =>
-                $article->authors
+                $pubAuthors
                     ?->map(function ($author) {
                         $a = [
                             '@type' => 'Person',
-                            'name' => $author->full_name ?? $author->last_name . ' ' . $author->first_name,
+                            'name' => $author->name ?: trim(($author->first_name ?? $author->given_name ?? '') . ' ' . ($author->last_name ?? $author->family_name ?? '')),
                         ];
                         if (!empty($author->affiliation)) {
                             $a['affiliation'] = [
@@ -333,6 +340,30 @@
         {{-- ================= LEFT COLUMN (MAIN CONTENT - 75%) ================= --}}
         <main class="w-full lg:w-3/4 min-w-0 space-y-10">
 
+            {{-- PREVIEW MODE BANNER (OJS STYLE) --}}
+            @if (request()->has('preview') || request()->boolean('preview') || !empty($isPreview))
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 shadow-xs flex items-center gap-3.5 mb-6">
+                    <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                        <i class="fa-solid fa-eye text-base"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-200/80 text-amber-950">
+                                {{ app()->getLocale() === 'id' ? 'MODE PRATINJAU' : 'PREVIEW MODE' }}
+                            </span>
+                            <span class="text-xs font-semibold text-amber-800">
+                                {{ app()->getLocale() === 'id' ? 'Naskah Belum Diterbitkan' : 'Unpublished Manuscript' }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-amber-800/90 mt-0.5 leading-normal">
+                            {{ app()->getLocale() === 'id'
+                                ? 'Ini adalah tampilan pratinjau (preview) naskah yang belum diterbitkan secara resmi. Akses ini hanya tersedia untuk kebutuhan peninjauan editorial.'
+                                : 'This is an unpublished preview of this article for editorial review purposes. It is not publicly accessible.' }}
+                        </p>
+                    </div>
+                </div>
+            @endif
+
             {{-- 1. TITLE --}}
             <h1 class="text-3xl md:text-4xl font-serif font-bold text-slate-900 leading-tight">
                 {{ $article->title }}
@@ -344,11 +375,11 @@
 
             {{-- 2. AUTHORS --}}
             <div class="space-y-3">
-                @if ($article->authors && $article->authors->isNotEmpty())
-                    @foreach ($article->authors as $author)
+                @if ($pubAuthors && $pubAuthors->isNotEmpty())
+                    @foreach ($pubAuthors as $author)
                         <div class="leading-snug">
                             <div class="font-bold text-slate-900 text-lg">
-                                {{ $author->first_name }} {{ $author->last_name }}
+                                {{ $author->name ?: trim(($author->first_name ?? $author->given_name ?? '') . ' ' . ($author->last_name ?? $author->family_name ?? '')) }}
                                 @if ($author->is_corresponding)
                                     <span class="text-orange-500 text-sm ml-1" title="Corresponding Author">
                                         <i class="fa-solid fa-envelope"></i>
