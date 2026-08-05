@@ -65,15 +65,36 @@ class IssueController extends Controller
             ->withCount('submissions')
             ->get();
 
-        // Back Issues (Published, paginated)
-        $backIssues = Issue::where('journal_id', $journal->id)
+        // Available years for Back Issues filter
+        $availableYears = Issue::where('journal_id', $journal->id)
             ->where('is_published', true)
-            ->orderBy('published_at', 'desc') // Published recently first
+            ->distinct()
+            ->pluck('year')
+            ->filter()
+            ->sortDesc()
+            ->values();
+
+        $selectedYear = request('year');
+
+        // Back Issues (Published, paginated)
+        $backIssuesQuery = Issue::where('journal_id', $journal->id)
+            ->where('is_published', true);
+
+        if (!empty($selectedYear)) {
+            $backIssuesQuery->where('year', $selectedYear);
+        }
+
+        $backIssues = $backIssuesQuery
+            ->orderBy('published_at', 'desc')
             ->orderBy('year', 'desc')
             ->orderBy('volume', 'desc')
             ->orderBy('number', 'desc')
             ->withCount('submissions')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
+
+        // Get current active issue
+        $currentIssue = $journal->currentIssue;
 
         return view('editor.issues.index', compact(
             'journal',
@@ -82,7 +103,10 @@ class IssueController extends Controller
             'totalIssues',
             'publishedCount',
             'upcomingCount',
-            'totalArticles'
+            'totalArticles',
+            'availableYears',
+            'selectedYear',
+            'currentIssue'
         ));
     }
 
@@ -316,5 +340,22 @@ class IssueController extends Controller
         $issue->delete();
 
         return back()->with('success', 'Issue deleted successfully.');
+    }
+
+    /**
+     * Set a published issue as the Current Issue for the journal
+     */
+    public function setCurrent(Issue $issue)
+    {
+        $journal = current_journal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+        if (!$issue->is_published) {
+            return back()->with('error', 'Only published issues can be set as current issue.');
+        }
+
+        // Touch published_at so it becomes the latest published issue
+        $issue->update(['published_at' => now()]);
+
+        return back()->with('success', "Issue {$issue->identifier} is now designated as the Current Issue.");
     }
 }

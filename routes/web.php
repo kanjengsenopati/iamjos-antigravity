@@ -533,6 +533,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     ]);
                     Route::post('/issues/{issue}/publish', [IssueController::class, 'publish'])->name('journal.issues.publish');
                     Route::post('/issues/{issue}/unpublish', [IssueController::class, 'unpublish'])->name('journal.issues.unpublish');
+                    Route::post('/issues/{issue}/current', [IssueController::class, 'setCurrent'])->name('journal.issues.current');
                     Route::post('/issues/{issue}/add-articles', [IssueController::class, 'addArticles'])->name('journal.issues.add-articles');
                     Route::delete('/issues/{issue}/remove-article/{submission}', [IssueController::class, 'removeArticle'])->name('journal.issues.remove-article');
                     Route::post('/issues/{issue}/reorder-articles', [IssueController::class, 'reorderArticles'])->name('journal.issues.reorder-articles');

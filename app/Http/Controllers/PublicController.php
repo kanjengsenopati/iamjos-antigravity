@@ -283,12 +283,18 @@ class PublicController extends Controller
             abort(404);
         }
 
-        if (!$issue->is_published) {
+        $isPreview = request()->boolean('preview') || request()->has('preview');
+
+        if (!$issue->is_published && !$isPreview) {
             abort(404);
         }
 
-        $articles = Submission::where('issue_id', $issue->id)
-            ->published()
+        $articlesQuery = Submission::where('issue_id', $issue->id);
+        if (!$isPreview) {
+            $articlesQuery->published();
+        }
+
+        $articles = $articlesQuery
             ->with(['authors', 'section', 'galleys'])
             ->get()
             ->sort(function ($a, $b) {
@@ -310,7 +316,7 @@ class PublicController extends Controller
         // Group by section
         $articlesBySection = $articles->groupBy(fn($article) => $article->section?->name ?? 'Uncategorized');
 
-        return view('public.issue', compact('journal', 'settings', 'issue', 'articles', 'articlesBySection'));
+        return view('public.issue', compact('journal', 'settings', 'issue', 'articles', 'articlesBySection', 'isPreview'));
     }
 
     public function article(string $journalSlug, $slug): \Illuminate\View\View|RedirectResponse

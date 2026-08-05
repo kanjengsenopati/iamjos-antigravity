@@ -96,7 +96,7 @@
 
             <!-- Tabs -->
             <div x-data="{
-                activeTab: 'future',
+                activeTab: '{{ request('tab') === 'back' || request('year') ? 'back' : 'future' }}',
                 publishModalOpen: false,
                 publishData: { id: '', identifier: '', doi: '', publishUrl: '' },
                 openPublishModal(data) {
@@ -261,6 +261,34 @@
 
                 <!-- Tab Content: Back Issues (Published) -->
                 <div x-show="activeTab === 'back'" x-cloak class="p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-box-archive text-primary-600"></i>
+                            <span>{{ $isId ? 'Terbitan Terbit' : 'Published Back Issues' }}</span>
+                        </h3>
+                        
+                        <!-- Filter Year Issue -->
+                        @if ($availableYears->isNotEmpty())
+                            <div class="flex items-center gap-2">
+                                <label for="yearFilter" class="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                                    <i class="fa-solid fa-filter text-slate-400 mr-1"></i>{{ $isId ? 'Filter Tahun Issue' : 'Filter Year Issue' }}
+                                </label>
+                                <select id="yearFilter" onchange="window.location.href = this.value"
+                                    class="text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-primary-500 shadow-2xs">
+                                    <option value="{{ route('journal.issues.index', ['journal' => $journal->slug, 'tab' => 'back']) }}">
+                                        {{ $isId ? 'Semua Tahun' : 'All Years' }}
+                                    </option>
+                                    @foreach ($availableYears as $yr)
+                                        <option value="{{ route('journal.issues.index', ['journal' => $journal->slug, 'tab' => 'back', 'year' => $yr]) }}"
+                                            {{ (string)$selectedYear === (string)$yr ? 'selected' : '' }}>
+                                            {{ $yr }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+                    </div>
+
                     @if ($backIssues->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach ($backIssues as $issue)
@@ -326,7 +354,7 @@
                                             </span>
                                         </div>
 
-                                        <!-- 4 OJS Actions Bar -->
+                                        <!-- 5 OJS Actions Bar -->
                                         <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap text-xs">
                                             <!-- 1. Edit -->
                                             <a href="{{ route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue]) }}"
@@ -354,7 +382,24 @@
                                                 </button>
                                             </form>
 
-                                            <!-- 4. Delete -->
+                                            <!-- 4. Current Issue -->
+                                            @if ($currentIssue && $currentIssue->id === $issue->id)
+                                                <span class="inline-flex items-center gap-1 font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/80 shadow-2xs" title="Terbitan utama saat ini">
+                                                    <i class="fa-solid fa-star text-[10px] text-blue-600"></i>
+                                                    <span>Current Issue</span>
+                                                </span>
+                                            @else
+                                                <form action="{{ route('journal.issues.current', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                                                    method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-blue-600 hover:text-blue-800 font-semibold transition-colors inline-flex items-center gap-1" title="{{ $isId ? 'Tetapkan sebagai terbitan terkini' : 'Set as current issue' }}">
+                                                        <i class="fa-regular fa-star text-[11px]"></i>
+                                                        <span>Current Issue</span>
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            <!-- 5. Delete -->
                                             <form action="{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue]) }}"
                                                 method="POST" class="inline"
                                                 onsubmit="return confirm('{{ $isId ? 'Hapus terbitan ini secara permanen?' : 'Delete this issue permanently?' }}')">
