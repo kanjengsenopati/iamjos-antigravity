@@ -160,6 +160,15 @@ class PublicationController extends Controller
         $authorEmail = strtolower(trim($validated['email']));
         $existingUser = User::where('email', $authorEmail)->first();
 
+        $isCorresponding = !empty($validated['is_corresponding']);
+        if ($isCorresponding) {
+            SubmissionAuthor::where('submission_id', $submission->id)
+                ->update([
+                    'is_corresponding' => false,
+                    'is_primary_contact' => false,
+                ]);
+        }
+
         $author = SubmissionAuthor::create([
             'submission_id' => $submission->id,
             'publication_id' => $publication->id,
@@ -173,7 +182,8 @@ class PublicationController extends Controller
             'affiliation' => $validated['affiliation'] ?? null,
             'country' => $validated['country'] ?? null,
             'orcid' => $validated['orcid'] ?? null,
-            'is_corresponding' => $validated['is_corresponding'] ?? false,
+            'is_corresponding' => $isCorresponding,
+            'is_primary_contact' => $isCorresponding,
             'include_in_browse' => $validated['include_in_browse'] ?? true,
             'user_group_id' => $validated['user_group_id'] ?? 'author',
             'sort_order' => $maxOrder + 1,
@@ -196,6 +206,35 @@ class PublicationController extends Controller
             'include_in_browse' => 'boolean',
             'user_group_id' => 'nullable|string|max:50',
         ]);
+
+        $isCorresponding = !empty($validated['is_corresponding']);
+        if ($isCorresponding) {
+            SubmissionAuthor::where('submission_id', $submission->id)
+                ->where('id', '!=', $author->id)
+                ->update([
+                    'is_corresponding' => false,
+                    'is_primary_contact' => false,
+                ]);
+        } else {
+            $hasOtherPrimary = SubmissionAuthor::where('submission_id', $submission->id)
+                ->where('id', '!=', $author->id)
+                ->where('is_corresponding', true)
+                ->exists();
+            if (!$hasOtherPrimary) {
+                $otherAuthor = SubmissionAuthor::where('submission_id', $submission->id)
+                    ->where('id', '!=', $author->id)
+                    ->first();
+                if ($otherAuthor) {
+                    $otherAuthor->update([
+                        'is_corresponding' => true,
+                        'is_primary_contact' => true,
+                    ]);
+                } else {
+                    $isCorresponding = true;
+                }
+            }
+        }
+
         $author->update([
             'name' => "{$validated['given_name']} {$validated['family_name']}",
             'given_name' => $validated['given_name'],
@@ -206,7 +245,8 @@ class PublicationController extends Controller
             'affiliation' => $validated['affiliation'] ?? null,
             'country' => $validated['country'] ?? null,
             'orcid' => $validated['orcid'] ?? null,
-            'is_corresponding' => $validated['is_corresponding'] ?? false,
+            'is_corresponding' => $isCorresponding,
+            'is_primary_contact' => $isCorresponding,
             'include_in_browse' => $validated['include_in_browse'] ?? true,
             'user_group_id' => $validated['user_group_id'] ?? $author->user_group_id,
         ]);
