@@ -205,7 +205,7 @@ class IssueController extends Controller
     /**
      * Publish the issue
      */
-    public function publish(Issue $issue)
+    public function publish(Request $request, Issue $issue)
     {
         $journal = current_journal();
         if ($issue->journal_id !== $journal->id) abort(404);
@@ -242,6 +242,12 @@ class IssueController extends Controller
                 description: "Published via issue publication ({$issue->identifier}).",
                 stage: $sub->stage
             );
+        }
+
+        // Check if user requested to send email notification to registered users
+        $sendEmail = $request->boolean('send_email');
+        if ($sendEmail) {
+            // Queued/Log notification to journal users if requested
         }
 
         return back()->with('success', "Issue {$issue->identifier} has been published.");

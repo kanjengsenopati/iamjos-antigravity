@@ -95,7 +95,15 @@
             </div>
 
             <!-- Tabs -->
-            <div x-data="{ activeTab: 'future' }" class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+            <div x-data="{
+                activeTab: 'future',
+                publishModalOpen: false,
+                publishData: { id: '', identifier: '', doi: '', publishUrl: '' },
+                openPublishModal(data) {
+                    this.publishData = data;
+                    this.publishModalOpen = true;
+                }
+            }" class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
                 <!-- Tab Headers -->
                 <div class="border-b border-slate-200 px-6">
                     <nav class="-mb-px flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
@@ -181,20 +189,45 @@
                                             {{ $issue->submissions_count }} {{ $isId ? 'artikel' : 'articles' }}
                                         </div>
 
-                                        <!-- Actions -->
-                                        <div class="flex items-center gap-2">
+                                        <!-- 4 OJS Actions Bar -->
+                                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap text-xs">
+                                            <!-- 1. Edit -->
                                             <a href="{{ route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                                                class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium text-center hover:bg-gray-200 transition-colors">
-                                                {{ $isId ? 'Lihat Detail' : 'View Details' }}
+                                                class="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                                <span>Edit</span>
                                             </a>
-                                            <form
-                                                action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                                                method="POST" class="flex-1">
+
+                                            <!-- 2. Preview -->
+                                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id]) }}?preview=1"
+                                                target="_blank"
+                                                class="text-slate-600 hover:text-slate-900 font-semibold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-eye text-[11px]"></i>
+                                                <span>Preview</span>
+                                            </a>
+
+                                            <!-- 3. Publish Issue -->
+                                            <button type="button"
+                                                @click="openPublishModal({
+                                                    id: '{{ $issue->id }}',
+                                                    identifier: '{{ addslashes($issue->identifier) }}',
+                                                    doi: '{{ addslashes($issue->doi ?? \App\Services\DoiService::generateForIssue($issue, $journal) ?? '') }}',
+                                                    publishUrl: '{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}'
+                                                })"
+                                                class="text-emerald-600 hover:text-emerald-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-upload text-[11px]"></i>
+                                                <span>Publish Issue</span>
+                                            </button>
+
+                                            <!-- 4. Delete -->
+                                            <form action="{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                                                method="POST" class="inline"
+                                                onsubmit="return confirm('{{ $isId ? 'Hapus terbitan ini secara permanen?' : 'Delete this issue permanently?' }}')">
                                                 @csrf
-                                                <button type="submit"
-                                                    onclick="return confirm('{{ $isId ? 'Terbitkan terbitan ini? Semua artikel yang ditetapkan juga akan diterbitkan.' : 'Publish this issue? All assigned articles will also be published.' }}')"
-                                                    class="w-full px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm">
-                                                    {{ $isId ? 'Terbitkan' : 'Publish' }}
+                                                @method('DELETE')
+                                                <button type="submit" class="text-rose-600 hover:text-rose-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                    <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                                    <span>Delete</span>
                                                 </button>
                                             </form>
                                         </div>
@@ -293,22 +326,45 @@
                                             </span>
                                         </div>
 
-                                        <!-- Actions -->
-                                        <div class="flex items-center gap-2">
+                                        <!-- 4 OJS Actions Bar -->
+                                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap text-xs">
+                                            <!-- 1. Edit -->
                                             <a href="{{ route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                                                class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium text-center hover:bg-gray-200 transition-colors">
-                                                {{ $isId ? 'Kelola' : 'Manage' }}
+                                                class="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                                <span>Edit</span>
                                             </a>
+
+                                            <!-- 2. Preview -->
                                             <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id]) }}"
                                                 target="_blank"
-                                                class="flex-1 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium text-center hover:bg-emerald-100 transition-colors">
-                                                    <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                    </svg>
-                                                {{ $isId ? 'Lihat' : 'View' }}
+                                                class="text-slate-600 hover:text-slate-900 font-semibold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-eye text-[11px]"></i>
+                                                <span>Preview</span>
                                             </a>
+
+                                            <!-- 3. Unpublish Issue -->
+                                            <form action="{{ route('journal.issues.unpublish', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                                                method="POST" class="inline"
+                                                onsubmit="return confirm('{{ $isId ? 'Batalkan publikasi terbitan ini? Status artikel akan dikembalikan.' : 'Unpublish this issue? Article status will be reverted.' }}')">
+                                                @csrf
+                                                <button type="submit" class="text-amber-600 hover:text-amber-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                    <i class="fa-solid fa-rotate-left text-[11px]"></i>
+                                                    <span>Unpublish</span>
+                                                </button>
+                                            </form>
+
+                                            <!-- 4. Delete -->
+                                            <form action="{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                                                method="POST" class="inline"
+                                                onsubmit="return confirm('{{ $isId ? 'Hapus terbitan ini secara permanen?' : 'Delete this issue permanently?' }}')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-rose-600 hover:text-rose-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                    <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                                    <span>Delete</span>
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -334,6 +390,85 @@
                             <p class="text-gray-500">{{ $isId ? 'Terbitan akan muncul di sini setelah diterbitkan.' : 'Issues will appear here once they are published.' }}</p>
                         </div>
                     @endif
+                </div>
+            </div>
+
+            <!-- ====== PUBLISH ISSUE MODAL (OJS STYLE) ====== -->
+            <div x-show="publishModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
+                <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                    <!-- Backdrop -->
+                    <div x-show="publishModalOpen"
+                        x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+                        @click="publishModalOpen = false"></div>
+
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                    <!-- Modal Dialog -->
+                    <div x-show="publishModalOpen"
+                        x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        class="relative inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full border border-slate-100">
+                        
+                        <!-- Modal Header -->
+                        <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-upload text-emerald-600"></i>
+                                <span>Publish Issue</span>
+                            </h3>
+                            <button type="button" @click="publishModalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100">
+                                <i class="fa-solid fa-xmark text-base"></i>
+                            </button>
+                        </div>
+
+                        <!-- Modal Form -->
+                        <form :action="publishData.publishUrl" method="POST">
+                            @csrf
+                            <div class="p-6 space-y-4">
+                                <!-- Option Checkbox: Send email -->
+                                <div class="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                                    <input type="checkbox" id="send_email" name="send_email" value="1" checked
+                                        class="mt-0.5 w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer">
+                                    <label for="send_email" class="text-xs font-semibold text-slate-800 cursor-pointer leading-normal select-none">
+                                        Send an email about this to all registered users.
+                                    </label>
+                                </div>
+
+                                <!-- Confirmation Message -->
+                                <p class="text-sm font-semibold text-slate-700">
+                                    Are you sure you want to publish the new issue?
+                                </p>
+
+                                <!-- DOI Section (Matching OJS Image 2) -->
+                                <div class="pt-2 border-t border-slate-100">
+                                    <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">DOI</h4>
+                                    <template x-if="publishData.doi">
+                                        <p class="text-xs text-slate-600 leading-relaxed">
+                                            The DOI <span class="font-mono font-bold text-slate-900" x-text="publishData.doi"></span> has been assigned.
+                                        </p>
+                                    </template>
+                                    <template x-if="!publishData.doi">
+                                        <p class="text-xs text-slate-400 italic">
+                                            No DOI configured for this issue.
+                                        </p>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Modal Footer -->
+                            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                                <button type="button" @click="publishModalOpen = false"
+                                    class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs">
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                    class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-md shadow-emerald-600/20">
+                                    OK
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
