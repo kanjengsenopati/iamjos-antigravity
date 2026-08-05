@@ -26,23 +26,70 @@
 
     </div>
 
-    <!-- Stats Bar -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
-            <p class="text-2xl font-bold text-gray-900">{{ $journals->count() }}</p>
-            <p class="text-sm text-gray-500">{{ $isId ? 'Total Jurnal' : 'Total Journals' }}</p>
+    <!-- Stats Bar (scirepid.com Style) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Card 1: Total Journals (Blue Theme) -->
+        <div class="relative overflow-hidden bg-blue-50/70 border border-blue-100/80 rounded-[24px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-[20px] bg-blue-600 shadow-md shadow-blue-500/25 flex items-center justify-center text-white flex-shrink-0 relative z-10">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <div class="relative z-10 min-w-0">
+                <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">{{ number_format($journals->count()) }}</p>
+                <h3 class="text-sm font-bold text-slate-800 leading-snug truncate">{{ $isId ? 'Total Jurnal' : 'Total Journals' }}</h3>
+                <p class="text-[11px] font-medium text-slate-500 truncate leading-tight mt-0.5">{{ $isId ? 'Jurnal terdaftar' : 'Hosted publications' }}</p>
+            </div>
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-blue-200/50 pointer-events-none"></div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
-            <p class="text-2xl font-bold text-emerald-600">{{ $journals->where('enabled', true)->count() }}</p>
-            <p class="text-sm text-gray-500">{{ $isId ? 'Aktif' : 'Active' }}</p>
+
+        <!-- Card 2: Active Journals (Emerald Theme) -->
+        <div class="relative overflow-hidden bg-emerald-50/70 border border-emerald-100/80 rounded-[24px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-[20px] bg-emerald-600 shadow-md shadow-emerald-500/25 flex items-center justify-center text-white flex-shrink-0 relative z-10">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="relative z-10 min-w-0">
+                <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">{{ number_format($journals->where('enabled', true)->count()) }}</p>
+                <h3 class="text-sm font-bold text-slate-800 leading-snug truncate">{{ $isId ? 'Jurnal Aktif' : 'Active Journals' }}</h3>
+                <p class="text-[11px] font-medium text-slate-500 truncate leading-tight mt-0.5">{{ $isId ? 'Status aktif & live' : 'Enabled & live' }}</p>
+            </div>
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-emerald-200/50 pointer-events-none"></div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
-            <p class="text-2xl font-bold text-gray-400">{{ $journals->where('enabled', false)->count() }}</p>
-            <p class="text-sm text-gray-500">{{ $isId ? 'Nonaktif' : 'Disabled' }}</p>
+
+        <!-- Card 3: Disabled Journals (Amber / Orange Theme) -->
+        <div class="relative overflow-hidden bg-amber-50/70 border border-amber-100/80 rounded-[24px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-[20px] bg-amber-600 shadow-md shadow-amber-500/25 flex items-center justify-center text-white flex-shrink-0 relative z-10">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+            </div>
+            <div class="relative z-10 min-w-0">
+                <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">{{ number_format($journals->where('enabled', false)->count()) }}</p>
+                <h3 class="text-sm font-bold text-slate-800 leading-snug truncate">{{ $isId ? 'Jurnal Nonaktif' : 'Disabled Journals' }}</h3>
+                <p class="text-[11px] font-medium text-slate-500 truncate leading-tight mt-0.5">{{ $isId ? 'Status dinonaktifkan' : 'Currently inactive' }}</p>
+            </div>
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-amber-200/50 pointer-events-none"></div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
-            <p class="text-2xl font-bold text-blue-600">{{ $journals->sum('submissions_count') }}</p>
-            <p class="text-sm text-gray-500">{{ $isId ? 'Total Artikel' : 'Total Articles' }}</p>
+
+        <!-- Card 4: Total Articles (Purple / Violet Theme) -->
+        <div class="relative overflow-hidden bg-purple-50/70 border border-purple-100/80 rounded-[24px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-[20px] bg-violet-600 shadow-md shadow-violet-500/25 flex items-center justify-center text-white flex-shrink-0 relative z-10">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <div class="relative z-10 min-w-0">
+                <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">{{ number_format($journals->sum('submissions_count')) }}</p>
+                <h3 class="text-sm font-bold text-slate-800 leading-snug truncate">{{ $isId ? 'Total Artikel' : 'Total Articles' }}</h3>
+                <p class="text-[11px] font-medium text-slate-500 truncate leading-tight mt-0.5">{{ $isId ? 'Artikel terdaftar' : 'Peer-reviewed articles' }}</p>
+            </div>
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-purple-200/50 pointer-events-none"></div>
         </div>
     </div>
 
