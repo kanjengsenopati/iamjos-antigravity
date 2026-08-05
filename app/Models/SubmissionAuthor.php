@@ -87,33 +87,52 @@ class SubmissionAuthor extends Model
     }
 
     /**
-     * Ensure exactly one author per submission is marked as primary contact.
+     * Ensure exactly one author per submission/publication is marked as primary contact.
+     * Queries by BOTH submission_id and publication_id to cover all related authors.
      */
-    public static function ensureSinglePrimaryAuthor(string $submissionId): void
+    public static function ensureSinglePrimaryAuthor(string $submissionId, ?string $publicationId = null): void
     {
-        $authors = self::where('submission_id', $submissionId)->orderBy('sort_order')->orderBy('created_at')->get();
+        // Build query covering both submission_id and publication_id scopes
+        $query = self::query();
+        if ($publicationId) {
+            $query->where(function ($q) use ($submissionId, $publicationId) {
+                $q->where('submission_id', $submissionId)
+                  ->orWhere('publication_id', $publicationId);
+            });
+        } else {
+            $query->where('submission_id', $submissionId);
+        }
+        $authors = $query->orderBy('sort_order')->orderBy('created_at')->get()->unique('id');
+
         if ($authors->isEmpty()) {
             return;
         }
 
+        $allIds = $authors->pluck('id')->toArray();
         $primaryAuthors = $authors->filter(fn($a) => $a->is_corresponding || $a->is_primary_contact);
 
+        // Pick exactly one primary author
+        $primary = null;
         if ($primaryAuthors->count() === 1) {
             $primary = $primaryAuthors->first();
-            if (!$primary->is_corresponding || !$primary->is_primary_contact) {
-                self::where('id', $primary->id)->update(['is_corresponding' => true, 'is_primary_contact' => true]);
-            }
-            self::where('submission_id', $submissionId)
-                ->where('id', '!=', $primary->id)
-                ->update(['is_corresponding' => false, 'is_primary_contact' => false]);
         } else {
-            // Either 0 or >1 primary authors: pick the first primary or first author
+            // 0 or >1 primary: pick the first primary, or fallback to first author
             $primary = $primaryAuthors->first() ?? $authors->first();
-            self::where('id', $primary->id)->update(['is_corresponding' => true, 'is_primary_contact' => true]);
-            self::where('submission_id', $submissionId)
-                ->where('id', '!=', $primary->id)
-                ->update(['is_corresponding' => false, 'is_primary_contact' => false]);
         }
+
+        // Set the chosen primary to true
+        self::where('id', $primary->id)->update([
+            'is_corresponding' => true,
+            'is_primary_contact' => true,
+        ]);
+
+        // Reset ALL others to false (using individual IDs for accuracy)
+        self::whereIn('id', $allIds)
+            ->where('id', '!=', $primary->id)
+            ->update([
+                'is_corresponding' => false,
+                'is_primary_contact' => false,
+            ]);
     }
 
     // =====================================================

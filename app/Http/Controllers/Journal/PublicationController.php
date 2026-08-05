@@ -20,8 +20,8 @@ class PublicationController extends Controller
      */
     public function show($journal, Submission $submission)
     {
-        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
         $publication = $submission->getOrCreatePublication();
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id, $publication->id);
         $publication->load(['authors', 'section', 'issue']);
         return response()->json([
             'publication' => $publication,
@@ -163,11 +163,14 @@ class PublicationController extends Controller
 
         $isCorresponding = !empty($validated['is_corresponding']);
         if ($isCorresponding) {
-            SubmissionAuthor::where('submission_id', $submission->id)
-                ->update([
-                    'is_corresponding' => false,
-                    'is_primary_contact' => false,
-                ]);
+            // Reset ALL related authors by both submission_id and publication_id
+            SubmissionAuthor::where(function ($q) use ($submission, $publication) {
+                $q->where('submission_id', $submission->id)
+                  ->orWhere('publication_id', $publication->id);
+            })->update([
+                'is_corresponding' => false,
+                'is_primary_contact' => false,
+            ]);
         }
 
         $author = SubmissionAuthor::create([
@@ -189,7 +192,7 @@ class PublicationController extends Controller
             'user_group_id' => $validated['user_group_id'] ?? 'author',
             'sort_order' => $maxOrder + 1,
         ]);
-        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id, $publication->id);
         return back()->with('success', 'Contributor added successfully.');
     }
     /**
@@ -209,29 +212,39 @@ class PublicationController extends Controller
             'user_group_id' => 'nullable|string|max:50',
         ]);
 
+        $publication = $submission->getOrCreatePublication();
         $isCorresponding = !empty($validated['is_corresponding']);
+
         if ($isCorresponding) {
-            SubmissionAuthor::where('submission_id', $submission->id)
-                ->where('id', '!=', $author->id)
-                ->update([
-                    'is_corresponding' => false,
-                    'is_primary_contact' => false,
-                ]);
+            // Reset ALL related authors (by both submission_id and publication_id)
+            SubmissionAuthor::where(function ($q) use ($submission, $publication) {
+                $q->where('submission_id', $submission->id)
+                  ->orWhere('publication_id', $publication->id);
+            })->where('id', '!=', $author->id)
+              ->update([
+                'is_corresponding' => false,
+                'is_primary_contact' => false,
+            ]);
         } else {
-            $hasOtherPrimary = SubmissionAuthor::where('submission_id', $submission->id)
-                ->where('id', '!=', $author->id)
-                ->where('is_corresponding', true)
-                ->exists();
+            // User unchecked primary: find or assign another author as primary
+            $hasOtherPrimary = SubmissionAuthor::where(function ($q) use ($submission, $publication) {
+                $q->where('submission_id', $submission->id)
+                  ->orWhere('publication_id', $publication->id);
+            })->where('id', '!=', $author->id)
+              ->where('is_corresponding', true)
+              ->exists();
             if (!$hasOtherPrimary) {
-                $otherAuthor = SubmissionAuthor::where('submission_id', $submission->id)
-                    ->where('id', '!=', $author->id)
-                    ->first();
+                $otherAuthor = SubmissionAuthor::where(function ($q) use ($submission, $publication) {
+                    $q->where('submission_id', $submission->id)
+                      ->orWhere('publication_id', $publication->id);
+                })->where('id', '!=', $author->id)->first();
                 if ($otherAuthor) {
                     $otherAuthor->update([
                         'is_corresponding' => true,
                         'is_primary_contact' => true,
                     ]);
                 } else {
+                    // Only author, force as primary
                     $isCorresponding = true;
                 }
             }
@@ -252,7 +265,7 @@ class PublicationController extends Controller
             'include_in_browse' => $validated['include_in_browse'] ?? true,
             'user_group_id' => $validated['user_group_id'] ?? $author->user_group_id,
         ]);
-        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id, $publication->id);
         return back()->with('success', 'Contributor updated successfully.');
     }
     /**
@@ -260,8 +273,9 @@ class PublicationController extends Controller
      */
     public function destroyContributor($journal, Submission $submission, SubmissionAuthor $author)
     {
+        $publication = $submission->getOrCreatePublication();
         $author->delete();
-        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id, $publication->id);
         return back()->with('success', 'Contributor removed.');
     }
     /**

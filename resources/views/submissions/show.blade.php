@@ -3937,16 +3937,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
         {{-- ==================== PUBLICATION TAB ==================== --}}
         @php
-            \App\Models\SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
             $publication = $submission->currentPublication ?? $submission->getOrCreatePublication();
             $pubStatus = $publication->status ?? 1;
-            // Query fresh from DB to avoid stale Eloquent relationship cache after ensureSinglePrimaryAuthor
-            $freshAuthors = \App\Models\SubmissionAuthor::where('publication_id', $publication->id)
-                ->orderBy('sort_order')->get();
-            if ($freshAuthors->isEmpty()) {
-                $freshAuthors = \App\Models\SubmissionAuthor::where('submission_id', $submission->id)
-                    ->orderBy('sort_order')->get();
-            }
+            // Enforce single primary with dual-scope (submission_id + publication_id)
+            \App\Models\SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id, $publication->id);
+            // Query fresh: get ALL related authors by publication_id OR submission_id
+            $freshAuthors = \App\Models\SubmissionAuthor::where(function ($q) use ($submission, $publication) {
+                $q->where('publication_id', $publication->id)
+                  ->orWhere('submission_id', $submission->id);
+            })->orderBy('sort_order')->get()->unique('id');
             $pubAuthors = $freshAuthors->map(
                 fn($a) => [
                     'id' => $a->id,
@@ -3963,7 +3962,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     'first_name' => $a->first_name ?? $a->given_name ?? '',
                     'last_name' => $a->last_name ?? $a->family_name ?? '',
                 ],
-            ) ?? collect();
+            )->values();
         @endphp
         <div x-show="activeTab === 'publication'" x-cloak x-data='{
             pubTab: (new URLSearchParams(window.location.search)).get("subtab") || "title",
