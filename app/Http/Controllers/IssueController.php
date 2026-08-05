@@ -40,8 +40,17 @@ class IssueController extends Controller
             ->latest()
             ->get();
 
+        // Stats
+        $totalIssues = $allIssues->count();
+        $publishedCount = $allIssues->where('is_published', true)->count();
+        $upcomingCount = $allIssues->where('is_published', false)->count();
+        $totalArticles = Submission::where('journal_id', $journal->id)
+            ->whereNotNull('issue_id')
+            ->count();
+
         // Separate into future (unpublished) and back (published) issues
         $futureIssues = $allIssues->where('is_published', false);
+
         // Available years for Back Issues filter
         $availableYears = Issue::where('journal_id', $journal->id)
             ->where('is_published', true)
