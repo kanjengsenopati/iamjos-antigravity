@@ -487,6 +487,7 @@ class SubmissionController extends Controller
                         'sort_order' => $index,
                     ]);
                 }
+                SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
 
                 // 4. Create Discussion for "Comments for the Editor" (if provided)
                 if (!empty($validated['comments_for_editor'])) {
@@ -679,6 +680,7 @@ class SubmissionController extends Controller
                         'sort_order' => $index,
                     ]);
                 }
+                SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
             }
 
             DB::commit();

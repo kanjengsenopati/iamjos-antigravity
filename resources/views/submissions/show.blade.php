@@ -3975,6 +3975,21 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                             'last_name' => $a->last_name ?? $a->family_name ?? '',
                         ],
                     )) ?? [];
+
+            // Ensure exactly one author in $pubAuthors is marked as primary contact (Self-healing)
+            if (!empty($pubAuthors)) {
+                $hasPrimary = false;
+                foreach ($pubAuthors as $auth) {
+                    if (!empty($auth['is_corresponding'])) {
+                        $hasPrimary = true;
+                        break;
+                    }
+                }
+                if (!$hasPrimary) {
+                    $pubAuthors[0]['is_corresponding'] = true;
+                    \App\Models\SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
+                }
+            }
         @endphp
         <div x-show="activeTab === 'publication'" x-cloak x-data='{
             pubTab: (new URLSearchParams(window.location.search)).get("subtab") || "title",

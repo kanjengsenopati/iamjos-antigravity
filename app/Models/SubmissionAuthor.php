@@ -87,11 +87,33 @@ class SubmissionAuthor extends Model
     }
 
     /**
-     * Scope to order by position
+     * Ensure exactly one author per submission is marked as primary contact.
      */
-    public function scopeOrdered($query)
+    public static function ensureSinglePrimaryAuthor(string $submissionId): void
     {
-        return $query->orderBy('sort_order');
+        $authors = self::where('submission_id', $submissionId)->orderBy('sort_order')->orderBy('created_at')->get();
+        if ($authors->isEmpty()) {
+            return;
+        }
+
+        $primaryAuthors = $authors->filter(fn($a) => $a->is_corresponding || $a->is_primary_contact);
+
+        if ($primaryAuthors->count() === 1) {
+            $primary = $primaryAuthors->first();
+            if (!$primary->is_corresponding || !$primary->is_primary_contact) {
+                self::where('id', $primary->id)->update(['is_corresponding' => true, 'is_primary_contact' => true]);
+            }
+            self::where('submission_id', $submissionId)
+                ->where('id', '!=', $primary->id)
+                ->update(['is_corresponding' => false, 'is_primary_contact' => false]);
+        } else {
+            // Either 0 or >1 primary authors: pick the first primary or first author
+            $primary = $primaryAuthors->first() ?? $authors->first();
+            self::where('id', $primary->id)->update(['is_corresponding' => true, 'is_primary_contact' => true]);
+            self::where('submission_id', $submissionId)
+                ->where('id', '!=', $primary->id)
+                ->update(['is_corresponding' => false, 'is_primary_contact' => false]);
+        }
     }
 
     // =====================================================

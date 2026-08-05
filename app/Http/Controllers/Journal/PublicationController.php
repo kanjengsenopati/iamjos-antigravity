@@ -20,6 +20,7 @@ class PublicationController extends Controller
      */
     public function show($journal, Submission $submission)
     {
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
         $publication = $submission->getOrCreatePublication();
         $publication->load(['authors', 'section', 'issue']);
         return response()->json([
@@ -188,6 +189,7 @@ class PublicationController extends Controller
             'user_group_id' => $validated['user_group_id'] ?? 'author',
             'sort_order' => $maxOrder + 1,
         ]);
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
         return back()->with('success', 'Contributor added successfully.');
     }
     /**
@@ -250,6 +252,7 @@ class PublicationController extends Controller
             'include_in_browse' => $validated['include_in_browse'] ?? true,
             'user_group_id' => $validated['user_group_id'] ?? $author->user_group_id,
         ]);
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
         return back()->with('success', 'Contributor updated successfully.');
     }
     /**
@@ -258,6 +261,7 @@ class PublicationController extends Controller
     public function destroyContributor($journal, Submission $submission, SubmissionAuthor $author)
     {
         $author->delete();
+        SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
         return back()->with('success', 'Contributor removed.');
     }
     /**
