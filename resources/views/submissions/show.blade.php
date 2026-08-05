@@ -3937,59 +3937,27 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
 
         {{-- ==================== PUBLICATION TAB ==================== --}}
         @php
+            \App\Models\SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
             $publication = $submission->currentPublication ?? $submission->getOrCreatePublication();
             $pubStatus = $publication->status ?? 1;
-            $pubAuthors =
-                ($publication->authors?->isNotEmpty()
-                    ? $publication->authors->map(
-                        fn($a) => [
-                            'id' => $a->id,
-                            'name' => $a->name,
-                            'email' => $a->email ?? '',
-                            'orcid' => $a->orcid ?? '',
-                            'orcid_url' => $a->orcid_url ?? '',
-                            'affiliation' => $a->affiliation ?? '',
-                            'country' => $a->country ?? '',
-                            'is_corresponding' => $a->is_corresponding ?? false,
-                            'include_in_browse' => $a->include_in_browse ?? true,
-                            'given_name' => $a->given_name ?? $a->first_name ?? '',
-                            'family_name' => $a->family_name ?? $a->last_name ?? '',
-                            'first_name' => $a->first_name ?? $a->given_name ?? '',
-                            'last_name' => $a->last_name ?? $a->family_name ?? '',
-                        ],
-                    )
-                    : $submission->authors->map(
-                        fn($a) => [
-                            'id' => $a->id,
-                            'name' => $a->name,
-                            'email' => $a->email ?? '',
-                            'orcid' => $a->orcid ?? '',
-                            'orcid_url' => $a->orcid_url ?? '',
-                            'affiliation' => $a->affiliation ?? '',
-                            'country' => $a->country ?? '',
-                            'is_corresponding' => $a->is_corresponding ?? false,
-                            'include_in_browse' => $a->include_in_browse ?? true,
-                            'given_name' => $a->given_name ?? $a->first_name ?? '',
-                            'family_name' => $a->family_name ?? $a->last_name ?? '',
-                            'first_name' => $a->first_name ?? $a->given_name ?? '',
-                            'last_name' => $a->last_name ?? $a->family_name ?? '',
-                        ],
-                    )) ?? [];
-
-            // Ensure exactly one author in $pubAuthors is marked as primary contact (Self-healing)
-            if (!empty($pubAuthors)) {
-                $hasPrimary = false;
-                foreach ($pubAuthors as $auth) {
-                    if (!empty($auth['is_corresponding'])) {
-                        $hasPrimary = true;
-                        break;
-                    }
-                }
-                if (!$hasPrimary) {
-                    $pubAuthors[0]['is_corresponding'] = true;
-                    \App\Models\SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
-                }
-            }
+            $pubAuthorsList = $publication->authors?->isNotEmpty() ? $publication->authors : $submission->authors;
+            $pubAuthors = $pubAuthorsList->map(
+                fn($a) => [
+                    'id' => $a->id,
+                    'name' => $a->name,
+                    'email' => $a->email ?? '',
+                    'orcid' => $a->orcid ?? '',
+                    'orcid_url' => $a->orcid_url ?? '',
+                    'affiliation' => $a->affiliation ?? '',
+                    'country' => $a->country ?? '',
+                    'is_corresponding' => (bool) $a->is_corresponding,
+                    'include_in_browse' => $a->include_in_browse ?? true,
+                    'given_name' => $a->given_name ?? $a->first_name ?? '',
+                    'family_name' => $a->family_name ?? $a->last_name ?? '',
+                    'first_name' => $a->first_name ?? $a->given_name ?? '',
+                    'last_name' => $a->last_name ?? $a->family_name ?? '',
+                ],
+            ) ?? collect();
         @endphp
         <div x-show="activeTab === 'publication'" x-cloak x-data='{
             pubTab: (new URLSearchParams(window.location.search)).get("subtab") || "title",
