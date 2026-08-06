@@ -71,10 +71,10 @@ class IssueController extends Controller
         }
 
         $backIssues = $backIssuesQuery
-            ->orderBy('published_at', 'desc')
             ->orderBy('year', 'desc')
             ->orderBy('volume', 'desc')
             ->orderBy('number', 'desc')
+            ->orderBy('created_at', 'desc')
             ->withCount('submissions')
             ->paginate(12)
             ->withQueryString();

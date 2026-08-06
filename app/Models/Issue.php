@@ -72,27 +72,22 @@ class Issue extends Model
      */
     public function resolveRouteBinding($value, $field = null)
     {
-        // If the value is not numeric, handle backward compatibility (301 Redirect)
+        // 1. If explicit field specified or value is a valid UUID, search by ID directly
+        if ($field === 'id' || \Illuminate\Support\Str::isUuid($value)) {
+            return $this->where('id', $value)->firstOrFail();
+        }
+
+        // 2. If value is not numeric, check url_path
         if (!is_numeric($value)) {
             $query = $this->where('url_path', $value);
-            if (\Illuminate\Support\Str::isUuid($value)) {
-                $query->orWhere('id', $value);
-            }
             $issue = $query->first();
             
             if ($issue && $issue->seq_id && request()->isMethod('GET')) {
-                // Generate the correct URL by replacing the slug/uuid with the new seq_id
                 $currentUrl = request()->url();
-                
-                // Be slightly safer with replacement to avoid mismatching early segments
                 $newUrl = preg_replace('/\/'.preg_quote($value, '/').'(?=\/|$)/', '/' . $issue->seq_id, $currentUrl, 1);
-                
-                // Fallback if regex didn't change anything
                 if ($newUrl === $currentUrl) {
-                      $newUrl = str_replace($value, $issue->seq_id, $currentUrl);
+                    $newUrl = str_replace($value, $issue->seq_id, $currentUrl);
                 }
-                
-                // Preserve query strings if any
                 if (request()->getQueryString()) {
                     $newUrl .= '?' . request()->getQueryString();
                 }
@@ -101,11 +96,17 @@ class Issue extends Model
             }
             
             if ($issue) {
-               return $issue;
+                return $issue;
             }
         }
 
-        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
+        // 3. For numeric seq_id values, scope by current journal if available
+        $query = $this->where($field ?? $this->getRouteKeyName(), $value);
+        if ($journal = current_journal()) {
+            $query->where('journal_id', $journal->id);
+        }
+
+        return $query->firstOrFail();
     }
 
     // =====================================================

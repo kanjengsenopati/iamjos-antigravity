@@ -378,14 +378,14 @@
                                         <!-- OJS Actions Bar -->
                                         <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap text-xs">
                                             <!-- 1. Edit -->
-                                            <a href="{{ route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                                            <a href="{{ route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue->id]) }}"
                                                 class="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                                 <span>Edit</span>
                                             </a>
 
                                             <!-- 2. Preview -->
-                                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id]) }}"
+                                            <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id ?: $issue->id]) }}"
                                                 target="_blank"
                                                 class="text-slate-600 hover:text-slate-900 font-semibold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-eye text-[11px]"></i>
@@ -397,7 +397,7 @@
                                                 @click="openUnpublishModal({
                                                     id: '{{ $issue->id }}',
                                                     identifier: '{{ addslashes($issue->identifier) }}',
-                                                    actionUrl: '{{ route('journal.issues.unpublish', ['journal' => $journal->slug, 'issue' => $issue]) }}'
+                                                    actionUrl: '{{ route('journal.issues.unpublish', ['journal' => $journal->slug, 'issue' => $issue->id]) }}'
                                                 })"
                                                 class="text-amber-600 hover:text-amber-800 font-semibold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-rotate-left text-[11px]"></i>
@@ -406,7 +406,7 @@
 
                                             <!-- 4. Current Issue Action (Shown only if NOT already Current Issue) -->
                                             @if (!$currentIssue || $currentIssue->id !== $issue->id)
-                                                <form action="{{ route('journal.issues.current', ['journal' => $journal->slug, 'issue' => $issue, 'tab' => 'back', 'year' => request('year')]) }}"
+                                                <form action="{{ route('journal.issues.current', ['journal' => $journal->slug, 'issue' => $issue->id, 'tab' => 'back', 'year' => request('year')]) }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="text-blue-600 hover:text-blue-800 font-semibold transition-colors inline-flex items-center gap-1" title="{{ $isId ? 'Tetapkan sebagai terbitan terkini' : 'Set as current issue' }}">
@@ -421,7 +421,7 @@
                                                 @click="openDeleteModal({
                                                     id: '{{ $issue->id }}',
                                                     identifier: '{{ addslashes($issue->identifier) }}',
-                                                    actionUrl: '{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue]) }}'
+                                                    actionUrl: '{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue->id]) }}'
                                                 })"
                                                 class="text-rose-600 hover:text-rose-800 font-semibold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-trash-can text-[11px]"></i>
