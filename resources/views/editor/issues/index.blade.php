@@ -327,7 +327,7 @@
                                         @endif
 
                                         <!-- Status Badges Overlay on Cover Image -->
-                                        <div class="absolute top-3 right-3 flex flex-col items-end gap-1.5 z-10">
+                                        <div class="absolute top-3 right-3 z-10">
                                             <span
                                                 class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/90 text-white backdrop-blur-md shadow-xs border border-emerald-400/40">
                                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
@@ -337,16 +337,16 @@
                                                 </svg>
                                                 {{ $isId ? 'Terbit' : 'Published' }}
                                             </span>
-
-                                            <!-- Prominent Premium Current Issue Badge directly on Cover Image -->
-                                            @if ($currentIssue && $currentIssue->id === $issue->id)
-                                                <span
-                                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-extrabold bg-blue-600/95 text-white backdrop-blur-md shadow-md shadow-blue-900/30 border border-blue-400/40">
-                                                    <i class="fa-solid fa-star text-yellow-300 text-xs"></i>
-                                                    <span>Current Issue</span>
-                                                </span>
-                                            @endif
                                         </div>
+
+                                        <!-- Prominent Outstanding Current Issue Hero Banner Overlay (Centered on Cover) -->
+                                        @if ($currentIssue && $currentIssue->id === $issue->id)
+                                            <div class="absolute inset-x-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600/95 via-indigo-600/95 to-blue-700/95 text-white py-2.5 px-4 rounded-2xl backdrop-blur-md shadow-xl shadow-blue-950/50 border border-white/30 flex items-center justify-center gap-2.5 z-20 transform group-hover:scale-[1.02] transition-all">
+                                                <i class="fa-solid fa-star text-yellow-300 text-sm"></i>
+                                                <span class="text-xs font-black tracking-widest uppercase text-white shadow-2xs">CURRENT ISSUE</span>
+                                                <i class="fa-solid fa-star text-yellow-300 text-sm"></i>
+                                            </div>
+                                        @endif
                                     </div>
 
                                     <!-- Content -->
