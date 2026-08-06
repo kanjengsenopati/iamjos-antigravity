@@ -312,7 +312,7 @@ class IssueController extends Controller
     /**
      * Publish the issue and all its articles.
      */
-    public function publish(string $journalSlug, Issue $issue): RedirectResponse
+    public function publish(Request $request, string $journalSlug, Issue $issue): RedirectResponse
     {
         $journal = $this->getJournal();
 

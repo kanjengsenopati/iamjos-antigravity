@@ -39,8 +39,31 @@
                     <a href="{{ route('journal.public.archives', ['journal' => $journal->slug]) }}"
                         class="hover:text-primary-600">{{ __('Archives') }}</a>
                     <span class="mx-2">/</span>
-                    <span class="text-gray-900">{{ $issue->display_title }}</span>
                 </nav>
+
+                {{-- PREVIEW MODE BANNER (OJS STYLE) --}}
+                @if (request()->has('preview') || request()->boolean('preview') || !empty($isPreview) || !$issue->is_published)
+                    <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 shadow-xs flex items-center gap-3.5 mb-6">
+                        <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                            <i class="fa-solid fa-eye text-base"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-200/80 text-amber-950">
+                                    {{ app()->getLocale() === 'id' ? 'MODE PRATINJAU' : 'PREVIEW MODE' }}
+                                </span>
+                                <span class="text-xs font-semibold text-amber-800">
+                                    {{ app()->getLocale() === 'id' ? 'Terbitan Belum Diterbitkan' : 'Unpublished Issue' }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-amber-800/90 mt-0.5 leading-normal">
+                                {{ app()->getLocale() === 'id'
+                                    ? 'Ini adalah tampilan pratinjau (preview) terbitan yang belum diterbitkan secara resmi. Akses ini hanya tersedia untuk kebutuhan peninjauan editorial.'
+                                    : 'This is a preview display of an issue that has not been officially published. Access is restricted for editorial review purposes.' }}
+                            </p>
+                        </div>
+                    </div>
+                @endif
 
                 <x-text.h1 class="mb-4">
                     {{ $issue->display_title }}
