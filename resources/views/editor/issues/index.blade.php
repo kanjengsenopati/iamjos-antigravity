@@ -436,60 +436,71 @@
                     @endif
                 </div>
 
-                <!-- ====== PUBLISH ISSUE MODAL (OJS STYLE) ====== -->
+                <!-- ====== PUBLISH ISSUE MODAL (PAKRT PREMIUM NATIVE - 24PX RADIUS, COMPACT) ====== -->
                 <div x-show="publishModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
-                    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
                         <!-- Backdrop -->
                         <div x-show="publishModalOpen"
                             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                            class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+                            class="fixed inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity"
                             @click="publishModalOpen = false"></div>
 
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                        <!-- Modal Dialog -->
+                        <!-- Modal Dialog Container (rounded-[24px], compact sm:max-w-md) -->
                         <div x-show="publishModalOpen"
                             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                            class="relative inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full border border-slate-100">
+                            class="relative inline-block align-middle bg-white rounded-[24px] text-left overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] transform transition-all sm:my-8 sm:max-w-md sm:w-full border border-slate-100">
                             
                             <!-- Modal Header -->
-                            <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
-                                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                                    <i class="fa-solid fa-upload text-emerald-600"></i>
-                                    <span>Publish Issue</span>
-                                </h3>
-                                <button type="button" @click="publishModalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100">
-                                    <i class="fa-solid fa-xmark text-base"></i>
+                            <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/60">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-2xs">
+                                        <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                                    </div>
+                                    <x-text.h2 class="!text-sm !font-bold !text-slate-900">
+                                        Publish Issue
+                                    </x-text.h2>
+                                </div>
+                                <button type="button" @click="publishModalOpen = false"
+                                    class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors flex items-center justify-center">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
                                 </button>
                             </div>
 
                             <!-- Modal Form -->
                             <form :action="publishData.publishUrl" method="POST">
                                 @csrf
-                                <div class="p-6 space-y-4">
+                                <div class="p-5 space-y-4">
                                     <!-- Option Checkbox: Send email -->
-                                    <div class="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                                    <label for="send_email"
+                                        class="group flex items-center gap-3 bg-slate-50/80 hover:bg-slate-100/60 border border-slate-200/80 rounded-xl p-3 cursor-pointer transition-all">
                                         <input type="checkbox" id="send_email" name="send_email" value="1" checked
-                                            class="mt-0.5 w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer">
-                                        <label for="send_email" class="text-xs font-semibold text-slate-800 cursor-pointer leading-normal select-none">
+                                            class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer">
+                                        <span class="text-xs font-semibold text-slate-800 group-hover:text-slate-900 leading-tight">
                                             Send an email about this to all registered users.
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
 
                                     <!-- Confirmation Message -->
-                                    <p class="text-sm font-semibold text-slate-700">
+                                    <p class="text-xs font-semibold text-slate-700 px-0.5 leading-relaxed">
                                         Are you sure you want to publish the new issue?
                                     </p>
 
                                     <!-- DOI Section (Matching OJS Image 3) -->
-                                    <div class="pt-2 border-t border-slate-100">
-                                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">DOI</h4>
+                                    <div class="pt-3 border-t border-slate-100">
+                                        <x-text.label class="mb-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                                            DOI
+                                        </x-text.label>
                                         <template x-if="publishData.doi">
-                                            <p class="text-xs text-slate-600 leading-relaxed">
-                                                The DOI <span class="font-mono font-bold text-slate-900" x-text="publishData.doi"></span> has been assigned.
-                                            </p>
+                                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5 flex items-center gap-2">
+                                                <i class="fa-solid fa-link text-emerald-600 text-xs"></i>
+                                                <p class="text-xs text-slate-600 leading-normal">
+                                                    The DOI <span class="font-mono font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200" x-text="publishData.doi"></span> has been assigned.
+                                                </p>
+                                            </div>
                                         </template>
                                         <template x-if="!publishData.doi">
                                             <p class="text-xs text-slate-400 italic">
@@ -500,13 +511,13 @@
                                 </div>
 
                                 <!-- Modal Footer -->
-                                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                                <div class="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-2.5">
                                     <button type="button" @click="publishModalOpen = false"
-                                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs">
+                                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl hover:bg-slate-100/80 transition-all shadow-2xs">
                                         Cancel
                                     </button>
                                     <button type="submit"
-                                        class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-md shadow-emerald-600/20">
+                                        class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] rounded-xl transition-all shadow-md shadow-emerald-600/20">
                                         OK
                                     </button>
                                 </div>
