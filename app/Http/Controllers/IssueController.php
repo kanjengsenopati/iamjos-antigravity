@@ -506,11 +506,36 @@ class IssueController extends Controller
         $journal = $this->getJournal();
         if ($issue->journal_id !== $journal->id) abort(404);
         if (!$issue->is_published) {
-            return back()->with('error', 'Only published issues can be set as current issue.');
+            return redirect()->route('journal.issues.index', [
+                'journal' => $journal->slug,
+                'tab' => 'back',
+            ])->with('error', 'Only published issues can be set as current issue.');
         }
 
-        $issue->update(['published_at' => now()]);
+        // Calculate a timestamp guaranteed to be strictly greater than any other issue's published_at
+        $maxPublishedAt = Issue::where('journal_id', $journal->id)
+            ->where('id', '!=', $issue->id)
+            ->max('published_at');
 
-        return back()->with('success', "Issue {$issue->identifier} is now designated as the Current Issue.");
+        $now = now();
+        if ($maxPublishedAt) {
+            $parsedMax = \Carbon\Carbon::parse($maxPublishedAt);
+            $newPublishedAt = $parsedMax->greaterThanOrEqualTo($now) ? $parsedMax->copy()->addSecond() : $now;
+        } else {
+            $newPublishedAt = $now;
+        }
+
+        $issue->update(['published_at' => $newPublishedAt]);
+
+        $queryParams = [
+            'journal' => $journal->slug,
+            'tab' => 'back',
+        ];
+        if ($request->filled('year')) {
+            $queryParams['year'] = $request->query('year');
+        }
+
+        return redirect()->route('journal.issues.index', $queryParams)
+            ->with('success', "Issue {$issue->identifier} is now designated as the Current Issue.");
     }
 }

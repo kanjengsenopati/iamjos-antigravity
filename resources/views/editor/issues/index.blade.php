@@ -406,7 +406,7 @@
 
                                             <!-- 4. Current Issue Action (Shown only if NOT already Current Issue) -->
                                             @if (!$currentIssue || $currentIssue->id !== $issue->id)
-                                                <form action="{{ route('journal.issues.current', ['journal' => $journal->slug, 'issue' => $issue]) }}"
+                                                <form action="{{ route('journal.issues.current', ['journal' => $journal->slug, 'issue' => $issue, 'tab' => 'back', 'year' => request('year')]) }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="text-blue-600 hover:text-blue-800 font-semibold transition-colors inline-flex items-center gap-1" title="{{ $isId ? 'Tetapkan sebagai terbitan terkini' : 'Set as current issue' }}">
