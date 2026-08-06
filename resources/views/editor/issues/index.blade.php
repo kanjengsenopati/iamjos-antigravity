@@ -102,6 +102,18 @@
                 openPublishModal(data) {
                     this.publishData = data;
                     this.publishModalOpen = true;
+                },
+                unpublishModalOpen: false,
+                unpublishData: { id: '', identifier: '', actionUrl: '' },
+                openUnpublishModal(data) {
+                    this.unpublishData = data;
+                    this.unpublishModalOpen = true;
+                },
+                deleteModalOpen: false,
+                deleteData: { id: '', identifier: '', actionUrl: '' },
+                openDeleteModal(data) {
+                    this.deleteData = data;
+                    this.deleteModalOpen = true;
                 }
             }" class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
                 <!-- Tab Headers -->
@@ -314,10 +326,10 @@
                                             </div>
                                         @endif
 
-                                        <!-- Status Badge -->
-                                        <div class="absolute top-3 right-3">
+                                        <!-- Status Badges Overlay on Cover Image -->
+                                        <div class="absolute top-3 right-3 flex flex-col items-end gap-1.5 z-10">
                                             <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/90 text-white backdrop-blur-md shadow-xs border border-emerald-400/40">
                                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -325,6 +337,15 @@
                                                 </svg>
                                                 {{ $isId ? 'Terbit' : 'Published' }}
                                             </span>
+
+                                            <!-- Prominent Premium Current Issue Badge directly on Cover Image -->
+                                            @if ($currentIssue && $currentIssue->id === $issue->id)
+                                                <span
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-extrabold bg-blue-600/95 text-white backdrop-blur-md shadow-md shadow-blue-900/30 border border-blue-400/40">
+                                                    <i class="fa-solid fa-star text-yellow-300 text-xs"></i>
+                                                    <span>Current Issue</span>
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
 
@@ -354,7 +375,7 @@
                                             </span>
                                         </div>
 
-                                        <!-- 5 OJS Actions Bar -->
+                                        <!-- OJS Actions Bar -->
                                         <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap text-xs">
                                             <!-- 1. Edit -->
                                             <a href="{{ route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue]) }}"
@@ -372,23 +393,19 @@
                                             </a>
 
                                             <!-- 3. Unpublish Issue -->
-                                            <form action="{{ route('journal.issues.unpublish', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                                                method="POST" class="inline"
-                                                onsubmit="return confirm('{{ $isId ? 'Batalkan publikasi terbitan ini? Status artikel akan dikembalikan.' : 'Unpublish this issue? Article status will be reverted.' }}')">
-                                                @csrf
-                                                <button type="submit" class="text-amber-600 hover:text-amber-800 font-semibold transition-colors inline-flex items-center gap-1">
-                                                    <i class="fa-solid fa-rotate-left text-[11px]"></i>
-                                                    <span>Unpublish</span>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+                                                @click="openUnpublishModal({
+                                                    id: '{{ $issue->id }}',
+                                                    identifier: '{{ addslashes($issue->identifier) }}',
+                                                    actionUrl: '{{ route('journal.issues.unpublish', ['journal' => $journal->slug, 'issue' => $issue]) }}'
+                                                })"
+                                                class="text-amber-600 hover:text-amber-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-rotate-left text-[11px]"></i>
+                                                <span>Unpublish</span>
+                                            </button>
 
-                                            <!-- 4. Current Issue -->
-                                            @if ($currentIssue && $currentIssue->id === $issue->id)
-                                                <span class="inline-flex items-center gap-1 font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/80 shadow-2xs" title="Terbitan utama saat ini">
-                                                    <i class="fa-solid fa-star text-[10px] text-blue-600"></i>
-                                                    <span>Current Issue</span>
-                                                </span>
-                                            @else
+                                            <!-- 4. Current Issue Action (Shown only if NOT already Current Issue) -->
+                                            @if (!$currentIssue || $currentIssue->id !== $issue->id)
                                                 <form action="{{ route('journal.issues.current', ['journal' => $journal->slug, 'issue' => $issue]) }}"
                                                     method="POST" class="inline">
                                                     @csrf
@@ -400,16 +417,16 @@
                                             @endif
 
                                             <!-- 5. Delete -->
-                                            <form action="{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                                                method="POST" class="inline"
-                                                onsubmit="return confirm('{{ $isId ? 'Hapus terbitan ini secara permanen?' : 'Delete this issue permanently?' }}')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-rose-600 hover:text-rose-800 font-semibold transition-colors inline-flex items-center gap-1">
-                                                    <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                                    <span>Delete</span>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+                                                @click="openDeleteModal({
+                                                    id: '{{ $issue->id }}',
+                                                    identifier: '{{ addslashes($issue->identifier) }}',
+                                                    actionUrl: '{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue]) }}'
+                                                })"
+                                                class="text-rose-600 hover:text-rose-800 font-semibold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                                <span>Delete</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -519,6 +536,141 @@
                                     <button type="submit"
                                         class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] rounded-xl transition-all shadow-md shadow-emerald-600/20">
                                         OK
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== UNPUBLISH ISSUE MODAL (PAKRT PREMIUM NATIVE - CENTER ALIGNED 24PX) ====== -->
+                <div x-show="unpublishModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
+                    <div class="flex items-center justify-center min-h-screen p-4 text-center">
+                        <!-- Backdrop -->
+                        <div x-show="unpublishModalOpen"
+                            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity"
+                            @click="unpublishModalOpen = false"></div>
+
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                        <!-- Modal Dialog Container (rounded-[24px], compact sm:max-w-md, centered) -->
+                        <div x-show="unpublishModalOpen"
+                            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-4 sm:translate-y-0" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100 translate-y-0" x-transition:leave-end="opacity-0 scale-95 translate-y-4 sm:translate-y-0"
+                            class="relative inline-block align-middle bg-white rounded-[24px] text-left overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] transform transition-all my-auto sm:max-w-md sm:w-full border border-slate-100">
+                            
+                            <!-- Modal Header -->
+                            <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-amber-50/60">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center font-bold text-sm shadow-2xs">
+                                        <i class="fa-solid fa-rotate-left text-sm"></i>
+                                    </div>
+                                    <x-text.h2 class="!text-sm !font-bold !text-slate-900">
+                                        Unpublish Issue
+                                    </x-text.h2>
+                                </div>
+                                <button type="button" @click="unpublishModalOpen = false"
+                                    class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors flex items-center justify-center">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
+
+                            <!-- Modal Form -->
+                            <form :action="unpublishData.actionUrl" method="POST">
+                                @csrf
+                                <div class="p-5 space-y-3">
+                                    <div class="p-3.5 bg-amber-50/80 border border-amber-200/60 rounded-xl flex items-start gap-3">
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm mt-0.5 flex-shrink-0"></i>
+                                        <div class="text-xs text-amber-900 leading-relaxed">
+                                            <span class="font-bold block mb-0.5 text-amber-950" x-text="unpublishData.identifier"></span>
+                                            {{ $isId ? 'Batalkan publikasi terbitan ini? Status seluruh artikel di dalam terbitan ini akan dikembalikan ke status Diterima (Accepted).' : 'Unpublish this issue? Article status will be reverted to Accepted status.' }}
+                                        </div>
+                                    </div>
+
+                                    <p class="text-xs font-semibold text-slate-700 px-0.5 leading-relaxed">
+                                        {{ $isId ? 'Apakah Anda yakin ingin membatalkan publikasi terbitan ini?' : 'Are you sure you want to unpublish this issue?' }}
+                                    </p>
+                                </div>
+
+                                <!-- Modal Footer -->
+                                <div class="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                                    <button type="button" @click="unpublishModalOpen = false"
+                                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl hover:bg-slate-100/80 transition-all shadow-2xs">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                        class="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:scale-[0.98] rounded-xl transition-all shadow-md shadow-amber-600/20">
+                                        Unpublish Issue
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== DELETE ISSUE MODAL (PAKRT PREMIUM NATIVE - CENTER ALIGNED 24PX) ====== -->
+                <div x-show="deleteModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
+                    <div class="flex items-center justify-center min-h-screen p-4 text-center">
+                        <!-- Backdrop -->
+                        <div x-show="deleteModalOpen"
+                            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity"
+                            @click="deleteModalOpen = false"></div>
+
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                        <!-- Modal Dialog Container (rounded-[24px], compact sm:max-w-md, centered) -->
+                        <div x-show="deleteModalOpen"
+                            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-4 sm:translate-y-0" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100 translate-y-0" x-transition:leave-end="opacity-0 scale-95 translate-y-4 sm:translate-y-0"
+                            class="relative inline-block align-middle bg-white rounded-[24px] text-left overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] transform transition-all my-auto sm:max-w-md sm:w-full border border-slate-100">
+                            
+                            <!-- Modal Header -->
+                            <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-rose-50/60">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-rose-100/80 text-rose-700 flex items-center justify-center font-bold text-sm shadow-2xs">
+                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                    </div>
+                                    <x-text.h2 class="!text-sm !font-bold !text-slate-900">
+                                        Delete Issue
+                                    </x-text.h2>
+                                </div>
+                                <button type="button" @click="deleteModalOpen = false"
+                                    class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors flex items-center justify-center">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
+
+                            <!-- Modal Form -->
+                            <form :action="deleteData.actionUrl" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <div class="p-5 space-y-3">
+                                    <div class="p-3.5 bg-rose-50/80 border border-rose-200/60 rounded-xl flex items-start gap-3">
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm mt-0.5 flex-shrink-0"></i>
+                                        <div class="text-xs text-rose-900 leading-relaxed">
+                                            <span class="font-bold block mb-0.5 text-rose-950" x-text="deleteData.identifier"></span>
+                                            {{ $isId ? 'Hapus terbitan ini secara permanen? Tindakan ini tidak dapat dibatalkan.' : 'Delete this issue permanently? This action cannot be undone.' }}
+                                        </div>
+                                    </div>
+
+                                    <p class="text-xs font-semibold text-slate-700 px-0.5 leading-relaxed">
+                                        {{ $isId ? 'Apakah Anda yakin ingin menghapus terbitan ini?' : 'Are you sure you want to delete this issue?' }}
+                                    </p>
+                                </div>
+
+                                <!-- Modal Footer -->
+                                <div class="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                                    <button type="button" @click="deleteModalOpen = false"
+                                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl hover:bg-slate-100/80 transition-all shadow-2xs">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                        class="px-5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] rounded-xl transition-all shadow-md shadow-rose-600/20">
+                                        Delete Issue
                                     </button>
                                 </div>
                             </form>

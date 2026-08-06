@@ -174,7 +174,7 @@ class PublicController extends Controller
 
         $issue = Issue::where('journal_id', $journal->id)
             ->published()
-            ->latest()
+            ->orderBy('published_at', 'desc')
             ->first();
 
         if (!$issue) {
