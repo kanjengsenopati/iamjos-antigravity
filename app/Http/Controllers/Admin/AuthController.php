@@ -167,14 +167,23 @@ class AuthController extends Controller
             ->with('success', 'Anda berhasil logout.');
     }
 
-    /**
-     * Handle post-login redirect based on user role and context.
-     */
     protected function handlePostLoginRedirect(User $user, ?Journal $journal)
     {
-        // 1. Super Admin always goes to site admin dashboard
+        // 1. Check intended journal from query parameter or session
+        $intendedJournalSlug = session('intended_journal') ?? session('login_journal_slug');
+        $intendedJournal = $intendedJournalSlug ? Journal::where('slug', $intendedJournalSlug)->first() : null;
+        
+        // Determine the requested journal context (either current route journal or intended journal)
+        $requestedJournal = $journal ?? $intendedJournal;
+
+        // 2. Super Admin handling: goes to requested journal dashboard, or site admin dashboard if global
         if ($user->hasRole('Super Admin')) {
             session()->forget(['intended_journal', 'login_journal_slug']);
+            
+            if ($requestedJournal) {
+                return redirect()->route('journal.submissions.index', ['journal' => $requestedJournal->slug]);
+            }
+            
             return redirect()->route('admin.site.index');
         }
 
@@ -200,12 +209,7 @@ class AuthController extends Controller
             return $redirect;
         };
 
-        // 2. Check intended journal from query parameter or session
-        $intendedJournalSlug = session('intended_journal') ?? session('login_journal_slug');
-        $intendedJournal = $intendedJournalSlug ? Journal::where('slug', $intendedJournalSlug)->first() : null;
-        
-        // Determine the requested journal context (either current route journal or intended journal)
-        $requestedJournal = $journal ?? $intendedJournal;
+
 
         if ($requestedJournal) {
             // Skenario A & B: Check if user has context in requested journal
