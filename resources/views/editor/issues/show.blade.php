@@ -512,9 +512,11 @@
                         </div>
                     @endif
                 </div>
-                <!-- End TAB: Table of Contents -->
+                <!-- End Sidebar -->
+            </div>
+            <!-- End TAB: Table of Contents -->
 
-                <!-- TAB: Issue Data -->
+            <!-- TAB: Issue Data -->
                 <div x-show="activeTab === 'data'" x-cloak>
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                         <form action="{{ route('journal.issues.update', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST" enctype="multipart/form-data"
