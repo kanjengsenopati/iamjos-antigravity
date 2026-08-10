@@ -524,6 +524,25 @@ class IssueController extends Controller
     }
 
     /**
+     * Update an Issue Galley label.
+     */
+    public function updateGalley(Request $request, string $journalSlug, Issue $issue, \App\Models\IssueGalley $galley): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        if ($issue->journal_id !== $journal->id || $galley->issue_id !== $issue->id) abort(404);
+
+        $request->validate([
+            'label' => 'required|string|max:255',
+        ]);
+
+        $galley->update([
+            'label' => $request->label,
+        ]);
+
+        return back()->with('success', 'Issue galley label updated successfully.')->with('activeTab', 'galleys');
+    }
+
+    /**
      * Delete an Issue Galley.
      */
     public function deleteGalley(string $journalSlug, Issue $issue, \App\Models\IssueGalley $galley): RedirectResponse

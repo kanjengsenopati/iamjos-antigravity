@@ -538,6 +538,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::post('/issues/{issue}/reorder-articles', [IssueController::class, 'reorderArticles'])->name('journal.issues.reorder-articles');
                     Route::delete('/issues/{issue}/cover', [IssueController::class, 'deleteCover'])->name('journal.issues.cover.delete');
                     Route::post('/issues/{issue}/galleys', [IssueController::class, 'uploadGalley'])->name('journal.issues.galleys.upload');
+                    Route::put('/issues/{issue}/galleys/{galley}', [IssueController::class, 'updateGalley'])->name('journal.issues.galleys.update');
                     Route::delete('/issues/{issue}/galleys/{galley}', [IssueController::class, 'deleteGalley'])->name('journal.issues.galleys.delete');
                 });
 

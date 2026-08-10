@@ -665,17 +665,29 @@
                         <!-- Galley List -->
                         <div class="divide-y divide-gray-100">
                             @forelse($issue->issueGalleys as $galley)
-                                <div class="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                <div class="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors" x-data="{ editing: false }">
+                                    <div class="flex items-center gap-4 flex-1">
+                                        <div class="w-10 h-10 rounded-lg bg-red-100 flex flex-shrink-0 items-center justify-center text-red-600">
                                             <i class="fa-solid fa-file-pdf"></i>
                                         </div>
-                                        <div>
+                                        <div x-show="!editing">
                                             <h4 class="font-medium text-gray-900">{{ $galley->label }}</h4>
                                             <p class="text-sm text-gray-500">{{ $galley->original_file_name }}</p>
                                         </div>
+                                        <div x-show="editing" x-cloak class="flex-1 max-w-md">
+                                            <form action="{{ route('journal.issues.galleys.update', ['journal' => $journal->slug, 'issue' => $issue, 'galley' => $galley]) }}" method="POST" class="flex items-center gap-2">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="text" name="label" value="{{ $galley->label }}" required class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                                <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">Save</button>
+                                                <button type="button" @click="editing = false" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+                                            </form>
+                                        </div>
                                     </div>
                                     <div class="flex items-center gap-3">
+                                        <button type="button" @click="editing = !editing" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <i class="fa-solid fa-edit"></i>
+                                        </button>
                                         <a href="{{ Storage::disk('public')->url($galley->file_path) }}" target="_blank" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                                             <i class="fa-solid fa-download"></i>
                                         </a>
