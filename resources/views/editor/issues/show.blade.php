@@ -763,18 +763,50 @@
                                     </div>
 
                                     @if ($journal->doi_prefix)
-                                        <div>
-                                            <label for="doi_suffix" class="block text-sm font-medium text-gray-700 mb-1">DOI Suffix</label>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-gray-500 text-sm">{{ $journal->doi_prefix }}/</span>
-                                                <input type="text" id="doi_suffix" name="doi_suffix" value="{{ old('doi_suffix', $issue->doi_suffix) }}" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                            </div>
-                                            <p class="mt-1 text-xs text-gray-500">If left empty, the system will auto-assign a DOI upon publication.</p>
-                                            @error('doi_suffix')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                        <div class="mt-8 pt-6 border-t border-gray-100">
+                                            <h4 class="text-sm font-bold text-gray-900 mb-4">DOI</h4>
+                                            
+                                            @if ($issue->doi)
+                                                <div class="space-y-4">
+                                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                                        <p class="text-gray-900 font-mono text-sm mb-2">{{ $issue->doi }}</p>
+                                                        <p class="text-xs text-gray-500">The DOI is assigned to this Issue.</p>
+                                                    </div>
+                                                    
+                                                    <div class="flex gap-2">
+                                                        <form action="{{ route('journal.issues.doi.clear', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <button type="submit" onclick="return confirm('Are you sure you want to clear this DOI?')" class="px-4 py-1.5 bg-white border border-pink-500 text-pink-600 rounded-lg text-sm font-bold hover:bg-pink-50 transition-colors">
+                                                                Clear
+                                                            </button>
+                                                        </form>
+                                                    </div>
+
+                                                    <div class="mt-6">
+                                                        <p class="text-xs text-gray-500 mb-2">Use the following option to clear DOIs of all objects (articles and galleys) currently scheduled for this issue.</p>
+                                                        <button type="button" onclick="alert('Not implemented yet.')" class="px-4 py-1.5 bg-white border border-pink-500 text-pink-600 rounded-lg text-sm font-bold hover:bg-pink-50 transition-colors">
+                                                            Clear Issue Objects DOIs
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div class="space-y-4">
+                                                    <p class="text-sm text-gray-500">No DOI is currently assigned to this issue.</p>
+                                                    <form action="{{ route('journal.issues.doi.assign', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors">
+                                                            Assign DOI
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
                                         </div>
                                     @else
-                                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                                            <p class="text-sm text-yellow-700">DOI assignment is not configured for this journal. Please configure the DOI prefix in Journal Settings to enable DOI assignment.</p>
+                                        <div class="mt-8 pt-6 border-t border-gray-100">
+                                            <h4 class="text-sm font-bold text-gray-900 mb-4">DOI</h4>
+                                            <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                                <p class="text-sm text-yellow-700">DOI assignment is not configured for this journal. Please configure the DOI prefix in Journal Settings to enable DOI assignment.</p>
+                                            </div>
                                         </div>
                                     @endif
                                 </div>

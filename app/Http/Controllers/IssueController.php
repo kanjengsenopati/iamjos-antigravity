@@ -264,7 +264,6 @@ class IssueController extends Controller
             'show_title' => 'nullable|boolean',
             'description' => 'nullable|string',
             'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,' . $issue->id . ',id,journal_id,' . $journal->id],
-            'doi_suffix' => 'nullable|string|max:255',
             'cover' => 'nullable|image|max:2048',
         ]);
 
@@ -280,10 +279,6 @@ class IssueController extends Controller
             'description' => $validated['description'] ?? null,
             'url_path' => $validated['url_path'] ?? null,
         ];
-
-        if (array_key_exists('doi_suffix', $validated)) {
-            $issueData['doi_suffix'] = $validated['doi_suffix'];
-        }
 
         $issue->update($issueData);
 
@@ -303,6 +298,45 @@ class IssueController extends Controller
         return redirect()->route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue])
             ->with('success', 'Issue updated successfully.')
             ->with('activeTab', $activeTab);
+    }
+
+    /**
+     * Assign a DOI to the issue.
+     */
+    public function assignDoi(Request $request, string $journalSlug, Issue $issue): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
+        if (!$journal->doi_prefix) {
+            return back()->with('error', 'DOI prefix is not configured for this journal.')->with('activeTab', 'identifiers');
+        }
+
+        $suffix = $issue->doi_suffix ?: "{$journal->slug}.v{$issue->volume}i{$issue->number}";
+        $doi = "{$journal->doi_prefix}/{$suffix}";
+
+        $issue->update([
+            'doi' => $doi,
+            'doi_suffix' => $suffix
+        ]);
+
+        return back()->with('success', 'DOI assigned successfully.')->with('activeTab', 'identifiers');
+    }
+
+    /**
+     * Clear the assigned DOI for the issue.
+     */
+    public function clearDoi(Request $request, string $journalSlug, Issue $issue): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
+        $issue->update([
+            'doi' => null,
+            'doi_suffix' => null
+        ]);
+
+        return back()->with('success', 'DOI cleared successfully.')->with('activeTab', 'identifiers');
     }
 
     /**

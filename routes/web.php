@@ -528,8 +528,11 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         'store' => 'journal.issues.store',
                         'show' => 'journal.issues.show',
                         'update' => 'journal.issues.update',
+                        'update' => 'journal.issues.update',
                         'destroy' => 'journal.issues.destroy',
                     ]);
+                    Route::post('/issues/{issue}/doi/assign', [IssueController::class, 'assignDoi'])->name('journal.issues.doi.assign');
+                    Route::post('/issues/{issue}/doi/clear', [IssueController::class, 'clearDoi'])->name('journal.issues.doi.clear');
                     Route::post('/issues/{issue}/publish', [IssueController::class, 'publish'])->name('journal.issues.publish');
                     Route::post('/issues/{issue}/unpublish', [IssueController::class, 'unpublish'])->name('journal.issues.unpublish');
                     Route::post('/issues/{issue}/current', [IssueController::class, 'setCurrent'])->name('journal.issues.current');
