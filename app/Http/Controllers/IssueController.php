@@ -380,6 +380,36 @@ class IssueController extends Controller
             );
         }
 
+        // Send email to authors if requested
+        if ($request->boolean('send_email')) {
+            $authorEmails = collect();
+            foreach ($issue->submissions as $sub) {
+                foreach ($sub->authors as $author) {
+                    if (!empty($author->email)) {
+                        $authorName = $author->name ?? trim("{$author->given_name} {$author->family_name}");
+                        $authorEmails->push([
+                            'name' => $authorName ?: 'Author',
+                            'email' => $author->email
+                        ]);
+                    }
+                }
+            }
+            
+            $uniqueAuthors = $authorEmails->unique('email');
+            $issueTitle = $issue->title ?: "Volume {$issue->volume} Issue {$issue->number}";
+            
+            foreach ($uniqueAuthors as $auth) {
+                \Illuminate\Support\Facades\Mail::to($auth['email'])->queue(
+                    new \App\Mail\GeneralNotificationMail(
+                        emailSubject: "Issue Published: {$issueTitle}",
+                        emailBody: "We are pleased to inform you that the issue **{$issueTitle}** containing your article has been published in **{$journal->name}**.",
+                        recipientName: $auth['name'],
+                        journalName: $journal->name
+                    )
+                );
+            }
+        }
+
         return back()->with('success', 'Issue published successfully. ' . $issue->submissions()->count() . ' article(s) are now live.');
     }
 

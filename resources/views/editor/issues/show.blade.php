@@ -562,7 +562,7 @@
                                     <input id="send_email" name="send_email" type="checkbox" value="1" checked class="focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded">
                                 </div>
                                 <div class="ml-3 text-sm">
-                                    <label for="send_email" class="font-medium text-gray-700">Send an email about this to all registered users.</label>
+                                    <label for="send_email" class="font-medium text-gray-700">Send an email notification to all authors whose articles are in this issue.</label>
                                 </div>
                             </div>
 
