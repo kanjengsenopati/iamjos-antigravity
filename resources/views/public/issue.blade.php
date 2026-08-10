@@ -27,6 +27,24 @@
                     </div>
                 </div>
             @endif
+
+            <!-- Issue Galleys (Full Issue) -->
+            @if ($issue->issueGalleys && $issue->issueGalleys->isNotEmpty())
+                <div class="mt-8">
+                    <x-text.h2 class="mb-4 pb-2 border-b border-gray-200 uppercase tracking-wider text-slate-400 text-xs font-bold">
+                        {{ app()->getLocale() === 'id' ? 'Terbitan Lengkap' : 'Full Issue' }}
+                    </x-text.h2>
+                    <div class="flex flex-col gap-3">
+                        @foreach ($issue->issueGalleys->sortBy('sort_order') as $galley)
+                            <a href="{{ Storage::disk('public')->url($galley->file_path) }}" target="_blank"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all hover:shadow-md active:scale-95 w-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                                {{ strtoupper($galley->label) }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Issue Info & Table of Contents -->

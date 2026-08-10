@@ -283,6 +283,8 @@ class PublicController extends Controller
             abort(404);
         }
 
+        $issue->load('issueGalleys');
+
         $isPreview = request()->boolean('preview') || request()->has('preview');
 
         if (!$issue->is_published && !$isPreview) {
