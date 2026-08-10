@@ -522,12 +522,11 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                 });
 
                 Route::middleware('role:Editor|Admin|Super Admin')->group(function () {
-                    Route::resource('issues', IssueController::class)->names([
+                    Route::resource('issues', IssueController::class)->except(['edit'])->names([
                         'index' => 'journal.issues.index',
                         'create' => 'journal.issues.create',
                         'store' => 'journal.issues.store',
                         'show' => 'journal.issues.show',
-                        'edit' => 'journal.issues.edit',
                         'update' => 'journal.issues.update',
                         'destroy' => 'journal.issues.destroy',
                     ]);
@@ -538,6 +537,8 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                     Route::delete('/issues/{issue}/remove-article/{submission}', [IssueController::class, 'removeArticle'])->name('journal.issues.remove-article');
                     Route::post('/issues/{issue}/reorder-articles', [IssueController::class, 'reorderArticles'])->name('journal.issues.reorder-articles');
                     Route::delete('/issues/{issue}/cover', [IssueController::class, 'deleteCover'])->name('journal.issues.cover.delete');
+                    Route::post('/issues/{issue}/galleys', [IssueController::class, 'uploadGalley'])->name('journal.issues.galleys.upload');
+                    Route::delete('/issues/{issue}/galleys/{galley}', [IssueController::class, 'deleteGalley'])->name('journal.issues.galleys.delete');
                 });
 
                 Route::prefix('reviewer')->name('journal.reviewer.')->middleware('role:Reviewer|Editor|Admin|Super Admin')->group(function () {

@@ -59,7 +59,8 @@
             } else {
                 this.selectedArticles.splice(index, 1);
             }
-        }
+        },
+        activeTab: '{{ session("activeTab", "toc") }}'
     }"
     @mousemove.window="drag"
     @mouseup.window="stopDrag"
@@ -147,14 +148,17 @@
 
                     <!-- Actions -->
                     <div class="flex flex-wrap gap-3">
-                        <a href="{{ route('journal.issues.edit', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit Issue
-                        </a>
+                        <form action="{{ route('journal.issues.destroy', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('Are you sure you want to delete this issue?')"
+                                class="inline-flex items-center px-4 py-2 bg-white border border-red-200 rounded-lg text-red-600 font-medium hover:bg-red-50 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete Issue
+                            </button>
+                        </form>
 
                         @if ($issue->is_published)
                             <form
@@ -200,9 +204,37 @@
                 </div>
             </div>
 
-            <!-- Main Content Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Table of Contents (Main Column) -->
+            <!-- Tabs Navigation -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+                    <button @click="activeTab = 'toc'"
+                        :class="activeTab === 'toc' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Table of Contents
+                    </button>
+                    <button @click="activeTab = 'data'"
+                        :class="activeTab === 'data' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Issue Data
+                    </button>
+                    <button @click="activeTab = 'galleys'"
+                        :class="activeTab === 'galleys' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Issue Galleys
+                    </button>
+                    <button @click="activeTab = 'identifiers'"
+                        :class="activeTab === 'identifiers' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Identifiers
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div>
+                <!-- TAB: Table of Contents -->
+                <div x-show="activeTab === 'toc'" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Table of Contents (Main Column) -->
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -480,7 +512,270 @@
                         </div>
                     @endif
                 </div>
+                <!-- End TAB: Table of Contents -->
+
+                <!-- TAB: Issue Data -->
+                <div x-show="activeTab === 'data'" x-cloak>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <form action="{{ route('journal.issues.update', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST" enctype="multipart/form-data"
+                            x-data="{
+                                volume: '{{ old('volume', $issue->volume) }}',
+                                number: '{{ old('number', $issue->number) }}',
+                                year: '{{ old('year', $issue->year) }}',
+                                title: '{{ old('title', $issue->title) }}',
+                                showTitle: {{ old('show_title', $issue->show_title ?? false) ? 'true' : 'false' }},
+                                urlPath: '{{ old('url_path', $issue->url_path) }}',
+                                manualUrlPath: {{ old('url_path', $issue->url_path) ? 'true' : 'false' }},
+                                generateSlug() {
+                                    if (this.manualUrlPath) return;
+                                    let slug = '';
+                                    if (this.showTitle && this.title) {
+                                        slug = this.title;
+                                    } else {
+                                        slug = 'v' + (this.volume || '1') + '-n' + (this.number || '1') + '-' + (this.year || new Date().getFullYear());
+                                    }
+                                    this.urlPath = slug.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+                                }
+                            }">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="active_tab" value="data">
+
+                            <div class="p-6 space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                        </svg>
+                                        Issue Identification
+                                    </h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                                        <div>
+                                            <label for="volume" class="block text-sm font-medium text-gray-700 mb-1">Volume <span class="text-red-500">*</span></label>
+                                            <input type="number" id="volume" name="volume" x-model="volume" @input="generateSlug" min="1" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                            @error('volume')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                        </div>
+                                        <div>
+                                            <label for="number" class="block text-sm font-medium text-gray-700 mb-1">Number <span class="text-red-500">*</span></label>
+                                            <input type="number" id="number" name="number" x-model="number" @input="generateSlug" min="1" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                            @error('number')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                        </div>
+                                        <div>
+                                            <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Year <span class="text-red-500">*</span></label>
+                                            <input type="number" id="year" name="year" x-model="year" @input="generateSlug" min="2000" max="2100" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                            @error('year')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-6 mb-6 text-sm text-gray-600">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="show_volume" value="1" {{ old('show_volume', $issue->show_volume ?? true) ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                            Show Volume
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="show_number" value="1" {{ old('show_number', $issue->show_number ?? true) ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                            Show Number
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="show_year" value="1" {{ old('show_year', $issue->show_year ?? true) ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                            Show Year
+                                        </label>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title (Optional)</label>
+                                        <input type="text" id="title" name="title" x-model="title" @input="generateSlug" placeholder="e.g. Special Issue on Technology" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                    </div>
+
+                                    <div class="mb-6 text-sm text-gray-600">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="show_title" value="1" x-model="showTitle" @change="generateSlug" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                            Show Title in Issue Identification
+                                        </label>
+                                    </div>
+
+                                    <div>
+                                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                                        <textarea id="description" name="description" rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">{{ old('description', $issue->description) }}</textarea>
+                                        @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                    </div>
+                                </div>
+
+                                <hr class="border-gray-100">
+
+                                <!-- Cover Image -->
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Cover Image
+                                    </h3>
+
+                                    <div class="flex items-start gap-6">
+                                        @if($issue->cover_path)
+                                            <div class="w-32 h-44 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative group">
+                                                <img src="{{ Storage::disk('public')->url($issue->cover_path) }}" alt="Cover" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <button type="button" onclick="if(confirm('Delete cover?')) { 
+                                                        fetch('{{ route('journal.issues.cover.delete', ['journal' => $journal->slug, 'issue' => $issue]) }}', {
+                                                            method: 'DELETE',
+                                                            headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+                                                        }).then(() => window.location.reload())
+                                                    }" class="bg-red-600 text-white rounded-full p-2 hover:bg-red-700">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        <div class="flex-1">
+                                            <input type="file" name="cover" id="cover" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                            <p class="mt-2 text-xs text-gray-500">Recommended size: 600x800px. Max size: 2MB. Formats: JPG, PNG.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- End TAB: Issue Data -->
+
+                <!-- TAB: Issue Galleys -->
+                <div x-show="activeTab === 'galleys'" x-cloak>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <h2 class="text-lg font-bold text-gray-900">Issue Galleys</h2>
+                                <p class="text-sm text-gray-500">Upload full-issue galleys (e.g., complete issue PDF).</p>
+                            </div>
+                        </div>
+
+                        <!-- Galley List -->
+                        <div class="divide-y divide-gray-100">
+                            @forelse($issue->issueGalleys as $galley)
+                                <div class="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                            <i class="fa-solid fa-file-pdf"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-900">{{ $galley->label }}</h4>
+                                            <p class="text-sm text-gray-500">{{ $galley->original_file_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <a href="{{ Storage::disk('public')->url($galley->file_path) }}" target="_blank" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                            <i class="fa-solid fa-download"></i>
+                                        </a>
+                                        <form action="{{ route('journal.issues.galleys.delete', ['journal' => $journal->slug, 'issue' => $issue, 'galley' => $galley]) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" onclick="return confirm('Are you sure you want to delete this galley?')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="p-12 text-center text-gray-500">
+                                    <p>No issue galleys uploaded yet.</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <!-- Upload Form -->
+                        <div class="p-6 bg-gray-50 border-t border-gray-100">
+                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Upload New Galley</h3>
+                            <form action="{{ route('journal.issues.galleys.upload', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST" enctype="multipart/form-data" class="flex items-end gap-4">
+                                @csrf
+                                <input type="hidden" name="active_tab" value="galleys">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Galley Label <span class="text-red-500">*</span></label>
+                                    <input type="text" name="label" placeholder="e.g. PDF" required class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">File <span class="text-red-500">*</span></label>
+                                    <input type="file" name="file" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-lg bg-white">
+                                </div>
+                                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                    Upload
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- End TAB: Issue Galleys -->
+
+                <!-- TAB: Identifiers -->
+                <div x-show="activeTab === 'identifiers'" x-cloak>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <form action="{{ route('journal.issues.update', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="active_tab" value="identifiers">
+                            
+                            <!-- Must include other required fields as hidden so validation doesn't fail -->
+                            <input type="hidden" name="volume" value="{{ $issue->volume }}">
+                            <input type="hidden" name="number" value="{{ $issue->number }}">
+                            <input type="hidden" name="year" value="{{ $issue->year }}">
+
+                            <div class="p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                    </svg>
+                                    Public URL & DOI
+                                </h3>
+
+                                <div class="space-y-6">
+                                    <div>
+                                        <label for="url_path" class="block text-sm font-medium text-gray-700 mb-1">Public URL Path</label>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500 text-sm">{{ url($journal->slug . '/issue/view/') }}/</span>
+                                            <input type="text" id="url_path" name="url_path" value="{{ old('url_path', $issue->url_path) }}" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        </div>
+                                        <p class="mt-1 text-xs text-gray-500">Leave blank to auto-generate based on Volume/Number/Year.</p>
+                                        @error('url_path')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                    </div>
+
+                                    @if ($journal->doi_prefix)
+                                        <div>
+                                            <label for="doi_suffix" class="block text-sm font-medium text-gray-700 mb-1">DOI Suffix</label>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-gray-500 text-sm">{{ $journal->doi_prefix }}/</span>
+                                                <input type="text" id="doi_suffix" name="doi_suffix" value="{{ old('doi_suffix', $issue->doi_suffix) }}" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-500">If left empty, the system will auto-assign a DOI upon publication.</p>
+                                            @error('doi_suffix')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                        </div>
+                                    @else
+                                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                            <p class="text-sm text-yellow-700">DOI assignment is not configured for this journal. Please configure the DOI prefix in Journal Settings to enable DOI assignment.</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                                    Save Identifiers
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- End TAB: Identifiers -->
             </div>
+            <!-- End Tabs Content Wrapper -->
         </div>
 
         <!-- Add Article Modal -->

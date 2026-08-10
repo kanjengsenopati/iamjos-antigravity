@@ -170,6 +170,14 @@ class Issue extends Model
         return $this->hasMany(Submission::class, 'issue_id');
     }
 
+    /**
+     * Get galleys for this issue
+     */
+    public function issueGalleys(): HasMany
+    {
+        return $this->hasMany(IssueGalley::class, 'issue_id');
+    }
+
     // =====================================================
     // SCOPES
     // =====================================================

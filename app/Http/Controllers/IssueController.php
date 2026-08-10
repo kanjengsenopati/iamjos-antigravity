@@ -202,6 +202,9 @@ class IssueController extends Controller
         $issue->load([
             'submissions' => function ($query) {
                 $query->with(['authors', 'section', 'currentPublication']);
+            },
+            'issueGalleys' => function ($query) {
+                $query->orderBy('sort_order');
             }
         ]);
 
@@ -239,21 +242,6 @@ class IssueController extends Controller
     }
 
     /**
-     * Show the form for editing the issue.
-     */
-    public function edit(string $journalSlug, Issue $issue): View
-    {
-        $journal = $this->getJournal();
-
-        // Ensure issue belongs to this journal
-        if ($issue->journal_id !== $journal->id) {
-            abort(404);
-        }
-
-        return view('editor.issues.edit', compact('issue', 'journal'));
-    }
-
-    /**
      * Update the specified issue.
      */
     public function update(Request $request, string $journalSlug, Issue $issue): RedirectResponse
@@ -276,6 +264,7 @@ class IssueController extends Controller
             'show_title' => 'nullable|boolean',
             'description' => 'nullable|string',
             'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,' . $issue->id . ',id,journal_id,' . $journal->id],
+            'doi_suffix' => 'nullable|string|max:255',
             'cover' => 'nullable|image|max:2048',
         ]);
 
@@ -292,6 +281,10 @@ class IssueController extends Controller
             'url_path' => $validated['url_path'] ?? null,
         ];
 
+        if (array_key_exists('doi_suffix', $validated)) {
+            $issueData['doi_suffix'] = $validated['doi_suffix'];
+        }
+
         $issue->update($issueData);
 
         // Upload new cover
@@ -305,8 +298,11 @@ class IssueController extends Controller
             $issue->update(['cover_path' => $path]);
         }
 
+        $activeTab = $request->input('active_tab', 'data');
+
         return redirect()->route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue])
-            ->with('success', 'Issue updated successfully.');
+            ->with('success', 'Issue updated successfully.')
+            ->with('activeTab', $activeTab);
     }
 
     /**
@@ -496,6 +492,51 @@ class IssueController extends Controller
 
         return redirect()->route('journal.issues.index', ['journal' => $journal->slug])
             ->with('success', 'Issue deleted successfully.');
+    }
+
+    /**
+     * Upload an Issue Galley.
+     */
+    public function uploadGalley(Request $request, string $journalSlug, Issue $issue): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
+        $request->validate([
+            'label' => 'required|string|max:255',
+            'file' => 'required|file|max:10240', // max 10MB
+            'locale' => 'nullable|string|max:10',
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store("journals/{$journal->id}/issues/{$issue->id}/galleys", 'public');
+
+        $issue->issueGalleys()->create([
+            'journal_id' => $journal->id,
+            'label' => $request->label,
+            'locale' => $request->locale,
+            'file_path' => $path,
+            'file_type' => $file->getClientMimeType(),
+            'original_file_name' => $file->getClientOriginalName(),
+        ]);
+
+        return back()->with('success', 'Issue galley uploaded successfully.')->with('activeTab', 'galleys');
+    }
+
+    /**
+     * Delete an Issue Galley.
+     */
+    public function deleteGalley(string $journalSlug, Issue $issue, \App\Models\IssueGalley $galley): RedirectResponse
+    {
+        $journal = $this->getJournal();
+        if ($issue->journal_id !== $journal->id || $galley->issue_id !== $issue->id) abort(404);
+
+        if ($galley->file_path) {
+            Storage::disk('public')->delete($galley->file_path);
+        }
+        $galley->delete();
+
+        return back()->with('success', 'Issue galley deleted successfully.')->with('activeTab', 'galleys');
     }
 
     /**
