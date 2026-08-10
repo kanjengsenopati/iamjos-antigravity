@@ -351,10 +351,19 @@ class IssueController extends Controller
             abort(404);
         }
 
-        $issue->update([
+        $updateData = [
             'is_published' => true,
             'published_at' => now(),
-        ]);
+        ];
+
+        // Auto-assign DOI if not present but prefix is configured
+        if (!$issue->doi && $journal->doi_prefix) {
+            $suffix = $issue->doi_suffix ?: "{$journal->slug}.v{$issue->volume}i{$issue->number}";
+            $updateData['doi'] = "{$journal->doi_prefix}/{$suffix}";
+            $updateData['doi_suffix'] = $suffix;
+        }
+
+        $issue->update($updateData);
 
         // Also publish all assigned submissions and log activity
         foreach ($issue->submissions as $sub) {
