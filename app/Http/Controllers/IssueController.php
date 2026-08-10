@@ -385,7 +385,8 @@ class IssueController extends Controller
             $authorEmails = collect();
             foreach ($issue->submissions as $sub) {
                 foreach ($sub->authors as $author) {
-                    if (!empty($author->email)) {
+                    // Layer 1: Strict email validation
+                    if (!empty($author->email) && filter_var($author->email, FILTER_VALIDATE_EMAIL)) {
                         $authorName = $author->name ?? trim("{$author->given_name} {$author->family_name}");
                         $authorEmails->push([
                             'name' => $authorName ?: 'Author',
@@ -399,14 +400,20 @@ class IssueController extends Controller
             $issueTitle = $issue->title ?: "Volume {$issue->volume} Issue {$issue->number}";
             
             foreach ($uniqueAuthors as $auth) {
-                \Illuminate\Support\Facades\Mail::to($auth['email'])->queue(
-                    new \App\Mail\GeneralNotificationMail(
-                        emailSubject: "Issue Published: {$issueTitle}",
-                        emailBody: "We are pleased to inform you that the issue **{$issueTitle}** containing your article has been published in **{$journal->name}**.",
-                        recipientName: $auth['name'],
-                        journalName: $journal->name
-                    )
-                );
+                // Layer 2: Unbreakable Loop
+                try {
+                    \Illuminate\Support\Facades\Mail::to($auth['email'])->queue(
+                        new \App\Mail\GeneralNotificationMail(
+                            emailSubject: "Issue Published: {$issueTitle}",
+                            emailBody: "We are pleased to inform you that the issue **{$issueTitle}** containing your article has been published in **{$journal->name}**.",
+                            recipientName: $auth['name'],
+                            journalName: $journal->name
+                        )
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Failed to queue publish notification for {$auth['email']}: " . $e->getMessage());
+                    continue;
+                }
             }
         }
 
