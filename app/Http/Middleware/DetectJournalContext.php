@@ -53,6 +53,9 @@ class DetectJournalContext
             
             app()->instance('currentJournal', null);
             view()->share('currentJournal', null);
+            
+            // Clear any lingering journal context so it doesn't leak into global portal actions
+            session()->forget('login_journal_slug');
         }
 
         // Set application locale based on journal primary locale, session, cookie, or fallback config
