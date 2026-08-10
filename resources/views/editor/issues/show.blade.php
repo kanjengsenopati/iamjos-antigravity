@@ -733,37 +733,18 @@
                 <!-- TAB: Identifiers -->
                 <div x-show="activeTab === 'identifiers'" x-cloak>
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        <form action="{{ route('journal.issues.update', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <input type="hidden" name="active_tab" value="identifiers">
-                            
-                            <!-- Must include other required fields as hidden so validation doesn't fail -->
-                            <input type="hidden" name="volume" value="{{ $issue->volume }}">
-                            <input type="hidden" name="number" value="{{ $issue->number }}">
-                            <input type="hidden" name="year" value="{{ $issue->year }}">
-
                             <div class="p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                     <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                     </svg>
-                                    Public URL & DOI
+                                    DOI (Digital Object Identifier)
                                 </h3>
 
                                 <div class="space-y-6">
-                                    <div>
-                                        <label for="url_path" class="block text-sm font-medium text-gray-700 mb-1">Public URL Path</label>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-gray-500 text-sm">{{ url($journal->slug . '/issue/view/') }}/</span>
-                                            <input type="text" id="url_path" name="url_path" value="{{ old('url_path', $issue->url_path) }}" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                        </div>
-                                        <p class="mt-1 text-xs text-gray-500">Leave blank to auto-generate based on Volume/Number/Year.</p>
-                                        @error('url_path')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                                    </div>
 
                                     @if ($journal->doi_prefix)
-                                        <div class="mt-8 pt-6 border-t border-gray-100">
+                                        <div>
                                             <h4 class="text-sm font-bold text-gray-900 mb-4">DOI</h4>
                                             
                                             @if ($issue->doi)
@@ -802,7 +783,7 @@
                                             @endif
                                         </div>
                                     @else
-                                        <div class="mt-8 pt-6 border-t border-gray-100">
+                                        <div>
                                             <h4 class="text-sm font-bold text-gray-900 mb-4">DOI</h4>
                                             <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                                                 <p class="text-sm text-yellow-700">DOI assignment is not configured for this journal. Please configure the DOI prefix in Journal Settings to enable DOI assignment.</p>
@@ -811,12 +792,6 @@
                                     @endif
                                 </div>
                             </div>
-                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-                                    Save Identifiers
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
                 <!-- End TAB: Identifiers -->
