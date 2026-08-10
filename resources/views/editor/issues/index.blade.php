@@ -384,12 +384,12 @@
                                                 <span>Edit</span>
                                             </a>
 
-                                            <!-- 2. Preview -->
+                                            <!-- 2. View -->
                                             <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $issue->seq_id ?: $issue->id]) }}"
                                                 target="_blank"
                                                 class="text-slate-600 hover:text-slate-900 font-semibold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-eye text-[11px]"></i>
-                                                <span>Preview</span>
+                                                <span>View</span>
                                             </a>
 
                                             <!-- 3. Unpublish Issue -->
