@@ -151,7 +151,7 @@
                                 </x-text.caption>
                             </div>
 
-                            <x-text.h2 class="text-slate-900 mb-5">{{ $submission->title }}</x-text.h2>
+                            <x-text.h2 class=" mb-5">{{ $submission->title }}</x-text.h2>
 
                             <!-- Meta Info Box -->
                             <div class="mb-6 bg-slate-50 rounded-[20px] p-5 grid grid-cols-2 gap-4">
@@ -199,7 +199,7 @@
                         <!-- Accept / Decline Action Section (if pending) -->
                         @if($status === 'pending')
                             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
-                                <x-text.h2 class="text-slate-900 mb-2">{{ $isId ? 'Tanggapan Undangan Ulasan' : 'Response to Review Invitation' }}</x-text.h2>
+                                <x-text.h2 class=" mb-2">{{ $isId ? 'Tanggapan Undangan Ulasan' : 'Response to Review Invitation' }}</x-text.h2>
                                 <x-text.body class="text-slate-500 mb-6 block">
                                     {{ $isId ? 'Silakan tentukan apakah Anda bersedia mengulas naskah ini. Anda dapat menerima undangan untuk masuk ke langkah berikutnya, atau menolaknya.' 
                                              : 'Please indicate whether you are willing to review this manuscript. You can accept the invitation to proceed to the next step, or decline it.' }}
@@ -247,7 +247,7 @@
                     <!-- Right: Schedule & Info -->
                     <div class="lg:col-span-1 space-y-6">
                         <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6">
-                            <x-text.h2 class="text-slate-900 mb-4 flex items-center">
+                            <x-text.h2 class=" mb-4 flex items-center">
                                 <i class="fa-solid fa-calendar-days text-slate-400 mr-2"></i>
                                 {{ $isId ? 'Jadwal Ulasan' : 'Review Schedule' }}
                             </x-text.h2>
@@ -303,7 +303,7 @@
                 <!-- STEP 2: GUIDELINES PANEL -->
                 <div x-show="activeStep === 2" x-cloak class="max-w-4xl mx-auto">
                     <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
-                        <x-text.h2 class="text-slate-900 flex items-center pb-4 border-b border-slate-100">
+                        <x-text.h2 class=" flex items-center pb-4 border-b border-slate-100">
                             <i class="fa-solid fa-scale-balanced mr-3 text-blue-600"></i>
                             {{ $isId ? 'Panduan Penilaian / Ulasan' : 'Reviewer Guidelines' }}
                         </x-text.h2>
@@ -340,7 +340,7 @@
                         x-data="{ search: '' }">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                             <div>
-                                <x-text.h2 class="text-slate-900">{{ $isId ? 'File Ulasan' : 'Review Files' }}</x-text.h2>
+                                <x-text.h2 class="">{{ $isId ? 'File Ulasan' : 'Review Files' }}</x-text.h2>
                                 <x-text.caption class="text-slate-400 block mt-0.5">
                                     {{ $isId ? 'Daftar naskah dan dokumen ulasan yang perlu ditinjau.' : 'List of manuscript files and documents to be reviewed.' }}
                                 </x-text.caption>
@@ -348,21 +348,21 @@
                             
                             <!-- Search Bar (Fitur Search OJS Style) -->
                             <div class="relative w-full sm:w-64">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" x-model="search" placeholder="{{ $isId ? 'Cari file...' : 'Search files...' }}"
-                                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:border-blue-500 focus:ring-blue-500 transition-all">
+                                    class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-blue-500 transition-all">
                             </div>
                         </div>
 
                         <!-- Data Table (OJS Model) -->
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                            <table class="w-full text-left text-sm text-slate-600 border-collapse">
                                 <thead>
                                     <tr class="border-b border-slate-200 bg-slate-50/70 font-bold uppercase tracking-wider text-slate-400 text-[11px]">
-                                        <th class="py-3 px-4">{{ $isId ? 'Review Files' : 'Review Files' }}</th>
-                                        <th class="py-3 px-4">{{ $isId ? 'Tanggal' : 'Date' }}</th>
-                                        <th class="py-3 px-4">{{ $isId ? 'Type File' : 'File Type' }}</th>
-                                        <th class="py-3 px-4 text-right">{{ $isId ? 'Aksi' : 'Action' }}</th>
+                                        <th class="py-4 px-4">{{ $isId ? 'Review Files' : 'Review Files' }}</th>
+                                        <th class="py-4 px-4">{{ $isId ? 'Tanggal' : 'Date' }}</th>
+                                        <th class="py-4 px-4">{{ $isId ? 'Type File' : 'File Type' }}</th>
+                                        <th class="py-4 px-4 text-right">{{ $isId ? 'Aksi' : 'Action' }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 font-medium">
@@ -375,33 +375,33 @@
                                     @else
                                         @foreach ($manuscriptFiles as $file)
                                             <tr x-show="!search || '{{ strtolower(addslashes($file->file_name)) }}'.includes(search.toLowerCase())" class="hover:bg-slate-50/80 transition-colors">
-                                                <td class="py-3.5 px-4">
+                                                <td class="py-4 px-4">
                                                     <div class="flex items-center space-x-3">
                                                         <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
                                                             <i class="fa-solid fa-file-pdf text-sm"></i>
                                                         </div>
                                                         <div class="min-w-0">
-                                                            <p class="font-bold text-slate-800 text-xs truncate max-w-md" title="{{ $file->file_name }}">
+                                                            <p class="font-bold text-slate-800 text-sm truncate max-w-md" title="{{ $file->file_name }}">
                                                                 {{ $file->file_name }}
                                                             </p>
-                                                            <p class="text-[10px] text-slate-400">
+                                                            <p class="text-xs text-slate-400">
                                                                 {{ $isId ? 'Versi' : 'Version' }} {{ $file->version }} • {{ $file->file_size_formatted }}
                                                             </p>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class="py-3.5 px-4 text-slate-500 whitespace-nowrap">
+                                                <td class="py-4 px-4 text-slate-500 whitespace-nowrap">
                                                     {{ $file->created_at?->translatedFormat('M j, Y') ?? $assignment->assigned_at?->translatedFormat('M j, Y') ?? '-' }}
                                                 </td>
-                                                <td class="py-3.5 px-4 whitespace-nowrap">
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                                <td class="py-4 px-4 whitespace-nowrap">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
                                                         {{ $file->file_type_label ?? 'Manuscript' }}
                                                     </span>
                                                 </td>
-                                                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                                                <td class="py-4 px-4 text-right whitespace-nowrap">
                                                     <a href="{{ route('files.download', $file) }}"
-                                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-xl transition-all shadow-sm">
-                                                        <i class="fa-solid fa-download mr-1"></i>
+                                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm">
+                                                        <i class="fa-solid fa-download mr-1.5"></i>
                                                         {{ $isId ? 'Unduh' : 'Download' }}
                                                     </a>
                                                 </td>
@@ -416,7 +416,7 @@
                     <!-- SECTION 2: Reviewer Guidelines (Di Bawah Review Files) -->
                     <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                            <x-text.h2 class="text-slate-900 flex items-center">
+                            <x-text.h2 class=" flex items-center">
                                 <i class="fa-solid fa-scale-balanced mr-2.5 text-blue-600"></i>
                                 {{ $isId ? 'Panduan Penilaian / Pengulas' : 'Reviewer Guidelines' }}
                             </x-text.h2>
@@ -444,7 +444,7 @@
                             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 space-y-6">
                                 <div class="border-b border-slate-100 pb-4 space-y-2">
                                     <div>
-                                        <x-text.h2 class="text-slate-900">{{ $isId ? 'Formulir Ulasan Anda' : 'Your Review' }}</x-text.h2>
+                                        <x-text.h2 class="">{{ $isId ? 'Formulir Ulasan Anda' : 'Your Review' }}</x-text.h2>
                                         @if($reviewForm)
                                             <p class="text-xs text-blue-600 font-bold mt-1 flex items-center gap-1.5">
                                                 <i class="fa-solid fa-clipboard-list"></i>
@@ -614,7 +614,7 @@
 
                             <!-- 2. Upload file hasil review (Reviewer Attachments Uploader) -->
                             <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 mt-6" x-data="reviewerAttachments()">
-                                <x-text.h2 class="text-slate-900 mb-2">{{ $isId ? 'Unggah File Hasil Review' : 'Upload' }}</x-text.h2>
+                                <x-text.h2 class=" mb-2">{{ $isId ? 'Unggah File Hasil Review' : 'Upload' }}</x-text.h2>
                                 <p class="text-xs text-slate-400 mb-4 leading-relaxed">
                                     {{ $isId ? 'Unggah file yang ingin Anda konsultasikan dengan editor dan/atau penulis, termasuk versi revisi dari file ulasan asli.' 
                                              : 'Upload files you would like the editor and/or author to consult, including revised versions of the original review file(s).' }}
@@ -672,7 +672,7 @@
                             <div class="border-b border-slate-100 pb-4 space-y-2">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <x-text.h2 class="text-slate-900">{{ $isId ? 'Formulir Ulasan Anda (Terkunci)' : 'Summary of Your Review' }}</x-text.h2>
+                                        <x-text.h2 class="">{{ $isId ? 'Formulir Ulasan Anda (Terkunci)' : 'Summary of Your Review' }}</x-text.h2>
                                         @if($reviewForm)
                                             <p class="text-xs text-blue-600 font-bold mt-1 flex items-center gap-1.5">
                                                 <i class="fa-solid fa-clipboard-list"></i>
@@ -924,7 +924,7 @@
                     <!-- SECTION 5: Keputusan Review (Recommendation) -->
                     @if ($status !== 'completed')
                         <div class="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8" x-data="{ recommendation: '{{ old('recommendation') }}' }">
-                            <x-text.h2 class="text-slate-900 mb-2">{{ $isId ? 'Keputusan Review' : 'Recommendation' }}</x-text.h2>
+                            <x-text.h2 class=" mb-2">{{ $isId ? 'Keputusan Review' : 'Recommendation' }}</x-text.h2>
                             <p class="text-xs text-slate-400 mb-6 leading-relaxed">
                                 {{ $isId ? 'Pilih rekomendasi dan kirimkan ulasan untuk menyelesaikan proses. Anda harus memasukkan ulasan atau mengunggah file sebelum memilih rekomendasi.' 
                                          : 'Select a recommendation and submit the review to complete the process. You must enter a review or upload a file before selecting a recommendation.' }}
@@ -990,7 +990,7 @@
                             <div>
                                 <div class="flex items-center space-x-2 mb-3 pb-3 border-b border-slate-100">
                                     <i class="fa-solid fa-clipboard-check text-blue-600 text-sm"></i>
-                                    <x-text.h2 class="text-slate-900 text-sm">{{ $isId ? 'Ringkasan Informasi' : 'Review Summary' }}</x-text.h2>
+                                    <x-text.h2 class=" text-sm">{{ $isId ? 'Ringkasan Informasi' : 'Review Summary' }}</x-text.h2>
                                 </div>
                                 <div class="space-y-2.5 text-xs text-slate-700">
                                     <div>
@@ -1052,7 +1052,7 @@
                     class="bg-white w-full max-w-lg rounded-[24px] shadow-2xl p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200 space-y-6">
                     
                     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                        <x-text.h2 class="text-slate-900">{{ $isId ? 'Tolak Undangan Ulasan' : 'Decline Review Request' }}</x-text.h2>
+                        <x-text.h2 class="">{{ $isId ? 'Tolak Undangan Ulasan' : 'Decline Review Request' }}</x-text.h2>
                         <button type="button" @click="showDeclineModal = false" class="text-slate-400 hover:text-slate-600">
                             <i class="fa-solid fa-xmark text-lg"></i>
                         </button>
