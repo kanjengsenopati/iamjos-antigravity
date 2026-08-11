@@ -370,15 +370,43 @@
                 <!-- TAB 2: REVIEW -->
                 <!-- ============================================ -->
                 <div x-show="activeTab === 'review'" x-cloak>
-                    <form action="{{ route('journal.settings.workflow.update', ['journal' => $journal->slug]) }}"
-                        method="POST">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="tab" value="review">
+                    <div class="flex flex-col md:flex-row gap-6" x-data="{ reviewSubTab: 'setup' }">
+                        <!-- Left Sidebar (Vertical Navigation) -->
+                        <div class="w-full md:w-64 flex-shrink-0">
+                            <nav class="flex flex-col space-y-1 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                <button type="button" @click="reviewSubTab = 'setup'"
+                                    :class="reviewSubTab === 'setup' ? 'bg-primary-50 text-primary-700 font-medium border-l-4 border-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'"
+                                    class="px-4 py-3 text-sm text-left transition-colors flex items-center justify-between group border-b border-gray-100">
+                                    <span>Setup</span>
+                                    <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity" :class="reviewSubTab === 'setup' ? 'opacity-100 text-primary-600' : ''"></i>
+                                </button>
+                                <button type="button" @click="reviewSubTab = 'guidance'"
+                                    :class="reviewSubTab === 'guidance' ? 'bg-primary-50 text-primary-700 font-medium border-l-4 border-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'"
+                                    class="px-4 py-3 text-sm text-left transition-colors flex items-center justify-between group border-b border-gray-100">
+                                    <span>Reviewer Guidance</span>
+                                    <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity" :class="reviewSubTab === 'guidance' ? 'opacity-100 text-primary-600' : ''"></i>
+                                </button>
+                                <button type="button" @click="reviewSubTab = 'forms'"
+                                    :class="reviewSubTab === 'forms' ? 'bg-primary-50 text-primary-700 font-medium border-l-4 border-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'"
+                                    class="px-4 py-3 text-sm text-left transition-colors flex items-center justify-between group">
+                                    <span>Review Forms</span>
+                                    <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity" :class="reviewSubTab === 'forms' ? 'opacity-100 text-primary-600' : ''"></i>
+                                </button>
+                            </nav>
+                        </div>
 
-                        <div class="space-y-10">
+                        <!-- Right Content Area -->
+                        <div class="flex-1 min-w-0">
+                            <!-- Setup & Guidance Form -->
+                            <form action="{{ route('journal.settings.workflow.update', ['journal' => $journal->slug]) }}"
+                                method="POST" x-show="reviewSubTab === 'setup' || reviewSubTab === 'guidance'">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="tab" value="review">
 
-                            <!-- Section: Review Mode -->
+                                <!-- Sub-Tab: Setup -->
+                                <div x-show="reviewSubTab === 'setup'" x-cloak class="space-y-10">
+                                    <!-- Section: Review Mode -->
                             <div>
                                 <div class="flex items-center gap-3 mb-6">
                                     <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -426,7 +454,7 @@
                                 </div>
                             </div>
 
-                            <!-- Section: Timelines -->
+                                    <!-- Section: Timelines -->
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 mb-4">{{ $isId ? 'Tenggat Waktu Ulasan' : 'Review Deadlines' }}</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -449,7 +477,18 @@
                                 </div>
                             </div>
 
-                            <!-- Section: Reviewer Guidelines -->
+                                    <div class="mt-10 pt-6 border-t border-gray-200 flex justify-end">
+                                        <button type="submit"
+                                            class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                            <i class="fa-solid fa-check mr-2"></i>
+                                            {{ $isId ? 'Simpan Pengaturan Setup' : 'Save Setup Settings' }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-Tab: Reviewer Guidance -->
+                                <div x-show="reviewSubTab === 'guidance'" x-cloak class="space-y-10">
+                                    <!-- Section: Reviewer Guidelines -->
                             <div>
                                 <div class="flex items-center gap-3 mb-4">
                                     <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -471,9 +510,19 @@
                                 </div>
                             </div>
 
-                            <hr class="border-gray-200 mt-10 mb-10">
+                                    <div class="mt-10 pt-6 border-t border-gray-200 flex justify-end">
+                                        <button type="submit"
+                                            class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                            <i class="fa-solid fa-check mr-2"></i>
+                                            {{ $isId ? 'Simpan Panduan' : 'Save Guidance' }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
-                            <!-- Section: Review Forms -->
+                            <!-- Sub-Tab: Review Forms -->
+                            <div x-show="reviewSubTab === 'forms'" x-cloak class="space-y-10">
+                                <!-- Section: Review Forms -->
                             <div>
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="text-sm font-medium text-gray-900">{{ $isId ? 'Formulir Ulasan' : 'Review Forms' }}</h4>
@@ -611,19 +660,13 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="mt-10 pt-6 border-t border-gray-200 flex justify-end">
-                            <button type="submit"
-                                class="inline-flex items-center px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                                <i class="fa-solid fa-check mr-2"></i>
-                                {{ $isId ? 'Simpan Pengaturan Ulasan' : 'Save Review Settings' }}
-                            </button>
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
 
                 <!-- ============================================ -->
-                <!-- TAB 3: LIBRARY -->
+<!-- TAB 3: LIBRARY -->
                 <!-- ============================================ -->
                 <div x-show="activeTab === 'library'" x-cloak>
                     <!-- This tab has its own add/upload form, handled via Modal usually, or standalone -->
