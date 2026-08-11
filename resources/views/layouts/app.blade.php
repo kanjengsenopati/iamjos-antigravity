@@ -423,7 +423,7 @@
                 x-transition:leave-end="opacity-0 translate-y-[-10px]"
                 class="absolute left-2 top-[calc(100%-0.5rem)] min-w-[calc(100%-1rem)] w-max max-w-[90vw] bg-white border border-gray-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[24px] z-[100] overflow-hidden">
                 <div class="py-2">
-                    <p class="px-5 py-3 text-[11px] font-bold text-slate-400 tracking-tight bg-slate-50/50 border-b border-slate-100">
+                    <p class="px-5 py-3 text-xs font-bold text-slate-500 tracking-tight bg-slate-50/50 border-b border-slate-100">
                         {{ $isId ? 'Pilih Jurnal' : 'Switch Journal' }}
                     </p>
                     <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
@@ -477,7 +477,7 @@
                 <!-- Group: Workflow -->
                 <div class="space-y-1">
                     <div class="px-3 mb-2" x-show="!sidebarCollapsed">
-                        <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
+                        <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
                     </div>
 
                     <!-- Submissions -->
@@ -549,7 +549,7 @@
                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
+                            <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
                         </div>
 
                         <!-- Journal -->
@@ -619,7 +619,7 @@
 
                         <!-- Statistics Header -->
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Statistik' : 'Statistics' }}</span>
+                            <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Statistik' : 'Statistics' }}</span>
                         </div>
 
                         <!-- Articles Stats -->
@@ -676,7 +676,7 @@
 
                         <!-- Maintenance Header -->
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Pemeliharaan' : 'Maintenance' }}</span>
+                            <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Pemeliharaan' : 'Maintenance' }}</span>
                         </div>
 
                         <!-- Tools -->
@@ -698,7 +698,7 @@
                 @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Administrasi' : 'Administration' }}</span>
+                            <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Administrasi' : 'Administration' }}</span>
                         </div>
 
                         <!-- Site Administration -->

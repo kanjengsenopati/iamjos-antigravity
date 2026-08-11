@@ -339,17 +339,20 @@ class ReviewWorkflowController extends Controller
                         // Log the acceptance and promotion
                         SubmissionLog::log(
                             submission:   $submission,
-                            eventType:    SubmissionLog::EVENT_STAGE_CHANGED,
+                            eventType:    SubmissionLog::EVENT_DECISION_MADE,
                             title:        'Submission Accepted',
                             description:  auth()->user()->name . ' accepted the submission and promoted ' . count($submissionFileIds) . ' file(s) to the Copyediting stage.',
-                            metadata:     ['decision' => 'accept', 'files_promoted' => count($submissionFileIds)],
+                            metadata:     [
+                                'decision' => 'accepted', 
+                                'files_promoted' => count($submissionFileIds)
+                            ],
                             fileIds:      $submissionFileIds,
                             stage:        Submission::STAGE_COPYEDITING,
                             emailSubject: $request->boolean('send_email', true) ? 'Submission Accepted' : null,
                             emailBody:    $request->boolean('send_email', true) ? $request->email_body : null
                         );
 
-                        // Email Handling
+                        // Email Handling via background job
                         if ($request->boolean('send_email', true)) {
                             SendDecisionEmailJob::dispatch($submission, $request->email_body, 'accepted');
                         }

@@ -272,7 +272,7 @@
                 :class="sidebarCollapsed ? 'left-16 top-2' : 'left-4 right-4 top-14'">
 
                 <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
-                    <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Jurnal Saya' : 'My Journals' }}</span>
+                    <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Jurnal Saya' : 'My Journals' }}</span>
                 </div>
 
                 <div class="max-h-60 overflow-y-auto">
@@ -326,7 +326,7 @@
             <!-- Group: Workflow -->
             <div class="space-y-1">
                 <div class="px-3 mb-2" x-show="!sidebarCollapsed">
-                    <span class="text-xs font-semibold text-gray-400 tracking-tight">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
+                    <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
                 </div>
 
                 <!-- Dashboard -->
@@ -401,7 +401,7 @@
             <!-- Group: Management -->
             <div class="space-y-1">
                 <div class="px-3 mb-2 mt-6" x-show="!sidebarCollapsed">
-                    <span class="text-xs font-semibold text-gray-400 tracking-tight">{{ $isId ? 'Pengaturan' : 'Setting' }}</span>
+                    <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Pengaturan' : 'Setting' }}</span>
                 </div>
 
                 <!-- Users & Roles -->
