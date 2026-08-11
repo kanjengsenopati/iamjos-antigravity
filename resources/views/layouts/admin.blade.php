@@ -176,7 +176,7 @@
                         <i class="fa-solid fa-book-open text-xs"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">{{ $isId ? 'Ganti Jurnal' : 'Switch Journal' }}</p>
+                        <p class="text-xs text-slate-400 tracking-tight font-medium">{{ $isId ? 'Ganti Jurnal' : 'Switch Journal' }}</p>
                         <p class="text-sm font-medium text-white truncate">{{ $userJournals->count() }} {{ $isId ? 'Jurnal' : 'Journal(s)' }}</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-400 text-xs transition-transform"
@@ -196,7 +196,7 @@
                     <div class="p-2">
                         <!-- Header -->
                         <div class="px-3 pb-2 pt-1 flex items-center justify-between border-b border-slate-700/80 mb-2">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Pilih Ruang Kerja' : 'Select Workspace' }}</span>
+                            <span class="text-[10px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Pilih Ruang Kerja' : 'Select Workspace' }}</span>
                             <a href="{{ route('journal.select') }}" class="text-[11px] font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-2.5 py-0.5 rounded-md transition-colors">{{ $isId ? 'Lihat Semua' : 'View All' }}</a>
                         </div>
 
@@ -214,7 +214,7 @@
                                     <!-- Info -->
                                     <div class="flex flex-col min-w-0 pr-2">
                                         <span class="text-[13px] font-medium text-slate-200 group-hover:text-white transition-colors whitespace-nowrap">{{ $j->name }}</span>
-                                        <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest group-hover:text-indigo-300 transition-colors">{{ $j->abbreviation ?? 'Journal' }}</span>
+                                        <span class="text-[10px] font-semibold text-slate-500 tracking-tight group-hover:text-indigo-300 transition-colors">{{ $j->abbreviation ?? 'Journal' }}</span>
                                     </div>
                                 </a>
                             @endforeach
@@ -305,7 +305,7 @@
             </a>
 
             <div class="pt-6 mt-6 border-t border-slate-700/50">
-                <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{{ $isId ? 'Tautan Cepat' : 'Quick Links' }}</p>
+                <p class="px-3 text-xs font-semibold text-slate-500 tracking-tight mb-3">{{ $isId ? 'Tautan Cepat' : 'Quick Links' }}</p>
 
                 <!-- Back to Portal -->
                 <a href="{{ route('portal.home') }}"

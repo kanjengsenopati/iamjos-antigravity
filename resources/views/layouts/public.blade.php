@@ -339,7 +339,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 
                 {{-- Quick Links --}}
                 <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Journal</h4>
+                    <h4 class="text-sm font-semibold text-white tracking-tight mb-4">Journal</h4>
                     <ul class="space-y-2 text-sm">
                         <li><a href="{{ route('journal.public.current', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Current Issue</a></li>
                         <li><a href="{{ route('journal.public.archives', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Archives</a></li>
@@ -350,7 +350,7 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 
                 {{-- For Authors --}}
                 <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">For Authors</h4>
+                    <h4 class="text-sm font-semibold text-white tracking-tight mb-4">For Authors</h4>
                     <ul class="space-y-2 text-sm">
                         <li><a href="{{ route('journal.public.author-guidelines', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Author Guidelines</a></li>
                         <li><a href="{{ route('journal.submissions.create', $journal->slug) }}" class="text-slate-400 hover:text-white transition-colors">Submit Manuscript</a></li>

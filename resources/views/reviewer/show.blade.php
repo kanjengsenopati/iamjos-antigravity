@@ -358,7 +358,7 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600 border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50/70 font-bold uppercase tracking-wider text-slate-400 text-[11px]">
+                                    <tr class="border-b border-slate-200 bg-slate-50/70 font-bold tracking-tight text-slate-400 text-[11px]">
                                         <th class="py-4 px-4">{{ $isId ? 'Review Files' : 'Review Files' }}</th>
                                         <th class="py-4 px-4">{{ $isId ? 'Tanggal' : 'Date' }}</th>
                                         <th class="py-4 px-4">{{ $isId ? 'Type File' : 'File Type' }}</th>
@@ -582,7 +582,7 @@
 
                                 <!-- Comments for Author -->
                                 <div>
-                                    <label for="comments_for_author" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                    <label for="comments_for_author" class="block text-xs font-bold tracking-tight text-slate-400 mb-2">
                                         {{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }} <span class="text-rose-500">*</span>
                                     </label>
                                     <textarea name="comments_for_author" id="comments_for_author" rows="6" placeholder="{{ $isId ? 'Berikan umpan balik terperinci...' : 'Provide detailed feedback...' }}"
@@ -597,7 +597,7 @@
 
                                 <!-- Comments for Editor (Confidential) -->
                                 <div>
-                                    <label for="comments_for_editor" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                    <label for="comments_for_editor" class="block text-xs font-bold tracking-tight text-slate-400 mb-2">
                                         {{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}
                                     </label>
                                     <textarea name="comments_for_editor" id="comments_for_editor" rows="4"
@@ -719,7 +719,7 @@
 
                             @if($reviewForm && $reviewForm->elements->isNotEmpty())
                                 <div class="space-y-6 pb-6 border-b border-slate-100">
-                                    <x-text.label class="block text-slate-400 font-bold uppercase tracking-wider text-[11px] mb-3">
+                                    <x-text.label class="block text-slate-400 font-bold tracking-tight text-[11px] mb-3">
                                         {{ $isId ? 'Hasil Formulir Evaluasi' : 'Evaluation Form Answers' }}
                                     </x-text.label>
 
@@ -869,7 +869,7 @@
 
                             <!-- Comments for Author (State Locked) -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                <label class="block text-xs font-bold tracking-tight text-slate-400 mb-2">
                                     {{ $isId ? 'Komentar untuk Penulis' : 'Comments for Author' }}
                                 </label>
                                 <textarea disabled readonly rows="6"
@@ -879,7 +879,7 @@
                             <!-- Comments for Editor (State Locked) -->
                             @if ($assignment->comments_for_editor)
                                 <div>
-                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                    <label class="block text-xs font-bold tracking-tight text-slate-400 mb-2">
                                         {{ $isId ? 'Komentar Rahasia untuk Editor' : 'Confidential Comments for Editor' }}
                                     </label>
                                     <textarea disabled readonly rows="4"
@@ -932,7 +932,7 @@
 
                             <!-- Recommendation Select Dropdown -->
                             <div class="mb-6">
-                                <label for="recommendation" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                <label for="recommendation" class="block text-xs font-bold tracking-tight text-slate-400 mb-2">
                                     {{ $isId ? 'Rekomendasi' : 'Recommendation' }} <span class="text-rose-500">*</span>
                                 </label>
                                 <select form="reviewerSubmitForm" name="recommendation" id="recommendation" x-model="recommendation" required
@@ -994,16 +994,16 @@
                                 </div>
                                 <div class="space-y-2.5 text-xs text-slate-700">
                                     <div>
-                                        <span class="text-slate-400 block text-[11px] uppercase font-semibold tracking-wider mb-0.5">{{ $isId ? 'Judul Naskah' : 'Manuscript Title' }}</span>
+                                        <span class="text-slate-400 block text-[11px]  font-semibold tracking-wider mb-0.5">{{ $isId ? 'Judul Naskah' : 'Manuscript Title' }}</span>
                                         <p class="font-bold text-slate-800 leading-snug">{{ $submission->title }}</p>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-50">
                                         <div>
-                                            <span class="text-slate-400 block text-[11px] uppercase font-semibold tracking-wider mb-0.5">{{ $isId ? 'Metode Ulasan' : 'Review Method' }}</span>
+                                            <span class="text-slate-400 block text-[11px]  font-semibold tracking-wider mb-0.5">{{ $isId ? 'Metode Ulasan' : 'Review Method' }}</span>
                                             <p class="font-semibold text-slate-800">{{ ucfirst(str_replace('_', ' ', $assignment->review_method)) }}</p>
                                         </div>
                                         <div>
-                                            <span class="text-slate-400 block text-[11px] uppercase font-semibold tracking-wider mb-0.5">{{ $isId ? 'Rekomendasi Anda' : 'Your Recommendation' }}</span>
+                                            <span class="text-slate-400 block text-[11px]  font-semibold tracking-wider mb-0.5">{{ $isId ? 'Rekomendasi Anda' : 'Your Recommendation' }}</span>
                                             <span class="font-bold text-emerald-600 inline-block bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100/80">
                                                 {{ $assignment->recommendation_label }}
                                             </span>
@@ -1061,7 +1061,7 @@
                     <form action="{{ route('journal.reviewer.decline', ['journal' => $journal->slug, 'assignment' => $assignment]) }}" method="POST" class="space-y-4">
                         @csrf
                         <div>
-                            <label for="reason" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                            <label for="reason" class="block text-xs font-bold tracking-tight text-slate-400 mb-2">
                                 {{ $isId ? 'Alasan Penolakan (Opsional)' : 'Reason for Decline (Optional)' }}
                             </label>
                             <textarea name="reason" id="reason" rows="4" x-model="declineReason"

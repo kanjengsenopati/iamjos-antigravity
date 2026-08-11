@@ -423,7 +423,7 @@
                 x-transition:leave-end="opacity-0 translate-y-[-10px]"
                 class="absolute left-2 top-[calc(100%-0.5rem)] min-w-[calc(100%-1rem)] w-max max-w-[90vw] bg-white border border-gray-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[24px] z-[100] overflow-hidden">
                 <div class="py-2">
-                    <p class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/50 border-b border-slate-100">
+                    <p class="px-5 py-3 text-[11px] font-bold text-slate-400 tracking-tight bg-slate-50/50 border-b border-slate-100">
                         {{ $isId ? 'Pilih Jurnal' : 'Switch Journal' }}
                     </p>
                     <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
@@ -433,7 +433,7 @@
                                 :class="'{{ $journal?->id }}' === j.id ? 'bg-emerald-50/50 text-slate-900 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'">
                                 <span class="whitespace-nowrap" x-text="j.name"></span>
                                 <template x-if="'{{ $journal?->id }}' === j.id">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200/50 shrink-0">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-tight bg-emerald-100 text-emerald-700 border border-emerald-200/50 shrink-0">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 relative flex">
                                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                             <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -451,7 +451,7 @@
 
                     <div class="border-t border-slate-100 mt-1">
                         <a href="{{ route('journal.select') }}"
-                            class="block px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
+                            class="block px-5 py-3 text-xs font-bold tracking-tight text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
                             <i class="fa-solid fa-list-check mr-2"></i> {{ $isId ? 'Lihat Semua Jurnal' : 'View All Journals' }}
                         </a>
                     </div>
@@ -477,7 +477,7 @@
                 <!-- Group: Workflow -->
                 <div class="space-y-1">
                     <div class="px-3 mb-2" x-show="!sidebarCollapsed">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
+                        <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
                     </div>
 
                     <!-- Submissions -->
@@ -549,7 +549,7 @@
                 @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
                         </div>
 
                         <!-- Journal -->
@@ -619,7 +619,7 @@
 
                         <!-- Statistics Header -->
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Statistik' : 'Statistics' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Statistik' : 'Statistics' }}</span>
                         </div>
 
                         <!-- Articles Stats -->
@@ -676,7 +676,7 @@
 
                         <!-- Maintenance Header -->
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Pemeliharaan' : 'Maintenance' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Pemeliharaan' : 'Maintenance' }}</span>
                         </div>
 
                         <!-- Tools -->
@@ -698,7 +698,7 @@
                 @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Administrasi' : 'Administration' }}</span>
+                            <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Administrasi' : 'Administration' }}</span>
                         </div>
 
                         <!-- Site Administration -->
@@ -1044,7 +1044,7 @@
                                 </p>
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span
-                                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wide">
+                                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 tracking-tight">
                                         {{ Auth::user()->primary_role_label }}
                                     </span>
                                 </div>

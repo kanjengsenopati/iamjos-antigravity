@@ -256,7 +256,7 @@
                     x-transition:enter-end="opacity-100 scale-100">
                     <p class="text-sm font-semibold text-gray-900 truncate">
                         {{ $journal->abbreviation ?? Str::limit($journal->name ?? 'Journal', 15) }}</p>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium truncate">{{ $isId ? 'Ganti Jurnal' : 'Switch Journal' }}</p>
+                    <p class="text-[10px] text-gray-500 tracking-tight font-medium truncate">{{ $isId ? 'Ganti Jurnal' : 'Switch Journal' }}</p>
                 </div>
 
                 <!-- Icon -->
@@ -272,7 +272,7 @@
                 :class="sidebarCollapsed ? 'left-16 top-2' : 'left-4 right-4 top-14'">
 
                 <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
-                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $isId ? 'Jurnal Saya' : 'My Journals' }}</span>
+                    <span class="text-[11px] font-bold text-slate-400 tracking-tight">{{ $isId ? 'Jurnal Saya' : 'My Journals' }}</span>
                 </div>
 
                 <div class="max-h-60 overflow-y-auto">
@@ -289,7 +289,7 @@
                                 class="text-sm truncate"
                                 x-text="j.name"></span>
                             <template x-if="'{{ $journal?->id }}' == j.id">
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200/50 shrink-0 ml-auto">
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-tight bg-emerald-100 text-emerald-700 border border-emerald-200/50 shrink-0 ml-auto">
                                     <span class="w-1 h-1 rounded-full bg-emerald-500 relative flex">
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
@@ -307,7 +307,7 @@
 
                 <div class="border-t border-slate-100 pt-1 mt-1">
                     <a href="{{ route('journal.select') }}"
-                        class="block px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
+                        class="block px-5 py-3 text-xs font-bold tracking-tight text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
                         <i class="fa-solid fa-list-check mr-2"></i> {{ $isId ? 'Lihat Semua Jurnal' : 'View All Journals' }}
                     </a>
                 </div>
@@ -326,7 +326,7 @@
             <!-- Group: Workflow -->
             <div class="space-y-1">
                 <div class="px-3 mb-2" x-show="!sidebarCollapsed">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
+                    <span class="text-xs font-semibold text-gray-400 tracking-tight">{{ $isId ? 'Alur Kerja' : 'Workflow' }}</span>
                 </div>
 
                 <!-- Dashboard -->
@@ -401,7 +401,7 @@
             <!-- Group: Management -->
             <div class="space-y-1">
                 <div class="px-3 mb-2 mt-6" x-show="!sidebarCollapsed">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $isId ? 'Pengaturan' : 'Setting' }}</span>
+                    <span class="text-xs font-semibold text-gray-400 tracking-tight">{{ $isId ? 'Pengaturan' : 'Setting' }}</span>
                 </div>
 
                 <!-- Users & Roles -->

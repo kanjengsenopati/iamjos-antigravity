@@ -171,7 +171,7 @@
         <div x-show="mobileMenuOpen" x-cloak x-transition class="md:hidden bg-white border-t border-gray-100">
             <div class="px-4 py-4 space-y-2">
                 <div class="px-4 pb-3 mb-3 border-b border-gray-100 flex items-center justify-between">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('Language') }}</span>
+                    <span class="text-xs font-semibold text-gray-500 tracking-tight">{{ __('Language') }}</span>
                     <x-language-switcher inline="true" />
                 </div>
                 <a href="{{ route('journal.public.home', $journal->slug) }}"
