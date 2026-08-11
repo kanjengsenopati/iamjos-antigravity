@@ -57,24 +57,43 @@
         <!-- AlpineJS Tabs Wrapper -->
         <div x-data="{ 
             status: '{{ $status }}',
-            activeStep: {{ $status === 'completed' ? 4 : ($status === 'accepted' ? 3 : 1) }},
+            assignmentId: '{{ $assignment->id }}',
+            activeStep: {{ $status === 'completed' ? 4 : ($status === 'accepted' ? 2 : 1) }},
+            maxReachedStep: {{ $status === 'completed' ? 4 : ($status === 'accepted' ? 2 : 1) }},
             declineReason: '',
             showDeclineModal: false,
             
-            isTabDisabled(step) {
-                if (this.status === 'pending') {
-                    return step > 1;
-                }
+            init() {
                 if (this.status === 'accepted') {
-                    return step > 3;
+                    let savedStep = localStorage.getItem('review_step_' + this.assignmentId);
+                    if (savedStep) {
+                        savedStep = parseInt(savedStep);
+                        if (savedStep > this.maxReachedStep && savedStep <= 3) {
+                            this.maxReachedStep = savedStep;
+                            this.activeStep = savedStep;
+                        }
+                    }
                 }
-                return false; // completed or declined can click all
+            },
+            
+            isTabDisabled(step) {
+                return step > this.maxReachedStep;
             },
             
             setStep(step) {
                 if (!this.isTabDisabled(step)) {
                     this.activeStep = step;
                 }
+            },
+            
+            advanceToStep(step) {
+                if (step > this.maxReachedStep) {
+                    this.maxReachedStep = step;
+                    if (this.status === 'accepted') {
+                        localStorage.setItem('review_step_' + this.assignmentId, this.maxReachedStep);
+                    }
+                }
+                this.activeStep = step;
             }
         }" class="space-y-6">
 
@@ -323,7 +342,7 @@
                                 <x-text.body class="text-slate-500">{{ $isId ? 'Saya telah membaca dan memahami panduan ini.' : 'I have read and understood these guidelines.' }}</x-text.body>
                             </label>
 
-                            <button type="button" @click="setStep(3)" :disabled="!checked"
+                            <button type="button" @click="advanceToStep(3)" :disabled="!checked"
                                 :class="checked ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
                                 class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 font-bold text-sm rounded-2xl transition-all gap-2">
                                 <span>{{ $isId ? 'Lanjut' : 'Next' }}</span>
