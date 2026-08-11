@@ -348,9 +348,10 @@
                             
                             <!-- Search Bar (Fitur Search OJS Style) -->
                             <div class="relative w-full sm:w-64">
-                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" x-model="search" placeholder="{{ $isId ? 'Cari file...' : 'Search files...' }}"
-                                    class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-blue-500 transition-all">
+                                    style="padding-left: 2.5rem;"
+                                    class="w-full pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-blue-500 transition-all">
                             </div>
                         </div>
 
@@ -358,7 +359,7 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600 border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50/70 font-bold tracking-tight text-slate-400 text-[11px]">
+                                    <tr class="border-b border-slate-200 bg-slate-50 font-bold text-slate-700 text-sm">
                                         <th class="py-4 px-4">{{ $isId ? 'Review Files' : 'Review Files' }}</th>
                                         <th class="py-4 px-4">{{ $isId ? 'Tanggal' : 'Date' }}</th>
                                         <th class="py-4 px-4">{{ $isId ? 'Type File' : 'File Type' }}</th>
