@@ -410,7 +410,7 @@ class IssueController extends Controller
 
             // 2. All Submission & Publication authors in this journal
             $journalSubmissions = \App\Models\Submission::where('journal_id', $journal->id)
-                ->with(['authors', 'currentPublication.authors', 'user'])
+                ->with(['authors', 'currentPublication.authors', 'author'])
                 ->get();
 
             foreach ($journalSubmissions as $sub) {
@@ -443,11 +443,11 @@ class IssueController extends Controller
                 }
 
                 // 2c. Submitter / Primary User Account
-                if ($sub->user && !empty($sub->user->email)) {
-                    $email = strtolower(trim((string)$sub->user->email));
+                if ($sub->author && !empty($sub->author->email)) {
+                    $email = strtolower(trim((string)$sub->author->email));
                     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                         $authorEmails->push([
-                            'name' => $sub->user->name ?: 'Author',
+                            'name' => $sub->author->name ?: 'Author',
                             'email' => $email
                         ]);
                     }
