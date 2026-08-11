@@ -383,37 +383,62 @@ class IssueController extends Controller
         // Send email to authors if requested
         if ($request->boolean('send_email')) {
             $authorEmails = collect();
+
+            // Load relations to ensure comprehensive multi-source author coverage
+            $issue->loadMissing(['submissions.authors', 'submissions.currentPublication.authors', 'submissions.user']);
+
             foreach ($issue->submissions as $sub) {
-                foreach ($sub->authors as $author) {
-                    // Layer 1: Strict email validation
-                    if (!empty($author->email) && filter_var($author->email, FILTER_VALIDATE_EMAIL)) {
-                        $authorName = $author->name ?? trim("{$author->given_name} {$author->family_name}");
+                // 1. Authors from submission_authors (submission_id)
+                if ($sub->authors) {
+                    foreach ($sub->authors as $author) {
+                        $email = strtolower(trim((string)$author->email));
+                        if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $authorName = $author->name ?? trim("{$author->given_name} {$author->family_name}");
+                            $authorEmails->push([
+                                'name' => $authorName ?: 'Author',
+                                'email' => $email
+                            ]);
+                        }
+                    }
+                }
+
+                // 2. Authors from publication_authors (currentPublication->authors)
+                if ($sub->currentPublication && $sub->currentPublication->authors) {
+                    foreach ($sub->currentPublication->authors as $pubAuthor) {
+                        $email = strtolower(trim((string)$pubAuthor->email));
+                        if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $authorName = $pubAuthor->name ?? trim("{$pubAuthor->given_name} {$pubAuthor->family_name}");
+                            $authorEmails->push([
+                                'name' => $authorName ?: 'Author',
+                                'email' => $email
+                            ]);
+                        }
+                    }
+                }
+
+                // 3. Submitter / Primary User Account
+                if ($sub->user && !empty($sub->user->email)) {
+                    $email = strtolower(trim((string)$sub->user->email));
+                    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                         $authorEmails->push([
-                            'name' => $authorName ?: 'Author',
-                            'email' => $author->email
+                            'name' => $sub->user->name ?: 'Author',
+                            'email' => $email
                         ]);
                     }
                 }
             }
-            
+
             $uniqueAuthors = $authorEmails->unique('email');
             $issueTitle = $issue->title ?: "Volume {$issue->volume} Issue {$issue->number}";
-            
+
             foreach ($uniqueAuthors as $auth) {
-                // Layer 2: Unbreakable Loop
-                try {
-                    \Illuminate\Support\Facades\Mail::to($auth['email'])->queue(
-                        new \App\Mail\GeneralNotificationMail(
-                            emailSubject: "Issue Published: {$issueTitle}",
-                            emailBody: "We are pleased to inform you that the issue **{$issueTitle}** containing your article has been published in **{$journal->name}**.",
-                            recipientName: $auth['name'],
-                            journalName: $journal->name
-                        )
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning("Failed to queue publish notification for {$auth['email']}: " . $e->getMessage());
-                    continue;
-                }
+                // Dispatch isolated per-recipient job to prevent any single recipient failure from interrupting the queue
+                \App\Jobs\SendIssuePublishedEmailJob::dispatch(
+                    recipientEmail: $auth['email'],
+                    recipientName: $auth['name'],
+                    issueTitle: $issueTitle,
+                    journalName: $journal->name
+                );
             }
         }
 
