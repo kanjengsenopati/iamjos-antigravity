@@ -308,23 +308,12 @@
                             {{ $isId ? 'Panduan Penilaian / Ulasan' : 'Reviewer Guidelines' }}
                         </x-text.h2>
 
-                        <div class="space-y-5 text-slate-600 leading-relaxed">
-                            <div class="flex items-start space-x-3.5">
-                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">1</div>
-                                <x-text.body>{{ $isId ? 'Baca naskah secara menyeluruh dan nilai kualitas serta kontribusi ilmiahnya.' : 'Read the manuscript thoroughly and assess its scientific quality and contribution.' }}</x-text.body>
-                            </div>
-                            <div class="flex items-start space-x-3.5">
-                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">2</div>
-                                <x-text.body>{{ $isId ? 'Evaluasi metodologi, hasil, dan kesimpulan untuk validitas dan kejelasan.' : 'Evaluate methodology, results, and conclusions for validity and clarity.' }}</x-text.body>
-                            </div>
-                            <div class="flex items-start space-x-3.5">
-                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">3</div>
-                                <x-text.body>{{ $isId ? 'Berikan umpan balik yang konstruktif. Bersikaplah hormat dan membantu dalam kritik Anda.' : 'Provide constructive feedback. Be respectful and helpful in your critique.' }}</x-text.body>
-                            </div>
-                            <div class="flex items-start space-x-3.5">
-                                <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">4</div>
-                                <x-text.body>{{ $isId ? 'Pastikan Anda menjaga kerahasiaan naskah ini dan tidak menggunakannya untuk kepentingan pribadi sebelum diterbitkan.' : 'Ensure you maintain the confidentiality of this manuscript and do not use it for personal interests before publication.' }}</x-text.body>
-                            </div>
+                        <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm">
+                            @if($journal->reviewer_guidelines)
+                                {!! clean($journal->reviewer_guidelines) !!}
+                            @else
+                                <p class="text-slate-400 italic">{{ $isId ? 'Tidak ada panduan pengulas yang tersedia.' : 'No reviewer guidelines available.' }}</p>
+                            @endif
                         </div>
 
                         <!-- Policy Checkbox and Navigation Button -->
@@ -436,23 +425,12 @@
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-600 text-xs leading-relaxed">
-                            <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <div class="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[10px]">1</div>
-                                <p>{{ $isId ? 'Baca naskah secara menyeluruh dan nilai kualitas serta kontribusi ilmiahnya.' : 'Read the manuscript thoroughly and assess its scientific quality and contribution.' }}</p>
-                            </div>
-                            <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <div class="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[10px]">2</div>
-                                <p>{{ $isId ? 'Evaluasi metodologi, hasil, dan kesimpulan untuk validitas dan kejelasan.' : 'Evaluate methodology, results, and conclusions for validity and clarity.' }}</p>
-                            </div>
-                            <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <div class="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[10px]">3</div>
-                                <p>{{ $isId ? 'Berikan umpan balik yang konstruktif dan bersikap hormat dalam kritik Anda.' : 'Provide constructive feedback and be respectful in your critique.' }}</p>
-                            </div>
-                            <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <div class="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[10px]">4</div>
-                                <p>{{ $isId ? 'Jaga kerahasiaan naskah ini dan tidak menggunakannya untuk kepentingan pribadi.' : 'Ensure confidentiality of this manuscript and do not use it for personal interest.' }}</p>
-                            </div>
+                        <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm">
+                            @if($journal->reviewer_guidelines)
+                                {!! clean($journal->reviewer_guidelines) !!}
+                            @else
+                                <p class="text-slate-400 italic">{{ $isId ? 'Tidak ada panduan pengulas yang tersedia.' : 'No reviewer guidelines available.' }}</p>
+                            @endif
                         </div>
                     </div>
 
