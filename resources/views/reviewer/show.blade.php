@@ -58,8 +58,8 @@
         <div x-data="{ 
             status: '{{ $status }}',
             assignmentId: '{{ $assignment->id }}',
-            activeStep: {{ $status === 'completed' ? 4 : ($status === 'accepted' ? 2 : 1) }},
-            maxReachedStep: {{ $status === 'completed' ? 4 : ($status === 'accepted' ? 2 : 1) }},
+            activeStep: {{ $status === 'completed' ? 4 : 1 }},
+            maxReachedStep: {{ $status === 'completed' ? 4 : 1 }},
             declineReason: '',
             showDeclineModal: false,
             
@@ -253,7 +253,7 @@
                                                  : 'You have agreed to review this manuscript. Please proceed to the reviewer guidelines.' }}
                                     </x-text.body>
                                     <div class="pt-3">
-                                        <button type="button" @click="setStep(2)"
+                                        <button type="button" @click="advanceToStep(2)"
                                             class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all">
                                             {{ $isId ? 'Lanjut ke Step 2: Panduan' : 'Go to Step 2: Guidelines' }} <i class="fa-solid fa-arrow-right ml-1.5"></i>
                                         </button>
