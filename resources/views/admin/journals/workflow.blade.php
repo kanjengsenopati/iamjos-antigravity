@@ -449,6 +449,30 @@
                                 </div>
                             </div>
 
+                            <!-- Section: Reviewer Guidelines -->
+                            <div>
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-book-open-reader text-indigo-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Panduan Peninjau' : 'Reviewer Guidance' }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $isId ? 'Sediakan petunjuk dan kriteria evaluasi bagi peninjau.' : 'Provide instructions and evaluation criteria for reviewers.' }}</p>
+                                    </div>
+                                </div>
+                                <!-- Quill Editor Container -->
+                                <div x-data="quillEditor({{ json_encode(old('reviewer_guidelines', $journal->reviewer_guidelines ?? '')) }})" class="mt-1">
+                                    <!-- Hidden Input for Form Submission -->
+                                    <input type="hidden" name="reviewer_guidelines" :value="content">
+
+                                    <!-- Editor Div -->
+                                    <div x-ref="quillElement" class="bg-white rounded-md shadow-sm" style="height: 300px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-200 mt-10 mb-10">
+
                             <!-- Section: Review Forms -->
                             <div>
                                 <div class="flex items-center justify-between mb-4">
