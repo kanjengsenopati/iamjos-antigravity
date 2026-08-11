@@ -380,15 +380,41 @@ class IssueController extends Controller
             );
         }
 
-        // Send email to authors if requested
+        // Send email to all authors in this journal if requested
         if ($request->boolean('send_email')) {
             $authorEmails = collect();
 
-            // Load relations to ensure comprehensive multi-source author coverage
-            $issue->loadMissing(['submissions.authors', 'submissions.currentPublication.authors', 'submissions.user']);
+            // 1. All registered Users with the 'Author' role in this journal
+            $registeredAuthorUsers = \App\Models\User::where(function ($q) use ($journal) {
+                $q->whereExists(function ($sub) use ($journal) {
+                    $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                        ->from('journal_user_roles')
+                        ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
+                        ->whereColumn('journal_user_roles.user_id', 'users.id')
+                        ->where('journal_user_roles.journal_id', $journal->id)
+                        ->where('roles.name', 'Author');
+                })->orWhereHas('roles', function ($sub) {
+                    $sub->where('name', 'Author');
+                });
+            })->get();
 
-            foreach ($issue->submissions as $sub) {
-                // 1. Authors from submission_authors (submission_id)
+            foreach ($registeredAuthorUsers as $user) {
+                $email = strtolower(trim((string)$user->email));
+                if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $authorEmails->push([
+                        'name' => $user->name ?: 'Author',
+                        'email' => $email
+                    ]);
+                }
+            }
+
+            // 2. All Submission & Publication authors in this journal
+            $journalSubmissions = \App\Models\Submission::where('journal_id', $journal->id)
+                ->with(['authors', 'currentPublication.authors', 'user'])
+                ->get();
+
+            foreach ($journalSubmissions as $sub) {
+                // 2a. Authors from submission_authors (submission_id)
                 if ($sub->authors) {
                     foreach ($sub->authors as $author) {
                         $email = strtolower(trim((string)$author->email));
@@ -402,7 +428,7 @@ class IssueController extends Controller
                     }
                 }
 
-                // 2. Authors from publication_authors (currentPublication->authors)
+                // 2b. Authors from publication_authors (currentPublication->authors)
                 if ($sub->currentPublication && $sub->currentPublication->authors) {
                     foreach ($sub->currentPublication->authors as $pubAuthor) {
                         $email = strtolower(trim((string)$pubAuthor->email));
@@ -416,7 +442,7 @@ class IssueController extends Controller
                     }
                 }
 
-                // 3. Submitter / Primary User Account
+                // 2c. Submitter / Primary User Account
                 if ($sub->user && !empty($sub->user->email)) {
                     $email = strtolower(trim((string)$sub->user->email));
                     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
