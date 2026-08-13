@@ -1139,8 +1139,8 @@ class SubmissionController extends Controller
 
         $this->authorize('delete', $submission);
 
-        if ($submission->status !== Submission::STATUS_DRAFT) {
-            return back()->with('error', 'Only draft submissions can be deleted.');
+        if (!in_array($submission->status, [Submission::STATUS_DRAFT, Submission::STATUS_REJECTED])) {
+            return back()->with('error', 'Only draft or declined submissions can be deleted.');
         }
 
         $submission->delete();

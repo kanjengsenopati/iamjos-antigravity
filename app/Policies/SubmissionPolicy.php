@@ -81,6 +81,12 @@ class SubmissionPolicy
             return true;
         }
 
+        // Editor/Manager can delete rejected (declined) submissions
+        if ($submission->status === Submission::STATUS_REJECTED && 
+            $user->hasJournalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_EDITOR], $submission->journal_id)) {
+            return true;
+        }
+
         return false;
     }
 
