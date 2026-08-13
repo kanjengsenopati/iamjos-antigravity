@@ -283,7 +283,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <div class="flex items-center gap-2" x-data="{ enabled: {{ $template->is_enabled ? 'true' : 'false' }} }">
                                         <button type="button" 
-                                            @click="enabled = !enabled; updateTemplateStatus({{ $template->id }}, enabled)"
+                                            @click="enabled = !enabled; updateTemplateStatus('{{ $template->id }}', enabled)"
                                             :class="enabled ? 'bg-emerald-500' : 'bg-gray-300'"
                                             class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                             role="switch" 
@@ -309,7 +309,9 @@
                                             </button>
                                         @endif
 
-                                        <button type="button" @click="editTemplate({{ $template }})"
+                                        <button type="button" 
+                                            :data-template='@json($template)'
+                                            @click="editTemplate(JSON.parse($el.dataset.template))"
                                             class="text-xs text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1">
                                             <i class="fa-solid fa-pen text-[10px]"></i>
                                             <span>{{ $isId ? 'Ubah' : 'Edit' }}</span>

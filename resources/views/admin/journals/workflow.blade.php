@@ -16,6 +16,21 @@
         editReviewForm: { id: '', title: '', description: '', is_active: true },
         isEditMode: false,
         editingItem: null,
+        openEditChecklistModal(item) {
+            this.isEditMode = true;
+            this.editingItem = item;
+            this.newChecklist = { content: item.content, is_required: item.is_required };
+            this.showChecklistModal = true;
+        },
+        openReviewFormPreviewModal(url, title) {
+            this.reviewFormIframeUrl = url;
+            this.reviewFormIframeTitle = title;
+            this.showReviewFormIframeModal = true;
+        },
+        openEditReviewFormModal(formObj) {
+            this.editReviewForm = formObj;
+            this.showEditReviewFormModal = true;
+        },
         onIframeLoad(event) {
             try {
                 const iframeWindow = event.target.contentWindow;
@@ -288,7 +303,8 @@
 
                                                 <!-- Edit Button -->
                                                 <button type="button"
-                                                    @click="isEditMode = true; editingItem = { id: '{{ $checklist->id }}', content: '{{ addslashes($checklist->content) }}', is_required: {{ $checklist->is_required ? 'true' : 'false' }} }; newChecklist = { content: editingItem.content, is_required: editingItem.is_required }; showChecklistModal = true;"
+                                                    :data-checklist='@json(["id" => (string)$checklist->id, "content" => $checklist->content, "is_required" => (bool)$checklist->is_required])'
+                                                    @click="openEditChecklistModal(JSON.parse($el.dataset.checklist))"
                                                     class="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
                                                     title="{{ $isId ? 'Ubah Item' : 'Edit Item' }}">
                                                     <i class="fa-solid fa-pen-to-square text-sm"></i>
@@ -601,7 +617,8 @@
                                                             <!-- Preview Button -->
                                                             @if ($form->hasElements())
                                                                 <button type="button"
-                                                                    @click='reviewFormIframeUrl = @js(route("journal.settings.workflow.review-forms.preview", ["journal" => $journal->slug, "reviewForm" => $form->id])); reviewFormIframeTitle = @js(($isId ? "Pratinjau Formulir" : "Form Preview") . " - " . $form->title); showReviewFormIframeModal = true'
+                                                                    :data-title='@json(($isId ? "Pratinjau Formulir" : "Form Preview") . " - " . $form->title)'
+                                                                    @click="openReviewFormPreviewModal('{{ route('journal.settings.workflow.review-forms.preview', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', JSON.parse($el.dataset.title))"
                                                                     class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                     title="{{ $isId ? 'Pratinjau' : 'Preview' }}">
                                                                     <i class="fa-solid fa-eye text-sm"></i>
@@ -610,7 +627,8 @@
 
                                                             <!-- Edit Button -->
                                                             <button type="button"
-                                                                @click='editReviewForm = @js(["id" => $form->id, "title" => $form->title, "description" => $form->description, "is_active" => $form->is_active]); showEditReviewFormModal = true'
+                                                                :data-form='@json(["id" => (string)$form->id, "title" => $form->title, "description" => $form->description ?? "", "is_active" => (bool)$form->is_active])'
+                                                                @click="openEditReviewFormModal(JSON.parse($el.dataset.form))"
                                                                 class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Edit' : 'Edit' }}">
                                                                 <i class="fa-solid fa-pencil text-sm"></i>
@@ -618,7 +636,8 @@
 
                                                             <!-- Builder Button -->
                                                             <button type="button"
-                                                                @click='reviewFormIframeUrl = @js(route("journal.settings.workflow.review-forms.builder", ["journal" => $journal->slug, "reviewForm" => $form->id])); reviewFormIframeTitle = @js(($isId ? "Kelola Pertanyaan" : "Manage Questions") . " - " . $form->title); showReviewFormIframeModal = true'
+                                                                :data-title='@json(($isId ? "Kelola Pertanyaan" : "Manage Questions") . " - " . $form->title)'
+                                                                @click="openReviewFormPreviewModal('{{ route('journal.settings.workflow.review-forms.builder', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', JSON.parse($el.dataset.title))"
                                                                 class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Kelola Pertanyaan' : 'Manage Questions' }}">
                                                                 <i class="fa-solid fa-list-check text-sm"></i>
