@@ -601,7 +601,7 @@
                                                             <!-- Preview Button -->
                                                             @if ($form->hasElements())
                                                                 <button type="button"
-                                                                    @click="reviewFormIframeUrl = '{{ route('journal.settings.workflow.review-forms.preview', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}'; reviewFormIframeTitle = '{{ $isId ? "Pratinjau Formulir" : "Form Preview" }} - {{ $form->title }}'; showReviewFormIframeModal = true"
+                                                                    @click='reviewFormIframeUrl = @js(route("journal.settings.workflow.review-forms.preview", ["journal" => $journal->slug, "reviewForm" => $form->id])); reviewFormIframeTitle = @js(($isId ? "Pratinjau Formulir" : "Form Preview") . " - " . $form->title); showReviewFormIframeModal = true'
                                                                     class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                     title="{{ $isId ? 'Pratinjau' : 'Preview' }}">
                                                                     <i class="fa-solid fa-eye text-sm"></i>
@@ -610,7 +610,7 @@
 
                                                             <!-- Edit Button -->
                                                             <button type="button"
-                                                                @click="editReviewForm = {{ json_encode(['id' => $form->id, 'title' => $form->title, 'description' => $form->description, 'is_active' => $form->is_active]) }}; showEditReviewFormModal = true"
+                                                                @click='editReviewForm = @js(["id" => $form->id, "title" => $form->title, "description" => $form->description, "is_active" => $form->is_active]); showEditReviewFormModal = true'
                                                                 class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Edit' : 'Edit' }}">
                                                                 <i class="fa-solid fa-pencil text-sm"></i>
@@ -618,7 +618,7 @@
 
                                                             <!-- Builder Button -->
                                                             <button type="button"
-                                                                @click="reviewFormIframeUrl = '{{ route('journal.settings.workflow.review-forms.builder', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}'; reviewFormIframeTitle = '{{ $isId ? "Kelola Pertanyaan" : "Manage Questions" }} - {{ $form->title }}'; showReviewFormIframeModal = true"
+                                                                @click='reviewFormIframeUrl = @js(route("journal.settings.workflow.review-forms.builder", ["journal" => $journal->slug, "reviewForm" => $form->id])); reviewFormIframeTitle = @js(($isId ? "Kelola Pertanyaan" : "Manage Questions") . " - " . $form->title); showReviewFormIframeModal = true'
                                                                 class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Kelola Pertanyaan' : 'Manage Questions' }}">
                                                                 <i class="fa-solid fa-list-check text-sm"></i>
