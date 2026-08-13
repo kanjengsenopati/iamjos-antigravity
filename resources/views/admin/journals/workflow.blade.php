@@ -303,7 +303,7 @@
 
                                                 <!-- Edit Button -->
                                                 <button type="button"
-                                                    :data-checklist='@json(["id" => (string)$checklist->id, "content" => $checklist->content, "is_required" => (bool)$checklist->is_required])'
+                                                    data-checklist="{{ json_encode(['id' => (string)$checklist->id, 'content' => $checklist->content, 'is_required' => (bool)$checklist->is_required]) }}"
                                                     @click="openEditChecklistModal(JSON.parse($el.dataset.checklist))"
                                                     class="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
                                                     title="{{ $isId ? 'Ubah Item' : 'Edit Item' }}">
@@ -617,8 +617,8 @@
                                                             <!-- Preview Button -->
                                                             @if ($form->hasElements())
                                                                 <button type="button"
-                                                                    :data-title='@json(($isId ? "Pratinjau Formulir" : "Form Preview") . " - " . $form->title)'
-                                                                    @click="openReviewFormPreviewModal('{{ route('journal.settings.workflow.review-forms.preview', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', JSON.parse($el.dataset.title))"
+                                                                    data-title="{{ ($isId ? 'Pratinjau Formulir' : 'Form Preview') . ' - ' . $form->title }}"
+                                                                    @click="openReviewFormPreviewModal('{{ route('journal.settings.workflow.review-forms.preview', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', $el.dataset.title)"
                                                                     class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                     title="{{ $isId ? 'Pratinjau' : 'Preview' }}">
                                                                     <i class="fa-solid fa-eye text-sm"></i>
@@ -627,7 +627,7 @@
 
                                                             <!-- Edit Button -->
                                                             <button type="button"
-                                                                :data-form='@json(["id" => (string)$form->id, "title" => $form->title, "description" => $form->description ?? "", "is_active" => (bool)$form->is_active])'
+                                                                data-form="{{ json_encode(['id' => (string)$form->id, 'title' => $form->title, 'description' => $form->description ?? '', 'is_active' => (bool)$form->is_active]) }}"
                                                                 @click="openEditReviewFormModal(JSON.parse($el.dataset.form))"
                                                                 class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Edit' : 'Edit' }}">
@@ -636,8 +636,8 @@
 
                                                             <!-- Builder Button -->
                                                             <button type="button"
-                                                                :data-title='@json(($isId ? "Kelola Pertanyaan" : "Manage Questions") . " - " . $form->title)'
-                                                                @click="openReviewFormPreviewModal('{{ route('journal.settings.workflow.review-forms.builder', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', JSON.parse($el.dataset.title))"
+                                                                data-title="{{ ($isId ? 'Kelola Pertanyaan' : 'Manage Questions') . ' - ' . $form->title }}"
+                                                                @click="openReviewFormPreviewModal('{{ route('journal.settings.workflow.review-forms.builder', ['journal' => $journal->slug, 'reviewForm' => $form->id]) }}', $el.dataset.title)"
                                                                 class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
                                                                 title="{{ $isId ? 'Kelola Pertanyaan' : 'Manage Questions' }}">
                                                                 <i class="fa-solid fa-list-check text-sm"></i>

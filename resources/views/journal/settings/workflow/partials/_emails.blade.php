@@ -310,7 +310,7 @@
                                         @endif
 
                                         <button type="button" 
-                                            :data-template='@json($template)'
+                                            data-template="{{ json_encode($template) }}"
                                             @click="editTemplate(JSON.parse($el.dataset.template))"
                                             class="text-xs text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1">
                                             <i class="fa-solid fa-pen text-[10px]"></i>
