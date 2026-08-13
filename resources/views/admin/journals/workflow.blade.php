@@ -31,13 +31,20 @@
             this.editReviewForm = formObj;
             this.showEditReviewFormModal = true;
         },
+        closeIframeModal() {
+            this.showReviewFormIframeModal = false;
+            this.reviewFormIframeUrl = '';
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'review');
+            url.searchParams.set('subtab', 'forms');
+            window.location.href = url.toString();
+        },
         onIframeLoad(event) {
             try {
                 const iframeWindow = event.target.contentWindow;
                 const iframeUrl = iframeWindow.location.href;
                 if (iframeUrl.includes('/settings/workflow') && (iframeUrl.includes('tab=review') || !iframeUrl.includes('/review-forms/'))) {
-                    this.showReviewFormIframeModal = false;
-                    window.location.reload();
+                    this.closeIframeModal();
                 }
             } catch (e) {
                 // Keamanan lintas asal jika berbeda port/domain, tapi di sini satu domain
@@ -386,7 +393,7 @@
                 <!-- TAB 2: REVIEW -->
                 <!-- ============================================ -->
                 <div x-show="activeTab === 'review'" x-cloak>
-                    <div class="flex flex-col md:flex-row gap-6" x-data="{ reviewSubTab: 'setup' }">
+                    <div class="flex flex-col md:flex-row gap-6" x-data="{ reviewSubTab: new URLSearchParams(window.location.search).get('subtab') || 'setup' }">
                         <!-- Left Sidebar (Vertical Navigation) -->
                         <div class="w-full md:w-64 flex-shrink-0">
                             <nav class="flex flex-col space-y-1 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
@@ -1113,11 +1120,11 @@
 
         <!-- Wide Iframe Modal (Pratinjau & Kelola Pertanyaan) -->
         <div x-show="showReviewFormIframeModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;"
-            @keydown.escape.window="showReviewFormIframeModal = false; window.location.reload();">
+            @keydown.escape.window="closeIframeModal()">
             <div class="flex min-h-screen items-center justify-center p-4">
                 <!-- Backdrop -->
                 <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" 
-                    @click="showReviewFormIframeModal = false; window.location.reload();"></div>
+                    @click="closeIframeModal()"></div>
                 
                 <!-- Modal Card (Radius 24px / rounded-3xl) -->
                 <div class="relative bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden transition-all transform">
@@ -1126,7 +1133,7 @@
                         <div>
                             <h3 class="text-[16px] font-semibold text-slate-800" x-text="reviewFormIframeTitle"></h3>
                         </div>
-                        <button type="button" @click="showReviewFormIframeModal = false; window.location.reload();"
+                        <button type="button" @click="closeIframeModal()"
                             class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
                             <i class="fa-solid fa-xmark text-lg"></i>
                         </button>
