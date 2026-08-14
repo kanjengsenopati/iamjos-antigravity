@@ -282,33 +282,12 @@ class SubmissionWorkflowController extends Controller
             // Already created by a parallel request, ignore and continue
         }
 
-        // Notify the assigned editor
+        // Notify the assigned editor (Standard OJS Editor Assignment Notification)
         if ($user) {
             try {
                 $user->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send editor assignment email: ' . $e->getMessage());
-            }
-
-            // Notify other assigned editors
-            try {
-                $otherEditors = $submission->activeEditors()
-                    ->where('user_id', '!=', $user->id)
-                    ->where('user_id', '!=', auth()->id())
-                    ->with('user')->get()
-                    ->map(fn($a) => $a->user)
-                    ->filter();
-
-                foreach ($otherEditors as $otherEditor) {
-                    $otherEditor->notify(new \App\Notifications\WorkflowEventNotification(
-                        $submission,
-                        'New Editor Assigned',
-                        "{$user->name} has been assigned as an editor to the submission: \"{$submission->title}\" by " . auth()->user()->name . ".",
-                        url("/{$journal->slug}/submissions/{$submission->url_slug}")
-                    ));
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send editor assignment notification to other editors: ' . $e->getMessage());
             }
 
             // Log the event

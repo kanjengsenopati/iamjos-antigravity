@@ -372,6 +372,23 @@ class SubmissionLog extends Model
                     break;
             }
 
+            // Jangan kirim notifikasi generik jika event tersebut sudah memiliki alur notifikasi terdedikasi
+            $skipGenericBroadcast = in_array($log->event_type, [
+                self::EVENT_SUBMITTED,
+                self::EVENT_EDITOR_ASSIGNED,
+                self::EVENT_EDITOR_REMOVED,
+                self::EVENT_STAGE_CHANGED,
+                self::EVENT_METADATA_UPDATED,
+                self::EVENT_FILE_UPLOADED,
+                self::EVENT_FILE_DELETED,
+                self::EVENT_PUBLISHED,
+                self::EVENT_DECISION_MADE,
+            ]);
+
+            if ($skipGenericBroadcast) {
+                return;
+            }
+
             // Kirim notifikasi generik ke semua Journal Editor, Journal Manager, dan Principal Contact
             // untuk SETIAP log workflow naskah (kecuali yang sudah dikirimi notifikasi spesifik di atas)
             foreach ($allJournalEditors as $editor) {
