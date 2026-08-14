@@ -25,17 +25,6 @@ class SubmissionReceived extends Notification
     public function via(object $notifiable): array
     {
         $isAnonymous = $notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable;
-        $journal = $this->submission->journal;
-        if ($journal) {
-            $disabled = \App\Models\EmailTemplate::where('journal_id', $journal->id)
-                ->where('key', 'SUBMISSION_ACK')
-                ->where('is_enabled', false)
-                ->exists();
-            if ($disabled) {
-                return $isAnonymous ? [] : ['database'];
-            }
-        }
-
         return $isAnonymous ? ['mail'] : ['mail', 'database'];
     }
 
@@ -57,7 +46,7 @@ class SubmissionReceived extends Notification
         $recipientName = $notifiable->name ?? ($this->submission->authors->first()->name ?? 'Author');
 
         $mailMessage = (new MailMessage)
-            ->subject('[' . ($journal->abbreviation ?? $journal->name ?? 'JOURNAL') . '] Submission Acknowledgement')
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $recipientName . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
             ->line('Thank you for submitting the manuscript, "' . $this->submission->title . '".')

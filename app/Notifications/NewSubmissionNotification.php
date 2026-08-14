@@ -52,7 +52,7 @@ class NewSubmissionNotification extends Notification
         $recipientName = $notifiable->name ?? 'Editor';
 
         $mailMessage = (new MailMessage)
-            ->subject('[' . ($journal->abbreviation ?? $journal->name ?? 'JOURNAL') . '] New Submission Received: ' . $this->submission->title)
+            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
             ->greeting('Dear ' . $recipientName . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
             ->line('A new submission titled "' . $this->submission->title . '" has been submitted by ' . $submitterName . '.')
