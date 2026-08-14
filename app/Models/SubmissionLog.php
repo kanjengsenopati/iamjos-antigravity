@@ -42,6 +42,8 @@ class SubmissionLog extends Model
     public const EVENT_DISCUSSION_MESSAGE    = 'discussion_message_sent';
     public const EVENT_FILE_UPLOADED         = 'file_uploaded';
     public const EVENT_METADATA_UPDATED      = 'metadata_updated';
+    public const EVENT_PARTICIPANT_ADDED     = 'participant_added';
+    public const EVENT_PARTICIPANT_REMOVED   = 'participant_removed';
     public const EVENT_PUBLISHED             = 'published';
     public const EVENT_UNPUBLISHED           = 'unpublished';
 
