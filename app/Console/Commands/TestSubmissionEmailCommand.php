@@ -91,7 +91,13 @@ class TestSubmissionEmailCommand extends Command
         $this->newLine();
         $this->line("<fg=yellow;options=bold>3. Loading Journal & Submission Context:</>");
         $journalSlug = $this->option('journal');
-        $journal = $journalSlug ? (Journal::where('slug', $journalSlug)->orWhere('id', $journalSlug)->first()) : Journal::first();
+        if ($journalSlug) {
+            $journal = \Illuminate\Support\Str::isUuid($journalSlug)
+                ? Journal::where('id', $journalSlug)->first()
+                : Journal::where('slug', $journalSlug)->first();
+        } else {
+            $journal = Journal::first();
+        }
         
         if (!$journal) {
             $this->warn("   No journal found in database. Using mock journal object.");
