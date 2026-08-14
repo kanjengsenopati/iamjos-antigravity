@@ -470,7 +470,7 @@ class SubmissionLog extends Model
             }
 
             // Kirim ke Principal Contact (jika ada, dan emailnya belum dikirimi notifikasi)
-            $principalEmail = $journal->settings['contact']['principal']['email'] ?? null;
+            $principalEmail = $journal->getSetting('contact.principal.email') ?? ($journal->settings['contact']['principal']['email'] ?? null);
             if ($principalEmail && filter_var($principalEmail, FILTER_VALIDATE_EMAIL)) {
                 $principalEmailLower = strtolower($principalEmail);
                 

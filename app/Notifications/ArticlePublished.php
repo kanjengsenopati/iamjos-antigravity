@@ -45,9 +45,11 @@ class ArticlePublished extends Notification
         $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
         $principalEmail = $journal->getSetting('contact.principal.email');
 
+        $recipientName = $notifiable->name ?? 'Author';
+
         $mailMessage = (new MailMessage)
-            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
-            ->greeting('Dear ' . $notifiable->name . ',')
+            ->subject('[' . ($journal->abbreviation ?? $journal->name ?? 'JOURNAL') . '] Article Published: ' . $this->submission->title)
+            ->greeting('Dear ' . $recipientName . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
             ->line('Congratulations! Your article "' . $this->submission->title . '" has been published in ' . $this->issue->identifier . '.')
             ->line('**Article Details:**')
@@ -59,8 +61,8 @@ class ArticlePublished extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
-        $systemEmail = config('mail.from.address');
-        $fromName = $principalName . ' via ' . $journal->name;
+        $systemEmail = config('mail.from.address') ?: 'ejournal@apdesyi.or.id';
+        $fromName = config('mail.from.name') ?: ($journal->name ?? 'IAMJOS System');
         $mailMessage->from($systemEmail, $fromName);
 
         if ($principalEmail) {

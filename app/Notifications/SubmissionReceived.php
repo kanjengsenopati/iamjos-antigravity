@@ -57,13 +57,13 @@ class SubmissionReceived extends Notification
         $recipientName = $notifiable->name ?? ($this->submission->authors->first()->name ?? 'Author');
 
         $mailMessage = (new MailMessage)
-            ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
+            ->subject('[' . ($journal->abbreviation ?? $journal->name ?? 'JOURNAL') . '] Submission Acknowledgement')
             ->greeting('Dear ' . $recipientName . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
             ->line('Thank you for submitting the manuscript, "' . $this->submission->title . '".')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
-            ->line('- **Authors:** ' . ($authorList ?: $notifiable->name))
+            ->line('- **Authors:** ' . ($authorList ?: $recipientName))
             ->line('- **Submission ID:** ' . ($this->submission->seq_id ?? 'Pending'))
             ->line('- **Submitted:** ' . ($this->submission->submitted_at?->format('F j, Y') ?? date('F j, Y')))
             ->line('- **Username:** ' . ($notifiable->username ?? 'N/A'))
@@ -71,8 +71,8 @@ class SubmissionReceived extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
-        $systemEmail = config('mail.from.address');
-        $fromName = $principalName . ' via ' . $journal->name;
+        $systemEmail = config('mail.from.address') ?: 'ejournal@apdesyi.or.id';
+        $fromName = config('mail.from.name') ?: 'IAMJOS System';
         $mailMessage->from($systemEmail, $fromName);
 
         if ($principalEmail) {

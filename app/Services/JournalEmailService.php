@@ -83,11 +83,15 @@ class JournalEmailService
                 $message->to($recipientEmail, $recipientName)
                     ->subject($subject);
                 
+                $systemEmail = config('mail.from.address') ?: 'ejournal@apdesyi.or.id';
+                $fromName = config('mail.from.name') ?: ($journal->name ?? 'IAMJOS System');
                 $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
-                $principalEmail = $journal->getSetting('contact.principal.email') ?? config('mail.from.address');
+                $principalEmail = $journal->getSetting('contact.principal.email');
 
-                $message->from($principalEmail, $principalName);
-                $message->replyTo($principalEmail, $principalName);
+                $message->from($systemEmail, $fromName);
+                if ($principalEmail) {
+                    $message->replyTo($principalEmail, $principalName);
+                }
                 
                 $message->html($bodyHtml);
             });

@@ -81,6 +81,13 @@ class EmailTemplate extends Model
                 'description' => 'Sent to co-authors when a new submission is received.',
             ],
             [
+                'key' => 'NOTIFICATION',
+                'name' => 'New Submission Notification (Manager / Editor)',
+                'subject' => 'New Submission Received: {$submissionTitle}',
+                'body' => "Dear {\$recipientName},\n\nA new submission titled \"{\$submissionTitle}\" has been submitted to {\$journalName} by {\$submitterName}.\n\nSubmission Details:\n- Title: {\$submissionTitle}\n- Section: {\$sectionName}\n- Submitted: {\$submittedDate}\n\nSubmission URL: {\$submissionUrl}\n\n{\$signature}",
+                'description' => 'Sent to journal managers and editors when a new submission is received.',
+            ],
+            [
                 'key' => 'REVIEW_REQUEST',
                 'name' => 'Review Request',
                 'subject' => 'Article Review Request',

@@ -121,8 +121,8 @@ class SubmissionDecision extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
-        $systemEmail = config('mail.from.address');
-        $fromName = $principalName . ' via ' . $journal->name;
+        $systemEmail = config('mail.from.address') ?: 'ejournal@apdesyi.or.id';
+        $fromName = config('mail.from.name') ?: ($journal->name ?? 'IAMJOS System');
         $mail->from($systemEmail, $fromName);
 
         if ($principalEmail) {

@@ -67,9 +67,11 @@ class WorkflowEventNotification extends Notification
         $principalName = $journal ? ($journal->getSetting('contact.principal.name') ?? $journal->name) : 'Journal';
         $principalEmail = $journal ? $journal->getSetting('contact.principal.email') : null;
 
+        $recipientName = $notifiable->name ?? 'User';
+
         $mailMessage = (new MailMessage)
-            ->subject('[' . ($journal?->abbreviation ?? 'JOURNAL') . '] New notification from ' . ($journal?->name ?? 'Journal'))
-            ->greeting('Dear ' . $notifiable->name . ',')
+            ->subject('[' . ($journal?->abbreviation ?? $journal?->name ?? 'JOURNAL') . '] New notification from ' . ($journal?->name ?? 'Journal'))
+            ->greeting('Dear ' . $recipientName . ',')
             ->line('You have a new notification from ' . ($journal?->name ?? 'Journal') . ':');
 
         foreach ($bodyLines as $line) {
@@ -83,8 +85,8 @@ class WorkflowEventNotification extends Notification
             ->line('Link: ' . $this->actionUrl)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . ($journal?->name ?? 'IAMJOS'));
 
-        $systemEmail = config('mail.from.address');
-        $fromName = $principalName . ' via ' . ($journal?->name ?? 'Journal');
+        $systemEmail = config('mail.from.address') ?: 'ejournal@apdesyi.or.id';
+        $fromName = config('mail.from.name') ?: ($journal?->name ?? 'IAMJOS System');
         $mailMessage->from($systemEmail, $fromName);
 
         if ($principalEmail) {
