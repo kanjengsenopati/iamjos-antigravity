@@ -376,12 +376,14 @@ class SubmissionLog extends Model
             $skipGenericBroadcast = in_array($log->event_type, [
                 self::EVENT_SUBMITTED,
                 self::EVENT_EDITOR_ASSIGNED,
-                self::EVENT_EDITOR_REMOVED,
+                self::EVENT_EDITOR_UNASSIGNED,
+                self::EVENT_REVIEWER_ASSIGNED,
+                self::EVENT_REVIEWER_UNASSIGNED,
                 self::EVENT_STAGE_CHANGED,
                 self::EVENT_METADATA_UPDATED,
                 self::EVENT_FILE_UPLOADED,
-                self::EVENT_FILE_DELETED,
                 self::EVENT_PUBLISHED,
+                self::EVENT_UNPUBLISHED,
                 self::EVENT_DECISION_MADE,
             ]);
 
