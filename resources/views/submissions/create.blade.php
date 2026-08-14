@@ -215,7 +215,10 @@
                             <div id="abstractEditor" class="rounded-lg border border-gray-300">{!! old('abstract', $draft->abstract ?? '') !!}</div>
                             <textarea name="abstract" id="abstractHidden" class="hidden" style="display: none;">{{ old('abstract', $draft->abstract ?? '') }}</textarea>
                         </div>
-                        <div x-data="keywordInputCustom({{ json_encode(old('keywords', [])) }})" class="relative">
+                        @php
+                            $initialKeywords = old('keywords', ($draft && $draft->relationLoaded('keywords') ? $draft->keywords->pluck('content')->toArray() : ($draft ? $draft->keywords()->pluck('content')->toArray() : [])));
+                        @endphp
+                        <div x-data="keywordInputCustom({{ json_encode($initialKeywords) }})" class="relative">
                             <label class="flex items-center text-sm font-medium text-gray-700 mb-1">
                                 {{ $isId ? 'Kata Kunci' : 'Keywords' }}
                                 <i class="fa-solid fa-circle-question text-gray-400 cursor-pointer ml-1.5" 

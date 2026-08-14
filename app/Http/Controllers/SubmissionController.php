@@ -269,7 +269,7 @@ class SubmissionController extends Controller
             $draft = Submission::where('id', $draftId)
                 ->where('user_id', $user->id)
                 ->where('status', Submission::STATUS_DRAFT)
-                ->with(['authors', 'files'])
+                ->with(['authors', 'files', 'keywords'])
                 ->first();
         }
 
@@ -425,6 +425,8 @@ class SubmissionController extends Controller
                         }
                     }
                     $submission->keywords()->sync(array_unique($keywordIds));
+                } else {
+                    $submission->keywords()->sync([]);
                 }
 
                 // 2. Upload File
@@ -573,6 +575,8 @@ class SubmissionController extends Controller
             'authors.*.affiliation' => 'nullable|string|max:255',
             'authors.*.country' => 'nullable|string|max:100',
             'primary_contact' => 'nullable|integer|min:0',
+            'keywords' => 'nullable|array',
+            'keywords.*' => 'string|max:100',
         ]);
 
         DB::beginTransaction();
@@ -681,6 +685,24 @@ class SubmissionController extends Controller
                     ]);
                 }
                 SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id);
+            }
+
+            // Sync Keywords
+            if (!empty($validated['keywords'])) {
+                $keywordIds = [];
+                foreach ($validated['keywords'] as $content) {
+                    $splitContents = preg_split('/[,;\n]+/', (string) $content, -1, PREG_SPLIT_NO_EMPTY);
+                    foreach ($splitContents as $rawTag) {
+                        $cleanTag = trim($rawTag);
+                        if ($cleanTag !== '') {
+                            $keyword = \App\Models\Keyword::firstOrCreate(['content' => $cleanTag]);
+                            $keywordIds[] = $keyword->id;
+                        }
+                    }
+                }
+                $submission->keywords()->sync(array_unique($keywordIds));
+            } else {
+                $submission->keywords()->sync([]);
             }
 
             DB::commit();
@@ -1092,7 +1114,7 @@ class SubmissionController extends Controller
         ]);
 
         // Sync keywords (many-to-many)
-        if (isset($validated['keywords'])) {
+        if (!empty($validated['keywords'])) {
             $keywordIds = [];
             foreach ($validated['keywords'] as $content) {
                 $splitContents = preg_split('/[,;\n]+/', (string) $content, -1, PREG_SPLIT_NO_EMPTY);
@@ -1105,6 +1127,8 @@ class SubmissionController extends Controller
                 }
             }
             $submission->keywords()->sync(array_unique($keywordIds));
+        } else {
+            $submission->keywords()->sync([]);
         }
 
         // Log metadata diff if any tracked field changed
