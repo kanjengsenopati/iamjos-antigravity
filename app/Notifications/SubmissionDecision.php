@@ -40,6 +40,8 @@ class SubmissionDecision extends Notification
             default => null,
         };
 
+        $isAnonymous = $notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable;
+
         if ($key) {
             $journal = $this->submission->journal;
             if ($journal) {
@@ -48,12 +50,12 @@ class SubmissionDecision extends Notification
                     ->where('is_enabled', false)
                     ->exists();
                 if ($disabled) {
-                    return ['database'];
+                    return $isAnonymous ? [] : ['database'];
                 }
             }
         }
 
-        return ['mail', 'database'];
+        return $isAnonymous ? ['mail'] : ['mail', 'database'];
     }
 
     /**

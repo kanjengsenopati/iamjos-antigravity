@@ -30,7 +30,8 @@ class NewSubmissionNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        $isAnonymous = $notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable;
+        return $isAnonymous ? ['mail'] : ['mail', 'database'];
     }
 
     /**
@@ -48,9 +49,11 @@ class NewSubmissionNotification extends Notification
         $principalName = $journal->getSetting('contact.principal.name') ?? $journal->name;
         $principalEmail = $journal->getSetting('contact.principal.email');
 
+        $recipientName = $notifiable->name ?? 'Editor';
+
         $mailMessage = (new MailMessage)
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
-            ->greeting('Dear ' . $notifiable->name . ',')
+            ->greeting('Dear ' . $recipientName . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
             ->line('A new submission titled "' . $this->submission->title . '" has been submitted by ' . $submitterName . '.')
             ->line('**Submission Details:**')

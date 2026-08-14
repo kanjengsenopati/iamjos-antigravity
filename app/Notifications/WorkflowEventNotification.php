@@ -52,7 +52,8 @@ class WorkflowEventNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        $isAnonymous = $notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable;
+        return $isAnonymous ? ['mail'] : ['mail', 'database'];
     }
 
     /**

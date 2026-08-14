@@ -219,19 +219,25 @@ class SubmissionLog extends Model
 
             // 1. Ambil Editor & Manager Jurnal (Aktif & Global) berdasarkan permission_level
             // OJS 3.3 default: Super Admin (0), Admin/Manager (1), Editor/Section Editor (2)
-            $editorRoles = Role::withoutGlobalScope('journal')
-                ->whereIn('permission_level', [
-                    Role::LEVEL_SUPER_ADMIN,
-                    Role::LEVEL_ADMIN, // Level 1 (Manager/Admin)
-                    Role::LEVEL_EDITOR // Level 2 (Editor/Section Editor)
-                ])
-                ->where('journal_id', $journal->id)
-                ->pluck('id');
-
-            $allJournalEditors = User::whereHas('journalRoles', function ($q) use ($journal, $editorRoles) {
+            $allJournalEditors = User::whereHas('journalRoles', function ($q) use ($journal) {
                 $q->where('journal_id', $journal->id)
-                  ->whereIn('role_id', $editorRoles);
+                  ->whereHas('role', function ($rq) {
+                      $rq->whereIn('permission_level', [
+                          Role::LEVEL_SUPER_ADMIN,
+                          Role::LEVEL_MANAGER,
+                          Role::LEVEL_ADMIN,
+                          Role::LEVEL_EDITOR,
+                          Role::LEVEL_SECTION_EDITOR,
+                      ]);
+                  });
             })->get();
+
+            // Jika belum ada editor/manager khusus di jurnal, sertakan Super Admin sistem
+            if ($allJournalEditors->isEmpty()) {
+                $allJournalEditors = User::whereHas('roles', function ($q) {
+                    $q->where('name', Role::ROLE_SUPERADMIN);
+                })->get();
+            }
 
             // Filter: Jika artikel sudah memiliki editor yang ditugaskan,
             // maka semua notifikasi selanjutnya hanya dikirim ke editor tersebut.
