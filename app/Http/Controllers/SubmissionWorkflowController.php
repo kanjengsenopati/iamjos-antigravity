@@ -971,6 +971,37 @@ class SubmissionWorkflowController extends Controller
 
             DB::commit();
 
+            // Notify corresponding author that submission has entered Review stage
+            try {
+                $author = $submission->author; // The submitting user
+                if ($author) {
+                    $submissionUrl = route('journal.submissions.show', [
+                        'journal' => $journal->slug,
+                        'submission' => $submission->url_slug ?? $submission->slug
+                    ]);
+                    
+                    $vars = [
+                        'submissionTitle' => $submission->title,
+                        'submissionUrl' => $submissionUrl,
+                        'authorName' => $author->name ?? $author->full_name ?? 'Author',
+                    ];
+
+                    $emailSent = \App\Services\JournalEmailService::sendNotification(
+                        $journal,
+                        $author,
+                        'SUBMISSION_UNDER_REVIEW',
+                        $vars
+                    );
+
+                    // Fallback to default notification if email template fails/disabled
+                    if (!$emailSent && method_exists($author, 'notify')) {
+                        $author->notify(new \App\Notifications\SubmissionDecision($submission, 'under_review'));
+                    }
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to notify author on send to review: ' . $e->getMessage());
+            }
+
             // Audit log the stage transition
             SubmissionLog::log(
                 submission:  $submission,

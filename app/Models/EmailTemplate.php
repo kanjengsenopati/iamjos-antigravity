@@ -81,6 +81,13 @@ class EmailTemplate extends Model
                 'description' => 'Sent to co-authors when a new submission is received.',
             ],
             [
+                'key' => 'SUBMISSION_UNDER_REVIEW',
+                'name' => 'Submission Sent to Review',
+                'subject' => 'Update on Your Submission: {$submissionTitle}',
+                'body' => "Dear {\$authorName},\n\nWe are pleased to inform you that your manuscript, \"{\$submissionTitle},\" has passed the initial desk review and has been sent to our reviewers for the peer review process.\n\nYou can track the progress of your submission by logging into the journal website:\n\nSubmission URL: {\$submissionUrl}\n\nWe will notify you once the reviewers have submitted their feedback and an editorial decision has been made.\n\nThank you for considering {\$journalName} as a venue for your work.\n\n{\$signature}",
+                'description' => 'Sent to the author when their submission is promoted to the Review stage.',
+            ],
+            [
                 'key' => 'NOTIFICATION',
                 'name' => 'New Submission Notification (Manager / Editor)',
                 'subject' => 'New Submission Received: {$submissionTitle}',

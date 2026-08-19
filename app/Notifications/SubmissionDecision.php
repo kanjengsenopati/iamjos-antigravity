@@ -104,6 +104,11 @@ class SubmissionDecision extends Notification
                     ->line('**Title:** ' . $this->submission->title);
                 break;
 
+            case 'under_review':
+                $mail->line('We are pleased to inform you that your manuscript "' . $this->submission->title . '" has passed the initial desk review and has been sent for peer review.')
+                    ->line('**Title:** ' . $this->submission->title);
+                break;
+
             default:
                 $mail->line('There is an update on your submission "' . $this->submission->title . '".')
                     ->line('**Title:** ' . $this->submission->title)
@@ -143,24 +148,28 @@ class SubmissionDecision extends Notification
             'accepted' => 'Submission Accepted',
             'rejected' => 'Submission Declined',
             'revision_required' => 'Revision Required',
+            'under_review' => 'Sent to Review',
         ];
 
         $types = [
             'accepted' => 'success',
             'rejected' => 'danger',
             'revision_required' => 'warning',
+            'under_review' => 'info',
         ];
 
         $icons = [
             'accepted' => 'fa-check-circle',
             'rejected' => 'fa-times-circle',
             'revision_required' => 'fa-edit',
+            'under_review' => 'fa-magnifying-glass',
         ];
 
         $messages = [
             'accepted' => 'Congratulations! Your submission has been accepted.',
             'rejected' => 'Your submission has been declined.',
             'revision_required' => 'Revision required for your submission.',
+            'under_review' => 'Your submission has passed desk review and is now under peer review.',
         ];
 
         return [
