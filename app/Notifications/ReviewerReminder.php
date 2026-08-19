@@ -30,7 +30,7 @@ class ReviewerReminder extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = ['mail', 'database'];
+        $channels = ['database'];
         
         // Add WhatsApp if configured and enabled
         if (!empty($notifiable->phone)) {
@@ -121,3 +121,4 @@ class ReviewerReminder extends Notification implements ShouldQueue
         ];
     }
 }
+

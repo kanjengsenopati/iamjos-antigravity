@@ -31,7 +31,7 @@ class NewSubmissionNotification extends Notification
     public function via(object $notifiable): array
     {
         $isAnonymous = $notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable;
-        return $isAnonymous ? ['mail'] : ['mail', 'database'];
+        return $isAnonymous ? ['mail'] : ['database'];
     }
 
     /**
@@ -100,3 +100,4 @@ class NewSubmissionNotification extends Notification
         ];
     }
 }
+

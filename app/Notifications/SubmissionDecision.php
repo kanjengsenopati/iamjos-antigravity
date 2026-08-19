@@ -55,7 +55,7 @@ class SubmissionDecision extends Notification
             }
         }
 
-        return $isAnonymous ? ['mail'] : ['mail', 'database'];
+        return $isAnonymous ? ['mail'] : ['database'];
     }
 
     /**
@@ -187,3 +187,4 @@ class SubmissionDecision extends Notification
         ];
     }
 }
+

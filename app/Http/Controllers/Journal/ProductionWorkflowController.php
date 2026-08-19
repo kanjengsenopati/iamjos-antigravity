@@ -349,6 +349,18 @@ class ProductionWorkflowController extends Controller
         // Notify author via email
         if ($submission->author) {
             try {
+                $issueTitle = $submission->issue ? 'Volume ' . $submission->issue->volume . ' Issue ' . $submission->issue->number : 'the latest issue';
+                \App\Services\JournalEmailService::sendNotification(
+                    $journal,
+                    $submission->author,
+                    'PUBLISH_NOTIFY',
+                    [
+                        'authorName' => $submission->author->name,
+                        'submissionTitle' => $submission->title,
+                        'issueTitle' => $issueTitle,
+                        'articleUrl' => route('journal.public.article', ['journal' => $journal->slug, 'slug' => $submission->url_slug ?? $submission->slug])
+                    ]
+                );
                 $submission->author->notify(new \App\Notifications\ArticlePublished($submission, $submission->issue));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send article published email to author from production: ' . $e->getMessage());

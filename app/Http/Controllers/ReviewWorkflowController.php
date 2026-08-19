@@ -133,6 +133,17 @@ class ReviewWorkflowController extends Controller
 
                 if ($reviewer) {
                     try {
+                        \App\Services\JournalEmailService::sendNotification(
+                            $journal,
+                            $reviewer,
+                            'REVIEW_REQUEST',
+                            [
+                                'reviewerName' => $reviewer->name,
+                                'submissionTitle' => $submission->title,
+                                'reviewUrl' => route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->id]),
+                                'reviewDueDate' => \Carbon\Carbon::parse($assignment->due_date)->format('Y-m-d')
+                            ]
+                        );
                         $reviewer->notify(new \App\Notifications\ReviewInvitation($assignment));
                     } catch (\Throwable $e) {
                         Log::error('Review invitation notification failed', [

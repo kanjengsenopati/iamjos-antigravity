@@ -118,6 +118,17 @@ class EditorDecisionController extends Controller
         $reviewer = User::find($validated['reviewer_id']);
         if ($reviewer) {
             try {
+                \App\Services\JournalEmailService::sendNotification(
+                    $journal,
+                    $reviewer,
+                    'REVIEW_REQUEST',
+                    [
+                        'reviewerName' => $reviewer->name,
+                        'submissionTitle' => $submission->title,
+                        'reviewUrl' => route('journal.reviewer.show', ['journal' => $journal->slug, 'identifier' => $assignment->id]),
+                        'reviewDueDate' => \Carbon\Carbon::parse($assignment->due_date)->format('Y-m-d')
+                    ]
+                );
                 $reviewer->notify(new ReviewInvitation($assignment));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send reviewer invitation email: ' . $e->getMessage());

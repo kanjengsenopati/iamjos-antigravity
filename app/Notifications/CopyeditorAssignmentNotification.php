@@ -37,7 +37,7 @@ class CopyeditorAssignmentNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['database'];
     }
 
     /**
@@ -103,3 +103,4 @@ class CopyeditorAssignmentNotification extends Notification
         ];
     }
 }
+

@@ -37,7 +37,7 @@ class NewDiscussionMessageNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['database'];
     }
 
     /**
@@ -124,3 +124,4 @@ class NewDiscussionMessageNotification extends Notification
         ];
     }
 }
+

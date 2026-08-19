@@ -156,6 +156,18 @@ class ReviewerController extends Controller
                 ->filter();
 
             foreach ($assignedEditors as $assignedEditor) {
+                \App\Services\JournalEmailService::sendNotification(
+                    $journal,
+                    $assignedEditor,
+                    'REVIEW_CONFIRM',
+                    [
+                        'editorName' => $assignedEditor->name,
+                        'reviewerName' => $assignment->reviewer->name,
+                        'submissionTitle' => $assignment->submission->title,
+                        'reviewUrl' => url("/{$journal->slug}/submissions/{$assignment->submission->url_slug}?tab=review"),
+                        'reviewDueDate' => \Carbon\Carbon::parse($assignment->due_date)->format('Y-m-d')
+                    ]
+                );
                 $assignedEditor->notify(new \App\Notifications\WorkflowEventNotification(
                     $assignment->submission,
                     'Review Invitation Accepted',
@@ -221,6 +233,16 @@ class ReviewerController extends Controller
             $declineReason = $request->input('reason') ? "Reason: " . $request->input('reason') : "No reason provided.";
 
             foreach ($assignedEditors as $assignedEditor) {
+                \App\Services\JournalEmailService::sendNotification(
+                    $journal,
+                    $assignedEditor,
+                    'REVIEW_DECLINE',
+                    [
+                        'editorName' => $assignedEditor->name,
+                        'reviewerName' => $assignment->reviewer->name,
+                        'submissionTitle' => $assignment->submission->title
+                    ]
+                );
                 $assignedEditor->notify(new \App\Notifications\WorkflowEventNotification(
                     $assignment->submission,
                     'Review Invitation Declined',
@@ -434,12 +456,23 @@ class ReviewerController extends Controller
         )->get();
 
         foreach ($editors as $editor) {
-            // Send email notification (Now handled globally by SubmissionLog::log)
-            // try {
-            //     $editor->notify(new ReviewCompleted($assignment));
-            // } catch (\Throwable $e) {
-            //     Log::error('ReviewCompleted email failed for editor ' . $editor->id . ': ' . $e->getMessage());
-            // }
+            // Send email notification via JournalEmailService and log to database
+            try {
+                \App\Services\JournalEmailService::sendNotification(
+                    $assignment->submission->journal,
+                    $editor,
+                    'REVIEW_COMPLETE',
+                    [
+                        'editorName' => $editor->name,
+                        'reviewerName' => $assignment->reviewer->name,
+                        'submissionTitle' => $assignment->submission->title,
+                        'submissionUrl' => url("/{$assignment->submission->journal->slug}/submissions/{$assignment->submission->url_slug}?tab=review")
+                    ]
+                );
+                $editor->notify(new \App\Notifications\ReviewCompleted($assignment));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('ReviewCompleted email failed for editor ' . $editor->id . ': ' . $e->getMessage());
+            }
 
             // Send WhatsApp notification
             try {

@@ -36,7 +36,7 @@ class ReviewInvitation extends Notification
             }
         }
 
-        return ['mail', 'database'];
+        return ['database'];
     }
 
     /**
@@ -101,3 +101,4 @@ class ReviewInvitation extends Notification
         ];
     }
 }
+

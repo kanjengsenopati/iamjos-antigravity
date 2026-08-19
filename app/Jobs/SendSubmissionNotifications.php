@@ -56,6 +56,16 @@ class SendSubmissionNotifications
 
             // Notify Submitting Author (Submission Acknowledgement)
             try {
+                \App\Services\JournalEmailService::sendNotification(
+                    $journal,
+                    $this->author,
+                    'SUBMISSION_ACK',
+                    [
+                        'authorName' => $this->author->name,
+                        'submissionTitle' => $this->submission->title,
+                        'submissionUrl' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug ?? $this->submission->slug])
+                    ]
+                );
                 $this->author->notify(new SubmissionReceived($this->submission));
                 $sentEmails[] = $submitterEmail;
                 Log::info("Submission notification email sent to submitting author: {$submitterEmail}");
@@ -74,6 +84,16 @@ class SendSubmissionNotifications
                     try {
                         $coAuthorUser = $subAuthor->user ?? User::where('email', $coAuthorEmail)->first();
                         if ($coAuthorUser) {
+                            \App\Services\JournalEmailService::sendNotification(
+                                $journal,
+                                $coAuthorUser,
+                                'SUBMISSION_ACK_NOT_USER',
+                                [
+                                    'recipientName' => $coAuthorUser->name,
+                                    'authorName' => $this->author->name,
+                                    'submissionTitle' => $this->submission->title
+                                ]
+                            );
                             $coAuthorUser->notify(new SubmissionReceived($this->submission));
                         } else {
                             // On-demand notification or Template fallback
@@ -119,6 +139,19 @@ class SendSubmissionNotifications
                 }
 
                 try {
+                    \App\Services\JournalEmailService::sendNotification(
+                        $journal,
+                        $editor,
+                        'NOTIFICATION',
+                        [
+                            'recipientName' => $editor->name,
+                            'submissionTitle' => $this->submission->title,
+                            'sectionName' => $this->submission->section?->title ?? 'Articles',
+                            'submittedDate' => $this->submission->submitted_at?->format('Y-m-d') ?? date('Y-m-d'),
+                            'submitterName' => $this->author->name,
+                            'submissionUrl' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug ?? $this->submission->slug])
+                        ]
+                    );
                     $editor->notify(new NewSubmissionNotification($this->submission));
                     $sentEmails[] = $editorEmail;
                     Log::info("New submission email sent to editor/manager: {$editorEmail}");
@@ -135,6 +168,19 @@ class SendSubmissionNotifications
                     try {
                         $principalUser = User::where('email', $principalEmailClean)->first();
                         if ($principalUser) {
+                            \App\Services\JournalEmailService::sendNotification(
+                                $journal,
+                                $principalUser,
+                                'NOTIFICATION',
+                                [
+                                    'recipientName' => $principalUser->name,
+                                    'submissionTitle' => $this->submission->title,
+                                    'sectionName' => $this->submission->section?->title ?? 'Articles',
+                                    'submittedDate' => $this->submission->submitted_at?->format('Y-m-d') ?? date('Y-m-d'),
+                                    'submitterName' => $this->author->name,
+                                    'submissionUrl' => route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug ?? $this->submission->slug])
+                                ]
+                            );
                             $principalUser->notify(new NewSubmissionNotification($this->submission));
                         } else {
                             Notification::route('mail', $principalEmailClean)
