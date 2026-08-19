@@ -24,19 +24,24 @@
     $pubAbstract = $pub->abstract ?? $article->abstract;
     
     // Fetch ALL authors across both submission_id and publication_id scopes
+    // Deduplicate by first_name+last_name+email to prevent duplicate citation_author meta tags
     $pubAuthors  = \App\Models\SubmissionAuthor::where(function ($q) use ($article, $pub) {
         $q->where('submission_id', $article->id);
         if (isset($pub->id)) {
             $q->orWhere('publication_id', $pub->id);
         }
-    })->orderBy('sort_order')->orderBy('created_at')->get()->unique('id')->values();
+    })->orderBy('sort_order')->orderBy('created_at')->get()->unique(function ($author) {
+        return strtolower(trim(($author->first_name ?? '') . '|' . ($author->last_name ?? '') . '|' . ($author->email ?? '')));
+    })->values();
 
     // BCP47 locale (id_ID → id, en_US → en)
     $rawLocale   = $article->locale ?? app()->getLocale() ?? 'en';
     $bcp47Locale = preg_replace('/_[A-Z]{2}$/', '', $rawLocale);
 
-    // ISSN
-    $issnValue = $journal->issn_online ?? $journal->issn_print ?? null;
+    // ISSN — prioritize model fields, then fallback to journal settings
+    $issnOnline = $journal->issn_online ?? $journal->getSetting('issn.online') ?? null;
+    $issnPrint  = $journal->issn_print  ?? $journal->getSetting('issn.print')  ?? null;
+    $issnValue  = $issnOnline ?? $issnPrint ?? null;
 
     // Pages
     $firstPage = $lastPage = null;
