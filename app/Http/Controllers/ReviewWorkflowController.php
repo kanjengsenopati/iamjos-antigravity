@@ -1383,7 +1383,32 @@ public function searchReviewers(Request $request, string $journalSlug)
         $metadata['thanked_at'] = now()->toIso8601String();
         $reviewAssignment->update(['metadata' => $metadata]);
 
-        // Log the thank you
+        // 1. Send the email using JournalEmailService
+        if ($reviewAssignment->reviewer) {
+            $submissionUrl = route('journal.submissions.show', [
+                'journal' => $journal->slug,
+                'submission' => $reviewAssignment->submission->url_slug ?? $reviewAssignment->submission->slug
+            ]);
+
+            $vars = [
+                'reviewerName' => $reviewAssignment->reviewer->name ?? $reviewAssignment->reviewer->full_name,
+                'submissionTitle' => $reviewAssignment->submission->title,
+                'submissionUrl' => $submissionUrl,
+            ];
+
+            try {
+                \App\Services\JournalEmailService::sendNotification(
+                    $journal,
+                    $reviewAssignment->reviewer,
+                    'REVIEW_ACK',
+                    $vars
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send thank you email to reviewer: ' . $e->getMessage());
+            }
+        }
+
+        // 2. Log the thank you action
         \App\Models\SubmissionLog::log(
             $reviewAssignment->submission,
             'reviewer_thanked',

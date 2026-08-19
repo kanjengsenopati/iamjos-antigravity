@@ -137,6 +137,13 @@ class EmailTemplate extends Model
                 'description' => 'Sent to editor when a reviewer completes their review.',
             ],
             [
+                'key' => 'REVIEW_ACK',
+                'name' => 'Review Acknowledgement',
+                'subject' => 'Article Review Acknowledgement',
+                'body' => "Dear {\$reviewerName},\n\nThank you for completing the review of the submission, \"{\$submissionTitle},\" for {\$journalName}. We appreciate your contribution to the quality of the work that we publish.\n\n{\$signature}",
+                'description' => 'Sent to a reviewer to thank them for completing a review.',
+            ],
+            [
                 'key' => 'EDITOR_DECISION_ACCEPT',
                 'name' => 'Editorial Decision: Accept',
                 'subject' => 'Editor Decision: Accept',
