@@ -39,9 +39,11 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 @endif
 <link rel="canonical" href="{{ url()->current() }}">
 <meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
+@unless($article ?? false)
 <meta property="og:type" content="website">
-<meta property="og:title" content="{{ $title ?? $journal->name }}">
 <meta property="og:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
+@endunless
+<meta property="og:title" content="{{ $title ?? $journal->name }}">
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
 @if($journal->logo_path ?? false)

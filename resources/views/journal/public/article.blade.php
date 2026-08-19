@@ -85,6 +85,8 @@
     $copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
     $copyrightYear   = $pub->copyright_year ?? ($issue->year ?? date('Y'));
     $licenseUrl      = $pub->license_url ?? ($journal->license_url ?? null);
+    
+    $articleUrl = route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]);
 @endphp
 
 <x-layouts.public :journal="$journal" :settings="$settings" :title="$article->title . ' | ' . $journal->name" :article="true">
@@ -99,6 +101,13 @@
     {{-- CRITICAL for academic indexing --}}
     {{-- ============================================ --}}
     @push('meta_tags')
+<link rel="canonical" href="{{ $articleUrl }}">
+<meta property="og:url" content="{{ $articleUrl }}">
+<meta property="og:type" content="article">
+<meta property="og:description" content="{{ Str::limit(strip_tags($pubAbstract ?? ''), 200) }}">
+@if($pubDate)
+<meta property="article:published_time" content="{{ $pubDate->toIso8601String() }}">
+@endif
 @php
     $metaTags = [];
     $metaTags[] = '<meta name="gs_meta_revision" content="1.1"/>';
@@ -116,6 +125,7 @@
     $metaTags[] = '<meta name="citation_language" content="' . $bcp47Locale . '"/>';
     if ($pubDate) {
         $metaTags[] = '<meta name="citation_date" content="' . $pubDate->format('Y/m/d') . '"/>';
+        $metaTags[] = '<meta name="citation_publication_date" content="' . $pubDate->format('Y/m/d') . '"/>';
     }
     if ($article->published_at && $pubDate && $article->published_at->format('Y-m-d') !== $pubDate->format('Y-m-d')) {
         $metaTags[] = '<meta name="citation_online_date" content="' . $article->published_at->format('Y/m/d') . '"/>';
@@ -155,9 +165,9 @@
     foreach ($processedKeywords as $keyword) {
         $metaTags[] = '<meta name="citation_keywords" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars($keyword) . '"/>';
     }
-    $metaTags[] = '<meta name="citation_abstract_html_url" content="' . url()->current() . '"/>';
+    $metaTags[] = '<meta name="citation_abstract_html_url" content="' . $articleUrl . '"/>';
     if ($pdfGalleyUrl) {
-        $metaTags[] = '<meta name="citation_fulltext_html_url" content="' . url()->current() . '"/>';
+        $metaTags[] = '<meta name="citation_fulltext_html_url" content="' . $articleUrl . '"/>';
         $metaTags[] = '<meta name="citation_pdf_url" content="' . $pdfGalleyUrl . '"/>';
     }
     if ($pubAbstract) {
@@ -199,7 +209,7 @@
     if ($pubDoi) {
         $metaTags[] = '<meta name="DC.Identifier.DOI" content="' . htmlspecialchars($pubDoi) . '"/>';
     }
-    $metaTags[] = '<meta name="DC.Identifier.URI" content="' . url()->current() . '"/>';
+    $metaTags[] = '<meta name="DC.Identifier.URI" content="' . $articleUrl . '"/>';
     $metaTags[] = '<meta name="DC.Rights" content="Copyright (c) ' . $copyrightYear . ' ' . htmlspecialchars($copyrightHolder) . '"/>';
     if ($licenseUrl) {
         $metaTags[] = '<meta name="DC.Rights" content="' . htmlspecialchars($licenseUrl) . '"/>';
@@ -253,7 +263,7 @@
                 '@type' => 'Organization',
                 'name' => $journal->publisher ?? $journal->name,
             ],
-            'mainEntityOfPage' => url()->current(),
+            'mainEntityOfPage' => $articleUrl,
         ];
 
         if ($publicationDate) {
@@ -368,6 +378,7 @@
             <h1 class="text-3xl md:text-4xl font-serif font-bold text-slate-900 leading-tight">
                 {{ $article->title }}
             </h1>
+            {!! app(\App\Services\CitationService::class)->generateCOinS($article, $journal) !!}
 
             @if ($article->subtitle)
                 <p class="text-xl text-slate-600 -mt-6">{{ $article->subtitle }}</p>
@@ -582,6 +593,37 @@
                     </h2>
                     <div class="value text-slate-600 text-sm leading-relaxed">
                         {!! nl2br(e($rawRefText)) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- 7.5. CITED BY --}}
+            @php
+                $citingSubmissions = $article->getCitingSubmissions();
+            @endphp
+            @if ($citingSubmissions->isNotEmpty())
+                <section class="item cited-by pt-6" id="citedBy">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-4 border-orange-400 inline-block mb-4 pb-1 uppercase tracking-wide">
+                        Cited By
+                    </h2>
+                    <div class="space-y-4 text-slate-700 text-sm">
+                        @foreach ($citingSubmissions as $citing)
+                            @php
+                                $citingAuthors = $citing->currentPublication->authors ?? $citing->authors;
+                                $authorsText = $citingAuthors ? $citingAuthors->map(fn($a) => trim($a->first_name . ' ' . $a->last_name))->implode(', ') : '';
+                            @endphp
+                            <div class="border-l-4 border-primary-200 pl-4 py-1">
+                                <p class="font-medium text-slate-800">
+                                    <a href="{{ route('journal.public.article', ['journal' => $citing->journal->slug, 'article' => $citing->seq_id]) }}" class="text-primary-600 hover:underline">
+                                        {{ $citing->currentPublication->title ?? $citing->title }}
+                                    </a>
+                                </p>
+                                <p class="text-slate-600 mt-1">{{ $authorsText }}</p>
+                                <p class="text-slate-500 text-xs mt-1">
+                                    {{ $citing->journal->name }}, Vol. {{ $citing->issue->volume ?? '-' }} No. {{ $citing->issue->number ?? '-' }} ({{ $citing->issue->year ?? '-' }})
+                                </p>
+                            </div>
+                        @endforeach
                     </div>
                 </section>
             @endif

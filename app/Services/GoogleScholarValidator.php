@@ -322,23 +322,27 @@ class GoogleScholarValidator
         // If Model doesn't have galleys yet, check if there's at least a manuscript file in the final stage?
         // Prompt says "Galley (PDF): Must have at least one published PDF Galley"
         
+        $hasPdf = false;
         if (method_exists($submission, 'galleys')) {
-             // Check galleys
              foreach ($submission->galleys as $galley) {
-                 if (Str::contains(strtolower($galley->label), 'pdf') || Str::contains(strtolower($galley->file_type ?? ''), 'pdf')) {
+                 if (\Illuminate\Support\Str::contains(strtolower($galley->label), 'pdf') || \Illuminate\Support\Str::contains(strtolower($galley->file_type ?? ''), 'pdf')) {
+                     $hasPdf = true;
                      break;
                  }
              }
-        } elseif (method_exists($submission, 'files')) {
-             // Fallback to checking files if galleys relation implies files
-             // Looking at Submission.php: public function galleys() exists.
         }
-
-        if ($submission->galleys()->count() == 0) {
+        if (!$hasPdf && $submission->galleys()->count() == 0) {
              return [
                 'label' => 'Galley (PDF)',
                 'status' => false,
                 'message' => 'No publication galleys found. At least one PDF galley is required.',
+                'score' => 0
+            ];
+        } elseif (!$hasPdf) {
+             return [
+                'label' => 'Galley (PDF)',
+                'status' => false,
+                'message' => 'No PDF galley found. At least one PDF galley is required.',
                 'score' => 0
             ];
         }

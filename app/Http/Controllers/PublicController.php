@@ -1005,8 +1005,14 @@ class PublicController extends Controller
         $journal = $this->resolveJournal($journalSlug);
 
         $submission = Submission::where('journal_id', $journal->id)
-            ->where(function ($q) use ($article) {
-                $q->Where('slug', $article);
+            ->where(function ($query) use ($article) {
+                if (is_numeric($article)) {
+                    $query->where('seq_id', $article)->orWhere('slug', $article);
+                } elseif (\Illuminate\Support\Str::isUuid($article)) {
+                    $query->where('id', $article);
+                } else {
+                    $query->where('slug', $article);
+                }
             })
             ->with(['authors', 'issue', 'section', 'currentPublication', 'keywords'])
             ->published()
@@ -1101,8 +1107,14 @@ class PublicController extends Controller
         $journal = $this->resolveJournal($journalSlug);
 
         $submission = Submission::where('journal_id', $journal->id)
-            ->where(function ($q) use ($article) {
-                $q->Where('slug', $article);
+            ->where(function ($query) use ($article) {
+                if (is_numeric($article)) {
+                    $query->where('seq_id', $article)->orWhere('slug', $article);
+                } elseif (\Illuminate\Support\Str::isUuid($article)) {
+                    $query->where('id', $article);
+                } else {
+                    $query->where('slug', $article);
+                }
             })
             ->with(['authors', 'issue', 'section', 'currentPublication', 'keywords'])
             ->published()

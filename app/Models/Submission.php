@@ -799,4 +799,30 @@ class Submission extends Model
         $doi = $this->doi;
         return $doi ? "https://doi.org/{$doi}" : null;
     }
+
+    /**
+     * Get other published submissions in IAMJOS that cite this submission.
+     */
+    public function getCitingSubmissions()
+    {
+        $title = $this->currentPublication->title ?? $this->title;
+        $doi = $this->currentPublication->doi ?? $this->doi;
+        
+        $query = static::where('id', '!=', $this->id)
+            ->where('status', 'published');
+            
+        $query->whereHas('currentPublication', function($q) use ($title, $doi) {
+            $q->where(function($subQ) use ($title, $doi) {
+                if ($title) {
+                    $subQ->where('references', 'ilike', '%' . $title . '%');
+                }
+                if ($doi) {
+                    $subQ->orWhere('references', 'ilike', '%' . $doi . '%');
+                }
+            });
+        });
+        
+        return $query->with(['currentPublication.authors', 'journal', 'issue'])->get();
+    }
 }
+

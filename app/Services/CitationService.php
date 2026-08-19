@@ -77,7 +77,7 @@ class CitationService
         $number = $issue->number ?? null;
         $pages = $submission->currentPublication->pages ?? $submission->pages;
         $doi = $submission->currentPublication->doi ?? $submission->doi;
-        $doiUrl = $doi ? "https://doi.org/{$doi}" : "";
+        $doiUrl = $doi ? "https://doi.org/{$doi}" : route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id]);
 
         // Title case for consistent display
         $titleCase = fn($s) => Str::title(trim($s));
@@ -106,5 +106,59 @@ class CitationService
             'Turabian' => "{$authorsFull}. \"{$submission->title}.\" {$journal}" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . " ({$year})" . ($pages ? ": {$pages}" : '') . ". {$doiUrl}",
             'Vancouver' => "{$authorsIEEE}. {$submission->title}. {$journal}. {$year}" . ($volume ? ";{$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ":{$pages}" : '') . ". {$doiUrl}",
         ];
+    }
+
+    /**
+     * Generate OpenURL COinS span for the submission
+     */
+    public function generateCOinS(Submission $submission, $journal): string
+    {
+        $year = $this->getYear($submission);
+        $issue = $submission->issue;
+        $volume = $issue->volume ?? null;
+        $number = $issue->number ?? null;
+        $pages = $submission->currentPublication->pages ?? $submission->pages;
+        $doi = $submission->currentPublication->doi ?? $submission->doi;
+
+        $ctx = [];
+        $ctx['ctx_ver'] = 'Z39.88-2004';
+        $ctx['rft_val_fmt'] = 'info:ofi/fmt:kev:mtx:journal';
+        $ctx['rft.type'] = 'article';
+        $ctx['rft.title'] = $submission->title;
+        $ctx['rft.jtitle'] = $journal->name;
+        if ($submission->journal->issn_online) {
+            $ctx['rft.issn'] = $submission->journal->issn_online;
+        } elseif ($submission->journal->issn_print) {
+            $ctx['rft.issn'] = $submission->journal->issn_print;
+        }
+        $ctx['rft.date'] = $year;
+        if ($volume) $ctx['rft.volume'] = $volume;
+        if ($number) $ctx['rft.issue'] = $number;
+        if ($pages) {
+            $pageParts = explode('-', $pages, 2);
+            $ctx['rft.spage'] = trim($pageParts[0]);
+            if (isset($pageParts[1])) {
+                $ctx['rft.epage'] = trim($pageParts[1]);
+            }
+        }
+        
+        if ($doi) {
+            $ctx['rft_id'] = 'info:doi/' . $doi;
+        } else {
+            $ctx['rft_id'] = route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id]);
+        }
+
+        foreach ($submission->authors as $author) {
+            $name = trim(($author->family_name ?? $author->last_name ?? '') . ', ' . ($author->given_name ?? $author->first_name ?? ''));
+            if ($name !== ',') {
+                $ctx['rft.au'][] = $name;
+            }
+        }
+        
+        $query = http_build_query($ctx, '', '&', PHP_QUERY_RFC3986);
+        // COinS often needs unindexed array params like rft.au=A&rft.au=B
+        $query = preg_replace('/%5B[0-9]+%5D/i', '', $query);
+
+        return '<span class="Z3988" title="' . $query . '"></span>';
     }
 }
