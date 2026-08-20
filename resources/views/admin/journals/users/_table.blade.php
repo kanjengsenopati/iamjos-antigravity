@@ -14,6 +14,8 @@
                     <th scope="col"
                         class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Username' : 'Username' }}</th>
                     <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Peran' : 'Roles' }}</th>
+                    <th scope="col"
                         class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $isId ? 'Surel' : 'Email' }}</th>
                 </tr>
             </thead>
@@ -53,13 +55,38 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm {{ $user->disabled ? 'text-gray-400' : 'text-gray-500' }}">
                             {{ $user->username ?? Str::slug($user->name) }}
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-wrap gap-1.5 items-center">
+                                @foreach (array_slice($userRoles, 0, 3) as $role)
+                                    @php
+                                        $badgeClass = match ($role) {
+                                            'Super Admin' => 'bg-purple-100 text-purple-800 border-purple-200 ring-1 ring-purple-500/20',
+                                            'Admin', 'Journal Manager' => 'bg-red-50 text-red-700 border-red-100',
+                                            'Editor', 'Section Editor' => 'bg-blue-50 text-blue-700 border-blue-100',
+                                            'Reviewer' => 'bg-amber-50 text-amber-700 border-amber-100',
+                                            'Author' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                            'Reader' => 'bg-gray-50 text-gray-600 border-gray-100',
+                                            default => 'bg-slate-100 text-slate-700 border-slate-200',
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border shadow-sm {{ $badgeClass }} {{ $user->disabled ? 'opacity-50' : '' }}">
+                                        {{ $role }}
+                                    </span>
+                                @endforeach
+                                @if(count($userRoles) > 3)
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200 shadow-sm">
+                                        +{{ count($userRoles) - 3 }}
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm {{ $user->disabled ? 'text-gray-400' : 'text-gray-500' }}">
                             <span>{{ $user->email }}</span>
                         </td>
                     </tr>
                     <!-- Expandable Actions Row -->
                     <tr x-show="expandedUser === '{{ $user->id }}'" x-cloak class="bg-slate-50/50">
-                        <td colspan="4" class="px-12 py-3 border-t border-slate-100">
+                        <td colspan="5" class="px-12 py-3 border-t border-slate-100">
                             <!-- Roles Display -->
                             <div class="flex flex-wrap gap-1.5 items-center mb-2.5">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1.5">{{ $isId ? 'Peran:' : 'Roles:' }}</span>
@@ -156,7 +183,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                                     <i class="fa-solid fa-users-slash text-gray-400"></i>
