@@ -36,14 +36,9 @@ class RedirectIfUninstalled
             return $next($request);
         }
 
-        // 2. Prevent redirect loops for installation, asset, and administrative paths.
+        // 2. Prevent redirect loops for installation and asset paths.
         $path = $request->path();
         $uri = $request->getRequestUri();
-
-        // Bypass check for AJAX, JSON, or Livewire requests
-        if ($request->ajax() || $request->expectsJson() || $request->hasHeader('X-Livewire')) {
-            return $next($request);
-        }
 
         // Bypass check if request is already an installation path
         if (str_contains($path, 'install') || str_contains($uri, 'install')) {
@@ -71,33 +66,7 @@ class RedirectIfUninstalled
             return $next($request);
         }
 
-        // Bypass check for global admin paths
-        if ($request->is('admin*') || $request->is('*/admin*') || str_contains($path, 'admin')) {
-            return $next($request);
-        }
-
-        // Bypass check for journal-specific administrative paths (e.g. mashlahah/*)
-        $segments = $request->segments();
-        if (!empty($segments) && $segments[0] === 'index.php') {
-            array_shift($segments);
-        }
-
-        if (!empty($segments)) {
-            $firstSegment = $segments[0];
-            $globalSegments = [
-                'login', 'register', 'logout', 'forgot-password', 'reset-password',
-                'change-password', 'auth', 'select-journal', 'admin', 'build',
-                'storage', 'vendor', 'livewire', 'up', 'search', 'journals',
-                'about', 'page', 'files', 'sitemap.xml'
-            ];
-
-            // If the first segment is not in the global/static list, it represents a dynamic journal slug (e.g., mashlahah/*)
-            if (!in_array($firstSegment, $globalSegments, true)) {
-                return $next($request);
-            }
-        }
-
-        // Redirect to installation wizard if not installed and path is not bypassed
-        return redirect('/install');
+        // If not installed and not an allowed path, redirect to install wizard
+        return redirect()->route('install.index');
     }
 }

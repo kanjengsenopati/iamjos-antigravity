@@ -191,12 +191,17 @@ class InstallController extends Controller
             config()->set('database.connections.pgsql.password', $dbConfig['db_password']);
             DB::purge('pgsql');
 
-            // 2. Migrate and Seed (using the dynamic connection config)
+            // 2. Setup Super Admin credentials for the Seeder
+            putenv('SUPER_ADMIN_EMAIL=' . $request->admin_email);
+            putenv('SUPER_ADMIN_NAME=' . $request->admin_name);
+            putenv('SUPER_ADMIN_PASSWORD=' . $request->admin_password);
+
+            // 3. Migrate and Seed (using the dynamic connection config)
             Artisan::call('migrate', ['--force' => true]);
             Artisan::call('db:seed', ['--force' => true]);
 
-            // 3. Create or Update Super Admin User
-            $admin = User::updateOrCreate(
+            // Ensure the admin user exists (fallback if seeder failed for any reason)
+            $admin = User::firstOrCreate(
                 ['email' => $request->admin_email],
                 [
                     'name' => $request->admin_name,
@@ -205,15 +210,6 @@ class InstallController extends Controller
                     'email_verified_at' => now(),
                 ]
             );
-
-            // Using Spatie Roles (assuming Super Admin role exists from seeds)
-            try {
-                if (!$admin->hasRole('Super Admin')) {
-                    $admin->assignRole('Super Admin');
-                }
-            } catch (\Exception $e) {
-                // Ignore if role doesn't exist just in case
-            }
 
             // 4. Create storage/installed file (so application knows it is installed)
             File::put(storage_path('installed'), 'installed_at: ' . now());
