@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Collection;
 
 return new class extends Migration
@@ -156,34 +157,59 @@ return new class extends Migration
             ->pluck('id');
         
         if ($discussionIds->isNotEmpty()) {
-            $counts['discussion_files'] = DB::table('discussion_files')
-                ->whereIn('discussion_id', $discussionIds)
-                ->delete();
+            if (Schema::hasTable('discussion_files')) {
+                if (Schema::hasColumn('discussion_files', 'discussion_message_id')) {
+                    $messageIds = DB::table('discussion_messages')
+                        ->whereIn('discussion_id', $discussionIds)
+                        ->pluck('id');
+                    if ($messageIds->isNotEmpty()) {
+                        $counts['discussion_files'] = DB::table('discussion_files')
+                            ->whereIn('discussion_message_id', $messageIds)
+                            ->delete();
+                    }
+                } elseif (Schema::hasColumn('discussion_files', 'discussion_id')) {
+                    $counts['discussion_files'] = DB::table('discussion_files')
+                        ->whereIn('discussion_id', $discussionIds)
+                        ->delete();
+                }
+            }
             
-            $counts['discussion_messages'] = DB::table('discussion_messages')
-                ->whereIn('discussion_id', $discussionIds)
-                ->delete();
+            if (Schema::hasTable('discussion_messages')) {
+                $counts['discussion_messages'] = DB::table('discussion_messages')
+                    ->whereIn('discussion_id', $discussionIds)
+                    ->delete();
+            }
             
-            $counts['discussion_participants'] = DB::table('discussion_participants')
-                ->whereIn('discussion_id', $discussionIds)
+            if (Schema::hasTable('discussion_participants')) {
+                $counts['discussion_participants'] = DB::table('discussion_participants')
+                    ->whereIn('discussion_id', $discussionIds)
+                    ->delete();
+            }
+        }
+        
+        if (Schema::hasTable('discussions')) {
+            $counts['discussions'] = DB::table('discussions')
+                ->whereIn('submission_id', $submissionIds)
                 ->delete();
         }
         
-        $counts['discussions'] = DB::table('discussions')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('review_assignments')) {
+            $counts['review_assignments'] = DB::table('review_assignments')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
-        $counts['review_assignments'] = DB::table('review_assignments')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('review_rounds')) {
+            $counts['review_rounds'] = DB::table('review_rounds')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
-        $counts['review_rounds'] = DB::table('review_rounds')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
-        
-        $counts['editorial_assignments'] = DB::table('editorial_assignments')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('editorial_assignments')) {
+            $counts['editorial_assignments'] = DB::table('editorial_assignments')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
         return $counts;
     }
@@ -217,22 +243,30 @@ return new class extends Migration
     {
         $counts = [];
         
-        $counts['submission_keyword'] = DB::table('submission_keyword')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('submission_keyword')) {
+            $counts['submission_keyword'] = DB::table('submission_keyword')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
-        $counts['submission_files'] = DB::table('submission_files')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('submission_files')) {
+            $counts['submission_files'] = DB::table('submission_files')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
-        $counts['submission_authors'] = DB::table('submission_authors')
-            ->whereIn('submission_id', $submissionIds)
-            ->whereNull('publication_id')
-            ->delete();
+        if (Schema::hasTable('submission_authors')) {
+            $counts['submission_authors'] = DB::table('submission_authors')
+                ->whereIn('submission_id', $submissionIds)
+                ->whereNull('publication_id')
+                ->delete();
+        }
         
-        $counts['submissions'] = DB::table('submissions')
-            ->whereIn('id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('submissions')) {
+            $counts['submissions'] = DB::table('submissions')
+                ->whereIn('id', $submissionIds)
+                ->delete();
+        }
         
         return $counts;
     }
@@ -241,68 +275,92 @@ return new class extends Migration
     {
         $counts = [];
         
-        $menuIds = DB::table('navigation_menus')
-            ->whereIn('journal_id', $journalIds)
-            ->pluck('id');
-        
-        if ($menuIds->isNotEmpty()) {
-            $counts['navigation_items'] = DB::table('navigation_items')
-                ->whereIn('navigation_menu_id', $menuIds)
+        if (Schema::hasTable('navigation_menus')) {
+            $menuIds = DB::table('navigation_menus')
+                ->whereIn('journal_id', $journalIds)
+                ->pluck('id');
+            
+            if ($menuIds->isNotEmpty() && Schema::hasTable('navigation_items')) {
+                $counts['navigation_items'] = DB::table('navigation_items')
+                    ->whereIn('navigation_menu_id', $menuIds)
+                    ->delete();
+            }
+            
+            $counts['navigation_menus'] = DB::table('navigation_menus')
+                ->whereIn('journal_id', $journalIds)
                 ->delete();
         }
         
-        $counts['navigation_menus'] = DB::table('navigation_menus')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('sidebar_blocks')) {
+            $counts['sidebar_blocks'] = DB::table('sidebar_blocks')
+                ->whereIn('journal_id', $journalIds)
+                ->delete();
+        }
         
-        $counts['sidebar_blocks'] = DB::table('sidebar_blocks')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('announcements')) {
+            $counts['announcements'] = DB::table('announcements')
+                ->whereIn('journal_id', $journalIds)
+                ->delete();
+        }
         
-        $counts['announcements'] = DB::table('announcements')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('notification_templates')) {
+            $counts['notification_templates'] = DB::table('notification_templates')
+                ->whereIn('journal_id', $journalIds)
+                ->delete();
+        }
         
-        $counts['notification_templates'] = DB::table('notification_templates')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('sections')) {
+            $counts['sections'] = DB::table('sections')
+                ->whereIn('journal_id', $journalIds)
+                ->delete();
+        }
         
-        $counts['sections'] = DB::table('sections')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('issues')) {
+            $counts['issues'] = DB::table('issues')
+                ->whereIn('journal_id', $journalIds)
+                ->delete();
+        }
         
-        $counts['issues'] = DB::table('issues')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
-        
-        $counts['journal_settings'] = DB::table('journal_settings')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('journal_settings')) {
+            $counts['journal_settings'] = DB::table('journal_settings')
+                ->whereIn('journal_id', $journalIds)
+                ->delete();
+        }
         
         return $counts;
     }
     
     private function deleteJournals(Collection $journalIds): int
     {
-        return DB::table('journals')
-            ->whereIn('id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('journals')) {
+            return DB::table('journals')
+                ->whereIn('id', $journalIds)
+                ->delete();
+        }
+        return 0;
     }
     
     private function deleteDemoUsers(Collection $userIds): int
     {
-        DB::table('journal_user_roles')
-            ->whereIn('user_id', $userIds)
-            ->delete();
+        if (Schema::hasTable('journal_user_roles')) {
+            DB::table('journal_user_roles')
+                ->whereIn('user_id', $userIds)
+                ->delete();
+        }
         
-        DB::table('model_has_roles')
-            ->where('model_type', 'App\\Models\\User')
-            ->whereIn('model_id', $userIds)
-            ->delete();
+        if (Schema::hasTable('model_has_roles')) {
+            DB::table('model_has_roles')
+                ->where('model_type', 'App\\Models\\User')
+                ->whereIn('model_id', $userIds)
+                ->delete();
+        }
         
-        return DB::table('users')
-            ->whereIn('id', $userIds)
-            ->delete();
+        if (Schema::hasTable('users')) {
+            return DB::table('users')
+                ->whereIn('id', $userIds)
+                ->delete();
+        }
+        return 0;
     }
     
     private function logCleanupSummary(array $counts, string $superAdminEmail): void
