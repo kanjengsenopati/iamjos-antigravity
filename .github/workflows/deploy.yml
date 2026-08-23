@@ -304,48 +304,50 @@ jobs:
 
             echo "🚀 Memulai deployment ke ${{ matrix.target.name }}..."
 
+            # Deteksi PHP 8.4 Binary (aaPanel standard vs system)
+            PHP_CMD="php"
+            if [ -x "/www/server/php/84/bin/php" ]; then
+              PHP_CMD="/www/server/php/84/bin/php"
+            elif command -v php8.4 >/dev/null 2>&1; then
+              PHP_CMD="php8.4"
+            fi
+            echo "ℹ️ Menggunakan PHP Binary: $($PHP_CMD -v | head -n 1)"
+
             # Buat direktori target jika belum ada
-            mkdir -p $TARGET_PATH
+            mkdir -p "$TARGET_PATH"
 
             # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel)
-            if [ -f $TARGET_PATH/public/.user.ini ]; then
-              sudo chattr -i $TARGET_PATH/public/.user.ini 2>/dev/null || true
-              chmod 777 $TARGET_PATH/public/.user.ini 2>/dev/null || true
-              rm -f $TARGET_PATH/public/.user.ini 2>/dev/null || true
+            if [ -f "$TARGET_PATH/public/.user.ini" ]; then
+              sudo chattr -i "$TARGET_PATH/public/.user.ini" 2>/dev/null || true
+              chmod 777 "$TARGET_PATH/public/.user.ini" 2>/dev/null || true
+              rm -f "$TARGET_PATH/public/.user.ini" 2>/dev/null || true
             fi
 
             # Backup file .env yang ada di VPS sebelum overwrite
-            if [ -f $TARGET_PATH/.env ]; then
-              cp $TARGET_PATH/.env $TMP_DIR/.env.backup
+            if [ -f "$TARGET_PATH/.env" ]; then
+              cp "$TARGET_PATH/.env" "$TMP_DIR/.env.backup"
             fi
 
             # Ekstrak arsip ke target path
-            tar -xzf $TMP_FILE -C $TARGET_PATH
+            tar -xzf "$TMP_FILE" -C "$TARGET_PATH"
 
             # Kembalikan file .env dari backup jika ada
-            if [ -f $TMP_DIR/.env.backup ]; then
-              mv $TMP_DIR/.env.backup $TARGET_PATH/.env
+            if [ -f "$TMP_DIR/.env.backup" ]; then
+              mv "$TMP_DIR/.env.backup" "$TARGET_PATH/.env"
             fi
 
             # Bersihkan file temp
-            rm -rf $TMP_DIR
+            rm -rf "$TMP_DIR" 2>/dev/null || true
 
-            cd $TARGET_PATH
+            cd "$TARGET_PATH"
 
-            # ─── Pastikan direktori storage ada dan writable ───────
-            mkdir -p storage/framework/cache/data
-            mkdir -p storage/framework/sessions
-            mkdir -p storage/framework/views
-            mkdir -p storage/logs
-            mkdir -p bootstrap/cache
-            chmod -R 777 storage bootstrap/cache
+            # ─── Pastikan direktori storage dan cache writable ───────
+            mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs storage/backups bootstrap/cache
+            chmod -R 775 storage bootstrap/cache 2>/dev/null || chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
             # ─── MIGRATION DARI VERSI LAMA (BACKWARD COMPATIBILITY) ───────────────
-            # Jika ada file .env (berarti ini bukan server kosong), tapi storage/installed tidak ada,
-            # maka ini adalah aplikasi lama yang diupdate ke versi baru.
-            # Kita WAJIB membuat file storage/installed agar middleware tidak me-redirect ke /install.
             if [ -f .env ] && [ ! -f storage/installed ]; then
-              echo "✅ Mendeteksi instalasi lama. Membuat file storage/installed..."
+              echo "✅ Mendeteksi instalasi lama (.env ditemukan). Membuat flag storage/installed..."
               echo "installed_at: $(date)" > storage/installed
             fi
 
@@ -354,7 +356,6 @@ jobs:
               echo "⚠️ File storage/installed tidak ditemukan."
               echo "Aplikasi belum diinstall. Menghentikan deployment DB (Menunggu Web Installer)."
               
-              # Set permissions
               PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
               sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
                 sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
@@ -365,64 +366,48 @@ jobs:
             
             # === DARI SINI KE BAWAH HANYA DIEKSEKUSI JIKA SUDAH DIINSTALL ===
 
-            # Backup database SEBELUM migration
-            echo "📦 Membuat backup database PostgreSQL..."
-            BACKUP_DIR="/var/backups/iamjos/${{ matrix.target.id }}"
-            mkdir -p $BACKUP_DIR
-            BACKUP_FILE="$BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).sql.gz"
-
-            get_env_val() {
-              (grep "^$1=" .env 2>/dev/null || echo "") | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
-            }
-            DB_HOST=$(get_env_val DB_HOST)
-            DB_PORT=$(get_env_val DB_PORT)
-            [ -z "$DB_PORT" ] && DB_PORT="5432"
-            DB_DATABASE=$(get_env_val DB_DATABASE)
-            DB_USERNAME=$(get_env_val DB_USERNAME)
-            DB_PASSWORD=$(get_env_val DB_PASSWORD)
-
-            BACKUP_OK=true
-            PGPASSWORD="$DB_PASSWORD" pg_dump \
-              -h "$DB_HOST" \
-              -p "$DB_PORT" \
-              -U "$DB_USERNAME" \
-              -d "$DB_DATABASE" \
-              --no-password 2>/dev/null \
-              | gzip > "$BACKUP_FILE" || BACKUP_OK=false
-
-            if [ "$BACKUP_OK" = false ] || [ ! -s "$BACKUP_FILE" ]; then
-              echo "⚠️ WARNING: Backup database gagal."
-              rm -f "$BACKUP_FILE" 2>/dev/null || true
-            else
-              echo "✅ Backup berhasil: $BACKUP_FILE"
+            # Backup database (Fail-safe, non-blocking ke storage/backups)
+            BACKUP_DIR="$TARGET_PATH/storage/backups"
+            mkdir -p "$BACKUP_DIR" 2>/dev/null || true
+            if command -v pg_dump >/dev/null 2>&1; then
+              (
+                DB_HOST=$(grep "^DB_HOST=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                DB_PORT=$(grep "^DB_PORT=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                [ -z "$DB_PORT" ] && DB_PORT="5432"
+                DB_DATABASE=$(grep "^DB_DATABASE=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                DB_USERNAME=$(grep "^DB_USERNAME=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                DB_PASSWORD=$(grep "^DB_PASSWORD=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                if [ -n "$DB_DATABASE" ]; then
+                  echo "📦 Membuat backup database $DB_DATABASE..."
+                  PGPASSWORD="$DB_PASSWORD" pg_dump -h "${DB_HOST:-127.0.0.1}" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" --no-password 2>/dev/null | gzip > "$BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).sql.gz" 2>/dev/null || true
+                fi
+                find "$BACKUP_DIR" -name "backup-*.sql.gz" -mtime +7 -delete 2>/dev/null || true
+              ) || true
             fi
-            find $BACKUP_DIR -name "backup-*.sql.gz" -mtime +7 -delete
 
             # Jalankan database migration
             echo "🗄️ Menjalankan database migration..."
-            php artisan migrate --force --ansi
+            $PHP_CMD artisan migrate --force --ansi
 
             # Storage link
-            php artisan storage:link --ansi || true
+            $PHP_CMD artisan storage:link --ansi 2>/dev/null || true
 
             # Set permissions SEBELUM cache rebuild
-            chmod -R 775 storage bootstrap/cache
+            chmod -R 775 storage bootstrap/cache 2>/dev/null || true
             PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
             sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 
-            # Rebuild cache
-            php artisan optimize:clear --ansi || true
-            php artisan cache:clear --ansi || true
-            php artisan config:clear --ansi || true
-            php artisan route:clear --ansi || true
-            php artisan view:clear --ansi || true
-            php artisan config:cache --ansi
-            php artisan route:cache --ansi
-            php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
+            # Rebuild cache dengan fallback aman
+            echo "⚡ Membangun ulang cache aplikasi..."
+            $PHP_CMD artisan optimize:clear --ansi || true
+            $PHP_CMD artisan config:cache --ansi || ($PHP_CMD artisan config:clear --ansi && echo "⚠️ Config cache fallback to clear") || true
+            $PHP_CMD artisan route:cache --ansi || ($PHP_CMD artisan route:clear --ansi && echo "⚠️ Route cache fallback to clear") || true
+            $PHP_CMD artisan view:cache --ansi || ($PHP_CMD artisan view:clear --ansi && echo "⚠️ View cache fallback to clear") || true
+            $PHP_CMD artisan livewire:publish --assets --force --ansi 2>/dev/null || true
 
             # Final permission fix
-            chmod -R 775 storage bootstrap/cache
+            chmod -R 775 storage bootstrap/cache 2>/dev/null || true
             sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 
@@ -512,45 +497,60 @@ jobs:
             # Buat direktori target jika belum ada
             mkdir -p $TARGET_PATH
 
+          script: |
+            set -eo pipefail
+
+            TARGET_PATH="${{ env.TARGET_PATH }}"
+            APP_URL="${{ env.APP_URL }}"
+            TMP_DIR="/tmp/${{ github.sha }}-preview"
+            TMP_FILE="$TMP_DIR/deploy.tar.gz"
+
+            echo "🚀 Memulai deployment ke ${{ env.ENV_LABEL }}..."
+
+            # Deteksi PHP 8.4 Binary
+            PHP_CMD="php"
+            if [ -x "/www/server/php/84/bin/php" ]; then
+              PHP_CMD="/www/server/php/84/bin/php"
+            elif command -v php8.4 >/dev/null 2>&1; then
+              PHP_CMD="php8.4"
+            fi
+            echo "ℹ️ Menggunakan PHP Binary: $($PHP_CMD -v | head -n 1)"
+
+            # Buat direktori target jika belum ada
+            mkdir -p "$TARGET_PATH"
+
             # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel)
-            if [ -f $TARGET_PATH/public/.user.ini ]; then
-              sudo chattr -i $TARGET_PATH/public/.user.ini 2>/dev/null || true
-              chmod 777 $TARGET_PATH/public/.user.ini 2>/dev/null || true
-              rm -f $TARGET_PATH/public/.user.ini 2>/dev/null || true
+            if [ -f "$TARGET_PATH/public/.user.ini" ]; then
+              sudo chattr -i "$TARGET_PATH/public/.user.ini" 2>/dev/null || true
+              chmod 777 "$TARGET_PATH/public/.user.ini" 2>/dev/null || true
+              rm -f "$TARGET_PATH/public/.user.ini" 2>/dev/null || true
             fi
 
             # Backup file .env yang ada di VPS sebelum overwrite
-            if [ -f $TARGET_PATH/.env ]; then
-              cp $TARGET_PATH/.env $TMP_DIR/.env.backup
+            if [ -f "$TARGET_PATH/.env" ]; then
+              cp "$TARGET_PATH/.env" "$TMP_DIR/.env.backup"
             fi
 
             # Ekstrak arsip ke target path
-            tar -xzf $TMP_FILE -C $TARGET_PATH
+            tar -xzf "$TMP_FILE" -C "$TARGET_PATH"
 
             # Kembalikan file .env dari backup jika ada
-            if [ -f $TMP_DIR/.env.backup ]; then
-              mv $TMP_DIR/.env.backup $TARGET_PATH/.env
+            if [ -f "$TMP_DIR/.env.backup" ]; then
+              mv "$TMP_DIR/.env.backup" "$TARGET_PATH/.env"
             fi
 
             # Bersihkan file temp
-            rm -rf $TMP_DIR
+            rm -rf "$TMP_DIR" 2>/dev/null || true
 
-            cd $TARGET_PATH
+            cd "$TARGET_PATH"
 
-            # ─── Pastikan direktori storage ada dan writable ───────
-            mkdir -p storage/framework/cache/data
-            mkdir -p storage/framework/sessions
-            mkdir -p storage/framework/views
-            mkdir -p storage/logs
-            mkdir -p bootstrap/cache
-            chmod -R 777 storage bootstrap/cache
+            # ─── Pastikan direktori storage dan cache writable ───────
+            mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs storage/backups bootstrap/cache
+            chmod -R 775 storage bootstrap/cache 2>/dev/null || chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
             # ─── MIGRATION DARI VERSI LAMA (BACKWARD COMPATIBILITY) ───────────────
-            # Jika ada file .env (berarti ini bukan server kosong), tapi storage/installed tidak ada,
-            # maka ini adalah aplikasi lama yang diupdate ke versi baru.
-            # Kita WAJIB membuat file storage/installed agar middleware tidak me-redirect ke /install.
             if [ -f .env ] && [ ! -f storage/installed ]; then
-              echo "✅ Mendeteksi instalasi lama. Membuat file storage/installed..."
+              echo "✅ Mendeteksi instalasi lama (.env ditemukan). Membuat flag storage/installed..."
               echo "installed_at: $(date)" > storage/installed
             fi
 
@@ -559,7 +559,6 @@ jobs:
               echo "⚠️ File storage/installed tidak ditemukan."
               echo "Aplikasi belum diinstall. Menghentikan deployment DB (Menunggu Web Installer)."
               
-              # Set permissions
               PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
               sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
                 sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
@@ -570,66 +569,50 @@ jobs:
             
             # === DARI SINI KE BAWAH HANYA DIEKSEKUSI JIKA SUDAH DIINSTALL ===
 
-            # Backup database SEBELUM migration (Hanya Staging)
+            # Backup database SEBELUM migration (Hanya Staging, non-blocking)
             if [ "${{ env.BRANCH_NAME }}" = "staging" ]; then
-              echo "📦 Membuat backup database PostgreSQL..."
-              BACKUP_DIR="/var/backups/iamjos/staging"
-              mkdir -p $BACKUP_DIR
-              BACKUP_FILE="$BACKUP_DIR/backup-staging-$(date +%Y%m%d-%H%M%S).sql.gz"
-
-              get_env_val() {
-                (grep "^$1=" .env 2>/dev/null || echo "") | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
-              }
-              DB_HOST=$(get_env_val DB_HOST)
-              DB_PORT=$(get_env_val DB_PORT)
-              [ -z "$DB_PORT" ] && DB_PORT="5432"
-              DB_DATABASE=$(get_env_val DB_DATABASE)
-              DB_USERNAME=$(get_env_val DB_USERNAME)
-              DB_PASSWORD=$(get_env_val DB_PASSWORD)
-
-              BACKUP_OK=true
-              PGPASSWORD="$DB_PASSWORD" pg_dump \
-                -h "$DB_HOST" \
-                -p "$DB_PORT" \
-                -U "$DB_USERNAME" \
-                -d "$DB_DATABASE" \
-                --no-password 2>/dev/null \
-                | gzip > "$BACKUP_FILE" || BACKUP_OK=false
-
-              if [ "$BACKUP_OK" = false ] || [ ! -s "$BACKUP_FILE" ]; then
-                echo "⚠️ WARNING: Backup database gagal."
-                rm -f "$BACKUP_FILE" 2>/dev/null || true
-              else
-                echo "✅ Backup berhasil: $BACKUP_FILE"
+              BACKUP_DIR="$TARGET_PATH/storage/backups"
+              mkdir -p "$BACKUP_DIR" 2>/dev/null || true
+              if command -v pg_dump >/dev/null 2>&1; then
+                (
+                  DB_HOST=$(grep "^DB_HOST=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                  DB_PORT=$(grep "^DB_PORT=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                  [ -z "$DB_PORT" ] && DB_PORT="5432"
+                  DB_DATABASE=$(grep "^DB_DATABASE=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                  DB_USERNAME=$(grep "^DB_USERNAME=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                  DB_PASSWORD=$(grep "^DB_PASSWORD=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+                  if [ -n "$DB_DATABASE" ]; then
+                    echo "📦 Membuat backup staging database $DB_DATABASE..."
+                    PGPASSWORD="$DB_PASSWORD" pg_dump -h "${DB_HOST:-127.0.0.1}" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" --no-password 2>/dev/null | gzip > "$BACKUP_DIR/backup-staging-$(date +%Y%m%d-%H%M%S).sql.gz" 2>/dev/null || true
+                  fi
+                  find "$BACKUP_DIR" -name "backup-*.sql.gz" -mtime +7 -delete 2>/dev/null || true
+                ) || true
               fi
-              find $BACKUP_DIR -name "backup-*.sql.gz" -mtime +7 -delete
             fi
 
             # Jalankan database migration
             echo "🗄️ Menjalankan database migration..."
-            php artisan migrate --force --ansi
+            $PHP_CMD artisan migrate --force --ansi
 
             # Storage link
-            php artisan storage:link --ansi || true
+            $PHP_CMD artisan storage:link --ansi 2>/dev/null || true
 
             # Set permissions SEBELUM cache rebuild
-            chmod -R 775 storage bootstrap/cache
+            chmod -R 775 storage bootstrap/cache 2>/dev/null || true
             PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
             sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 
-            # Rebuild cache
-            php artisan optimize:clear --ansi || true
-            php artisan cache:clear --ansi || true
-            php artisan config:clear --ansi || true
-            php artisan route:clear --ansi || true
-            php artisan view:clear --ansi || true
-            php artisan config:cache --ansi
-            php artisan route:cache --ansi
-            php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
+            # Rebuild cache dengan fallback aman
+            echo "⚡ Membangun ulang cache aplikasi..."
+            $PHP_CMD artisan optimize:clear --ansi || true
+            $PHP_CMD artisan config:cache --ansi || ($PHP_CMD artisan config:clear --ansi && echo "⚠️ Config cache fallback to clear") || true
+            $PHP_CMD artisan route:cache --ansi || ($PHP_CMD artisan route:clear --ansi && echo "⚠️ Route cache fallback to clear") || true
+            $PHP_CMD artisan view:cache --ansi || ($PHP_CMD artisan view:clear --ansi && echo "⚠️ View cache fallback to clear") || true
+            $PHP_CMD artisan livewire:publish --assets --force --ansi 2>/dev/null || true
 
             # Final permission fix
-            chmod -R 775 storage bootstrap/cache
+            chmod -R 775 storage bootstrap/cache 2>/dev/null || true
             sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 

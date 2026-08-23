@@ -47,7 +47,7 @@ try {
     if (\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
         $ojsPrefixEnabled = (bool) \App\Facades\Settings::site('use_ojs_url_format', false);
     }
-} catch (\Exception $e) {}
+} catch (\Throwable $e) {}
 
 // =====================================================
 // ROUTE DEFINITIONS

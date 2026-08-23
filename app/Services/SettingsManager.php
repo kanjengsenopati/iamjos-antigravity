@@ -32,6 +32,12 @@ class SettingsManager
                 ->toArray();
         });
 
+        if (!is_array($settings)) {
+            $settings = is_object($settings) && method_exists($settings, 'toArray')
+                ? $settings->toArray()
+                : (array) ($settings ?? []);
+        }
+
         return array_key_exists($key, $settings) ? $settings[$key] : $default;
     }
 
@@ -52,6 +58,12 @@ class SettingsManager
 
             return $model ? $model->toArray() : [];
         });
+
+        if (!is_array($attributes)) {
+            $attributes = is_object($attributes) && method_exists($attributes, 'toArray')
+                ? $attributes->toArray()
+                : (array) ($attributes ?? []);
+        }
 
         return array_key_exists($key, $attributes) ? $attributes[$key] : $default;
     }
@@ -74,6 +86,12 @@ class SettingsManager
         $settings = Cache::remember($cacheKey, 900, function () use ($journalId) {
             return JournalSetting::getAllForJournal($journalId);
         });
+
+        if (!is_array($settings)) {
+            $settings = is_object($settings) && method_exists($settings, 'toArray')
+                ? $settings->toArray()
+                : (array) ($settings ?? []);
+        }
 
         return array_key_exists($key, $settings) ? $settings[$key] : $default;
     }
