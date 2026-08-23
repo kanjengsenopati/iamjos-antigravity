@@ -341,10 +341,10 @@ jobs:
             chmod -R 777 storage bootstrap/cache
 
             # ─── MIGRATION DARI VERSI LAMA (BACKWARD COMPATIBILITY) ───────────────
-            # Jika ada backup .env (berarti ini bukan server kosong), tapi storage/installed tidak ada,
+            # Jika ada file .env (berarti ini bukan server kosong), tapi storage/installed tidak ada,
             # maka ini adalah aplikasi lama yang diupdate ke versi baru.
             # Kita WAJIB membuat file storage/installed agar middleware tidak me-redirect ke /install.
-            if [ -f $TMP_DIR/.env.backup ] && [ ! -f storage/installed ]; then
+            if [ -f .env ] && [ ! -f storage/installed ]; then
               echo "✅ Mendeteksi instalasi lama. Membuat file storage/installed..."
               echo "installed_at: $(date)" > storage/installed
             fi
@@ -412,6 +412,7 @@ jobs:
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 
             # Rebuild cache
+            php artisan optimize:clear --ansi || true
             php artisan cache:clear --ansi || true
             php artisan config:clear --ansi || true
             php artisan route:clear --ansi || true
@@ -545,10 +546,10 @@ jobs:
             chmod -R 777 storage bootstrap/cache
 
             # ─── MIGRATION DARI VERSI LAMA (BACKWARD COMPATIBILITY) ───────────────
-            # Jika ada backup .env (berarti ini bukan server kosong), tapi storage/installed tidak ada,
+            # Jika ada file .env (berarti ini bukan server kosong), tapi storage/installed tidak ada,
             # maka ini adalah aplikasi lama yang diupdate ke versi baru.
             # Kita WAJIB membuat file storage/installed agar middleware tidak me-redirect ke /install.
-            if [ -f $TMP_DIR/.env.backup ] && [ ! -f storage/installed ]; then
+            if [ -f .env ] && [ ! -f storage/installed ]; then
               echo "✅ Mendeteksi instalasi lama. Membuat file storage/installed..."
               echo "installed_at: $(date)" > storage/installed
             fi
@@ -618,6 +619,7 @@ jobs:
               sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 
             # Rebuild cache
+            php artisan optimize:clear --ansi || true
             php artisan cache:clear --ansi || true
             php artisan config:clear --ansi || true
             php artisan route:clear --ansi || true
