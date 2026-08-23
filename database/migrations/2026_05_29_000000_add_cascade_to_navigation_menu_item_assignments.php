@@ -12,23 +12,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Bersihkan assignment yatim piatu (orphaned) terlebih dahulu agar tidak memicu error FK
-        DB::table('navigation_menu_item_assignments')
-            ->whereNotNull('parent_id')
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('navigation_menu_item_assignments as parent')
-                    ->whereColumn('parent.id', 'navigation_menu_item_assignments.parent_id');
-            })
-            ->delete();
+        try {
+            if (Schema::hasTable('navigation_menu_item_assignments')) {
+                // 1. Bersihkan assignment yatim piatu (orphaned) terlebih dahulu agar tidak memicu error FK
+                DB::table('navigation_menu_item_assignments')
+                    ->whereNotNull('parent_id')
+                    ->whereNotExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('navigation_menu_item_assignments as parent')
+                            ->whereColumn('parent.id', 'navigation_menu_item_assignments.parent_id');
+                    })
+                    ->delete();
 
-        // 2. Tambahkan foreign key constraint pada kolom parent_id
-        Schema::table('navigation_menu_item_assignments', function (Blueprint $table) {
-            $table->foreign('parent_id')
-                ->references('id')
-                ->on('navigation_menu_item_assignments')
-                ->cascadeOnDelete();
-        });
+                // 2. Tambahkan foreign key constraint pada kolom parent_id
+                Schema::table('navigation_menu_item_assignments', function (Blueprint $table) {
+                    $table->foreign('parent_id')
+                        ->references('id')
+                        ->on('navigation_menu_item_assignments')
+                        ->cascadeOnDelete();
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not add cascade to navigation_menu_item_assignments: ' . $e->getMessage());
+        }
     }
 
     /**

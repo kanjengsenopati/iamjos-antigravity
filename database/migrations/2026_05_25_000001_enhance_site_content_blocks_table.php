@@ -14,41 +14,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('site_content_blocks', function (Blueprint $table) {
-            // Add content column for rich text content
-            $table->text('content')->nullable()->after('description');
-            
-            // Add audit trail fields
-            $table->uuid('created_by')->nullable()->after('category');
-            $table->uuid('updated_by')->nullable()->after('created_by');
-            $table->uuid('deleted_by')->nullable()->after('updated_by');
-            
-            // Add soft deletes
-            $table->softDeletes()->after('deleted_by');
-            
-            // Add foreign key constraints
-            $table->foreign('created_by')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-            
-            $table->foreign('updated_by')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-            
-            $table->foreign('deleted_by')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-            
-            // Add indexes for performance
-            $table->index('is_active');
-            $table->index('sort_order');
-            $table->index('category');
-            $table->index('created_by');
-            $table->index('updated_by');
-        });
+        try {
+            if (Schema::hasTable('site_content_blocks')) {
+                Schema::table('site_content_blocks', function (Blueprint $table) {
+                    if (!Schema::hasColumn('site_content_blocks', 'content')) {
+                        $table->text('content')->nullable()->after('description');
+                    }
+                    if (!Schema::hasColumn('site_content_blocks', 'created_by')) {
+                        $table->uuid('created_by')->nullable()->after('category');
+                    }
+                    if (!Schema::hasColumn('site_content_blocks', 'updated_by')) {
+                        $table->uuid('updated_by')->nullable()->after('created_by');
+                    }
+                    if (!Schema::hasColumn('site_content_blocks', 'deleted_by')) {
+                        $table->uuid('deleted_by')->nullable()->after('updated_by');
+                    }
+                    if (!Schema::hasColumn('site_content_blocks', 'deleted_at')) {
+                        $table->softDeletes()->after('deleted_by');
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not alter site_content_blocks: ' . $e->getMessage());
+        }
     }
 
     /**

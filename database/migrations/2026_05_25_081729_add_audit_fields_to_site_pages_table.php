@@ -11,39 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('site_pages', function (Blueprint $table) {
-            // Add audit fields for tracking who created and updated records
-            $table->uuid('created_by')->nullable()->after('sort_order');
-            $table->uuid('updated_by')->nullable()->after('created_by');
-            
-            // Add soft delete support
-            $table->softDeletes()->after('updated_by');
-            $table->uuid('deleted_by')->nullable()->after('deleted_at');
-            
-            // Add meta description field for SEO
-            $table->string('meta_description', 160)->nullable()->after('content');
-            
-            // Add foreign key constraints for user references
-            $table->foreign('created_by')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-            
-            $table->foreign('updated_by')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-            
-            $table->foreign('deleted_by')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-            
-            // Add indexes for performance
-            $table->index('is_published');
-            $table->index('sort_order');
-            $table->index('deleted_at');
-        });
+        try {
+            if (Schema::hasTable('site_pages')) {
+                Schema::table('site_pages', function (Blueprint $table) {
+                    if (!Schema::hasColumn('site_pages', 'created_by')) {
+                        $table->uuid('created_by')->nullable()->after('sort_order');
+                    }
+                    if (!Schema::hasColumn('site_pages', 'updated_by')) {
+                        $table->uuid('updated_by')->nullable()->after('created_by');
+                    }
+                    if (!Schema::hasColumn('site_pages', 'deleted_at')) {
+                        $table->softDeletes()->after('updated_by');
+                    }
+                    if (!Schema::hasColumn('site_pages', 'deleted_by')) {
+                        $table->uuid('deleted_by')->nullable()->after('deleted_at');
+                    }
+                    if (!Schema::hasColumn('site_pages', 'meta_description')) {
+                        $table->string('meta_description', 160)->nullable()->after('content');
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not alter site_pages: ' . $e->getMessage());
+        }
     }
 
     /**
