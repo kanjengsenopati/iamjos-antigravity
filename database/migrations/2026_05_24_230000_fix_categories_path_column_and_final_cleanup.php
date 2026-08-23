@@ -24,20 +24,32 @@ return new class extends Migration
         try {
             DB::transaction(function () {
                 // Step 1: Make path column nullable for site-level categories
-                Schema::table('categories', function (Blueprint $table) {
-                    $table->string('path')->nullable()->change();
-                });
-                Log::info('Made path column nullable');
+                try {
+                    if (Schema::hasTable('categories')) {
+                        Schema::table('categories', function (Blueprint $table) {
+                            if (Schema::hasColumn('categories', 'path')) {
+                                $table->string('path')->nullable()->change();
+                            }
+                        });
+                        Log::info('Made path column nullable');
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Could not change categories path column: ' . $e->getMessage());
+                }
                 
                 // Step 2: Delete ALL site-level categories (journal_id IS NULL)
-                $deletedCategories = DB::table('categories')
-                    ->whereNull('journal_id')
-                    ->delete();
-                Log::info('Deleted ALL site-level categories', ['count' => $deletedCategories]);
+                if (Schema::hasTable('categories')) {
+                    $deletedCategories = DB::table('categories')
+                        ->whereNull('journal_id')
+                        ->delete();
+                    Log::info('Deleted ALL site-level categories', ['count' => $deletedCategories]);
+                }
                 
                 // Step 3: Delete ALL accreditations
-                $deletedAccreditations = DB::table('accreditations')->delete();
-                Log::info('Deleted ALL accreditations', ['count' => $deletedAccreditations]);
+                if (Schema::hasTable('accreditations')) {
+                    $deletedAccreditations = DB::table('accreditations')->delete();
+                    Log::info('Deleted ALL accreditations', ['count' => $deletedAccreditations]);
+                }
                 
                 // Step 4: Investigate remaining authors
                 $remainingAuthors = DB::table('users')

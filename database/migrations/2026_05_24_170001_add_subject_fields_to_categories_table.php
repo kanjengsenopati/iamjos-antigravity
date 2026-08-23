@@ -11,14 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->string('slug')->nullable()->after('name');
-            $table->string('icon')->nullable()->after('description');
-            $table->string('color')->nullable()->after('icon');
-            
-            // Make journal_id nullable for site-level categories
-            $table->uuid('journal_id')->nullable()->change();
-        });
+        try {
+            if (Schema::hasTable('categories')) {
+                Schema::table('categories', function (Blueprint $table) {
+                    if (!Schema::hasColumn('categories', 'slug')) {
+                        $table->string('slug')->nullable()->after('name');
+                    }
+                    if (!Schema::hasColumn('categories', 'icon')) {
+                        $table->string('icon')->nullable()->after('description');
+                    }
+                    if (!Schema::hasColumn('categories', 'color')) {
+                        $table->string('color')->nullable()->after('icon');
+                    }
+                    
+                    // Make journal_id nullable for site-level categories
+                    $table->uuid('journal_id')->nullable()->change();
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not alter categories table: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -26,8 +38,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->dropColumn(['slug', 'icon', 'color']);
-        });
+        try {
+            if (Schema::hasTable('categories')) {
+                Schema::table('categories', function (Blueprint $table) {
+                    $colsToDrop = [];
+                    if (Schema::hasColumn('categories', 'slug')) $colsToDrop[] = 'slug';
+                    if (Schema::hasColumn('categories', 'icon')) $colsToDrop[] = 'icon';
+                    if (Schema::hasColumn('categories', 'color')) $colsToDrop[] = 'color';
+                    if (!empty($colsToDrop)) {
+                        $table->dropColumn($colsToDrop);
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not revert categories table: ' . $e->getMessage());
+        }
     }
 };

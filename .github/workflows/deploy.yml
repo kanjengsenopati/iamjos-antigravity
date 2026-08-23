@@ -385,6 +385,15 @@ jobs:
               ) || true
             fi
 
+            # Pastikan kepemilikan tabel PostgreSQL selaras dengan DB_USERNAME (mencegah error Insufficient privilege)
+            (
+              DB_DATABASE=$(grep "^DB_DATABASE=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+              DB_USERNAME=$(grep "^DB_USERNAME=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+              if [ -n "$DB_DATABASE" ] && [ -n "$DB_USERNAME" ] && command -v psql >/dev/null 2>&1; then
+                sudo -u postgres psql -d "$DB_DATABASE" -c "DO \$\$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP EXECUTE 'ALTER TABLE public.' || quote_ident(r.tablename) || ' OWNER TO ' || quote_ident('$DB_USERNAME'); END LOOP; END \$\$;" 2>/dev/null || true
+              fi
+            ) || true
+
             # Jalankan database migration
             echo "🗄️ Menjalankan database migration..."
             $PHP_CMD artisan migrate --force --ansi
@@ -576,6 +585,15 @@ jobs:
                 ) || true
               fi
             fi
+
+            # Pastikan kepemilikan tabel PostgreSQL selaras dengan DB_USERNAME (mencegah error Insufficient privilege)
+            (
+              DB_DATABASE=$(grep "^DB_DATABASE=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+              DB_USERNAME=$(grep "^DB_USERNAME=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d '\r')
+              if [ -n "$DB_DATABASE" ] && [ -n "$DB_USERNAME" ] && command -v psql >/dev/null 2>&1; then
+                sudo -u postgres psql -d "$DB_DATABASE" -c "DO \$\$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP EXECUTE 'ALTER TABLE public.' || quote_ident(r.tablename) || ' OWNER TO ' || quote_ident('$DB_USERNAME'); END LOOP; END \$\$;" 2>/dev/null || true
+              fi
+            ) || true
 
             # Jalankan database migration
             echo "🗄️ Menjalankan database migration..."
