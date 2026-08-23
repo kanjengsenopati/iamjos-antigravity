@@ -235,19 +235,23 @@ jobs:
             url: "https://ejournal.apdesyi.or.id"
           - id: iamjos
             name: "IAMJOS Apdesyi"
-            path: "/www/wwwroot/iamjos.apdesyi"
+            path: "/home/wwwroot/iamjos.apdesyi"
             url: "https://iamjos.apdesyi"
           - id: iamjos-id
             name: "IAMJOS ID"
-            path: "/www/wwwroot/iamjos.id"
+            path: "/home/wwwroot/iamjos.id"
             url: "https://iamjos.id"
+          - id: journal-apdesyi
+            name: "Journal Apdesyi"
+            path: "/home/wwwroot/journal.apdesyi.or.id"
+            url: "https://journal.apdesyi.or.id"
           - id: klipang
             name: "Klipang"
-            path: "/www/wwwroot/klipang.iamjos.id"
+            path: "/home/wwwroot/klipang.iamjos.id"
             url: "https://klipang.iamjos.id"
           - id: sisdev
             name: "Sisdev"
-            path: "/www/wwwroot/sisdev.iamjos.id"
+            path: "/home/wwwroot/sisdev.iamjos.id"
             url: "https://sisdev.iamjos.id"
 
     steps:
