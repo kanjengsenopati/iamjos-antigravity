@@ -214,36 +214,228 @@ jobs:
           retention-days: 1
 
   # ============================================================
-  # JOB 3: DEPLOY
-  # Hanya berjalan setelah job build selesai.
-  # Hanya pada push ke branch main, staging, atau dev.
-  #
-  # PENTING: Untuk branch 'main', GitHub Environment 'production'
-  # harus dikonfigurasi dengan required reviewers di:
-  # Settings → Environments → production → Required reviewers
-  # Ini memastikan ada approval manual sebelum deploy ke production.
   # ============================================================
-  deploy:
+  # JOB 3A: DEPLOY PRODUCTION (MATRIX STRATEGY)
+  # Berjalan jika branch adalah main.
+  # Men-deploy ke 5 folder secara paralel.
+  # ============================================================
+  deploy-production:
+    name: 🚀 Deploy ke ${{ matrix.target.name }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref_name == 'main' && github.event_name == 'push'
+    environment: production
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - id: ejournal
+            name: "E-Journal"
+            path: "/www/wwwroot/ejournal.apdesyi.or.id"
+            url: "https://ejournal.apdesyi.or.id"
+          - id: iamjos
+            name: "IAMJOS Apdesyi"
+            path: "/www/wwwroot/iamjos.apdesyi"
+            url: "https://iamjos.apdesyi"
+          - id: iamjos-id
+            name: "IAMJOS ID"
+            path: "/www/wwwroot/iamjos.id"
+            url: "https://iamjos.id"
+          - id: klipang
+            name: "Klipang"
+            path: "/www/wwwroot/klipang.iamjos.id"
+            url: "https://klipang.iamjos.id"
+          - id: sisdev
+            name: "Sisdev"
+            path: "/www/wwwroot/sisdev.iamjos.id"
+            url: "https://sisdev.iamjos.id"
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Download build assets artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-assets-${{ github.sha }}
+          path: public/build
+
+      - name: Create deployment archive
+        run: |
+          TAR_NAME="deploy-${{ github.sha }}-${{ matrix.target.id }}.tar.gz"
+          tar -czf /tmp/$TAR_NAME \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=.env \
+            --exclude=tests \
+            --exclude=storage \
+            --exclude=public/storage \
+            .
+          mv /tmp/$TAR_NAME ./deploy.tar.gz
+
+      - name: Copy deployment archive to VPS via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          source: "deploy.tar.gz"
+          target: "/tmp/${{ github.sha }}-${{ matrix.target.id }}"
+
+      - name: Deploy ke VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          script: |
+            set -eo pipefail
+
+            TARGET_PATH="${{ matrix.target.path }}"
+            APP_URL="${{ matrix.target.url }}"
+            TMP_DIR="/tmp/${{ github.sha }}-${{ matrix.target.id }}"
+            TMP_FILE="$TMP_DIR/deploy.tar.gz"
+
+            echo "🚀 Memulai deployment ke ${{ matrix.target.name }}..."
+
+            # Buat direktori target jika belum ada
+            mkdir -p $TARGET_PATH
+
+            # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel)
+            if [ -f $TARGET_PATH/public/.user.ini ]; then
+              sudo chattr -i $TARGET_PATH/public/.user.ini 2>/dev/null || true
+              chmod 777 $TARGET_PATH/public/.user.ini 2>/dev/null || true
+              rm -f $TARGET_PATH/public/.user.ini 2>/dev/null || true
+            fi
+
+            # Backup file .env yang ada di VPS sebelum overwrite
+            if [ -f $TARGET_PATH/.env ]; then
+              cp $TARGET_PATH/.env $TMP_DIR/.env.backup
+            fi
+
+            # Ekstrak arsip ke target path
+            tar -xzf $TMP_FILE -C $TARGET_PATH
+
+            # Kembalikan file .env dari backup jika ada
+            if [ -f $TMP_DIR/.env.backup ]; then
+              mv $TMP_DIR/.env.backup $TARGET_PATH/.env
+            fi
+
+            # Bersihkan file temp
+            rm -rf $TMP_DIR
+
+            cd $TARGET_PATH
+
+            # ─── Pastikan direktori storage ada dan writable ───────
+            mkdir -p storage/framework/cache/data
+            mkdir -p storage/framework/sessions
+            mkdir -p storage/framework/views
+            mkdir -p storage/logs
+            mkdir -p bootstrap/cache
+            chmod -R 777 storage bootstrap/cache
+
+            # ─── CEK INSTALASI (CLEAN INSTALL POLICY) ───────────────
+            if [ ! -f storage/installed ]; then
+              echo "⚠️ File storage/installed tidak ditemukan."
+              echo "Aplikasi belum diinstall. Menghentikan deployment DB (Menunggu Web Installer)."
+              
+              # Set permissions
+              PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
+              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+                sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
+                
+              echo "🎉 Distribusi kode mentah selesai! Silakan buka $APP_URL/install"
+              exit 0
+            fi
+            
+            # === DARI SINI KE BAWAH HANYA DIEKSEKUSI JIKA SUDAH DIINSTALL ===
+
+            # Backup database SEBELUM migration
+            echo "📦 Membuat backup database PostgreSQL..."
+            BACKUP_DIR="/var/backups/iamjos/${{ matrix.target.id }}"
+            mkdir -p $BACKUP_DIR
+            BACKUP_FILE="$BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).sql.gz"
+
+            get_env_val() {
+              grep "^$1=" .env | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
+            }
+            DB_HOST=$(get_env_val DB_HOST)
+            DB_PORT=$(get_env_val DB_PORT)
+            [ -z "$DB_PORT" ] && DB_PORT="5432"
+            DB_DATABASE=$(get_env_val DB_DATABASE)
+            DB_USERNAME=$(get_env_val DB_USERNAME)
+            DB_PASSWORD=$(get_env_val DB_PASSWORD)
+
+            BACKUP_OK=true
+            PGPASSWORD="$DB_PASSWORD" pg_dump \
+              -h "$DB_HOST" \
+              -p "$DB_PORT" \
+              -U "$DB_USERNAME" \
+              -d "$DB_DATABASE" \
+              --no-password 2>/dev/null \
+              | gzip > "$BACKUP_FILE" || BACKUP_OK=false
+
+            if [ "$BACKUP_OK" = false ] || [ ! -s "$BACKUP_FILE" ]; then
+              echo "⚠️ WARNING: Backup database gagal."
+              rm -f "$BACKUP_FILE" 2>/dev/null || true
+            else
+              echo "✅ Backup berhasil: $BACKUP_FILE"
+            fi
+            find $BACKUP_DIR -name "backup-*.sql.gz" -mtime +7 -delete
+
+            # Jalankan database migration
+            echo "🗄️ Menjalankan database migration..."
+            php artisan migrate --force --ansi
+
+            # Storage link
+            php artisan storage:link --ansi || true
+
+            # Set permissions SEBELUM cache rebuild
+            chmod -R 775 storage bootstrap/cache
+            PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
+            sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
+
+            # Rebuild cache
+            php artisan cache:clear --ansi || true
+            php artisan config:clear --ansi || true
+            php artisan route:clear --ansi || true
+            php artisan view:clear --ansi || true
+            php artisan config:cache --ansi
+            php artisan route:cache --ansi
+            php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
+
+            # Final permission fix
+            chmod -R 775 storage bootstrap/cache
+            sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
+
+            # Restart services
+            sudo systemctl reload php8.4-fpm 2>/dev/null || \
+              sudo systemctl reload php-fpm 2>/dev/null || true
+            sudo systemctl reload nginx 2>/dev/null || true
+
+            echo "🎉 Deployment ke ${{ matrix.target.name }} berhasil!"
+  # ============================================================
+  # JOB 3B: DEPLOY PREVIEW
+  # Berjalan jika branch adalah staging atau dev.
+  # ============================================================
+  deploy-preview:
     name: 🚀 Deploy ke ${{ github.ref_name }}
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push'
-
-    # Environment GitHub — 'production' memerlukan approval manual
+    if: (github.ref_name == 'staging' || github.ref_name == 'dev') && github.event_name == 'push'
     environment:
-      name: ${{ github.ref_name == 'main' && 'production' || github.ref_name == 'staging' && 'staging' || 'development' }}
-      url: ${{ github.ref_name == 'main' && 'https://ejournal.apdesyi.or.id' || github.ref_name == 'staging' && 'https://staging.ejournal.apdesyi.or.id' || 'https://dev.ejournal.apdesyi.or.id' }}
-
+      name: ${{ github.ref_name == 'staging' && 'staging' || 'development' }}
+      url: ${{ github.ref_name == 'staging' && 'https://staging.ejournal.apdesyi.or.id' || 'https://dev.ejournal.apdesyi.or.id' }}
+    
     steps:
       - name: Tentukan variabel deployment berdasarkan branch
         id: set-env
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "TARGET_PATH=${{ secrets.PROD_PATH }}" >> $GITHUB_ENV
-            echo "BRANCH_NAME=main" >> $GITHUB_ENV
-            echo "APP_URL=https://ejournal.apdesyi.or.id" >> $GITHUB_ENV
-            echo "ENV_LABEL=PRODUCTION" >> $GITHUB_ENV
-          elif [ "${{ github.ref_name }}" = "staging" ]; then
+          if [ "${{ github.ref_name }}" = "staging" ]; then
             echo "TARGET_PATH=${{ secrets.STAGING_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=staging" >> $GITHUB_ENV
             echo "APP_URL=https://staging.ejournal.apdesyi.or.id" >> $GITHUB_ENV
@@ -258,25 +450,6 @@ jobs:
       - name: Checkout kode
         uses: actions/checkout@v4
 
-      - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: pgsql, pdo_pgsql, redis, gd, zip, bcmath, intl, mbstring
-          coverage: none
-          tools: composer:v2
-
-      - name: Cache Composer dependencies (production)
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-prod-${{ runner.os }}-${{ hashFiles('composer.lock') }}
-          restore-keys: |
-            composer-prod-${{ runner.os }}-
-
-      - name: Install PHP dependencies (production)
-        run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-
       - name: Download build assets artifact
         uses: actions/download-artifact@v4
         with:
@@ -285,7 +458,7 @@ jobs:
 
       - name: Create deployment archive
         run: |
-          tar -czf /tmp/deploy.tar.gz \
+          tar -czf /tmp/deploy-${{ github.sha }}.tar.gz \
             --exclude=node_modules \
             --exclude=.git \
             --exclude=.env \
@@ -293,7 +466,7 @@ jobs:
             --exclude=storage \
             --exclude=public/storage \
             .
-          mv /tmp/deploy.tar.gz ./deploy.tar.gz
+          mv /tmp/deploy-${{ github.sha }}.tar.gz ./deploy.tar.gz
 
       - name: Copy deployment archive to VPS via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -303,7 +476,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT || '22' }}
           source: "deploy.tar.gz"
-          target: "/tmp"
+          target: "/tmp/${{ github.sha }}-preview"
 
       - name: Deploy ke VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -315,41 +488,42 @@ jobs:
           script: |
             set -eo pipefail
 
+            TARGET_PATH="${{ env.TARGET_PATH }}"
+            APP_URL="${{ env.APP_URL }}"
+            TMP_DIR="/tmp/${{ github.sha }}-preview"
+            TMP_FILE="$TMP_DIR/deploy.tar.gz"
+
             echo "🚀 Memulai deployment ke ${{ env.ENV_LABEL }}..."
 
             # Buat direktori target jika belum ada
-            mkdir -p ${{ env.TARGET_PATH }}
+            mkdir -p $TARGET_PATH
 
             # Bebaskan file .user.ini jika dikunci atribut immutable (aaPanel)
-            if [ -f ${{ env.TARGET_PATH }}/public/.user.ini ]; then
-              echo "🔓 Melepas atribut immutable pada public/.user.ini..."
-              sudo chattr -i ${{ env.TARGET_PATH }}/public/.user.ini 2>/dev/null || true
-              chmod 777 ${{ env.TARGET_PATH }}/public/.user.ini 2>/dev/null || true
-              rm -f ${{ env.TARGET_PATH }}/public/.user.ini 2>/dev/null || true
+            if [ -f $TARGET_PATH/public/.user.ini ]; then
+              sudo chattr -i $TARGET_PATH/public/.user.ini 2>/dev/null || true
+              chmod 777 $TARGET_PATH/public/.user.ini 2>/dev/null || true
+              rm -f $TARGET_PATH/public/.user.ini 2>/dev/null || true
             fi
 
             # Backup file .env yang ada di VPS sebelum overwrite
-            if [ -f ${{ env.TARGET_PATH }}/.env ]; then
-              echo "💾 Membackup file .env yang ada..."
-              cp ${{ env.TARGET_PATH }}/.env /tmp/.env.backup
+            if [ -f $TARGET_PATH/.env ]; then
+              cp $TARGET_PATH/.env $TMP_DIR/.env.backup
             fi
 
             # Ekstrak arsip ke target path
-            echo "📦 Mengekstrak berkas deployment..."
-            tar -xzf /tmp/deploy.tar.gz -C ${{ env.TARGET_PATH }}
+            tar -xzf $TMP_FILE -C $TARGET_PATH
 
             # Kembalikan file .env dari backup jika ada
-            if [ -f /tmp/.env.backup ]; then
-              echo "💾 Mengembalikan file .env..."
-              mv /tmp/.env.backup ${{ env.TARGET_PATH }}/.env
+            if [ -f $TMP_DIR/.env.backup ]; then
+              mv $TMP_DIR/.env.backup $TARGET_PATH/.env
             fi
 
-            # Hapus file temporary deploy.tar.gz
-            rm -f /tmp/deploy.tar.gz
+            # Bersihkan file temp
+            rm -rf $TMP_DIR
 
-            cd ${{ env.TARGET_PATH }}
+            cd $TARGET_PATH
 
-            # ─── 1.5 Pastikan direktori storage ada dan writable ───────
+            # ─── Pastikan direktori storage ada dan writable ───────
             mkdir -p storage/framework/cache/data
             mkdir -p storage/framework/sessions
             mkdir -p storage/framework/views
@@ -357,21 +531,29 @@ jobs:
             mkdir -p bootstrap/cache
             chmod -R 777 storage bootstrap/cache
 
-            # ─── 1.6 Pastikan file storage/installed terbuat jika hilang ───
+            # ─── CEK INSTALASI (CLEAN INSTALL POLICY) ───────────────
             if [ ! -f storage/installed ]; then
-              echo "installed_at: $(date)" > storage/installed
-              echo "✅ Recreated missing storage/installed file"
+              echo "⚠️ File storage/installed tidak ditemukan."
+              echo "Aplikasi belum diinstall. Menghentikan deployment DB (Menunggu Web Installer)."
+              
+              # Set permissions
+              PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
+              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
+                sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
+                
+              echo "🎉 Distribusi kode mentah selesai! Silakan buka $APP_URL/install"
+              exit 0
             fi
+            
+            # === DARI SINI KE BAWAH HANYA DIEKSEKUSI JIKA SUDAH DIINSTALL ===
 
-            # ─── 2. Backup database SEBELUM migration ──────────────────
-            # Hanya untuk production dan staging (bukan dev)
-            if [ "${{ env.BRANCH_NAME }}" = "main" ] || [ "${{ env.BRANCH_NAME }}" = "staging" ]; then
+            # Backup database SEBELUM migration (Hanya Staging)
+            if [ "${{ env.BRANCH_NAME }}" = "staging" ]; then
               echo "📦 Membuat backup database PostgreSQL..."
-              BACKUP_DIR="/var/backups/iamjos"
+              BACKUP_DIR="/var/backups/iamjos/staging"
               mkdir -p $BACKUP_DIR
-              BACKUP_FILE="$BACKUP_DIR/backup-${{ env.BRANCH_NAME }}-$(date +%Y%m%d-%H%M%S).sql.gz"
+              BACKUP_FILE="$BACKUP_DIR/backup-staging-$(date +%Y%m%d-%H%M%S).sql.gz"
 
-              # Ambil kredensial DB dari .env dengan aman dari CRLF (\r) dan tanda kutip
               get_env_val() {
                 grep "^$1=" .env | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
               }
@@ -382,7 +564,6 @@ jobs:
               DB_USERNAME=$(get_env_val DB_USERNAME)
               DB_PASSWORD=$(get_env_val DB_PASSWORD)
 
-              # Backup — non-blocking, jika gagal deployment tetap lanjut
               BACKUP_OK=true
               PGPASSWORD="$DB_PASSWORD" pg_dump \
                 -h "$DB_HOST" \
@@ -392,133 +573,45 @@ jobs:
                 --no-password 2>/dev/null \
                 | gzip > "$BACKUP_FILE" || BACKUP_OK=false
 
-              # Verifikasi backup berhasil (file harus ada dan tidak kosong)
               if [ "$BACKUP_OK" = false ] || [ ! -s "$BACKUP_FILE" ]; then
-                echo "⚠️ WARNING: Backup database gagal. Melanjutkan deployment tanpa backup."
+                echo "⚠️ WARNING: Backup database gagal."
                 rm -f "$BACKUP_FILE" 2>/dev/null || true
               else
                 echo "✅ Backup berhasil: $BACKUP_FILE"
               fi
-
-              # Hapus backup yang lebih dari 7 hari
               find $BACKUP_DIR -name "backup-*.sql.gz" -mtime +7 -delete
-              echo "🧹 Backup lama (>7 hari) telah dihapus."
             fi
 
-            # ─── 3. Salin manifest Vite jika diperlukan ────────────────
-            [ -f public/build/.vite/manifest.json ] && \
-              cp public/build/.vite/manifest.json public/build/manifest.json || true
-
-            # ─── 4. Jalankan database migration ────────────────────────
+            # Jalankan database migration
             echo "🗄️ Menjalankan database migration..."
             php artisan migrate --force --ansi
 
-            # Ensure storage symlink is active
-            echo "🔗 Menghubungkan storage link..."
+            # Storage link
             php artisan storage:link --ansi || true
 
-            # ─── 5. Set permissions SEBELUM cache rebuild ─────────────
-            echo "🔑 Menyesuaikan permission storage dan bootstrap/cache..."
+            # Set permissions SEBELUM cache rebuild
             chmod -R 775 storage bootstrap/cache
-            
-            # Deteksi PHP-FPM user dan set ownership
             PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
-            echo "   PHP-FPM user terdeteksi: $PHP_FPM_USER"
             sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 
-            # ─── 5.5 Rebuild cache aplikasi ───────────────────────────────
-            echo "⚡ Membangun ulang cache aplikasi..."
-            # Clear semua cache
+            # Rebuild cache
             php artisan cache:clear --ansi || true
             php artisan config:clear --ansi || true
             php artisan route:clear --ansi || true
             php artisan view:clear --ansi || true
-            
-            # Rebuild config dan route cache saja
             php artisan config:cache --ansi
             php artisan route:cache --ansi
-            
-            # Livewire assets (skip jika error)
             php artisan livewire:publish --assets --force --ansi 2>/dev/null || true
 
-            # ─── 5.6 Final permission fix setelah cache rebuild ───────────
-            echo "🔑 Final permission fix..."
+            # Final permission fix
             chmod -R 775 storage bootstrap/cache
             sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || \
-              sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+              sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
 
-            # ─── 6. Restart services ───────────────────────────────────
-            echo "🔄 Merestart services..."
+            # Restart services
             sudo systemctl reload php8.4-fpm 2>/dev/null || \
-              sudo systemctl reload php-fpm 2>/dev/null || \
-              sudo kill -USR2 $(cat /run/php/php8.4-fpm.pid 2>/dev/null) 2>/dev/null || true
+              sudo systemctl reload php-fpm 2>/dev/null || true
             sudo systemctl reload nginx 2>/dev/null || true
 
-            # ─── 7. Verifikasi health check setelah deployment ─────────
-            echo "🏥 Menunggu aplikasi siap (5 detik)..."
-            sleep 5
-
-            echo "🏥 Menjalankan verifikasi health check..."
-            HTTP_STATUS=$(curl -sk -o /dev/null -w "%{http_code}" \
-              --max-time 15 \
-              "${{ env.APP_URL }}/api/v1/health" 2>/dev/null) || HTTP_STATUS="000"
-
-            if [ "$HTTP_STATUS" = "000" ]; then
-              echo "⚠️ Domain unreachable dari VPS, mencoba via localhost..."
-              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-                --max-time 10 \
-                "http://127.0.0.1/api/v1/health" 2>/dev/null) || HTTP_STATUS="000"
-            fi
-
-            if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "503" ]; then
-              echo "✅ Health check OK — Aplikasi berjalan (HTTP $HTTP_STATUS)"
-            else
-              echo "❌ Health check mengembalikan HTTP $HTTP_STATUS"
-              echo "   Periksa log aplikasi di: ${{ env.TARGET_PATH }}/storage/logs/"
-              echo ""
-              echo "📋 Menampilkan 30 baris terakhir dari log Laravel:"
-              tail -n 30 storage/logs/laravel-$(date +%Y-%m-%d).log 2>/dev/null || \
-                tail -n 30 storage/logs/laravel.log 2>/dev/null || \
-                echo "   Log file tidak ditemukan"
-              echo ""
-              echo "🔄 Mencoba clear semua cache dan restart..."
-              php artisan cache:clear --ansi 2>/dev/null || true
-              php artisan config:clear --ansi 2>/dev/null || true
-              php artisan route:clear --ansi 2>/dev/null || true
-              php artisan view:clear --ansi 2>/dev/null || true
-              php artisan config:cache --ansi 2>/dev/null || true
-              php artisan route:cache --ansi 2>/dev/null || true
-              echo ""
-              echo "🔄 Restart PHP-FPM..."
-              sudo systemctl restart php8.4-fpm 2>/dev/null || \
-                sudo systemctl restart php-fpm 2>/dev/null || true
-              echo ""
-              echo "⏳ Tunggu 5 detik dan coba health check lagi..."
-              sleep 5
-
-              HTTP_STATUS_RETRY=$(curl -sk -o /dev/null -w "%{http_code}" \
-                --max-time 15 \
-                "${{ env.APP_URL }}/api/v1/health" 2>/dev/null) || HTTP_STATUS_RETRY="000"
-              if [ "$HTTP_STATUS_RETRY" = "000" ]; then
-                HTTP_STATUS_RETRY=$(curl -s -o /dev/null -w "%{http_code}" \
-                  --max-time 10 \
-                  "http://127.0.0.1/api/v1/health" 2>/dev/null) || HTTP_STATUS_RETRY="000"
-              fi
-
-              if [ "$HTTP_STATUS_RETRY" = "200" ] || [ "$HTTP_STATUS_RETRY" = "503" ]; then
-                echo "✅ Health check OK setelah retry (HTTP $HTTP_STATUS_RETRY)"
-              else
-                echo "⚠️ Health check masih fail setelah retry (HTTP $HTTP_STATUS_RETRY)"
-                echo "   Deployment selesai tapi health check belum memverifikasi."
-                echo "   Periksa manual: ${{ env.APP_URL }}/api/v1/health"
-              fi
-            fi
-
-            echo ""
             echo "🎉 Deployment ke ${{ env.ENV_LABEL }} berhasil!"
-            echo "   Branch: ${{ env.BRANCH_NAME }}"
-            echo "   Commit: ${{ github.sha }}"
-            echo "   URL: ${{ env.APP_URL }}"
