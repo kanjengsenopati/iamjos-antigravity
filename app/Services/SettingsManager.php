@@ -26,7 +26,7 @@ class SettingsManager
      */
     public function system(string $key, mixed $default = null): mixed
     {
-        $settings = Cache::remember('system_settings', 3600, function () {
+        $settings = Cache::remember('settings_manager_system_array', 3600, function () {
             return SystemSetting::all()
                 ->mapWithKeys(fn ($setting) => [$setting->key => $setting->typed_value])
                 ->toArray();
@@ -47,7 +47,7 @@ class SettingsManager
      */
     public function site(string $key, mixed $default = null): mixed
     {
-        $attributes = Cache::remember('site_settings', 3600, function () {
+        $attributes = Cache::remember('settings_manager_site_array', 3600, function () {
             $model = SiteSetting::first();
 
             return $model ? $model->toArray() : [];
@@ -156,7 +156,7 @@ class SettingsManager
      */
     public function flushSystem(): void
     {
-        Cache::forget('system_settings');
+        Cache::forget('settings_manager_system_array');
     }
 
     /**
@@ -164,7 +164,7 @@ class SettingsManager
      */
     public function flushSite(): void
     {
-        Cache::forget('site_settings');
+        Cache::forget('settings_manager_site_array');
     }
 
     /**
