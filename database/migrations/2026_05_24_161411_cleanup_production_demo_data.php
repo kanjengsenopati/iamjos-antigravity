@@ -119,31 +119,39 @@ return new class extends Migration
     {
         $counts = [];
         
-        $counts['article_metrics'] = DB::table('article_metrics')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
-        
-        $logIds = DB::table('submission_logs')
-            ->whereIn('submission_id', $submissionIds)
-            ->pluck('id');
-        
-        if ($logIds->isNotEmpty()) {
-            $counts['submission_log_files'] = DB::table('submission_log_files')
-                ->whereIn('submission_log_id', $logIds)
+        if (Schema::hasTable('article_metrics')) {
+            $counts['article_metrics'] = DB::table('article_metrics')
+                ->whereIn('submission_id', $submissionIds)
                 ->delete();
         }
         
-        $counts['submission_logs'] = DB::table('submission_logs')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('submission_logs')) {
+            $logIds = DB::table('submission_logs')
+                ->whereIn('submission_id', $submissionIds)
+                ->pluck('id');
+            
+            if ($logIds->isNotEmpty() && Schema::hasTable('submission_log_files')) {
+                $counts['submission_log_files'] = DB::table('submission_log_files')
+                    ->whereIn('submission_log_id', $logIds)
+                    ->delete();
+            }
+            
+            $counts['submission_logs'] = DB::table('submission_logs')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
-        $counts['submission_notes'] = DB::table('submission_notes')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('submission_notes')) {
+            $counts['submission_notes'] = DB::table('submission_notes')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
-        $counts['crossref_logs'] = DB::table('crossref_logs')
-            ->whereIn('journal_id', $journalIds)
-            ->delete();
+        if (Schema::hasTable('crossref_logs')) {
+            $counts['crossref_logs'] = DB::table('crossref_logs')
+                ->whereIn('journal_id', $journalIds)
+                ->delete();
+        }
         
         return $counts;
     }
@@ -218,23 +226,39 @@ return new class extends Migration
     {
         $counts = [];
         
-        $publicationIds = DB::table('publications')
-            ->whereIn('submission_id', $submissionIds)
-            ->pluck('id');
-        
-        if ($publicationIds->isNotEmpty()) {
-            $counts['publication_galleys'] = DB::table('publication_galleys')
-                ->whereIn('publication_id', $publicationIds)
-                ->delete();
-            
-            $counts['submission_authors_pub'] = DB::table('submission_authors')
-                ->whereIn('publication_id', $publicationIds)
-                ->delete();
+        if (Schema::hasTable('publication_galleys')) {
+            if (Schema::hasColumn('publication_galleys', 'submission_id')) {
+                $counts['publication_galleys'] = DB::table('publication_galleys')
+                    ->whereIn('submission_id', $submissionIds)
+                    ->delete();
+            }
         }
         
-        $counts['publications'] = DB::table('publications')
-            ->whereIn('submission_id', $submissionIds)
-            ->delete();
+        if (Schema::hasTable('publications')) {
+            $publicationIds = DB::table('publications')
+                ->whereIn('submission_id', $submissionIds)
+                ->pluck('id');
+            
+            if ($publicationIds->isNotEmpty()) {
+                if (Schema::hasTable('publication_galleys') && Schema::hasColumn('publication_galleys', 'publication_id')) {
+                    $counts['publication_galleys'] = DB::table('publication_galleys')
+                        ->whereIn('publication_id', $publicationIds)
+                        ->delete();
+                }
+                
+                if (Schema::hasTable('submission_authors')) {
+                    if (Schema::hasColumn('submission_authors', 'publication_id')) {
+                        $counts['submission_authors_pub'] = DB::table('submission_authors')
+                            ->whereIn('publication_id', $publicationIds)
+                            ->delete();
+                    }
+                }
+            }
+            
+            $counts['publications'] = DB::table('publications')
+                ->whereIn('submission_id', $submissionIds)
+                ->delete();
+        }
         
         return $counts;
     }
