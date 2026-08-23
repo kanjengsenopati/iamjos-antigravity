@@ -372,7 +372,7 @@ jobs:
             BACKUP_FILE="$BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).sql.gz"
 
             get_env_val() {
-              grep "^$1=" .env | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
+              (grep "^$1=" .env 2>/dev/null || echo "") | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
             }
             DB_HOST=$(get_env_val DB_HOST)
             DB_PORT=$(get_env_val DB_PORT)
@@ -578,7 +578,7 @@ jobs:
               BACKUP_FILE="$BACKUP_DIR/backup-staging-$(date +%Y%m%d-%H%M%S).sql.gz"
 
               get_env_val() {
-                grep "^$1=" .env | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
+                (grep "^$1=" .env 2>/dev/null || echo "") | sed "s/^$1=//" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
               }
               DB_HOST=$(get_env_val DB_HOST)
               DB_PORT=$(get_env_val DB_PORT)
