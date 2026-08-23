@@ -494,19 +494,6 @@ jobs:
 
             echo "🚀 Memulai deployment ke ${{ env.ENV_LABEL }}..."
 
-            # Buat direktori target jika belum ada
-            mkdir -p $TARGET_PATH
-
-          script: |
-            set -eo pipefail
-
-            TARGET_PATH="${{ env.TARGET_PATH }}"
-            APP_URL="${{ env.APP_URL }}"
-            TMP_DIR="/tmp/${{ github.sha }}-preview"
-            TMP_FILE="$TMP_DIR/deploy.tar.gz"
-
-            echo "🚀 Memulai deployment ke ${{ env.ENV_LABEL }}..."
-
             # Deteksi PHP 8.4 Binary
             PHP_CMD="php"
             if [ -x "/www/server/php/84/bin/php" ]; then
