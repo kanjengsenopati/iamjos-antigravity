@@ -179,8 +179,20 @@ class InstallController extends Controller
             $dbConfig = session('install_db');
             $mailConfig = session('install_mail');
 
-            if (!$dbConfig || !$mailConfig) {
-                return back()->with('error', 'Session expired. Please restart the installer.');
+            if (!$mailConfig) {
+                $mailConfig = [
+                    'mail_host' => '127.0.0.1',
+                    'mail_port' => '2525',
+                    'mail_username' => '',
+                    'mail_password' => '',
+                    'mail_encryption' => '',
+                    'mail_from_address' => 'hello@example.com',
+                    'mail_from_name' => 'IAMJOS System',
+                ];
+            }
+
+            if (!$dbConfig) {
+                return back()->with('error', 'Database Session expired. Please restart the installer.');
             }
 
             // 1. Re-configure DB dynamically in-memory to run migrations

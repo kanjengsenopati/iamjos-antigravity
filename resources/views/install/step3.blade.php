@@ -81,8 +81,8 @@
                 <a href="{{ route('install.step2') }}" class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition text-sm font-medium">
                     Back
                 </a>
-                <button type="submit" :disabled="!testSuccess && !isLoading" class="px-5 py-2.5 rounded-md text-sm font-medium transition disabled:bg-indigo-300 disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm">
-                    Next Step &rarr;
+                <button type="submit" :disabled="isLoading" class="px-5 py-2.5 rounded-md text-sm font-medium transition disabled:bg-indigo-300 disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm">
+                    Skip / Next Step &rarr;
                 </button>
             </div>
         </div>
