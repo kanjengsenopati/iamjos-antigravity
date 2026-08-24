@@ -12,9 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('submissions', function (Blueprint $table) {
-            $table->bigInteger('seq_id')->unsigned()->nullable()->unique();
-        });
+        if (!Schema::hasColumn('submissions', 'seq_id')) {
+            Schema::table('submissions', function (Blueprint $table) {
+                $table->bigInteger('seq_id')->unsigned()->nullable()->unique();
+            });
+        }
 
         if (DB::getDriverName() === 'pgsql') {
             DB::statement('CREATE SEQUENCE IF NOT EXISTS submissions_seq_id_seq');

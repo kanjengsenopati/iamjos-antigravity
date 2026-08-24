@@ -13,9 +13,11 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('publication_galleys')) {
-            Schema::table('publication_galleys', function (Blueprint $table) {
-                $table->bigInteger('seq_id')->unsigned()->nullable()->unique();
-            });
+            if (!Schema::hasColumn('publication_galleys', 'seq_id')) {
+                Schema::table('publication_galleys', function (Blueprint $table) {
+                    $table->bigInteger('seq_id')->unsigned()->nullable()->unique();
+                });
+            }
             if (DB::getDriverName() === 'pgsql') {
                 // PostgreSQL specific sequence handling
                 DB::statement('CREATE SEQUENCE IF NOT EXISTS publication_galleys_seq_id_seq');
