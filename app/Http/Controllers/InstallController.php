@@ -64,35 +64,52 @@ class InstallController extends Controller
     public function testDatabase(Request $request)
     {
         $request->validate([
-            'db_host' => 'required',
-            'db_port' => 'required',
+            'db_driver' => 'required|in:pgsql,mysql,sqlite',
+            'db_host' => 'required_unless:db_driver,sqlite',
+            'db_port' => 'required_unless:db_driver,sqlite',
             'db_database' => 'required',
-            'db_username' => 'required',
+            'db_username' => 'required_unless:db_driver,sqlite',
             'db_password' => 'nullable',
         ]);
 
         try {
-            config()->set('database.connections.pgsql_test', [
-                'driver' => 'pgsql',
-                'url' => env('DATABASE_URL'),
-                'host' => $request->db_host,
-                'port' => $request->db_port,
-                'database' => $request->db_database,
-                'username' => $request->db_username,
-                'password' => $request->db_password,
-                'charset' => 'utf8',
-                'prefix' => '',
-                'prefix_indexes' => true,
-                'search_path' => 'public',
-                'sslmode' => 'prefer',
-            ]);
+            if ($request->db_driver === 'sqlite') {
+                $dbPath = base_path('database/database.sqlite');
+                if (!file_exists($dbPath)) {
+                    touch($dbPath);
+                }
+                config()->set('database.connections.sqlite_test', [
+                    'driver' => 'sqlite',
+                    'url' => env('DATABASE_URL'),
+                    'database' => $dbPath,
+                    'prefix' => '',
+                    'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+                ]);
+                DB::purge('sqlite_test');
+                DB::connection('sqlite_test')->getPdo();
+            } else {
+                config()->set('database.connections.dynamic_test', [
+                    'driver' => $request->db_driver,
+                    'url' => env('DATABASE_URL'),
+                    'host' => $request->db_host,
+                    'port' => $request->db_port,
+                    'database' => $request->db_database,
+                    'username' => $request->db_username,
+                    'password' => $request->db_password,
+                    'charset' => 'utf8',
+                    'prefix' => '',
+                    'prefix_indexes' => true,
+                    'search_path' => 'public',
+                    'sslmode' => 'prefer',
+                ]);
 
-            DB::purge('pgsql_test');
-            DB::connection('pgsql_test')->getPdo();
+                DB::purge('dynamic_test');
+                DB::connection('dynamic_test')->getPdo();
+            }
 
             // Cache credentials in session for final step
             session([
-                'install_db' => $request->only('db_host', 'db_port', 'db_database', 'db_username', 'db_password')
+                'install_db' => $request->only('db_driver', 'db_host', 'db_port', 'db_database', 'db_username', 'db_password')
             ]);
 
             return response()->json(['success' => true, 'message' => 'Database connection successful!']);
@@ -174,6 +191,10 @@ class InstallController extends Controller
             'admin_password' => 'required|min:8|confirmed',
             'app_url' => 'required|url',
         ]);
+        
+        if (file_exists(base_path('.env')) && !is_writable(base_path('.env'))) {
+            return back()->with('error', 'Instalasi Gagal: File .env bersifat Read-Only. Mohon jalankan "chown -R www:www ' . base_path() . '" di server Anda agar web server dapat menulis konfigurasi.');
+        }
 
         try {
             $dbConfig = session('install_db');
@@ -196,13 +217,18 @@ class InstallController extends Controller
             }
 
             // 1. Re-configure DB dynamically in-memory to run migrations
-            config()->set('database.connections.pgsql.host', $dbConfig['db_host']);
-            config()->set('database.connections.pgsql.port', $dbConfig['db_port']);
-            config()->set('database.connections.pgsql.database', $dbConfig['db_database']);
-            config()->set('database.connections.pgsql.username', $dbConfig['db_username']);
-            config()->set('database.connections.pgsql.password', $dbConfig['db_password']);
-            config()->set('database.default', 'pgsql');
-            DB::purge('pgsql');
+            $driver = $dbConfig['db_driver'] ?? 'pgsql';
+            if ($driver === 'sqlite') {
+                config()->set('database.connections.sqlite.database', base_path('database/database.sqlite'));
+            } else {
+                config()->set("database.connections.{$driver}.host", $dbConfig['db_host']);
+                config()->set("database.connections.{$driver}.port", $dbConfig['db_port']);
+                config()->set("database.connections.{$driver}.database", $dbConfig['db_database']);
+                config()->set("database.connections.{$driver}.username", $dbConfig['db_username']);
+                config()->set("database.connections.{$driver}.password", $dbConfig['db_password']);
+            }
+            config()->set('database.default', $driver);
+            DB::purge($driver);
 
             // 2. Setup Super Admin credentials for the Seeder (Avoid putenv because aaPanel disables it)
             $_ENV['SUPER_ADMIN_EMAIL'] = $request->admin_email;
@@ -233,15 +259,17 @@ class InstallController extends Controller
             File::put(storage_path('installed'), 'installed_at: ' . now());
             File::put(storage_path('install.log'), 'installed_at: ' . now() . "\n" . Artisan::output());
 
+            $driver = $dbConfig['db_driver'] ?? 'pgsql';
+            
             // 5. Update .env (DO THIS LAST to prevent php artisan serve from killing the request process mid-way!)
             $envUpdates = [
                 'APP_URL' => $request->app_url,
-                'DB_CONNECTION' => 'pgsql',
-                'DB_HOST' => $dbConfig['db_host'],
-                'DB_PORT' => $dbConfig['db_port'],
-                'DB_DATABASE' => $dbConfig['db_database'],
-                'DB_USERNAME' => $dbConfig['db_username'],
-                'DB_PASSWORD' => $dbConfig['db_password'],
+                'DB_CONNECTION' => $driver,
+                'DB_HOST' => $dbConfig['db_host'] ?? '127.0.0.1',
+                'DB_PORT' => $dbConfig['db_port'] ?? '',
+                'DB_DATABASE' => $driver === 'sqlite' ? base_path('database/database.sqlite') : $dbConfig['db_database'],
+                'DB_USERNAME' => $dbConfig['db_username'] ?? '',
+                'DB_PASSWORD' => $dbConfig['db_password'] ?? '',
                 'MAIL_HOST' => $mailConfig['mail_host'],
                 'MAIL_PORT' => $mailConfig['mail_port'],
                 'MAIL_USERNAME' => $mailConfig['mail_username'],

@@ -11,34 +11,55 @@
     <!-- Form -->
     <form id="dbForm" method="GET" action="{{ route('install.step3') }}" class="space-y-5">
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Database Host</label>
-                <input type="text" x-model="formData.db_host" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="127.0.0.1" required>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Database Port</label>
-                <input type="text" x-model="formData.db_port" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="5432" required>
-            </div>
+        <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Database Type</label>
+            <select x-model="formData.db_driver" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm">
+                <option value="pgsql">PostgreSQL (Recommended)</option>
+                <option value="mysql">MySQL / MariaDB</option>
+                <option value="sqlite">SQLite (For Testing/Development)</option>
+            </select>
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Database Name</label>
-            <input type="text" x-model="formData.db_database" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="iamjos_db" required>
-        </div>
+        <template x-if="formData.db_driver !== 'sqlite'">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Database Host</label>
+                    <input type="text" x-model="formData.db_host" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="127.0.0.1" :required="formData.db_driver !== 'sqlite'">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Database Port</label>
+                    <input type="text" x-model="formData.db_port" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="5432" :required="formData.db_driver !== 'sqlite'">
+                </div>
+            </div>
+        </template>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <template x-if="formData.db_driver !== 'sqlite'">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Database Username</label>
-                <input type="text" x-model="formData.db_username" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="postgres" required>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Database Name</label>
+                <input type="text" x-model="formData.db_database" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="iamjos_db" :required="formData.db_driver !== 'sqlite'">
             </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Database Password</label>
-                <input type="password" x-model="formData.db_password" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="Leave empty if none">
+        </template>
+
+        <template x-if="formData.db_driver !== 'sqlite'">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Database Username</label>
+                    <input type="text" x-model="formData.db_username" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="postgres" :required="formData.db_driver !== 'sqlite'">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Database Password</label>
+                    <input type="password" x-model="formData.db_password" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border text-sm" placeholder="Leave empty if none">
+                </div>
             </div>
-        </div>
+        </template>
+
+        <template x-if="formData.db_driver === 'sqlite'">
+            <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded relative text-sm" role="alert">
+                <span class="block sm:inline">You selected SQLite. A database file will automatically be created at <strong>database/database.sqlite</strong>. No other credentials are required.</span>
+            </div>
+        </template>
 
         <!-- Connection Test Result -->
         <div x-show="testResult !== null" x-cloak class="p-4 rounded-md text-sm font-medium border" :class="testSuccess ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'">
@@ -76,6 +97,7 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('databaseSetup', () => ({
             formData: {
+                db_driver: 'pgsql',
                 db_host: '127.0.0.1',
                 db_port: '5432',
                 db_database: '',
@@ -89,11 +111,16 @@
             testMessage: '',
 
             async testConnection() {
-                if(!this.formData.db_host || !this.formData.db_port || !this.formData.db_database || !this.formData.db_username) {
-                    this.testResult = 'error';
-                    this.testSuccess = false;
-                    this.testMessage = 'Please fill out all required fields first.';
-                    return;
+                if (this.formData.db_driver !== 'sqlite') {
+                    if(!this.formData.db_host || !this.formData.db_port || !this.formData.db_database || !this.formData.db_username) {
+                        this.testResult = 'error';
+                        this.testSuccess = false;
+                        this.testMessage = 'Please fill out all required fields first.';
+                        return;
+                    }
+                } else {
+                    // For SQLite, just pass dummy data for validation or skip
+                    this.formData.db_database = 'database.sqlite';
                 }
 
                 this.isLoading = true;
