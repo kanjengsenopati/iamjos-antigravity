@@ -203,10 +203,15 @@ class InstallController extends Controller
             config()->set('database.connections.pgsql.password', $dbConfig['db_password']);
             DB::purge('pgsql');
 
-            // 2. Setup Super Admin credentials for the Seeder
-            putenv('SUPER_ADMIN_EMAIL=' . $request->admin_email);
-            putenv('SUPER_ADMIN_NAME=' . $request->admin_name);
-            putenv('SUPER_ADMIN_PASSWORD=' . $request->admin_password);
+            // 2. Setup Super Admin credentials for the Seeder (Avoid putenv because aaPanel disables it)
+            $_ENV['SUPER_ADMIN_EMAIL'] = $request->admin_email;
+            $_SERVER['SUPER_ADMIN_EMAIL'] = $request->admin_email;
+            
+            $_ENV['SUPER_ADMIN_NAME'] = $request->admin_name;
+            $_SERVER['SUPER_ADMIN_NAME'] = $request->admin_name;
+            
+            $_ENV['SUPER_ADMIN_PASSWORD'] = $request->admin_password;
+            $_SERVER['SUPER_ADMIN_PASSWORD'] = $request->admin_password;
 
             // 3. Migrate and Seed (using the dynamic connection config)
             Artisan::call('migrate', ['--force' => true]);
