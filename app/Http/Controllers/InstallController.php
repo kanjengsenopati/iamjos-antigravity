@@ -201,6 +201,7 @@ class InstallController extends Controller
             config()->set('database.connections.pgsql.database', $dbConfig['db_database']);
             config()->set('database.connections.pgsql.username', $dbConfig['db_username']);
             config()->set('database.connections.pgsql.password', $dbConfig['db_password']);
+            config()->set('database.default', 'pgsql');
             DB::purge('pgsql');
 
             // 2. Setup Super Admin credentials for the Seeder (Avoid putenv because aaPanel disables it)
