@@ -43,12 +43,8 @@ return new class extends Migration
             ]);
         }
 
-        // 2. Add Unique constraint if it does not exist (PostgreSQL-compatible check)
-        $constraintExists = DB::select(
-            "SELECT 1 FROM pg_constraint WHERE conname = 'issues_journal_id_url_path_unique'"
-        );
-
-        if (empty($constraintExists)) {
+        // 2. Add Unique constraint if it does not exist (Database-agnostic check)
+        if (!Schema::hasIndex('issues', 'issues_journal_id_url_path_unique')) {
             Schema::table('issues', function (Blueprint $table) {
                 // Using a composite unique index so url_path is unique per journal
                 $table->unique(['journal_id', 'url_path'], 'issues_journal_id_url_path_unique');
