@@ -235,6 +235,7 @@ class InstallController extends Controller
             // 5. Update .env (DO THIS LAST to prevent php artisan serve from killing the request process mid-way!)
             $envUpdates = [
                 'APP_URL' => $request->app_url,
+                'DB_CONNECTION' => 'pgsql',
                 'DB_HOST' => $dbConfig['db_host'],
                 'DB_PORT' => $dbConfig['db_port'],
                 'DB_DATABASE' => $dbConfig['db_database'],
