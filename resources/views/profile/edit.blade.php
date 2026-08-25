@@ -102,7 +102,7 @@
                                 {{ $isId ? 'Unggah avatar baru. Ukuran file maksimum: 2MB. Format yang diperbolehkan: JPG, PNG, WebP.' : 'Upload a new avatar. Max file size: 2MB. Allowed formats: JPG, PNG, WebP.' }}
                             </p>
                             <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                                <form action="{{ route('journal.profile.avatar', $journal->slug) }}" method="POST"
+                                <form action="{{ $journal ? route('journal.profile.avatar', $journal->slug) : route('profile.avatar') }}" method="POST"
                                     enctype="multipart/form-data" class="flex items-center gap-3">
                                     @csrf
                                     @method('PATCH')
@@ -138,7 +138,7 @@
                                 </form>
 
                                 @if ($user->avatar)
-                                    <form action="{{ route('journal.profile.avatar.delete', $journal->slug) }}"
+                                    <form action="{{ $journal ? route('journal.profile.avatar.delete', $journal->slug) : route('profile.avatar.delete') }}"
                                         method="POST">
                                         @csrf
                                         @method('DELETE')
@@ -226,7 +226,7 @@
                 </div>
 
                 <!-- Tab Content -->
-                <form action="{{ route('journal.profile.update', $journal->slug) }}" method="POST" class="p-6" x-show="['identity', 'contact', 'public'].includes(activeTab)" x-cloak>
+                <form action="{{ $journal ? route('journal.profile.update', $journal->slug) : route('profile.update') }}" method="POST" class="p-6" x-show="['identity', 'contact', 'public'].includes(activeTab)" x-cloak>
                     @csrf
                     @method('PATCH')
 
@@ -520,7 +520,7 @@
                         <i class="fa-solid fa-key text-indigo-600 text-xl"></i>
                         <h3 class="text-lg font-bold text-slate-800">{{ $isId ? 'Ubah Kata Sandi' : 'Change Password' }}</h3>
                     </div>
-                    <form action="{{ route('journal.profile.password', $journal->slug) }}" method="POST" class="p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
+                    <form action="{{ $journal ? route('journal.profile.password', $journal->slug) : route('profile.password') }}" method="POST" class="p-6 rounded-[24px] border-2 border-slate-50 bg-slate-50/30">
                         @csrf
                         @method('PATCH')
 
@@ -649,7 +649,7 @@
                 images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
                     xhr.withCredentials = false;
-                    xhr.open('POST', '{{ route('journal.profile.upload.image', $journal->slug) }}');
+                    xhr.open('POST', '{{ $journal ? route("journal.profile.upload.image", $journal->slug) : route("profile.upload.image") }}');
                     xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
 
                     xhr.upload.onprogress = (e) => {
@@ -774,4 +774,5 @@
         </script>
     @endpush
 </x-app-layout>
+
 
