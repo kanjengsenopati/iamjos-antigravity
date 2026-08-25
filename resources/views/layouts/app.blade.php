@@ -481,7 +481,7 @@
                     </div>
 
                     <!-- Submissions -->
-                    @journalRole([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR, \App\Models\Role::LEVEL_AUTHOR], $journal->id)
+                    @journalRole([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR, \App\Models\Role::LEVEL_AUTHOR], $journal?->id)
                         @php $isSubmissionsActive = request()->routeIs('journal.submissions.*'); @endphp
                         <a href="{{ route('journal.submissions.index', ['journal' => $journalSlug]) }}"
                             class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isSubmissionsActive ? $navActiveClass : $navInactiveClass }}"
@@ -497,7 +497,7 @@
                     @endjournalRole
 
                     <!-- Reviewer: My Reviews -->
-                    @journalPermission([\App\Models\Role::LEVEL_REVIEWER], $journal->id)
+                    @journalPermission([\App\Models\Role::LEVEL_REVIEWER], $journal?->id)
                         @php $isReviewerActive = request()->routeIs('journal.reviewer.*'); @endphp
                         <a href="{{ route('journal.reviewer.index', ['journal' => $journalSlug]) }}"
                             class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isReviewerActive ? $navActiveClass : $navInactiveClass }}"
@@ -513,7 +513,7 @@
                     @endjournalPermission
 
                     <!-- Issues -->
-                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
+                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal?->id)
                         @php $isIssuesActive = request()->routeIs('journal.issues.*'); @endphp
                         <a href="{{ route('journal.issues.index', ['journal' => $journalSlug]) }}"
                             class="group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isIssuesActive ? $navActiveClass : $navInactiveClass }}"
@@ -529,7 +529,7 @@
                     @endjournalPermission
 
                     <!-- Announcements -->
-                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
+                    @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal?->id)
                         @php $isAnnouncementsActive = request()->routeIs('journal.announcements.*'); @endphp
                         <a href="{{ route('journal.announcements.index', ['journal' => $journalSlug]) }}"
                             class="w-full group flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative {{ $isAnnouncementsActive ? $navActiveClass : $navInactiveClass }}"
@@ -546,7 +546,7 @@
                 </div>
 
                 <!-- Group: Management -->
-                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal->id)
+                @journalPermission([\App\Models\Role::LEVEL_MANAGER, \App\Models\Role::LEVEL_SECTION_EDITOR], $journal?->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
                             <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Pengaturan' : 'Settings' }}</span>
@@ -695,7 +695,7 @@
                 @endjournalPermission
 
                 <!-- Group: Administration (Super Admin Only) -->
-                @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal->id)
+                @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal?->id)
                     <div class="space-y-1">
                         <div class="px-3 mb-2 mt-4" x-show="!sidebarCollapsed">
                             <span class="text-xs font-bold text-slate-500 tracking-tight">{{ $isId ? 'Administrasi' : 'Administration' }}</span>
@@ -1083,7 +1083,7 @@
                                     </svg>
                                     {{ $isId ? 'Profil Saya' : 'My Profile' }}
                                 </a>
-                                @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal->id)
+                                @journalPermission([\App\Models\Role::LEVEL_SUPER_ADMIN], $journal?->id)
                                     <a href="{{ route('admin.site.index') }}"
                                         class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor"
@@ -1211,4 +1211,6 @@
 </body>
 
 </html>
+
+
 
