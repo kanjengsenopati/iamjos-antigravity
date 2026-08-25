@@ -18,20 +18,18 @@
             }
         </style>
     @endpush
-    @if(!$isSuperAdminContext)
-    @endif
 
-    <div class="min-h-screen bg-gray-50 -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
+    <div class="min-h-screen bg-gray-50 {{ $isSuperAdminContext ? '-m-6 lg:-m-8 p-6 lg:p-8' : '-m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8' }}">
         <div class="max-w-6xl mx-auto">
             <!-- Header -->
             <div class="mb-8">
-                <a href="{{ route('dashboard') }}"
+                <a href="{{ $isSuperAdminContext ? route('admin.site.index') : route('dashboard') }}"
                     class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    {{ $isId ? 'Kembali ke Dasbor' : 'Back to Dashboard' }}
+                    {{ $isSuperAdminContext ? ($isId ? 'Kembali ke Admin' : 'Back to Admin') : ($isId ? 'Kembali ke Dasbor' : 'Back to Dashboard') }}
                 </a>
                 <h1 class="text-3xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Profil' : 'Profile Settings' }}</h1>
                 <p class="mt-2 text-gray-600">{{ $isId ? 'Kelola informasi akun dan preferensi Anda' : 'Manage your account information and preferences' }}</p>

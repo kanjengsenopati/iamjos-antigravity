@@ -65,6 +65,13 @@
                         sans: ['Inter', 'sans-serif'],
                         mono: ['JetBrains Mono', 'monospace'],
                     },
+                    colors: {
+                        primary: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4e',
+                        },
+                    },
                 }
             }
         }
@@ -74,13 +81,11 @@
 
     <style>
         /* Sembunyikan alert box session flash bawaan di dalam main content agar tidak duplikat dengan modal */
-        main .bg-emerald-50.border-emerald-200,
-        main .bg-green-50.border-green-200,
-        main .bg-red-50.border-red-200,
-        main .bg-red-100.border-red-200,
-        .flex-1.p-6.lg\:p-8 > div.bg-emerald-50,
-        .flex-1.p-6.lg\:p-8 > div.bg-green-50,
-        .flex-1.p-6.lg\:p-8 > div.bg-red-50 {
+        /* Hanya sembunyikan anak langsung dari wrapper konten utama, bukan alert di dalam card/form */
+        main > .p-6 > .bg-emerald-50.border-emerald-200,
+        main > .p-6 > .bg-green-50.border-green-200,
+        main > .p-6 > .bg-red-50.border-red-200,
+        main > .p-6 > .bg-red-100.border-red-200 {
             display: none !important;
         }
 
