@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :journal="$journal ?? null">
     @php
         $isId = app()->getLocale() === 'id';
     @endphp
@@ -774,6 +774,7 @@
         </script>
     @endpush
 </x-app-layout>
+
 
 
 
