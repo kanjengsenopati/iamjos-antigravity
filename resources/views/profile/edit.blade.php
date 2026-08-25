@@ -785,13 +785,5 @@
             }
         </script>
     @endpush
-</x-app-layout>
 
 
-
-
-@if($isSuperAdminContext)
-    @endsection
-@else
-    </x-app-layout>
-@endif
