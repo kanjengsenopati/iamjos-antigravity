@@ -1,7 +1,17 @@
-<x-app-layout :journal="$journal ?? null">
-    @php
-        $isId = app()->getLocale() === 'id';
-    @endphp
+@php
+    $isId = app()->getLocale() === 'id';
+    // Gunakan URL untuk menentukan konteks Super Admin (tanpa jurnal di URL)
+    $isSuperAdminContext = !request()->route('journal') && auth()->check() && auth()->user()->hasRole(\App\Models\Role::ROLE_SUPERADMIN);
+@endphp
+
+@if($isSuperAdminContext)
+    @extends('layouts.admin')
+    @section('title', $isId ? 'Pengaturan Profil' : 'Profile Settings')
+    
+    @section('content')
+@else
+    <x-app-layout :journal="$journal ?? null">
+@endif
     @push('styles')
         <style>
             /* CKEditor 4 Custom Styling */
@@ -22,7 +32,9 @@
             }
         </style>
     @endpush
-    <x-slot name="title">{{ $isId ? 'Pengaturan Profil' : 'Profile Settings' }}</x-slot>
+    @if(!$isSuperAdminContext)
+        <x-slot name="title">{{ $isId ? 'Pengaturan Profil' : 'Profile Settings' }}</x-slot>
+    @endif
 
     <div class="min-h-screen bg-gray-50 -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
         <div class="max-w-6xl mx-auto">
@@ -778,4 +790,8 @@
 
 
 
-
+@if($isSuperAdminContext)
+    @endsection
+@else
+    </x-app-layout>
+@endif
