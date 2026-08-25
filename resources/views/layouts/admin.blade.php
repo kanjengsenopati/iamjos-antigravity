@@ -337,7 +337,7 @@
             </button>
             <div x-show="userMenuOpen" @click.away="userMenuOpen = false" x-cloak x-transition
                 class="mt-2 py-1 bg-slate-800 rounded-lg shadow-lg"> <a
-                    href="{{ ($j = request()->route('journal') ?? \App\Models\Journal::first()) ? route('journal.profile.edit', $j) : '#' }}"
+                    href="{{ ($j = request()->route('journal')) ? route('journal.profile.edit', $j) : route('profile.edit') }}"
                     class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -564,7 +564,7 @@
 
                     <div x-show="profileOpen" @click.away="profileOpen = false" x-cloak x-transition
                         class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1">
-                        <a href="{{ ($j = request()->route('journal') ?? \App\Models\Journal::first()) ? route('journal.profile.edit', $j) : '#' }}"
+                        <a href="{{ ($j = request()->route('journal')) ? route('journal.profile.edit', $j) : route('profile.edit') }}"
                             class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             <i class="fa-solid fa-user text-gray-400"></i> {{ $isId ? 'Pengaturan Profil' : 'Profile Settings' }}
                         </a>

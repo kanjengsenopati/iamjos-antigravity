@@ -163,13 +163,11 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
             Route::get('/dashboard', [JournalSelectController::class, 'redirectToDashboard'])->name('dashboard');
             Route::get('/select-journal', [JournalSelectController::class, 'index'])->name('journal.select');
             Route::get('/select-journal/{journal:slug}', [JournalSelectController::class, 'select'])->name('journal.select.go');
-            Route::get('/profile', function () {
-                $journal = \App\Models\Journal::first();
-                if ($journal) {
-                    return redirect()->route('journal.profile.edit', $journal->slug);
-                }
-                return redirect('/');
-            })->name('profile.edit');
+            Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+            Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+            Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+            Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+            Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
             Route::post('/profile/upload-image', [ProfileController::class, 'uploadImage'])->name('profile.upload.image');
 
             Route::prefix('notifications')->name('notifications.')->group(function () {

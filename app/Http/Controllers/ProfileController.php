@@ -25,115 +25,120 @@ class ProfileController extends Controller
      * Display user profile edit form.
      * Journal parameter is injected via route model binding.
      */
-    public function edit(Request $request, Journal $journal): View
+    public function edit(Request $request, ?Journal $journal = null): View
     {
         $user = Auth::user();
-
-        // Fetch roles available for self-registration in current journal
-        // Cache self‑registerable roles per journal to avoid repeated queries
-        $availableRoles = Cache::remember(
-            'available_roles_journal_' . $journal->id,
-            now()->addMinutes(30),
-            function () use ($journal) {
-                return Role::withoutGlobalScope('journal')
-                    ->where('allow_registration', true)
-                    ->where(function($query) use ($journal) {
-                        $query->where('journal_id', $journal->id)
-                              ->orWhereNull('journal_id');
-                    })
-                    ->get();
-            }
-        );
-
-        // Get current user's role names for this journal
-        $userRolesNames = $user->journalRoles()
-            ->where('journal_id', $journal->id)
-            ->with(['role' => function($q) {
-                $q->withoutGlobalScope('journal');
-            }])
-            ->get()
-            ->filter(fn($item) => $item->role)
-            ->map(fn($item) => $item->role->name)
-            ->toArray();
-
-        // Map names to the rendered available roles IDs for this journal
-        $availableRoleIdsByName = $availableRoles->pluck('id', 'name')->toArray();
+        $availableRoles = collect();
         $userRolesIds = [];
-        foreach ($userRolesNames as $name) {
-            if (isset($availableRoleIdsByName[$name])) {
-                $userRolesIds[] = $availableRoleIdsByName[$name];
-            }
-        }
-
-        // Get all journal IDs where user has a role via JournalUserRole
-        // Journals where the user already has a role (for enrollment exclusion)
-        $enrolledJournalIds = $user->journalRoles()
-            ->pluck('journal_id')
-            ->unique()
-            ->toArray();
-
-        // Get user's detailed roles in all journals, mapped to correct matching self-registerable role IDs by name
-        $userJournalRolesRaw = $user->journalRoles()
-            ->with(['role' => function($q) {
-                $q->withoutGlobalScope('journal');
-            }])
-            ->get()
-            ->groupBy('journal_id');
-
+        $enrolledJournalIds = [];
         $userJournalRoles = [];
-        foreach ($userJournalRolesRaw as $jId => $items) {
-            $roleNames = $items->filter(fn($item) => $item->role)->map(fn($item) => $item->role->name)->toArray();
-            
-            // Get all self-registerable roles for this journal (specific or global)
-            $jrRoles = Role::withoutGlobalScope('journal')
-                ->where('journal_id', $jId)
-                ->where('allow_registration', true)
-                ->get();
-                
-            if ($jrRoles->isEmpty()) {
-                $jrRoles = Role::withoutGlobalScope('journal')
-                    ->whereNull('journal_id')
-                    ->where('allow_registration', true)
-                    ->get();
-            }
-            
-            $mappedIds = [];
-            foreach ($roleNames as $name) {
-                $matchedRole = $jrRoles->firstWhere('name', $name);
-                if ($matchedRole) {
-                    $mappedIds[] = $matchedRole->id;
-                }
-            }
-            $userJournalRoles[$jId] = $mappedIds;
-        }
-
-        // Get user's administrative (staff) roles in all journals
         $userJournalAdminRoles = [];
-        if ($user) {
-            $userJournalAdminRoles = $user->journalRoles()
+        $otherJournals = collect();
+
+        if ($journal) {
+            // Fetch roles available for self-registration in current journal
+            // Cache self‑registerable roles per journal to avoid repeated queries
+            $availableRoles = Cache::remember(
+                'available_roles_journal_' . $journal->id,
+                now()->addMinutes(30),
+                function () use ($journal) {
+                    return Role::withoutGlobalScope('journal')
+                        ->where('allow_registration', true)
+                        ->where(function($query) use ($journal) {
+                            $query->where('journal_id', $journal->id)
+                                  ->orWhereNull('journal_id');
+                        })
+                        ->get();
+                }
+            );
+
+            // Get current user's role names for this journal
+            $userRolesNames = $user->journalRoles()
+                ->where('journal_id', $journal->id)
                 ->with(['role' => function($q) {
                     $q->withoutGlobalScope('journal');
                 }])
                 ->get()
-                ->filter(function ($jur) {
-                    return $jur->role && !in_array($jur->role->name, ['Author', 'Reader', 'Reviewer', 'Translator']);
-                })
-                ->groupBy('journal_id')
-                ->map(function ($items) {
-                    return $items->map(fn($item) => $item->role->name)->unique()->toArray();
-                })
+                ->filter(fn($item) => $item->role)
+                ->map(fn($item) => $item->role->name)
                 ->toArray();
+
+            // Map names to the rendered available roles IDs for this journal
+            $availableRoleIdsByName = $availableRoles->pluck('id', 'name')->toArray();
+            foreach ($userRolesNames as $name) {
+                if (isset($availableRoleIdsByName[$name])) {
+                    $userRolesIds[] = $availableRoleIdsByName[$name];
+                }
+            }
+
+            // Get all journal IDs where user has a role via JournalUserRole
+            // Journals where the user already has a role (for enrollment exclusion)
+            $enrolledJournalIds = $user->journalRoles()
+                ->pluck('journal_id')
+                ->unique()
+                ->toArray();
+
+            // Get user's detailed roles in all journals, mapped to correct matching self-registerable role IDs by name
+            $userJournalRolesRaw = $user->journalRoles()
+                ->with(['role' => function($q) {
+                    $q->withoutGlobalScope('journal');
+                }])
+                ->get()
+                ->groupBy('journal_id');
+
+            foreach ($userJournalRolesRaw as $jId => $items) {
+                $roleNames = $items->filter(fn($item) => $item->role)->map(fn($item) => $item->role->name)->toArray();
+                
+                // Get all self-registerable roles for this journal (specific or global)
+                $jrRoles = Role::withoutGlobalScope('journal')
+                    ->where('journal_id', $jId)
+                    ->where('allow_registration', true)
+                    ->get();
+                    
+                if ($jrRoles->isEmpty()) {
+                    $jrRoles = Role::withoutGlobalScope('journal')
+                        ->whereNull('journal_id')
+                        ->where('allow_registration', true)
+                        ->get();
+                }
+                
+                $mappedIds = [];
+                foreach ($roleNames as $name) {
+                    $matchedRole = $jrRoles->firstWhere('name', $name);
+                    if ($matchedRole) {
+                        $mappedIds[] = $matchedRole->id;
+                    }
+                }
+                $userJournalRoles[$jId] = $mappedIds;
+            }
+
+            // Get user's administrative (staff) roles in all journals
+            if ($user) {
+                $userJournalAdminRoles = $user->journalRoles()
+                    ->with(['role' => function($q) {
+                        $q->withoutGlobalScope('journal');
+                    }])
+                    ->get()
+                    ->filter(function ($jur) {
+                        return $jur->role && !in_array($jur->role->name, ['Author', 'Reader', 'Reviewer', 'Translator']);
+                    })
+                    ->groupBy('journal_id')
+                    ->map(function ($items) {
+                        return $items->map(fn($item) => $item->role->name)->unique()->toArray();
+                    })
+                    ->toArray();
+            }
+
+            // Fetch other enabled journals for enrollment
+            $query = Journal::where('id', '!=', $journal->id)
+                ->where('enabled', true);
+
+            $otherJournals = $query->with(['roles' => function($q) {
+                    $q->withoutGlobalScope('journal')->where('allow_registration', true);
+                }])
+                ->paginate(5)
+                ->appends($request->query());
         }
-
-        // Fetch other enabled journals for enrollment
-        $query = Journal::where('id', '!=', $journal->id)
-            ->where('enabled', true);
-
-        $otherJournals = $query->with(['roles' => function($q) {
-                $q->withoutGlobalScope('journal')->where('allow_registration', true);
-            }])
-            ->paginate(5)
-            ->appends($request->query());
 
         $activeTab = $request->query('tab', 'identity');
 
@@ -143,7 +148,7 @@ class ProfileController extends Controller
     /**
      * Update user profile information.
      */
-    public function update(Request $request, Journal $journal): RedirectResponse
+    public function update(Request $request, ?Journal $journal = null): RedirectResponse
     {
         $user = Auth::user();
 
@@ -185,7 +190,9 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
-        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Profile updated successfully.');
+        return $journal 
+            ? redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Profile updated successfully.')
+            : redirect()->route('profile.edit')->with('success', 'Profile updated successfully.');
     }
 
     /**
@@ -225,7 +232,7 @@ class ProfileController extends Controller
     /**
      * Update user password.
      */
-    public function updatePassword(Request $request, Journal $journal): RedirectResponse
+    public function updatePassword(Request $request, ?Journal $journal = null): RedirectResponse
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
@@ -236,13 +243,15 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Password updated successfully.');
+        return $journal 
+            ? redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Password updated successfully.')
+            : redirect()->route('profile.edit')->with('success', 'Password updated successfully.');
     }
 
     /**
      * Update user avatar.
      */
-    public function updateAvatar(Request $request, Journal $journal): RedirectResponse
+    public function updateAvatar(Request $request, ?Journal $journal = null): RedirectResponse
     {
         $request->validate([
             'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
@@ -269,7 +278,9 @@ class ProfileController extends Controller
 
         $user->update(['avatar' => $path]);
 
-        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Avatar updated successfully.');
+        return $journal 
+            ? redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Avatar updated successfully.')
+            : redirect()->route('profile.edit')->with('success', 'Avatar updated successfully.');
     }
 
     /**
@@ -296,7 +307,7 @@ class ProfileController extends Controller
     /**
      * Delete user avatar.
      */
-    public function deleteAvatar(Journal $journal): RedirectResponse
+    public function deleteAvatar(?Journal $journal = null): RedirectResponse
     {
         $user = Auth::user();
 
@@ -306,7 +317,9 @@ class ProfileController extends Controller
 
         $user->update(['avatar' => null]);
 
-        return redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Avatar removed successfully.');
+        return $journal 
+            ? redirect()->route('journal.profile.edit', $journal->slug)->with('success', 'Avatar removed successfully.')
+            : redirect()->route('profile.edit')->with('success', 'Avatar removed successfully.');
     }
 
     /**
