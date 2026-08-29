@@ -362,7 +362,7 @@ class SubmissionController extends Controller
                 'authors' => 'required|array|min:1',
                 'authors.*.first_name' => 'required|string|max:255',
                 'authors.*.last_name' => 'required|string|max:255',
-                'authors.*.email' => 'required|email|max:255',
+                'authors.*.email' => 'required|email|max:255|distinct',
                 'authors.*.affiliation' => 'nullable|string|max:255',
                 'authors.*.country' => 'nullable|string|max:100',
 
@@ -571,7 +571,7 @@ class SubmissionController extends Controller
             'authors' => 'nullable|array',
             'authors.*.first_name' => 'nullable|string|max:255',
             'authors.*.last_name' => 'nullable|string|max:255',
-            'authors.*.email' => 'nullable|string|max:255',
+            'authors.*.email' => 'nullable|string|max:255|distinct',
             'authors.*.affiliation' => 'nullable|string|max:255',
             'authors.*.country' => 'nullable|string|max:100',
             'primary_contact' => 'nullable|integer|min:0',
