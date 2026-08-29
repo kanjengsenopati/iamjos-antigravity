@@ -436,6 +436,35 @@ jobs:
               sudo systemctl reload php-fpm 2>/dev/null || true
             sudo systemctl reload nginx 2>/dev/null || true
 
+            # ─── POST-DEPLOY HEALTH CHECK ─────────────────────────
+            echo "🔍 Menjalankan post-deploy health check..."
+            
+            # 1. Verifikasi Vite manifest ada
+            if [ ! -f "$TARGET_PATH/public/build/manifest.json" ]; then
+              echo "❌ CRITICAL: public/build/manifest.json tidak ditemukan!"
+              exit 1
+            fi
+            
+            # 2. Verifikasi Livewire assets ter-publish (retry jika gagal)
+            if [ ! -d "$TARGET_PATH/public/vendor/livewire" ]; then
+              echo "⚠️ WARNING: Livewire assets belum ter-publish. Mencoba ulang..."
+              cd "$TARGET_PATH" && $PHP_CMD artisan livewire:publish --assets --force --ansi 2>/dev/null || true
+              chmod -R 775 "$TARGET_PATH/public/vendor" 2>/dev/null || true
+              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} "$TARGET_PATH/public/vendor" 2>/dev/null || true
+            fi
+            
+            # 3. Verifikasi TinyMCE asset ada
+            if [ ! -f "$TARGET_PATH/public/assets/js/vendors/plugins/tinymce/tinymce.min.js" ]; then
+              echo "⚠️ WARNING: TinyMCE asset tidak ditemukan di public/assets/"
+            fi
+            
+            # 4. Asset Inventory Report
+            echo "📋 Asset Inventory Report:"
+            [ -f "$TARGET_PATH/public/build/manifest.json" ] && echo "   - Vite manifest: ✅" || echo "   - Vite manifest: ❌"
+            [ -d "$TARGET_PATH/public/vendor/livewire" ] && echo "   - Livewire assets: ✅" || echo "   - Livewire assets: ❌"
+            [ -f "$TARGET_PATH/public/assets/js/vendors/plugins/tinymce/tinymce.min.js" ] && echo "   - TinyMCE: ✅" || echo "   - TinyMCE: ❌"
+            [ -L "$TARGET_PATH/public/storage" ] && echo "   - Storage link: ✅" || echo "   - Storage link: ❌"
+
             echo "🎉 Deployment ke ${{ matrix.target.name }} berhasil!"
   # ============================================================
   # JOB 3B: DEPLOY PREVIEW
@@ -647,5 +676,34 @@ jobs:
             sudo systemctl reload php8.4-fpm 2>/dev/null || \
               sudo systemctl reload php-fpm 2>/dev/null || true
             sudo systemctl reload nginx 2>/dev/null || true
+
+            # ─── POST-DEPLOY HEALTH CHECK ─────────────────────────
+            echo "🔍 Menjalankan post-deploy health check..."
+            
+            # 1. Verifikasi Vite manifest ada
+            if [ ! -f "$TARGET_PATH/public/build/manifest.json" ]; then
+              echo "❌ CRITICAL: public/build/manifest.json tidak ditemukan!"
+              exit 1
+            fi
+            
+            # 2. Verifikasi Livewire assets ter-publish (retry jika gagal)
+            if [ ! -d "$TARGET_PATH/public/vendor/livewire" ]; then
+              echo "⚠️ WARNING: Livewire assets belum ter-publish. Mencoba ulang..."
+              cd "$TARGET_PATH" && $PHP_CMD artisan livewire:publish --assets --force --ansi 2>/dev/null || true
+              chmod -R 775 "$TARGET_PATH/public/vendor" 2>/dev/null || true
+              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} "$TARGET_PATH/public/vendor" 2>/dev/null || true
+            fi
+            
+            # 3. Verifikasi TinyMCE asset ada
+            if [ ! -f "$TARGET_PATH/public/assets/js/vendors/plugins/tinymce/tinymce.min.js" ]; then
+              echo "⚠️ WARNING: TinyMCE asset tidak ditemukan di public/assets/"
+            fi
+            
+            # 4. Asset Inventory Report
+            echo "📋 Asset Inventory Report:"
+            [ -f "$TARGET_PATH/public/build/manifest.json" ] && echo "   - Vite manifest: ✅" || echo "   - Vite manifest: ❌"
+            [ -d "$TARGET_PATH/public/vendor/livewire" ] && echo "   - Livewire assets: ✅" || echo "   - Livewire assets: ❌"
+            [ -f "$TARGET_PATH/public/assets/js/vendors/plugins/tinymce/tinymce.min.js" ] && echo "   - TinyMCE: ✅" || echo "   - TinyMCE: ❌"
+            [ -L "$TARGET_PATH/public/storage" ] && echo "   - Storage link: ✅" || echo "   - Storage link: ❌"
 
             echo "🎉 Deployment ke ${{ env.ENV_LABEL }} berhasil!"

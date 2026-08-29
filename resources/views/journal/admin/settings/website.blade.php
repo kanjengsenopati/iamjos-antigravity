@@ -743,6 +743,7 @@
     @push('scripts')
         <script src="{{ asset('assets/js/vendors/plugins/tinymce/tinymce.min.js') }}"></script>
         <script>
+            if (typeof tinymce !== 'undefined') {
             tinymce.init({
                 selector: '#page_footer, #info_readers, #info_authors, #info_librarians, #announcements_introduction, #privacy_statement',
                 height: 300,
@@ -752,6 +753,7 @@
                 branding: false,
                 license_key: 'gpl'
             });
+            } // end tinymce guard
         </script>
     @endpush
 </x-app-layout>

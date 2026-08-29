@@ -816,6 +816,7 @@
         @push('scripts')
             <script>
                 // Initialize TinyMCE for all rich text editors (OJS 3.3 Compatible)
+                if (typeof tinymce !== 'undefined') {
                 tinymce.init({
                     selector: '.tinymce-editor',
                     height: 500,
@@ -870,5 +871,6 @@
                         xhr.send(formData);
                     })
                 });
+                } // end tinymce guard
             </script>
         @endpush
