@@ -413,12 +413,10 @@ class Submission extends Model
                 'keywords' => $this->keywords_string,
             ]);
 
-            // Copy authors from submission to publication
+            // Link authors from submission to publication (update, not clone)
             foreach ($this->authors as $author) {
-                $newAuthor = $author->replicate();
-                $newAuthor->submission_id = null;
-                $newAuthor->publication_id = $publication->id;
-                $newAuthor->save();
+                $author->publication_id = $publication->id;
+                $author->save();
             }
         }
 

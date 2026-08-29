@@ -92,17 +92,16 @@ class SubmissionAuthor extends Model
      */
     public static function ensureSinglePrimaryAuthor(string $submissionId, ?string $publicationId = null): void
     {
-        // Build query covering both submission_id and publication_id scopes
-        $query = self::query();
+        // Query by publication_id first (single source of truth), fallback to submission_id
+        $authors = collect();
         if ($publicationId) {
-            $query->where(function ($q) use ($submissionId, $publicationId) {
-                $q->where('submission_id', $submissionId)
-                  ->orWhere('publication_id', $publicationId);
-            });
-        } else {
-            $query->where('submission_id', $submissionId);
+            $authors = self::where('publication_id', $publicationId)
+                ->orderBy('sort_order')->orderBy('created_at')->get();
         }
-        $authors = $query->orderBy('sort_order')->orderBy('created_at')->get()->unique('id');
+        if ($authors->isEmpty()) {
+            $authors = self::where('submission_id', $submissionId)
+                ->orderBy('sort_order')->orderBy('created_at')->get();
+        }
 
         if ($authors->isEmpty()) {
             return;

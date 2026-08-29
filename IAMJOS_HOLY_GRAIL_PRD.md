@@ -1,4 +1,4 @@
-﻿# 📜 IAMJOS HOLY GRAIL PRD
+# 📜 IAMJOS HOLY GRAIL PRD
 **Version**: 1.1 (Migration Focused)
 **Status**: DRAFT / LIVING DOCUMENT
 
@@ -58,6 +58,45 @@ Memindahkan seluruh data dari OJS (MySQL) ke IamJOS (PostgreSQL) tanpa kehilanga
 3.  **Phase 3**: Migrasi Sejarah & Workflow (Log, Review, Discussion).
 4.  **Phase 4**: Security Shield Integration.
 5.  **Phase 5**: KAMPUS (Kantor Manajemen Pusat IamJOS) Deployment.
+
+---
+
+## 6. Non-Regression Covenant (Aturan Mengikat Permanen)
+
+> **ATURAN INI BERSIFAT MUTLAK DAN BERLAKU PERMANEN UNTUK SEMUA CI/CD MULTI-DEPLOYMENT.**
+
+### 6.1. Zero Regression Policy
+Setiap perubahan kode — baik penambahan fitur baru, perbaikan bug, enhancement UI, maupun refactoring — **DILARANG KERAS** merusak, mengubah, atau mengganggu:
+1.  **Sistem & Logika Bisnis** yang sudah berjalan dan settled.
+2.  **Behavior & Workflow** yang sudah stabil di production.
+3.  **UI Rendering & Interaksi** yang sudah berfungsi identik di multi-deployment.
+4.  **Database Schema & Data Integrity** yang sudah mapan.
+
+### 6.2. Prinsip Pelaksanaan
+*   **Non-Destructive**: Perubahan harus bersifat additive/isolated, bukan replacing.
+*   **Backwards Compatible**: Tidak boleh memutus kompatibilitas mundur.
+*   **Single Source of Truth**: Setiap entitas data harus memiliki satu sumber kebenaran yang jelas (contoh: Publication → authors, bukan dual query OR).
+*   **Idempotent Operations**: Operasi yang bisa dipanggil berulang harus menghasilkan hasil yang sama (contoh: `getOrCreatePublication()` tidak boleh duplicate data).
+
+### 6.3. Cakupan Berlaku
+Aturan ini berlaku untuk:
+*   Semua push ke branch `main`, `staging`, dan `dev`.
+*   Semua deployment ke multi-VPS dan multi-domain.
+*   Semua kontribusi dari developer manusia maupun AI.
+*   Berlaku **persistent** dan **permanen** — tidak boleh di-override tanpa persetujuan eksplisit dari pemilik proyek.
+
+---
+
+## 7. Mass Distribution Architecture
+
+### 7.1. Prinsip Distribusi Massal
+IamJOS dirancang untuk di-clone dan didistribusikan secara massal ke multi-VPS, multi-domain/subdomain. Setiap instance deployment **HARUS** menghasilkan sistem dan UI yang **identik sama persis**.
+
+### 7.2. Deployment Rules
+*   **Self-Contained Assets**: Setiap dependency kritis harus memiliki jalur muat mandiri, tidak boleh bergantung pada satu chain tunggal.
+*   **Environment-Agnostic UI**: UI harus berfungsi identik di semua kondisi server (dengan/tanpa URL rewriting, prefix `/index.php/`, panel apapun).
+*   **Deterministic Deployment**: Apa yang di-build di CI = apa yang di-deploy di semua target.
+*   **Post-Deploy Verification**: Setiap deployment harus diverifikasi otomatis (health check) sebelum dianggap sukses.
 
 ---
 *Dokumen ini adalah Kitab Suci pengembangan IamJOS. Setiap perubahan kode harus merujuk pada PRD ini.*

@@ -163,11 +163,8 @@ class PublicationController extends Controller
 
         $isCorresponding = !empty($validated['is_corresponding']);
         if ($isCorresponding) {
-            // Reset ALL related authors by both submission_id and publication_id
-            SubmissionAuthor::where(function ($q) use ($submission, $publication) {
-                $q->where('submission_id', $submission->id)
-                  ->orWhere('publication_id', $publication->id);
-            })->update([
+            // Reset ALL related authors by publication_id (single source of truth)
+            SubmissionAuthor::where('publication_id', $publication->id)->update([
                 'is_corresponding' => false,
                 'is_primary_contact' => false,
             ]);

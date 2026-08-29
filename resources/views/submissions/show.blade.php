@@ -3939,13 +3939,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
         @php
             $publication = $submission->currentPublication ?? $submission->getOrCreatePublication();
             $pubStatus = $publication->status ?? 1;
-            // Enforce single primary with dual-scope (submission_id + publication_id)
+            // Publication as single source of truth for contributors
+            $freshAuthors = \App\Models\SubmissionAuthor::where('publication_id', $publication->id)
+                ->orderBy('sort_order')->get();
+            // Fallback: if publication has no authors, use submission authors
+            if ($freshAuthors->isEmpty()) {
+                $freshAuthors = \App\Models\SubmissionAuthor::where('submission_id', $submission->id)
+                    ->orderBy('sort_order')->get();
+            }
             \App\Models\SubmissionAuthor::ensureSinglePrimaryAuthor($submission->id, $publication->id);
-            // Query fresh: get ALL related authors by publication_id OR submission_id
-            $freshAuthors = \App\Models\SubmissionAuthor::where(function ($q) use ($submission, $publication) {
-                $q->where('publication_id', $publication->id)
-                  ->orWhere('submission_id', $submission->id);
-            })->orderBy('sort_order')->get()->unique('id');
             $pubAuthors = $freshAuthors->map(
                 fn($a) => [
                     'id' => $a->id,
