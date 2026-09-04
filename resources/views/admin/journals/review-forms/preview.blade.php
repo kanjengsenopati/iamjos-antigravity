@@ -179,7 +179,7 @@
                 <i class="fa-solid fa-arrow-left mr-2"></i>
                 {{ $isId ? 'Kembali ke Builder' : 'Back to Builder' }}
             </a>
-            <a href="{{ route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'review']) }}"
+            <a href="{{ route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'review', 'subtab' => 'forms']) }}"
                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50">
                 {{ $isId ? 'Selesai' : 'Done' }}
             </a>

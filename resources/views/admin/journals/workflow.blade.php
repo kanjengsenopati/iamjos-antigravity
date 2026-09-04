@@ -105,7 +105,7 @@
                         <i class="fa-solid fa-file-arrow-up mr-2"></i>
                         {{ $isId ? 'Pengajuan' : 'Submissions' }}
                     </button>
-                    <button type="button" @click="activeTab = 'review'; history.replaceState(null, '', '?tab=' + activeTab)"
+                    <button type="button" @click="activeTab = 'review'; try { const u = new URL(window.location.href); u.searchParams.set('tab', 'review'); history.replaceState(null, '', u.toString()); } catch(e){}"
                         :class="activeTab === 'review' ? 'border-primary-500 text-primary-600' :
                             'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                         class="flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer">
@@ -393,23 +393,41 @@
                 <!-- TAB 2: REVIEW -->
                 <!-- ============================================ -->
                 <div x-show="activeTab === 'review'" x-cloak>
-                    <div class="flex flex-col md:flex-row gap-6" x-data="{ reviewSubTab: new URLSearchParams(window.location.search).get('subtab') || 'setup' }">
+                    <div class="flex flex-col md:flex-row gap-6" x-data="{
+                        reviewSubTab: (function() {
+                            try {
+                                const p = new URLSearchParams(window.location.search).get('subtab');
+                                if (['setup', 'guidance', 'forms'].includes(p)) return p;
+                            } catch(e) {}
+                            return '{{ session('review_subtab', request('subtab', 'setup')) }}';
+                        })(),
+                        setSubTab(sub) {
+                            if (!['setup', 'guidance', 'forms'].includes(sub)) sub = 'setup';
+                            this.reviewSubTab = sub;
+                            try {
+                                const url = new URL(window.location.href);
+                                url.searchParams.set('tab', 'review');
+                                url.searchParams.set('subtab', sub);
+                                window.history.replaceState(null, '', url.toString());
+                            } catch (e) {}
+                        }
+                    }">
                         <!-- Left Sidebar (Vertical Navigation) -->
                         <div class="w-full md:w-64 flex-shrink-0">
                             <nav class="flex flex-col space-y-1 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                                <button type="button" @click="reviewSubTab = 'setup'"
+                                <button type="button" @click="setSubTab('setup')"
                                     :class="reviewSubTab === 'setup' ? 'bg-primary-50 text-primary-700 font-medium border-l-4 border-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'"
                                     class="px-4 py-3 text-sm text-left transition-colors flex items-center justify-between group border-b border-gray-100">
                                     <span>Setup</span>
                                     <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity" :class="reviewSubTab === 'setup' ? 'opacity-100 text-primary-600' : ''"></i>
                                 </button>
-                                <button type="button" @click="reviewSubTab = 'guidance'"
+                                <button type="button" @click="setSubTab('guidance')"
                                     :class="reviewSubTab === 'guidance' ? 'bg-primary-50 text-primary-700 font-medium border-l-4 border-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'"
                                     class="px-4 py-3 text-sm text-left transition-colors flex items-center justify-between group border-b border-gray-100">
                                     <span>Reviewer Guidance</span>
                                     <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity" :class="reviewSubTab === 'guidance' ? 'opacity-100 text-primary-600' : ''"></i>
                                 </button>
-                                <button type="button" @click="reviewSubTab = 'forms'"
+                                <button type="button" @click="setSubTab('forms')"
                                     :class="reviewSubTab === 'forms' ? 'bg-primary-50 text-primary-700 font-medium border-l-4 border-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'"
                                     class="px-4 py-3 text-sm text-left transition-colors flex items-center justify-between group">
                                     <span>Review Forms</span>
@@ -426,6 +444,7 @@
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="tab" value="review">
+                                <input type="hidden" name="subtab" :value="reviewSubTab">
 
                                 <!-- Sub-Tab: Setup -->
                                 <div x-show="reviewSubTab === 'setup'" x-cloak class="space-y-10">
@@ -1042,6 +1061,8 @@
                         action="{{ route('journal.settings.workflow.review-forms.store', ['journal' => $journal->slug]) }}"
                         method="POST">
                         @csrf
+                        <input type="hidden" name="tab" value="review">
+                        <input type="hidden" name="subtab" value="forms">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Buat Formulir Ulasan' : 'Create Review Form' }}</h3>
                             <button type="button" @click="showReviewFormModal = false"
@@ -1082,6 +1103,8 @@
                         method="POST">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="tab" value="review">
+                        <input type="hidden" name="subtab" value="forms">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold text-gray-900">{{ $isId ? 'Edit Formulir Ulasan' : 'Edit Review Form' }}</h3>
                             <button type="button" @click="showEditReviewFormModal = false"

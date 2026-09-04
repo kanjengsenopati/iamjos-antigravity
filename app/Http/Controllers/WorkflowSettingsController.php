@@ -164,7 +164,18 @@ class WorkflowSettingsController extends Controller
                 'require_competing_interests' => $request->boolean('require_competing_interests'),
             ]);
 
-            return redirect()->route('journal.settings.workflow.index', ['journal' => $journal->slug, 'tab' => 'review'])->with('success', 'Review settings saved successfully.');
+            $validReviewSubtabs = ['setup', 'guidance', 'forms'];
+            $subtab = $request->input('subtab', 'setup');
+            if (!in_array($subtab, $validReviewSubtabs, true)) {
+                $subtab = 'setup';
+            }
+
+            return redirect()->route('journal.settings.workflow.index', [
+                'journal' => $journal->slug,
+                'tab' => 'review',
+                'subtab' => $subtab,
+            ])->with('success', 'Review settings saved successfully.')
+              ->with('review_subtab', $subtab);
         }
 
         if ($tab === 'emails') {
@@ -298,7 +309,12 @@ class WorkflowSettingsController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Review form created successfully.');
+        return redirect()->route('journal.settings.workflow.index', [
+            'journal' => $journal->slug,
+            'tab' => 'review',
+            'subtab' => 'forms',
+        ])->with('success', 'Review form created successfully.')
+          ->with('review_subtab', 'forms');
     }
 
     /**
@@ -330,7 +346,12 @@ class WorkflowSettingsController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return back()->with('success', 'Review form updated successfully.');
+        return redirect()->route('journal.settings.workflow.index', [
+            'journal' => $currentJournal->slug,
+            'tab' => 'review',
+            'subtab' => 'forms',
+        ])->with('success', 'Review form updated successfully.')
+          ->with('review_subtab', 'forms');
     }
 
     /**
@@ -351,12 +372,22 @@ class WorkflowSettingsController extends Controller
         }
 
         if ($reviewForm->response_count > 0) {
-            return back()->with('error', 'Cannot delete review form with existing responses.');
+            return redirect()->route('journal.settings.workflow.index', [
+                'journal' => $currentJournal->slug,
+                'tab' => 'review',
+                'subtab' => 'forms',
+            ])->with('error', 'Cannot delete review form with existing responses.')
+              ->with('review_subtab', 'forms');
         }
 
         $reviewForm->delete();
 
-        return back()->with('success', 'Review form deleted successfully.');
+        return redirect()->route('journal.settings.workflow.index', [
+            'journal' => $currentJournal->slug,
+            'tab' => 'review',
+            'subtab' => 'forms',
+        ])->with('success', 'Review form deleted successfully.')
+          ->with('review_subtab', 'forms');
     }
 
     /**
@@ -378,7 +409,12 @@ class WorkflowSettingsController extends Controller
 
         $newForm = $reviewForm->duplicate();
 
-        return back()->with('success', "Review form duplicated successfully: {$newForm->title}");
+        return redirect()->route('journal.settings.workflow.index', [
+            'journal' => $currentJournal->slug,
+            'tab' => 'review',
+            'subtab' => 'forms',
+        ])->with('success', "Review form duplicated successfully: {$newForm->title}")
+          ->with('review_subtab', 'forms');
     }
 
     // =====================================================
