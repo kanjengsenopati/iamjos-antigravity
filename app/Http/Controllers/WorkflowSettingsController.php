@@ -717,6 +717,26 @@ class WorkflowSettingsController extends Controller
         return back()->with('error', 'Could not find default template.')->with('email_subtab', 'templates');
     }
 
+    /**
+     * Reset all email templates for this journal to system defaults.
+     */
+    public function resetAllEmailTemplates(string $journal): RedirectResponse
+    {
+        $currentJournal = current_journal();
+
+        if (!$currentJournal) {
+            abort(404, 'Journal not found.');
+        }
+
+        $templates = EmailTemplate::where('journal_id', $currentJournal->id)->get();
+        foreach ($templates as $template) {
+            $template->resetToDefault();
+            $template->update(['is_enabled' => true]);
+        }
+
+        return back()->with('success', 'All email templates have been reset to system defaults.')->with('email_subtab', 'templates');
+    }
+
     // =====================================================
     // NOTIFICATION TEMPLATES
     // =====================================================

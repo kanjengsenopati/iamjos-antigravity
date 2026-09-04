@@ -70,7 +70,7 @@ class JournalEmailService
             // Add signature if not present
             if (!isset($variables['signature'])) {
                 $variables['signature'] = $journal->email_signature 
-                    ?: ('<p><a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team</p>'); 
+                    ?: ('<a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team'); 
             }
 
             // 3. Parse Content
@@ -184,26 +184,70 @@ class JournalEmailService
     }
 
     /**
-     * Convert plain text email body to HTML paragraphs if not already HTML.
+     * Convert email body into clean, beautiful OJS-style HTML email.
      */
     public static function formatEmailBodyHtml(string $body): string
     {
-        $hasTags = preg_match('/<(p|div|br|table|ul|ol|h[1-6]|a)\b[^>]*>/i', $body);
-        if ($hasTags) {
-            return self::autoLinkUrls($body);
+        // 1. If body does not contain block HTML tags (p, div), convert double newlines to paragraphs
+        $hasBlock = preg_match('/<(p|div|table|ul|ol|h[1-6]|blockquote)\b[^>]*>/i', $body);
+        if (!$hasBlock) {
+            $normalized = str_replace(["\r\n", "\r"], "\n", $body);
+            $paragraphs = array_filter(array_map('trim', explode("\n\n", $normalized)), function ($p) {
+                return $p !== '';
+            });
+            $html = '';
+            foreach ($paragraphs as $p) {
+                $html .= '<p style="margin: 0 0 16px 0; line-height: 1.6;">' . nl2br($p) . "</p>\n";
+            }
+            $body = $html;
+        } else {
+            // Clean up any double nested <p><p> tags from variable replacement
+            $body = preg_replace('/<p>\s*<p>/i', '<p>', $body);
+            $body = preg_replace('/<\/p>\s*<\/p>/i', '</p>', $body);
         }
 
-        $paragraphs = array_filter(array_map('trim', explode("\n\n", $body)));
-        if (empty($paragraphs)) {
-            return '';
-        }
+        // 2. Auto-link plain text URLs
+        $content = self::autoLinkUrls($body);
 
-        $html = '';
-        foreach ($paragraphs as $p) {
-            $html .= '<p>' . nl2br($p) . '</p>';
-        }
+        // 3. Wrap in clean OJS 3 HTML Email Layout
+        return self::wrapInOjsLayout($content);
+    }
 
-        return self::autoLinkUrls($html);
+    /**
+     * Wrap email body in a clean OJS 3 style responsive email wrapper.
+     */
+    public static function wrapInOjsLayout(string $content): string
+    {
+        return '<!DOCTYPE html>' . "\n"
+            . '<html>' . "\n"
+            . '<head>' . "\n"
+            . '    <meta charset="utf-8">' . "\n"
+            . '    <meta name="viewport" content="width=device-width, initial-scale=1.0">' . "\n"
+            . '    <style>' . "\n"
+            . '        body { margin: 0; padding: 24px 16px; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b; }' . "\n"
+            . '        p { margin: 0 0 16px 0; line-height: 1.6; color: #1e293b; }' . "\n"
+            . '        p:last-child { margin-bottom: 0; }' . "\n"
+            . '        a { color: #2563eb; text-decoration: underline; font-weight: 500; }' . "\n"
+            . '        ul, ol { margin: 0 0 16px 0; padding-left: 20px; }' . "\n"
+            . '        li { margin-bottom: 4px; }' . "\n"
+            . '    </style>' . "\n"
+            . '</head>' . "\n"
+            . '<body style="margin: 0; padding: 24px 16px; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b;">' . "\n"
+            . '    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 20px 0;">' . "\n"
+            . '        <tr>' . "\n"
+            . '            <td align="center">' . "\n"
+            . '                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: left;">' . "\n"
+            . '                    <tr>' . "\n"
+            . '                        <td style="padding: 32px 32px 28px 32px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b;">' . "\n"
+            . '                            ' . $content . "\n"
+            . '                        </td>' . "\n"
+            . '                    </tr>' . "\n"
+            . '                </table>' . "\n"
+            . '            </td>' . "\n"
+            . '        </tr>' . "\n"
+            . '    </table>' . "\n"
+            . '</body>' . "\n"
+            . '</html>';
     }
 
     /**
@@ -225,7 +269,7 @@ class JournalEmailService
             'journalName' => $journal->name,
             'journalUrl' => $journalHomeUrl,
             'editorName' => $editorName,
-            'signature' => $journal->email_signature ?: ('<p><a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team</p>'),
+            'signature' => $journal->email_signature ?: ('<a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team'),
             'editorComments' => '',
         ];
 
@@ -284,7 +328,7 @@ class JournalEmailService
             'submissionUrl' => $submissionUrl,
             'journalName' => $journal->name,
             'journalUrl' => $journalHomeUrl,
-            'signature' => $journal->email_signature ?: ('<p><a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team</p>'),
+            'signature' => $journal->email_signature ?: ('<a href="' . $journalHomeUrl . '" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">' . e($journal->name) . '</a><br>Editorial Team'),
         ];
 
         $keys = [

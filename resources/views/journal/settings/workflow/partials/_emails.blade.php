@@ -10,9 +10,68 @@
     showEditModal: false,
     editingTemplate: null,
     searchQuery: '',
+    showFilters: true,
+    filterStatus: '',
+    filterSentFrom: '',
+    filterSentTo: '',
+    filterStage: '',
+    expandedTemplates: [],
+
+    toggleExpand(id) {
+        if (this.expandedTemplates.includes(id)) {
+            this.expandedTemplates = this.expandedTemplates.filter(item => item !== id);
+        } else {
+            this.expandedTemplates.push(id);
+        }
+    },
+
+    isExpanded(id) {
+        return this.expandedTemplates.includes(id);
+    },
+
+    clearFilters() {
+        this.searchQuery = '';
+        this.filterStatus = '';
+        this.filterSentFrom = '';
+        this.filterSentTo = '';
+        this.filterStage = '';
+    },
+
+    hasActiveFilters() {
+        return this.searchQuery !== '' || this.filterStatus !== '' || this.filterSentFrom !== '' || this.filterSentTo !== '' || this.filterStage !== '';
+    },
+
+    matchesFilter(item) {
+        if (this.searchQuery !== '') {
+            const q = this.searchQuery.toLowerCase().trim();
+            const nameMatch = (item.name || '').toLowerCase().includes(q);
+            const keyMatch = (item.key || '').toLowerCase().includes(q);
+            const descMatch = (item.description || '').toLowerCase().includes(q);
+            if (!nameMatch && !keyMatch && !descMatch) return false;
+        }
+
+        if (this.filterStatus === 'enabled' && !item.is_enabled) return false;
+        if (this.filterStatus === 'disabled' && item.is_enabled) return false;
+        if (this.filterStatus === 'custom' && !item.is_custom) return false;
+
+        if (this.filterSentFrom !== '' && (item.sent_from || '') !== this.filterSentFrom) return false;
+        if (this.filterSentTo !== '' && (item.sent_to || '') !== this.filterSentTo) return false;
+        if (this.filterStage !== '' && (item.stage || '').toLowerCase() !== this.filterStage.toLowerCase()) return false;
+
+        return true;
+    },
 
     editTemplate(template) {
-        this.editingTemplate = template;
+        // Ensure body is HTML formatted if it still has raw newlines without block tags
+        let body = template.body || '';
+        const hasBlock = /<(p|div|table|ul|ol|h[1-6]|blockquote)\b[^>]*>/i.test(body);
+        if (!hasBlock && body.trim() !== '') {
+            const paragraphs = body.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n\n').map(p => p.trim()).filter(p => p !== '');
+            body = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br />')}</p>`).join('\n');
+            template.body = body;
+        }
+
+        this.editingTemplate = Object.assign({}, template);
         this.showEditModal = true;
         this.$nextTick(() => {
             this.initEmailBodyTinyMCE();
@@ -34,8 +93,11 @@
         if (typeof tinymce !== 'undefined') {
             tinymce.init({
                 selector: selector,
-                height: 320,
+                height: 340,
                 menubar: false,
+                forced_root_block: 'p',
+                remove_trailing_brs: true,
+                entity_encoding: 'raw',
                 plugins: 'lists link image table code autoresize',
                 toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat | code',
                 branding: false,
@@ -46,7 +108,7 @@
                 link_assume_external_targets: 'https',
                 link_default_target: '_blank',
                 default_link_target: '_blank',
-                content_style: 'a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; } a:hover { color: #1d4ed8 !important; }',
+                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b; padding: 12px; } p { margin: 0 0 14px 0; } a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; } a:hover { color: #1d4ed8 !important; }',
                 setup: function(editor) {
                     editor.on('init', function() {
                         if (self.editingTemplate && self.editingTemplate.body) {
@@ -225,103 +287,254 @@
         </form>
     </div>
 
-    {{-- SUB-TAB 2: EMAIL TEMPLATES --}}
+    {{-- SUB-TAB 2: EMAIL TEMPLATES (OJS 3 REDESIGNED UI) --}}
     <div x-show="emailSubTab === 'templates'" x-cloak class="space-y-6">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            {{-- Toolbar Header & Refined Search Box --}}
-            <div class="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/80">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-envelope-open-text text-indigo-600"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-semibold text-gray-900">{{ $isId ? 'Templat Surel' : 'Email Templates' }}</h3>
-                        <p class="text-xs text-gray-500">{{ $isId ? 'Kelola dan sesuaikan templat pesan surel sistem.' : 'Manage and customize automated email templates.' }}</p>
-                    </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {{-- OJS 3 HEADER --}}
+            <div class="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 tracking-tight">{{ $isId ? 'Templat Surel' : 'Email Templates' }}</h3>
                 </div>
 
-                {{-- Kotak Pencarian Terpisah Tanpa Overlap --}}
-                <div class="relative w-full sm:w-80">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
+                {{-- Action Cluster di Kanan (Search + Filters + Reset All) --}}
+                <div class="flex items-center flex-wrap gap-2.5">
+                    {{-- Search Box --}}
+                    <div class="relative w-56 sm:w-64">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-search text-xs"></i>
+                        </div>
+                        <input type="text" x-model="searchQuery"
+                            style="padding-left: 2rem !important;"
+                            class="block w-full pr-7 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-all shadow-sm"
+                            placeholder="{{ $isId ? 'Cari templat...' : 'Search' }}">
+                        <button x-show="searchQuery" @click="searchQuery = ''" type="button"
+                            class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
                     </div>
-                    <input type="text" x-model="searchQuery"
-                        style="padding-left: 2.75rem !important;"
-                        class="block w-full pr-4 py-2 border border-gray-300 rounded-lg leading-5 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all shadow-sm"
-                        placeholder="{{ $isId ? 'Cari templat surel...' : 'Find email template...' }}">
+
+                    {{-- Filters Toggle Button (OJS 3 Navy Style) --}}
+                    <button type="button" @click="showFilters = !showFilters"
+                        :class="showFilters ? 'bg-[#006699] text-white border-[#006699]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border shadow-sm transition-colors cursor-pointer">
+                        <i class="fa-solid fa-filter text-xs"></i>
+                        <span>{{ $isId ? 'Filter' : 'Filters' }}</span>
+                    </button>
+
+                    {{-- Reset All Button (OJS 3 Red/Maroon Style) --}}
+                    <button type="button"
+                        onclick="submitForm('{{ route('journal.settings.workflow.email-templates.reset-all', ['journal' => $journalSlug]) }}', 'POST', '{{ $isId ? 'Apakah Anda yakin ingin mengatur ulang semua templat surel ke bawaan sistem?' : 'Are you sure you want to reset all email templates to system defaults?' }}')"
+                        class="text-xs font-semibold text-[#a81010] hover:text-red-700 px-2 py-1.5 transition-colors cursor-pointer">
+                        {{ $isId ? 'Atur Ulang Semua' : 'Reset All' }}
+                    </button>
                 </div>
             </div>
 
-            {{-- Table --}}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {{ $isId ? 'Nama Templat' : 'Template Name' }}</th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
-                                {{ $isId ? 'Status' : 'Status' }}</th>
-                            <th scope="col"
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
-                                {{ $isId ? 'Aksi' : 'Actions' }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach ($emailTemplates as $template)
-                            <tr x-show="searchQuery === '' || '{{ strtolower($template->name) }}'.includes(searchQuery.toLowerCase()) || '{{ strtolower($template->key) }}'.includes(searchQuery.toLowerCase())">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-semibold text-gray-900">{{ $template->name }}</span>
-                                        <span class="text-xs text-indigo-600 font-mono mt-0.5">{{ $template->key }}</span>
-                                        <span class="text-xs text-gray-500 truncate max-w-md mt-1">{{ Str::limit($template->description, 70) }}</span>
+            {{-- 2-COLUMN OJS 3 BODY LAYOUT --}}
+            <div class="flex flex-col md:flex-row min-h-[520px]">
+                {{-- LEFT SIDEBAR: FILTERS --}}
+                <aside x-show="showFilters" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0"
+                    class="w-full md:w-56 flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-200 p-5 bg-white space-y-4 select-none">
+                    
+                    <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <span class="font-bold text-gray-900 flex items-center gap-1.5 text-xs tracking-wider uppercase">
+                            <i class="fa-solid fa-filter text-gray-500"></i>
+                            {{ $isId ? 'Filter' : 'Filters' }}
+                        </span>
+                        <button x-show="hasActiveFilters()" @click="clearFilters()" type="button"
+                            class="text-xs text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                            {{ $isId ? 'Bersihkan' : 'Clear' }}
+                        </button>
+                    </div>
+
+                    {{-- Category 1: Status --}}
+                    <div class="space-y-1">
+                        <button type="button" @click="filterStatus = (filterStatus === 'enabled' ? '' : 'enabled')"
+                            :class="filterStatus === 'enabled' ? 'text-blue-600 font-bold' : 'text-blue-600 hover:underline'"
+                            class="block text-left w-full text-xs py-0.5 transition-colors cursor-pointer">
+                            Enabled
+                        </button>
+                        <button type="button" @click="filterStatus = (filterStatus === 'disabled' ? '' : 'disabled')"
+                            :class="filterStatus === 'disabled' ? 'text-blue-600 font-bold' : 'text-blue-600 hover:underline'"
+                            class="block text-left w-full text-xs py-0.5 transition-colors cursor-pointer">
+                            Disabled
+                        </button>
+                        <button type="button" @click="filterStatus = (filterStatus === 'custom' ? '' : 'custom')"
+                            :class="filterStatus === 'custom' ? 'text-blue-600 font-bold' : 'text-blue-600 hover:underline'"
+                            class="block text-left w-full text-xs py-0.5 transition-colors cursor-pointer">
+                            Custom Template
+                        </button>
+                    </div>
+
+                    {{-- Category 2: Sent From --}}
+                    <div class="space-y-1 pt-3 border-t border-gray-100">
+                        <h5 class="text-xs font-bold text-gray-800 tracking-wide">Sent From</h5>
+                        <div class="space-y-1">
+                            @foreach (['Editor', 'Reviewer', 'Assistant', 'Reader'] as $from)
+                                <button type="button" @click="filterSentFrom = (filterSentFrom === '{{ $from }}' ? '' : '{{ $from }}')"
+                                    :class="filterSentFrom === '{{ $from }}' ? 'text-blue-600 font-bold' : 'text-blue-600 hover:underline'"
+                                    class="block text-left w-full text-xs py-0.5 transition-colors cursor-pointer">
+                                    {{ $from }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Category 3: Sent To --}}
+                    <div class="space-y-1 pt-3 border-t border-gray-100">
+                        <h5 class="text-xs font-bold text-gray-800 tracking-wide">Sent To</h5>
+                        <div class="space-y-1">
+                            @foreach (['Editor', 'Reviewer', 'Assistant', 'Author', 'Reader', 'Subscription Manager'] as $to)
+                                <button type="button" @click="filterSentTo = (filterSentTo === '{{ $to }}' ? '' : '{{ $to }}')"
+                                    :class="filterSentTo === '{{ $to }}' ? 'text-blue-600 font-bold' : 'text-blue-600 hover:underline'"
+                                    class="block text-left w-full text-xs py-0.5 transition-colors cursor-pointer">
+                                    {{ $to }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Category 4: Stage --}}
+                    <div class="space-y-1 pt-3 border-t border-gray-100">
+                        <h5 class="text-xs font-bold text-gray-800 tracking-wide">Stage</h5>
+                        <div class="space-y-1">
+                            @foreach (['Submission', 'Review', 'Copyediting', 'Production', 'Other'] as $stg)
+                                <button type="button" @click="filterStage = (filterStage === '{{ $stg }}' ? '' : '{{ $stg }}')"
+                                    :class="filterStage === '{{ $stg }}' ? 'text-blue-600 font-bold' : 'text-blue-600 hover:underline'"
+                                    class="block text-left w-full text-xs py-0.5 transition-colors cursor-pointer">
+                                    {{ $stg }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </aside>
+
+                {{-- RIGHT MAIN CONTENT: TEMPLATE LIST --}}
+                <main class="flex-1 bg-white p-4 sm:p-6 divide-y divide-gray-100 min-w-0">
+                    {{-- Active Filter Indicators --}}
+                    <div x-show="hasActiveFilters()" class="pb-3 flex items-center flex-wrap gap-2 text-xs">
+                        <span class="text-gray-500 font-medium">{{ $isId ? 'Filter Aktif:' : 'Active Filters:' }}</span>
+                        <template x-if="searchQuery">
+                            <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
+                                "{{ searchQuery }}" <button type="button" @click="searchQuery = ''" class="cursor-pointer font-bold">×</button>
+                            </span>
+                        </template>
+                        <template x-if="filterStatus">
+                            <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs capitalize">
+                                Status: <span x-text="filterStatus"></span> <button type="button" @click="filterStatus = ''" class="cursor-pointer font-bold">×</button>
+                            </span>
+                        </template>
+                        <template x-if="filterSentFrom">
+                            <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
+                                From: <span x-text="filterSentFrom"></span> <button type="button" @click="filterSentFrom = ''" class="cursor-pointer font-bold">×</button>
+                            </span>
+                        </template>
+                        <template x-if="filterSentTo">
+                            <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
+                                To: <span x-text="filterSentTo"></span> <button type="button" @click="filterSentTo = ''" class="cursor-pointer font-bold">×</button>
+                            </span>
+                        </template>
+                        <template x-if="filterStage">
+                            <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
+                                Stage: <span x-text="filterStage"></span> <button type="button" @click="filterStage = ''" class="cursor-pointer font-bold">×</button>
+                            </span>
+                        </template>
+                        <button type="button" @click="clearFilters()" class="text-xs text-red-600 hover:underline ml-2 cursor-pointer">
+                            {{ $isId ? 'Hapus Semua' : 'Clear All' }}
+                        </button>
+                    </div>
+
+                    @foreach ($emailTemplates as $template)
+                        <div class="py-4 first:pt-0 last:pb-0"
+                            x-data="{ 
+                                template: {{ json_encode($template) }}, 
+                                enabled: {{ $template->is_enabled ? 'true' : 'false' }} 
+                            }"
+                            x-show="matchesFilter(template)">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    {{-- OJS Badge Key Box --}}
+                                    <div>
+                                        <span class="inline-block px-1.5 py-0.5 text-[11px] font-mono font-medium text-blue-600 border border-blue-200 rounded uppercase bg-blue-50/40">
+                                            {{ $template->key }}
+                                        </span>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <div class="flex items-center gap-2" x-data="{ enabled: {{ $template->is_enabled ? 'true' : 'false' }} }">
-                                        <button type="button" 
+
+                                    {{-- Template Name --}}
+                                    <h4 @click="toggleExpand('{{ $template->id }}')"
+                                        class="text-base font-bold text-gray-900 mt-1 cursor-pointer hover:text-blue-600 transition-colors">
+                                        {{ $template->name }}
+                                    </h4>
+
+                                    {{-- Description --}}
+                                    <p class="text-xs sm:text-sm text-gray-600 mt-0.5 leading-relaxed">
+                                        {{ $template->description }}
+                                    </p>
+                                </div>
+
+                                {{-- OJS Expand Chevron Button --}}
+                                <div class="flex-shrink-0 flex items-center gap-2 pt-1">
+                                    <button type="button" @click="toggleExpand('{{ $template->id }}')"
+                                        class="w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-300 rounded hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
+                                        :title="isExpanded('{{ $template->id }}') ? 'Collapse' : 'Expand'">
+                                        <i class="fa-solid text-xs transition-transform duration-200"
+                                           :class="isExpanded('{{ $template->id }}') ? 'fa-chevron-up text-blue-600' : 'fa-chevron-down'"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Expanded Drawer Panel --}}
+                            <div x-show="isExpanded('{{ $template->id }}')" x-collapse class="mt-3 pt-3 border-t border-gray-100 bg-gray-50/70 p-4 rounded-lg space-y-3">
+                                {{-- Subject Preview --}}
+                                <div class="text-xs">
+                                    <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px]">{{ $isId ? 'Subjek:' : 'Subject:' }}</span>
+                                    <span class="text-gray-900 font-medium ml-1">{{ $template->subject }}</span>
+                                </div>
+
+                                {{-- Controls Row --}}
+                                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200/60">
+                                    {{-- Status Toggle Switch --}}
+                                    <div class="flex items-center gap-2">
+                                        <button type="button"
                                             @click="enabled = !enabled; updateTemplateStatus('{{ $template->id }}', enabled)"
                                             :class="enabled ? 'bg-emerald-500' : 'bg-gray-300'"
-                                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                                            role="switch" 
+                                            class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                                            role="switch"
                                             :aria-checked="enabled">
-                                            <span class="sr-only">Toggle email template status</span>
-                                            <span :class="enabled ? 'translate-x-5' : 'translate-x-0'"
-                                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                                            <span :class="enabled ? 'translate-x-4' : 'translate-x-0'"
+                                                class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
                                             </span>
                                         </button>
                                         <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
                                             :class="enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'"
-                                            x-text="enabled ? '{{ $isId ? 'ON' : 'ON' }}' : '{{ $isId ? 'OFF' : 'OFF' }}'">
+                                            x-text="enabled ? '{{ $isId ? 'Aktif (ON)' : 'Enabled (ON)' }}' : '{{ $isId ? 'Nonaktif (OFF)' : 'Disabled (OFF)' }}'">
                                         </span>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex items-center justify-end space-x-3">
+
+                                    {{-- Action Buttons --}}
+                                    <div class="flex items-center gap-2">
                                         @if ($template->is_custom)
                                             <button type="button"
                                                 onclick="submitForm('{{ route('journal.settings.workflow.email-templates.reset', ['journal' => $journalSlug, 'emailTemplate' => $template->id]) }}', 'POST', '{{ $isId ? 'Kembalikan templat ini ke konten bawaannya?' : 'Reset this template to its default content?' }}')"
-                                                class="text-xs text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer">
-                                                {{ $isId ? 'Atur Ulang' : 'Reset' }}
+                                                class="text-xs text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded font-medium transition-colors cursor-pointer">
+                                                {{ $isId ? 'Atur Ulang Bawaan' : 'Reset to Default' }}
                                             </button>
                                         @endif
 
-                                        <button type="button" 
+                                        <button type="button"
                                             data-template="{{ json_encode($template) }}"
                                             @click="editTemplate(JSON.parse($el.dataset.template))"
-                                            class="text-xs text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1">
+                                            class="text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded font-semibold transition-colors cursor-pointer flex items-center gap-1.5 border border-blue-200/60">
                                             <i class="fa-solid fa-pen text-[10px]"></i>
-                                            <span>{{ $isId ? 'Ubah' : 'Edit' }}</span>
+                                            <span>{{ $isId ? 'Ubah Templat' : 'Edit Template' }}</span>
                                         </button>
                                     </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </main>
             </div>
         </div>
     </div>
