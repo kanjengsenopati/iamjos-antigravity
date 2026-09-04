@@ -456,25 +456,36 @@
                                 <div class="flex-1 min-w-0">
                                     {{-- OJS Badge Key Box --}}
                                     <div>
-                                        <span class="inline-block px-1.5 py-0.5 text-[11px] font-mono font-medium text-blue-600 border border-blue-200 rounded uppercase bg-blue-50/40">
+                                        <span class="inline-block px-2 py-0.5 text-[11px] font-bold tracking-widest text-blue-600 border border-blue-200 rounded uppercase bg-blue-50/40">
                                             {{ $template->key }}
                                         </span>
                                     </div>
 
                                     {{-- Template Name --}}
                                     <h4 @click="toggleExpand('{{ $template->id }}')"
-                                        class="text-base font-bold text-gray-900 mt-1 cursor-pointer hover:text-blue-600 transition-colors">
+                                        class="text-base font-semibold text-slate-800 mt-1 cursor-pointer hover:text-blue-600 transition-colors">
                                         {{ $template->name }}
                                     </h4>
 
                                     {{-- Description --}}
-                                    <p class="text-xs sm:text-sm text-gray-600 mt-0.5 leading-relaxed">
+                                    <p class="text-sm font-medium text-slate-600 mt-0.5 leading-relaxed">
                                         {{ $template->description }}
                                     </p>
                                 </div>
 
-                                {{-- OJS Expand Chevron Button --}}
+                                {{-- Action Cluster --}}
                                 <div class="flex-shrink-0 flex items-center gap-2 pt-1">
+                                    {{-- Edit Button --}}
+                                    <button type="button"
+                                        data-template="{{ json_encode($template) }}"
+                                        @click.stop="editTemplate(JSON.parse($el.dataset.template))"
+                                        class="text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded font-semibold transition-colors cursor-pointer flex items-center gap-1.5 border border-blue-200/60"
+                                        title="{{ $isId ? 'Ubah Templat' : 'Edit Template' }}">
+                                        <i class="fa-solid fa-pen text-[10px]"></i>
+                                        <span class="hidden sm:inline">{{ $isId ? 'Ubah' : 'Edit' }}</span>
+                                    </button>
+
+                                    {{-- OJS Expand Chevron Button --}}
                                     <button type="button" @click="toggleExpand('{{ $template->id }}')"
                                         class="w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-300 rounded hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
                                         :title="isExpanded('{{ $template->id }}') ? 'Collapse' : 'Expand'">
@@ -521,14 +532,6 @@
                                                 {{ $isId ? 'Atur Ulang Bawaan' : 'Reset to Default' }}
                                             </button>
                                         @endif
-
-                                        <button type="button"
-                                            data-template="{{ json_encode($template) }}"
-                                            @click="editTemplate(JSON.parse($el.dataset.template))"
-                                            class="text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded font-semibold transition-colors cursor-pointer flex items-center gap-1.5 border border-blue-200/60">
-                                            <i class="fa-solid fa-pen text-[10px]"></i>
-                                            <span>{{ $isId ? 'Ubah Templat' : 'Edit Template' }}</span>
-                                        </button>
                                     </div>
                                 </div>
                             </div>
