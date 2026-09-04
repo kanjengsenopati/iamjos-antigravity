@@ -417,7 +417,7 @@
                         <span class="text-gray-500 font-medium">{{ $isId ? 'Filter Aktif:' : 'Active Filters:' }}</span>
                         <template x-if="searchQuery">
                             <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
-                                "{{ searchQuery }}" <button type="button" @click="searchQuery = ''" class="cursor-pointer font-bold">×</button>
+                                "<span x-text="searchQuery"></span>" <button type="button" @click="searchQuery = ''" class="cursor-pointer font-bold">×</button>
                             </span>
                         </template>
                         <template x-if="filterStatus">
