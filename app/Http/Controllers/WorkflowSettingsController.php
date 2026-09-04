@@ -35,13 +35,9 @@ class WorkflowSettingsController extends Controller
         $checklists = $journal->submissionChecklists()->ordered()->get();
         $reviewForms = $journal->reviewForms()->get();
         $libraryFiles = $journal->libraryFiles()->latest()->get();
-        $emailTemplates = $journal->emailTemplates()->orderBy('key')->get();
-
-        // If no email templates exist, seed them
-        if ($emailTemplates->isEmpty()) {
-            EmailTemplate::seedForJournal($journal->id);
-            $emailTemplates = $journal->emailTemplates()->orderBy('key')->get();
-        }
+        // Ensure all default email templates are seeded for this journal (non-destructive via firstOrCreate)
+        EmailTemplate::seedForJournal($journal->id);
+        $emailTemplates = $journal->emailTemplates()->orderBy('name')->get();
 
         // Load Notification Templates (Per-Journal Logic)
         $defaults = \App\Services\WaGateway::getDefaultTemplates();

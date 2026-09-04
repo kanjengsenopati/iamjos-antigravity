@@ -34,7 +34,8 @@ class EditorAssignmentNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $isAnonymous = $notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable;
+        return $isAnonymous ? ['mail'] : ['database'];
     }
 
     /**
@@ -43,14 +44,18 @@ class EditorAssignmentNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $journal = $this->submission->journal;
-        $url = route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $this->submission->url_slug]);
+        $url = route('journal.submissions.show', [
+            'journal' => $journal->slug,
+            'submission' => $this->submission->url_slug ?? $this->submission->slug ?? $this->submission->id
+        ]);
         $assignedBy = $this->assignedBy;
+        $recipientName = $notifiable->full_name ?? $notifiable->name ?? 'Editor';
 
         $mailMessage = (new MailMessage)
             ->subject('[' . ($journal->abbreviation ?? 'JOURNAL') . '] New notification from ' . $journal->name)
-            ->greeting('Dear ' . $notifiable->name . ',')
+            ->greeting('Dear ' . $recipientName . ',')
             ->line('You have a new notification from ' . $journal->name . ':')
-            ->line('You have been assigned as editor for the submission "' . $this->submission->title . '" by ' . $assignedBy->name . '.')
+            ->line('You have been assigned as editor for the submission "' . $this->submission->title . '" by ' . ($assignedBy->name ?? 'Manager') . '.')
             ->line('**Submission Details:**')
             ->line('- **Title:** ' . $this->submission->title)
             ->line('- **Author:** ' . ($this->submission->authors->first()->name ?? 'Unknown'))
@@ -60,8 +65,8 @@ class EditorAssignmentNotification extends Notification
             ->line('Link: ' . $url)
             ->salutation("Best regards,\nEditorial Team\n________________________________\n" . $journal->name);
 
-        $systemEmail = config('mail.from.address');
-        $fromName = ($assignedBy ? $assignedBy->name : 'Editor') . ' via ' . $journal->name;
+        $systemEmail = config('mail.from.address') ?: 'ejournal@apdesyi.or.id';
+        $fromName = ($assignedBy ? $assignedBy->name : 'Editor') . ' via ' . ($journal->name ?? 'IAMJOS');
         $mailMessage->from($systemEmail, $fromName);
 
         if ($assignedBy && $assignedBy->email) {

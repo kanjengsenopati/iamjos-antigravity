@@ -284,10 +284,44 @@ class SubmissionWorkflowController extends Controller
 
         // Notify the assigned editor (Standard OJS Editor Assignment Notification)
         if ($user) {
+            // 1. Send OJS Email Notification via JournalEmailService
+            try {
+                // Ensure template exists in database for this journal
+                \App\Models\EmailTemplate::seedForJournal($journal->id);
+
+                $submissionUrl = route('journal.submissions.show', [
+                    'journal' => $journal->slug,
+                    'submission' => $submission->url_slug ?? $submission->slug ?? $submission->id,
+                ]);
+
+                $sent = \App\Services\JournalEmailService::sendNotification(
+                    $journal,
+                    $user,
+                    'EDITOR_ASSIGN',
+                    [
+                        'editorName' => $user->full_name ?: $user->name,
+                        'recipientName' => $user->full_name ?: $user->name,
+                        'submissionTitle' => $submission->title,
+                        'sectionName' => $submission->section->title ?? $submission->section->name ?? 'Articles',
+                        'assignedByName' => auth()->user()->name ?? 'Manager',
+                        'submissionUrl' => $submissionUrl,
+                    ]
+                );
+
+                if ($sent) {
+                    Log::info("Editor assignment email sent successfully to {$user->email} for submission #{$submission->id}");
+                } else {
+                    Log::warning("Editor assignment email was not sent (template disabled or missing) for {$user->email}");
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send editor assignment email via JournalEmailService: ' . $e->getMessage());
+            }
+
+            // 2. In-App Notification (Database)
             try {
                 $user->notify(new \App\Notifications\EditorAssignmentNotification($submission, auth()->user()));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send editor assignment email: ' . $e->getMessage());
+                Log::error('Failed to record editor assignment in-app notification: ' . $e->getMessage());
             }
 
             // Log the event

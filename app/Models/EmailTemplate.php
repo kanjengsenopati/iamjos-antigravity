@@ -95,6 +95,13 @@ class EmailTemplate extends Model
                 'description' => 'Sent to journal managers and editors when a new submission is received.',
             ],
             [
+                'key' => 'EDITOR_ASSIGN',
+                'name' => 'Editor Assignment',
+                'subject' => 'Editor Assignment: {$submissionTitle}',
+                'body' => "Dear {\$editorName},\n\nYou have been assigned as an editor to oversee the submission, \"{\$submissionTitle},\" for {\$journalName}.\n\nSubmission Details:\n- Title: {\$submissionTitle}\n- Section: {\$sectionName}\n- Assigned By: {\$assignedByName}\n\nSubmission URL: {\$submissionUrl}\n\nPlease log in to the journal system to begin the editorial process.\n\n{\$signature}",
+                'description' => 'Sent to an editor when they are assigned to handle a submission.',
+            ],
+            [
                 'key' => 'REVIEW_REQUEST',
                 'name' => 'Review Request',
                 'subject' => 'Article Review Request',
