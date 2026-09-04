@@ -108,7 +108,7 @@
                 link_assume_external_targets: 'https',
                 link_default_target: '_blank',
                 default_link_target: '_blank',
-                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b; padding: 12px; } p { margin: 0 0 14px 0; } a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; } a:hover { color: #1d4ed8 !important; }',
+                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b; padding: 12px; } p { margin: 0 0 14px 0; } a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; } a:hover { color: #1d4ed8 !important; }',
                 setup: function(editor) {
                     editor.on('init', function() {
                         if (self.editingTemplate && self.editingTemplate.body) {
