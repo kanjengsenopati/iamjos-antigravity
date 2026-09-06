@@ -108,6 +108,26 @@ class Publication extends Model
         return $this->hasMany(SubmissionAuthor::class, 'publication_id')->orderBy('sort_order');
     }
 
+    /**
+     * Get all structured citations for this publication (ordered by sequence).
+     * These are derived from the raw references TEXT field via ProcessCitationsJob.
+     */
+    public function citations(): HasMany
+    {
+        return $this->hasMany(Citation::class, 'publication_id')->orderBy('seq');
+    }
+
+    /**
+     * Get only successfully parsed (structured) citations.
+     * Used for generating high-quality citation_reference meta tags.
+     */
+    public function structuredCitations(): HasMany
+    {
+        return $this->hasMany(Citation::class, 'publication_id')
+            ->where('is_structured', true)
+            ->orderBy('seq');
+    }
+
     // =====================================================
     // SCOPES
     // =====================================================

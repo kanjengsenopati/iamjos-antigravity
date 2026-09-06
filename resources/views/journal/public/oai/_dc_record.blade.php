@@ -141,6 +141,13 @@
       <dc:rights>{{ htmlspecialchars($journal->license_terms, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:rights>
     @endif
 
+    {{-- dc:relation — cited references (DOI/URL) for aggregator citation tracking --}}
+    @if ($record->currentPublication)
+      @foreach ($record->currentPublication->citations()->whereNotNull('doi')->limit(50)->get() as $citation)
+        <dc:relation>{{ htmlspecialchars('https://doi.org/' . $citation->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:relation>
+      @endforeach
+    @endif
+
   </oai_dc:dc>
 </metadata>
 @endif

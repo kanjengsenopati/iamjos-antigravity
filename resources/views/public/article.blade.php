@@ -131,9 +131,18 @@
             if ($pubAbstract) {
                 $metaTags[] = '<meta name="citation_abstract" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars(trim(strip_tags($pubAbstract))) . '"/>';
             }
-            foreach (array_slice($parsedRefs, 0, 50) as $ref) {
-                $metaTags[] = '<meta name="citation_reference" content="' . htmlspecialchars($ref) . '"/>';
+            $structuredCitations = $article->currentPublication->structuredCitations ?? collect();
+            if ($structuredCitations->isNotEmpty()) {
+                foreach ($structuredCitations->take(50) as $cit) {
+                    $metaTags[] = '<meta name="citation_reference" content="' . htmlspecialchars($cit->toScholarMetaContent()) . '"/>';
+                }
+            } else {
+                foreach (array_slice($parsedRefs, 0, 50) as $ref) {
+                    $structuredRef = \App\Services\CitationService::parseReferenceToScholarMeta($ref);
+                    $metaTags[] = '<meta name="citation_reference" content="' . htmlspecialchars($structuredRef) . '"/>';
+                }
             }
+
 
             // Dublin Core Metadata
             $metaTags[] = '<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"/>';

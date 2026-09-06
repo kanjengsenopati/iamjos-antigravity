@@ -800,26 +800,48 @@ class Submission extends Model
 
     /**
      * Get other published submissions in IAMJOS that cite this submission.
+     *
+     * Fixes applied:
+     *  - Guard clause: return empty collection if both title and DOI are missing.
+     *  - DB driver detection: use 'ilike' for PostgreSQL, 'like' for MySQL/SQLite.
+     *  - Correct OR logic: build conditions only for non-empty identifiers to
+     *    prevent an empty subquery that returns no rows.
      */
     public function getCitingSubmissions()
     {
-        $title = $this->currentPublication->title ?? $this->title;
-        $doi = $this->currentPublication->doi ?? $this->doi;
-        
+        $title = $this->currentPublication->title ?? $this->title ?? null;
+        $doi   = $this->currentPublication->doi   ?? $this->doi   ?? null;
+
+        // Nothing to search by — return empty collection immediately.
+        if (empty($title) && empty($doi)) {
+            return collect();
+        }
+
+        // Use the correct LIKE operator based on the active DB driver.
+        // PostgreSQL supports 'ilike' (case-insensitive); others use 'like'.
+        $likeOp = (strtolower(\Illuminate\Support\Facades\DB::connection()->getDriverName()) === 'pgsql')
+            ? 'ilike'
+            : 'like';
+
         $query = static::where('id', '!=', $this->id)
             ->where('status', 'published');
-            
-        $query->whereHas('currentPublication', function($q) use ($title, $doi) {
-            $q->where(function($subQ) use ($title, $doi) {
-                if ($title) {
-                    $subQ->where('references', 'ilike', '%' . $title . '%');
+
+        $query->whereHas('currentPublication', function ($q) use ($title, $doi, $likeOp) {
+            $q->where(function ($subQ) use ($title, $doi, $likeOp) {
+                $hasCondition = false;
+
+                if (!empty($title)) {
+                    $subQ->where('references', $likeOp, '%' . $title . '%');
+                    $hasCondition = true;
                 }
-                if ($doi) {
-                    $subQ->orWhere('references', 'ilike', '%' . $doi . '%');
+
+                if (!empty($doi)) {
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $subQ->{$method}('references', $likeOp, '%' . $doi . '%');
                 }
             });
         });
-        
+
         return $query->with(['currentPublication.authors', 'journal', 'issue'])->get();
     }
 }

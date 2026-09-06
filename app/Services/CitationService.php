@@ -161,4 +161,121 @@ class CitationService
 
         return '<span class="Z3988" title="' . $query . '"></span>';
     }
+
+    /**
+     * Parse a plain-text reference string into a Google Scholar-compatible
+     * citation_reference key=value meta content string.
+     *
+     * Priority order:
+     *   1. citation_doi        — highest-fidelity match for Scholar & CrossRef
+     *   2. citation_title      — fuzzy match fallback
+     *   3. citation_author     — disambiguation
+     *   4. citation_publication_date — year
+     *   5. citation_volume / citation_issue / citation_firstpage / citation_lastpage
+     *
+     * If parsing yields fewer than 2 structured fields, the raw text is returned
+     * unchanged (safe fallback — no regression).
+     *
+     * @param  string $rawRef  A single reference line (APA or similar format)
+     * @return string          key=value string OR original plain text as fallback
+     */
+    public static function parseReferenceToScholarMeta(string $rawRef): string
+    {
+        $rawRef = trim($rawRef);
+        if (empty($rawRef)) {
+            return '';
+        }
+
+        $fields = [];
+
+        // ── 1. DOI ─────────────────────────────────────────────────────────
+        // Match bare DOI (10.XXXX/...) or inside doi.org URL
+        $doi = null;
+        if (preg_match('/\bhttps?:\/\/(?:dx\.)?doi\.org\/(10\.\d{4,}\/[^\s\]>,;]+)/i', $rawRef, $m)) {
+            $doi = rtrim($m[1], '.,;)"\'');
+        } elseif (preg_match('/\b(10\.\d{4,}\/[^\s\]>,;]+)/i', $rawRef, $m)) {
+            $doi = rtrim($m[1], '.,;)"\'');
+        }
+        if ($doi) {
+            $fields[] = 'citation_doi=' . $doi;
+        }
+
+        // ── 2. Year ────────────────────────────────────────────────────────
+        $year = null;
+        if (preg_match('/\((\d{4}[a-z]?)\)/', $rawRef, $m)) {
+            $year = $m[1];
+            $fields[] = 'citation_publication_date=' . $year;
+        }
+
+        // ── 3. Authors ─────────────────────────────────────────────────────
+        // Everything before the first "(YEAR)" — APA pattern
+        if ($year && preg_match('/^(.+?)\s*\(\d{4}[a-z]?\)/', $rawRef, $m)) {
+            $rawAuthors = trim($m[1], " ,.\t");
+            if ($rawAuthors) {
+                // Split on "; " first (Vancouver/numbered style)
+                $authorList = preg_split('/;\s+/', $rawAuthors, -1, PREG_SPLIT_NO_EMPTY);
+                // If only one element, try APA comma-split: "Surname, I., Surname2, I2."
+                if (count($authorList) === 1) {
+                    preg_match_all(
+                        '/[^\s,][^,]+,\s+[A-Z](?:\.[A-Z])*\.(?=\s|,|$)/u',
+                        $rawAuthors,
+                        $am
+                    );
+                    if (!empty($am[0])) {
+                        $authorList = $am[0];
+                    }
+                }
+                foreach ($authorList as $author) {
+                    $author = trim($author, " ,.\t");
+                    if (mb_strlen($author) > 3) {
+                        $fields[] = 'citation_author=' . $author;
+                    }
+                }
+            }
+        }
+
+        // ── 4. Title ───────────────────────────────────────────────────────
+        // APA: text immediately after "(YEAR). " and before the journal name.
+        if ($year) {
+            $afterYear = preg_replace('/^.*?\(\d{4}[a-z]?\)\.\s*/u', '', $rawRef, 1);
+            if ($afterYear && $afterYear !== $rawRef) {
+                if (preg_match('/^(.+?)(?:\.\s+[A-Z\p{Lu}]|\.$)/u', $afterYear, $tm)) {
+                    $title = trim($tm[1]);
+                    // Remove trailing DOI URL that may have been appended
+                    $title = preg_replace('/\s+https?:\/\/\S+/i', '', $title);
+                    $title = trim($title, " .\t");
+                    if (mb_strlen($title) > 8) {
+                        $fields[] = 'citation_title=' . $title;
+                    }
+                }
+            }
+        }
+
+        // ── 5. Volume & Issue ──────────────────────────────────────────────
+        // Pattern: "N(N)" e.g. "3(2)" or "Vol. 3 No. 2"
+        if (preg_match('/[,\s](\d+)\((\d+)\)/', $rawRef, $m)) {
+            $fields[] = 'citation_volume=' . $m[1];
+            $fields[] = 'citation_issue=' . $m[2];
+        } elseif (preg_match('/[Vv]ol\.?\s*(\d+)[,;\s]+[Nn]o\.?\s*(\d+)/', $rawRef, $m)) {
+            $fields[] = 'citation_volume=' . $m[1];
+            $fields[] = 'citation_issue=' . $m[2];
+        }
+
+        // ── 6. Pages ───────────────────────────────────────────────────────
+        // Pattern: "20-29" or "20–29" (en-dash)
+        if (preg_match('/[,\s](\d+)\s*[–\-]\s*(\d+)(?:[.,\s]|$)/', $rawRef, $m)) {
+            $fields[] = 'citation_firstpage=' . $m[1];
+            $fields[] = 'citation_lastpage=' . $m[2];
+        }
+
+        // ── Safety fallback ────────────────────────────────────────────────
+        // If we didn't extract at least 2 fields, return the raw string
+        // so Scholar can still attempt its own NLP parsing (no regression).
+        if (count($fields) < 2) {
+            return $rawRef;
+        }
+
+        return implode('; ', $fields) . ';';
+    }
 }
+

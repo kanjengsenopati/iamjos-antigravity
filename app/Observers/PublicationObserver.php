@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Publication;
 
 use App\Jobs\DepositCrossrefJob;
+use App\Jobs\ProcessCitationsJob;
 
 class PublicationObserver
 {
@@ -25,6 +26,12 @@ class PublicationObserver
         if ($publication->wasChanged('status') || 
             ($publication->isPublished() && $publication->wasChanged(['references', 'title', 'abstract', 'keywords', 'doi', 'pages']))) {
             $this->checkCrossrefDeposit($publication);
+        }
+
+        // Process references into structured citations for better Scholar/CrossRef matching
+        if ($publication->wasChanged('references') || 
+            ($publication->wasChanged('status') && $publication->isPublished())) {
+            ProcessCitationsJob::dispatch($publication->id);
         }
     }
 
