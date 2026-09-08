@@ -253,6 +253,10 @@ jobs:
             name: "Sisdev"
             path: "/home/wwwroot/sisdev.iamjos.id"
             url: "https://sisdev.iamjos.id"
+          - id: multilingualjournal
+            name: "Multilingual Journal"
+            path: "/home/wwwroot/multilingualjournal"
+            url: "https://multilingualjournal.org"
 
     steps:
       - name: Checkout kode
