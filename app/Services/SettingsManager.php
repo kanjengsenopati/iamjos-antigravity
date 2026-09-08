@@ -142,9 +142,12 @@ class SettingsManager
     {
         $model = SiteSetting::first();
 
-        if ($model) {
-            $model->update([$key => $value]);
+        if (!$model) {
+            $model = new SiteSetting();
         }
+
+        $model->{$key} = $value;
+        $model->save();
 
         $this->flushSite();
     }
