@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | {{ $journal->name ?? config('app.name', 'IAMJOS') }}</title>
+    <title>Login | {{ $journal->name ?? \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}</title>
     <meta name="description"
         content="{{ $journal ? $journal->name . ' - Login' : \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') . ' - Login' }}">
     <meta name="robots" content="noindex, nofollow">
@@ -88,7 +88,7 @@
                         @endif
                         <div class="flex flex-col">
                             <span class="text-2xl font-bold text-white tracking-widest uppercase">
-                                {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                                {{ $branding['acronym'] ?? \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}
                             </span>
                             <span class="text-[10px] text-indigo-300 font-bold tracking-[0.3em] uppercase">Academic Publishing</span>
                         </div>
@@ -189,7 +189,7 @@
                             </div>
                         @endif
                         <span class="text-xl font-bold text-gray-900">
-                            {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                            {{ $branding['acronym'] ?? \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}
                         </span>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
                 <div class="mb-8">
                     <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">{{ __('Welcome back') }}</h2>
                     <p class="text-gray-500">
-                        {{ __('Login to') }} {{ $branding['acronym'] ?? config('app.name', 'IAMJOS') }}
+                        {{ __('Login to') }} {{ $branding['acronym'] ?? \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}
                     </p>
                 </div>
 
@@ -333,7 +333,7 @@
                 <!-- Footer -->
                 <div class="mt-12 pt-8 border-t border-gray-200">
                     <p class="text-center text-xs text-gray-400">
-                        © {{ date('Y') }} {{ $journal ? $journal->name : config('app.name', 'IAMJOS') }}.
+                        © {{ date('Y') }} {{ $journal ? $journal->name : \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}.
                         @unless ($journal)
                             {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
                         @endunless

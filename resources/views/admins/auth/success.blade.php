@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Sent | {{ config('app.name', 'IAMJOS') }}</title>
+    <title>Email Sent | {{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}</title>
     <meta name="description" content="Verification email has been sent successfully">
     <meta name="robots" content="noindex, nofollow">
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('Forgot Password') }} | {{ config('app.name', 'IAMJOS') }}</title>
+    <title>{{ __('Forgot Password') }} | {{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}</title>
     <meta name="description" content="{{ __('Reset password for your IAMJOS account') }}">
     <meta name="robots" content="noindex, nofollow">
 

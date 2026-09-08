@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Change Password | {{ config('app.name', 'IAMJOS') }}</title>
+    <title>Change Password | {{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}</title>
     <meta name="description" content="Create new password for your IAMJOS account">
     <meta name="robots" content="noindex, nofollow">
 

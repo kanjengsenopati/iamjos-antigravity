@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | {{ config('app.name', 'IAMJOS') }}</title>
+    <title>Register | {{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}</title>
     <meta name="description" content="{{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }} - Create Account">
     <meta name="robots" content="noindex, nofollow">
 
@@ -660,7 +660,7 @@
                 <!-- Footer -->
                 <div class="mt-8 text-center">
                     <p class="text-xs text-gray-400">
-                        © {{ date('Y') }} {{ config('app.name', 'IAMJOS') }}. {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
+                        © {{ date('Y') }} {{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}. {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
                     </p>
                 </div>
             </div>
