@@ -255,6 +255,17 @@ class InstallController extends Controller
                 ]
             );
 
+            // Sync Mail Settings to Database (overriding seeder defaults)
+            if (class_exists(\App\Models\SystemSetting::class)) {
+                \App\Models\SystemSetting::where('key', 'mail_host')->update(['value' => $mailConfig['mail_host']]);
+                \App\Models\SystemSetting::where('key', 'mail_port')->update(['value' => $mailConfig['mail_port']]);
+                \App\Models\SystemSetting::where('key', 'mail_username')->update(['value' => $mailConfig['mail_username'] ?? '']);
+                \App\Models\SystemSetting::where('key', 'mail_password')->update(['value' => $mailConfig['mail_password'] ?? '']);
+                \App\Models\SystemSetting::where('key', 'mail_encryption')->update(['value' => $mailConfig['mail_encryption'] ?? '']);
+                \App\Models\SystemSetting::where('key', 'mail_from_address')->update(['value' => $mailConfig['mail_from_address']]);
+                \App\Models\SystemSetting::where('key', 'mail_from_name')->update(['value' => $mailConfig['mail_from_name']]);
+            }
+
             // 4. Create storage/installed file (so application knows it is installed)
             File::put(storage_path('installed'), 'installed_at: ' . now());
             File::put(storage_path('install.log'), 'installed_at: ' . now() . "\n" . Artisan::output());
