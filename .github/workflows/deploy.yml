@@ -359,13 +359,27 @@ jobs:
             # ─── CEK INSTALASI (CLEAN INSTALL POLICY) ───────────────
             if [ ! -f storage/installed ]; then
               echo "⚠️ File storage/installed tidak ditemukan."
-              echo "Aplikasi belum diinstall. Menghentikan deployment DB (Menunggu Web Installer)."
-              
+              echo "Aplikasi belum diinstall. Menyiapkan environment untuk Web Installer..."
+
+              # === FRESH INSTALL BOOTSTRAP ===
+              # 1. Buat .env dari template jika belum ada
+              if [ ! -f .env ]; then
+                cp .env.example .env
+                echo "📝 File .env dibuat dari .env.example"
+              fi
+
+              # 2. Generate APP_KEY agar Laravel bisa boot
+              rm -f bootstrap/cache/*.php 2>/dev/null || true
+              $PHP_CMD artisan key:generate --force --ansi
+              echo "🔑 APP_KEY berhasil di-generate"
+
+              # 3. Set permission untuk web server
               PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
-              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
-                sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
-                
-              echo "🎉 Distribusi kode mentah selesai! Silakan buka $APP_URL/install"
+              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache .env 2>/dev/null || \
+                sudo chown -R www:www storage bootstrap/cache .env 2>/dev/null || true
+              chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+
+              echo "🎉 Fresh install siap! Silakan buka $APP_URL/install"
               exit 0
             fi
             
@@ -602,13 +616,27 @@ jobs:
             # ─── CEK INSTALASI (CLEAN INSTALL POLICY) ───────────────
             if [ ! -f storage/installed ]; then
               echo "⚠️ File storage/installed tidak ditemukan."
-              echo "Aplikasi belum diinstall. Menghentikan deployment DB (Menunggu Web Installer)."
-              
+              echo "Aplikasi belum diinstall. Menyiapkan environment untuk Web Installer..."
+
+              # === FRESH INSTALL BOOTSTRAP ===
+              # 1. Buat .env dari template jika belum ada
+              if [ ! -f .env ]; then
+                cp .env.example .env
+                echo "📝 File .env dibuat dari .env.example"
+              fi
+
+              # 2. Generate APP_KEY agar Laravel bisa boot
+              rm -f bootstrap/cache/*.php 2>/dev/null || true
+              $PHP_CMD artisan key:generate --force --ansi
+              echo "🔑 APP_KEY berhasil di-generate"
+
+              # 3. Set permission untuk web server
               PHP_FPM_USER=$(ps aux | grep '[p]hp-fpm.*pool' | head -1 | awk '{print $1}' 2>/dev/null || echo "www")
-              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache 2>/dev/null || \
-                sudo chown -R www:www storage bootstrap/cache 2>/dev/null || true
-                
-              echo "🎉 Distribusi kode mentah selesai! Silakan buka $APP_URL/install"
+              sudo chown -R ${PHP_FPM_USER}:${PHP_FPM_USER} storage bootstrap/cache .env 2>/dev/null || \
+                sudo chown -R www:www storage bootstrap/cache .env 2>/dev/null || true
+              chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+
+              echo "🎉 Fresh install siap! Silakan buka $APP_URL/install"
               exit 0
             fi
             
