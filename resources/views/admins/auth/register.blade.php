@@ -660,7 +660,7 @@
                 <!-- Footer -->
                 <div class="mt-8 text-center">
                     <p class="text-xs text-gray-400">
-                        © {{ date('Y') }} {{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}. {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
+                        © {{ date('Y') }} {{ \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}. All rights reserved.
                     </p>
                 </div>
             </div>

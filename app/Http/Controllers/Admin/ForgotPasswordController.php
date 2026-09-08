@@ -139,13 +139,13 @@ class ForgotPasswordController extends Controller
     protected function getBrandingData(): array
     {
         return [
-            'name' => config('app.name', 'IAMJOS'),
-            'acronym' => 'IAMJOS',
-            'description' => 'Indonesian Academic Journal System',
+            'name' => \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')),
+            'acronym' => \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')),
+            'description' => \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System'),
             'logo_url' => null,
             'cover_url' => null,
             'headline' => 'Advance Your Academic Research',
-            'tagline' => 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.',
+            'tagline' => \App\Facades\Settings::site('site_intro', 'A modern platform for managing academic journal submissions, peer reviews, and publications with streamlined workflows.'),
         ];
     }
 }

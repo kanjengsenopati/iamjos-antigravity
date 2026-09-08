@@ -335,7 +335,7 @@
                     <p class="text-center text-xs text-gray-400">
                         © {{ date('Y') }} {{ $journal ? $journal->name : \App\Facades\Settings::site('site_title', config('app.name', 'IAMJOS')) }}.
                         @unless ($journal)
-                            {{ \App\Facades\Settings::site('site_intro', 'Indonesian Academic Journal System') }}.
+                            All rights reserved.
                         @endunless
                     </p>
                 </div>
