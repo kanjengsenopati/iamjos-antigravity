@@ -74,10 +74,6 @@ class SiteAdminController extends Controller
             'site_intro' => 'nullable|string',
             'about_content' => 'nullable|string',
             'footer_content' => 'nullable|string',
-            'header_color' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'show_journal_summary' => 'boolean',
-            'header_bg_image' => 'boolean',
-            'homepage_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'redirect_to_journal' => 'boolean',
             'use_ojs_url_format' => 'boolean',
             'min_password_length' => 'required|integer|min:6|max:32',
@@ -93,8 +89,6 @@ class SiteAdminController extends Controller
         // Handle boolean checkboxes which might not be present in request
         $validated['redirect_to_journal'] = $request->has('redirect_to_journal');
         $validated['use_ojs_url_format'] = $request->has('use_ojs_url_format');
-        $validated['show_journal_summary'] = $request->has('show_journal_summary');
-        $validated['header_bg_image'] = $request->has('header_bg_image');
 
         // Handle reCAPTCHA Keys
         if ($request->has('recaptcha_site_key')) {
@@ -102,14 +96,6 @@ class SiteAdminController extends Controller
         }
         if ($request->has('recaptcha_secret_key')) {
             $validated['recaptcha_secret_key'] = $request->input('recaptcha_secret_key');
-        }
-
-        // Handle file upload
-        if ($request->hasFile('homepage_image')) {
-            $file = $request->file('homepage_image');
-            $filename = 'homepage_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('site', $filename, 'public');
-            $validated['homepage_image'] = $path;
         }
 
         // Persist each field through Settings facade (flushSite() is called automatically per setSite())
