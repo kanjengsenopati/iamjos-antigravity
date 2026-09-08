@@ -211,6 +211,7 @@ jobs:
           name: build-assets-${{ github.sha }}
           path: |
             public/build/
+            vendor/
           retention-days: 1
 
   # ============================================================
@@ -266,7 +267,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-assets-${{ github.sha }}
-          path: public/build
+          path: .
 
       - name: Create deployment archive
         run: |
@@ -506,7 +507,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-assets-${{ github.sha }}
-          path: public/build
+          path: .
 
       - name: Create deployment archive
         run: |
