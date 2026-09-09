@@ -105,6 +105,18 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Livewire Asset URL
+    |---------------------------------------------------------------------------
+    |
+    | Here you can specify the base URL Livewire will use when resolving its
+    | JavaScript assets. By default, Livewire will use a relative URL.
+    |
+    */
+
+    'asset_url' => env('APP_URL', 'http://localhost'),
+
+    /*
+    |---------------------------------------------------------------------------
     | Auto-inject Frontend Assets
     |---------------------------------------------------------------------------
     |

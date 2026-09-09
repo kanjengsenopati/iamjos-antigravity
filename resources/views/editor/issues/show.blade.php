@@ -513,103 +513,7 @@
                         </div>
                     @endif
                 </div>
-                <!-- Publish Issue Modal -->
-        <div x-show="showPublishModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
-            aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="showPublishModal" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                    @click="showPublishModal = false" aria-hidden="true"></div>
 
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                <div x-show="showPublishModal" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
-                    
-                    <form action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
-                        @csrf
-                        
-                        <!-- Modal Header -->
-                        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="p-2 bg-emerald-50 rounded-xl">
-                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-lg font-bold text-gray-900" id="modal-title">Publish Issue</h3>
-                            </div>
-                            <button type="button" @click="showPublishModal = false" class="text-gray-400 hover:text-gray-500">
-                                <span class="sr-only">Close</span>
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- Modal Body -->
-                        <div class="px-6 py-6 space-y-6">
-                            <!-- Email Notification Option -->
-                            <div class="flex items-start bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                <div class="flex items-center h-5">
-                                    <input id="send_email" name="send_email" type="checkbox" value="1" checked class="focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded">
-                                </div>
-                                <div class="ml-3 text-sm">
-                                    <label for="send_email" class="font-medium text-gray-700">Send an email notification to all authors whose articles are in this issue.</label>
-                                </div>
-                            </div>
-
-                            <div>
-                                <p class="text-sm font-medium text-gray-800">Are you sure you want to publish the new issue?</p>
-                            </div>
-
-                            @if($journal->doi_prefix)
-                                <div class="mt-4 border border-gray-200 rounded-xl overflow-hidden">
-                                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">DOI</h4>
-                                    </div>
-                                    <div class="p-4 bg-white flex items-center gap-3">
-                                        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                        </svg>
-                                        <div class="text-sm text-gray-700">
-                                            The DOI 
-                                            <span class="inline-block px-2 py-0.5 border border-gray-200 rounded-md font-mono font-medium text-gray-900 bg-gray-50 shadow-sm mx-1">
-                                                {{ $issue->doi ?: "{$journal->doi_prefix}/{$journal->slug}.v{$issue->volume}i{$issue->number}" }}
-                                            </span>
-                                            @if($issue->doi)
-                                                has been assigned.
-                                            @else
-                                                will be assigned.
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Modal Footer -->
-                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
-                            <button type="button" @click="showPublishModal = false" class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                                Cancel
-                            </button>
-                            <button type="submit" class="px-5 py-2 bg-emerald-600 border border-transparent rounded-xl text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                                OK
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- End Modals -->
             </div>
             <!-- End TAB: Table of Contents -->
 
@@ -895,6 +799,102 @@
             </div>
             <!-- End Tabs Content Wrapper -->
         </div>
+
+            <!-- ====== PUBLISH ISSUE MODAL (Moved OUTSIDE tab containers) ====== -->
+            <div x-show="showPublishModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+                aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div x-show="showPublishModal" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                        @click="showPublishModal = false" aria-hidden="true"></div>
+
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                    <div x-show="showPublishModal" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave="ease-in duration-200"
+                        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
+                        
+                        <form action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
+                            @csrf
+                            
+                            <!-- Modal Header -->
+                            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-emerald-50 rounded-xl">
+                                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900" id="modal-title">Publish Issue</h3>
+                                </div>
+                                <button type="button" @click="showPublishModal = false" class="text-gray-400 hover:text-gray-500">
+                                    <span class="sr-only">Close</span>
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Modal Body -->
+                            <div class="px-6 py-6 space-y-6">
+                                <!-- Email Notification Option -->
+                                <div class="flex items-start bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                    <div class="flex items-center h-5">
+                                        <input id="send_email" name="send_email" type="checkbox" value="1" checked class="focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="send_email" class="font-medium text-gray-700">Send an email notification to all authors whose articles are in this issue.</label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">Are you sure you want to publish the new issue?</p>
+                                </div>
+
+                                @if($journal->doi_prefix)
+                                    <div class="mt-4 border border-gray-200 rounded-xl overflow-hidden">
+                                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                                            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">DOI</h4>
+                                        </div>
+                                        <div class="p-4 bg-white flex items-center gap-3">
+                                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                            </svg>
+                                            <div class="text-sm text-gray-700">
+                                                The DOI 
+                                                <span class="inline-block px-2 py-0.5 border border-gray-200 rounded-md font-mono font-medium text-gray-900 bg-gray-50 shadow-sm mx-1">
+                                                    {{ $issue->doi ?: "{$journal->doi_prefix}/{$journal->slug}.v{$issue->volume}i{$issue->number}" }}
+                                                </span>
+                                                @if($issue->doi)
+                                                    has been assigned.
+                                                @else
+                                                    will be assigned.
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Modal Footer -->
+                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                                <button type="button" @click="showPublishModal = false" class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="px-5 py-2 bg-emerald-600 border border-transparent rounded-xl text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                                    OK
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
         <!-- Add Article Modal -->
         <div x-show="showAddArticleModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"

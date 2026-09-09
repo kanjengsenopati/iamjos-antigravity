@@ -344,131 +344,108 @@ class IssueController extends Controller
      */
     public function publish(Request $request, string $journalSlug, Issue $issue): RedirectResponse
     {
-        $journal = $this->getJournal();
+        try {
+            $journal = $this->getJournal();
 
-        // Ensure issue belongs to this journal
-        if ($issue->journal_id !== $journal->id) {
-            abort(404);
-        }
+            // Ensure issue belongs to this journal
+            if ($issue->journal_id !== $journal->id) {
+                abort(404);
+            }
 
-        $updateData = [
-            'is_published' => true,
-            'published_at' => now(),
-        ];
-
-        // Auto-assign DOI if not present but prefix is configured
-        if (!$issue->doi && $journal->doi_prefix) {
-            $suffix = $issue->doi_suffix ?: "{$journal->slug}.v{$issue->volume}i{$issue->number}";
-            $updateData['doi'] = "{$journal->doi_prefix}/{$suffix}";
-            $updateData['doi_suffix'] = $suffix;
-        }
-
-        $issue->update($updateData);
-
-        // Also publish all assigned submissions and log activity
-        foreach ($issue->submissions as $sub) {
-            $sub->update([
-                'status' => Submission::STATUS_PUBLISHED,
+            $updateData = [
+                'is_published' => true,
                 'published_at' => now(),
-            ]);
-            SubmissionLog::log(
-                submission: $sub,
-                eventType: SubmissionLog::EVENT_PUBLISHED,
-                title: 'Article Published',
-                description: "Published via issue publication ({$issue->identifier}).",
-                stage: $sub->stage
-            );
-        }
+            ];
 
-        // Send email to all authors in this journal if requested
-        if ($request->boolean('send_email')) {
-            $authorEmails = collect();
-
-            // 1. All registered Users with the 'Author' role in this journal
-            $registeredAuthorUsers = \App\Models\User::where(function ($q) use ($journal) {
-                $q->whereExists(function ($sub) use ($journal) {
-                    $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                        ->from('journal_user_roles')
-                        ->join('roles', 'journal_user_roles.role_id', '=', 'roles.id')
-                        ->whereColumn('journal_user_roles.user_id', 'users.id')
-                        ->where('journal_user_roles.journal_id', $journal->id)
-                        ->where('roles.name', 'Author');
-                })->orWhereHas('roles', function ($sub) {
-                    $sub->where('name', 'Author');
-                });
-            })->get();
-
-            foreach ($registeredAuthorUsers as $user) {
-                $email = strtolower(trim((string)$user->email));
-                if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $authorEmails->push([
-                        'name' => $user->name ?: 'Author',
-                        'email' => $email
-                    ]);
-                }
+            // Auto-assign DOI if not present but prefix is configured
+            if (!$issue->doi && $journal->doi_prefix) {
+                $suffix = $issue->doi_suffix ?: "{$journal->slug}.v{$issue->volume}i{$issue->number}";
+                $updateData['doi'] = "{$journal->doi_prefix}/{$suffix}";
+                $updateData['doi_suffix'] = $suffix;
             }
 
-            // 2. All Submission & Publication authors in this journal
-            $journalSubmissions = \App\Models\Submission::where('journal_id', $journal->id)
-                ->with(['authors', 'currentPublication.authors', 'author'])
-                ->get();
+            $issue->update($updateData);
 
-            foreach ($journalSubmissions as $sub) {
-                // 2a. Authors from submission_authors (submission_id)
-                if ($sub->authors) {
-                    foreach ($sub->authors as $author) {
-                        $email = strtolower(trim((string)$author->email));
-                        if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                            $authorName = $author->name ?? trim("{$author->given_name} {$author->family_name}");
-                            $authorEmails->push([
-                                'name' => $authorName ?: 'Author',
-                                'email' => $email
-                            ]);
-                        }
-                    }
-                }
-
-                // 2b. Authors from publication_authors (currentPublication->authors)
-                if ($sub->currentPublication && $sub->currentPublication->authors) {
-                    foreach ($sub->currentPublication->authors as $pubAuthor) {
-                        $email = strtolower(trim((string)$pubAuthor->email));
-                        if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                            $authorName = $pubAuthor->name ?? trim("{$pubAuthor->given_name} {$pubAuthor->family_name}");
-                            $authorEmails->push([
-                                'name' => $authorName ?: 'Author',
-                                'email' => $email
-                            ]);
-                        }
-                    }
-                }
-
-                // 2c. Submitter / Primary User Account
-                if ($sub->author && !empty($sub->author->email)) {
-                    $email = strtolower(trim((string)$sub->author->email));
-                    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                        $authorEmails->push([
-                            'name' => $sub->author->name ?: 'Author',
-                            'email' => $email
-                        ]);
-                    }
-                }
-            }
-
-            $uniqueAuthors = $authorEmails->unique('email');
-            $issueTitle = $issue->title ?: "Volume {$issue->volume} Issue {$issue->number}";
-
-            foreach ($uniqueAuthors as $auth) {
-                // Dispatch isolated per-recipient job to prevent any single recipient failure from interrupting the queue
-                \App\Jobs\SendIssuePublishedEmailJob::dispatch(
-                    recipientEmail: $auth['email'],
-                    recipientName: $auth['name'],
-                    issueTitle: $issueTitle,
-                    journalName: $journal->name
+            // Also publish all assigned submissions and log activity
+            foreach ($issue->submissions as $sub) {
+                $sub->update([
+                    'status' => Submission::STATUS_PUBLISHED,
+                    'published_at' => now(),
+                ]);
+                SubmissionLog::log(
+                    submission: $sub,
+                    eventType: SubmissionLog::EVENT_PUBLISHED,
+                    title: 'Article Published',
+                    description: "Published via issue publication ({$issue->identifier}).",
+                    stage: $sub->stage
                 );
             }
-        }
 
-        return back()->with('success', 'Issue published successfully. ' . $issue->submissions()->count() . ' article(s) are now live.');
+            // Send email to all authors in THIS issue if requested
+            if ($request->boolean('send_email')) {
+                $authorEmails = collect();
+
+                $issue->loadMissing(['submissions.authors', 'submissions.currentPublication.authors', 'submissions.author']);
+
+                foreach ($issue->submissions as $sub) {
+                    // 2a. Authors from submission_authors
+                    if ($sub->authors) {
+                        foreach ($sub->authors as $author) {
+                            $email = strtolower(trim((string)$author->email));
+                            if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                $authorName = $author->name ?? trim("{$author->given_name} {$author->family_name}");
+                                $authorEmails->push([
+                                    'name' => $authorName ?: 'Author',
+                                    'email' => $email
+                                ]);
+                            }
+                        }
+                    }
+
+                    // 2b. Authors from publication_authors
+                    if ($sub->currentPublication && $sub->currentPublication->authors) {
+                        foreach ($sub->currentPublication->authors as $pubAuthor) {
+                            $email = strtolower(trim((string)$pubAuthor->email));
+                            if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                $authorName = $pubAuthor->name ?? trim("{$pubAuthor->given_name} {$pubAuthor->family_name}");
+                                $authorEmails->push([
+                                    'name' => $authorName ?: 'Author',
+                                    'email' => $email
+                                ]);
+                            }
+                        }
+                    }
+
+                    // 2c. Submitter / Primary User Account
+                    if ($sub->author && !empty($sub->author->email)) {
+                        $email = strtolower(trim((string)$sub->author->email));
+                        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $authorEmails->push([
+                                'name' => $sub->author->name ?: 'Author',
+                                'email' => $email
+                            ]);
+                        }
+                    }
+                }
+
+                $uniqueAuthors = $authorEmails->unique('email');
+                $issueTitle = $issue->title ?: "Volume {$issue->volume} Issue {$issue->number}";
+
+                foreach ($uniqueAuthors as $auth) {
+                    \App\Jobs\SendIssuePublishedEmailJob::dispatch(
+                        recipientEmail: $auth['email'],
+                        recipientName: $auth['name'],
+                        issueTitle: $issueTitle,
+                        journalName: $journal->name
+                    );
+                }
+            }
+
+            return back()->with('success', 'Issue published successfully. ' . $issue->submissions()->count() . ' article(s) are now live.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Issue Publish Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Terjadi kesalahan saat mempublikasikan terbitan. Mohon coba lagi atau hubungi administrator. (Error: ' . $e->getMessage() . ')');
+        }
     }
 
     /**
