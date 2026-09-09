@@ -60,6 +60,7 @@ class CrossrefDepositService
         }
 
         $xmlString = $this->generateXml($submissions, $journal);
+        $batchId = (string) Str::uuid();
         $filename = 'crossref-' . $journal->path . '-' . date('YmdHis') . '.xml';
 
         $isTestMode = $journal->getSetting('crossref_test_mode');
