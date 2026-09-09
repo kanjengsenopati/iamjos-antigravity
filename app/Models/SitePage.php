@@ -112,7 +112,7 @@ class SitePage extends Model
         $originalSlug = $slug;
         $count = 1;
 
-        while (static::where('slug', $slug)
+        while (static::withTrashed()->where('slug', $slug)
             ->where('id', '!=', $this->id ?? null)
             ->exists()) {
             $slug = "{$originalSlug}-{$count}";

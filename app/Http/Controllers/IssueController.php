@@ -142,7 +142,7 @@ class IssueController extends Controller
             'show_year' => 'nullable|boolean',
             'show_title' => 'nullable|boolean',
             'description' => 'nullable|string',
-            'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,NULL,id,journal_id,' . $journal->id],
+            'url_path' => ['nullable', 'string', 'alpha_dash', \Illuminate\Validation\Rule::unique('issues', 'url_path')->where('journal_id', $journal->id)->withTrashed()],
             'cover' => 'nullable|image|max:2048', // 2MB max
         ]);
 
@@ -263,7 +263,7 @@ class IssueController extends Controller
             'show_year' => 'nullable|boolean',
             'show_title' => 'nullable|boolean',
             'description' => 'nullable|string',
-            'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,' . $issue->id . ',id,journal_id,' . $journal->id],
+            'url_path' => ['nullable', 'string', 'alpha_dash', \Illuminate\Validation\Rule::unique('issues', 'url_path')->ignore($issue->id)->where('journal_id', $journal->id)->withTrashed()],
             'cover' => 'nullable|image|max:2048',
         ]);
 

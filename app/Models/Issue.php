@@ -139,7 +139,8 @@ class Issue extends Model
         $slug = $baseSlug;
         $counter = 1;
 
-        while (static::where('journal_id', $issue->journal_id)
+        while (static::withTrashed()
+            ->where('journal_id', $issue->journal_id)
             ->where('url_path', $slug)
             ->where('id', '!=', $issue->id)
             ->exists()) {

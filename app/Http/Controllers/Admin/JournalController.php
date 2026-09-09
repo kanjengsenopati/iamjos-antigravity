@@ -58,7 +58,7 @@ class JournalController extends Controller
         // Ensure slug is unique
         $originalSlug = $slug;
         $count = 1;
-        while (Journal::where('slug', $slug)->exists()) {
+        while (Journal::withTrashed()->where('slug', $slug)->exists()) {
             $slug = $originalSlug . '-' . $count++;
         }
 
@@ -179,6 +179,17 @@ class JournalController extends Controller
             'thumbnail' => 'nullable|image|max:1024',
         ]);
 
+        $newSlug = Str::slug($validated['abbreviation'] ?? $validated['name']);
+        if (empty($newSlug)) {
+            $newSlug = $journal->slug;
+        } else {
+            $originalSlug = $newSlug;
+            $count = 1;
+            while (Journal::withTrashed()->where('slug', $newSlug)->where('id', '!=', $journal->id)->exists()) {
+                $newSlug = $originalSlug . '-' . $count++;
+            }
+        }
+
         $journal->update([
             'name' => $validated['name'],
             'abbreviation' => $validated['abbreviation'],
@@ -194,8 +205,8 @@ class JournalController extends Controller
             'url_issn_online' => $validated['url_issn_online'] ?? null,
             'enabled' => $validated['enabled'] ?? true,
             'visible' => $validated['visible'] ?? true,
-            'path' => Str::lower($validated['abbreviation']) ?? $journal->path,
-            'slug' => Str::slug($validated['abbreviation']) ?? $journal->slug,
+            'path' => $newSlug,
+            'slug' => $newSlug,
         ]);
 
         // Upload logo

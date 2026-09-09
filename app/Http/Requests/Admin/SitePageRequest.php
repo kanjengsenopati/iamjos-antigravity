@@ -53,8 +53,8 @@ class SitePageRequest extends FormRequest
                 'max:255',
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 $isUpdate 
-                    ? Rule::unique('site_pages', 'slug')->ignore($sitePageId)
-                    : Rule::unique('site_pages', 'slug'),
+                    ? Rule::unique('site_pages', 'slug')->ignore($sitePageId)->withTrashed()
+                    : Rule::unique('site_pages', 'slug')->withTrashed(),
             ],
             'content' => [
                 'nullable',
