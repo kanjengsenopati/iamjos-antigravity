@@ -127,29 +127,10 @@
                 {{-- Country --}}
                 <div>
                     <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
-                    @php
-                        $countries = [
-                            'ID' => 'Indonesia',
-                            'US' => 'United States',
-                            'GB' => 'United Kingdom',
-                            'AU' => 'Australia',
-                            'CA' => 'Canada',
-                            'MY' => 'Malaysia',
-                            'SG' => 'Singapore',
-                            'JP' => 'Japan',
-                            'CN' => 'China',
-                            'KR' => 'South Korea',
-                            'IN' => 'India',
-                            'TH' => 'Thailand',
-                            'VN' => 'Vietnam',
-                            'PH' => 'Philippines',
-                            // Add more as needed or use a helper
-                        ];
-                    @endphp
                     <select name="country" id="country"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                         <option value="">Select Country...</option>
-                        @foreach ($countries as $code => $name)
+                        @foreach (config('countries', []) as $code => $name)
                             <option value="{{ $code }}"
                                 {{ old('country', $user->country) == $code ? 'selected' : '' }}>{{ $name }}
                             </option>

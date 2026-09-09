@@ -103,26 +103,6 @@
                                                 {{ old('country') == $code ? 'selected' : '' }}>{{ $name }}
                                             </option>
                                         @endforeach
-                                        @if (empty(config('countries')))
-                                            <option value="ID" {{ old('country') == 'ID' ? 'selected' : '' }}>
-                                                Indonesia</option>
-                                            <option value="MY" {{ old('country') == 'MY' ? 'selected' : '' }}>
-                                                Malaysia</option>
-                                            <option value="SG" {{ old('country') == 'SG' ? 'selected' : '' }}>
-                                                Singapore</option>
-                                            <option value="TH" {{ old('country') == 'TH' ? 'selected' : '' }}>
-                                                Thailand</option>
-                                            <option value="VN" {{ old('country') == 'VN' ? 'selected' : '' }}>
-                                                Vietnam</option>
-                                            <option value="PH" {{ old('country') == 'PH' ? 'selected' : '' }}>
-                                                Philippines</option>
-                                            <option value="AU" {{ old('country') == 'AU' ? 'selected' : '' }}>
-                                                Australia</option>
-                                            <option value="US" {{ old('country') == 'US' ? 'selected' : '' }}>
-                                                United States</option>
-                                            <option value="OTHER" {{ old('country') == 'OTHER' ? 'selected' : '' }}>
-                                                Other</option>
-                                        @endif
                                     </select>
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                         <i class="fas fa-chevron-down text-slate-400 text-xs"></i>

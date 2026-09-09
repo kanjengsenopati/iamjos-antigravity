@@ -664,28 +664,10 @@
                                 {{-- Country --}}
                                 <div>
                                     <label for="country" class="block text-sm font-medium text-slate-700">{{ $isId ? 'Negara' : 'Country' }}</label>
-                                    @php
-                                        $countries = [
-                                            'ID' => 'Indonesia',
-                                            'US' => 'United States',
-                                            'GB' => 'United Kingdom',
-                                            'AU' => 'Australia',
-                                            'CA' => 'Canada',
-                                            'MY' => 'Malaysia',
-                                            'SG' => 'Singapore',
-                                            'JP' => 'Japan',
-                                            'CN' => 'China',
-                                            'KR' => 'South Korea',
-                                            'IN' => 'India',
-                                            'TH' => 'Thailand',
-                                            'VN' => 'Vietnam',
-                                            'PH' => 'Philippines',
-                                        ];
-                                    @endphp
                                     <select name="country" id="country"
                                         class="mt-1 block w-full rounded-lg border-slate-200 focus:border-primary-500 focus:ring-primary-500 sm:text-sm border p-2.5 bg-white cursor-pointer">
                                         <option value="">{{ $isId ? 'Pilih Negara...' : 'Select Country...' }}</option>
-                                        @foreach ($countries as $code => $name)
+                                        @foreach (config('countries', []) as $code => $name)
                                             <option value="{{ $code }}" {{ old('country') == $code ? 'selected' : '' }}>{{ $name }}</option>
                                         @endforeach
                                     </select>

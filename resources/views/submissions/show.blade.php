@@ -5203,24 +5203,6 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         @foreach (config('countries', []) as $code => $name)
                                             <option value="{{ $code }}" :selected="editingContributor?.country === '{{ addslashes($code) }}' || editingContributor?.country === '{{ addslashes($name) }}'">{{ $name }}</option>
                                         @endforeach
-                                        @if (empty(config('countries')))
-                                            @php
-                                                $fallbacks = [
-                                                    'ID' => 'Indonesia',
-                                                    'MY' => 'Malaysia',
-                                                    'SG' => 'Singapore',
-                                                    'TH' => 'Thailand',
-                                                    'VN' => 'Vietnam',
-                                                    'PH' => 'Philippines',
-                                                    'AU' => 'Australia',
-                                                    'US' => 'United States',
-                                                    'OTHER' => $isId ? 'Lainnya' : 'Other',
-                                                ];
-                                            @endphp
-                                            @foreach ($fallbacks as $code => $name)
-                                                <option value="{{ $code }}" :selected="editingContributor?.country === '{{ addslashes($code) }}' || editingContributor?.country === '{{ addslashes($name) }}'">{{ $name }}</option>
-                                            @endforeach
-                                        @endif
                                     </select>
                                 </div>
                                 <div>

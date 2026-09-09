@@ -349,24 +349,6 @@
                                                 @foreach (config('countries', []) as $code => $name)
                                                     <option value="{{ $code }}">{{ $name }}</option>
                                                 @endforeach
-                                                @if (empty(config('countries')))
-                                                    @php
-                                                        $fallbacks = [
-                                                            'ID' => 'Indonesia',
-                                                            'MY' => 'Malaysia',
-                                                            'SG' => 'Singapore',
-                                                            'TH' => 'Thailand',
-                                                            'VN' => 'Vietnam',
-                                                            'PH' => 'Philippines',
-                                                            'AU' => 'Australia',
-                                                            'US' => 'United States',
-                                                            'OTHER' => 'Other',
-                                                        ];
-                                                    @endphp
-                                                    @foreach ($fallbacks as $code => $name)
-                                                        <option value="{{ $code }}">{{ $name }}</option>
-                                                    @endforeach
-                                                @endif
                                             </select>
                                         </div>
                                     </div>

@@ -302,42 +302,10 @@
                                 <select name="country" id="country"
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                     <option value="">{{ $isId ? 'Pilih negara...' : 'Select a country' }}</option>
-                                    @php
-                                        $countries = [
-                                            'Indonesia',
-                                            'Malaysia',
-                                            'Singapore',
-                                            'Thailand',
-                                            'Philippines',
-                                            'United States',
-                                            'United Kingdom',
-                                            'Australia',
-                                            'Canada',
-                                            'Germany',
-                                            'France',
-                                            'Japan',
-                                            'South Korea',
-                                            'China',
-                                            'India',
-                                            'Netherlands',
-                                            'Switzerland',
-                                            'Sweden',
-                                            'Norway',
-                                            'Denmark',
-                                            'Finland',
-                                            'Belgium',
-                                            'Austria',
-                                            'New Zealand',
-                                            'Brazil',
-                                            'Mexico',
-                                            'Argentina',
-                                            'Chile',
-                                        ];
-                                    @endphp
-                                    @foreach ($countries as $country)
-                                        <option value="{{ $country }}"
-                                            {{ old('country', $user->country) === $country ? 'selected' : '' }}>
-                                            {{ $country }}
+                                    @foreach (config('countries', []) as $code => $name)
+                                        <option value="{{ $code }}"
+                                            {{ old('country', $user->country) === $code ? 'selected' : '' }}>
+                                            {{ $name }}
                                         </option>
                                     @endforeach
                                 </select>

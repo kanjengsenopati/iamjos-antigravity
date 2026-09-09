@@ -237,47 +237,6 @@
                                                 {{ old('country') == $code ? 'selected' : '' }}>{{ $name }}
                                             </option>
                                         @endforeach
-                                        <!-- Fallback countries if config not available -->
-                                        @if (empty(config('countries')))
-                                            <option value="ID" {{ old('country') == 'ID' ? 'selected' : '' }}>
-                                                Indonesia</option>
-                                            <option value="MY" {{ old('country') == 'MY' ? 'selected' : '' }}>
-                                                Malaysia</option>
-                                            <option value="SG" {{ old('country') == 'SG' ? 'selected' : '' }}>
-                                                Singapore</option>
-                                            <option value="TH" {{ old('country') == 'TH' ? 'selected' : '' }}>
-                                                Thailand</option>
-                                            <option value="VN" {{ old('country') == 'VN' ? 'selected' : '' }}>
-                                                Vietnam</option>
-                                            <option value="PH" {{ old('country') == 'PH' ? 'selected' : '' }}>
-                                                Philippines</option>
-                                            <option value="AU" {{ old('country') == 'AU' ? 'selected' : '' }}>
-                                                Australia</option>
-                                            <option value="JP" {{ old('country') == 'JP' ? 'selected' : '' }}>Japan
-                                            </option>
-                                            <option value="KR" {{ old('country') == 'KR' ? 'selected' : '' }}>South
-                                                Korea</option>
-                                            <option value="CN" {{ old('country') == 'CN' ? 'selected' : '' }}>China
-                                            </option>
-                                            <option value="IN" {{ old('country') == 'IN' ? 'selected' : '' }}>
-                                                India</option>
-                                            <option value="US" {{ old('country') == 'US' ? 'selected' : '' }}>
-                                                United States</option>
-                                            <option value="GB" {{ old('country') == 'GB' ? 'selected' : '' }}>
-                                                United Kingdom</option>
-                                            <option value="DE" {{ old('country') == 'DE' ? 'selected' : '' }}>
-                                                Germany</option>
-                                            <option value="FR" {{ old('country') == 'FR' ? 'selected' : '' }}>
-                                                France</option>
-                                            <option value="NL" {{ old('country') == 'NL' ? 'selected' : '' }}>
-                                                Netherlands</option>
-                                            <option value="CA" {{ old('country') == 'CA' ? 'selected' : '' }}>
-                                                Canada</option>
-                                            <option value="BR" {{ old('country') == 'BR' ? 'selected' : '' }}>
-                                                Brazil</option>
-                                            <option value="OTHER" {{ old('country') == 'OTHER' ? 'selected' : '' }}>
-                                                Other</option>
-                                        @endif
                                     </select>
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                         <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
