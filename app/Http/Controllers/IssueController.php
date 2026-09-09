@@ -341,8 +341,9 @@ class IssueController extends Controller
 
     /**
      * Publish the issue and all its articles.
+     * Returns JSON for AJAX requests (modal fetch), or redirect for standard POST.
      */
-    public function publish(Request $request, string $journalSlug, Issue $issue): RedirectResponse
+    public function publish(Request $request, string $journalSlug, Issue $issue): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         try {
             $journal = $this->getJournal();
@@ -441,10 +442,32 @@ class IssueController extends Controller
                 }
             }
 
-            return back()->with('success', 'Issue published successfully. ' . $issue->submissions()->count() . ' article(s) are now live.');
+            $successMessage = 'Issue published successfully. ' . $issue->submissions()->count() . ' article(s) are now live.';
+
+            // Return JSON for AJAX requests (from modal fetch)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMessage,
+                    'redirect' => route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue]),
+                ]);
+            }
+
+            return back()->with('success', $successMessage);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Issue Publish Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Terjadi kesalahan saat mempublikasikan terbitan. Mohon coba lagi atau hubungi administrator. (Error: ' . $e->getMessage() . ')');
+
+            $errorMessage = 'Terjadi kesalahan saat mempublikasikan terbitan. Mohon coba lagi atau hubungi administrator.';
+
+            // Return JSON for AJAX requests (from modal fetch)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage,
+                ], 500);
+            }
+
+            return back()->with('error', $errorMessage . ' (Error: ' . $e->getMessage() . ')');
         }
     }
 

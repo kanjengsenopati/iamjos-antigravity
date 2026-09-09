@@ -11,6 +11,8 @@
         showAddArticleModal: false,
         showReorderModal: false,
         showPublishModal: false,
+        publishLoading: false,
+        publishError: '',
         modalX: 0,
         modalY: 0,
         isDragging: false,
@@ -186,20 +188,15 @@
                                 View Public
                             </a>
                         @else
-                            <form
-                                action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                                method="POST">
-                                @csrf
-                                <button type="button"
-                                    @click="showPublishModal = true"
-                                    class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:bg-emerald-700 transition-all">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Publish Issue
-                                </button>
-                            </form>
+                            <button type="button"
+                                @click="showPublishModal = true; publishError = ''; publishLoading = false"
+                                class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:bg-emerald-700 transition-all">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Publish Issue
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -820,7 +817,34 @@
                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                         class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
                         
-                        <form action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
+                        <form @submit.prevent="
+                            publishLoading = true;
+                            publishError = '';
+                            let formData = new URLSearchParams(new FormData($event.target));
+                            fetch($event.target.getAttribute('data-action'), {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: formData
+                            })
+                            .then(async (response) => {
+                                const data = await response.json();
+                                if (data.success) {
+                                    showPublishModal = false;
+                                    window.location.href = data.redirect;
+                                } else {
+                                    publishError = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+                                    publishLoading = false;
+                                }
+                            })
+                            .catch(() => {
+                                publishError = 'Koneksi gagal atau terjadi kesalahan server. Silakan refresh halaman dan coba lagi.';
+                                publishLoading = false;
+                            })
+                        " data-action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}">
                             @csrf
                             
                             <!-- Modal Header -->
@@ -833,7 +857,7 @@
                                     </div>
                                     <h3 class="text-lg font-bold text-gray-900" id="modal-title">Publish Issue</h3>
                                 </div>
-                                <button type="button" @click="showPublishModal = false" class="text-gray-400 hover:text-gray-500">
+                                <button type="button" @click="showPublishModal = false" class="text-gray-400 hover:text-gray-500" :disabled="publishLoading">
                                     <span class="sr-only">Close</span>
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -843,6 +867,14 @@
 
                             <!-- Modal Body -->
                             <div class="px-6 py-6 space-y-6">
+                                <!-- Error Message -->
+                                <div x-show="publishError" x-cloak class="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p class="text-sm font-medium text-red-800" x-text="publishError"></p>
+                                </div>
+
                                 <!-- Email Notification Option -->
                                 <div class="flex items-start bg-gray-50 rounded-xl p-4 border border-gray-100">
                                     <div class="flex items-center h-5">
@@ -884,11 +916,17 @@
 
                             <!-- Modal Footer -->
                             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
-                                <button type="button" @click="showPublishModal = false" class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                                <button type="button" @click="showPublishModal = false" :disabled="publishLoading" class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50">
                                     Cancel
                                 </button>
-                                <button type="submit" class="px-5 py-2 bg-emerald-600 border border-transparent rounded-xl text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                                    OK
+                                <button type="submit" :disabled="publishLoading" class="px-5 py-2 bg-emerald-600 border border-transparent rounded-xl text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50 inline-flex items-center gap-2">
+                                    <template x-if="publishLoading">
+                                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </template>
+                                    <span x-text="publishLoading ? 'Publishing...' : 'OK'"></span>
                                 </button>
                             </div>
                         </form>
