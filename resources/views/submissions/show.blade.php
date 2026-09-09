@@ -3963,6 +3963,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     'family_name' => $a->family_name ?? $a->last_name ?? '',
                     'first_name' => $a->first_name ?? $a->given_name ?? '',
                     'last_name' => $a->last_name ?? $a->family_name ?? '',
+                    'user_group_id' => $a->user_group_id ?? 'author',
                 ],
             )->values();
         @endphp
@@ -3997,6 +3998,14 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                     url.searchParams.set("subtab", value);
                     window.history.replaceState({}, document.title, url.pathname + url.search);
                 });
+
+                // Auto-open contributor modal jika ada validation error dari server
+                @if ($errors->has('email'))
+                    this.pubTab = 'contributors';
+                    this.$nextTick(() => {
+                        this.contributorModalOpen = true;
+                    });
+                @endif
             },
         
             // Reordering Logic
@@ -4291,6 +4300,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                             {{ $isId ? 'Afiliasi' : 'Affiliation' }}</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                            {{ $isId ? 'Peran' : 'Role' }}</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                             {{ $isId ? 'Utama' : 'Primary' }}</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                             {{ $isId ? 'Daftar Telusur' : 'In Browse' }}</th>
@@ -4331,7 +4342,8 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                                         country: '{{ $author['country'] ?? '' }}',
                                                                         orcid: '{{ $author['orcid'] ?? '' }}',
                                                                         is_corresponding: {{ $author['is_corresponding'] ? 'true' : 'false' }},
-                                                                        include_in_browse: {{ $author['include_in_browse'] ?? true ? 'true' : 'false' }}
+                                                                        include_in_browse: {{ $author['include_in_browse'] ?? true ? 'true' : 'false' }},
+                                                                        user_group_id: '{{ $author['user_group_id'] ?? 'author' }}'
                                                                     })"
                                                                     class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 border border-slate-200/60 transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed">
                                                                     <i class="fa-solid fa-pen-to-square mr-1.5 text-amber-500 text-[10px]"></i>
@@ -4362,6 +4374,18 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                                 {{ $author['affiliation'] ?? '-' }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                @php $role = $author['user_group_id'] ?? 'author'; @endphp
+                                                @if ($role === 'translator')
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+                                                        <i class="fa-solid fa-language mr-1 text-[10px]"></i>Translator
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                                                        <i class="fa-solid fa-pen-nib mr-1 text-[10px]"></i>Author
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
                                                 @if ($author['is_corresponding'])
                                                     <i class="fa-solid fa-check-circle text-emerald-500"></i>
                                                 @else
@@ -4378,7 +4402,7 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="px-6 py-12 text-center">
+                                            <td colspan="7" class="px-6 py-12 text-center">
                                                 <div class="flex flex-col items-center">
                                                     <div
                                                         class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -5156,7 +5180,10 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         class="text-red-500">*</span></label>
                                 <input type="email" name="email" required
                                     :value="editingContributor?.email || ''"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 @error('email') border-red-500 ring-1 ring-red-500 @enderror">
+                                @error('email')
+                                    <p class="mt-1 text-sm text-red-600"><i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
@@ -5202,6 +5229,15 @@ $selectedRound = $allRounds->firstWhere('round', $selectedRoundNumber) ?? $curre
                                         placeholder="0000-0000-0000-0000"
                                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                 </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $isId ? 'Peran Kontributor' : 'Contributor Role' }}</label>
+                                <select name="user_group_id"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                                    <option value="author" :selected="(editingContributor?.user_group_id || 'author') === 'author'">Author</option>
+                                    <option value="translator" :selected="editingContributor?.user_group_id === 'translator'">Translator</option>
+                                </select>
                             </div>
 
                             <div class="space-y-3 pt-2">

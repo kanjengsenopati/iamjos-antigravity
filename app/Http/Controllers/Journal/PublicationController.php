@@ -159,6 +159,21 @@ class PublicationController extends Controller
         // Get the next sort order
         $maxOrder = $publication->authors()->max('sort_order') ?? 0;
         $authorEmail = strtolower(trim($validated['email']));
+
+        // Validasi duplikat: cek email sudah ada di publication atau submission yang sama
+        $existingAuthor = SubmissionAuthor::where(function ($q) use ($publication, $submission) {
+                $q->where('publication_id', $publication->id)
+                  ->orWhere('submission_id', $submission->id);
+            })
+            ->whereRaw('LOWER(TRIM(email)) = ?', [$authorEmail])
+            ->first();
+
+        if ($existingAuthor) {
+            return back()->withInput()->withErrors([
+                'email' => 'Kontributor dengan email ini sudah terdaftar pada publikasi ini.',
+            ]);
+        }
+
         $existingUser = User::where('email', $authorEmail)->first();
 
         $isCorresponding = !empty($validated['is_corresponding']);
@@ -179,7 +194,7 @@ class PublicationController extends Controller
             'first_name' => $validated['given_name'],
             'family_name' => $validated['family_name'],
             'last_name' => $validated['family_name'],
-            'email' => $validated['email'],
+            'email' => $authorEmail,
             'affiliation' => $validated['affiliation'] ?? null,
             'country' => $validated['country'] ?? null,
             'orcid' => $validated['orcid'] ?? null,
@@ -210,6 +225,23 @@ class PublicationController extends Controller
         ]);
 
         $publication = $submission->getOrCreatePublication();
+        $authorEmail = strtolower(trim($validated['email']));
+
+        // Validasi duplikat: cek email sudah dipakai kontributor lain di publication/submission yang sama
+        $duplicate = SubmissionAuthor::where(function ($q) use ($publication, $submission) {
+                $q->where('publication_id', $publication->id)
+                  ->orWhere('submission_id', $submission->id);
+            })
+            ->where('id', '!=', $author->id)
+            ->whereRaw('LOWER(TRIM(email)) = ?', [$authorEmail])
+            ->first();
+
+        if ($duplicate) {
+            return back()->withInput()->withErrors([
+                'email' => 'Kontributor lain dengan email ini sudah terdaftar pada publikasi ini.',
+            ]);
+        }
+
         $isCorresponding = !empty($validated['is_corresponding']);
 
         if ($isCorresponding) {
@@ -253,7 +285,7 @@ class PublicationController extends Controller
             'first_name' => $validated['given_name'],
             'family_name' => $validated['family_name'],
             'last_name' => $validated['family_name'],
-            'email' => $validated['email'],
+            'email' => $authorEmail,
             'affiliation' => $validated['affiliation'] ?? null,
             'country' => $validated['country'] ?? null,
             'orcid' => $validated['orcid'] ?? null,
