@@ -85,7 +85,9 @@ class CrossrefExportController extends Controller
         return redirect()->back()->with('success', 'Crossref settings saved successfully.');
     }
 
-    // 4. Mark Active Logic (Manual Override)
+    // 4. Mark Active Logic (Manual Override — OJS 3.3 "Marked active")
+    // Sets doi_status to 'marked', NOT 'active'. Status 'active' is reserved
+    // for Crossref API confirmation only (via auto-poll).
     public function markActive(Request $request)
     {
         $journal = current_journal();
@@ -103,38 +105,12 @@ class CrossrefExportController extends Controller
         foreach ($submissions as $submission) {
             $pub = $submission->currentPublication;
             if ($pub) {
-                $pub->doi_status = 'active';
-                $pub->save();
-            }
-        }
-
-        return back()->with('success', 'DOI status marked as active successfully for selected articles.');
-    }
-
-    // 5. Mark Registered Logic (Manual Registration Outside System — OJS 3.3 Compatible)
-    public function markRegistered(Request $request)
-    {
-        $journal = current_journal();
-        $ids = $request->input('submission_ids', []);
-
-        if (empty($ids)) {
-            return back()->with('error', 'Please select at least one article to mark as registered.');
-        }
-
-        $submissions = \App\Models\Submission::where('journal_id', $journal->id)
-            ->whereIn('id', $ids)
-            ->with(['currentPublication'])
-            ->get();
-
-        foreach ($submissions as $submission) {
-            $pub = $submission->currentPublication;
-            if ($pub) {
                 $pub->doi_status = 'marked';
                 $pub->save();
             }
         }
 
-        return back()->with('success', 'DOI status marked as registered successfully for selected articles.');
+        return back()->with('success', 'DOI status marked as active successfully for selected articles.');
     }
 
     // 2. XML Export Logic
