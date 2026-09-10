@@ -747,6 +747,7 @@ Route::get('/', [PortalController::class, 'index'])->name('portal.home');
                         Route::post('/save', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'saveSettings'])->name('save');
                         Route::post('/deposit', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'deposit'])->name('deposit');
                         Route::post('/mark-active', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'markActive'])->name('mark_active');
+                        Route::post('/mark-registered', [\App\Http\Controllers\Admin\Tools\CrossrefExportController::class, 'markRegistered'])->name('mark_registered');
                     });
                 });
 

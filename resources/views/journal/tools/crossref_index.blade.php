@@ -213,6 +213,10 @@
                         class="{{ $status == 'active' ? 'font-bold text-black bg-slate-100 px-2 py-1 rounded' : 'text-blue-600 hover:underline px-2 py-1' }}">{{ $isId ? 'Aktif' : 'Active' }}</a>
                     <span class="text-slate-300">|</span>
 
+                    <a href="?status=submitted&tab={{ $tab }}"
+                        class="{{ $status == 'submitted' ? 'font-bold text-black bg-slate-100 px-2 py-1 rounded' : 'text-blue-600 hover:underline px-2 py-1' }}">{{ $isId ? 'Diajukan' : 'Submitted' }}</a>
+                    <span class="text-slate-300">|</span>
+
                     <a href="?status=marked&tab={{ $tab }}"
                         class="{{ $status == 'marked' ? 'font-bold text-black bg-slate-100 px-2 py-1 rounded' : 'text-blue-600 hover:underline px-2 py-1' }}">{{ $isId ? 'Ditandai Terdaftar' : 'Marked Registered' }}</a>
                 </div>
@@ -318,6 +322,11 @@
                                                     class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
                                                     {{ $isId ? 'Gagal' : 'Failed' }}
                                                 </span>
+                                            @elseif (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'marked')
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                    {{ $isId ? 'Ditandai Terdaftar' : 'Marked Registered' }}
+                                                </span>
                                             @else
                                                 <span
                                                     class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -369,6 +378,13 @@
                                 formaction="{{ route('journal.settings.tools.crossref.mark_active', $journal->slug) }}"
                                 class="bg-white text-gray-700 font-medium py-2 px-4 rounded-xl border border-gray-300 hover:bg-gray-50 transition text-sm cursor-pointer">
                                 {{ $isId ? 'Tandai Aktif' : 'Mark Active' }}
+                            </button>
+
+                            <button type="submit"
+                                name="action" value="markRegistered"
+                                formaction="{{ route('journal.settings.tools.crossref.mark_registered', $journal->slug) }}"
+                                class="bg-white text-purple-700 font-medium py-2 px-4 rounded-xl border border-purple-300 hover:bg-purple-50 transition text-sm cursor-pointer">
+                                {{ $isId ? 'Tandai Terdaftar' : 'Mark Registered' }}
                             </button>
                         </div>
                     </div>
