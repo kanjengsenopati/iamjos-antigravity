@@ -45,8 +45,8 @@
 
   <head>
     <doi_batch_id>{{ $batchId }}</doi_batch_id>
-    {{-- timestamp must be incremented with each deposit; use microseconds for uniqueness --}}
-    <timestamp>{{ now()->format('YmdHis') }}{{ str_pad(now()->micro, 6, '0', STR_PAD_LEFT) }}</timestamp>
+    {{-- timestamp: 17 digit (YYYYMMDDHHMMSSmmm) — max 19 digit for Crossref Java long --}}
+    <timestamp>{{ now()->format('YmdHis') }}{{ substr(str_pad(now()->format('u'), 6, '0', STR_PAD_LEFT), 0, 3) }}</timestamp>
     <depositor>
       <depositor_name>{!! $escape($journal->getSetting('crossref_depositor_name') ?: $journal->name) !!}</depositor_name>
       <email_address>{!! $escape($journal->getSetting('crossref_depositor_email') ?: ($journal->email ?? 'admin@example.com')) !!}</email_address>
