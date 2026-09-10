@@ -109,7 +109,7 @@
             xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
             xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
             publication_type="full_text"
-            metadata_distribution_opts="any">
+            reference_distribution_opts="any">
 
             {{-- TITLES: include subtitle if available --}}
             <titles>
@@ -138,7 +138,11 @@
                   @endif
                   <surname>{!! $escape($familyName) !!}</surname>
                   @if ($author->affiliation)
-                    <affiliation>{!! $escape($author->affiliation) !!}</affiliation>
+                    <affiliations>
+                      <institution>
+                        <institution_name>{!! $escape($author->affiliation) !!}</institution_name>
+                      </institution>
+                    </affiliations>
                   @endif
                   @if ($cleanOrcid)
                     <ORCID authenticated="{{ $orcidVerified ? 'true' : 'false' }}">https://orcid.org/{{ $cleanOrcid }}</ORCID>
