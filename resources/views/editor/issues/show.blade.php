@@ -821,34 +821,9 @@
                         @click.stop
                         class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
                         
-                        <form @submit.prevent="
-                            publishLoading = true;
-                            publishError = '';
-                            let formData = new URLSearchParams(new FormData($event.target));
-                            fetch($event.target.getAttribute('data-action'), {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: formData
-                            })
-                            .then(async (response) => {
-                                const data = await response.json();
-                                if (data.success) {
-                                    showPublishModal = false;
-                                    window.location.href = data.redirect;
-                                } else {
-                                    publishError = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
-                                    publishLoading = false;
-                                }
-                            })
-                            .catch(() => {
-                                publishError = 'Koneksi gagal atau terjadi kesalahan server. Silakan refresh halaman dan coba lagi.';
-                                publishLoading = false;
-                            })
-                        " data-action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}">
+                        <form action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}" 
+                            method="POST" 
+                            @submit="publishLoading = true; publishError = '';">
                             @csrf
                             
                             <!-- Modal Header -->
