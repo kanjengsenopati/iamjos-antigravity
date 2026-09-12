@@ -14,14 +14,16 @@ class DepositCrossrefJob implements ShouldQueue
 
     public $submissionIds;
     public $journal;
+    public $objectType;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($submissionIds, Journal $journal)
+    public function __construct($ids, Journal $journal, $objectType = 'article')
     {
-        $this->submissionIds = $submissionIds;
+        $this->submissionIds = $ids; // Could be issue IDs if objectType is 'issue'
         $this->journal = $journal;
+        $this->objectType = $objectType;
     }
 
     /**
@@ -29,6 +31,10 @@ class DepositCrossrefJob implements ShouldQueue
      */
     public function handle(CrossrefDepositService $service): void
     {
-        $service->deposit($this->submissionIds, $this->journal);
+        if ($this->objectType === 'issue') {
+            $service->depositIssues($this->submissionIds, $this->journal);
+        } else {
+            $service->deposit($this->submissionIds, $this->journal);
+        }
     }
 }

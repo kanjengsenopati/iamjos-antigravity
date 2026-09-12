@@ -407,7 +407,17 @@
                         <div class="leading-snug">
                             <div class="font-bold text-slate-900 text-lg">
                                 {{ $author->name ?: trim(($author->first_name ?? $author->given_name ?? '') . ' ' . ($author->last_name ?? $author->family_name ?? '')) }}
-                                @if ($author->is_corresponding)
+                                @if ($author->is_corresponding && $author->email)
+                                    @php
+                                        $b64Email = base64_encode($author->email);
+                                    @endphp
+                                    <a href="#" 
+                                       onclick="event.preventDefault(); window.location.href = 'mailto:' + atob('{{ $b64Email }}');"
+                                       class="text-orange-500 hover:text-orange-600 transition-colors text-sm ml-1" 
+                                       title="Contact Corresponding Author">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </a>
+                                @elseif ($author->is_corresponding)
                                     <span class="text-orange-500 text-sm ml-1" title="Corresponding Author">
                                         <i class="fa-solid fa-envelope"></i>
                                     </span>

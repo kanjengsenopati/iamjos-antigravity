@@ -15,9 +15,9 @@ class CrossrefDepositService
     /**
      * Generate Crossref XML content.
      */
-    public function generateXml($submissions, Journal $journal)
+    public function generateXml($submissions, Journal $journal, $batchId = null)
     {
-        $batchId = (string) Str::uuid();
+        $batchId = $batchId ?? (string) Str::uuid();
         $content = view('journal.tools.crossref_xml', compact('submissions', 'journal', 'batchId'))->render();
 
         // Cleaning (Remove BOM & leading/trailing whitespace)
@@ -59,8 +59,9 @@ class CrossrefDepositService
             ];
         }
 
-        $xmlString = $this->generateXml($submissions, $journal);
+        // Fix: Generate batch ID once and pass it to both XML generator and database
         $batchId = (string) Str::uuid();
+        $xmlString = $this->generateXml($submissions, $journal, $batchId);
         $filename = 'crossref-' . $journal->path . '-' . date('YmdHis') . '.xml';
 
         $isTestMode = $journal->getSetting('crossref_test_mode');
@@ -131,5 +132,106 @@ class CrossrefDepositService
             'status' => $status,
             'message' => $message
         ];
+    }
+
+    /**
+     * Generate Crossref XML content for Issues.
+     */
+    public function generateIssueXml($issues, Journal $journal, $batchId = null)
+    {
+        $batchId = $batchId ?? (string) Str::uuid();
+        // Menggunakan blade khusus untuk schema XML issue
+        $content = view('journal.tools.crossref_issue_xml', compact('issues', 'journal', 'batchId'))->render();
+
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+        $content = trim($content);
+        $content = preg_replace('/>\s+</', '><', $content);
+
+        return '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $content;
+    }
+
+    /**
+     * Send Issue XML to Crossref.
+     */
+    public function depositIssues($issueIds, Journal $journal)
+    {
+        $hasDepositorInfo = $journal->getSetting('crossref_depositor_name') 
+            && $journal->getSetting('crossref_depositor_email') 
+            && $journal->getSetting('crossref_username');
+
+        if (!$hasDepositorInfo) {
+            return ['status' => 'Failed', 'message' => 'Crossref depositor info or username is missing.'];
+        }
+
+        $issues = \App\Models\Issue::whereIn('id', (array) $issueIds)
+            ->where('journal_id', $journal->id)
+            ->get();
+
+        if ($issues->isEmpty()) {
+            return ['status' => 'Failed', 'message' => 'No valid issues found.'];
+        }
+
+        // Fix: Generate batch ID once and pass it to both XML generator and database
+        $batchId = (string) Str::uuid();
+        $xmlString = $this->generateIssueXml($issues, $journal, $batchId);
+        $filename = 'crossref-issue-' . $journal->path . '-' . date('YmdHis') . '.xml';
+
+        $isTestMode = $journal->getSetting('crossref_test_mode');
+        
+        $url = $isTestMode
+            ? Settings::system('crossref_deposit_url_test', 'https://test.crossref.org/servlet/deposit')
+            : Settings::system('crossref_deposit_url_live', 'https://doi.crossref.org/servlet/deposit');
+        
+        $username = $journal->getSetting('crossref_username');
+        $rawPassword = $journal->getSetting('crossref_password');
+        $password = '';
+        if ($rawPassword) {
+            try {
+                $password = decrypt($rawPassword);
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                $password = $rawPassword;
+            }
+        }
+
+        try {
+            $response = Http::attach('fname', $xmlString, $filename)
+                ->post($url, [
+                    'operation' => 'doMDataUpload',
+                    'login_id' => $username,
+                    'login_passwd' => $password,
+                ]);
+
+            if ($response->successful()) {
+                $status = 'Success';
+                $message = 'Deposit successful. Crossref Response: ' . $response->body();
+            } else {
+                $status = 'Failed';
+                $message = 'HTTP Error ' . $response->status() . ': ' . $response->body();
+            }
+        } catch (\Exception $e) {
+            $status = 'Failed';
+            $message = 'Request failed: ' . $e->getMessage();
+        }
+
+        // Log the result and update issue status
+        foreach ($issues as $issue) {
+            CrossrefLog::create([
+                'id' => (string) Str::uuid(),
+                'journal_id' => $journal->id,
+                'submission_id' => null, // null for issues
+                'status' => $status,
+                'crossref_batch_id' => $batchId,
+                'message' => substr($message, 0, 500),
+            ]);
+
+            if ($status === 'Success') {
+                $issue->update([
+                    'doi_status' => 'submitted',
+                    'crossref_batch_id' => $batchId
+                ]);
+            }
+        }
+
+        return ['status' => $status, 'message' => $message];
     }
 }

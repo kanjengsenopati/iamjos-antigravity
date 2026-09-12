@@ -20,38 +20,39 @@ class CrossrefExportController extends Controller
         $status = $request->input('status', 'not_deposited'); // Default OJS usually shows 'not_deposited'
         $tab = $request->input('tab', 'settings');
 
-        // 2. Base Query
-        $query = Submission::where('journal_id', $journal->id)
-            ->where('status', Submission::STATUS_PUBLISHED) // Only Published Articles
-            ->with(['authors', 'issue', 'currentPublication']);
+        // 2. Base Query & Filter
+        if ($tab === 'issues') {
+            $query = \App\Models\Issue::where('journal_id', $journal->id)
+                ->where('is_published', true);
 
-        // 3. Apply Status Filter
-        if ($status == 'not_deposited') {
-            $query->whereHas('currentPublication', function ($q) {
-                $q->where('doi_status', 'not_deposited')->orWhereNull('doi_status');
-            });
-        } elseif ($status == 'active') {
-            $query->whereHas('currentPublication', function ($q) {
-                $q->where('doi_status', 'active');
-            });
-        } elseif ($status == 'failed') {
-            $query->whereHas('currentPublication', function ($q) {
-                $q->where('doi_status', 'failed');
-            });
-        } elseif ($status == 'submitted') {
-            $query->whereHas('currentPublication', function ($q) {
-                $q->where('doi_status', 'submitted');
-            });
-        } elseif ($status == 'marked') {
-            $query->whereHas('currentPublication', function ($q) {
-                $q->where('doi_status', 'marked');
-            });
+            if ($status == 'not_deposited') {
+                $query->where(function ($q) {
+                    $q->where('doi_status', 'not_deposited')->orWhereNull('doi_status');
+                });
+            } elseif (in_array($status, ['active', 'failed', 'submitted', 'marked'])) {
+                $query->where('doi_status', $status);
+            }
+
+            $items = $query->orderByDesc('published_at')->paginate(20);
+        } else {
+            $query = Submission::where('journal_id', $journal->id)
+                ->where('status', Submission::STATUS_PUBLISHED)
+                ->with(['authors', 'issue', 'currentPublication']);
+
+            if ($status == 'not_deposited') {
+                $query->whereHas('currentPublication', function ($q) {
+                    $q->where('doi_status', 'not_deposited')->orWhereNull('doi_status');
+                });
+            } elseif (in_array($status, ['active', 'failed', 'submitted', 'marked'])) {
+                $query->whereHas('currentPublication', function ($q) use ($status) {
+                    $q->where('doi_status', $status);
+                });
+            }
+
+            $items = $query->latest('published_at')->paginate(20);
         }
 
-        // 4. Pagination
-        $submissions = $query->latest('published_at')->paginate(20);
-
-        return view('journal.tools.crossref_index', compact('journal', 'submissions', 'status', 'tab'));
+        return view('journal.tools.crossref_index', compact('journal', 'items', 'status', 'tab'));
     }
 
     // 2. Save Settings Logic
@@ -86,68 +87,68 @@ class CrossrefExportController extends Controller
     }
 
     // 4. Mark Active Logic (Manual Override — OJS 3.3 "Marked active")
-    // Sets doi_status to 'marked', NOT 'active'. Status 'active' is reserved
-    // for Crossref API confirmation only (via auto-poll).
     public function markActive(Request $request)
     {
         $journal = current_journal();
         $ids = $request->input('submission_ids', []);
+        $type = $request->input('type', 'article');
 
         if (empty($ids)) {
-            return back()->with('error', 'Please select at least one article to mark as active.');
+            return back()->with('error', 'Please select at least one item to mark as active.');
         }
 
-        $submissions = \App\Models\Submission::where('journal_id', $journal->id)
-            ->whereIn('id', $ids)
-            ->with(['currentPublication'])
-            ->get();
-
-        foreach ($submissions as $submission) {
-            $pub = $submission->currentPublication;
-            if ($pub) {
-                $pub->doi_status = 'marked';
-                $pub->save();
+        if ($type === 'issue') {
+            $issues = \App\Models\Issue::where('journal_id', $journal->id)->whereIn('id', $ids)->get();
+            foreach ($issues as $issue) {
+                $issue->doi_status = 'marked';
+                $issue->save();
+            }
+        } else {
+            $submissions = \App\Models\Submission::where('journal_id', $journal->id)
+                ->whereIn('id', $ids)->with(['currentPublication'])->get();
+            foreach ($submissions as $submission) {
+                $pub = $submission->currentPublication;
+                if ($pub) {
+                    $pub->doi_status = 'marked';
+                    $pub->save();
+                }
             }
         }
 
-        return back()->with('success', 'DOI status marked as active successfully for selected articles.');
+        return back()->with('success', 'DOI status marked as active successfully.');
     }
 
     // 2. XML Export Logic
     public function export(Request $request)
     {
-        // 1. Fetch Data
         $journal = current_journal();
         $ids = $request->input('submission_ids', []);
+        $type = $request->input('type', 'article');
 
         if (empty($ids)) {
-            return back()->with('error', 'Please select at least one article.');
+            return back()->with('error', 'Please select at least one item.');
         }
 
-        $submissions = \App\Models\Submission::whereIn('id', $ids)
-            ->where('journal_id', $journal->id)
-            ->with(['authors', 'issue', 'currentPublication', 'galleys.file'])
-            ->get();
-
-        // Unique batch ID in OJS format: YYYYMMDDHHMMSS000
         $batchId = (string) \Illuminate\Support\Str::uuid();
         $filename = 'crossref-' . $journal->path . '-' . now()->format('YmdHis') . '.xml';
 
-        // 2. Render View (Without XML Header)
-        $content = view('journal.tools.crossref_xml', compact('submissions', 'journal', 'batchId'))->render();
+        if ($type === 'issue') {
+            $issues = \App\Models\Issue::whereIn('id', $ids)->where('journal_id', $journal->id)->get();
+            $content = view('journal.tools.crossref_issue_xml', compact('issues', 'journal', 'batchId'))->render();
+        } else {
+            $submissions = \App\Models\Submission::whereIn('id', $ids)
+                ->where('journal_id', $journal->id)
+                ->with(['authors', 'issue', 'currentPublication', 'galleys.file'])
+                ->get();
+            $content = view('journal.tools.crossref_xml', compact('submissions', 'journal', 'batchId'))->render();
+        }
 
-        // 3. Clean BOM only — preserve 2-space indentation for OJS-compatible output
-        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content); // Remove BOM if present
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
         $content = trim($content);
-
-        // 4. Construct Final XML
         $xml = '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $content;
 
-        // 5. Clean System Buffer
-        // Discard unwanted whitespace/newlines from system/config files
         if (ob_get_length()) ob_clean();
 
-        // 6. Return Response
         return response($xml, 200, [
             'Content-Type' => 'text/xml',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -159,9 +160,10 @@ class CrossrefExportController extends Controller
     {
         $journal = current_journal();
         $ids = $request->input('submission_ids', []);
+        $type = $request->input('type', 'article');
 
         if (empty($ids)) {
-            return back()->with('error', 'Please select at least one article for deposit.');
+            return back()->with('error', 'Please select at least one item for deposit.');
         }
 
         $hasDepositorInfo = $journal->getSetting('crossref_depositor_name') 
@@ -172,35 +174,33 @@ class CrossrefExportController extends Controller
             return back()->with('error', 'Crossref username and depositor information must be configured first.');
         }
 
-        // Check if there are DOIs assigned
-        $submissions = \App\Models\Submission::whereIn('id', $ids)
-            ->where('journal_id', $journal->id)
-            ->with(['currentPublication'])
-            ->get();
-            
         $invalidCount = 0;
-        $batchId = (string) \Illuminate\Support\Str::uuid();
 
-        foreach ($submissions as $sub) {
-            if (!$sub->currentPublication || empty($sub->currentPublication->doi)) {
-                $invalidCount++;
-            } else {
-                // Update publication status
-                $sub->currentPublication->update([
-                    'doi_status' => 'submitted',
-                    'crossref_batch_id' => $batchId
-                ]);
+        if ($type === 'issue') {
+            $issues = \App\Models\Issue::whereIn('id', $ids)->where('journal_id', $journal->id)->get();
+            foreach ($issues as $issue) {
+                if (empty($issue->doi)) {
+                    $invalidCount++;
+                }
             }
-        }
-        
-        if ($invalidCount > 0 && $invalidCount == $submissions->count()) {
-             return back()->with('error', 'None of the selected articles have DOIs assigned.');
+            if ($invalidCount > 0 && $invalidCount == $issues->count()) {
+                return back()->with('error', 'None of the selected issues have DOIs assigned.');
+            }
+            \App\Jobs\DepositCrossrefJob::dispatch($ids, $journal, 'issue');
+        } else {
+            $submissions = \App\Models\Submission::whereIn('id', $ids)
+                ->where('journal_id', $journal->id)->with(['currentPublication'])->get();
+            foreach ($submissions as $sub) {
+                if (!$sub->currentPublication || empty($sub->currentPublication->doi)) {
+                    $invalidCount++;
+                }
+            }
+            if ($invalidCount > 0 && $invalidCount == $submissions->count()) {
+                return back()->with('error', 'None of the selected articles have DOIs assigned.');
+            }
+            \App\Jobs\DepositCrossrefJob::dispatch($ids, $journal, 'article');
         }
 
-        // For large numbers, we dispatch to Job, otherwise process here or dispatch anyway.
-        // Let's use the Job pattern for UI action to avoid slow API hanging the server.
-        \App\Jobs\DepositCrossrefJob::dispatch($ids, $journal);
-
-        return back()->with('success', 'Selected articles have been queued for Crossref deposit.');
+        return back()->with('success', 'Selected items have been queued for Crossref deposit.');
     }
 }

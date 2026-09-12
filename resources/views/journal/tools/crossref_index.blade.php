@@ -3,7 +3,7 @@
 @section('title', ($isId ? 'Plugin Ekspor XML Crossref' : 'Crossref XML Export Plugin') . ' - ' . $journal->name)
 
 @section('content')
-    <div class="space-y-6">
+    <div class="space-y-6" x-data="{ errorModalOpen: false, errorText: '' }">
 
         {{-- Header Area --}}
         <div
@@ -49,6 +49,15 @@
                         </path>
                     </svg>
                     {{ $isId ? 'Artikel' : 'Articles' }}
+                </a>
+                <a href="?tab=issues"
+                    class="flex-shrink-0 py-4 px-1 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer {{ $tab === 'issues' ? 'border-primary-600 text-primary-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    {{ $isId ? 'Terbitan' : 'Issues' }}
                 </a>
             </nav>
         </div>
@@ -98,23 +107,23 @@
                                 <div>
                                     <label for="depositor_name" class="block mb-2 text-sm font-bold text-gray-700">{{ $isId ? 'Nama pendaftar *' : 'Depositor name *' }}</label>
                                     <input type="text" id="depositor_name" name="depositor_name" required
-                                        value="{{ old('depositor_name', $journal->getSetting('crossref_depositor_name') ?? 'Siswanto') }}"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        value="{{ old('depositor_name', $journal->getSetting('crossref_depositor_name')) }}"
+                                        class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                 </div>
                                 <div>
                                     <label for="depositor_email" class="block mb-2 text-sm font-bold text-gray-700">{{ $isId ? 'Surel pendaftar *' : 'Depositor email *' }}</label>
                                     <input type="email" id="depositor_email" name="depositor_email" required
-                                        value="{{ old('depositor_email', $journal->getSetting('crossref_depositor_email') ?? 'syswebcosmg@gmail.com') }}"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        value="{{ old('depositor_email', $journal->getSetting('crossref_depositor_email')) }}"
+                                        class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                 </div>
                             </div>
                         </div>
 
-                        {{-- API Credentials --}}
+                        {{-- Credentials --}}
                         <div class="mb-8">
                             <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">{{ $isId ? 'Kredensial Crossref' : 'Crossref Credentials' }}</h3>
-                            <p class="text-sm text-gray-600 mb-4">
-                                {{ $isId ? 'Gunakan kredensial (nama pengguna/kata sandi) untuk akun Crossref Anda. Kredensial ini digunakan untuk mengautentikasi deposit.' : 'Use the credentials (username/password) for your Crossref account. These are used to authenticate deposits.' }}
+                            <p class="text-sm text-gray-500 mb-4">
+                                {{ $isId ? 'Gunakan kredensial (nama pengguna/kata sandi) untuk akun Crossref Anda. Ini digunakan untuk mengautentikasi deposit.' : 'Use the credentials (username/password) for your Crossref account. These are used to authenticate deposits.' }}
                             </p>
 
                             <div class="grid gap-6 mb-6 md:grid-cols-2">
@@ -122,29 +131,27 @@
                                     <label for="username" class="block mb-2 text-sm font-bold text-gray-700">{{ $isId ? 'Nama Pengguna' : 'Username' }}</label>
                                     <input type="text" id="username" name="username"
                                         value="{{ old('username', $journal->getSetting('crossref_username')) }}"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                 </div>
                                 <div>
                                     <label for="password" class="block mb-2 text-sm font-bold text-gray-700">{{ $isId ? 'Kata Sandi' : 'Password' }}</label>
                                     <div class="relative">
                                         <input type="password" id="password" name="password"
-                                            placeholder="{{ $journal->getSetting('crossref_password') ? '••••••••' : '' }}"
-                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10">
-                                        <button type="button" onclick="togglePassword()" 
-                                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                                            tabindex="-1">
+                                            value="{{ old('password', $journal->getSetting('crossref_password') ? '********' : '') }}"
+                                            class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10">
+                                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
                                             {{-- Eye icon (visible when password is hidden) --}}
-                                            <svg id="eyeIcon" class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            <svg id="eyeIcon" class="h-5 w-5 text-gray-400 hover:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                             </svg>
                                             {{-- Eye-off icon (visible when password is shown) --}}
-                                            <svg id="eyeOffIcon" class="w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                                            <svg id="eyeOffIcon" class="h-5 w-5 text-gray-400 hover:text-gray-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                             </svg>
                                         </button>
                                     </div>
-                                    <p class="mt-1 text-xs text-green-600">{{ $isId ? 'Kata sandi akan dienkripsi sebelum disimpan.' : 'Password will be encrypted before storage.' }}</p>
+                                    <p class="mt-1 text-xs text-green-600 font-medium">{{ $isId ? 'Kata sandi akan dienkripsi sebelum disimpan.' : 'Password will be encrypted before storage.' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -188,15 +195,20 @@
                         </div>
 
                         {{-- Action Buttons --}}
-                        <div class="flex gap-4 border-t pt-6">
-                            <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 font-semibold rounded-xl text-sm px-5 py-2.5 mr-2 mb-2 focus:outline-none transition shadow-sm cursor-pointer">{{ $isId ? 'Simpan' : 'Save' }}</button>
-                            <button type="button" onclick="window.history.back()" class="py-2.5 px-5 mr-2 mb-2 text-sm font-semibold text-slate-700 focus:outline-none bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer">{{ $isId ? 'Batal' : 'Cancel' }}</button>
+                        <div class="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+                            <button type="submit"
+                                class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-xl text-sm w-full sm:w-auto px-5 py-2.5 text-center transition">
+                                {{ $isId ? 'Simpan' : 'Save' }}
+                            </button>
+                            <a href="{{ route('journal.settings.tools.index', $journal->slug) }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm border border-gray-300 bg-white px-5 py-2.5 rounded-xl hover:bg-gray-50 transition">
+                                {{ $isId ? 'Batal' : 'Cancel' }}
+                            </a>
                         </div>
                     </form>
                 </div>
             @endif
 
-            @if ($tab == 'articles')
+            @if (in_array($tab, ['articles', 'issues']))
                 {{-- OJS 3.3 STYLE FILTERS --}}
                 <div class="flex flex-wrap gap-4 text-sm mb-6 text-slate-600 items-center">
                     <span class="font-semibold text-slate-700">{{ $isId ? 'Status:' : 'Status:' }}</span>
@@ -243,7 +255,7 @@
                                     <p>
                                         {{ $isId ? 'Anda harus mengonfigurasi Nama Pendaftar, Surel Pendaftar, dan Nama Pengguna Crossref di tab ' : 'You must configure your Depositor Name, Depositor Email, and Crossref Username in the ' }}
                                         <a href="?tab=settings" class="font-bold underline hover:text-red-900">{{ $isId ? 'Pengaturan' : 'Settings tab' }}</a>
-                                        {{ $isId ? ' sebelum dapat mengekspor atau mendepositkan artikel.' : ' before you can export or deposit articles.' }}
+                                        {{ $isId ? ' sebelum dapat mengekspor atau mendepositkan.' : ' before you can export or deposit.' }}
                                     </p>
                                 </div>
                             </div>
@@ -254,6 +266,7 @@
                 {{-- CONTENT FORM --}}
                 <form action="{{ route('journal.settings.tools.crossref.download', $journal->slug) }}" method="POST">
                     @csrf
+                    <input type="hidden" name="type" value="{{ $tab == 'issues' ? 'issue' : 'article' }}">
 
                     <div class="bg-white rounded-[24px] border border-slate-200 overflow-hidden mb-6 shadow-sm">
                         <table class="w-full text-left border-collapse text-sm">
@@ -263,77 +276,112 @@
                                         <input type="checkbox" id="selectAll" onclick="toggleAll(this)"
                                             class="rounded border-gray-300 focus:ring-blue-500 text-blue-600">
                                     </th>
-                                    <th class="p-4 w-1/2">{{ $isId ? 'Judul' : 'Title' }}</th>
-                                    <th class="p-4">{{ $isId ? 'Penulis' : 'Author' }}</th>
-                                    <th class="p-4">{{ $isId ? 'Terbitan' : 'Issue' }}</th>
+                                    @if ($tab == 'issues')
+                                        <th class="p-4 w-1/2">{{ $isId ? 'Identitas Terbitan' : 'Issue Identity' }}</th>
+                                        <th class="p-4">{{ $isId ? 'Volume/No' : 'Vol/No' }}</th>
+                                        <th class="p-4">{{ $isId ? 'Tahun' : 'Year' }}</th>
+                                    @else
+                                        <th class="p-4 w-1/2">{{ $isId ? 'Judul Artikel' : 'Article Title' }}</th>
+                                        <th class="p-4">{{ $isId ? 'Penulis' : 'Author' }}</th>
+                                        <th class="p-4">{{ $isId ? 'Terbitan' : 'Issue' }}</th>
+                                    @endif
                                     <th class="p-4">{{ $isId ? 'Status' : 'Status' }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                @forelse($submissions as $sub)
+                                @forelse($items as $item)
+                                    @php
+                                        $hasDoi = $tab == 'issues' ? !empty($item->doi) : ($item->currentPublication && !empty($item->currentPublication->doi));
+                                        $doiStatus = $tab == 'issues' ? $item->doi_status : ($item->currentPublication->doi_status ?? null);
+                                        $doiValue = $tab == 'issues' ? $item->doi : ($item->currentPublication->doi ?? null);
+                                        $errorMsg = 'Unknown Error';
+                                        
+                                        if ($doiStatus == 'failed') {
+                                            $errorLog = $tab == 'issues' 
+                                                ? \App\Models\CrossrefLog::where('crossref_batch_id', $item->crossref_batch_id)->latest()->first()
+                                                : $item->currentPublication->crossrefLogs()->latest()->first();
+                                            if ($errorLog) $errorMsg = htmlspecialchars(addslashes($errorLog->message));
+                                        }
+                                    @endphp
                                     <tr class="hover:bg-gray-50 transition">
                                         <td class="p-4 text-center">
-                                            @php
-                                                $hasDoi = $sub->currentPublication && !empty($sub->currentPublication->doi);
-                                            @endphp
-                                            <input type="checkbox" name="submission_ids[]" value="{{ $sub->id }}"
+                                            <input type="checkbox" name="submission_ids[]" value="{{ $item->id }}"
                                                 class="sub-checkbox rounded border-gray-300 {{ $hasDoi ? 'text-blue-600 focus:ring-blue-500' : 'text-gray-300 cursor-not-allowed bg-gray-100' }}"
                                                 @if(!$hasDoi) disabled title="{{ $isId ? 'DOI belum ditetapkan' : 'DOI has not been assigned' }}" @endif>
                                         </td>
-                                        <td class="p-4">
-                                            <div class="font-medium text-blue-600 mb-1">
-                                                <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $sub->url_slug]) }}"
-                                                    target="_blank" class="hover:underline">
-                                                    {{ $sub->title }}
-                                                </a>
-                                            </div>
-                                            {{-- DOI Info --}}
-                                            @if($hasDoi)
-                                                <div class="text-xs text-gray-700 font-mono bg-blue-50 border border-blue-100 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
-                                                    <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
-                                                    {{ $sub->currentPublication->doi }}
+                                        
+                                        @if ($tab == 'issues')
+                                            <td class="p-4">
+                                                <div class="font-medium text-blue-600 mb-1">
+                                                    <a href="{{ route('journal.public.issue', ['journal' => $journal->slug, 'issue' => $item->seq_id ?? $item->id]) }}" target="_blank" class="hover:underline">
+                                                        {{ $item->title ?: 'Vol ' . $item->volume . ', No ' . $item->number . ' (' . $item->year . ')' }}
+                                                    </a>
                                                 </div>
-                                            @else
-                                                <div class="text-xs text-orange-700 font-medium bg-orange-50 border border-orange-200 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
-                                                    <svg class="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
-                                                    {{ $isId ? 'DOI belum ditetapkan' : 'DOI not assigned' }}
+                                                @if($hasDoi)
+                                                    <div class="text-xs text-gray-700 font-mono bg-blue-50 border border-blue-100 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
+                                                        <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+                                                        {{ $doiValue }}
+                                                    </div>
+                                                @else
+                                                    <div class="text-xs text-orange-700 font-medium bg-orange-50 border border-orange-200 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
+                                                        <svg class="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                                        {{ $isId ? 'DOI belum ditetapkan' : 'DOI not assigned' }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="p-4 text-gray-600">Vol {{ $item->volume ?? '-' }}, No {{ $item->number ?? '-' }}</td>
+                                            <td class="p-4 text-gray-600">{{ $item->year ?? '-' }}</td>
+                                        @else
+                                            <td class="p-4">
+                                                <div class="font-medium text-blue-600 mb-1">
+                                                    <a href="{{ route('journal.submissions.show', ['journal' => $journal->slug, 'submission' => $item->url_slug]) }}" target="_blank" class="hover:underline">
+                                                        {{ $item->title }}
+                                                    </a>
                                                 </div>
-                                            @endif
-                                        </td>
-                                        <td class="p-4 text-gray-600">
-                                            {{ $sub->authors->first()->last_name ?? $sub->authors->first()->first_name }}
-                                            @if ($sub->authors->count() > 1)
-                                                et al.
-                                            @endif
-                                        </td>
-                                        <td class="p-4 text-gray-600">
-                                            Vol {{ $sub->issue->volume ?? '-' }}, No {{ $sub->issue->number ?? '-' }}
-                                            ({{ $sub->issue->year ?? '-' }})
-                                        </td>
+                                                @if($hasDoi)
+                                                    <div class="text-xs text-gray-700 font-mono bg-blue-50 border border-blue-100 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
+                                                        <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+                                                        {{ $doiValue }}
+                                                    </div>
+                                                @else
+                                                    <div class="text-xs text-orange-700 font-medium bg-orange-50 border border-orange-200 inline-flex items-center px-1.5 py-0.5 rounded gap-1">
+                                                        <svg class="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                                        {{ $isId ? 'DOI belum ditetapkan' : 'DOI not assigned' }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="p-4 text-gray-600">
+                                                {{ $item->authors->first()->last_name ?? $item->authors->first()->first_name ?? '-' }}
+                                                @if ($item->authors->count() > 1) et al. @endif
+                                            </td>
+                                            <td class="p-4 text-gray-600">
+                                                Vol {{ $item->issue->volume ?? '-' }}, No {{ $item->issue->number ?? '-' }} ({{ $item->issue->year ?? '-' }})
+                                            </td>
+                                        @endif
+
                                         <td class="p-4">
-                                            @if (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'active')
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            @if ($doiStatus == 'active')
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                                     {{ $isId ? 'Aktif' : 'Active' }}
                                                 </span>
-                                            @elseif (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'submitted')
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            @elseif ($doiStatus == 'submitted')
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                                     {{ $isId ? 'Diajukan' : 'Submitted' }}
                                                 </span>
-                                            @elseif (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'failed')
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            @elseif ($doiStatus == 'failed')
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mb-1">
                                                     {{ $isId ? 'Gagal' : 'Failed' }}
-                                                </span>
-                                            @elseif (isset($sub->currentPublication->doi_status) && $sub->currentPublication->doi_status == 'marked')
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                </span><br>
+                                                <button type="button" @click="errorText = '{{ $errorMsg }}'; errorModalOpen = true" class="text-[11px] font-semibold text-red-600 hover:text-red-800 underline flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                    View Error
+                                                </button>
+                                            @elseif ($doiStatus == 'marked')
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                                     {{ $isId ? 'Ditandai Aktif' : 'Marked Active' }}
                                                 </span>
                                             @else
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                                                     {{ $isId ? 'Belum Dideposit' : 'Not Deposited' }}
                                                 </span>
                                             @endif
@@ -342,7 +390,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="5" class="p-8 text-center text-gray-500 italic">
-                                            {{ $isId ? 'Tidak ada artikel yang ditemukan cocok dengan filter ini.' : 'No articles found matching this filter.' }}
+                                            {{ $isId ? 'Tidak ada data yang ditemukan cocok dengan filter ini.' : 'No items found matching this filter.' }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -353,8 +401,8 @@
                     {{-- ACTION BUTTONS BAR --}}
                     <div class="flex items-center justify-between bg-slate-50/50 p-4 rounded-[24px] border border-slate-200 shadow-sm">
                         <div class="text-xs text-slate-500 font-bold">
-                            {{ $isId ? 'Menampilkan' : 'Showing' }} {{ $submissions->firstItem() ?? 0 }} {{ $isId ? 'sampai' : 'to' }} {{ $submissions->lastItem() ?? 0 }} {{ $isId ? 'dari' : 'of' }}
-                            {{ $submissions->total() }} {{ $isId ? 'item' : 'items' }}
+                            {{ $isId ? 'Menampilkan' : 'Showing' }} {{ $items->firstItem() ?? 0 }} {{ $isId ? 'sampai' : 'to' }} {{ $items->lastItem() ?? 0 }} {{ $isId ? 'dari' : 'of' }}
+                            {{ $items->total() }} {{ $isId ? 'item' : 'items' }}
                         </div>
 
                         <div class="flex gap-2">
@@ -369,10 +417,8 @@
                             <button type="submit"
                                 @if(!$hasDepositorInfo) disabled @endif
                                 class="{{ !$hasDepositorInfo ? 'bg-blue-300 cursor-not-allowed border-blue-300' : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 cursor-pointer' }} font-medium py-2 px-4 rounded-xl border transition text-sm flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
                                 {{ $isId ? 'Unduh XML' : 'Download XML' }}
                             </button>
@@ -387,10 +433,58 @@
                     </div>
 
                     <div class="mt-4">
-                        {{ $submissions->appends(request()->query())->links() }}
+                        {{ $items->appends(request()->query())->links() }}
                     </div>
                 </form>
             @endif
+        </div>
+
+        {{-- CROSSREF ERROR MODAL (PAKRT PREMIUM NATIVE - 24PX) --}}
+        <div x-show="errorModalOpen" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+                <div x-show="errorModalOpen"
+                    x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity"
+                    @click="errorModalOpen = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="errorModalOpen"
+                    x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="relative inline-block align-middle bg-white rounded-[24px] text-left overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] transform transition-all sm:my-8 sm:max-w-lg sm:w-full border border-slate-100">
+                    
+                    <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-red-50/60">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm shadow-2xs">
+                                <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                            </div>
+                            <h2 class="text-sm font-bold text-slate-900">
+                                Crossref Deposit Error
+                            </h2>
+                        </div>
+                        <button type="button" @click="errorModalOpen = false"
+                            class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+                        <p class="text-sm text-slate-600 mb-3">{{ $isId ? 'Server Crossref menolak XML Anda dengan alasan berikut:' : 'The Crossref server rejected your XML deposit with the following reason:' }}</p>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto">
+                            <code class="text-xs text-red-600 whitespace-pre-wrap break-words font-mono" x-text="errorText"></code>
+                        </div>
+                    </div>
+
+                    <div class="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end">
+                        <button type="button" @click="errorModalOpen = false"
+                            class="px-5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 active:scale-[0.98] rounded-xl transition-all shadow-md">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

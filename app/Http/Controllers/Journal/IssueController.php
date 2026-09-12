@@ -254,6 +254,11 @@ class IssueController extends Controller
 
         $issue->update($issueData);
 
+        // [IAMJOS-CROSSREF-ISSUE] Trigger Auto-Deposit for Issue if enabled
+        if ($journal->getSetting('crossref_automatic_deposit') && !empty($issueData['doi'])) {
+            \App\Jobs\DepositCrossrefJob::dispatch([$issue->id], $journal, 'issue');
+        }
+
         foreach ($issue->submissions as $sub) {
             $sub->update([
                 'status' => Submission::STATUS_PUBLISHED,
@@ -381,5 +386,44 @@ class IssueController extends Controller
 
         return redirect()->route('journal.issues.index', $queryParams)
             ->with('success', "Issue {$issue->identifier} is now designated as the Current Issue.");
+    }
+
+    /**
+     * Assign DOI to the specified issue manually
+     */
+    public function assignDoi(Issue $issue)
+    {
+        $journal = current_journal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
+        if ($issue->doi) {
+            return back()->with('error', 'This issue already has a DOI assigned.');
+        }
+
+        $doi = \App\Services\DoiService::generateForIssue($issue, $journal);
+        
+        if ($doi) {
+            $issue->doi = $doi;
+            $issue->save();
+            return back()->with('success', 'DOI successfully assigned to this issue.');
+        }
+
+        return back()->with('error', 'Failed to generate DOI. Please check your DOI Plugin configuration.');
+    }
+
+    /**
+     * Clear DOI from the specified issue
+     */
+    public function clearDoi(Issue $issue)
+    {
+        $journal = current_journal();
+        if ($issue->journal_id !== $journal->id) abort(404);
+
+        $issue->doi = null;
+        $issue->doi_status = null;
+        $issue->crossref_batch_id = null;
+        $issue->save();
+
+        return back()->with('success', 'DOI successfully cleared from this issue.');
     }
 }

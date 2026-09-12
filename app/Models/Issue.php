@@ -37,6 +37,8 @@ class Issue extends Model
         'seq_id',
         'doi',
         'doi_suffix',
+        'doi_status',
+        'crossref_batch_id',
     ];
 
     /**
