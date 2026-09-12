@@ -8,3 +8,6 @@ use App\Jobs\SyncAdsCountersJob;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Mendaftarkan Command Crossref ke standar Cron Scheduler
+Schedule::command('crossref:check-status')->everyThirtyMinutes()->withoutOverlapping();
