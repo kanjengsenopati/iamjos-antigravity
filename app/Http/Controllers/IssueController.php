@@ -146,8 +146,9 @@ class IssueController extends Controller
             'cover' => 'nullable|image|max:2048', // 2MB max
         ]);
 
-        // Check for duplicate
-        $exists = Issue::where('journal_id', $journal->id)
+        // Check for duplicate (including soft-deleted) to prevent DOI unique constraint violations
+        $exists = Issue::withTrashed()
+            ->where('journal_id', $journal->id)
             ->where('volume', $validated['volume'])
             ->where('number', $validated['number'])
             ->where('year', $validated['year'])
@@ -155,7 +156,7 @@ class IssueController extends Controller
 
         if ($exists) {
             return back()->withInput()
-                ->with('error', 'An issue with this volume, number, and year already exists.');
+                ->with('error', "Pembuatan gagal: Terbitan dengan Volume {$validated['volume']}, Nomor {$validated['number']}, dan Tahun {$validated['year']} sudah pernah dibuat di database (aktif maupun terhapus). Silakan gunakan kombinasi Volume dan Nomor yang berbeda.");
         }
 
         $issueData = [
@@ -267,6 +268,20 @@ class IssueController extends Controller
             'cover' => 'nullable|image|max:2048',
         ]);
 
+        // Check for duplicate (including soft-deleted) to prevent DOI unique constraint violations
+        $exists = Issue::withTrashed()
+            ->where('journal_id', $journal->id)
+            ->where('volume', $validated['volume'])
+            ->where('number', $validated['number'])
+            ->where('year', $validated['year'])
+            ->where('id', '!=', $issue->id)
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()
+                ->with('error', "Pembaruan gagal: Terbitan dengan Volume {$validated['volume']}, Nomor {$validated['number']}, dan Tahun {$validated['year']} sudah pernah dibuat di database. Silakan gunakan kombinasi Volume dan Nomor yang berbeda.");
+        }
+
         $issueData = [
             'volume' => $validated['volume'],
             'number' => $validated['number'],
@@ -360,12 +375,29 @@ class IssueController extends Controller
 
             // Auto-assign DOI if not present but prefix is configured
             if (!$issue->doi && $journal->doi_prefix) {
-                $suffix = $issue->doi_suffix ?: "{$journal->slug}.v{$issue->volume}i{$issue->number}";
-                $updateData['doi'] = "{$journal->doi_prefix}/{$suffix}";
-                $updateData['doi_suffix'] = $suffix;
+                // Use DoiService which has collision handling built-in
+                $generatedDoi = \App\Services\DoiService::generateForIssue($issue, $journal);
+                if ($generatedDoi) {
+                    $updateData['doi'] = $generatedDoi;
+                    $prefix = $journal->doi_prefix;
+                    if ($prefix && str_starts_with($generatedDoi, $prefix . '/')) {
+                        $updateData['doi_suffix'] = substr($generatedDoi, strlen($prefix) + 1);
+                    }
+                }
             }
 
-            $issue->update($updateData);
+            try {
+                $issue->update($updateData);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->getCode() === '23505' && str_contains($e->getMessage(), 'issues_doi_unique')) {
+                    $msg = 'Gagal mempublikasikan: Suffix DOI untuk terbitan ini sudah pernah digunakan oleh terbitan lain. Silakan ubah Suffix DOI secara manual di menu Edit Issue agar unik.';
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => $msg], 400);
+                    }
+                    return back()->with('error', $msg);
+                }
+                throw $e;
+            }
 
             // Also publish all assigned submissions and log activity
             foreach ($issue->submissions as $sub) {
