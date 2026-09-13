@@ -255,7 +255,7 @@
                                     </button>
                                 @endif
                                 @if (!$issue->is_published)
-                                    <button @click="showAddArticleModal = true"
+                                    <button type="button" @click="showAddArticleModal = true"
                                         class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -385,7 +385,7 @@
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">No Articles Yet</h3>
                                 <p class="text-gray-500 mb-6">Start adding accepted submissions to this issue.</p>
                                 @if (!$issue->is_published)
-                                    <button @click="showAddArticleModal = true"
+                                    <button type="button" @click="showAddArticleModal = true"
                                         class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -799,140 +799,91 @@
             <!-- End Tabs Content Wrapper -->
         </div>
 
-            <!-- ====== PUBLISH ISSUE MODAL (Moved OUTSIDE tab containers) ====== -->
-            <div x-show="showPublishModal" x-cloak
-                x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                class="fixed inset-0 z-50 overflow-y-auto"
-                aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                    <div x-show="showPublishModal" x-transition:enter="ease-out duration-300"
-                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
-                        x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                        @mousedown.self="showPublishModal = false" aria-hidden="true"></div>
+            <!-- ====== PUBLISH ISSUE MODAL (PAKRT PREMIUM NATIVE - 24PX RADIUS) ====== -->
+            <div x-show="showPublishModal" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
+                <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+                    <!-- Backdrop -->
+                    <div x-show="showPublishModal"
+                        x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 bg-slate-950/40 transition-opacity"
+                        @click="showPublishModal = false"></div>
 
                     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                    <div x-show="showPublishModal" x-transition:enter="ease-out duration-300"
-                        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                        x-transition:leave="ease-in duration-200"
-                        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        @click.stop
-                        class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
+                    <!-- Modal Dialog Container (rounded-[24px], compact sm:max-w-md) -->
+                    <div x-show="showPublishModal"
+                        x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        class="relative inline-block align-middle bg-white rounded-[24px] text-left overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] transform transition-all sm:my-8 sm:max-w-2xl sm:w-full border border-slate-300">
                         
-                        <form @submit.prevent="
-                            publishLoading = true;
-                            publishError = '';
-                            let formData = new URLSearchParams(new FormData($event.target));
-                            fetch($event.target.dataset.action, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: formData
-                            })
-                            .then(async (response) => {
-                                const data = await response.json();
-                                if (data.success) {
-                                    showPublishModal = false;
-                                    window.location.href = data.redirect;
-                                } else {
-                                    publishError = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
-                                    publishLoading = false;
-                                }
-                            })
-                            .catch(() => {
-                                publishError = 'Koneksi gagal atau terjadi kesalahan server. Silakan refresh halaman dan coba lagi.';
-                                publishLoading = false;
-                            })
-                        " data-action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}">
-                            @csrf
-                            
-                            <!-- Modal Header -->
-                            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 bg-emerald-50 rounded-xl">
-                                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                        </svg>
-                                    </div>
-                                    <h3 class="text-lg font-bold text-gray-900" id="modal-title">Publish Issue</h3>
+                        <!-- Modal Header -->
+                        <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/60">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-2xs">
+                                    <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
                                 </div>
-                                <button type="button" @click="showPublishModal = false" class="text-gray-400 hover:text-gray-500" :disabled="publishLoading">
-                                    <span class="sr-only">Close</span>
-                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <x-text.h2 class="!text-sm !font-bold !text-slate-900">
+                                    Publish Issue
+                                </x-text.h2>
                             </div>
+                            <button type="button" @click="showPublishModal = false"
+                                class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors flex items-center justify-center">
+                                <i class="fa-solid fa-xmark text-sm"></i>
+                            </button>
+                        </div>
 
-                            <!-- Modal Body -->
-                            <div class="px-6 py-6 space-y-6">
-                                <!-- Error Message -->
-                                <div x-show="publishError" x-cloak class="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
-                                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p class="text-sm font-medium text-red-800" x-text="publishError"></p>
-                                </div>
+                        <!-- Modal Form -->
+                        <form action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
+                            @csrf
+                            <div class="p-5 space-y-4">
+                                <!-- Option Checkbox: Send email -->
+                                <label for="send_email"
+                                    class="group flex items-center gap-3 bg-slate-50/80 hover:bg-slate-100/60 border border-slate-200/80 rounded-xl p-3 cursor-pointer transition-all">
+                                    <input type="checkbox" id="send_email" name="send_email" value="1" checked
+                                        class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer">
+                                    <span class="text-xs font-semibold text-slate-800 group-hover:text-slate-900 leading-tight">
+                                        Send an email notification to all authors whose articles are in this issue.
+                                    </span>
+                                </label>
 
-                                <!-- Email Notification Option -->
-                                <div class="flex items-start bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                    <div class="flex items-center h-5">
-                                        <input id="send_email" name="send_email" type="checkbox" value="1" checked class="focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded">
-                                    </div>
-                                    <div class="ml-3 text-sm">
-                                        <label for="send_email" class="font-medium text-gray-700">Send an email notification to all authors whose articles are in this issue.</label>
-                                    </div>
-                                </div>
+                                <!-- Confirmation Message -->
+                                <p class="text-xs font-semibold text-slate-700 px-0.5 leading-relaxed">
+                                    Are you sure you want to publish the new issue?
+                                </p>
 
-                                <div>
-                                    <p class="text-sm font-medium text-gray-800">Are you sure you want to publish the new issue?</p>
-                                </div>
-
-                                @if($journal->doi_prefix)
-                                    <div class="mt-4 border border-gray-200 rounded-xl overflow-hidden">
-                                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                                            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">DOI</h4>
+                                <!-- DOI Section -->
+                                <div class="pt-3 border-t border-slate-100">
+                                    <x-text.label class="mb-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                                        DOI
+                                    </x-text.label>
+                                    @php
+                                        $computedDoi = $issue->doi ?: ($journal->doi_prefix ? "{$journal->doi_prefix}/{$journal->slug}.v{$issue->volume}i{$issue->number}" : null);
+                                    @endphp
+                                    @if($computedDoi)
+                                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5 flex items-center gap-2">
+                                            <i class="fa-solid fa-link text-emerald-600 text-xs"></i>
+                                            <p class="text-xs text-slate-600 leading-normal">
+                                                The DOI <span class="font-mono font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200">{{ $computedDoi }}</span> has been assigned.
+                                            </p>
                                         </div>
-                                        <div class="p-4 bg-white flex items-center gap-3">
-                                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                            </svg>
-                                            <div class="text-sm text-gray-700">
-                                                The DOI 
-                                                <span class="inline-block px-2 py-0.5 border border-gray-200 rounded-md font-mono font-medium text-gray-900 bg-gray-50 shadow-sm mx-1">
-                                                    {{ $issue->doi ?: "{$journal->doi_prefix}/{$journal->slug}.v{$issue->volume}i{$issue->number}" }}
-                                                </span>
-                                                @if($issue->doi)
-                                                    has been assigned.
-                                                @else
-                                                    will be assigned.
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+                                    @else
+                                        <p class="text-xs text-slate-400 italic">
+                                            No DOI configured for this issue.
+                                        </p>
+                                    @endif
+                                </div>
                             </div>
 
                             <!-- Modal Footer -->
-                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
-                                <button type="button" @click="showPublishModal = false" :disabled="publishLoading" class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50">
+                            <div class="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                                <button type="button" @click="showPublishModal = false"
+                                    class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl hover:bg-slate-100/80 transition-all shadow-2xs">
                                     Cancel
                                 </button>
-                                <button type="submit" :disabled="publishLoading" class="px-5 py-2 bg-emerald-600 border border-transparent rounded-xl text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50 inline-flex items-center gap-2">
-                                    <template x-if="publishLoading">
-                                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </template>
-                                    <span x-text="publishLoading ? 'Publishing...' : 'OK'"></span>
+                                <button type="submit"
+                                    class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] rounded-xl transition-all shadow-md shadow-emerald-600/20">
+                                    OK
                                 </button>
                             </div>
                         </form>
@@ -940,152 +891,98 @@
                 </div>
             </div>
 
-        <!-- Add Article Modal -->
-        <div x-show="showAddArticleModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
-            aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <!-- Background overlay -->
-                <div x-show="showAddArticleModal" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity"
+
+        <!-- ====== ADD ARTICLE MODAL (PAKRT PREMIUM NATIVE - 24PX RADIUS) ====== -->
+        <div x-show="showAddArticleModal" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+                <!-- Backdrop -->
+                <div x-show="showAddArticleModal"
+                    x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 bg-slate-950/40 transition-opacity"
                     @click="showAddArticleModal = false"></div>
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                <!-- Modal panel -->
-                <div x-show="showAddArticleModal" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <!-- Modal Dialog Container -->
+                <div x-show="showAddArticleModal"
+                    x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="relative inline-block align-middle bg-white rounded-[24px] text-left overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] transform transition-all sm:my-8 sm:max-w-2xl sm:w-full border border-slate-300">
 
-                    <form @submit.prevent="
-                            addArticleLoading = true;
-                            addArticleError = '';
-                            let formData = new URLSearchParams(new FormData($event.target));
-                            fetch($event.target.dataset.action, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: formData
-                            })
-                            .then(async (response) => {
-                                const data = await response.json();
-                                if (data.success) {
-                                    showAddArticleModal = false;
-                                    window.location.href = data.redirect;
-                                } else {
-                                    addArticleError = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
-                                    addArticleLoading = false;
-                                }
-                            })
-                            .catch(() => {
-                                addArticleError = 'Koneksi gagal atau terjadi kesalahan server. Silakan refresh halaman dan coba lagi.';
-                                addArticleLoading = false;
-                            })
-                        " data-action="{{ route('journal.issues.add-articles', ['journal' => $journal->slug, 'issue' => $issue]) }}">
+                    <form action="{{ route('journal.issues.add-articles', ['journal' => $journal->slug, 'issue' => $issue]) }}" method="POST">
                         @csrf
 
-                        <div class="px-6 py-5 border-b border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900" id="modal-title">Add Articles to Issue
-                                    </h3>
-                                    <p class="text-sm text-gray-500 mt-1">Select accepted submissions to add to this issue
-                                    </p>
+                        <!-- Modal Header -->
+                        <div class="px-6 py-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/60">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg shadow-2xs">
+                                    <i class="fa-solid fa-file-circle-plus"></i>
                                 </div>
-                                <button type="button" @click="showAddArticleModal = false"
-                                    class="text-gray-400 hover:text-gray-500" :disabled="addArticleLoading">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <div>
+                                    <x-text.h2 class="!text-base !font-bold !text-slate-900">Add Articles to Issue</x-text.h2>
+                                    <x-text.caption class="!text-slate-500 mt-0.5">Select accepted submissions to add to this issue</x-text.caption>
+                                </div>
                             </div>
+                            <button type="button" @click="showAddArticleModal = false"
+                                class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors flex items-center justify-center">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
 
-                        <div class="px-6 py-4 max-h-96 overflow-y-auto">
-                            <!-- Error Message -->
-                            <div x-show="addArticleError" x-cloak class="flex items-start gap-3 p-4 mb-4 bg-red-50 border border-red-200 rounded-xl">
-                                <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p class="text-sm font-medium text-red-800" x-text="addArticleError"></p>
-                            </div>
-
+                        <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
                             @if ($availableSubmissions->count() > 0)
                                 <div class="space-y-3">
                                     @foreach ($availableSubmissions as $submission)
                                         <label
-                                            class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors"
-                                            :class="{
-                                                'ring-2 ring-indigo-500 bg-indigo-50': selectedArticles.includes(
-                                                    '{{ $submission->id }}')
-                                            }">
+                                            class="flex items-start gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-slate-100/60 cursor-pointer transition-all"
+                                            :class="{ 'ring-2 ring-indigo-500 bg-indigo-50/50 border-indigo-200': selectedArticles.includes('{{ $submission->id }}') }">
                                             <input type="checkbox" name="submission_ids[]" value="{{ $submission->id }}"
                                                 @change="toggleArticle('{{ $submission->id }}')"
-                                                class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                                class="mt-1 h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer">
                                             <div class="flex-1 min-w-0">
-                                                <p class="font-medium text-gray-900 line-clamp-2">{{ $submission->title }}
-                                                </p>
-                                                <p class="text-sm text-gray-500 mt-1">
+                                                <x-text.body class="!font-semibold !text-slate-900 line-clamp-2 leading-snug">{{ $submission->title }}</x-text.body>
+                                                <p class="text-xs text-slate-500 mt-1.5 font-medium">
                                                     {{ $submission->authors->pluck('name')->join(', ') }}
                                                 </p>
-                                                <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                                                    <span
-                                                        class="px-2 py-0.5 bg-gray-200 rounded">{{ $submission->section->name ?? 'Uncategorized' }}</span>
-                                                    <span>Accepted
-                                                        {{ $submission->accepted_at?->format('M d, Y') ?? 'Recently' }}</span>
+                                                <div class="flex items-center gap-2 mt-2">
+                                                    <span class="px-2 py-0.5 bg-slate-200/70 text-slate-600 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                                        {{ $submission->section->name ?? 'Uncategorized' }}
+                                                    </span>
+                                                    <span class="text-[11px] text-slate-400 font-medium">
+                                                        Accepted {{ $submission->accepted_at?->format('M d, Y') ?? 'Recently' }}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </label>
                                     @endforeach
                                 </div>
                             @else
-                                <div class="text-center py-8">
-                                    <div
-                                        class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
+                                <div class="text-center py-10">
+                                    <div class="w-16 h-16 bg-slate-100 rounded-[20px] flex items-center justify-center mx-auto mb-4">
+                                        <i class="fa-solid fa-inbox text-2xl text-slate-400"></i>
                                     </div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Available Submissions</h3>
-                                    <p class="text-gray-500">All accepted submissions have already been assigned to issues.
-                                    </p>
+                                    <x-text.h2 class="!text-slate-900 mb-1">No Available Submissions</x-text.h2>
+                                    <x-text.body class="!text-slate-500">All accepted submissions have already been assigned to issues.</x-text.body>
                                 </div>
                             @endif
                         </div>
 
                         @if ($availableSubmissions->count() > 0)
-                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                                <p class="text-sm text-gray-600">
-                                    <span x-text="selectedArticles.length"></span> article(s) selected
+                            <div class="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
+                                <p class="text-xs font-semibold text-slate-600">
+                                    <span x-text="selectedArticles.length" class="text-indigo-600 font-bold"></span> article(s) selected
                                 </p>
-                                <div class="flex gap-3">
+                                <div class="flex gap-2.5">
                                     <button type="button" @click="showAddArticleModal = false"
-                                        :disabled="addArticleLoading"
-                                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50">
+                                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl hover:bg-slate-100/80 transition-all shadow-2xs">
                                         Cancel
                                     </button>
-                                    <button type="submit" :disabled="selectedArticles.length === 0 || addArticleLoading"
-                                        :class="{ 'opacity-50 cursor-not-allowed': selectedArticles.length === 0 || addArticleLoading }"
-                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2">
-                                        <template x-if="addArticleLoading">
-                                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                        </template>
-                                        <span x-text="addArticleLoading ? 'Adding...' : 'Add Selected'"></span>
+                                    <button type="submit" :disabled="selectedArticles.length === 0"
+                                        :class="{ 'opacity-50 cursor-not-allowed': selectedArticles.length === 0 }"
+                                        class="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] rounded-xl transition-all shadow-md shadow-indigo-600/20 inline-flex items-center gap-2">
+                                        <i class="fa-solid fa-plus text-[10px]"></i>
+                                        <span>Add Selected</span>
                                     </button>
                                 </div>
                             </div>
@@ -1096,15 +993,14 @@
         </div>
 
         <!-- Reorder Articles Modal -->
-        <div x-show="showReorderModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
-            aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <!-- Background overlay -->
+        <div x-show="showReorderModal" x-cloak class="fixed z-50 inset-0 overflow-y-auto" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+                <!-- Backdrop -->
                 <div x-show="showReorderModal" x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                     x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity"
+                    class="fixed inset-0 bg-slate-950/40 transition-opacity"
                     @click="showReorderModal = false"></div>
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -1117,7 +1013,7 @@
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     :style="{ transform: 'translate(' + modalX + 'px, ' + modalY + 'px)', transition: isDragging ? 'none' : '' }"
-                    class="inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                    class="inline-block align-bottom bg-white rounded-[24px] text-left overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-300">
 
                     <form
                         action="{{ route('journal.issues.reorder-articles', ['journal' => $journal->slug, 'issue' => $issue]) }}"
