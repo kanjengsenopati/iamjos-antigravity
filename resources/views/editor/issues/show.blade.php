@@ -13,6 +13,8 @@
         showPublishModal: false,
         publishLoading: false,
         publishError: '',
+        addArticleLoading: false,
+        addArticleError: '',
         modalX: 0,
         modalY: 0,
         isDragging: false,
@@ -821,9 +823,34 @@
                         @click.stop
                         class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
                         
-                        <form action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}" 
-                            method="POST" 
-                            @submit="publishLoading = true; publishError = '';">
+                        <form @submit.prevent="
+                            publishLoading = true;
+                            publishError = '';
+                            let formData = new URLSearchParams(new FormData($event.target));
+                            fetch($event.target.dataset.action, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: formData
+                            })
+                            .then(async (response) => {
+                                const data = await response.json();
+                                if (data.success) {
+                                    showPublishModal = false;
+                                    window.location.href = data.redirect;
+                                } else {
+                                    publishError = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+                                    publishLoading = false;
+                                }
+                            })
+                            .catch(() => {
+                                publishError = 'Koneksi gagal atau terjadi kesalahan server. Silakan refresh halaman dan coba lagi.';
+                                publishLoading = false;
+                            })
+                        " data-action="{{ route('journal.issues.publish', ['journal' => $journal->slug, 'issue' => $issue]) }}">
                             @csrf
                             
                             <!-- Modal Header -->
@@ -936,9 +963,34 @@
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
 
-                    <form
-                        action="{{ route('journal.issues.add-articles', ['journal' => $journal->slug, 'issue' => $issue]) }}"
-                        method="POST">
+                    <form @submit.prevent="
+                            addArticleLoading = true;
+                            addArticleError = '';
+                            let formData = new URLSearchParams(new FormData($event.target));
+                            fetch($event.target.dataset.action, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: formData
+                            })
+                            .then(async (response) => {
+                                const data = await response.json();
+                                if (data.success) {
+                                    showAddArticleModal = false;
+                                    window.location.href = data.redirect;
+                                } else {
+                                    addArticleError = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+                                    addArticleLoading = false;
+                                }
+                            })
+                            .catch(() => {
+                                addArticleError = 'Koneksi gagal atau terjadi kesalahan server. Silakan refresh halaman dan coba lagi.';
+                                addArticleLoading = false;
+                            })
+                        " data-action="{{ route('journal.issues.add-articles', ['journal' => $journal->slug, 'issue' => $issue]) }}">
                         @csrf
 
                         <div class="px-6 py-5 border-b border-gray-100">
@@ -950,7 +1002,7 @@
                                     </p>
                                 </div>
                                 <button type="button" @click="showAddArticleModal = false"
-                                    class="text-gray-400 hover:text-gray-500">
+                                    class="text-gray-400 hover:text-gray-500" :disabled="addArticleLoading">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M6 18L18 6M6 6l12 12" />
@@ -960,6 +1012,14 @@
                         </div>
 
                         <div class="px-6 py-4 max-h-96 overflow-y-auto">
+                            <!-- Error Message -->
+                            <div x-show="addArticleError" x-cloak class="flex items-start gap-3 p-4 mb-4 bg-red-50 border border-red-200 rounded-xl">
+                                <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="text-sm font-medium text-red-800" x-text="addArticleError"></p>
+                            </div>
+
                             @if ($availableSubmissions->count() > 0)
                                 <div class="space-y-3">
                                     @foreach ($availableSubmissions as $submission)
@@ -1012,13 +1072,20 @@
                                 </p>
                                 <div class="flex gap-3">
                                     <button type="button" @click="showAddArticleModal = false"
-                                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                                        :disabled="addArticleLoading"
+                                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50">
                                         Cancel
                                     </button>
-                                    <button type="submit" :disabled="selectedArticles.length === 0"
-                                        :class="{ 'opacity-50 cursor-not-allowed': selectedArticles.length === 0 }"
-                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-                                        Add Selected
+                                    <button type="submit" :disabled="selectedArticles.length === 0 || addArticleLoading"
+                                        :class="{ 'opacity-50 cursor-not-allowed': selectedArticles.length === 0 || addArticleLoading }"
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2">
+                                        <template x-if="addArticleLoading">
+                                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </template>
+                                        <span x-text="addArticleLoading ? 'Adding...' : 'Add Selected'"></span>
                                     </button>
                                 </div>
                             </div>

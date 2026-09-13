@@ -508,8 +508,9 @@ class IssueController extends Controller
 
     /**
      * Add articles to the issue.
+     * Returns JSON for AJAX requests (modal fetch), or redirect for standard POST.
      */
-    public function addArticles(Request $request, string $journalSlug, Issue $issue): RedirectResponse
+    public function addArticles(Request $request, string $journalSlug, Issue $issue): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $journal = $this->getJournal();
 
@@ -543,7 +544,18 @@ class IssueController extends Controller
             }
         }
 
-        return back()->with('success', "{$addedCount} article(s) added to the issue.");
+        $successMessage = "{$addedCount} article(s) added to the issue.";
+
+        // Return JSON for AJAX requests (from modal fetch)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage,
+                'redirect' => route('journal.issues.show', ['journal' => $journal->slug, 'issue' => $issue]),
+            ]);
+        }
+
+        return back()->with('success', $successMessage);
     }
 
     /**
