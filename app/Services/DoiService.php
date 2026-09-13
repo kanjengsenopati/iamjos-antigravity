@@ -45,7 +45,18 @@ class DoiService
 
         $suffix = self::generateSuffix($publication, $journal);
         
-        return "{$prefix}/{$suffix}";
+        $doi = "{$prefix}/{$suffix}";
+
+        // Handle DOI collisions for publications
+        // to prevent PostgreSQL Unique Violation on `publications_doi_unique` constraint.
+        $originalDoi = $doi;
+        $counter = 1;
+        while (\App\Models\Publication::where('doi', $doi)->where('id', '!=', $publication->id)->exists()) {
+            $doi = "{$originalDoi}-{$counter}";
+            $counter++;
+        }
+        
+        return $doi;
     }
 
     /**
@@ -90,7 +101,7 @@ class DoiService
             return null;
         }
 
-        // Generate issue suffix
+        // Generate base issue suffix
         $suffix = sprintf(
             '%s.v%di%d',
             $journal->path,
@@ -98,7 +109,18 @@ class DoiService
             $issue->number ?? 0
         );
         
-        return "{$prefix}/{$suffix}";
+        $doi = "{$prefix}/{$suffix}";
+
+        // Handle DOI collisions for issues (including soft-deleted ones)
+        // to prevent PostgreSQL Unique Violation on `issues_doi_unique` constraint.
+        $originalDoi = $doi;
+        $counter = 1;
+        while (\App\Models\Issue::withTrashed()->where('doi', $doi)->where('id', '!=', $issue->id)->exists()) {
+            $doi = "{$originalDoi}-{$counter}";
+            $counter++;
+        }
+        
+        return $doi;
     }
 
     /**
