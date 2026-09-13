@@ -267,6 +267,11 @@ class IssueController extends Controller
         if (empty($issue->doi)) {
             $generatedDoi = \App\Services\DoiService::generateForIssue($issue, $journal);
             if ($generatedDoi) {
+                // Prevent duplicate DOI assignment
+                if (\App\Models\Issue::withTrashed()->where('doi', $generatedDoi)->where('id', '!=', $issue->id)->exists()) {
+                    return back()->with('error', "Gagal mempublikasikan: DOI terbitan ini ({$generatedDoi}) sudah digunakan oleh terbitan lain. Silakan masuk ke Edit Issue dan buat Suffix DOI secara manual yang lebih unik.");
+                }
+
                 $issueData['doi'] = $generatedDoi;
                 // Extract suffix from full DOI
                 $prefix = $journal->doi_prefix;
@@ -274,9 +279,21 @@ class IssueController extends Controller
                     $issueData['doi_suffix'] = substr($generatedDoi, strlen($prefix) + 1);
                 }
             }
+        } else {
+            // Check if existing DOI collides
+            if (\App\Models\Issue::withTrashed()->where('doi', $issue->doi)->where('id', '!=', $issue->id)->exists()) {
+                return back()->with('error', "Gagal mempublikasikan: DOI terbitan ini ({$issue->doi}) sudah digunakan oleh terbitan lain. Silakan masuk ke Edit Issue dan ubah Suffix DOI secara manual.");
+            }
         }
 
-        $issue->update($issueData);
+        try {
+            $issue->update($issueData);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23505' && str_contains($e->getMessage(), 'issues_doi_unique')) {
+                return back()->with('error', 'Gagal mempublikasikan: Terdapat duplikasi DOI pada terbitan ini di sistem. Silakan masuk ke menu Edit Issue dan ubah Suffix DOI secara manual agar unik.');
+            }
+            throw $e;
+        }
 
         // [IAMJOS-CROSSREF-ISSUE] Trigger Auto-Deposit for Issue if enabled
         if ($journal->getSetting('crossref_automatic_deposit') && !empty($issueData['doi'])) {
