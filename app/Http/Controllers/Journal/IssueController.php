@@ -129,7 +129,19 @@ class IssueController extends Controller
             'description' => 'nullable|string',
             'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,NULL,id,journal_id,' . $journal->id],
             'cover' => 'nullable|image|max:2048',
-            'doi_suffix' => 'nullable|string|max:255',
+            'doi_suffix' => [
+                'nullable',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) use ($journal) {
+                    if ($journal->doi_prefix) {
+                        $fullDoi = $journal->doi_prefix . '/' . $value;
+                        if (\App\Models\Issue::withTrashed()->where('doi', $fullDoi)->exists()) {
+                            $fail("Suffix DOI ini akan menghasilkan DOI ({$fullDoi}) yang sudah digunakan oleh terbitan lain. Harap gunakan suffix yang unik.");
+                        }
+                    }
+                },
+            ],
         ]);
 
         $issueData = [
@@ -188,7 +200,19 @@ class IssueController extends Controller
             'description' => 'nullable|string',
             'url_path' => ['nullable', 'string', 'alpha_dash', 'unique:issues,url_path,' . $issue->id . ',id,journal_id,' . $journal->id],
             'cover' => 'nullable|image|max:2048',
-            'doi_suffix' => 'nullable|string|max:255',
+            'doi_suffix' => [
+                'nullable',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) use ($journal, $issue) {
+                    if ($journal->doi_prefix) {
+                        $fullDoi = $journal->doi_prefix . '/' . $value;
+                        if (\App\Models\Issue::withTrashed()->where('doi', $fullDoi)->where('id', '!=', $issue->id)->exists()) {
+                            $fail("Suffix DOI ini akan menghasilkan DOI ({$fullDoi}) yang sudah digunakan oleh terbitan lain. Harap gunakan suffix yang unik.");
+                        }
+                    }
+                },
+            ],
         ]);
 
         $issueData = [
