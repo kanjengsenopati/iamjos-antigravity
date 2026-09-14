@@ -27,6 +27,12 @@ class CheckCrossrefDepositStatus extends Command
 
     /**
      * Execute the console command.
+     * 
+     * Dual-Strategy Polling (Identik OJS):
+     * 1. Works API (Primary) — Cek apakah DOI sudah resolving di registry global.
+     *    Tidak butuh autentikasi, universal, dan paling reliable.
+     * 2. Deposit API (Secondary) — Cek detail status deposit via batch_id.
+     *    Butuh autentikasi, digunakan untuk mendeteksi FAILURE secara eksplisit.
      */
     public function handle()
     {
@@ -40,105 +46,76 @@ class CheckCrossrefDepositStatus extends Command
                 continue;
             }
 
-            // Find publications that are submitted but not yet active
+            // Ambil kredensial sekali per journal
+            $username = $journal->getSetting('crossref_username');
+            $rawPassword = $journal->getSetting('crossref_password');
+            $password = '';
+            if ($rawPassword) {
+                try {
+                    $password = decrypt($rawPassword);
+                } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                    $password = $rawPassword;
+                }
+            }
+            $depositorEmail = $journal->getSetting('crossref_depositor_email') ?? 'admin@iamjos.id';
+
+            // ---------------------------------------------------------
+            // [PUBLICATIONS] Poll pending Article DOIs
+            // ---------------------------------------------------------
+            // FIX: Scope by journal_id to prevent cross-journal processing
             $pendingPublications = Publication::where('doi_status', 'submitted')
                 ->whereNotNull('doi')
+                ->whereHas('submission', function ($q) use ($journal) {
+                    $q->where('journal_id', $journal->id);
+                })
                 ->get();
 
-            if ($pendingPublications->isEmpty()) {
-                continue;
-            }
+            if ($pendingPublications->isNotEmpty()) {
+                $this->info("Found {$pendingPublications->count()} pending DOIs for Journal: {$journal->name}");
 
-            $this->info("Found {$pendingPublications->count()} pending DOIs for Journal: {$journal->name}");
+                foreach ($pendingPublications as $pub) {
+                    try {
+                        $result = $this->checkDoiStatus(
+                            $pub->doi,
+                            $pub->crossref_batch_id,
+                            $username,
+                            $password,
+                            $depositorEmail
+                        );
 
-            foreach ($pendingPublications as $pub) {
-                try {
-                    // Gunakan Advanced Polling (Deposit API) via batch_id
-                    $username = $journal->getSetting('crossref_username');
-                    $rawPassword = $journal->getSetting('crossref_password');
-                    $password = '';
-                    if ($rawPassword) {
-                        try {
-                            $password = decrypt($rawPassword);
-                        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-                            $password = $rawPassword;
-                        }
-                    }
-
-                    // Jika tidak ada batch_id atau kredensial, fallback ke Works API (Legacy)
-                    if (!$pub->crossref_batch_id || empty($username) || empty($password)) {
-                        $apiBaseUrl = rtrim(Settings::system('crossref_api_base_url', 'https://api.crossref.org/works/'), '/') . '/';
-                        $url = $apiBaseUrl . urlencode($pub->doi);
-                        $response = Http::timeout(10)->get($url);
-
-                        if ($response->successful()) {
+                        if ($result['status'] === 'active') {
                             $pub->update(['doi_status' => 'active']);
-                            $this->info("DOI {$pub->doi} is now ACTIVE (via Legacy Works API).");
+                            $this->info("DOI {$pub->doi} is now ACTIVE ({$result['source']}).");
                             $processedCount++;
-                        } elseif ($response->status() === 404) {
-                            $this->line("DOI {$pub->doi} is still pending/404 (via Legacy).");
+                        } elseif ($result['status'] === 'failed') {
+                            $pub->update(['doi_status' => 'failed']);
+                            
+                            \App\Models\CrossrefLog::create([
+                                'id' => (string) \Illuminate\Support\Str::uuid(),
+                                'journal_id' => $journal->id,
+                                'submission_id' => $pub->submission_id,
+                                'status' => 'Failed',
+                                'crossref_batch_id' => $pub->crossref_batch_id,
+                                'message' => substr('Crossref Error: ' . $result['message'], 0, 500),
+                            ]);
+                            
+                            $this->error("DOI {$pub->doi} FAILED: {$result['message']}");
                         } else {
-                            $this->error("Error checking DOI {$pub->doi}: HTTP {$response->status()}");
+                            $this->line("DOI {$pub->doi} is still pending ({$result['detail']}).");
                         }
-                    } else {
-                        // Advanced Deposit API Polling
-                        $url = "https://api.crossref.org/deposits?filter=submission-id:" . urlencode($pub->crossref_batch_id);
-                        $response = Http::withBasicAuth($username, $password)->timeout(10)->get($url);
 
-                        if ($response->successful()) {
-                            $items = $response->json('message.items');
-                            if (is_array($items) && count($items) > 0) {
-                                $item = $items[0];
-                                $crossrefStatus = $item['status'] ?? 'submitted';
-                                
-                                if ($crossrefStatus === 'completed') {
-                                    $pub->update(['doi_status' => 'active']);
-                                    $this->info("DOI {$pub->doi} is now ACTIVE (Deposit API).");
-                                    $processedCount++;
-                                } elseif ($crossrefStatus === 'failed') {
-                                    $pub->update(['doi_status' => 'failed']);
-                                    $messages = $item['messages'] ?? [];
-                                    $errorText = "Crossref rejected deposit.";
-                                    if (!empty($messages)) {
-                                        $errorTexts = array_map(function($msg) {
-                                            return $msg['message'] ?? '';
-                                        }, $messages);
-                                        $errorText = implode(' | ', $errorTexts);
-                                    }
-                                    
-                                    // Log the explicit error back to crossref_logs
-                                    \App\Models\CrossrefLog::create([
-                                        'id' => (string) \Illuminate\Support\Str::uuid(),
-                                        'journal_id' => $journal->id,
-                                        'submission_id' => $pub->submission_id,
-                                        'status' => 'Failed',
-                                        'crossref_batch_id' => $pub->crossref_batch_id,
-                                        'message' => 'Crossref Error: ' . substr($errorText, 0, 480),
-                                    ]);
-                                    
-                                    $this->error("DOI {$pub->doi} FAILED: $errorText");
-                                } else {
-                                    $this->line("DOI {$pub->doi} is still pending (status: {$crossrefStatus}).");
-                                }
-                            } else {
-                                $this->line("DOI {$pub->doi} deposit is not yet available in Crossref API (might take a few minutes).");
-                            }
-                        } else {
-                            $this->error("Error connecting to Deposit API for DOI {$pub->doi}: HTTP {$response->status()}");
-                        }
+                        // Rate limiting: 300ms between API calls (Crossref etiquette)
+                        usleep(300000);
+
+                    } catch (\Exception $e) {
+                        $this->error("Failed to check DOI {$pub->doi}: " . $e->getMessage());
+                        Log::error("Crossref Auto-Poll Error for DOI {$pub->doi}: " . $e->getMessage());
                     }
-                    
-                    // Sleep to avoid rate limiting from Crossref API
-                    usleep(300000); // 300ms
-                    
-                } catch (\Exception $e) {
-                    $this->error("Failed to check DOI {$pub->doi}: " . $e->getMessage());
-                    Log::error("Crossref Auto-Poll Error for DOI {$pub->doi}: " . $e->getMessage());
                 }
             }
 
             // ---------------------------------------------------------
-            // [IAMJOS-CROSSREF-ISSUE] Poll pending Issues
+            // [ISSUES] Poll pending Issue DOIs
             // ---------------------------------------------------------
             $pendingIssues = \App\Models\Issue::where('journal_id', $journal->id)
                 ->where('doi_status', 'submitted')
@@ -150,68 +127,37 @@ class CheckCrossrefDepositStatus extends Command
 
                 foreach ($pendingIssues as $issue) {
                     try {
-                        $username = $journal->getSetting('crossref_username');
-                        $rawPassword = $journal->getSetting('crossref_password');
-                        $password = '';
-                        if ($rawPassword) {
-                            try { $password = decrypt($rawPassword); } 
-                            catch (\Exception $e) { $password = $rawPassword; }
-                        }
+                        $result = $this->checkDoiStatus(
+                            $issue->doi,
+                            $issue->crossref_batch_id,
+                            $username,
+                            $password,
+                            $depositorEmail
+                        );
 
-                        if (!$issue->crossref_batch_id || empty($username) || empty($password)) {
-                            $apiBaseUrl = rtrim(Settings::system('crossref_api_base_url', 'https://api.crossref.org/works/'), '/') . '/';
-                            $url = $apiBaseUrl . urlencode($issue->doi);
-                            $response = Http::timeout(10)->get($url);
+                        if ($result['status'] === 'active') {
+                            $issue->update(['doi_status' => 'active']);
+                            $this->info("Issue DOI {$issue->doi} is now ACTIVE ({$result['source']}).");
+                            $processedCount++;
+                        } elseif ($result['status'] === 'failed') {
+                            $issue->update(['doi_status' => 'failed']);
 
-                            if ($response->successful()) {
-                                $issue->update(['doi_status' => 'active']);
-                                $this->info("Issue DOI {$issue->doi} is now ACTIVE (Legacy).");
-                                $processedCount++;
-                            } elseif ($response->status() === 404) {
-                                $this->line("Issue DOI {$issue->doi} is still pending (Legacy).");
-                            }
+                            \App\Models\CrossrefLog::create([
+                                'id' => (string) \Illuminate\Support\Str::uuid(),
+                                'journal_id' => $journal->id,
+                                'submission_id' => null,
+                                'status' => 'Failed',
+                                'crossref_batch_id' => $issue->crossref_batch_id,
+                                'message' => substr($result['message'], 0, 500),
+                            ]);
+
+                            $this->error("Issue DOI {$issue->doi} FAILED. Logged rejection reason.");
                         } else {
-                            $url = "https://api.crossref.org/deposits?filter=submission-id:" . urlencode($issue->crossref_batch_id);
-                            $response = Http::withBasicAuth($username, $password)->timeout(10)->get($url);
-
-                            if ($response->successful()) {
-                                $items = $response->json('message.items');
-                                if (is_array($items) && count($items) > 0) {
-                                    $item = $items[0];
-                                    $crossrefStatus = $item['status'] ?? 'submitted';
-                                    
-                                    if ($crossrefStatus === 'completed') {
-                                        $issue->update(['doi_status' => 'active']);
-                                        $this->info("Issue DOI {$issue->doi} is now ACTIVE (Deposit API).");
-                                        $processedCount++;
-                                    } elseif ($crossrefStatus === 'failed') {
-                                        $issue->update(['doi_status' => 'failed']);
-                                        $messages = $item['messages'] ?? [];
-                                        
-                                        $errorLines = [];
-                                        foreach ($messages as $msg) {
-                                            $msgType = $msg['msg_type'] ?? 'Error';
-                                            $msgText = $msg['msg'] ?? '';
-                                            $errorLines[] = "[$msgType] $msgText";
-                                        }
-                                        $finalErrorMessage = !empty($errorLines) ? implode("\n", $errorLines) : 'Unknown Crossref Rejection';
-                                        
-                                        \App\Models\CrossrefLog::create([
-                                            'id' => (string) \Illuminate\Support\Str::uuid(),
-                                            'journal_id' => $journal->id,
-                                            'submission_id' => null,
-                                            'status' => 'Failed',
-                                            'crossref_batch_id' => $issue->crossref_batch_id,
-                                            'message' => substr($finalErrorMessage, 0, 500),
-                                        ]);
-                                        
-                                        $this->error("Issue DOI {$issue->doi} FAILED. Logged rejection reason.");
-                                    } else {
-                                        $this->line("Issue DOI {$issue->doi} is still processing ({$crossrefStatus}).");
-                                    }
-                                }
-                            }
+                            $this->line("Issue DOI {$issue->doi} is still processing ({$result['detail']}).");
                         }
+
+                        usleep(300000);
+
                     } catch (\Exception $e) {
                         $this->error("Exception while checking Issue DOI {$issue->doi}: " . $e->getMessage());
                     }
@@ -221,5 +167,138 @@ class CheckCrossrefDepositStatus extends Command
 
         $this->info("Finished checking statuses. {$processedCount} DOIs activated.");
         return Command::SUCCESS;
+    }
+
+    /**
+     * Dual-Strategy DOI Status Check
+     * 
+     * Strategy 1 (Primary): Works API — cek apakah DOI sudah terdaftar di registry global.
+     *   Endpoint: GET https://api.crossref.org/works/{DOI}
+     *   Tidak butuh autentikasi. Jika 200 = DOI aktif. Jika 404 = belum aktif.
+     *   Ini adalah metode yang sama digunakan oleh OJS.
+     * 
+     * Strategy 2 (Secondary): Deposit API — cek status batch deposit untuk mendeteksi kegagalan.
+     *   Endpoint: GET https://api.crossref.org/deposits?filter=submission-id:{BATCH_ID}
+     *   Butuh Basic Auth. Bisa mendeteksi status 'completed', 'failed', atau 'submitted'.
+     *   Digunakan untuk menangkap pesan error eksplisit dari Crossref.
+     * 
+     * @return array{status: string, source: string, message: string, detail: string}
+     */
+    private function checkDoiStatus(
+        string $doi,
+        ?string $batchId,
+        ?string $username,
+        ?string $password,
+        string $depositorEmail
+    ): array {
+        // =====================================================
+        // STRATEGY 1: Works API (Primary — OJS-style)
+        // =====================================================
+        $apiBaseUrl = rtrim(Settings::system('crossref_api_base_url', 'https://api.crossref.org/works/'), '/') . '/';
+        $worksUrl = $apiBaseUrl . urlencode($doi);
+
+        try {
+            // Crossref Polite Pool: sertakan mailto di User-Agent untuk rate limit lebih baik
+            $worksResponse = Http::timeout(15)
+                ->withHeaders([
+                    'User-Agent' => 'IamJOS/1.0 (mailto:' . $depositorEmail . ')',
+                ])
+                ->get($worksUrl);
+
+            if ($worksResponse->successful()) {
+                // DOI sudah terdaftar dan resolving di registry global Crossref
+                return [
+                    'status' => 'active',
+                    'source' => 'Works API',
+                    'message' => 'DOI is resolving successfully.',
+                    'detail' => 'confirmed',
+                ];
+            }
+        } catch (\Exception $e) {
+            // Works API gagal (timeout/network), lanjut ke Strategy 2
+            Log::warning("Works API check failed for DOI {$doi}: " . $e->getMessage());
+        }
+
+        // =====================================================
+        // STRATEGY 2: Deposit API (Secondary — Failure Detection)
+        // =====================================================
+        if ($batchId && !empty($username) && !empty($password)) {
+            try {
+                $depositUrl = "https://api.crossref.org/deposits?filter=submission-id:" . urlencode($batchId);
+                $depositResponse = Http::withBasicAuth($username, $password)
+                    ->timeout(15)
+                    ->withHeaders([
+                        'User-Agent' => 'IamJOS/1.0 (mailto:' . $depositorEmail . ')',
+                    ])
+                    ->get($depositUrl);
+
+                if ($depositResponse->successful()) {
+                    $items = $depositResponse->json('message.items');
+
+                    if (is_array($items) && count($items) > 0) {
+                        $item = $items[0];
+                        $crossrefStatus = $item['status'] ?? 'submitted';
+
+                        if ($crossrefStatus === 'completed') {
+                            return [
+                                'status' => 'active',
+                                'source' => 'Deposit API',
+                                'message' => 'Deposit completed successfully.',
+                                'detail' => 'completed',
+                            ];
+                        }
+
+                        if ($crossrefStatus === 'failed') {
+                            // Ekstrak pesan error detail dari Crossref
+                            $errorLines = [];
+                            $messages = $item['messages'] ?? [];
+                            foreach ($messages as $msg) {
+                                $msgType = $msg['msg_type'] ?? $msg['type'] ?? 'Error';
+                                $msgText = $msg['msg'] ?? $msg['message'] ?? '';
+                                if ($msgText) {
+                                    $errorLines[] = "[{$msgType}] {$msgText}";
+                                }
+                            }
+                            $finalError = !empty($errorLines) 
+                                ? implode("\n", $errorLines) 
+                                : 'Unknown Crossref Rejection';
+
+                            return [
+                                'status' => 'failed',
+                                'source' => 'Deposit API',
+                                'message' => $finalError,
+                                'detail' => 'failed',
+                            ];
+                        }
+
+                        // Masih dalam antrean
+                        return [
+                            'status' => 'pending',
+                            'source' => 'Deposit API',
+                            'message' => '',
+                            'detail' => "deposit status: {$crossrefStatus}",
+                        ];
+                    }
+
+                    // Batch belum muncul di API (masih sangat awal)
+                    return [
+                        'status' => 'pending',
+                        'source' => 'Deposit API',
+                        'message' => '',
+                        'detail' => 'batch not yet visible in Crossref API',
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::warning("Deposit API check failed for batch {$batchId}: " . $e->getMessage());
+            }
+        }
+
+        // Kedua strategy tidak menghasilkan jawaban definitif
+        return [
+            'status' => 'pending',
+            'source' => 'None',
+            'message' => '',
+            'detail' => 'waiting for Crossref processing (Works API 404, no Deposit API data)',
+        ];
     }
 }
