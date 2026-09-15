@@ -155,8 +155,8 @@ class CrossrefExportController extends Controller
         ]);
     }
 
-    // 4. API Deposit Logic (Synchronous execution)
-    public function deposit(Request $request, \App\Services\CrossrefDepositService $crossrefService)
+    // 4. API Deposit Logic (Asynchronous Queue)
+    public function deposit(Request $request)
     {
         $journal = current_journal();
         $ids = $request->input('submission_ids', []);
@@ -175,7 +175,6 @@ class CrossrefExportController extends Controller
         }
 
         $invalidCount = 0;
-        $result = ['status' => 'Failed', 'message' => 'Unknown error'];
 
         if ($type === 'issue') {
             $issues = \App\Models\Issue::whereIn('id', $ids)->where('journal_id', $journal->id)->get();
@@ -187,8 +186,7 @@ class CrossrefExportController extends Controller
             if ($invalidCount > 0 && $invalidCount == $issues->count()) {
                 return back()->with('error', 'None of the selected issues have DOIs assigned.');
             }
-            // Execute synchronously
-            $result = $crossrefService->depositIssues($ids, $journal);
+            \App\Jobs\DepositCrossrefJob::dispatch($ids, $journal, 'issue');
         } else {
             $submissions = \App\Models\Submission::whereIn('id', $ids)
                 ->where('journal_id', $journal->id)->with(['currentPublication'])->get();
@@ -200,14 +198,9 @@ class CrossrefExportController extends Controller
             if ($invalidCount > 0 && $invalidCount == $submissions->count()) {
                 return back()->with('error', 'None of the selected articles have DOIs assigned.');
             }
-            // Execute synchronously
-            $result = $crossrefService->deposit($ids, $journal);
+            \App\Jobs\DepositCrossrefJob::dispatch($ids, $journal, 'article');
         }
 
-        if ($result['status'] === 'Success') {
-            return back()->with('success', 'Deposit successful. Status updated to Submitted.');
-        } else {
-            return back()->with('error', 'Crossref deposit failed: ' . $result['message']);
-        }
+        return back()->with('success', 'Selected items have been queued for Crossref deposit. The background worker will process them shortly.');
     }
 }

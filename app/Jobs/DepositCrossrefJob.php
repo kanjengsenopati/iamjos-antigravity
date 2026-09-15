@@ -12,6 +12,8 @@ class DepositCrossrefJob implements ShouldQueue
 {
     use Queueable;
 
+    public $afterCommit = true;
+
     public $submissionIds;
     public $journal;
     public $objectType;
