@@ -40,7 +40,8 @@ class PublicationObserver
         if ($publication->status === Publication::STATUS_PUBLISHED) {
             $journal = $publication->submission->journal;
             if ($journal && $journal->getSetting('crossref_automatic_deposit')) {
-                DepositCrossrefJob::dispatch([$publication->submission_id], $journal);
+                // Execute synchronously to bypass unreliable queue workers
+                DepositCrossrefJob::dispatchSync([$publication->submission_id], $journal);
             }
         }
     }

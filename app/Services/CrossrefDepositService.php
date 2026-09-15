@@ -84,7 +84,15 @@ class CrossrefDepositService
         }
 
         try {
-            $response = Http::attach('fname', $xmlString, $filename)
+            Log::channel('single')->info('[CrossrefDeposit] Starting deposit', [
+                'batch_id' => $batchId,
+                'endpoint' => $url,
+                'xml_size' => strlen($xmlString),
+                'username' => $username,
+            ]);
+
+            $response = Http::timeout(30)
+                ->attach('fname', $xmlString, $filename)
                 ->post($url, [
                     'operation' => 'doMDataUpload',
                     'login_id' => $username,
@@ -94,15 +102,17 @@ class CrossrefDepositService
             if ($response->successful()) {
                 $status = 'Success';
                 $message = 'Deposit successful. Crossref Response: ' . $response->body();
-                // Depending on Crossref response, you might extract batch_id from the XML response string.
-                // It usually returns a generic HTML/XML response stating queued processing.
+                Log::channel('single')->info('[CrossrefDeposit] Request successful', ['batch_id' => $batchId, 'status' => $response->status()]);
             } else {
                 $status = 'Failed';
                 $message = 'HTTP Error ' . $response->status() . ': ' . $response->body();
+                Log::channel('single')->error('[CrossrefDeposit] HTTP Error', ['batch_id' => $batchId, 'status' => $response->status(), 'response' => $response->body()]);
             }
         } catch (\Exception $e) {
             $status = 'Failed';
             $message = 'Request failed: ' . $e->getMessage();
+            Log::channel('single')->error('[CrossrefDeposit] Exception', ['batch_id' => $batchId, 'error' => $e->getMessage()]);
+            // No need to re-throw since we run synchronously and return the status directly to the controller
         }
 
         // Log the result
@@ -194,7 +204,15 @@ class CrossrefDepositService
         }
 
         try {
-            $response = Http::attach('fname', $xmlString, $filename)
+            Log::channel('single')->info('[CrossrefDeposit-Issue] Starting deposit', [
+                'batch_id' => $batchId,
+                'endpoint' => $url,
+                'xml_size' => strlen($xmlString),
+                'username' => $username,
+            ]);
+
+            $response = Http::timeout(30)
+                ->attach('fname', $xmlString, $filename)
                 ->post($url, [
                     'operation' => 'doMDataUpload',
                     'login_id' => $username,
@@ -204,13 +222,16 @@ class CrossrefDepositService
             if ($response->successful()) {
                 $status = 'Success';
                 $message = 'Deposit successful. Crossref Response: ' . $response->body();
+                Log::channel('single')->info('[CrossrefDeposit-Issue] Request successful', ['batch_id' => $batchId, 'status' => $response->status()]);
             } else {
                 $status = 'Failed';
                 $message = 'HTTP Error ' . $response->status() . ': ' . $response->body();
+                Log::channel('single')->error('[CrossrefDeposit-Issue] HTTP Error', ['batch_id' => $batchId, 'status' => $response->status(), 'response' => $response->body()]);
             }
         } catch (\Exception $e) {
             $status = 'Failed';
             $message = 'Request failed: ' . $e->getMessage();
+            Log::channel('single')->error('[CrossrefDeposit-Issue] Exception', ['batch_id' => $batchId, 'error' => $e->getMessage()]);
         }
 
         // Log the result and update issue status
