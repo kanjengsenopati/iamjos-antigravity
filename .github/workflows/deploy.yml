@@ -230,30 +230,32 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - id: ejournal
-            name: "E-Journal"
-            path: "/www/wwwroot/ejournal.apdesyi.or.id"
-            url: "https://ejournal.apdesyi.or.id"
-          - id: iamjos
-            name: "IAMJOS Apdesyi"
-            path: "/home/wwwroot/iamjos.apdesyi"
-            url: "https://iamjos.apdesyi"
-          - id: iamjos-id
-            name: "IAMJOS ID"
-            path: "/home/wwwroot/iamjos.id"
-            url: "https://iamjos.id"
-          - id: journal-apdesyi
-            name: "Journal Apdesyi"
-            path: "/home/wwwroot/journal.apdesyi.or.id"
-            url: "https://journal.apdesyi.or.id"
-          - id: klipang
-            name: "Klipang"
-            path: "/home/wwwroot/klipang.iamjos.id"
-            url: "https://klipang.iamjos.id"
-          - id: sisdev
-            name: "Sisdev"
-            path: "/home/wwwroot/sisdev.iamjos.id"
-            url: "https://sisdev.iamjos.id"
+          # ─── TEMPORARILY DISABLED: fokus deploy ke multilingualjournal dulu ───
+          # - id: ejournal
+          #   name: "E-Journal"
+          #   path: "/www/wwwroot/ejournal.apdesyi.or.id"
+          #   url: "https://ejournal.apdesyi.or.id"
+          # - id: iamjos
+          #   name: "IAMJOS Apdesyi"
+          #   path: "/home/wwwroot/iamjos.apdesyi"
+          #   url: "https://iamjos.apdesyi"
+          # - id: iamjos-id
+          #   name: "IAMJOS ID"
+          #   path: "/home/wwwroot/iamjos.id"
+          #   url: "https://iamjos.id"
+          # - id: journal-apdesyi
+          #   name: "Journal Apdesyi"
+          #   path: "/home/wwwroot/journal.apdesyi.or.id"
+          #   url: "https://journal.apdesyi.or.id"
+          # - id: klipang
+          #   name: "Klipang"
+          #   path: "/home/wwwroot/klipang.iamjos.id"
+          #   url: "https://klipang.iamjos.id"
+          # - id: sisdev
+          #   name: "Sisdev"
+          #   path: "/home/wwwroot/sisdev.iamjos.id"
+          #   url: "https://sisdev.iamjos.id"
+          # ─── ACTIVE TARGET ───
           - id: multilingualjournal
             name: "Multilingual Journal"
             path: "/home/wwwroot/multilingualjournal"
