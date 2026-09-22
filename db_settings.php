@@ -1,0 +1,1 @@
+<?php require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $settings = \Illuminate\Support\Facades\DB::table("journal_settings")->where("setting_name", "like", "crossref%")->get(); echo json_encode($settings, JSON_PRETTY_PRINT);

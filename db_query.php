@@ -1,0 +1,1 @@
+<?php require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $pubs = \App\Models\Publication::select("id", "submission_id", "doi", "doi_status", "status")->get(); echo json_encode($pubs, JSON_PRETTY_PRINT);

@@ -37,11 +37,24 @@ class PublicationObserver
 
     protected function checkCrossrefDeposit(Publication $publication): void
     {
-        if ($publication->status === Publication::STATUS_PUBLISHED) {
-            $journal = $publication->submission->journal;
-            if ($journal && $journal->getSetting('crossref_automatic_deposit')) {
-                DepositCrossrefJob::dispatch([$publication->submission_id], $journal);
-            }
+        if ($publication->status !== Publication::STATUS_PUBLISHED) {
+            return;
+        }
+
+        // Idempotency guard: jangan deposit ulang jika sudah submitted/active
+        // Identik OJS yang cek status sebelum deposit
+        if (in_array($publication->doi_status, ['submitted', 'active', 'marked'])) {
+            return;
+        }
+
+        // Guard: harus punya DOI yang di-assign
+        if (empty($publication->doi)) {
+            return;
+        }
+
+        $journal = $publication->submission->journal;
+        if ($journal && $journal->getSetting('crossref_automatic_deposit')) {
+            DepositCrossrefJob::dispatch([$publication->submission_id], $journal);
         }
     }
 
