@@ -12,8 +12,6 @@ class DepositCrossrefJob implements ShouldQueue
 {
     use Queueable;
 
-    public $afterCommit = true;
-
     public $submissionIds;
     public $journal;
     public $objectType;
@@ -23,6 +21,7 @@ class DepositCrossrefJob implements ShouldQueue
      */
     public function __construct($ids, Journal $journal, $objectType = 'article')
     {
+        $this->afterCommit = true;
         $this->submissionIds = $ids; // Could be issue IDs if objectType is 'issue'
         $this->journal = $journal;
         $this->objectType = $objectType;
