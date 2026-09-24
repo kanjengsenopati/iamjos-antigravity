@@ -188,6 +188,7 @@
                             <template x-if="homepagePreview">
                                 <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 inline-block">
                                     <img :src="homepagePreview" alt="Homepage Image Preview" class="max-h-40 w-auto rounded-lg shadow-sm">
+                                    <button type="button" @click="if(confirm('Delete homepage image?')) { fetch('{{ route('journal.settings.website.homepage-image.delete', $journalSlug) }}', { method: 'DELETE', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'} }).then(() => { homepagePreview = ''; }); }" class="text-red-600 text-xs mt-1 hover:underline block">{{ $isId ? 'Hapus Gambar' : 'Remove Image' }}</button>
                                 </div>
                             </template>
                             <input type="file" name="homepage_image" accept="image/jpeg,image/png,image/webp" @change="homepagePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : ''" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer">
