@@ -13,42 +13,202 @@ use App\Models\User;
 class InstallController extends Controller
 {
     /**
-     * Step 1: Requirements Check
+     * Step 1: Comprehensive Pre-Flight Requirements Check
+     *
+     * Verifikasi lengkap semua dependency, ekstensi PHP, permission,
+     * environment, dan konfigurasi server sebelum instalasi dimulai.
      */
     public function index()
     {
-        $requirements = [
-            'php' => version_compare(PHP_VERSION, '8.2.0', '>='),
-            'extensions' => [
-                'bcmath'    => extension_loaded('bcmath'),
-                'ctype'     => extension_loaded('ctype'),
-                'fileinfo'  => extension_loaded('fileinfo'),
-                'mbstring'  => extension_loaded('mbstring'),
-                'openssl'   => extension_loaded('openssl'),
-                'pdo_pgsql' => extension_loaded('pdo_pgsql'),
-                'xml'       => extension_loaded('xml'),
-            ],
-            'permissions' => [
-                '.env'             => is_writable(base_path('.env')),
-                'storage'          => is_writable(storage_path()),
-                'bootstrap/cache'  => is_writable(base_path('bootstrap/cache')),
-            ],
+        // ──────────────────────────────────────────────
+        // Phase 1: Auto-Fix — Resolve common first-time
+        // setup issues automatically before checking.
+        // ──────────────────────────────────────────────
+        $autoFixed = false;
+
+        // Auto-fix: Copy .env.example → .env if missing
+        if (!file_exists(base_path('.env')) && file_exists(base_path('.env.example'))) {
+            if (is_writable(base_path())) {
+                @copy(base_path('.env.example'), base_path('.env'));
+                $autoFixed = true;
+            }
+        }
+
+        // Auto-fix: Generate APP_KEY if empty
+        if (file_exists(base_path('.env')) && is_writable(base_path('.env'))) {
+            $envContent = file_get_contents(base_path('.env'));
+            $keyMissing = !preg_match('/^APP_KEY=base64:.+/m', $envContent);
+            if ($keyMissing) {
+                try {
+                    Artisan::call('key:generate', ['--force' => true]);
+                    $autoFixed = true;
+                } catch (\Exception $e) {
+                    // Silently continue — check below will report the issue
+                }
+            }
+        }
+
+        // Auto-fix: Create storage symlink if missing
+        if (!file_exists(public_path('storage'))) {
+            try {
+                Artisan::call('storage:link');
+                $autoFixed = true;
+            } catch (\Exception $e) {
+                // Continue
+            }
+        }
+
+        // Redirect after auto-fix so environment reloads on next boot
+        if ($autoFixed) {
+            return redirect()->route('install.index')
+                ->with('info', 'Environment telah dikonfigurasi secara otomatis. Memverifikasi persyaratan...');
+        }
+
+        // ──────────────────────────────────────────────
+        // Phase 2: Comprehensive Requirement Checks
+        // ──────────────────────────────────────────────
+
+        // 2A. PHP Version (composer.json requires ^8.4)
+        $phpVersion = [
+            'required' => '8.4.0',
+            'current'  => PHP_VERSION,
+            'pass'     => version_compare(PHP_VERSION, '8.4.0', '>='),
         ];
 
-        $allChecksPass = $requirements['php'];
-        foreach ($requirements['extensions'] as $pass) {
-            if (!$pass) {
-                $allChecksPass = false;
-            }
+        // 2B. Required PHP Extensions
+        $extensions = [
+            'bcmath'    => ['loaded' => extension_loaded('bcmath'),    'purpose' => 'Presisi matematika'],
+            'ctype'     => ['loaded' => extension_loaded('ctype'),     'purpose' => 'Validasi tipe karakter'],
+            'curl'      => ['loaded' => extension_loaded('curl'),      'purpose' => 'HTTP request & OAuth'],
+            'dom'       => ['loaded' => extension_loaded('dom'),       'purpose' => 'Generasi PDF & parsing HTML'],
+            'exif'      => ['loaded' => extension_loaded('exif'),      'purpose' => 'Metadata gambar (EXIF)'],
+            'fileinfo'  => ['loaded' => extension_loaded('fileinfo'),  'purpose' => 'Deteksi tipe file'],
+            'intl'      => ['loaded' => extension_loaded('intl'),      'purpose' => 'Internasionalisasi & format lokal'],
+            'mbstring'  => ['loaded' => extension_loaded('mbstring'),  'purpose' => 'String multibyte'],
+            'openssl'   => ['loaded' => extension_loaded('openssl'),   'purpose' => 'Enkripsi & keamanan'],
+            'pdo'       => ['loaded' => extension_loaded('pdo'),       'purpose' => 'Abstraksi database'],
+            'tokenizer' => ['loaded' => extension_loaded('tokenizer'), 'purpose' => 'Kompilasi template Blade'],
+            'xml'       => ['loaded' => extension_loaded('xml'),       'purpose' => 'Parsing XML & sitemap'],
+            'zip'       => ['loaded' => extension_loaded('zip'),       'purpose' => 'Export/import Excel'],
+        ];
+
+        // 2C. Image Processing Driver (at least one: GD or Imagick)
+        $imageDriver = [
+            'gd'      => extension_loaded('gd'),
+            'imagick' => extension_loaded('imagick'),
+            'pass'    => extension_loaded('gd') || extension_loaded('imagick'),
+        ];
+
+        // 2D. Database Drivers (at least one required — no longer hardcoded to pdo_pgsql)
+        $databaseDrivers = [
+            'pdo_pgsql'  => ['loaded' => extension_loaded('pdo_pgsql'),  'label' => 'PostgreSQL'],
+            'pdo_mysql'  => ['loaded' => extension_loaded('pdo_mysql'),  'label' => 'MySQL / MariaDB'],
+            'pdo_sqlite' => ['loaded' => extension_loaded('pdo_sqlite'), 'label' => 'SQLite'],
+        ];
+        $anyDatabaseDriver = collect($databaseDrivers)->contains('loaded', true);
+
+        // 2E. File & Directory Permissions (comprehensive)
+        $permissions = [
+            '.env'                        => $this->checkPathWritable(base_path('.env')),
+            'storage/'                    => $this->checkPathWritable(storage_path()),
+            'storage/app/'                => $this->checkPathWritable(storage_path('app')),
+            'storage/app/public/'         => $this->checkPathWritable(storage_path('app/public')),
+            'storage/app/private/'        => $this->checkPathWritable(storage_path('app/private')),
+            'storage/framework/views/'    => $this->checkPathWritable(storage_path('framework/views')),
+            'storage/framework/cache/'    => $this->checkPathWritable(storage_path('framework/cache')),
+            'storage/framework/sessions/' => $this->checkPathWritable(storage_path('framework/sessions')),
+            'storage/logs/'               => $this->checkPathWritable(storage_path('logs')),
+            'bootstrap/cache/'            => $this->checkPathWritable(base_path('bootstrap/cache')),
+        ];
+
+        // 2F. Application Foundation
+        $envFileExists = file_exists(base_path('.env'));
+
+        // Read .env directly to verify APP_KEY (in-memory config may be stale)
+        $appKeySet = false;
+        if ($envFileExists) {
+            $envRaw = file_get_contents(base_path('.env'));
+            $appKeySet = (bool) preg_match('/^APP_KEY=base64:.+/m', $envRaw);
         }
-        
-        foreach ($requirements['permissions'] as $pass) {
-            if (!$pass) {
-                $allChecksPass = false;
-            }
+        if (!$appKeySet) {
+            $appKeySet = !empty(config('app.key'));
         }
 
-        $requirements['allPass'] = $allChecksPass;
+        $foundation = [
+            'vendor_exists'      => is_dir(base_path('vendor')) && file_exists(base_path('vendor/autoload.php')),
+            'env_exists'         => $envFileExists,
+            'env_example_exists' => file_exists(base_path('.env.example')),
+            'app_key_set'        => $appKeySet,
+            'storage_link'       => file_exists(public_path('storage')),
+        ];
+
+        // 2G. Frontend Build Assets (non-blocking, informational)
+        $frontend = [
+            'build_exists'    => is_dir(public_path('build')),
+            'manifest_exists' => file_exists(public_path('build/manifest.json'))
+                              || file_exists(public_path('build/.vite/manifest.json')),
+        ];
+
+        // 2H. Optional: System Binaries
+        $optionalBinaries = [
+            'ffmpeg'  => ['available' => $this->checkBinaryAvailable('ffmpeg'),  'purpose' => 'Kompresi video slider'],
+            'ffprobe' => ['available' => $this->checkBinaryAvailable('ffprobe'), 'purpose' => 'Metadata & thumbnail video'],
+        ];
+
+        // 2I. Optional: Critical PHP Functions (often disabled on shared hosting)
+        $disabledFunctions = array_filter(array_map('trim', explode(',', ini_get('disable_functions') ?: '')));
+        $criticalFunctions = [
+            'proc_open' => ['disabled' => in_array('proc_open', $disabledFunctions), 'purpose' => 'Artisan commands & proses eksternal'],
+            'symlink'   => ['disabled' => in_array('symlink', $disabledFunctions),   'purpose' => 'Storage link (symlink)'],
+            'putenv'    => ['disabled' => in_array('putenv', $disabledFunctions),    'purpose' => 'Konfigurasi environment runtime'],
+        ];
+
+        // ──────────────────────────────────────────────
+        // Phase 3: Determine Overall Pass/Fail
+        // Only REQUIRED items contribute to allPass.
+        // Frontend, binaries, and functions are non-blocking.
+        // ──────────────────────────────────────────────
+        $allRequiredPass = true;
+
+        // PHP version must pass
+        if (!$phpVersion['pass']) $allRequiredPass = false;
+
+        // All required extensions must be loaded
+        foreach ($extensions as $ext) {
+            if (!$ext['loaded']) $allRequiredPass = false;
+        }
+
+        // Image driver must be available
+        if (!$imageDriver['pass']) $allRequiredPass = false;
+
+        // At least one database driver
+        if (!$anyDatabaseDriver) $allRequiredPass = false;
+
+        // All permissions must pass
+        foreach ($permissions as $writable) {
+            if (!$writable) $allRequiredPass = false;
+        }
+
+        // Foundation must all pass
+        if (!$foundation['vendor_exists']) $allRequiredPass = false;
+        if (!$foundation['env_exists']) $allRequiredPass = false;
+        if (!$foundation['app_key_set']) $allRequiredPass = false;
+
+        // ──────────────────────────────────────────────
+
+        $requirements = [
+            'php'               => $phpVersion,
+            'extensions'        => $extensions,
+            'imageDriver'       => $imageDriver,
+            'databaseDrivers'   => $databaseDrivers,
+            'anyDatabaseDriver' => $anyDatabaseDriver,
+            'permissions'       => $permissions,
+            'foundation'        => $foundation,
+            'frontend'          => $frontend,
+            'optionalBinaries'  => $optionalBinaries,
+            'criticalFunctions' => $criticalFunctions,
+            'allPass'           => $allRequiredPass,
+        ];
 
         return view('install.step1', compact('requirements'));
     }
@@ -326,5 +486,38 @@ class InstallController extends Controller
             
             file_put_contents($envFile, $content);
         }
+    }
+
+    /**
+     * Check if a path is writable. If the path doesn't exist,
+     * checks if the parent directory is writable (can create it).
+     */
+    private function checkPathWritable(string $path): bool
+    {
+        if (file_exists($path)) {
+            return is_writable($path);
+        }
+
+        return is_writable(dirname($path));
+    }
+
+    /**
+     * Check if a system binary is available on PATH.
+     * Returns null if exec() is disabled and cannot be checked.
+     */
+    private function checkBinaryAvailable(string $binary): ?bool
+    {
+        $disabledFunctions = array_map('trim', explode(',', ini_get('disable_functions') ?: ''));
+        if (in_array('exec', $disabledFunctions)) {
+            return null;
+        }
+
+        $command = PHP_OS_FAMILY === 'Windows'
+            ? "where {$binary} 2>NUL"
+            : "which {$binary} 2>/dev/null";
+
+        @exec($command, $output, $returnCode);
+
+        return $returnCode === 0;
     }
 }
