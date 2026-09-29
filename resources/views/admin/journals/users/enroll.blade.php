@@ -36,7 +36,9 @@
 
     <!-- Main Content Grid -->
     <div class="max-w-4xl">
-        <form action="{{ route($routePrefix . '.enroll.store', ['journal' => $journal->slug]) }}" method="POST">
+        <form action="{{ route($routePrefix . '.enroll.store', ['journal' => $journal->slug]) }}" method="POST"
+            x-data="{ isSubmitting: false }"
+            @submit="isSubmitting = true">
             @csrf
 
             <div class="space-y-8">
@@ -205,8 +207,13 @@
                 </a>
                 @if (!$availableUsers->isEmpty())
                     <button type="submit"
-                        class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors shadow-sm shadow-indigo-200">
-                        <i class="fa-solid fa-user-plus mr-2"></i> {{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}
+                        :disabled="isSubmitting"
+                        class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors shadow-sm shadow-indigo-200 flex items-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
+                        <i class="fa-solid fa-user-plus" x-show="!isSubmitting"></i>
+                        <span x-text="isSubmitting ? '{{ $isId ? 'Memproses...' : 'Processing...' }}' : '{{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}'">
+                            {{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}
+                        </span>
                     </button>
                 @endif
             </div>

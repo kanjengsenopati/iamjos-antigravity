@@ -330,7 +330,9 @@
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 class="relative inline-block w-full max-w-4xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
 
-                <form action="{{ route($routePrefix . '.enroll.store', ['journal' => $journal->slug]) }}" method="POST">
+                <form action="{{ route($routePrefix . '.enroll.store', ['journal' => $journal->slug]) }}" method="POST"
+                    x-data="{ isSubmitting: false }"
+                    @submit="isSubmitting = true">
                     @csrf
 
                     <!-- Header -->
@@ -512,9 +514,13 @@
                         </button>
                         @if (!$availableUsers->isEmpty())
                             <button type="submit"
-                                class="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
-                                <i class="fa-solid fa-user-check"></i>
-                                {{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}
+                                :disabled="isSubmitting"
+                                class="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed">
+                                <i class="fa-solid fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
+                                <i class="fa-solid fa-user-check" x-show="!isSubmitting"></i>
+                                <span x-text="isSubmitting ? '{{ $isId ? 'Memproses...' : 'Processing...' }}' : '{{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}'">
+                                    {{ $isId ? 'Daftarkan Pengguna' : 'Enroll User' }}
+                                </span>
                             </button>
                         @endif
                     </div>
@@ -550,7 +556,9 @@
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 class="relative inline-block w-full max-w-5xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
 
-                <form action="{{ route($routePrefix . '.store', ['journal' => $journal->slug]) }}" method="POST">
+                <form action="{{ route($routePrefix . '.store', ['journal' => $journal->slug]) }}" method="POST"
+                    x-data="{ isSubmitting: false }"
+                    @submit="isSubmitting = true">
                     @csrf
 
                     <!-- Header -->
@@ -847,9 +855,13 @@
                             {{ $isId ? 'Batal' : 'Cancel' }}
                         </button>
                         <button type="submit"
-                            class="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-user-plus"></i>
-                            {{ $isId ? 'Buat Pengguna' : 'Create User' }}
+                            :disabled="isSubmitting"
+                            class="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
+                            <i class="fa-solid fa-user-plus" x-show="!isSubmitting"></i>
+                            <span x-text="isSubmitting ? '{{ $isId ? 'Memproses...' : 'Processing...' }}' : '{{ $isId ? 'Buat Pengguna' : 'Create User' }}'">
+                                {{ $isId ? 'Buat Pengguna' : 'Create User' }}
+                            </span>
                         </button>
                     </div>
                 </form>

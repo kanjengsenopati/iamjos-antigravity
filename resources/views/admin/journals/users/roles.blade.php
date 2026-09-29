@@ -47,7 +47,8 @@
                 class="relative inline-block w-full max-w-5xl overflow-hidden text-left align-bottom transition-all transform bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:my-8 sm:align-middle ring-1 ring-black ring-opacity-5">
 
                 <form action="{{ route($routePrefix . '.roles.store', ['journal' => $journal->slug]) }}" method="POST"
-                    x-data="{ selectedLevel: 5, activeTab: 'identity' }">
+                    x-data="{ selectedLevel: 5, activeTab: 'identity', isSubmitting: false }"
+                    @submit="isSubmitting = true">
                     @csrf
 
                     <!-- Header -->
@@ -447,9 +448,13 @@
                             {{ $isId ? 'Batal' : 'Cancel' }}
                         </button>
                         <button type="submit"
-                            class="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-save"></i>
-                            {{ $isId ? 'Simpan Peran' : 'Save Role' }}
+                            :disabled="isSubmitting"
+                            class="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
+                            <i class="fa-solid fa-save" x-show="!isSubmitting"></i>
+                            <span x-text="isSubmitting ? '{{ $isId ? 'Menyimpan...' : 'Saving...' }}' : '{{ $isId ? 'Simpan Peran' : 'Save Role' }}'">
+                                {{ $isId ? 'Simpan Peran' : 'Save Role' }}
+                            </span>
                         </button>
                     </div>
                 </form>

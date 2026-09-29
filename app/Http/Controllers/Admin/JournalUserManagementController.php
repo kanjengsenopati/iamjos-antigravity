@@ -536,6 +536,18 @@ class JournalUserManagementController extends Controller
     {
         $journalModel = current_journal();
 
+        // Normalize string inputs to avoid case/space mismatches against PostgreSQL unique constraints
+        if ($request->has('email')) {
+            $request->merge([
+                'email' => strtolower(trim((string) $request->email)),
+            ]);
+        }
+        if ($request->has('username')) {
+            $request->merge([
+                'username' => strtolower(trim((string) $request->username)),
+            ]);
+        }
+
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
             'name' => 'nullable|string|max:255', // Preferred Public Name
@@ -575,16 +587,68 @@ class JournalUserManagementController extends Controller
         $userData['email_verified_at'] = now(); // Auto-verify when created by admin
         $userData['date_registered'] = now();
 
-        $user = User::create($userData);
+        try {
+            DB::beginTransaction();
 
-        // Assign roles to user for THIS journal using JournalUserRole
-        JournalUserRole::assignRoles($user, $journalModel, $request->roles);
+            $user = User::create($userData);
 
-        // Also give them the Spatie roles for global permission checks
-        $user->syncRoles($request->roles);
+            // Assign roles to user for THIS journal using JournalUserRole
+            JournalUserRole::assignRoles($user, $journalModel, $request->roles);
 
-        return redirect()->route($this->getRoutePrefix() . '.index', ['journal' => $journalModel->slug])
-            ->with('success', 'User created and enrolled in this journal successfully.');
+            // Also give them the Spatie roles for global permission checks
+            $user->syncRoles($request->roles);
+
+            DB::commit();
+
+            return redirect()->route($this->getRoutePrefix() . '.index', ['journal' => $journalModel->slug])
+                ->with('success', 'User created and enrolled in this journal successfully.');
+        } catch (\Illuminate\Database\UniqueConstraintViolationException | \Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+
+            // Catch unique constraint violation (SQLSTATE 23505) or concurrent submission
+            if ($e instanceof \Illuminate\Database\UniqueConstraintViolationException || $e->getCode() == 23505) {
+                // Check if user already exists (created concurrently or existing user)
+                $existingUser = User::where('email', $userData['email'])->first();
+                if ($existingUser) {
+                    // Idempotently enroll existing user in this journal with the requested roles
+                    JournalUserRole::assignRoles($existingUser, $journalModel, $request->roles);
+
+                    $allUserRoles = JournalUserRole::where('user_id', $existingUser->id)
+                        ->with('role')
+                        ->get()
+                        ->pluck('role.name')
+                        ->unique()
+                        ->toArray();
+                    $existingUser->syncRoles($allUserRoles);
+
+                    return redirect()->route($this->getRoutePrefix() . '.index', ['journal' => $journalModel->slug])
+                        ->with('success', __('User with this email already exists and has been enrolled in this journal successfully.'));
+                }
+
+                return back()->withInput()->withErrors([
+                    'username' => __('Username or email already exists in the system.'),
+                ]);
+            }
+
+            Log::error('Database error creating user in journal: ' . $e->getMessage(), [
+                'exception' => $e,
+                'email' => $userData['email'] ?? null,
+            ]);
+
+            return back()->withInput()->withErrors([
+                'error' => __('Failed to create user: ') . $e->getMessage(),
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error('Unexpected error creating user in journal: ' . $e->getMessage(), [
+                'exception' => $e,
+                'email' => $userData['email'] ?? null,
+            ]);
+
+            return back()->withInput()->withErrors([
+                'error' => __('Failed to create user: ') . $e->getMessage(),
+            ]);
+        }
     }
 
     public function update(Request $request, $journal, User $user)

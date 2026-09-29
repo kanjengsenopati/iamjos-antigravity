@@ -35,6 +35,8 @@
     </div>
 
     <form action="{{ route($routePrefix . '.store', ['journal' => $journal->slug]) }}" method="POST"
+        x-data="{ isSubmitting: false }"
+        @submit="isSubmitting = true"
         class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden max-w-5xl">
         @csrf
 
@@ -310,8 +312,12 @@
             <a href="{{ route($routePrefix . '.index', ['journal' => $journal->slug]) }}"
                 class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium">{{ $isId ? 'Batal' : 'Cancel' }}</a>
             <button type="submit"
-                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-sm transition-colors">
-                {{ $isId ? 'Buat Pengguna' : 'Create User' }}
+                :disabled="isSubmitting"
+                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-sm transition-colors flex items-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
+                <span x-text="isSubmitting ? '{{ $isId ? 'Memproses...' : 'Processing...' }}' : '{{ $isId ? 'Buat Pengguna' : 'Create User' }}'">
+                    {{ $isId ? 'Buat Pengguna' : 'Create User' }}
+                </span>
             </button>
         </div>
     </form>
