@@ -26,7 +26,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Halaman Tidak Ditemukan | {{ $siteName }}</title>
+    <title>429 - Terlalu Banyak Permintaan | {{ $siteName }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -58,8 +58,8 @@
 <body class="min-h-screen flex items-center justify-center p-6 selection:bg-blue-500/30">
     <!-- Abstract Background Elements -->
     <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-blue-600/10 rounded-full blur-[120px] animate-float"></div>
-        <div class="absolute -bottom-[20%] -right-[10%] w-[60vw] h-[60vw] bg-emerald-600/5 rounded-full blur-[120px] animate-float" style="animation-delay: -5s;"></div>
+        <div class="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-amber-600/10 rounded-full blur-[120px] animate-float"></div>
+        <div class="absolute -bottom-[20%] -right-[10%] w-[60vw] h-[60vw] bg-blue-600/10 rounded-full blur-[120px] animate-float" style="animation-delay: -5s;"></div>
     </div>
 
     <div class="relative z-10 w-full max-w-[580px] glass-card rounded-[40px] p-8 sm:p-12 md:p-16 text-center shadow-2xl transition-all duration-500">
@@ -70,28 +70,31 @@
             </span>
         </div>
 
-        <!-- Big 404 -->
+        <!-- Big 429 -->
         <div class="mb-4">
-            <h1 class="text-[100px] sm:text-[120px] font-black text-white leading-none tracking-tighter opacity-90">404</h1>
+            <h1 class="text-[100px] sm:text-[120px] font-black text-white leading-none tracking-tighter opacity-90">429</h1>
         </div>
         
         <!-- Main Message -->
         <div class="mb-8">
-            <h2 class="text-xl sm:text-2xl font-bold text-white mb-3">Halaman Tidak Ditemukan</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-white mb-3">Terlalu Banyak Permintaan</h2>
             <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
-                Maaf, halaman atau artikel yang Anda cari tidak tersedia. Mungkin tautan yang dimasukkan keliru atau halaman telah dipindahkan.
+                Sistem kami mendeteksi aktivitas yang terlalu cepat dalam rentang waktu singkat dari perangkat Anda demi melindungi kestabilan layanan.
+            </p>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3 leading-relaxed">
+                Mohon tunggu beberapa detik sebelum mencoba kembali melakukan permintaan.
             </p>
         </div>
 
         <!-- Action Buttons -->
         <div class="mt-4 flex flex-col gap-3">
-            <button onclick="window.history.back()" 
+            <button onclick="window.location.reload()" 
                     class="group relative inline-flex items-center justify-center w-full py-3.5 px-6 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base sm:text-lg rounded-2xl shadow-xl shadow-blue-900/40 transition-all active:scale-[0.98] overflow-hidden cursor-pointer">
                 <span class="relative z-10 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Halaman Sebelumnya
+                    Coba Lagi Sekarang
                 </span>
                 <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             </button>
