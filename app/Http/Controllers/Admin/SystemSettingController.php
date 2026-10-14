@@ -12,7 +12,10 @@ class SystemSettingController extends Controller
     public function index()
     {
         $settings = SystemSetting::orderBy('group')->orderBy('key')->get()->groupBy('group');
-        return view('admin.system-settings.index', compact('settings'));
+        $installerLocked = file_exists(storage_path('installed'))
+            || file_exists(storage_path('Installed'))
+            || file_exists(storage_path('INSTALLED'));
+        return view('admin.system-settings.index', compact('settings', 'installerLocked'));
     }
 
     public function update(Request $request)

@@ -15,10 +15,9 @@ class CheckIfInstalled
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Di-comment sementara agar preview klien bisa melihat /install walau sudah terinstall
-        // if (file_exists(storage_path('installed'))) {
-        //     return redirect('/login');
-        // }
+        if (file_exists(storage_path('installed')) || file_exists(storage_path('Installed')) || file_exists(storage_path('INSTALLED'))) {
+            abort(404, 'Installation wizard is locked and unavailable.');
+        }
 
         return $next($request);
     }

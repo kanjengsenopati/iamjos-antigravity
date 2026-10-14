@@ -1,0 +1,14 @@
+.git
+.github
+.agents
+.kiro
+node_modules
+tests
+*.log
+.env
+.env.backup
+.env.*
+!.env.example
+Dockerfile
+docker-compose*.yml
+vendor/

@@ -4,9 +4,20 @@
 
 @section('content')
     <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Sistem' : 'System Settings' }}</h1>
-        <p class="mt-1 text-gray-500">{{ $isId ? 'Kelola konfigurasi teknis untuk seluruh aplikasi. Perubahan akan segera diterapkan.' : 'Manage application-wide technical configuration. Changes take effect immediately.' }}</p>
+    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $isId ? 'Pengaturan Sistem' : 'System Settings' }}</h1>
+            <p class="mt-1 text-gray-500">{{ $isId ? 'Kelola konfigurasi teknis untuk seluruh aplikasi. Perubahan akan segera diterapkan.' : 'Manage application-wide technical configuration. Changes take effect immediately.' }}</p>
+        </div>
+        @php
+            $isLocked = $installerLocked ?? file_exists(storage_path('installed'));
+        @endphp
+        <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl border text-xs font-semibold {{ $isLocked ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200' }}">
+            <span class="w-2.5 h-2.5 rounded-full {{ $isLocked ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500' }}"></span>
+            <span>{{ $isId ? 'Installer' : 'Installer' }}: <strong>{{ $isLocked ? ($isId ? 'Terkunci (Locked / 404)' : 'Locked (404 Disabled)') : ($isId ? 'Terbuka (Unlocked)' : 'Unlocked') }}</strong></span>
+            <span class="text-slate-400">|</span>
+            <span class="font-mono text-[11px] text-slate-500">/install</span>
+        </div>
     </div>
 
     @if (session('success'))

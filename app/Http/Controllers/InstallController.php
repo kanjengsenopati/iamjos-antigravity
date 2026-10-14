@@ -52,9 +52,21 @@ class InstallController extends Controller
         if (!file_exists(public_path('storage'))) {
             try {
                 Artisan::call('storage:link');
-                $autoFixed = true;
+                if (file_exists(public_path('storage'))) {
+                    $autoFixed = true;
+                }
             } catch (\Exception $e) {
                 // Continue
+            }
+
+            // Fallback on Windows if Artisan storage:link failed or symlink privilege is not held
+            if (!file_exists(public_path('storage')) && PHP_OS_FAMILY === 'Windows') {
+                $target = storage_path('app/public');
+                $link = public_path('storage');
+                @exec("mklink /J \"{$link}\" \"{$target}\"");
+                if (file_exists(public_path('storage'))) {
+                    $autoFixed = true;
+                }
             }
         }
 
@@ -68,11 +80,11 @@ class InstallController extends Controller
         // Phase 2: Comprehensive Requirement Checks
         // ──────────────────────────────────────────────
 
-        // 2A. PHP Version (composer.json requires ^8.4)
+        // 2A. PHP Version (Laravel 12 requires ^8.2)
         $phpVersion = [
-            'required' => '8.4.0',
+            'required' => '8.2.0',
             'current'  => PHP_VERSION,
-            'pass'     => version_compare(PHP_VERSION, '8.4.0', '>='),
+            'pass'     => version_compare(PHP_VERSION, '8.2.0', '>='),
         ];
 
         // 2B. Required PHP Extensions
@@ -507,14 +519,34 @@ class InstallController extends Controller
      */
     private function checkBinaryAvailable(string $binary): ?bool
     {
+        // Check environment override first (e.g. FFMPEG_BINARIES, FFPROBE_BINARIES)
+        $envKey = strtoupper($binary) . '_BINARIES';
+        $envPath = env($envKey) ?: config("laravel-ffmpeg.{$binary}.binaries");
+        if (!empty($envPath) && file_exists($envPath)) {
+            return true;
+        }
+
         $disabledFunctions = array_map('trim', explode(',', ini_get('disable_functions') ?: ''));
         if (in_array('exec', $disabledFunctions)) {
             return null;
         }
 
-        $command = PHP_OS_FAMILY === 'Windows'
-            ? "where {$binary} 2>NUL"
-            : "which {$binary} 2>/dev/null";
+        if (PHP_OS_FAMILY === 'Windows') {
+            // Check common Windows installation directories
+            $commonWindowsPaths = [
+                "C:\\ffmpeg\\bin\\{$binary}.exe",
+                "C:\\Program Files\\ffmpeg\\bin\\{$binary}.exe",
+                "C:\\tools\\ffmpeg\\bin\\{$binary}.exe",
+            ];
+            foreach ($commonWindowsPaths as $path) {
+                if (file_exists($path)) {
+                    return true;
+                }
+            }
+            $command = "where {$binary} 2>NUL";
+        } else {
+            $command = "command -v {$binary} 2>/dev/null || which {$binary} 2>/dev/null";
+        }
 
         @exec($command, $output, $returnCode);
 

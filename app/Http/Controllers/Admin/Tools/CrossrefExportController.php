@@ -203,4 +203,128 @@ class CrossrefExportController extends Controller
 
         return back()->with('success', 'Selected items have been queued for Crossref deposit. The background worker will process them shortly.');
     }
+
+    // 5. Manual Sync / Check DOI Status (OJS 3.3 Status Polling)
+    public function syncStatus(Request $request, \App\Services\CrossrefDepositService $service)
+    {
+        $journal = current_journal();
+        $ids = $request->input('submission_ids', []);
+        $type = $request->input('type', 'article');
+
+        $username = $journal->getSetting('crossref_username');
+        $rawPassword = $journal->getSetting('crossref_password');
+        $password = '';
+        if ($rawPassword) {
+            try {
+                $password = decrypt($rawPassword);
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                $password = $rawPassword;
+            }
+        }
+        $depositorEmail = $journal->getSetting('crossref_depositor_email') ?? 'admin@iamjos.id';
+        $isTestMode = (bool) $journal->getSetting('crossref_test_mode');
+
+        $activatedCount = 0;
+        $failedCount = 0;
+        $pendingCount = 0;
+
+        if ($type === 'issue') {
+            $query = \App\Models\Issue::where('journal_id', $journal->id)
+                ->whereNotNull('doi');
+
+            if (!empty($ids)) {
+                $query->whereIn('id', $ids);
+            } else {
+                $query->where('doi_status', 'submitted');
+            }
+
+            $issues = $query->get();
+
+            if ($issues->isEmpty()) {
+                return back()->with('info', 'Tidak ada issue yang perlu diperiksa statusnya.');
+            }
+
+            foreach ($issues as $issue) {
+                $result = $service->checkDoiStatus(
+                    $issue->doi,
+                    $issue->crossref_batch_id,
+                    $username,
+                    $password,
+                    $depositorEmail,
+                    $isTestMode
+                );
+
+                if ($result['status'] === 'active') {
+                    $issue->update(['doi_status' => 'active']);
+                    $activatedCount++;
+                } elseif ($result['status'] === 'failed') {
+                    $issue->update(['doi_status' => 'failed']);
+                    \App\Models\CrossrefLog::create([
+                        'id' => (string) \Illuminate\Support\Str::uuid(),
+                        'journal_id' => $journal->id,
+                        'submission_id' => null,
+                        'status' => 'Failed',
+                        'crossref_batch_id' => $issue->crossref_batch_id,
+                        'message' => substr($result['message'], 0, 500),
+                    ]);
+                    $failedCount++;
+                } else {
+                    $pendingCount++;
+                }
+            }
+        } else {
+            $query = \App\Models\Submission::where('journal_id', $journal->id)
+                ->whereHas('currentPublication', function ($q) use ($ids) {
+                    $q->whereNotNull('doi');
+                    if (empty($ids)) {
+                        $q->where('doi_status', 'submitted');
+                    }
+                })
+                ->with(['currentPublication']);
+
+            if (!empty($ids)) {
+                $query->whereIn('id', $ids);
+            }
+
+            $submissions = $query->get();
+
+            if ($submissions->isEmpty()) {
+                return back()->with('info', 'Tidak ada artikel yang perlu diperiksa statusnya.');
+            }
+
+            foreach ($submissions as $sub) {
+                $pub = $sub->currentPublication;
+                if (!$pub || !$pub->doi) continue;
+
+                $result = $service->checkDoiStatus(
+                    $pub->doi,
+                    $pub->crossref_batch_id,
+                    $username,
+                    $password,
+                    $depositorEmail,
+                    $isTestMode
+                );
+
+                if ($result['status'] === 'active') {
+                    $pub->update(['doi_status' => 'active']);
+                    $activatedCount++;
+                } elseif ($result['status'] === 'failed') {
+                    $pub->update(['doi_status' => 'failed']);
+                    \App\Models\CrossrefLog::create([
+                        'id' => (string) \Illuminate\Support\Str::uuid(),
+                        'journal_id' => $journal->id,
+                        'submission_id' => $sub->id,
+                        'status' => 'Failed',
+                        'crossref_batch_id' => $pub->crossref_batch_id,
+                        'message' => substr('Crossref Error: ' . $result['message'], 0, 500),
+                    ]);
+                    $failedCount++;
+                } else {
+                    $pendingCount++;
+                }
+            }
+        }
+
+        return back()->with('success', "Status DOI berhasil diperiksa: {$activatedCount} aktif, {$failedCount} gagal, {$pendingCount} masih diproses.");
+    }
 }

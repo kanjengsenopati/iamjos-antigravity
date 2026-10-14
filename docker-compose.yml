@@ -1,0 +1,142 @@
+services:
+  # Nginx Reverse Proxy / Web Server
+  iamjos-web:
+    image: nginx:alpine
+    container_name: iamjos-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:80"
+    volumes:
+      - ./:/var/www:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - iamjos_storage:/var/www/storage:ro
+    depends_on:
+      - iamjos-app
+    networks:
+      - iamjos-network
+
+  # PHP-FPM Application Core
+  iamjos-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iamjos-app
+    restart: unless-stopped
+    environment:
+      APP_NAME: "${APP_NAME:-IamJOS}"
+      APP_ENV: "${APP_ENV:-production}"
+      APP_KEY: "${APP_KEY}"
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      APP_URL: "${APP_URL:-http://localhost}"
+      DB_CONNECTION: pgsql
+      DB_HOST: iamjos-db
+      DB_PORT: 5432
+      DB_DATABASE: "${DB_DATABASE:-iamjos}"
+      DB_USERNAME: "${DB_USERNAME:-iamjos}"
+      DB_PASSWORD: "${DB_PASSWORD:-secret}"
+      REDIS_HOST: iamjos-redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      RUN_MIGRATIONS: "${RUN_MIGRATIONS:-true}"
+    volumes:
+      - iamjos_storage:/var/www/storage
+    depends_on:
+      - iamjos-db
+      - iamjos-redis
+    networks:
+      - iamjos-network
+
+  # PostgreSQL Database
+  iamjos-db:
+    image: postgres:16-alpine
+    container_name: iamjos-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-iamjos}"
+      POSTGRES_USER: "${DB_USERNAME:-iamjos}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-secret}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - iamjos-network
+
+  # Redis Cache & Queue Broker
+  iamjos-redis:
+    image: redis:7-alpine
+    container_name: iamjos-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - iamjos-network
+
+  # Background Queue Worker
+  iamjos-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iamjos-worker
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    environment:
+      APP_ENV: "${APP_ENV:-production}"
+      APP_KEY: "${APP_KEY}"
+      DB_CONNECTION: pgsql
+      DB_HOST: iamjos-db
+      DB_PORT: 5432
+      DB_DATABASE: "${DB_DATABASE:-iamjos}"
+      DB_USERNAME: "${DB_USERNAME:-iamjos}"
+      DB_PASSWORD: "${DB_PASSWORD:-secret}"
+      REDIS_HOST: iamjos-redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+    volumes:
+      - iamjos_storage:/var/www/storage
+    depends_on:
+      - iamjos-app
+      - iamjos-db
+      - iamjos-redis
+    networks:
+      - iamjos-network
+
+  # Scheduled Tasks Runner
+  iamjos-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iamjos-scheduler
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"]
+    environment:
+      APP_ENV: "${APP_ENV:-production}"
+      APP_KEY: "${APP_KEY}"
+      DB_CONNECTION: pgsql
+      DB_HOST: iamjos-db
+      DB_PORT: 5432
+      DB_DATABASE: "${DB_DATABASE:-iamjos}"
+      DB_USERNAME: "${DB_USERNAME:-iamjos}"
+      DB_PASSWORD: "${DB_PASSWORD:-secret}"
+      REDIS_HOST: iamjos-redis
+      REDIS_PORT: 6379
+    volumes:
+      - iamjos_storage:/var/www/storage
+    depends_on:
+      - iamjos-app
+      - iamjos-db
+      - iamjos-redis
+    networks:
+      - iamjos-network
+
+networks:
+  iamjos-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  iamjos_storage:
+    driver: local
