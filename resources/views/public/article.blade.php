@@ -131,13 +131,16 @@
             if ($pubAbstract) {
                 $metaTags[] = '<meta name="citation_abstract" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars(trim(strip_tags($pubAbstract))) . '"/>';
             }
-            $structuredCitations = $article->currentPublication->structuredCitations ?? collect();
-            if ($structuredCitations->isNotEmpty()) {
-                foreach ($structuredCitations->take(50) as $cit) {
+            // citation_reference: PKP OJS GoogleScholarPlugin philosophy:
+            // Render 100% of references into <meta name="citation_reference">.
+            // Emit key-value format only when Title, Author, and Year exist; otherwise emit raw bibliographic text string.
+            $dbCitations = $submission->currentPublication?->citations ?? collect();
+            if ($dbCitations->isNotEmpty()) {
+                foreach ($dbCitations as $cit) {
                     $metaTags[] = '<meta name="citation_reference" content="' . htmlspecialchars($cit->toScholarMetaContent()) . '"/>';
                 }
-            } else {
-                foreach (array_slice($parsedRefs, 0, 50) as $ref) {
+            } elseif (!empty($parsedRefs)) {
+                foreach ($parsedRefs as $ref) {
                     $structuredRef = \App\Services\CitationService::parseReferenceToScholarMeta($ref);
                     $metaTags[] = '<meta name="citation_reference" content="' . htmlspecialchars($structuredRef) . '"/>';
                 }
@@ -353,7 +356,7 @@
     </article>
 
     <!-- Related Articles -->
-    @if ($relatedArticles->isNotEmpty())
+    @if (!empty($relatedArticles) && $relatedArticles->isNotEmpty())
         <section class="bg-gray-100 py-12">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 class="text-xl font-semibold text-gray-900 mb-6">{{ __('Related Articles') }}</h2>

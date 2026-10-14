@@ -15,6 +15,11 @@ class PublicationObserver
     public function created(Publication $publication): void
     {
         $this->checkCrossrefDeposit($publication);
+
+        // Process references into structured citations if created with published status
+        if ($publication->isPublished() && !empty(trim($publication->references ?? ''))) {
+            ProcessCitationsJob::dispatch($publication->id);
+        }
     }
 
     /**
@@ -32,6 +37,29 @@ class PublicationObserver
         if ($publication->wasChanged('references') || 
             ($publication->wasChanged('status') && $publication->isPublished())) {
             ProcessCitationsJob::dispatch($publication->id);
+        } elseif ($publication->wasChanged('status') && $publication->getOriginal('status') === Publication::STATUS_PUBLISHED) {
+            // Publication was unpublished: recalculate counts on all previously cited target submissions
+            $this->recalculateTargetSubmissions($publication);
+        }
+    }
+
+    /**
+     * Recalculate citation counts for all submissions cited by this publication.
+     */
+    protected function recalculateTargetSubmissions(Publication $publication): void
+    {
+        $targetIds = \App\Models\Citation::where('publication_id', $publication->id)
+            ->whereNotNull('target_submission_id')
+            ->pluck('target_submission_id')
+            ->unique()
+            ->toArray();
+
+        foreach ($targetIds as $tid) {
+            \App\Models\Submission::find($tid)?->recalculateCitationCount();
+        }
+
+        if ($publication->submission_id) {
+            \App\Models\Submission::find($publication->submission_id)?->recalculateCitationCount();
         }
     }
 
@@ -63,7 +91,8 @@ class PublicationObserver
      */
     public function deleted(Publication $publication): void
     {
-        //
+        $this->recalculateTargetSubmissions($publication);
+        \App\Models\Citation::where('publication_id', $publication->id)->delete();
     }
 
     /**

@@ -63,6 +63,8 @@ class Submission extends Model
         'published_at',
         'metadata',
         'references',
+        'citation_count',
+        'external_citation_count',
         'seq_id',
         'sort_order',
     ];
@@ -74,6 +76,8 @@ class Submission extends Model
         'submitted_at' => 'datetime',
         'accepted_at' => 'datetime',
         'published_at' => 'datetime',
+        'citation_count' => 'integer',
+        'external_citation_count' => 'integer',
         'metadata' => 'array', // JSONB to array
     ];
 
@@ -799,50 +803,118 @@ class Submission extends Model
     }
 
     /**
+     * Citations in other publications that target/cite this submission.
+     */
+    public function incomingCitations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Citation::class, 'target_submission_id');
+    }
+
+    /**
+     * Alias for incomingCitations.
+     */
+    public function citations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->incomingCitations();
+    }
+
+    /**
+     * Recalculate and update the internal citation_count for this submission.
+     */
+    public function recalculateCitationCount(): int
+    {
+        $count = Citation::where('target_submission_id', $this->id)
+            ->whereHas('publication', function ($q) {
+                $q->where('status', Publication::STATUS_PUBLISHED)
+                  ->whereHas('submission', function ($sq) {
+                      $sq->where('status', self::STATUS_PUBLISHED)
+                         ->where('id', '!=', $this->id);
+                  });
+            })
+            ->join('publications', 'citations.publication_id', '=', 'publications.id')
+            ->distinct('publications.submission_id')
+            ->count('publications.submission_id');
+
+        $this->update(['citation_count' => $count]);
+
+        return $count;
+    }
+
+    /**
      * Get other published submissions in IAMJOS that cite this submission.
      *
-     * Fixes applied:
-     *  - Guard clause: return empty collection if both title and DOI are missing.
-     *  - DB driver detection: use 'ilike' for PostgreSQL, 'like' for MySQL/SQLite.
-     *  - Correct OR logic: build conditions only for non-empty identifiers to
-     *    prevent an empty subquery that returns no rows.
+     * Queries structured Citation records linking to this submission (target_submission_id)
+     * combined with case-insensitive raw reference fallback, ensuring complete coverage.
      */
     public function getCitingSubmissions()
     {
+        $citingSubmissions = collect();
+
+        // 1. Structured citations linked via target_submission_id
+        $structuredCitations = Citation::where('target_submission_id', $this->id)
+            ->whereHas('publication', function ($q) {
+                $q->where('status', Publication::STATUS_PUBLISHED)
+                  ->whereHas('submission', fn($sq) => $sq->where('status', self::STATUS_PUBLISHED));
+            })
+            ->with([
+                'publication.submission.currentPublication.authors',
+                'publication.submission.journal',
+                'publication.submission.issue'
+            ])
+            ->get();
+
+        foreach ($structuredCitations as $cit) {
+            $citingSub = $cit->publication?->submission;
+            if ($citingSub && $citingSub->id !== $this->id && $citingSub->status === self::STATUS_PUBLISHED) {
+                $citingSubmissions->put($citingSub->id, $citingSub);
+            }
+        }
+
+        // 2. Case-insensitive fallback using raw references text matching
         $title = $this->currentPublication->title ?? $this->title ?? null;
         $doi   = $this->currentPublication->doi   ?? $this->doi   ?? null;
 
-        // Nothing to search by — return empty collection immediately.
-        if (empty($title) && empty($doi)) {
-            return collect();
+        $hasTitle = !empty($title) && mb_strlen(trim($title)) > 8;
+        $hasDoi   = !empty($doi);
+
+        if ($hasTitle || $hasDoi) {
+            $likeOp = (strtolower(\Illuminate\Support\Facades\DB::connection()->getDriverName()) === 'pgsql')
+                ? 'ilike'
+                : 'like';
+
+            $fallbackQuery = static::where('id', '!=', $this->id)
+                ->where('status', self::STATUS_PUBLISHED);
+
+            if ($citingSubmissions->isNotEmpty()) {
+                $fallbackQuery->whereNotIn('id', $citingSubmissions->keys());
+            }
+
+            $fallbackQuery->whereHas('currentPublication', function ($q) use ($title, $doi, $likeOp, $hasTitle, $hasDoi) {
+                $q->where(function ($subQ) use ($title, $doi, $likeOp, $hasTitle, $hasDoi) {
+                    if ($hasTitle) {
+                        $subQ->where('references', $likeOp, '%' . $title . '%');
+                    }
+
+                    if ($hasDoi) {
+                        $cleanDoi = preg_replace('/^https?:\/\/(?:dx\.)?doi\.org\//i', '', trim($doi));
+                        $method = $hasTitle ? 'orWhere' : 'where';
+                        $subQ->{$method}('references', $likeOp, '%' . $cleanDoi . '%');
+                    }
+                });
+            });
+
+            $fallbackSubmissions = $fallbackQuery->with([
+                'currentPublication.authors',
+                'journal',
+                'issue'
+            ])->get();
+
+            foreach ($fallbackSubmissions as $sub) {
+                $citingSubmissions->put($sub->id, $sub);
+            }
         }
 
-        // Use the correct LIKE operator based on the active DB driver.
-        // PostgreSQL supports 'ilike' (case-insensitive); others use 'like'.
-        $likeOp = (strtolower(\Illuminate\Support\Facades\DB::connection()->getDriverName()) === 'pgsql')
-            ? 'ilike'
-            : 'like';
-
-        $query = static::where('id', '!=', $this->id)
-            ->where('status', 'published');
-
-        $query->whereHas('currentPublication', function ($q) use ($title, $doi, $likeOp) {
-            $q->where(function ($subQ) use ($title, $doi, $likeOp) {
-                $hasCondition = false;
-
-                if (!empty($title)) {
-                    $subQ->where('references', $likeOp, '%' . $title . '%');
-                    $hasCondition = true;
-                }
-
-                if (!empty($doi)) {
-                    $method = $hasCondition ? 'orWhere' : 'where';
-                    $subQ->{$method}('references', $likeOp, '%' . $doi . '%');
-                }
-            });
-        });
-
-        return $query->with(['currentPublication.authors', 'journal', 'issue'])->get();
+        return $citingSubmissions->values();
     }
 }
 

@@ -178,15 +178,16 @@
     if ($pubAbstract) {
         $metaTags[] = '<meta name="citation_abstract" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars(trim(strip_tags($pubAbstract))) . '"/>';
     }
-    // citation_reference: prefer structured citations from DB (high precision),
-    // fallback to runtime parser if citations haven't been processed yet.
-    $structuredCitations = $article->currentPublication->structuredCitations ?? collect();
-    if ($structuredCitations->isNotEmpty()) {
-        foreach ($structuredCitations->take(50) as $cit) {
+    // citation_reference: PKP OJS GoogleScholarPlugin philosophy:
+    // Render 100% of references into <meta name="citation_reference">.
+    // Emit key-value format only when Title, Author, and Year exist; otherwise emit raw bibliographic text string.
+    $dbCitations = $article->currentPublication?->citations ?? collect();
+    if ($dbCitations->isNotEmpty()) {
+        foreach ($dbCitations as $cit) {
             $metaTags[] = '<meta name="citation_reference" content="' . htmlspecialchars($cit->toScholarMetaContent()) . '"/>';
         }
-    } else {
-        foreach (array_slice($parsedRefs, 0, 50) as $ref) {
+    } elseif (!empty($parsedRefs)) {
+        foreach ($parsedRefs as $ref) {
             $structuredRef = \App\Services\CitationService::parseReferenceToScholarMeta($ref);
             $metaTags[] = '<meta name="citation_reference" content="' . htmlspecialchars($structuredRef) . '"/>';
         }

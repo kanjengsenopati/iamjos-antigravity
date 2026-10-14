@@ -400,11 +400,28 @@ class IssueController extends Controller
             }
 
             // Also publish all assigned submissions and log activity
+            $now = now();
             foreach ($issue->submissions as $sub) {
                 $sub->update([
                     'status' => Submission::STATUS_PUBLISHED,
-                    'published_at' => now(),
+                    'published_at' => $now,
                 ]);
+
+                // Update currentPublication so PublicationObserver triggers ProcessCitationsJob and Crossref deposit
+                $pub = $sub->currentPublication ?? $sub->getOrCreatePublication();
+                if ($pub) {
+                    $statusChanged = ($pub->status !== \App\Models\Publication::STATUS_PUBLISHED);
+                    $pub->update([
+                        'status' => \App\Models\Publication::STATUS_PUBLISHED,
+                        'date_published' => $pub->date_published ?? $now,
+                        'issue_id' => $pub->issue_id ?? $issue->id,
+                    ]);
+
+                    if (!$statusChanged && !empty(trim($pub->references ?? ''))) {
+                        \App\Jobs\ProcessCitationsJob::dispatch($pub->id);
+                    }
+                }
+
                 SubmissionLog::log(
                     submission: $sub,
                     eventType: SubmissionLog::EVENT_PUBLISHED,
@@ -526,6 +543,14 @@ class IssueController extends Controller
                 'status' => Submission::STATUS_ACCEPTED,
                 'published_at' => null,
             ]);
+
+            if ($sub->currentPublication) {
+                $sub->currentPublication->update([
+                    'status' => \App\Models\Publication::STATUS_UNPUBLISHED,
+                    'date_published' => null,
+                ]);
+            }
+
             SubmissionLog::log(
                 submission: $sub,
                 eventType: SubmissionLog::EVENT_UNPUBLISHED,

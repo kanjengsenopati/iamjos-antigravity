@@ -22,6 +22,8 @@ class Citation extends Model
 
     protected $fillable = [
         'publication_id',
+        'target_submission_id',
+        'matched_by',
         'seq',
         'raw_citation',
         'doi',
@@ -57,6 +59,14 @@ class Citation extends Model
         return $this->belongsTo(Publication::class, 'publication_id');
     }
 
+    /**
+     * The internal submission this citation points to (if matched).
+     */
+    public function targetSubmission(): BelongsTo
+    {
+        return $this->belongsTo(Submission::class, 'target_submission_id');
+    }
+
     // =====================================================
     // ACCESSORS
     // =====================================================
@@ -65,26 +75,26 @@ class Citation extends Model
      * Generate a Google Scholar-compatible citation_reference key=value string
      * from the structured fields stored in this model.
      *
-     * Falls back to raw_citation if not enough structured data is available.
+     * In accordance with PKP OJS GoogleScholarPlugin:
+     * Emit key-value format only when Title, Author, and Year exist;
+     * otherwise emit the raw bibliographic text string.
      */
     public function toScholarMetaContent(): string
     {
+        if (empty($this->title) || empty($this->authors) || empty($this->year)) {
+            return $this->raw_citation ?? '';
+        }
+
         $fields = [];
 
         if ($this->doi) {
             $fields[] = 'citation_doi=' . $this->doi;
         }
-        if ($this->title) {
-            $fields[] = 'citation_title=' . $this->title;
+        $fields[] = 'citation_title=' . $this->title;
+        foreach ($this->authors as $author) {
+            $fields[] = 'citation_author=' . $author;
         }
-        if (!empty($this->authors)) {
-            foreach ($this->authors as $author) {
-                $fields[] = 'citation_author=' . $author;
-            }
-        }
-        if ($this->year) {
-            $fields[] = 'citation_publication_date=' . $this->year;
-        }
+        $fields[] = 'citation_publication_date=' . $this->year;
         if ($this->source) {
             $fields[] = 'citation_journal_title=' . $this->source;
         }
@@ -99,11 +109,6 @@ class Citation extends Model
         }
         if ($this->last_page) {
             $fields[] = 'citation_lastpage=' . $this->last_page;
-        }
-
-        // Fallback: if less than 2 structured fields, return raw text
-        if (count($fields) < 2) {
-            return $this->raw_citation;
         }
 
         return implode('; ', $fields) . ';';
