@@ -129,16 +129,18 @@
             animation: neon-pulse 4s ease-in-out infinite;
         }
 
-        /* Anime Button Glow */
+        /* Clean Solid Anime Button (No Gradient) */
         .btn-anime-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
-            background-size: 200% 200%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #2563eb;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-anime-primary:hover {
-            background-position: right center;
-            box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), 0 10px 20px -5px rgba(236, 72, 153, 0.4);
+            background-color: #1d4ed8;
+            box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.5);
             transform: translateY(-2px);
+        }
+        .btn-anime-primary:active {
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -312,7 +314,7 @@
                 <span>Halaman Sebelumnya</span>
             </button>
 
-            <a href="http://localhost:8000" 
+            <a href="/" 
                class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 hover:text-white font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02]">
                 <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

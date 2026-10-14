@@ -10,10 +10,10 @@
 
     $homeUrl = '/';
     try {
-        if ($journal && isset($journal->slug)) {
-            $homeUrl = route('journal.public.home', $journal->slug);
+        if ($journal && isset($journal->slug) && !empty($journal->slug)) {
+            $homeUrl = '/' . ltrim($journal->slug, '/');
         } else {
-            $homeUrl = url('/');
+            $homeUrl = '/';
         }
     } catch (\Throwable $e) {
         $homeUrl = '/';
@@ -152,16 +152,18 @@
             animation: neon-pulse 4s ease-in-out infinite;
         }
 
-        /* Anime Button Glow */
+        /* Clean Solid Anime Button (No Gradient) */
         .btn-anime-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
-            background-size: 200% 200%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #2563eb;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-anime-primary:hover {
-            background-position: right center;
-            box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), 0 10px 20px -5px rgba(236, 72, 153, 0.4);
+            background-color: #1d4ed8;
+            box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.5);
             transform: translateY(-2px);
+        }
+        .btn-anime-primary:active {
+            transform: translateY(0);
         }
     </style>
 </head>
