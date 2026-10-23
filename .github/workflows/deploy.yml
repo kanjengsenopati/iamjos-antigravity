@@ -434,6 +434,10 @@ jobs:
             echo "🗄️ Menjalankan database migration..."
             $PHP_CMD artisan migrate --force --ansi
 
+            # Backfill dan proses seluruh riwayat sitasi
+            echo "Memproses ulang dan backfill riwayat sitasi..."
+            $PHP_CMD artisan citations:process --force --sync --ansi || true
+
             # Storage link
             $PHP_CMD artisan storage:link --ansi 2>/dev/null || true
 
@@ -692,6 +696,10 @@ jobs:
             # Jalankan database migration
             echo "🗄️ Menjalankan database migration..."
             $PHP_CMD artisan migrate --force --ansi
+
+            # Backfill dan proses seluruh riwayat sitasi
+            echo "Memproses ulang dan backfill riwayat sitasi..."
+            $PHP_CMD artisan citations:process --force --sync --ansi || true
 
             # Storage link
             $PHP_CMD artisan storage:link --ansi 2>/dev/null || true
