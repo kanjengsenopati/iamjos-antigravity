@@ -14,13 +14,14 @@ class CitationService
     {
         $year = $this->getYear($submission);
         $authors = $this->getAuthorsAPA($submission);
-        $journal = $submission->journal->name;
+        $journal = e($submission->journal->name);
         $volume = $submission->issue->volume ?? null;
         $number = $submission->issue->number ?? null;
         $pages = $submission->currentPublication->pages ?? $submission->pages;
         $doi = $submission->currentPublication->doi ?? $submission->doi;
+        $title = e($submission->currentPublication->title ?? $submission->title);
 
-        $citation = "{$authors} ({$year}). {$submission->title}. <em>{$journal}</em>";
+        $citation = "{$authors} ({$year}). {$title}. <em>{$journal}</em>";
         if ($volume) $citation .= ", {$volume}";
         if ($number) $citation .= "({$number})";
         if ($pages) $citation .= ", {$pages}";
@@ -56,9 +57,11 @@ class CitationService
      */
     protected function getAuthorsAPA(Submission $submission): string
     {
-        $authors = $submission->authors->map(function ($author) {
-            $last = Str::title(trim($author->last_name ?? ''));
-            $first = Str::title(trim($author->first_name ?? ''));
+        $pub = $submission->currentPublication;
+        $authorCollection = $pub?->authors ?? $submission->authors;
+        $authors = $authorCollection->map(function ($author) {
+            $last = trim($author->last_name ?? '');
+            $first = trim($author->first_name ?? '');
             return $last ? "{$last}, " . mb_substr($first, 0, 1) . "." : $first;
         });
 
@@ -71,7 +74,7 @@ class CitationService
     public function getAllFormats(Submission $submission): array
     {
         $year = $this->getYear($submission);
-        $journal = $submission->journal->name;
+        $journal = e($submission->journal->name);
         $issue = $submission->issue;
         $volume = $issue->volume ?? null;
         $number = $issue->number ?? null;
@@ -79,32 +82,38 @@ class CitationService
         $doi = $submission->currentPublication->doi ?? $submission->doi;
         $doiUrl = $doi ? "https://doi.org/{$doi}" : route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id]);
 
-        // Title case for consistent display
-        $titleCase = fn($s) => Str::title(trim($s));
+        // Use author names as-is from database (preserve intentional casing like "van der Berg")
+        $cleanName = fn($s) => trim($s);
+
+        // Title from currentPublication with fallback, HTML-escaped
+        $title = e($submission->currentPublication->title ?? $submission->title);
+
+        $pub = $submission->currentPublication;
+        $authorCollection = $pub?->authors ?? $submission->authors;
 
         // Full names for some formats
-        $authorsFull = $submission->authors->map(fn($a) => $titleCase($a->first_name . ' ' . $a->last_name))->implode(', ');
+        $authorsFull = $authorCollection->map(fn($a) => $cleanName($a->first_name . ' ' . $a->last_name))->implode(', ');
         
         // IEEE format: F. Last
-        $authorsIEEE = $submission->authors->map(function($a) use ($titleCase) {
-            $first = $titleCase($a->first_name);
-            $last = $titleCase($a->last_name);
+        $authorsIEEE = $authorCollection->map(function($a) use ($cleanName) {
+            $first = $cleanName($a->first_name);
+            $last = $cleanName($a->last_name);
             return ($first ? mb_substr($first, 0, 1) . '. ' : '') . $last;
         })->implode(', ');
 
         $authorsAPA = $this->getAuthorsAPA($submission);
 
         return [
-            'APA' => "{$authorsAPA} ({$year}). {$submission->title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ". {$doiUrl}",
-            'ACM' => "{$authorsFull}. {$year}. {$submission->title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? ", {$number}" : '') . ($pages ? ", {$pages}" : '') . ". DOI: {$doiUrl}",
-            'ACS' => "{$authorsFull}. {$submission->title}. <em>{$journal}</em> {$year}" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ". {$doiUrl}",
-            'ABNT' => mb_strtoupper($authorsFull) . ". {$submission->title}. {$journal}, {$year}." . ($volume ? " v. {$volume}" : '') . ($number ? ", n. {$number}" : '') . ($pages ? ", p. {$pages}" : '') . ". Disponível em: {$doiUrl}",
-            'Chicago' => "{$authorsFull}. {$year}. \"{$submission->title}.\" <em>{$journal}</em>" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ": {$pages}" : '') . ". {$doiUrl}",
-            'Harvard' => "{$authorsFull} ({$year}) '{$submission->title}', <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . ". Available at: {$doiUrl}",
-            'IEEE' => "{$authorsIEEE}, \"{$submission->title},\" <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . ", {$year}. {$doiUrl}",
-            'MLA' => "{$authorsFull}. \"{$submission->title}.\" <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ", {$year}" . ($pages ? ", pp. {$pages}" : '') . ". {$doiUrl}",
-            'Turabian' => "{$authorsFull}. \"{$submission->title}.\" {$journal}" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . " ({$year})" . ($pages ? ": {$pages}" : '') . ". {$doiUrl}",
-            'Vancouver' => "{$authorsIEEE}. {$submission->title}. {$journal}. {$year}" . ($volume ? ";{$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ":{$pages}" : '') . ". {$doiUrl}",
+            'APA' => "{$authorsAPA} ({$year}). {$title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ". {$doiUrl}",
+            'ACM' => "{$authorsFull}. {$year}. {$title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? ", {$number}" : '') . ($pages ? ", {$pages}" : '') . ". DOI: {$doiUrl}",
+            'ACS' => "{$authorsFull}. {$title}. <em>{$journal}</em> {$year}" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ". {$doiUrl}",
+            'ABNT' => mb_strtoupper($authorsFull) . ". {$title}. {$journal}, {$year}." . ($volume ? " v. {$volume}" : '') . ($number ? ", n. {$number}" : '') . ($pages ? ", p. {$pages}" : '') . ". Disponível em: {$doiUrl}",
+            'Chicago' => "{$authorsFull}. {$year}. \"{$title}.\" <em>{$journal}</em>" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ": {$pages}" : '') . ". {$doiUrl}",
+            'Harvard' => "{$authorsFull} ({$year}) '{$title}', <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . ". Available at: {$doiUrl}",
+            'IEEE' => "{$authorsIEEE}, \"{$title},\" <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . ", {$year}. {$doiUrl}",
+            'MLA' => "{$authorsFull}. \"{$title}.\" <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ", {$year}" . ($pages ? ", pp. {$pages}" : '') . ". {$doiUrl}",
+            'Turabian' => "{$authorsFull}. \"{$title}.\" {$journal}" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . " ({$year})" . ($pages ? ": {$pages}" : '') . ". {$doiUrl}",
+            'Vancouver' => "{$authorsIEEE}. {$title}. {$journal}. {$year}" . ($volume ? ";{$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ":{$pages}" : '') . ". {$doiUrl}",
         ];
     }
 
@@ -124,7 +133,7 @@ class CitationService
         $ctx['ctx_ver'] = 'Z39.88-2004';
         $ctx['rft_val_fmt'] = 'info:ofi/fmt:kev:mtx:journal';
         $ctx['rft.type'] = 'article';
-        $ctx['rft.title'] = $submission->title;
+        $ctx['rft.title'] = $submission->currentPublication->title ?? $submission->title;
         $ctx['rft.jtitle'] = $journal->name;
         if ($submission->journal->issn_online) {
             $ctx['rft.issn'] = $submission->journal->issn_online;
@@ -148,7 +157,7 @@ class CitationService
             $ctx['rft_id'] = route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id]);
         }
 
-        foreach ($submission->authors as $author) {
+        foreach ($submission->currentPublication?->authors ?? $submission->authors as $author) {
             $name = trim(($author->family_name ?? $author->last_name ?? '') . ', ' . ($author->given_name ?? $author->first_name ?? ''));
             if ($name !== ',') {
                 $ctx['rft.au'][] = $name;
@@ -163,74 +172,12 @@ class CitationService
     }
 
     /**
-     * Parse a plain-text reference string into a Google Scholar-compatible
-     * citation_reference key=value meta content string.
-     *
-     * Priority order:
-     *   1. citation_doi        — highest-fidelity match for Scholar & CrossRef
-     *   2. citation_title      — fuzzy match fallback
-     *   3. citation_author     — disambiguation
-     *   4. citation_publication_date — year
-     *   5. citation_volume / citation_issue / citation_firstpage / citation_lastpage
-     *
-     * If parsing yields fewer than 2 structured fields, the raw text is returned
-     * unchanged (safe fallback — no regression).
-     *
-     * @param  string $rawRef  A single reference line (APA or similar format)
-     * @return string          key=value string OR original plain text as fallback
+     * @deprecated Use CitationParserService::toScholarMeta() instead.
+     * Kept as proxy for backwards compatibility.
      */
     public static function parseReferenceToScholarMeta(string $rawRef): string
     {
-        $rawRef = trim($rawRef);
-        if (empty($rawRef)) {
-            return '';
-        }
-
-        $parsed = CitationParserService::parse($rawRef);
-
-        // Safety fallback: require at least Title and Year before returning key-value pairs;
-        // otherwise return the raw reference string so volume/issue/pages alone are not emitted as a broken tag.
-        if (empty($parsed['title']) || empty($parsed['year'])) {
-            return $rawRef;
-        }
-
-        $fields = [];
-
-        if (!empty($parsed['doi'])) {
-            $fields[] = 'citation_doi=' . $parsed['doi'];
-        }
-
-        $fields[] = 'citation_title=' . $parsed['title'];
-
-        if (!empty($parsed['authors'])) {
-            foreach ($parsed['authors'] as $author) {
-                $fields[] = 'citation_author=' . $author;
-            }
-        }
-
-        $fields[] = 'citation_publication_date=' . $parsed['year'];
-
-        if (!empty($parsed['source'])) {
-            $fields[] = 'citation_journal_title=' . $parsed['source'];
-        }
-
-        if (!empty($parsed['volume'])) {
-            $fields[] = 'citation_volume=' . $parsed['volume'];
-        }
-
-        if (!empty($parsed['issue'])) {
-            $fields[] = 'citation_issue=' . $parsed['issue'];
-        }
-
-        if (!empty($parsed['first_page'])) {
-            $fields[] = 'citation_firstpage=' . $parsed['first_page'];
-        }
-
-        if (!empty($parsed['last_page'])) {
-            $fields[] = 'citation_lastpage=' . $parsed['last_page'];
-        }
-
-        return implode('; ', $fields) . ';';
+        return \App\Services\CitationParserService::toScholarMeta($rawRef);
     }
 }
 

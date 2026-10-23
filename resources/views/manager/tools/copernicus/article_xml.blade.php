@@ -63,10 +63,14 @@
       }
 
       // References
-      $referencesStr   = $pub?->references ?? $article->references ?? '';
-      $referencesArray = $referencesStr
-        ? array_values(array_filter(array_map('trim', explode("\n", $referencesStr))))
-        : [];
+      $citationRecords = $pub?->citations ?? collect();
+      $useCitTable     = $citationRecords->isNotEmpty();
+      if (!$useCitTable) {
+          $referencesStr   = $pub?->references ?? $article->references ?? '';
+          $referencesArray = $referencesStr
+            ? array_values(array_filter(array_map('trim', explode("\n", $referencesStr))))
+            : [];
+      }
 
       // Issue attrs
       $issueNumber = $article->issue?->number ?? '';
@@ -114,13 +118,23 @@
         @endforeach
       </authors>
       <references>
-        @foreach($referencesArray as $refIndex => $reference)
-          <reference>
-            <unparsedContent>{!! $e($reference) !!}</unparsedContent>
-            <order>{{ $refIndex + 1 }}</order>
-            <doi/>
-          </reference>
-        @endforeach
+        @if ($useCitTable)
+          @foreach($citationRecords as $cit)
+            <reference>
+              <unparsedContent>{!! $e($cit->raw_citation) !!}</unparsedContent>
+              <order>{{ $cit->seq }}</order>
+              <doi>{{ $cit->doi ?? '' }}</doi>
+            </reference>
+          @endforeach
+        @else
+          @foreach($referencesArray as $refIndex => $reference)
+            <reference>
+              <unparsedContent>{!! $e($reference) !!}</unparsedContent>
+              <order>{{ $refIndex + 1 }}</order>
+              <doi/>
+            </reference>
+          @endforeach
+        @endif
       </references>
     </article>
     </issue>

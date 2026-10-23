@@ -53,11 +53,25 @@ class GoogleScholarValidator
 
         // 5. References Check
         // Weight: 10
-        // Use 'citations' first (if parsed), fallback to 'references' text
-        $references = $data->citations ?? $data->references;
+        // Use structured citations first (if parsed and non-empty),
+        // then fall back to raw references text.
+        // Note: $data->citations returns a Collection (never null), so ?? won't work.
+        // Must explicitly check isEmpty() before falling back.
+        $references = null;
 
-        if (empty($references)) {
-            $references = $submission->citations ?? $submission->references;
+        // 1. Try Publication citations (structured, from DB)
+        if ($data instanceof \App\Models\Publication && $data->citations->isNotEmpty()) {
+            $references = $data->citations;
+        }
+
+        // 2. Fallback: Publication raw references text
+        if (empty($references) && !empty($data->references)) {
+            $references = $data->references;
+        }
+
+        // 3. Fallback: Submission raw references text
+        if (empty($references) && !empty($submission->references)) {
+            $references = $submission->references;
         }
 
         $referencesCheck = $this->checkReferences($references);

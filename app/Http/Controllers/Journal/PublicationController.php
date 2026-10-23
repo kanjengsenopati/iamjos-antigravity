@@ -94,6 +94,11 @@ class PublicationController extends Controller
         
         $publication = $submission->getOrCreatePublication();
         $publication->update($validated);
+
+        // Sync back to submission for compatibility (mirrors updateTitleAbstract pattern)
+        $submission->update([
+            'references' => $validated['references'] ?? $submission->references,
+        ]);
         
         return back()->with('success', 'References updated successfully.');
     }

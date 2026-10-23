@@ -105,6 +105,15 @@ class CitationParserService
         elseif (preg_match('/\b(19\d{2}|20\d{2})\b/', $cleanRef, $m)) {
             $year = (int) $m[1];
         }
+        // IEEE/Vancouver fallback: year at end of citation without parentheses
+        // e.g., "... pp. 12-20, 2023." or "... 2023;10(2):45-50."
+        if (!$year && preg_match('/(?:,\s*|\.\s+|;\s*)(\d{4})(?:\s*[.;]?\s*$)/', $rawRef, $m)) {
+            $year = (int) $m[1];
+            if ($year >= 1800 && $year <= 2100) {
+                $result['year'] = $year;
+                $fieldsFound++;
+            }
+        }
 
         if ($year && $year >= 1800 && $year <= 2100) {
             $result['year'] = $year;
@@ -332,5 +341,63 @@ class CitationParserService
         }
 
         return $results;
+    }
+
+    /**
+     * Convert a parsed citation array into a Google Scholar-compatible
+     * citation_reference key=value meta content string.
+     *
+     * Replaces the duplicated logic that was in CitationService::parseReferenceToScholarMeta().
+     *
+     * @param  string $rawRef  A single reference line
+     * @return string          key=value string OR original plain text as fallback
+     */
+    public static function toScholarMeta(string $rawRef): string
+    {
+        $rawRef = trim($rawRef);
+        if (empty($rawRef)) {
+            return '';
+        }
+
+        $parsed = self::parse($rawRef);
+        $fields = [];
+
+        if ($parsed['doi']) {
+            $fields[] = 'citation_doi=' . $parsed['doi'];
+        }
+        if ($parsed['title']) {
+            $fields[] = 'citation_title=' . $parsed['title'];
+        }
+        if (!empty($parsed['authors'])) {
+            foreach ($parsed['authors'] as $author) {
+                $fields[] = 'citation_author=' . $author;
+            }
+        }
+        if ($parsed['year']) {
+            $fields[] = 'citation_publication_date=' . $parsed['year'];
+        }
+        if ($parsed['source']) {
+            $fields[] = 'citation_journal_title=' . $parsed['source'];
+        }
+        if ($parsed['volume']) {
+            $fields[] = 'citation_volume=' . $parsed['volume'];
+        }
+        if ($parsed['issue']) {
+            $fields[] = 'citation_issue=' . $parsed['issue'];
+        }
+        if ($parsed['first_page']) {
+            $fields[] = 'citation_firstpage=' . $parsed['first_page'];
+        }
+        if ($parsed['last_page']) {
+            $fields[] = 'citation_lastpage=' . $parsed['last_page'];
+        }
+
+        // Fallback: if less than 2 structured fields, return raw text
+        // so Scholar can still attempt its own NLP parsing (no regression).
+        if (count($fields) < 2) {
+            return $rawRef;
+        }
+
+        return implode('; ', $fields) . ';';
     }
 }

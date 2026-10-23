@@ -283,8 +283,19 @@ class JatsXmlService
     private function buildBack(Submission $submission): ?DOMElement
     {
         $pub  = $submission->currentPublication;
-        $refs = $pub?->references ?? null;
 
+        // Prefer structured citations from DB; fallback to raw references string
+        $citations = $pub?->citations ?? collect();
+
+        if ($citations->isNotEmpty()) {
+            $back    = $this->dom->createElement('back');
+            $refList = $this->buildRefListFromCitations($citations);
+            $back->appendChild($refList);
+            return $back;
+        }
+
+        // Fallback: parse raw references text
+        $refs = $pub?->references ?? null;
         if (empty($refs)) {
             return null;
         }
@@ -293,6 +304,33 @@ class JatsXmlService
         $refList = $this->buildRefList($refs);
         $back->appendChild($refList);
         return $back;
+    }
+
+    /**
+     * Build <ref-list> from structured Citation model records.
+     */
+    private function buildRefListFromCitations(\Illuminate\Support\Collection $citations): \DOMElement
+    {
+        $refList = $this->dom->createElement('ref-list');
+
+        foreach ($citations as $cit) {
+            $ref = $this->dom->createElement('ref');
+            $ref->setAttribute('id', "ref-{$cit->seq}");
+
+            $mixedCitation = $this->dom->createElement('mixed-citation');
+            $mixedCitation->appendChild($this->dom->createTextNode($cit->raw_citation));
+
+            if ($cit->doi) {
+                $pubId = $this->dom->createElement('pub-id', $this->esc($cit->doi));
+                $pubId->setAttribute('pub-id-type', 'doi');
+                $mixedCitation->appendChild($pubId);
+            }
+
+            $ref->appendChild($mixedCitation);
+            $refList->appendChild($ref);
+        }
+
+        return $refList;
     }
 
     private function buildRefList(string $references): DOMElement

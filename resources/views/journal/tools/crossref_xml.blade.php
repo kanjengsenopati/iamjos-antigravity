@@ -256,14 +256,28 @@
             @endif
 
             {{-- CITATION LIST --}}
-            {{-- Key format: key-{doi}-{index} for uniqueness across deposits --}}
-            {{-- Structured citations preferred; DOI extracted when present --}}
             @php
-              $parsedRefs = $pub->parsed_references ?? [];
               $doiForKey  = $doi ?? $batchId;
+              // Prefer structured citations from DB; fallback to raw references text
+              $citationRecords = $pub->citations ?? collect();
+              $useCitationTable = $citationRecords->isNotEmpty();
+              $parsedRefs = $useCitationTable ? [] : ($pub->parsed_references ?? []);
             @endphp
-            @if (count($parsedRefs) > 0)
+            @if ($useCitationTable || count($parsedRefs) > 0)
               <citation_list>
+                @if ($useCitationTable)
+                  @foreach ($citationRecords as $cit)
+                    @php
+                      $citationKey = 'key-' . preg_replace('/[^a-zA-Z0-9\-]/', '-', $doiForKey) . '-' . $cit->seq;
+                    @endphp
+                    <citation key="{{ $citationKey }}">
+                      @if ($cit->doi)
+                        <doi>{{ $cit->doi }}</doi>
+                      @endif
+                      <unstructured_citation>{!! $escape(strip_tags($cit->raw_citation)) !!}</unstructured_citation>
+                    </citation>
+                  @endforeach
+                @else
                 @foreach ($parsedRefs as $index => $ref)
                   @php
                     $refText    = trim($ref);
@@ -283,6 +297,7 @@
                     </citation>
                   @endif
                 @endforeach
+                @endif
               </citation_list>
             @endif
 

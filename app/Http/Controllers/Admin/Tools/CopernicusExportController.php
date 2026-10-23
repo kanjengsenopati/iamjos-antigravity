@@ -24,7 +24,7 @@ class CopernicusExportController extends Controller
         // Fetch published submissions for the articles tab
         $submissions = Submission::where('journal_id', $journal->id)
             ->where('status', Submission::STATUS_PUBLISHED)
-            ->with(['authors', 'issue', 'section', 'currentPublication', 'galleys'])
+            ->with(['authors', 'issue', 'section', 'currentPublication.citations', 'currentPublication', 'galleys'])
             ->latest('published_at')
             ->get();
 
@@ -62,7 +62,7 @@ class CopernicusExportController extends Controller
 
         $submissions = Submission::whereIn('id', $ids)
             ->where('journal_id', $journal->id)
-            ->with(['authors', 'issue', 'section', 'currentPublication', 'galleys'])
+            ->with(['authors', 'issue', 'section', 'currentPublication.citations', 'currentPublication', 'galleys'])
             ->get();
 
         if ($submissions->isEmpty()) {

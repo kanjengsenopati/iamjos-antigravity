@@ -244,7 +244,7 @@ class Publication extends Model
         $newVersion->version = $this->version + 1;
         $newVersion->status = self::STATUS_QUEUED;
         $newVersion->date_published = null;
-        $newVersion->save();
+        $newVersion->save(); // Fires 'created' event → Observer dispatches ProcessCitationsJob if references non-empty
 
         // Copy authors
         foreach ($this->authors as $author) {
@@ -252,6 +252,10 @@ class Publication extends Model
             $newAuthor->publication_id = $newVersion->id;
             $newAuthor->save();
         }
+
+        // Note: citations are NOT manually copied — they will be re-processed
+        // by ProcessCitationsJob dispatched from PublicationObserver::created()
+        // since $newVersion->references is copied via replicate().
 
         return $newVersion;
     }

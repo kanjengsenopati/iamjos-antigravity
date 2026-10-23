@@ -368,6 +368,7 @@ class PublicController extends Controller
             'galleys' => function ($q) {
                 $q->ordered();
             },
+            'currentPublication.citations',
             'currentPublication',
         ]);
 

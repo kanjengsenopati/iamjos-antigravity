@@ -16,8 +16,9 @@ class PublicationObserver
     {
         $this->checkCrossrefDeposit($publication);
 
-        // Process references into structured citations if created with published status
-        if ($publication->isPublished() && !empty(trim($publication->references ?? ''))) {
+        // Process citations if the new publication already has references
+        // (e.g., copied from Submission via getOrCreatePublication, or from createNewVersion)
+        if (!empty(trim($publication->references ?? ''))) {
             ProcessCitationsJob::dispatch($publication->id);
         }
     }

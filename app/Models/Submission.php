@@ -415,6 +415,7 @@ class Submission extends Model
                 'subtitle' => $this->subtitle,
                 'abstract' => $this->abstract,
                 'keywords' => $this->keywords_string,
+                'references' => $this->references,
             ]);
 
             // Link authors from submission to publication (update, not clone)

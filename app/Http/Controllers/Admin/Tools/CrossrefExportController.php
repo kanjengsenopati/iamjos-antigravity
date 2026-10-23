@@ -138,7 +138,7 @@ class CrossrefExportController extends Controller
         } else {
             $submissions = \App\Models\Submission::whereIn('id', $ids)
                 ->where('journal_id', $journal->id)
-                ->with(['authors', 'issue', 'currentPublication', 'galleys.file'])
+                ->with(['authors', 'issue', 'currentPublication.citations', 'currentPublication', 'galleys.file'])
                 ->get();
             $content = view('journal.tools.crossref_xml', compact('submissions', 'journal', 'batchId'))->render();
         }

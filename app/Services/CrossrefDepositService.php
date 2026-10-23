@@ -49,7 +49,7 @@ class CrossrefDepositService
 
         $submissions = Submission::whereIn('id', (array) $submissionIds)
             ->where('journal_id', $journal->id)
-            ->with(['authors', 'issue', 'currentPublication.authors', 'galleys.file'])
+            ->with(['authors', 'issue', 'currentPublication.authors', 'currentPublication.citations', 'galleys.file'])
             ->get();
 
         if ($submissions->isEmpty()) {
