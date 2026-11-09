@@ -34,3 +34,98 @@
 .prose ul { list-style-type: disc;    margin: 1em 0; padding-left: 1.5em; }
 .prose li { margin-bottom: .5em; }
 .prose ol li, .prose ul li { list-style-type: inherit; }
+
+/* ==========================================================================
+   SIMPATI-INSPIRED PREMIUM UI UTILITY CLASSES (TRIAL FOR IAMJOS.ID)
+   ========================================================================== */
+
+/* 1. Tri-Color Gradient Primary Button */
+.btn-gradient {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-image: linear-gradient(to right, #6366f1, #8b5cf6, #06b6d4);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.25), 0 4px 6px -4px rgba(99, 102, 241, 0.15);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+.btn-gradient:hover {
+    filter: brightness(110%);
+    box-shadow: 0 14px 20px -3px rgba(99, 102, 241, 0.40);
+    transform: translateY(-1px);
+}
+.btn-gradient:active {
+    transform: scale(0.98);
+}
+
+/* 2. Glassmorphic Ghost Button */
+.btn-ghost-glass {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.btn-ghost-glass:hover {
+    background-color: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+.btn-ghost-glass:active {
+    transform: scale(0.98);
+}
+
+/* 3. 24px Container Card Surface */
+.card-24 {
+    border-radius: 24px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.card-24-hover:hover {
+    transform: translateY(-3px);
+}
+
+/* 4. Glow-Border (1px Masked Gradient Border) */
+.glow-border {
+    position: relative;
+    border-radius: 24px;
+}
+.glow-border::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(140deg, rgba(129, 140, 248, 0.8), rgba(192, 132, 252, 0.25) 40%, rgba(34, 211, 238, 0.75));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) border-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* 5. Animated Shimmer Text Gradient */
+.text-gradient-shimmer {
+    background: linear-gradient(100deg, #a5b4fc 0%, #c084fc 35%, #22d3ee 70%, #a5b4fc 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine-text 4s linear infinite;
+}
+@keyframes shine-text {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}

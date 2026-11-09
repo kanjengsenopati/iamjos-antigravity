@@ -217,30 +217,30 @@ jobs:
     needs: build
     if: github.event_name == 'push'
 
-    # Environment GitHub — 'production' memerlukan approval manual
+    # Environment GitHub — Deploy eksklusif HANYA ke iamjos.id untuk ujicoba UI refinement
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || github.ref_name == 'staging' && 'staging' || 'development' }}
-      url: ${{ github.ref_name == 'main' && 'https://ejournal.apdesyi.or.id' || github.ref_name == 'staging' && 'https://staging.ejournal.apdesyi.or.id' || 'https://dev.ejournal.apdesyi.or.id' }}
+      url: https://iamjos.id
 
     steps:
-      - name: Tentukan variabel deployment berdasarkan branch
+      - name: Tentukan variabel deployment berdasarkan branch (Khusus iamjos.id)
         id: set-env
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "TARGET_PATH=${{ secrets.PROD_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=main" >> $GITHUB_ENV
-            echo "APP_URL=https://ejournal.apdesyi.or.id" >> $GITHUB_ENV
-            echo "ENV_LABEL=PRODUCTION" >> $GITHUB_ENV
+            echo "APP_URL=https://iamjos.id" >> $GITHUB_ENV
+            echo "ENV_LABEL=PRODUCTION (iamjos.id)" >> $GITHUB_ENV
           elif [ "${{ github.ref_name }}" = "staging" ]; then
             echo "TARGET_PATH=${{ secrets.STAGING_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=staging" >> $GITHUB_ENV
-            echo "APP_URL=https://staging.ejournal.apdesyi.or.id" >> $GITHUB_ENV
-            echo "ENV_LABEL=STAGING" >> $GITHUB_ENV
+            echo "APP_URL=https://iamjos.id" >> $GITHUB_ENV
+            echo "ENV_LABEL=STAGING (iamjos.id)" >> $GITHUB_ENV
           else
             echo "TARGET_PATH=${{ secrets.DEV_PATH }}" >> $GITHUB_ENV
             echo "BRANCH_NAME=dev" >> $GITHUB_ENV
-            echo "APP_URL=https://dev.ejournal.apdesyi.or.id" >> $GITHUB_ENV
-            echo "ENV_LABEL=DEVELOPMENT" >> $GITHUB_ENV
+            echo "APP_URL=https://iamjos.id" >> $GITHUB_ENV
+            echo "ENV_LABEL=DEVELOPMENT (iamjos.id)" >> $GITHUB_ENV
           fi
 
       - name: Deploy ke VPS via SSH
