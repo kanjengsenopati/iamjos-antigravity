@@ -2,11 +2,19 @@
     $primaryColor = $settings['primary_color'] ?? '#0369a1';
     $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
 
-    // Get PDF Galley for citation_pdf_url (Google Scholar)
+    // Get PDF Galley for citation_pdf_url (Google Scholar) — strict PDF only, never fallback to HTML/XML
     $pdfGalley = $article->galleys?->first(function ($galley) {
-        return (optional($galley->file)->mime_type === 'application/pdf') || 
-               in_array(strtolower($galley->label ?? ''), ['pdf', 'pdf galley', 'naskah pdf', 'dokumen pdf']);
-    }) ?? $article->galleys?->first();
+        $label = strtolower(trim((string) ($galley->label ?? '')));
+        $mime = strtolower(trim((string) (optional($galley->file)->mime_type ?? '')));
+        return str_contains($mime, 'pdf') || str_contains($label, 'pdf');
+    });
+
+    // Get HTML Galley separately for citation_fulltext_html_url (Google Scholar)
+    $htmlGalley = $article->galleys?->first(function ($galley) {
+        $label = strtolower(trim((string) ($galley->label ?? '')));
+        $mime = strtolower(trim((string) (optional($galley->file)->mime_type ?? '')));
+        return str_contains($mime, 'html') || $label === 'html' || str_contains($label, 'html');
+    });
 
     // Publication date logic
     $publicationDate = $issue?->published_at ?? $article->published_at;
@@ -76,13 +84,23 @@
         ));
     }
 
-    // PDF galley URL — SEO-friendly direct PDF download route
+    // PDF galley URL — SEO-friendly direct PDF download route (.pdf suffix for Google Scholar)
     $pdfGalleyUrl = null;
     if ($pdfGalley) {
+        $pdfSlug = \Illuminate\Support\Str::slug($pubTitle) ?: ('article-' . $article->seq_id);
         $pdfGalleyUrl = route('journal.article.download.pdf', [
             'journal'  => $journal->slug,
             'seq_id'   => $article->seq_id,
-            'filename' => \Illuminate\Support\Str::slug($pubTitle),
+            'filename' => $pdfSlug,
+        ]);
+    }
+
+    $htmlGalleyUrl = null;
+    if ($htmlGalley) {
+        $htmlGalleyUrl = route('journal.article.galley', [
+            'journal' => $journal->slug,
+            'article' => $article->seq_id,
+            'galley'  => $htmlGalley->seq_id ?? $htmlGalley->id,
         ]);
     }
 
@@ -90,11 +108,11 @@
     $copyrightHolder = $pub->copyright_holder ?? ($journal->publisher ?? $journal->name);
     $copyrightYear   = $pub->copyright_year ?? ($issue->year ?? date('Y'));
     $licenseUrl      = $pub->license_url ?? ($journal->license_url ?? null);
-    
+
     $articleUrl = route('journal.public.article', ['journal' => $journal->slug, 'article' => $article->seq_id]);
 @endphp
 
-<x-layouts.public :journal="$journal" :settings="$settings" :title="$article->title . ' | ' . $journal->name" :article="true">
+<x-layouts.public :journal="$journal" :settings="$settings" :title="$pubTitle . ' | ' . $journal->name" :canonical="$articleUrl" :article="true">
 
 
 
@@ -106,10 +124,8 @@
     {{-- CRITICAL for academic indexing --}}
     {{-- ============================================ --}}
     @push('meta_tags')
-<link rel="canonical" href="{{ $articleUrl }}">
-<meta property="og:url" content="{{ $articleUrl }}">
 <meta property="og:type" content="article">
-<meta property="og:description" content="{{ Str::limit(strip_tags($pubAbstract ?? ''), 200) }}">
+<meta property="og:description" content="{{ Str::limit(trim(strip_tags(html_entity_decode($pubAbstract ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'))), 200) }}">
 @if($pubDate)
 <meta property="article:published_time" content="{{ $pubDate->toIso8601String() }}">
 @endif
@@ -171,12 +187,17 @@
         $metaTags[] = '<meta name="citation_keywords" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars($keyword) . '"/>';
     }
     $metaTags[] = '<meta name="citation_abstract_html_url" content="' . $articleUrl . '"/>';
+    if ($htmlGalleyUrl) {
+        $metaTags[] = '<meta name="citation_fulltext_html_url" content="' . $htmlGalleyUrl . '"/>';
+    }
     if ($pdfGalleyUrl) {
-        $metaTags[] = '<meta name="citation_fulltext_html_url" content="' . $articleUrl . '"/>';
         $metaTags[] = '<meta name="citation_pdf_url" content="' . $pdfGalleyUrl . '"/>';
     }
-    if ($pubAbstract) {
-        $metaTags[] = '<meta name="citation_abstract" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars(trim(strip_tags($pubAbstract))) . '"/>';
+    $cleanPubAbstract = $pubAbstract
+        ? trim(preg_replace('/\s+/u', ' ', strip_tags(html_entity_decode($pubAbstract, ENT_QUOTES | ENT_HTML5, 'UTF-8'))))
+        : '';
+    if ($cleanPubAbstract !== '') {
+        $metaTags[] = '<meta name="citation_abstract" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars($cleanPubAbstract, ENT_QUOTES, 'UTF-8') . '"/>';
     }
     // citation_reference: prefer structured citations from DB (high precision),
     // fallback to runtime parser if citations haven't been processed yet.
@@ -205,8 +226,8 @@
             $metaTags[] = '<meta name="DC.Creator.PersonalName" content="' . htmlspecialchars($dcName) . '"/>';
         }
     }
-    if ($pubAbstract) {
-        $metaTags[] = '<meta name="DC.Description" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars(trim(strip_tags($pubAbstract))) . '"/>';
+    if ($cleanPubAbstract !== '') {
+        $metaTags[] = '<meta name="DC.Description" xml:lang="' . $bcp47Locale . '" content="' . htmlspecialchars($cleanPubAbstract, ENT_QUOTES, 'UTF-8') . '"/>';
     }
     if ($pubDate) {
         $metaTags[] = '<meta name="DC.Date.created" scheme="ISO8601" content="' . $pubDate->format('Y-m-d') . '"/>';
@@ -256,9 +277,9 @@
         $schemaData = [
             '@context' => 'https://schema.org',
             '@type' => 'ScholarlyArticle',
-            'headline' => $article->title,
-            'name' => $article->title,
-            'description' => Str::limit(strip_tags($article->abstract ?? ''), 300),
+            'headline' => $pubTitle,
+            'name' => $pubTitle,
+            'description' => Str::limit($cleanPubAbstract, 300),
             'author' =>
                 $pubAuthors
                     ?->map(function ($author) {
@@ -320,7 +341,7 @@
         }
     @endphp
     <script type="application/ld+json">
-        {!! json_encode($schemaData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) !!}
+        {!! json_encode($schemaData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) !!}
     </script>
 
     {{-- ============================================ --}}
@@ -723,7 +744,7 @@
             {{-- ISSUE COVER (Clickable - Links to Issue Page) --}}
             @if ($issue)
                 @if ($issue->cover_path)
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id ?? $issue->id]) }}"
                         class="block hover:opacity-90 transition group">
                         <img src="{{ Storage::disk('public')->url($issue->cover_path) }}" alt="{{ $issue->title }}"
                             class="w-full rounded shadow-md border border-slate-200">
@@ -769,7 +790,7 @@
             @if ($issue)
                 <div class="bg-slate-50 p-5 rounded border border-slate-200">
                     <h4 class="font-bold text-slate-700 text-xs uppercase mb-3 tracking-wider">Issue</h4>
-                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id]) }}"
+                    <a href="{{ route('journal.public.issue', [$journal->slug, $issue->seq_id ?? $issue->id]) }}"
                         class="block hover:text-primary-600 transition">
                         <p class="font-semibold text-slate-800">
                             Vol. {{ $issue->volume }} No. {{ $issue->number }} ({{ $issue->year }})
@@ -797,14 +818,14 @@
                     </template>
                 </select>
 
-                <div class="bg-white p-3 border rounded text-xs italic font-mono leading-relaxed break-words"
+                <div x-ref="citationOutput" class="bg-white p-3 border rounded text-xs italic font-mono leading-relaxed break-words"
                     x-html="citations[format]"></div>
 
-                <button
+                <button type="button"
                     @click="
-                        navigator.clipboard.writeText(
-                            document.querySelector('[x-html]').innerText
-                        );
+                        if ($refs.citationOutput) {
+                            navigator.clipboard.writeText($refs.citationOutput.innerText);
+                        }
                         $el.innerText='Copied';
                         setTimeout(()=> $el.innerText='Copy Citation',2000);
                     "

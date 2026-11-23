@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Jobs\SendToWhatsappNotificationJob;
+use App\Models\Journal;
 use App\Models\User;
 use App\Facades\Settings;
 use App\Models\NotificationTemplate;
@@ -19,9 +20,10 @@ class WaGateway
      *
      * @param mixed $userOrNumber User Model instance or raw phone string
      * @param string $message The WhatsApp message to send
+     * @param Journal|null $journal Explicit journal context (for CLI/queue workers)
      * @return bool True if job was dispatched, false otherwise
      */
-    public static function send($userOrNumber, string $message): bool
+    public static function send($userOrNumber, string $message, ?Journal $journal = null): bool
     {
         // 1. Resolve Phone Number from input
         $phone = null;
@@ -43,9 +45,9 @@ class WaGateway
         }
 
         // 2.5. Journal Toggle Check
-        $journal = current_journal();
-        if ($journal && !$journal->wa_notifications_enabled) {
-            Log::info("WhatsApp notification skipped: Disabled for journal {$journal->name}");
+        $resolvedJournal = $journal ?? current_journal();
+        if ($resolvedJournal && !$resolvedJournal->wa_notifications_enabled) {
+            Log::info("WhatsApp notification skipped: Disabled for journal {$resolvedJournal->name}");
             return false;
         }
 
@@ -148,7 +150,9 @@ class WaGateway
             return false;
         }
 
-        return self::send($user, $message);
+        $journal = $journalId ? Journal::find($journalId) : null;
+
+        return self::send($user, $message, $journal);
     }
 
     /**

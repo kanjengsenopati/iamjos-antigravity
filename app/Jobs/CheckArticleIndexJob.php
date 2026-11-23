@@ -32,11 +32,7 @@ class CheckArticleIndexJob implements ShouldQueue
      */
     public function handle(ScholarCheckerService $checker): void
     {
-        // 1. Random Delay to prevent blocking
-        $sleepTime = rand(5, 15);
-        sleep($sleepTime);
-
-        $submission = Submission::with('journal')->find($this->submissionId);
+        $submission = Submission::with(['journal', 'currentPublication', 'indexStat'])->find($this->submissionId);
 
         if (!$submission) {
             Log::error("CheckArticleIndexJob: Submission not found: {$this->submissionId}");
@@ -44,32 +40,29 @@ class CheckArticleIndexJob implements ShouldQueue
         }
 
         try {
-            // 2. Perform Check
+            // 1. Perform Check (ScholarCheckerService throws on CAPTCHA / blocking so we never false-alert)
             $isIndexed = $checker->isIndexed($submission);
-            
-            // 3. Get or Create Stat Record
+
+            // 2. Get or Create Stat Record
             $stat = SubmissionIndexStat::firstOrCreate(
                 ['submission_id' => $submission->id],
                 ['journal_id' => $submission->journal_id]
             );
 
-            // 4. Check for De-indexing (Previous was true, current is false)
-            // We only alert if it was previously KNOWN to be indexed (is_indexed === true)
+            // 3. Check for De-indexing (Previous was true, current is false)
             if ($stat->is_indexed === true && $isIndexed === false) {
                 $this->notifyJournalManager($submission);
             }
 
-            // 5. Update Stats
+            // 4. Update Stats
             $stat->is_indexed = $isIndexed;
             $stat->last_check_status = $isIndexed ? 'found' : 'not_found';
             $stat->last_checked_at = now();
-            // Optional: update scholar_url if found (feature not fully implemented in service yet)
             $stat->save();
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('CheckArticleIndexJob Error', ['error' => $e->getMessage()]);
-            
-            // Mark as error
+
             $stat = SubmissionIndexStat::firstOrCreate(
                 ['submission_id' => $submission->id],
                 ['journal_id' => $submission->journal_id]
@@ -82,14 +75,18 @@ class CheckArticleIndexJob implements ShouldQueue
 
     protected function notifyJournalManager(Submission $submission)
     {
-        // Find Journal Manager
         $journal = $submission->journal;
-        // Assuming 'journal_manager' is the role name
-        $manager = $journal->usersWithRole('journal_manager')->first();
+        if (!$journal) {
+            return;
+        }
+
+        $manager = $journal->usersWithRole('Journal Manager')->first()
+            ?? $journal->usersWithRole('journal_manager')->first();
 
         if ($manager && $manager->phone) {
-            $message = "⚠️ Warning: Article '{$submission->title}' appears to have dropped from Google Scholar index.";
-            WaGateway::send($manager, $message);
+            $title = $submission->currentPublication?->title ?? $submission->title;
+            $message = "⚠️ Warning: Article '{$title}' appears to have dropped from Google Scholar index.";
+            WaGateway::send($manager, $message, $journal);
             Log::info("ScholarWatchdog: Alert sent to manager for submission {$submission->id}");
         } else {
             Log::warning("ScholarWatchdog: No journal manager with phone found for journal {$journal->id}");

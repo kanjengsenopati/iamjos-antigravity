@@ -53,6 +53,25 @@ try {
 // ROUTE DEFINITIONS
 // =====================================================
 
+// Dynamic robots.txt — emits active domain sitemap URL instead of hardcoded apps.iamjos.id
+Route::get('/robots.txt', function () {
+    $sitemapUrl = url('/sitemap.xml');
+    $content = implode("\n", [
+        'User-agent: *',
+        'Allow: /',
+        '',
+        'Disallow: /admin',
+        'Disallow: /login',
+        'Disallow: /register',
+        'Disallow: /password/reset',
+        '',
+        "Sitemap: {$sitemapUrl}",
+        '',
+    ]);
+
+    return response($content, 200)->header('Content-Type', 'text/plain; charset=UTF-8');
+})->name('robots.txt');
+
 Route::get('/temp-cleanup-duplicates', function () {
     // Check if user is superadmin/admin or just allow it temporarily for the fix
     $files = \App\Models\SubmissionFile::all();

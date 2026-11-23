@@ -71,14 +71,24 @@
     xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
 
     {{-- dc:title --}}
-    <dc:title>{{ htmlspecialchars($record->title, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:title>
+    <dc:title>{!! htmlspecialchars($record->currentPublication?->title ?? $record->title, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:title>
 
     {{-- dc:creator — one element per author --}}
-    @if (isset($record->authors) && $record->authors->isNotEmpty())
-      @foreach ($record->authors as $author)
-        @php $creatorName = trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? '')); @endphp
+    @php
+      $oaiAuthors = ($record->currentPublication && $record->currentPublication->authors && $record->currentPublication->authors->isNotEmpty())
+        ? $record->currentPublication->authors
+        : ($record->authors ?? collect());
+    @endphp
+    @if ($oaiAuthors->isNotEmpty())
+      @foreach ($oaiAuthors as $author)
+        @php
+          $creatorName = trim(($author->first_name ?? $author->given_name ?? '') . ' ' . ($author->last_name ?? $author->family_name ?? ''));
+          if ($creatorName === '') {
+            $creatorName = trim((string) ($author->preferred_public_name ?? $author->name ?? ''));
+          }
+        @endphp
         @if ($creatorName)
-          <dc:creator>{{ htmlspecialchars($creatorName, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:creator>
+          <dc:creator>{!! htmlspecialchars($creatorName, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:creator>
         @endif
       @endforeach
     @endif
@@ -88,18 +98,18 @@
       @foreach ($record->keywords as $kw)
         @php $kwText = trim($kw->content ?? $kw->keyword ?? $kw->name ?? ''); @endphp
         @if ($kwText)
-          <dc:subject>{{ htmlspecialchars($kwText, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:subject>
+          <dc:subject>{!! htmlspecialchars($kwText, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:subject>
         @endif
       @endforeach
     @endif
 
     {{-- dc:description — abstract, no HTML --}}
     @if ($abstractClean)
-      <dc:description>{{ htmlspecialchars($abstractClean, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:description>
+      <dc:description>{!! htmlspecialchars($abstractClean, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:description>
     @endif
 
     {{-- dc:publisher --}}
-    <dc:publisher>{{ htmlspecialchars($journal->publisher ?? $journal->name, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:publisher>
+    <dc:publisher>{!! htmlspecialchars($journal->publisher ?? $journal->name, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:publisher>
 
     {{-- dc:date — ISO 8601, no whitespace inside tag --}}
     @if ($pubDate)
@@ -113,38 +123,38 @@
     {{-- dc:format --}}
     <dc:format>application/pdf</dc:format>
     @if ($record->currentPublication && $record->currentPublication->pages)
-      <dc:format>{{ htmlspecialchars($record->currentPublication->pages, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:format>
+      <dc:format>{!! htmlspecialchars($record->currentPublication->pages, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:format>
     @endif
 
     {{-- dc:identifier — DOI (preferred), then article URL --}}
     @if ($record->currentPublication && $record->currentPublication->doi)
-      <dc:identifier>{{ htmlspecialchars('https://doi.org/' . $record->currentPublication->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:identifier>
-      <dc:identifier>{{ htmlspecialchars('doi:' . $record->currentPublication->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:identifier>
+      <dc:identifier>{!! htmlspecialchars('https://doi.org/' . $record->currentPublication->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:identifier>
+      <dc:identifier>{!! htmlspecialchars('doi:' . $record->currentPublication->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:identifier>
     @endif
-    <dc:identifier>{{ htmlspecialchars(route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]), ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:identifier>
+    <dc:identifier>{!! htmlspecialchars(route('journal.public.article', ['journal' => $journal->slug, 'article' => $record->seq_id]), ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:identifier>
 
     {{-- dc:source — journal name + ISSN + volume/issue --}}
-    <dc:source>{{ htmlspecialchars($sourceInfo, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:source>
+    <dc:source>{!! htmlspecialchars($sourceInfo, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:source>
 
     {{-- dc:language — BCP47/ISO 639-1 (id, en, etc.) --}}
     <dc:language>{{ $oaiLocale }}</dc:language>
 
     {{-- dc:relation — stable PDF URL for Google Scholar / BASE --}}
     @if ($pdfUrl)
-      <dc:relation>{{ htmlspecialchars($pdfUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:relation>
+      <dc:relation>{!! htmlspecialchars($pdfUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:relation>
     @endif
 
     {{-- dc:rights — license URL preferred over terms text --}}
     @if ($journal->license_url)
-      <dc:rights>{{ htmlspecialchars($journal->license_url, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:rights>
+      <dc:rights>{!! htmlspecialchars($journal->license_url, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:rights>
     @elseif ($journal->license_terms)
-      <dc:rights>{{ htmlspecialchars($journal->license_terms, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:rights>
+      <dc:rights>{!! htmlspecialchars($journal->license_terms, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:rights>
     @endif
 
     {{-- dc:relation — cited references (DOI/URL) for aggregator citation tracking --}}
     @if ($record->currentPublication)
       @foreach ($record->currentPublication->citations()->whereNotNull('doi')->limit(50)->get() as $citation)
-        <dc:relation>{{ htmlspecialchars('https://doi.org/' . $citation->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') }}</dc:relation>
+        <dc:relation>{!! htmlspecialchars('https://doi.org/' . $citation->doi, ENT_XML1 | ENT_QUOTES, 'UTF-8') !!}</dc:relation>
       @endforeach
     @endif
 

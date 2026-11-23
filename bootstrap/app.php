@@ -64,6 +64,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Crossref DOI Status Polling — setiap 30 menit (dual registration dengan routes/console.php)
         $schedule->command('crossref:check-status')->everyThirtyMinutes()->withoutOverlapping();
 
+        // Google Scholar Watchdog — mingguan
+        $schedule->command('scholar:monitor')->weeklyOn(1, '02:00')->withoutOverlapping();
+
         // Auto-run queue worker once a minute if database queue is active
         if (config('queue.default') === 'database') {
             $schedule->command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();

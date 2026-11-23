@@ -8,20 +8,24 @@ use Illuminate\Support\Str;
 class CitationService
 {
     /**
-     * Generate APA Citation
+     * Generate APA Citation (HTML-safe, only static <em> tags unescaped)
      */
     public function generateAPA(Submission $submission): string
     {
-        $year = $this->getYear($submission);
+        $year = e((string) $this->getYear($submission));
         $authors = $this->getAuthorsAPA($submission);
-        $journal = e($submission->journal->name);
-        $volume = $submission->issue->volume ?? null;
-        $number = $submission->issue->number ?? null;
-        $pages = $submission->currentPublication->pages ?? $submission->pages;
-        $doi = $submission->currentPublication->doi ?? $submission->doi;
-        $title = e($submission->currentPublication->title ?? $submission->title);
+        $journal = e((string) ($submission->journal?->name ?? ''));
+        $volume = $submission->issue?->volume ? e((string) $submission->issue->volume) : null;
+        $number = $submission->issue?->number ? e((string) $submission->issue->number) : null;
+        $rawPages = $submission->currentPublication?->pages ?? $submission->pages;
+        $pages = $rawPages ? e((string) $rawPages) : null;
+        $rawDoi = trim((string) ($submission->currentPublication?->doi ?? $submission->doi ?? ''));
+        $cleanDoi = trim((string) preg_replace('#^https?://(dx\.)?doi\.org/#i', '', $rawDoi));
+        $doi = $cleanDoi !== '' ? e($cleanDoi) : null;
+        $title = e((string) ($submission->currentPublication?->title ?? $submission->title ?? ''));
 
-        $citation = "{$authors} ({$year}). {$title}. <em>{$journal}</em>";
+        $prefix = $authors !== '' ? "{$authors} ({$year}). " : "({$year}). ";
+        $citation = "{$prefix}{$title}. <em>{$journal}</em>";
         if ($volume) $citation .= ", {$volume}";
         if ($number) $citation .= "({$number})";
         if ($pages) $citation .= ", {$pages}";
@@ -39,8 +43,9 @@ class CitationService
             return [];
         }
 
-        // Split by newline and filter empty lines
-        return array_values(array_filter(array_map('trim', explode("\n", $references))));
+        $lines = preg_split('/\R/u', $references) ?: [];
+
+        return array_values(array_filter(array_map('trim', $lines), static fn (string $line): bool => $line !== ''));
     }
 
     /**
@@ -48,72 +53,147 @@ class CitationService
      */
     protected function getYear(Submission $submission): int
     {
-        return $submission->issue->year ?? 
-               ($submission->published_at ? $submission->published_at->year : now()->year);
+        if ($submission->issue?->year) {
+            return (int) $submission->issue->year;
+        }
+        if ($submission->currentPublication?->date_published) {
+            return (int) $submission->currentPublication->date_published->year;
+        }
+        if ($submission->published_at) {
+            return (int) $submission->published_at->year;
+        }
+
+        return (int) now()->year;
     }
 
     /**
-     * Format authors for APA: Last, F.
+     * Format authors for APA (HTML-escaped): Last, F. M., &amp; Last2, F.
      */
     protected function getAuthorsAPA(Submission $submission): string
     {
         $pub = $submission->currentPublication;
-        $authorCollection = $pub?->authors ?? $submission->authors;
-        $authors = $authorCollection->map(function ($author) {
-            $last = trim($author->last_name ?? '');
-            $first = trim($author->first_name ?? '');
-            return $last ? "{$last}, " . mb_substr($first, 0, 1) . "." : $first;
-        });
+        $authorCollection = ($pub && $pub->authors && $pub->authors->isNotEmpty())
+            ? $pub->authors
+            : ($submission->authors ?? collect());
 
-        return $authors->implode(', ');
+        $authors = $authorCollection->map(function ($author): string {
+            $last = trim((string) ($author->family_name ?: ($author->last_name ?? '')));
+            $first = trim((string) ($author->given_name ?: ($author->first_name ?? '')));
+            $initials = $this->formatInitials($first);
+            if ($last !== '' && $initials !== '') {
+                return e("{$last}, {$initials}");
+            }
+            if ($last !== '') {
+                return e($last);
+            }
+            if ($first !== '') {
+                return e($first);
+            }
+            $fallback = trim((string) ($author->preferred_public_name ?: ($author->name ?? '')));
+
+            return $fallback !== '' ? e($fallback) : '';
+        })->filter()->values();
+
+        $count = $authors->count();
+        if ($count === 0) {
+            return '';
+        }
+        if ($count === 1) {
+            return $authors[0];
+        }
+        if ($count === 2) {
+            return $authors[0] . ', &amp; ' . $authors[1];
+        }
+        $lastAuthor = $authors->pop();
+
+        return $authors->implode(', ') . ', &amp; ' . $lastAuthor;
     }
 
     /**
-     * Generate all citation formats for UI
+     * Format UTF-8 given-name initials (e.g., "John Michael" -> "J. M.").
+     */
+    protected function formatInitials(string $givenName): string
+    {
+        if ($givenName === '') {
+            return '';
+        }
+        $tokens = preg_split('/\s+/u', $givenName) ?: [];
+        $initials = [];
+        foreach ($tokens as $token) {
+            $clean = trim($token, " \t\n\r\0\x0B.");
+            if ($clean !== '') {
+                $initials[] = mb_substr($clean, 0, 1, 'UTF-8') . '.';
+            }
+        }
+
+        return implode(' ', $initials);
+    }
+
+    /**
+     * Generate all citation formats for UI (HTML-safe)
      */
     public function getAllFormats(Submission $submission): array
     {
-        $year = $this->getYear($submission);
-        $journal = e($submission->journal->name);
+        $year = e((string) $this->getYear($submission));
+        $journal = e((string) ($submission->journal?->name ?? ''));
         $issue = $submission->issue;
-        $volume = $issue->volume ?? null;
-        $number = $issue->number ?? null;
-        $pages = $submission->currentPublication->pages ?? $submission->pages;
-        $doi = $submission->currentPublication->doi ?? $submission->doi;
-        $doiUrl = $doi ? "https://doi.org/{$doi}" : route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id]);
-
-        // Use author names as-is from database (preserve intentional casing like "van der Berg")
-        $cleanName = fn($s) => trim($s);
+        $volume = $issue?->volume ? e((string) $issue->volume) : null;
+        $number = $issue?->number ? e((string) $issue->number) : null;
+        $rawPages = $submission->currentPublication?->pages ?? $submission->pages;
+        $pages = $rawPages ? e((string) $rawPages) : null;
+        $rawDoi = trim((string) ($submission->currentPublication?->doi ?? $submission->doi ?? ''));
+        $cleanDoi = trim((string) preg_replace('#^https?://(dx\.)?doi\.org/#i', '', $rawDoi));
+        $rawDoiUrl = $cleanDoi !== ''
+            ? "https://doi.org/{$cleanDoi}"
+            : ($submission->journal
+                ? route('journal.public.article', ['journal' => $submission->journal->slug, 'article' => $submission->seq_id ?? $submission->id])
+                : '');
+        $doiUrl = e($rawDoiUrl);
 
         // Title from currentPublication with fallback, HTML-escaped
-        $title = e($submission->currentPublication->title ?? $submission->title);
+        $title = e((string) ($submission->currentPublication?->title ?? $submission->title ?? ''));
 
         $pub = $submission->currentPublication;
-        $authorCollection = $pub?->authors ?? $submission->authors;
+        $authorCollection = ($pub && $pub->authors && $pub->authors->isNotEmpty())
+            ? $pub->authors
+            : ($submission->authors ?? collect());
 
-        // Full names for some formats
-        $authorsFull = $authorCollection->map(fn($a) => $cleanName($a->first_name . ' ' . $a->last_name))->implode(', ');
-        
-        // IEEE format: F. Last
-        $authorsIEEE = $authorCollection->map(function($a) use ($cleanName) {
-            $first = $cleanName($a->first_name);
-            $last = $cleanName($a->last_name);
-            return ($first ? mb_substr($first, 0, 1) . '. ' : '') . $last;
-        })->implode(', ');
+        // Full names (HTML-escaped, preserving intentional casing like "van der Berg")
+        $authorsFullRaw = $authorCollection->map(function ($a): string {
+            $first = trim((string) ($a->given_name ?: ($a->first_name ?? '')));
+            $last = trim((string) ($a->family_name ?: ($a->last_name ?? '')));
+            $full = trim("{$first} {$last}");
+
+            return $full !== '' ? $full : trim((string) ($a->preferred_public_name ?: ($a->name ?? '')));
+        })->filter()->values();
+
+        $authorsFull = $authorsFullRaw->map(static fn (string $n): string => e($n))->implode(', ');
+        $authorsAbnt = $authorsFullRaw->map(static fn (string $n): string => e(mb_strtoupper($n, 'UTF-8')))->implode(', ');
+
+        // IEEE format: F. M. Last (HTML-escaped)
+        $authorsIEEE = $authorCollection->map(function ($a): string {
+            $first = trim((string) ($a->given_name ?: ($a->first_name ?? '')));
+            $last = trim((string) ($a->family_name ?: ($a->last_name ?? '')));
+            $initials = $this->formatInitials($first);
+            $formatted = trim(($initials !== '' ? "{$initials} " : '') . $last);
+
+            return $formatted !== '' ? e($formatted) : e(trim((string) ($a->preferred_public_name ?: ($a->name ?? ''))));
+        })->filter()->implode(', ');
 
         $authorsAPA = $this->getAuthorsAPA($submission);
+        $doiSuffix = $doiUrl !== '' ? " {$doiUrl}" : '';
 
         return [
-            'APA' => "{$authorsAPA} ({$year}). {$title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ". {$doiUrl}",
-            'ACM' => "{$authorsFull}. {$year}. {$title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? ", {$number}" : '') . ($pages ? ", {$pages}" : '') . ". DOI: {$doiUrl}",
-            'ACS' => "{$authorsFull}. {$title}. <em>{$journal}</em> {$year}" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ". {$doiUrl}",
-            'ABNT' => mb_strtoupper($authorsFull) . ". {$title}. {$journal}, {$year}." . ($volume ? " v. {$volume}" : '') . ($number ? ", n. {$number}" : '') . ($pages ? ", p. {$pages}" : '') . ". Disponível em: {$doiUrl}",
-            'Chicago' => "{$authorsFull}. {$year}. \"{$title}.\" <em>{$journal}</em>" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ": {$pages}" : '') . ". {$doiUrl}",
-            'Harvard' => "{$authorsFull} ({$year}) '{$title}', <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . ". Available at: {$doiUrl}",
-            'IEEE' => "{$authorsIEEE}, \"{$title},\" <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . ", {$year}. {$doiUrl}",
-            'MLA' => "{$authorsFull}. \"{$title}.\" <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ", {$year}" . ($pages ? ", pp. {$pages}" : '') . ". {$doiUrl}",
-            'Turabian' => "{$authorsFull}. \"{$title}.\" {$journal}" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . " ({$year})" . ($pages ? ": {$pages}" : '') . ". {$doiUrl}",
-            'Vancouver' => "{$authorsIEEE}. {$title}. {$journal}. {$year}" . ($volume ? ";{$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ":{$pages}" : '') . ". {$doiUrl}",
+            'APA' => "{$authorsAPA} ({$year}). {$title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ".{$doiSuffix}",
+            'ACM' => "{$authorsFull}. {$year}. {$title}. <em>{$journal}</em>" . ($volume ? ", {$volume}" : '') . ($number ? ", {$number}" : '') . ($pages ? ", {$pages}" : '') . '.' . ($doiUrl !== '' ? " DOI: {$doiUrl}" : ''),
+            'ACS' => "{$authorsFull}. {$title}. <em>{$journal}</em> {$year}" . ($volume ? ", {$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ", {$pages}" : '') . ".{$doiSuffix}",
+            'ABNT' => "{$authorsAbnt}. {$title}. {$journal}, {$year}." . ($volume ? " v. {$volume}" : '') . ($number ? ", n. {$number}" : '') . ($pages ? ", p. {$pages}" : '') . '.' . ($doiUrl !== '' ? " Disponível em: {$doiUrl}" : ''),
+            'Chicago' => "{$authorsFull}. {$year}. &quot;{$title}.&quot; <em>{$journal}</em>" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ": {$pages}" : '') . ".{$doiSuffix}",
+            'Harvard' => "{$authorsFull} ({$year}) &#039;{$title}&#039;, <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . '.' . ($doiUrl !== '' ? " Available at: {$doiUrl}" : ''),
+            'IEEE' => "{$authorsIEEE}, &quot;{$title},&quot; <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ($pages ? ", pp. {$pages}" : '') . ", {$year}.{$doiSuffix}",
+            'MLA' => "{$authorsFull}. &quot;{$title}.&quot; <em>{$journal}</em>" . ($volume ? ", vol. {$volume}" : '') . ($number ? ", no. {$number}" : '') . ", {$year}" . ($pages ? ", pp. {$pages}" : '') . ".{$doiSuffix}",
+            'Turabian' => "{$authorsFull}. &quot;{$title}.&quot; {$journal}" . ($volume ? " {$volume}" : '') . ($number ? ", no. {$number}" : '') . " ({$year})" . ($pages ? ": {$pages}" : '') . ".{$doiSuffix}",
+            'Vancouver' => "{$authorsIEEE}. {$title}. {$journal}. {$year}" . ($volume ? ";{$volume}" : '') . ($number ? "({$number})" : '') . ($pages ? ":{$pages}" : '') . ".{$doiSuffix}",
         ];
     }
 

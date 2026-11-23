@@ -1,9 +1,10 @@
 {{-- Master Public Layout Component for Journal Pages (OJS 3.3 Parity) --}}
-@props(['journal', 'settings' => [], 'title' => null, 'description' => null])
+@props(['journal', 'settings' => [], 'title' => null, 'description' => null, 'canonical' => null])
 
 @php
 $primaryColor = $settings['primary_color'] ?? '#0369a1';
 $secondaryColor = $settings['secondary_color'] ?? '#7c3aed';
+$canonicalUrl = $canonical ?? url()->current();
 
 // OJS 3.3 Header Logic:
 // If homepage_image exists AND show_homepage_image_in_header is TRUE -> show as header background
@@ -37,14 +38,14 @@ $siteIntro = \App\Facades\Settings::site('site_intro', 'Indonesian Academic Jour
 @else
 <meta name="robots" content="index, follow">
 @endif
-<link rel="canonical" href="{{ url()->current() }}">
+<link rel="canonical" href="{{ $canonicalUrl }}">
 <meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
 @unless($article ?? false)
 <meta property="og:type" content="website">
 <meta property="og:description" content="{{ $description ?? Str::limit($journal->description ?? '', 200) }}">
 @endunless
 <meta property="og:title" content="{{ $title ?? $journal->name }}">
-<meta property="og:url" content="{{ url()->current() }}">
+<meta property="og:url" content="{{ $canonicalUrl }}">
 <meta property="og:site_name" content="{{ $journal->name ?? 'IAMJOS' }}">
 @if($journal->logo_path ?? false)
 <meta property="og:image" content="{{ Storage::disk('public')->url($journal->logo_path) }}">

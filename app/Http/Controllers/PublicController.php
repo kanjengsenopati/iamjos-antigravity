@@ -998,6 +998,37 @@ class PublicController extends Controller
     }
 
     /**
+     * Sanitize a single-line RIS field value to prevent CR/LF tag injection.
+     */
+    protected function sanitizeRisValue(?string $value): string
+    {
+        return trim((string) preg_replace('/[\r\n]+/', ' ', strip_tags(html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8'))));
+    }
+
+    /**
+     * Escape BibTeX special characters in a single pass.
+     */
+    protected function escapeBibtexValue(?string $value): string
+    {
+        $normalized = trim((string) preg_replace('/[\r\n]+/', ' ', (string) $value));
+
+        return strtr($normalized, [
+            '\\' => '\\textbackslash{}',
+            '{' => '\\{',
+            '}' => '\\}',
+            '%' => '\\%',
+            '$' => '\\$',
+            '#' => '\\#',
+            '&' => '\\&',
+            '_' => '\\_',
+            '^' => '\\^{}',
+            '~' => '\\~{}',
+            '<' => '\\textless{}',
+            '>' => '\\textgreater{}',
+        ]);
+    }
+
+    /**
      * Export citation in RIS format (for EndNote, Zotero, Mendeley)
      * RIS 2001 spec: https://en.wikipedia.org/wiki/RIS_(file_format)
      */
@@ -1015,34 +1046,37 @@ class PublicController extends Controller
                     $query->where('slug', $article);
                 }
             })
-            ->with(['authors', 'issue', 'section', 'currentPublication', 'keywords'])
+            ->with(['authors', 'issue', 'section', 'currentPublication.authors', 'keywords'])
             ->published()
             ->firstOrFail();
 
         $pub            = $submission->currentPublication;
         $issue          = $submission->issue;
         $publicationDate = $pub?->date_published ?? ($issue?->published_at ?? $submission->published_at);
-        $doi            = $pub?->doi ?? null;
-        $pages          = $pub?->pages ?? null;
+        $doi            = $this->sanitizeRisValue($pub?->doi ?? $submission->doi ?? null);
+        $doi            = preg_replace('#^https?://(dx\.)?doi\.org/#i', '', $doi) ?? $doi;
+        $pages          = $this->sanitizeRisValue($pub?->pages ?? $submission->pages ?? null);
         $abstract       = $pub?->abstract ?? $submission->abstract ?? null;
+        $title          = $this->sanitizeRisValue($pub?->title ?? $submission->title ?? '');
+        $authors        = ($pub && $pub->authors && $pub->authors->isNotEmpty()) ? $pub->authors : $submission->authors;
 
         $ris  = "TY  - JOUR\n";
-        $ris .= "TI  - " . ($pub?->title ?? $submission->title) . "\n";
+        $ris .= "TI  - {$title}\n";
 
         // Authors: Last, First (RIS standard)
-        foreach ($submission->authors as $author) {
-            $lastName  = $author->family_name ?? $author->last_name ?? '';
-            $firstName = $author->given_name  ?? $author->first_name ?? '';
-            if ($lastName || $firstName) {
-                $ris .= "AU  - {$lastName}, {$firstName}\n";
+        foreach ($authors as $author) {
+            $lastName  = $this->sanitizeRisValue($author->family_name ?: ($author->last_name ?? ''));
+            $firstName = $this->sanitizeRisValue($author->given_name ?: ($author->first_name ?? ''));
+            if ($lastName !== '' || $firstName !== '') {
+                $ris .= "AU  - " . trim("{$lastName}, {$firstName}", ', ') . "\n";
             }
         }
 
-        $ris .= "T2  - {$journal->name}\n";
+        $ris .= "T2  - " . $this->sanitizeRisValue($journal->name) . "\n";
 
         // ISSN (SN field)
-        $issn = $journal->issn_online ?? $journal->issn_print ?? null;
-        if ($issn) {
+        $issn = $this->sanitizeRisValue($journal->issn_online ?? $journal->issn_print ?? null);
+        if ($issn !== '') {
             $ris .= "SN  - {$issn}\n";
         }
 
@@ -1052,51 +1086,56 @@ class PublicController extends Controller
         }
 
         if ($issue?->volume) {
-            $ris .= "VL  - {$issue->volume}\n";
+            $ris .= "VL  - " . $this->sanitizeRisValue((string) $issue->volume) . "\n";
         }
         if ($issue?->number) {
-            $ris .= "IS  - {$issue->number}\n";
+            $ris .= "IS  - " . $this->sanitizeRisValue((string) $issue->number) . "\n";
         }
 
         // Pages: SP (start) and EP (end)
-        if ($pages) {
+        if ($pages !== '') {
             $pageParts = explode('-', $pages, 2);
             $ris .= "SP  - " . trim($pageParts[0]) . "\n";
-            if (isset($pageParts[1])) {
+            if (isset($pageParts[1]) && trim($pageParts[1]) !== '') {
                 $ris .= "EP  - " . trim($pageParts[1]) . "\n";
             }
         }
 
-        if ($doi) {
+        if ($doi !== '') {
             $ris .= "DO  - {$doi}\n";
             $ris .= "UR  - https://doi.org/{$doi}\n";
         }
 
         if ($abstract) {
-            $ris .= "AB  - " . trim(strip_tags($abstract)) . "\n";
+            $cleanAbstract = $this->sanitizeRisValue($abstract);
+            if ($cleanAbstract !== '') {
+                $ris .= "AB  - {$cleanAbstract}\n";
+            }
         }
 
-        // Keywords — use keywords relation (BelongsToMany), not is_array check
+        // Keywords — use keywords relation (BelongsToMany)
         foreach ($submission->keywords as $keyword) {
-            $kwText = $keyword->content ?? $keyword->name ?? null;
-            if ($kwText) {
+            $kwText = $this->sanitizeRisValue($keyword->content ?? $keyword->name ?? null);
+            if ($kwText !== '') {
                 $ris .= "KW  - {$kwText}\n";
             }
         }
 
         if ($journal->publisher) {
-            $ris .= "PB  - {$journal->publisher}\n";
+            $ris .= "PB  - " . $this->sanitizeRisValue($journal->publisher) . "\n";
         }
 
         // Language (LA field)
-        $lang = preg_replace('/_[A-Z]{2}$/', '', $submission->locale ?? 'en');
+        $lang = $this->sanitizeRisValue(preg_replace('/_[A-Z]{2}$/', '', $submission->locale ?? 'en'));
         $ris .= "LA  - {$lang}\n";
 
         $ris .= "ER  - \n";
 
+        $filenameBase = Str::slug($title) ?: ('citation-' . ($submission->seq_id ?? $submission->id));
+
         return response($ris)
-            ->header('Content-Type', 'application/x-research-info-systems')
-            ->header('Content-Disposition', 'attachment; filename="' . \Str::slug($submission->title) . '.ris"');
+            ->header('Content-Type', 'application/x-research-info-systems; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filenameBase . '.ris"');
     }
 
     /**
@@ -1117,94 +1156,93 @@ class PublicController extends Controller
                     $query->where('slug', $article);
                 }
             })
-            ->with(['authors', 'issue', 'section', 'currentPublication', 'keywords'])
+            ->with(['authors', 'issue', 'section', 'currentPublication.authors', 'keywords'])
             ->published()
             ->firstOrFail();
 
         $pub            = $submission->currentPublication;
         $issue          = $submission->issue;
         $publicationDate = $pub?->date_published ?? ($issue?->published_at ?? $submission->published_at);
-        $doi            = $pub?->doi ?? null;
-        $pages          = $pub?->pages ?? null;
+        $rawDoi         = trim((string) ($pub?->doi ?? $submission->doi ?? ''));
+        $doi            = trim((string) preg_replace('#^https?://(dx\.)?doi\.org/#i', '', $rawDoi));
+        $pages          = trim((string) ($pub?->pages ?? $submission->pages ?? ''));
         $abstract       = $pub?->abstract ?? $submission->abstract ?? null;
+        $title          = (string) ($pub?->title ?? $submission->title ?? '');
+        $authorsCollection = ($pub && $pub->authors && $pub->authors->isNotEmpty()) ? $pub->authors : $submission->authors;
 
-        // BibTeX special character escaping
-        // Escapes: { } \ % $ # & _ ^ ~ < >
-        $escapeBibtex = function (string $str): string {
-            // Protect existing braces first, then escape special chars
-            $str = str_replace('\\', '\\\\', $str);
-            $str = str_replace('%',  '\\%',  $str);
-            $str = str_replace('$',  '\\$',  $str);
-            $str = str_replace('#',  '\\#',  $str);
-            $str = str_replace('&',  '\\&',  $str);
-            $str = str_replace('_',  '\\_',  $str);
-            $str = str_replace('^',  '\\^{}', $str);
-            $str = str_replace('~',  '\\~{}', $str);
-            return $str;
-        };
-
-        // Citation key: FirstAuthorLastName + Year + seq_id suffix for uniqueness
-        $firstAuthor = $submission->authors->first();
-        $lastName    = $firstAuthor ? ($firstAuthor->family_name ?? $firstAuthor->last_name ?? 'Author') : 'Author';
+        // Citation key: safe ASCII letter prefix + year + seq_id suffix for uniqueness
+        $firstAuthor = $authorsCollection->first();
+        $lastName    = $firstAuthor ? ($firstAuthor->family_name ?: ($firstAuthor->last_name ?: 'Author')) : 'Author';
         $year        = $publicationDate?->year ?? now()->year;
-        $citationKey = Str::slug($lastName) . $year . '-' . $submission->seq_id;
+        $slugLast    = Str::slug((string) $lastName, '');
+        if ($slugLast === '' || ctype_digit($slugLast[0])) {
+            $slugLast = 'ref' . $slugLast;
+        }
+        $citationKey = $slugLast . $year . '-' . ($submission->seq_id ?? substr((string) $submission->id, 0, 8));
 
         $bibtex  = "@article{{$citationKey},\n";
-        $bibtex .= "  title     = {{" . $escapeBibtex($pub?->title ?? $submission->title) . "}},\n";
+        $bibtex .= "  title     = {{" . $this->escapeBibtexValue($title) . "}},\n";
 
         // Authors: First Last and First Last (BibTeX standard)
-        $authors = $submission->authors->map(function ($a) {
-            $first = $a->given_name  ?? $a->first_name  ?? '';
-            $last  = $a->family_name ?? $a->last_name   ?? '';
+        $authors = $authorsCollection->map(function ($a) {
+            $first = $a->given_name  ?: ($a->first_name  ?? '');
+            $last  = $a->family_name ?: ($a->last_name   ?? '');
             return trim("{$first} {$last}");
         })->filter()->implode(' and ');
-        $bibtex .= "  author    = {{" . $escapeBibtex($authors) . "}},\n";
+        $bibtex .= "  author    = {{" . $this->escapeBibtexValue($authors) . "}},\n";
 
-        $bibtex .= "  journal   = {{" . $escapeBibtex($journal->name) . "}},\n";
+        $bibtex .= "  journal   = {{" . $this->escapeBibtexValue($journal->name) . "}},\n";
 
         if ($publicationDate) {
             $bibtex .= "  year      = {{{$publicationDate->year}}},\n";
             $bibtex .= "  month     = {{{$publicationDate->format('m')}}},\n";
         }
         if ($issue?->volume) {
-            $bibtex .= "  volume    = {{{$issue->volume}}},\n";
+            $bibtex .= "  volume    = {{" . $this->escapeBibtexValue((string) $issue->volume) . "}},\n";
         }
         if ($issue?->number) {
-            $bibtex .= "  number    = {{{$issue->number}}},\n";
+            $bibtex .= "  number    = {{" . $this->escapeBibtexValue((string) $issue->number) . "}},\n";
         }
-        if ($pages) {
-            $bibtex .= "  pages     = {{" . str_replace('-', '--', $pages) . "}},\n";
+        if ($pages !== '') {
+            $bibtex .= "  pages     = {{" . $this->escapeBibtexValue(str_replace('-', '--', $pages)) . "}},\n";
         }
-        if ($doi) {
-            $bibtex .= "  doi       = {{{$doi}}},\n";
-            $bibtex .= "  url       = {{https://doi.org/{$doi}}},\n";
+        if ($doi !== '') {
+            $safeDoi = $this->escapeBibtexValue($doi);
+            $safeDoiUrl = $this->escapeBibtexValue("https://doi.org/{$doi}");
+            $bibtex .= "  doi       = {{{$safeDoi}}},\n";
+            $bibtex .= "  url       = {{{$safeDoiUrl}}},\n";
         }
         if ($journal->publisher) {
-            $bibtex .= "  publisher = {{" . $escapeBibtex($journal->publisher) . "}},\n";
+            $bibtex .= "  publisher = {{" . $this->escapeBibtexValue($journal->publisher) . "}},\n";
         }
 
         // ISSN
         $issn = $journal->issn_online ?? $journal->issn_print ?? null;
         if ($issn) {
-            $bibtex .= "  issn      = {{{$issn}}},\n";
+            $bibtex .= "  issn      = {{" . $this->escapeBibtexValue((string) $issn) . "}},\n";
         }
 
         // Abstract
         if ($abstract) {
-            $bibtex .= "  abstract  = {{" . $escapeBibtex(trim(strip_tags($abstract))) . "}},\n";
+            $cleanAbstract = trim(strip_tags(html_entity_decode((string) $abstract, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+            if ($cleanAbstract !== '') {
+                $bibtex .= "  abstract  = {{" . $this->escapeBibtexValue($cleanAbstract) . "}},\n";
+            }
         }
 
         // Keywords
         $kwList = $submission->keywords->map(fn($k) => $k->content ?? $k->name ?? '')->filter()->implode(', ');
         if ($kwList) {
-            $bibtex .= "  keywords  = {{" . $escapeBibtex($kwList) . "}},\n";
+            $bibtex .= "  keywords  = {{" . $this->escapeBibtexValue($kwList) . "}},\n";
         }
 
         $bibtex .= "}\n";
 
+        $filenameBase = Str::slug($title) ?: ('citation-' . ($submission->seq_id ?? $submission->id));
+
         return response($bibtex)
-            ->header('Content-Type', 'application/x-bibtex')
-            ->header('Content-Disposition', 'attachment; filename="' . \Str::slug($submission->title) . '.bib"');
+            ->header('Content-Type', 'application/x-bibtex; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filenameBase . '.bib"');
     }
 
     /**

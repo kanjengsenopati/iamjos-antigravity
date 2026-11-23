@@ -257,15 +257,36 @@ class GoogleScholarValidator
 
     private function checkKeywords($keywords): array
     {
-        // Keywords can be string or array depending on model casting
         $keywordArray = [];
         if (is_string($keywords)) {
-            $keywordArray = array_filter(array_map('trim', explode(',', $keywords)));
+            $trimmed = trim($keywords);
+            if ($trimmed !== '' && str_starts_with($trimmed, '[')) {
+                $decoded = json_decode($trimmed, true);
+                if (is_array($decoded)) {
+                    $keywordArray = $decoded;
+                }
+            }
+            if (empty($keywordArray) && $trimmed !== '') {
+                $keywordArray = explode(',', $trimmed);
+            }
         } elseif (is_array($keywords)) {
             $keywordArray = $keywords;
+        } elseif ($keywords instanceof \Traversable) {
+            $keywordArray = iterator_to_array($keywords, false);
         }
 
-        $count = count($keywordArray);
+        $normalized = [];
+        foreach ($keywordArray as $item) {
+            $val = is_array($item)
+                ? ($item['value'] ?? $item['content'] ?? $item['name'] ?? '')
+                : (is_object($item) ? ($item->content ?? $item->value ?? $item->name ?? '') : (string) $item);
+            $val = trim((string) $val);
+            if ($val !== '') {
+                $normalized[] = $val;
+            }
+        }
+
+        $count = count($normalized);
 
         if ($count < 3) {
             return [
@@ -276,7 +297,7 @@ class GoogleScholarValidator
             ];
         }
 
-        if ($count > 10) { // Google Scholar says max 6 usually, but we relax to 10
+        if ($count > 10) {
             return [
                 'label' => 'Keywords',
                 'status' => 'warning',
@@ -295,22 +316,28 @@ class GoogleScholarValidator
 
     private function checkReferences($references): array
     {
-        if (empty($references)) {
+        $count = 0;
+        if (is_string($references)) {
+            $lines = preg_split('/\R/u', $references) ?: [];
+            $count = count(array_filter(array_map('trim', $lines), static fn (string $l): bool => $l !== ''));
+        } elseif (is_array($references)) {
+            $count = count(array_filter($references, static fn ($item): bool => trim((string) (is_object($item) ? ($item->raw_citation ?? '') : $item)) !== ''));
+        } elseif ($references instanceof \Traversable) {
+            foreach ($references as $item) {
+                $text = is_object($item) ? (string) ($item->raw_citation ?? $item->id ?? '') : (string) $item;
+                if (trim($text) !== '') {
+                    $count++;
+                }
+            }
+        }
+
+        if ($count === 0) {
             return [
                 'label' => self::LABEL_REFERENCES,
                 'status' => false,
                 'message' => 'No references provided. Google Scholar requires citations to trace the citation graph.',
                 'score' => 0
             ];
-        }
-
-        // Handle string vs array/collection
-        $count = 0;
-        if (is_string($references)) {
-            // Count newlines as rough proxy for citation count
-            $count = substr_count($references, "\n") + 1;
-        } elseif (is_array($references) || $references instanceof \Traversable) {
-            $count = count($references);
         }
 
         if ($count < 10) {
@@ -323,7 +350,7 @@ class GoogleScholarValidator
         }
 
         return [
-                'label' => self::LABEL_REFERENCES,
+            'label' => self::LABEL_REFERENCES,
             'status' => true,
             'message' => "Good number of references found ($count).",
             'score' => 10
@@ -332,28 +359,31 @@ class GoogleScholarValidator
 
     private function checkGalleys(Submission $submission): array
     {
-        // Assuming relationship 'galleys' or similar exists for published files (PDFs)
-        // If Model doesn't have galleys yet, check if there's at least a manuscript file in the final stage?
-        // Prompt says "Galley (PDF): Must have at least one published PDF Galley"
-        
-        $hasPdf = false;
-        if (method_exists($submission, 'galleys')) {
-             foreach ($submission->galleys as $galley) {
-                 if (\Illuminate\Support\Str::contains(strtolower($galley->label), 'pdf') || \Illuminate\Support\Str::contains(strtolower($galley->file_type ?? ''), 'pdf')) {
-                     $hasPdf = true;
-                     break;
-                 }
-             }
-        }
-        if (!$hasPdf && $submission->galleys()->count() == 0) {
-             return [
+        $galleys = method_exists($submission, 'galleys')
+            ? $submission->galleys()->with('file')->get()
+            : collect();
+
+        if ($galleys->isEmpty()) {
+            return [
                 'label' => 'Galley (PDF)',
                 'status' => false,
                 'message' => 'No publication galleys found. At least one PDF galley is required.',
                 'score' => 0
             ];
-        } elseif (!$hasPdf) {
-             return [
+        }
+
+        $hasPdf = false;
+        foreach ($galleys as $galley) {
+            $label = strtolower(trim((string) ($galley->label ?? '')));
+            $mime = strtolower(trim((string) ($galley->file?->mime_type ?? '')));
+            if (\Illuminate\Support\Str::contains($label, 'pdf') || \Illuminate\Support\Str::contains($mime, 'pdf')) {
+                $hasPdf = true;
+                break;
+            }
+        }
+
+        if (!$hasPdf) {
+            return [
                 'label' => 'Galley (PDF)',
                 'status' => false,
                 'message' => 'No PDF galley found. At least one PDF galley is required.',
