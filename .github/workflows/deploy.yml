@@ -338,6 +338,9 @@ jobs:
             # Ekstrak arsip ke target path
             tar -xzf "$TMP_FILE" -C "$TARGET_PATH"
 
+            # Hapus public/robots.txt statis warisan agar route dinamis /robots.txt aktif
+            rm -f "$TARGET_PATH/public/robots.txt" 2>/dev/null || true
+
             # Kembalikan file .env dari backup jika ada
             if [ -f "$TMP_DIR/.env.backup" ]; then
               mv "$TMP_DIR/.env.backup" "$TARGET_PATH/.env"
@@ -598,6 +601,9 @@ jobs:
 
             # Ekstrak arsip ke target path
             tar -xzf "$TMP_FILE" -C "$TARGET_PATH"
+
+            # Hapus public/robots.txt statis warisan agar route dinamis /robots.txt aktif
+            rm -f "$TARGET_PATH/public/robots.txt" 2>/dev/null || true
 
             # Kembalikan file .env dari backup jika ada
             if [ -f "$TMP_DIR/.env.backup" ]; then
